@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>launch · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p>Like the <a href=&quot;/docs/2.0.0-RC2-3/cli-fetch&quot;><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC2-3">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="launch · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p>Like the <a href=&quot;/docs/2.0.0-RC2-3/cli-fetch&quot;><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../versions"><h3>2.0.0-RC2-3</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../docs/2.0.0-RC2-3/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-fetch">fetch</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cli-native-bootstrap">scala-native bootstrap</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-3/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-launch.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">launch</h1>
+       </header>
+       <article>
+        <div>
+         <span><p>Like the <a href="../../../docs/2.0.0-RC2-3/cli-fetch"><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the artifacts of one or more dependencies. Unlike <a href="../../../docs/2.0.0-RC2-3/cli-fetch"><code>fetch</code></a>, it doesn't stop there, and proceeds to actually launch the dependencies it fetched, like</p> <pre><code class="hljs css language-bash">$ coursier launch io.get-coursier:http-server_2.12:1.0.0
+</code></pre> <p>The <code>launch</code> command runs the dependencies it fetched in its own JVM. It simply loads them in a fresh class loader, loads the main class by reflection, and calls its main method.</p> <h2><a class="anchor" aria-hidden="true" id="arguments"></a><a href="cli-launch.html#arguments" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Arguments</h2> <p>Pass arguments to the launched program, by adding <code>--</code> after the coursier arguments, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -- --version
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="main-class"></a><a href="cli-launch.html#main-class" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Main class</h2> <p>The main class to launch from the passed dependencies must be either specified on the command-line, via the <code>-M</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+</code></pre> <p>or must be specified in the manifest of one of the loaded JARs.</p> <p>If the project of the main class relies on sbt, and contains only one main class, its manifest should already contain this main class name (it's added out-of-the-box). In case of several main classes, one should set the <a href="https://github.com/sbt/sbt/blob/v1.2.8/main/src/main/scala/sbt/Keys.scala#L265"><code>mainClass</code></a> setting to the right value, for the main class to be specified in the manifest.</p> <p>In case several of the loaded JARs have manifests with main classes, the <code>launch</code> command applies an heuristic to try to find the "main" one.</p> <p>If ever that heuristic fails, run the <code>launch</code> command with the <code>-v</code> option specified twice, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
+…
+Found main classes:
+  com.martiansoftware.nailgun.NGServer (vendor: , title: )
+  org.scalafmt.cli.Cli (vendor: com.geirsson, title: cli)
+…
+</code></pre> <p>It should print the main classes it found. Then, replace <code>-v -v</code> with <code>-M main.class.of.your.choice</code>, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -M org.scalafmt.cli.Cli -- --version
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="java-options"></a><a href="cli-launch.html#java-options" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Java options</h2> <p>On Linux / OS X, recent versions of the coursier launcher accept Java options, prefixed with <code>-J</code>, like</p> <pre><code class="hljs css language-bash">$ coursier -J-Dfoo=bar -J-Xmx2g launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+Loading...
+Welcome to the Ammonite Repl 1.6.0
+(Scala 2.12.8 Java 1.8.0_121)
+@ sys.props(<span class="hljs-string">"foo"</span>)
+res0: String = <span class="hljs-string">"bar"</span>
+</code></pre> <p>Alternatively, run <code>java</code> explicitly, and pass it the options you'd like, e.g.</p> <pre><code class="hljs css language-bash">$ java -Dfoo=bar -Xmx2g -jar <span class="hljs-string">"<span class="hljs-variable">$(which coursier)</span>"</span> launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+Loading...
+Welcome to the Ammonite Repl 1.6.0
+(Scala 2.12.8 Java 1.8.0_121)
+@ sys.props(<span class="hljs-string">"foo"</span>)
+res0: String = <span class="hljs-string">"bar"</span>
+</code></pre> <p>From the Windows command, only the second way should work, like</p> <pre><code class="hljs">&gt; java -Dfoo=bar -jar /path/to/coursier launch com.lihaoyi:ammonite_2<span class="hljs-number">.12</span><span class="hljs-number">.8</span>:<span class="hljs-number">1.6</span><span class="hljs-number">.0</span> -M ammonite.Main
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="examples"></a><a href="cli-launch.html#examples" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Examples</h2> <h3><a class="anchor" aria-hidden="true" id="ammonite"></a><a href="cli-launch.html#ammonite" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Ammonite</h3> <pre><code class="hljs css language-bash">$ ./coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="frege"></a><a href="cli-launch.html#frege" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Frege</h3> <pre><code class="hljs css language-bash">$ ./coursier launch -r central -r https://oss.sonatype.org/content/groups/public \
+    org.frege-lang:frege-repl-core:1.3 -M frege.repl.FregeRepl
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="clojure"></a><a href="cli-launch.html#clojure" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>clojure</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.clojure:clojure:1.7.0 -M clojure.main
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="jruby"></a><a href="cli-launch.html#jruby" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>jruby</h3> <pre><code class="hljs css language-bash">$ wget https://raw.githubusercontent.com/jruby/jruby/master/bin/jirb &amp;&amp; \
+  ./coursier launch org.jruby:jruby:9.0.4.0 -M org.jruby.Main -- -- jirb
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="jython"></a><a href="cli-launch.html#jython" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>jython</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.python:jython-standalone:2.7.0 -M org.python.util.jython
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="groovy"></a><a href="cli-launch.html#groovy" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Groovy</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.codehaus.groovy:groovy-groovysh:2.4.5 -M org.codehaus.groovy.tools.shell.Main \
+    commons-cli:commons-cli:1.3.1
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="proguard"></a><a href="cli-launch.html#proguard" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>ProGuard</h3> <pre><code class="hljs css language-bash">$ ./coursier launch net.sf.proguard:proguard-base:5.2.1 -M proguard.ProGuard
+$ ./coursier launch net.sf.proguard:proguard-retrace:5.2.1 -M proguard.retrace.ReTrace
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="wiremock"></a><a href="cli-launch.html#wiremock" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Wiremock</h3> <pre><code class="hljs css language-bash">./coursier launch com.github.tomakehurst:wiremock:1.57 -- \
+--proxy-all=<span class="hljs-string">"http://search.twitter.com"</span> --record-mappings --verbose
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="sqlline"></a><a href="cli-launch.html#sqlline" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>SQLLine</h3> <pre><code class="hljs css language-bash">$ ./coursier launch \
+  sqlline:sqlline:1.3.0 \
+  org.postgresql:postgresql:42.1.4 \
+  -M sqlline.SqlLine -- \
+  -d org.postgresql.Driver \
+  -n USERNAME \
+  -p PASSWORD \
+  -u jdbc:postgresql://HOST:PORT/DATABASE
+</code></pre> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../docs/2.0.0-RC2-3/cli-fetch"><span class="arrow-prev">← </span><span>fetch</span></a>
+       <a class="docs-next button" href="../../../docs/2.0.0-RC2-3/cli-bootstrap"><span>bootstrap</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="cli-launch.html#arguments">Arguments</a></li>
+      <li><a href="cli-launch.html#main-class">Main class</a></li>
+      <li><a href="cli-launch.html#java-options">Java options</a></li>
+      <li><a href="cli-launch.html#examples">Examples</a>
+       <ul class="toc-headings">
+        <li><a href="cli-launch.html#ammonite">Ammonite</a></li>
+        <li><a href="cli-launch.html#frege">Frege</a></li>
+        <li><a href="cli-launch.html#clojure">clojure</a></li>
+        <li><a href="cli-launch.html#jruby">jruby</a></li>
+        <li><a href="cli-launch.html#jython">jython</a></li>
+        <li><a href="cli-launch.html#groovy">Groovy</a></li>
+        <li><a href="cli-launch.html#proguard">ProGuard</a></li>
+        <li><a href="cli-launch.html#wiremock">Wiremock</a></li>
+        <li><a href="cli-launch.html#sqlline">SQLLine</a></li>
+       </ul></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5>Docs</h5>
+      <a href="../../../docs/overview">Overview</a>
+      <a href="../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5>Community</h5>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2019 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>

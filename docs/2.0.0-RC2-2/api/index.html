@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>API · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<blockquote>
+<p>This page describes the new high level API of coursier, being added since</p>
+</blockquote>
+">
+  <meta name="docsearch:version" content="2.0.0-RC2-2">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="API · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<blockquote>
+<p>This page describes the new high level API of coursier, being added since</p>
+</blockquote>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../../versions"><h3>2.0.0-RC2-2</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../../docs/2.0.0-RC2-2/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>API</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cli-native-bootstrap">scala-native bootstrap</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC2-2/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/api.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">API</h1>
+       </header>
+       <article>
+        <div>
+         <span>
+          <blockquote> 
+           <p>This page describes the new high level API of coursier, being added since <code>1.1.0-M10</code>. It's still subject to source / binary compatibility breakages, even though its general outline shouldn't change much. See <a href="../../../../docs/2.0.0-RC2-2/api-low-level">low level API</a> for the former API, less subject to change.</p> 
+          </blockquote> <p>The high level API of coursier aims at being as simple to use as its <a href="../../../../docs/2.0.0-RC2-2/cli-overview">CLI</a>, with sensible defaults in particular, while retaining the purity of the low-level API.</p> <p>It exposes a few objects under the <code>coursier</code> namespace, most notably <code>coursier.Resolve</code> and <code>coursier.Fetch</code>, allowing to resolve dependencies and fetch their artifacts.</p> <h2><a class="anchor" aria-hidden="true" id="resolve"></a><a href="index.html#resolve" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Resolve</h2> <p><code>coursier.Resolve</code> allows to run resolutions, that is finding all the transitive dependencies of some intial dependencies (while reconciling their versions at the same time).</p> <p>This entirely relies on metadata, that is POM or <code>maven-metadata.xml</code> files for Maven repositories, and <code>ivy.xml</code> files for Ivy repositories.</p> <p>If you're fine with all the defaults (cache location, resolution parameters, …), you can just resolve some dependencies with</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> resolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .run()
+</code></pre> <p>This runs the resolution synchronously. To run resolutions in the background, the <code>future</code> and <code>io</code> methods can be called instead of <code>run</code>, to start resolution eagerly via <code>scala.concurrent.Future</code>, or lazily via an IO monad.</p> <p><code>resolution</code> is a <code>coursier.core.Resolution</code>, which represents the (final) state of the resolution. It has various methods allowing to process dependencies, most notably <code>minDependencies</code>, returning a set of dependencies (with redundant dependencies stripped).</p> <p>The object returned by <code>Resolve()</code> allows to optionally change a number of parameters, discussed below.</p> <h3><a class="anchor" aria-hidden="true" id="dependencies"></a><a href="index.html#dependencies" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Dependencies</h3> <p>Pass some extra dependencies with <code>addDependencies</code>. <code>addDependencies</code> accepts multiple dependencies, and can be called several times. If you prefer, you can also call <code>withDependencies</code>, that accepts a <code>Seq[Dependency]</code>, and wipes any previously passed dependency.</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> resolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(
+    <span class="hljs-string">dep"org.http4s:http4s-dsl_2.12:0.18.22"</span>,
+    <span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>
+  )
+  .run()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="repositories"></a><a href="index.html#repositories" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Repositories</h3> <p>The default repositories are the Ivy2 local repository (only on the JVM) and <a href="https://repo1.maven.org/maven2">Maven Central</a>. More details <a href="../../../../docs/2.0.0-RC2-2/other-repositories">here</a>. One can add some extra repositories with <code>addRepositories</code>, that accepts multiple arguments, and can be called several times. Optionally, one can call <code>withRepositories</code> to set all the repositories at once, wiping the default ones and any previously passed one.</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> resolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"sh.almond:scala-kernel-api_2.12.8:0.2.2"</span>)
+  .addRepositories(
+    <span class="hljs-type">Repositories</span>.sonatype(<span class="hljs-string">"releases"</span>),
+    <span class="hljs-type">Repositories</span>.jitpack
+  )
+  .run()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="cache"></a><a href="index.html#cache" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Cache</h3> <p>One can override the default cache, and adjust its parameters, with <code>withCache</code>,</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.cache._
+<span class="hljs-keyword">import</span> coursier.cache.loggers._
+
+<span class="hljs-keyword">import</span> scala.concurrent.duration._
+
+<span class="hljs-keyword">val</span> pool = java.util.concurrent.<span class="hljs-type">Executors</span>.newFixedThreadPool(<span class="hljs-number">3</span>)
+
+<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>()
+  .withLocation(<span class="hljs-string">"./path/to/custom-cache"</span>)
+  .withLogger(<span class="hljs-type">RefreshLogger</span>.create(<span class="hljs-type">System</span>.out))
+  .withPool(pool)
+  .withTtl(<span class="hljs-number">1.</span>hour)
+
+<span class="hljs-keyword">val</span> resolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .withCache(cache)
+  .run()
+
+pool.shutdown()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="resolution-parameters"></a><a href="index.html#resolution-parameters" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Resolution parameters</h3> <p>A number of resolution parameters can be adjusted by passing a custom <code>ResolutionParams</code> to <code>withResolutionParameters</code>,</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.params._
+<span class="hljs-keyword">import</span> coursier.params.rule._
+
+<span class="hljs-keyword">val</span> params = <span class="hljs-type">ResolutionParams</span>()
+  .withMaxIterations(<span class="hljs-number">50</span>)
+  .withScalaVersion(<span class="hljs-string">"2.12.8"</span>)
+  .addForceVersion(
+    <span class="hljs-string">mod"joda-time:joda-time"</span> -&gt; <span class="hljs-string">"2.10.1"</span>
+  )
+  .addRule(
+    <span class="hljs-type">SameVersion</span>(<span class="hljs-string">mod"com.fasterxml.jackson.*:jackson-*"</span>)
+  )
+
+<span class="hljs-keyword">val</span> resolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"org.apache.spark:spark-sql_2.12:2.4.0"</span>)
+  .withResolutionParams(params)
+  .run()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="future"></a><a href="index.html#future" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Future</h3> <p>If you prefer to eagerly run resolutions in the background via a <code>Future</code>, call <code>future</code> instead of <code>run</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> futureResolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .future()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="io"></a><a href="index.html#io" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>IO</h3> <p>If you prefer resolutions to be run lazily in the background via an IO monad, call <code>io</code> instead of <code>run</code> or <code>future</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .io
+</code></pre> <p>The default IO monad is the rather basic <code>coursier.util.Task</code>, that ships with coursier. This monad can be changed by changing the cache <em>upfront</em>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.cache._
+<span class="hljs-keyword">import</span> coursier.interop.cats._
+
+<span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">IO</span>
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
+
+<span class="hljs-keyword">implicit</span> <span class="hljs-keyword">val</span> cs = <span class="hljs-type">IO</span>.contextShift(<span class="hljs-type">ExecutionContext</span>.global)
+
+<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">IO</span>]()
+
+<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>(cache) <span class="hljs-comment">// note the cache passed here</span>
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .io
+</code></pre> <p>Note that this example requires the <code>coursier-cats-interop</code> module (<code>io.get-coursier::coursier-cats-interop:2.0.0-RC2-2</code>).</p> <h2><a class="anchor" aria-hidden="true" id="fetch"></a><a href="index.html#fetch" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Fetch</h2> <p><code>coursier.Fetch</code> resolves dependencies, then fetches their artifacts.</p> <p>Use it like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> files = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .run()
+
+<span class="hljs-comment">// files: Seq[java.io.File]</span>
+</code></pre> <p>One can</p> 
+          <ul> 
+           <li><a href="index.html#dependencies">add dependencies</a>,</li> 
+           <li><a href="index.html#repositories">adjust repositories</a>,</li> 
+           <li><a href="index.html#cache">adjust the cache</a>, or</li> 
+           <li><a href="index.html#resolution-parameters">change the resolution parameters</a>,</li> 
+          </ul> <p>with the same methods as <a href="index.html#resolve"><code>coursier.Resolve</code></a>.</p> <h3><a class="anchor" aria-hidden="true" id="classifiers"></a><a href="index.html#classifiers" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Classifiers</h3> <p>Call <code>addClassifiers</code> to adjust the classifiers you're interested in, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> files = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .addClassifiers(<span class="hljs-type">Classifier</span>.javadoc, <span class="hljs-type">Classifier</span>.sources)
+  .run()
+</code></pre> <p>To keep default artifacts while also fetching classifiers, call <code>withMainArtifacts</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> files = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .addClassifiers(<span class="hljs-type">Classifier</span>.javadoc, <span class="hljs-type">Classifier</span>.sources)
+  .withMainArtifacts()
+  .run()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="artifact-types"></a><a href="index.html#artifact-types" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Artifact types</h3> <p>If you know what you're doing and want to fetch all or some specific artifact types, call <code>allArtifactTypes</code> or <code>addArtifactType</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> files = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .allArtifactTypes()
+  .run()
+</code></pre> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> files = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .addArtifactTypes(<span class="hljs-type">Type</span>.pom, <span class="hljs-type">Type</span>.testJar)
+  .run()
+</code></pre> <p>If none of these methods are called, artifact types are automatically adjusted depending on <a href="index.html#classifiers">classifiers</a>.</p> <h3><a class="anchor" aria-hidden="true" id="future-1"></a><a href="index.html#future-1" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Future</h3> <p>Like for <a href="index.html#future"><code>Resolve</code></a>, fetching can be (eagerly) run in the background by calling <code>future</code> rather than <code>run</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> futureFiles = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .future()
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="io-1"></a><a href="index.html#io-1" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>IO</h3> <p>Like for <a href="index.html#io"><code>Resolve</code></a>, fetching can be (lazily) run in the background by calling <code>io</code> rather than <code>run</code>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-keyword">val</span> ioFiles = <span class="hljs-type">Fetch</span>()
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .io
+</code></pre> <p>Here too, the default IO monad is <code>coursier.util.Task</code> that ships with coursier.</p> <p>One can use another IO monad by adjusting the cache <em>upfront</em>, like</p> <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.cache._
+<span class="hljs-keyword">import</span> coursier.interop.cats._
+
+<span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">IO</span>
+<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
+
+<span class="hljs-keyword">implicit</span> <span class="hljs-keyword">val</span> cs = <span class="hljs-type">IO</span>.contextShift(<span class="hljs-type">ExecutionContext</span>.global)
+
+<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">IO</span>]()
+
+<span class="hljs-keyword">val</span> ioFiles = <span class="hljs-type">Fetch</span>(cache) <span class="hljs-comment">// note the cache passed here</span>
+  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
+  .io
+</code></pre> <p>Note that this example requires the <code>coursier-cats-interop</code> module (<code>io.get-coursier::coursier-cats-interop:2.0.0-RC2-2</code>).</p> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../../docs/2.0.0-RC2-2/cli-native-bootstrap"><span class="arrow-prev">← </span><span>scala-native bootstrap</span></a>
+       <a class="docs-next button" href="../../../../docs/2.0.0-RC2-2/api-low-level"><span>Low-level API</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="index.html#resolve">Resolve</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#dependencies">Dependencies</a></li>
+        <li><a href="index.html#repositories">Repositories</a></li>
+        <li><a href="index.html#cache">Cache</a></li>
+        <li><a href="index.html#resolution-parameters">Resolution parameters</a></li>
+        <li><a href="index.html#future">Future</a></li>
+        <li><a href="index.html#io">IO</a></li>
+       </ul></li>
+      <li><a href="index.html#fetch">Fetch</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#classifiers">Classifiers</a></li>
+        <li><a href="index.html#artifact-types">Artifact types</a></li>
+        <li><a href="index.html#future-1">Future</a></li>
+        <li><a href="index.html#io-1">IO</a></li>
+       </ul></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5>Docs</h5>
+      <a href="../../../../docs/overview">Overview</a>
+      <a href="../../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5>Community</h5>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2019 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>

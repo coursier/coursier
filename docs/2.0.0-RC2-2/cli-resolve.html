@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>resolve · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p>The <code>resolve</code> command resolves then prints the transitive dependencies of one</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC2-2">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="resolve · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p>The <code>resolve</code> command resolves then prints the transitive dependencies of one</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../versions"><h3>2.0.0-RC2-2</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../docs/2.0.0-RC2-2/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-overview">Overview</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cli-native-bootstrap">scala-native bootstrap</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC2-2/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-resolve.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">resolve</h1>
+       </header>
+       <article>
+        <div>
+         <span><p>The <code>resolve</code> command resolves then prints the transitive dependencies of one or more dependencies.</p> <p>Use like</p> <pre><code class="hljs css language-bash">$ coursier resolve org.http4s:http4s-dsl_2.12:0.18.21
+co.fs2:fs2-core_2.12:0.10.6:default
+co.fs2:fs2-io_2.12:0.10.6:default
+co.fs2:fs2-scodec_2.12:0.10.6:default
+org.http4s:http4s-core_2.12:0.18.21:default
+org.http4s:http4s-dsl_2.12:0.18.21:default
+org.http4s:http4s-websocket_2.12:0.2.1:default
+org.http4s:parboiled_2.12:1.0.0:default
+org.log4s:log4s_2.12:1.6.1:default
+org.scala-lang:scala-library:2.12.7:default
+org.scala-lang:scala-reflect:2.12.6:default
+org.scodec:scodec-bits_2.12:1.1.6:default
+org.slf4j:slf4j-api:1.7.25:default
+org.typelevel:cats-core_2.12:1.4.0:default
+org.typelevel:cats-effect_2.12:0.10.1:default
+org.typelevel:cats-kernel_2.12:1.4.0:default
+org.typelevel:cats-macros_2.12:1.4.0:default
+org.typelevel:machinist_2.12:0.6.5:default
+</code></pre> <p>The <code>resolve</code> command only relies on metadata, that is <code>*.pom</code> or <code>*.xml</code> files. It doesn't fetch or check the actual artifacts (<code>*.jar</code> files typically). If you're interested in the <code>.jar</code> files or other artifacts, see the <a href="../../../docs/2.0.0-RC2-2/cli-fetch"><code>fetch</code> command</a> instead.</p> <h2><a class="anchor" aria-hidden="true" id="tree"></a><a href="cli-resolve.html#tree" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Tree</h2> <p>The default output of the <code>resolve</code> command is a simple listing of dependencies, currently sorted by organization, then name. When passed the <code>--tree</code> or <code>-t</code> option, it outputs a tree instead, like</p> <pre><code class="hljs css language-bash">$ coursier resolve -t com.github.alexarchambault:<span class="hljs-keyword">case</span>-app_2.12:2.0.0-M5
+  Result:
+└─ com.github.alexarchambault:<span class="hljs-keyword">case</span>-app_2.12:2.0.0-M5
+   ├─ com.github.alexarchambault:<span class="hljs-keyword">case</span>-app-annotations_2.12:2.0.0-M5
+   │  └─ org.scala-lang:scala-library:2.12.7
+   ├─ com.github.alexarchambault:<span class="hljs-keyword">case</span>-app-util_2.12:2.0.0-M5
+   │  ├─ com.chuusai:shapeless_2.12:2.3.3
+   │  │  ├─ org.scala-lang:scala-library:2.12.4 -&gt; 2.12.7
+   │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
+   │  │     └─ org.scala-lang:scala-library:2.12.0 -&gt; 2.12.7
+   │  └─ org.scala-lang:scala-library:2.12.7
+   └─ org.scala-lang:scala-library:2.12.7
+</code></pre> <p>In this tree, each dependency has its own direct dependencies as children, which themselves have their own dependencies as children, this way recursively.</p> <h2><a class="anchor" aria-hidden="true" id="reverse-tree"></a><a href="cli-resolve.html#reverse-tree" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Reverse tree</h2> <p>Trees can also be printed the other way around, with dependees as children, via the <code>--reverse-tree</code> or <code>-T</code> options, like</p> <pre><code class="hljs css language-bash">$ coursier resolve -T com.chuusai:shapeless_2.12:2.3.3
+  Result:
+├─ com.chuusai:shapeless_2.12:2.3.3
+├─ org.scala-lang:scala-library:2.12.4
+│  ├─ com.chuusai:shapeless_2.12:2.3.3
+│  └─ org.typelevel:macro-compat_2.12:1.1.1 org.scala-lang:scala-library:2.12.0 -&gt; 2.12.4
+│     └─ com.chuusai:shapeless_2.12:2.3.3
+└─ org.typelevel:macro-compat_2.12:1.1.1
+   └─ com.chuusai:shapeless_2.12:2.3.3
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="what-depends-on"></a><a href="cli-resolve.html#what-depends-on" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>What depends on</h2> <p>The printed trees can quickly grow in size (try <code>coursier resolve -T org.apache.spark:spark-sql_2.12:2.4.0</code>). If you're interested in knowing what brings a particular dependency, use the <code>--what-depends-on</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier resolve org.apache.spark:spark-sql_2.12:2.4.0 \
+    --what-depends-on org.htrace:htrace-core
+  Result:
+└─ org.htrace:htrace-core:3.0.4
+   ├─ org.apache.hadoop:hadoop-common:2.6.5
+   │  └─ org.apache.hadoop:hadoop-client:2.6.5
+   │     └─ org.apache.spark:spark-core_2.12:2.4.0
+   │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+   │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
+   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
+      └─ org.apache.hadoop:hadoop-client:2.6.5
+         └─ org.apache.spark:spark-core_2.12:2.4.0
+            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+            └─ org.apache.spark:spark-sql_2.12:2.4.0
+</code></pre> <p><code>--what-depends-on</code> can be specified multiple times, like</p> <pre><code class="hljs css language-bash">$ coursier resolve org.apache.spark:spark-sql_2.12:2.4.0 \
+    --what-depends-on org.htrace:htrace-core \
+    --what-depends-on org.json4s:json4s-jackson_2.12
+  Result:
+├─ org.htrace:htrace-core:3.0.4
+│  ├─ org.apache.hadoop:hadoop-common:2.6.5
+│  │  └─ org.apache.hadoop:hadoop-client:2.6.5
+│  │     └─ org.apache.spark:spark-core_2.12:2.4.0
+│  │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+│  │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+│  │        └─ org.apache.spark:spark-sql_2.12:2.4.0
+│  └─ org.apache.hadoop:hadoop-hdfs:2.6.5
+│     └─ org.apache.hadoop:hadoop-client:2.6.5
+│        └─ org.apache.spark:spark-core_2.12:2.4.0
+│           ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+│           │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+│           └─ org.apache.spark:spark-sql_2.12:2.4.0
+└─ org.json4s:json4s-jackson_2.12:3.5.3
+   └─ org.apache.spark:spark-core_2.12:2.4.0
+      ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+      │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+      └─ org.apache.spark:spark-sql_2.12:2.4.0
+</code></pre> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../docs/2.0.0-RC2-2/cli-overview"><span class="arrow-prev">← </span><span>Overview</span></a>
+       <a class="docs-next button" href="../../../docs/2.0.0-RC2-2/cli-fetch"><span>fetch</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="cli-resolve.html#tree">Tree</a></li>
+      <li><a href="cli-resolve.html#reverse-tree">Reverse tree</a></li>
+      <li><a href="cli-resolve.html#what-depends-on">What depends on</a></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5>Docs</h5>
+      <a href="../../../docs/overview">Overview</a>
+      <a href="../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5>Community</h5>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2019 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>

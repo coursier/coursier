@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Overview · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<h1><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;cli&quot;></a><a href=&quot;#cli&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>CLI</h1>
+">
+  <meta name="docsearch:version" content="2.0.0-RC1">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="Overview · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<h1><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;cli&quot;></a><a href=&quot;#cli&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>CLI</h1>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../versions"><h3>2.0.0-RC1</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../docs/2.0.0-RC1/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cli-native-bootstrap">scala-native bootstrap</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC1/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-overview.md" target="_blank" rel="noreferrer noopener">Edit</a>
+       </header>
+       <article>
+        <div>
+         <span><h1><a class="anchor" aria-hidden="true" id="cli"></a><a href="cli-overview.html#cli" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>CLI</h1> <p>The CLI of coursier allows to</p> 
+          <ul> 
+           <li><a href="../../../docs/2.0.0-RC1/cli-resolve">list the transitive dependencies</a> and</li> 
+           <li><a href="../../../docs/2.0.0-RC1/cli-fetch">fetch the artifacts</a> of one or more dependencies,</li> 
+           <li><a href="../../../docs/2.0.0-RC1/cli-launch">run applications from dependencies</a>, and</li> 
+           <li><a href="../../../docs/2.0.0-RC1/cli-bootstrap">generate convenient launchers to run them</a> among others.</li> 
+          </ul> <p>See below for its <a href="cli-overview.html#installation">installation</a>, <a href="cli-overview.html#usage">its basic usage</a>, and click on the links above or on the left for more details about each of its commands.</p> <h2><a class="anchor" aria-hidden="true" id="installation"></a><a href="cli-overview.html#installation" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Installation</h2> <h3><a class="anchor" aria-hidden="true" id="curl"></a><a href="cli-overview.html#curl" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>curl</h3> <p>Download and run its launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo coursier https://git.io/coursier-cli &amp;&amp;
+    chmod +x coursier &amp;&amp;
+    ./coursier --<span class="hljs-built_in">help</span>
+</code></pre> <p>The launcher itself weights only 17 kB and can be easily embedded as is in other projects. It downloads the artifacts required to launch coursier on the first run.</p> <p>The short URL <a href="https://git.io/coursier-cli">https://git.io/coursier-cli</a> redirects to <a href="https://github.com/coursier/coursier/raw/gh-pages/coursier">https://github.com/coursier/coursier/raw/gh-pages/coursier</a>. From version <code>1.0.0-RC1</code> to <code>1.1.0-M9</code>, <code>gh-pages</code> in the latter URL can be replaced by the tag of a specific version, to download the launcher of that exact version, like <a href="https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier">https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier</a>. For versions <code>1.1.0-M9</code> and later, the launcher is available as an asset on the GitHub release page, e.g. <a href="https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier">https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier</a>.</p> <h3><a class="anchor" aria-hidden="true" id="brew"></a><a href="cli-overview.html#brew" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>brew</h3> <p>Alternatively on OS X, install it via homebrew, that puts the <code>coursier</code> launcher directly in your PATH,</p> <pre><code class="hljs css language-bash">$ brew tap coursier/formulas
+$ brew install coursier/formulas/coursier
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="windows"></a><a href="cli-overview.html#windows" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Windows</h3> <p>Install and run coursier from the current directory at the Windows prompt, with</p> <pre><code class="hljs css language-bat">&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
+&gt; bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "<span class="hljs-variable">%cd%</span>\coursier.bat"
+</code></pre> <p>You can then run coursier from the same directory, like</p> <pre><code class="hljs css language-bat">&gt; coursier resolve io.circe:circe-core_2.<span class="hljs-number">12</span>:<span class="hljs-number">0</span>.<span class="hljs-number">10</span>.<span class="hljs-number">0</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="arch-linux"></a><a href="cli-overview.html#arch-linux" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Arch Linux</h3> <p>Install it from <a href="https://aur.archlinux.org/packages/coursier/">AUR</a>,</p> <pre><code class="hljs css language-bash">$ pacaur -S coursier
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="freebsd"></a><a href="cli-overview.html#freebsd" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>FreeBSD</h3> <p>Install it via <code>pkg</code> from the <a href="https://www.freshports.org/devel/coursier/">Ports Collection</a>,</p> <pre><code class="hljs css language-bash">$ pkg install coursier
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="zsh-completions"></a><a href="cli-overview.html#zsh-completions" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>zsh completions</h3> <p>If you use ZSH, simple tab-completions are available by copying the <a href="https://raw.githubusercontent.com/coursier/coursier/master/scripts/_coursier"><code>scripts/_coursier</code></a> file into your completions directory, if you have one. If you do not, then you can install the completions with,</p> <pre><code class="hljs css language-bash">mkdir -p ~/.zsh/completion
+cp scripts/_coursier ~/.zsh/completion/
+<span class="hljs-built_in">echo</span> <span class="hljs-string">'fpath=(~/.zsh/completion $fpath)'</span> &gt;&gt; ~/.zshrc
+<span class="hljs-built_in">echo</span> <span class="hljs-string">'autoload -Uz compinit ; compinit'</span> &gt;&gt; ~/.zshrc
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="usage"></a><a href="cli-overview.html#usage" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Usage</h2> <pre><code class="hljs css language-bash">$ ./coursier --<span class="hljs-built_in">help</span>
+</code></pre> <p>lists the available coursier commands. The most notable ones are <code>launch</code>, and <code>fetch</code>. Type</p> <pre><code class="hljs css language-bash">$ ./coursier <span class="hljs-built_in">command</span> --<span class="hljs-built_in">help</span>
+</code></pre> <p>to get a description of the various options the command <code>command</code> (replace with one of the above command) accepts.</p> <p>Both commands below can be given repositories with the <code>-r</code> or <code>--repository</code> option, like</p> <pre><code class="hljs css language-bash">-r central
+-r sonatype:snapshots
+-r https://oss.sonatype.org/content/repositories/snapshots
+-r <span class="hljs-string">"ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"</span>
+</code></pre> <p><code>central</code> and <code>ivy2local</code> correspond to Maven Central and <code>~/.ivy2/local</code>. These are used by default unless the <code>--no-default</code> option is specified.</p> <p>Repositories starting with <code>ivy:</code> are assumed to be Ivy repositories, specified with an Ivy pattern, like <code>ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]</code>. Else, a Maven repository is assumed.</p> <p>To set credentials for a repository, pass a user and password in its URL, like</p> <pre><code class="hljs css language-bash">-r https://user:pass@nexus.corp.com/content/repositories/releases
+</code></pre> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../docs/2.0.0-RC1/sbt-pgp-coursier"><span class="arrow-prev">← </span><span>sbt-pgp-coursier</span></a>
+       <a class="docs-next button" href="../../../docs/2.0.0-RC1/cli-resolve"><span>resolve</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="cli-overview.html#installation">Installation</a>
+       <ul class="toc-headings">
+        <li><a href="cli-overview.html#curl">curl</a></li>
+        <li><a href="cli-overview.html#brew">brew</a></li>
+        <li><a href="cli-overview.html#windows">Windows</a></li>
+        <li><a href="cli-overview.html#arch-linux">Arch Linux</a></li>
+        <li><a href="cli-overview.html#freebsd">FreeBSD</a></li>
+        <li><a href="cli-overview.html#zsh-completions">zsh completions</a></li>
+       </ul></li>
+      <li><a href="cli-overview.html#usage">Usage</a></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5>Docs</h5>
+      <a href="../../../docs/overview">Overview</a>
+      <a href="../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5>Community</h5>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2019 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>

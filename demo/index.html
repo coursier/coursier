@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dependency resolution with Coursier</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- TODO Get from NPM packages -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/bootstrap-treeview.css">
+
+  <style>
+      .icon-action {
+        cursor: pointer;
+      }
+
+      #resolveButton {
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+
+      #results {
+        display: none;
+      }
+
+      .customButton {
+        margin: 5px;
+      }
+
+      .popover {
+        max-width: 400px;
+      }
+  </style>
+
+</head>
+<body style="margin: 0px">
+
+<div class="container theme-showcase" role="main">
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse" id="mainNavBar">
+        <ul class="nav navbar-nav">
+            <li><a href="#demo" data-toggle="tab">Demo</a></li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="../">Home</a></li>
+            <li><a href="https://github.com/coursier/coursier">Github</a></li>
+        </ul>
+    </div>
+
+  </div>
+</nav>
+
+<div class="tab-content" id="mainTabContent">
+
+    <div class="tab-pane fade in active" id="demo">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+	    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Warning</strong> The repositories we query have different domains
+	    than this page.
+	    The requests to them are proxied through a public CORS proxy. Usage of this
+	    proxy is throttled, which can make medium to large resolutions
+	    timeout and fail.
+	</div>
+        <div id="demoContent"></div>
+    </div>
+
+    <div class="tab-pane fade" id="usageCli">
+        <p>CLI</p>
+    </div>
+
+    <div class="tab-pane fade" id="usageApi">
+        <p>API</p>
+    </div>
+
+</div>
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+<script src="bundle.js"></script>
+
+<!-- Paths changed by push-gh-pages.sh before pushing to gh-pages -->
+<script src="web-fastopt-bundle.js"></script>
+
+<script>
+// From http://www.bootply.com/VQqzOawoYc
+// Javascript to enable link to tab
+var hash = document.location.hash;
+if (hash) {
+console.log('match');
+    // $('.nav-tabs a[href='+hash+']').tab('show');
+    $('a[href='+hash+']').trigger('click');
+}
+// Change hash for page-reload
+// Working?
+$('.nav-tabs a').on('shown.bs.tab', function (e) {
+    window.location.hash = e.target.hash;
+});
+</script>
+
+</body>
+</html>

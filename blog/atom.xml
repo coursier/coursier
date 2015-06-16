@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://get-coursier.io/blog</id>
+    <title>Coursier Blog</title>
+    <updated>2019-07-12T06:00:00Z</updated>
+    <generator>Feed for Node.js</generator>
+    <link rel="alternate" href="https://get-coursier.io/blog"/>
+    <subtitle>The best place to stay up-to-date with the latest Coursier news and events.</subtitle>
+    <logo>https://get-coursier.io/undefined</logo>
+    <rights>Copyright © 2019 coursier contributors</rights>
+    <entry>
+        <title type="html"><![CDATA[2.0.0-RC2]]></title>
+        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC2.html</id>
+        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC2.html">
+        </link>
+        <updated>2019-07-12T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>coursier <code>2.0.0-RC2</code> was released some time ago. This release brings much less changes than <code>2.0.0-RC1</code>. It mostly add scala <code>2.13.0</code> support, and a few fixes in the experimental <code>install</code> command.</p> ]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[2.0.0-RC1]]></title>
+        <id>https://get-coursier.io/blog/2019/07/12/2.0.0-RC1.html</id>
+        <link href="https://get-coursier.io/blog/2019/07/12/2.0.0-RC1.html">
+        </link>
+        <updated>2019-07-12T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>2.0.0-RC1</code>.</p> <h2><a class="anchor" aria-hidden="true" id="strict-conflict-manager"></a><a href="#strict-conflict-manager" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"/></svg></a>Strict conflict manager</h2> <p>The CLI now accepts options to enable and configure the new strict conflict manager.</p> <ul> <li><code>--strict</code> enables the strict conflict manager,</li> <li><code>--strict-exclude org:name...</code></li></ul>]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[1.1.0-M14]]></title>
+        <id>https://get-coursier.io/blog/2019/07/05/1.1.0-M14.html</id>
+        <link href="https://get-coursier.io/blog/2019/07/05/1.1.0-M14.html">
+        </link>
+        <updated>2019-07-05T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>This post describes the most notables changes of coursier <code>1.1.0-M14</code>.</p> <h2><a class="anchor" aria-hidden="true" id="mirrors"></a><a href="#mirrors" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"/></svg></a>Mirrors</h2> <p>coursier got support for mirrors, kind of like Maven has. Mirrors allow to substitute some repositories for others. This can be useful with internal Maven repositories mirro...</p>]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[1.1.0-M13]]></title>
+        <id>https://get-coursier.io/blog/2019/03/05/1.1.0-M13.html</id>
+        <link href="https://get-coursier.io/blog/2019/03/05/1.1.0-M13.html">
+        </link>
+        <updated>2019-03-05T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M13</code> was just released.</p> <p>The most notable changes of this milestone happened in the new high level API, that is nearing completion. A notion of &quot;rules&quot; or constraints is also being added to coursier, and should be described in ...</p>]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[1.1.0-M12]]></title>
+        <id>https://get-coursier.io/blog/2019/03/04/1.1.0-M12.html</id>
+        <link href="https://get-coursier.io/blog/2019/03/04/1.1.0-M12.html">
+        </link>
+        <updated>2019-03-04T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>Changes in <code>1.1.0-M12</code> are discussed along those of <a href="/blog/2019/03/05/1.1.0-M13"><code>1.1.0-M13</code></a>.</p> ]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[1.1.0-M11]]></title>
+        <id>https://get-coursier.io/blog/2019/02/05/1.1.0-M11.html</id>
+        <link href="https://get-coursier.io/blog/2019/02/05/1.1.0-M11.html">
+        </link>
+        <updated>2019-02-05T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M11</code> was just released. This release contains <a href="#tweaking-enhancements">numerous enhancements</a> both in the core of coursier and its CLI, along with <a href="#fixes">a few fixes</a> for the CLI.</p> <p>It occurs in the midst of the addition of the higher level API for coursier, that should b...</p>]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[1.1.0-M10]]></title>
+        <id>https://get-coursier.io/blog/2019/01/14/1.1.0-M10.html</id>
+        <link href="https://get-coursier.io/blog/2019/01/14/1.1.0-M10.html">
+        </link>
+        <updated>2019-01-14T06:00:00Z</updated>
+        <summary type="html"><![CDATA[<p>coursier <code>1.1.0-M10</code> was just released. This is the first release of coursier while it's <a href="https://get-coursier.io">new website</a> is up and running, and <a href="https://github.com/olafurpg/sbt-ci-release">sbt-ci-release</a> handles publishing, from Travis CI.</p> <p>Note that this is a milestone release, not necessarily aiming at retaining bi...</p>]]></summary>
+        <author>
+            <name>Alexandre Archambault</name>
+            <uri>https://github.com/alexarchambault</uri>
+        </author>
+    </entry>
+</feed>
