@@ -111,6 +111,16 @@ object CoursierBuild extends Build {
       }
     )
 
+  lazy val jcabiCli = Project(id = "jcabi-aether", base = file("jcabi-aether"))
+    .settings(commonSettings ++ xerial.sbt.Pack.packAutoSettings: _*)
+    .settings(
+      libraryDependencies ++= Seq(
+        "com.jcabi" % "jcabi-aether" % "0.10.1",
+        "org.apache.maven" % "maven-core" % "3.0.5",
+        "ch.qos.logback" % "logback-classic" % "1.1.3"
+      )
+    )
+
   lazy val web = Project(id = "web", base = file("web"))
     .dependsOn(coreJs)
     .settings(commonSettings: _*)

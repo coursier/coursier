@@ -1,26 +1,12 @@
-# Coursier
+Sub-project `jcabi-aether` is a CLI tool that fetches and prints the dependencies of the
+modules given on the command-line, using [Aether](https://github.com/eclipse/aether-core) and [jcabi](https://github.com/jcabi/jcabi-aether) to do the resolution.
 
-*Pure Scala Artifact Fetching*
+Build it with
+```scala
+sbt jcabi-aether/pack
+```
 
-A pure Scala substitute for [Aether](http://www.eclipse.org/aether/)
-
-[![Build Status](https://travis-ci.org/alexarchambault/coursier.svg?branch=master)](https://travis-ci.org/alexarchambault/coursier)
-
-See [Scala JS demo](https://alexarchambault.github.io/coursier/index.html#demo) and [usage](https://github.com/alexarchambault/coursier/blob/master/USAGE.md).
-
-Both a JVM library and a Scala JS one.
-
-Work in progress:
-* full list of dependencies / version conflict resolution working, mildly to well tested,
-* downloading/caching of JARs in its early stages.
-
-Implements fancy Maven features like
-* [POM inheritance](http://books.sonatype.com/mvnref-book/reference/pom-relationships-sect-project-relationships.html#pom-relationships-sect-project-inheritance),
-* [dependency management](http://books.sonatype.com/mvnex-book/reference/optimizing-sect-dependencies.html),
-* [import scope](https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Importing_Dependencies),
-* [properties](http://books.sonatype.com/mvnref-book/reference/resource-filtering-sect-properties.html).
-
-Restricted to Maven resolution and repositories for now. Support for Ivy seems definitely at reach, just not done yet.
-
-
-Released under the Apache license, v2.
+Run like
+```scala
+jcabi-aether/target/pack/bin/jcabi-aether "org.apache.spark:spark-core_2.10:1.4.0"
+```
