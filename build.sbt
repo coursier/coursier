@@ -208,7 +208,6 @@ lazy val cache = project
     name := "coursier-cache-java-6",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-concurrent" % "7.1.2",
-      "com.lihaoyi" %% "ammonite-terminal" % "0.5.0",
       "com.google.guava" % "guava" % "19.0"
     ),
     previousArtifacts := Set.empty, //Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
