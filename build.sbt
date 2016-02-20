@@ -140,7 +140,7 @@ lazy val core = crossProject
         Seq(f)
       }.taskValue
     },
-    previousArtifacts := Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
+    previousArtifacts := Set.empty, //Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
     binaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
       import com.typesafe.tools.mima.core.ProblemFilters._
@@ -211,7 +211,7 @@ lazy val cache = project
       "com.lihaoyi" %% "ammonite-terminal" % "0.5.0",
       "com.google.guava" % "guava" % "19.0"
     ),
-    previousArtifacts := Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
+    previousArtifacts := Set.empty, //Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
     binaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
       import com.typesafe.tools.mima.core.ProblemFilters._
