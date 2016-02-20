@@ -118,7 +118,7 @@ lazy val core = crossProject
   .settings(commonSettings: _*)
   .settings(mimaDefaultSettings: _*)
   .settings(
-    name := "coursier",
+    name := "coursier-java-6",
     resourceGenerators.in(Compile) += {
       (target, version).map { (dir, ver) =>
         import sys.process._
@@ -184,7 +184,7 @@ lazy val tests = crossProject
   .settings(commonSettings: _*)
   .settings(noPublishSettings: _*)
   .settings(
-    name := "coursier-tests",
+    name := "coursier-tests-java-6",
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %% "scala-async" % "0.9.1" % "provided",
       "com.lihaoyi" %%% "utest" % "0.3.0" % "test"
@@ -205,7 +205,7 @@ lazy val cache = project
   .settings(commonSettings)
   .settings(mimaDefaultSettings)
   .settings(
-    name := "coursier-cache",
+    name := "coursier-cache-java-6",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-concurrent" % "7.1.2",
       "com.lihaoyi" %% "ammonite-terminal" % "0.5.0"
@@ -229,7 +229,7 @@ lazy val bootstrap = project
   .settings(baseCommonSettings)
   .settings(noPublishSettings)
   .settings(
-    name := "coursier-bootstrap",
+    name := "coursier-bootstrap-java-6",
     artifactName := {
       val artifactName0 = artifactName.value
       (sv, m, artifact) =>
@@ -249,7 +249,7 @@ lazy val cli = project
   .settings(packAutoSettings)
   .settings(proguardSettings)
   .settings(
-    name := "coursier-cli",
+    name := "coursier-cli-java-6",
     libraryDependencies ++= {
       if (scalaVersion.value startsWith "2.10.")
         Seq()
@@ -316,7 +316,7 @@ lazy val plugin = project
   .settings(baseCommonSettings)
   .settings(noPublish211Settings)
   .settings(
-    name := "coursier-sbt-plugin",
+    name := "coursier-sbt-plugin-java-6",
     sbtPlugin := {
       scalaVersion.value.startsWith("2.10.")
     },
