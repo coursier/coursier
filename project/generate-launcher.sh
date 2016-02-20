@@ -10,7 +10,7 @@ if [ ! -f "$SBTPACK_LAUNCHER" ]; then
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
-  com.github.alexarchambault:coursier-cli_2.11:$VERSION \
+  com.github.alexarchambault:coursier-cli-java-6_2.11:$VERSION \
   --no-default \
   -r central \
   -r sonatype:releases \
