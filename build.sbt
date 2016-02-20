@@ -128,7 +128,7 @@ lazy val core = crossProject
 
         val p = new java.util.Properties()
 
-        p.setProperty("version", ver)
+        p.setProperty("version", ver + " (Java 6 branch)")
         p.setProperty("commit-hash", Seq("git", "rev-parse", "HEAD").!!.trim)
 
         val w = new FileOutputStream(f)
