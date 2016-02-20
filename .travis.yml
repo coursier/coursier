@@ -15,10 +15,10 @@ matrix:
   include:
     - env: TRAVIS_SCALA_VERSION=2.11.7 PUBLISH=1
       os: linux
-      jdk: oraclejdk8
+      jdk: openjdk6
     - env: TRAVIS_SCALA_VERSION=2.10.6 PUBLISH=1
       os: linux
-      jdk: oraclejdk8
+      jdk: openjdk6
 env:
   global:
   - COURSIER_NO_TERM=1
