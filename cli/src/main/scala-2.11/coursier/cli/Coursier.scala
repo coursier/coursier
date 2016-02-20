@@ -3,10 +3,10 @@ package cli
 
 import java.io.{ FileInputStream, ByteArrayOutputStream, File, IOException }
 import java.net.URLClassLoader
-import java.nio.file.{ Files => NIOFiles }
-import java.nio.file.attribute.PosixFilePermission
 import java.util.Properties
 import java.util.zip.{ ZipEntry, ZipOutputStream, ZipInputStream }
+
+import com.google.common.io.Files
 
 import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
 import coursier.util.Parse
@@ -549,7 +549,7 @@ case class Bootstrap(
     "exec java -jar \"$0\" \"$@\""
   ).mkString("", "\n", "\n")
 
-  try NIOFiles.write(output0.toPath, shellPreamble.getBytes("UTF-8") ++ buffer.toByteArray)
+  try Files.write(shellPreamble.getBytes("UTF-8") ++ buffer.toByteArray, output0)
   catch { case e: IOException =>
     Console.err.println(s"Error while writing $output0: ${e.getMessage}")
     sys.exit(1)
@@ -557,21 +557,10 @@ case class Bootstrap(
 
 
   try {
-    val perms = NIOFiles.getPosixFilePermissions(output0.toPath).asScala.toSet
-
-    var newPerms = perms
-    if (perms(PosixFilePermission.OWNER_READ))
-      newPerms += PosixFilePermission.OWNER_EXECUTE
-    if (perms(PosixFilePermission.GROUP_READ))
-      newPerms += PosixFilePermission.GROUP_EXECUTE
-    if (perms(PosixFilePermission.OTHERS_READ))
-      newPerms += PosixFilePermission.OTHERS_EXECUTE
-
-    if (newPerms != perms)
-      NIOFiles.setPosixFilePermissions(
-        output0.toPath,
-        newPerms.asJava
-      )
+    import sys.process._
+    val ret = Seq("chmod", "+x", output0.getAbsolutePath).!
+    if (ret != 0)
+      Console.err.println(s"Warning: non-zero return code $ret when trying to make $output0 executable with chmod")
   } catch {
     case e: UnsupportedOperationException =>
       // Ignored

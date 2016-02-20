@@ -2,9 +2,10 @@ package coursier
 
 import java.net.{HttpURLConnection, URL}
 import java.nio.channels.{ OverlappingFileLockException, FileLock }
-import java.nio.file.{ StandardCopyOption, Files => NioFiles }
 import java.security.MessageDigest
 import java.util.concurrent.{ConcurrentHashMap, Executors, ExecutorService}
+
+import com.google.common.io.Files
 
 import coursier.ivy.IvyRepository
 
@@ -265,7 +266,7 @@ object Cache {
                 case _ => (false, conn0)
               }
 
-              for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
+              for (len0 <- Option(conn.getContentLength) if len0 >= 0L) {
                 val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
                 logger.foreach(_.downloadLength(url, len))
               }
@@ -281,7 +282,10 @@ object Cache {
                 } finally in.close()
 
               file.getParentFile.mkdirs()
-              NioFiles.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
+
+              // WARNING No guarantee this is atomic - done with NIO on the main branch
+              if (!tmp.renameTo(file))
+                throw new IOException(s"Cannot move $tmp to $file")
 
               for (lastModified <- Option(conn.getLastModified) if lastModified > 0L)
                 file.setLastModified(lastModified)
@@ -357,7 +361,7 @@ object Cache {
       artifact0.checksumUrls.get(sumType) match {
         case Some(sumFile) =>
           Task {
-            val sum = new String(NioFiles.readAllBytes(new File(sumFile).toPath), "UTF-8")
+            val sum = new String(Files.asByteSource(new File(sumFile)).read(), "UTF-8")
               .linesIterator
               .toStream
               .headOption
@@ -471,7 +475,7 @@ object Cache {
         pool = pool
       ).leftMap(_.message).map { f =>
         // FIXME Catch error here?
-        new String(NioFiles.readAllBytes(f.toPath), "UTF-8")
+        new String(Files.asByteSource(f).read(), "UTF-8")
       }
   }
 

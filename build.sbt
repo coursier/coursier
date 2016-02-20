@@ -95,10 +95,10 @@ lazy val baseCommonSettings = Seq(
     "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
     Resolver.sonatypeRepo("releases")
   ),
-  scalacOptions += "-target:jvm-1.7",
+  scalacOptions += "-target:jvm-1.6",
   javacOptions ++= Seq(
-    "-source", "1.7",
-    "-target", "1.7"
+    "-source", "1.6",
+    "-target", "1.6"
   ),
   javacOptions in Keys.doc := Seq()
 ) ++ releaseSettings
@@ -208,7 +208,8 @@ lazy val cache = project
     name := "coursier-cache-java-6",
     libraryDependencies ++= Seq(
       "org.scalaz" %% "scalaz-concurrent" % "7.1.2",
-      "com.lihaoyi" %% "ammonite-terminal" % "0.5.0"
+      "com.lihaoyi" %% "ammonite-terminal" % "0.5.0",
+      "com.google.guava" % "guava" % "19.0"
     ),
     previousArtifacts := Set(organization.value %% moduleName.value % binaryCompatibilityVersion),
     binaryIssueFilters ++= {
@@ -320,6 +321,7 @@ lazy val plugin = project
     sbtPlugin := {
       scalaVersion.value.startsWith("2.10.")
     },
+    libraryDependencies += "com.google.guava" % "guava" % "19.0",
     // added so that 2.10 artifacts of the other modules can be found by
     // the too-naive-for-now inter-project resolver of the coursier SBT plugin
     resolvers += Resolver.sonatypeRepo("snapshots")

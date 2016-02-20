@@ -4,8 +4,6 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -204,7 +202,10 @@ public class Bootstrap {
                             File tmpDest = new File(dest.getParentFile(), dest.getName() + "-" + random.nextInt());
                             tmpDest.deleteOnExit();
                             writeBytesToFile(tmpDest, b);
-                            Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                            // WARNING Possibly not atomic - done with nio on the master branch
+                            if (!tmpDest.renameTo(dest)) {
+                                System.err.println("Error: cannot move " + tmpDest + " to "+ dest + ", continuing anyway.");
+                            }
                             dest.setLastModified(lastModified);
                         } catch (Exception e) {
                             System.err.println("Error while downloading " + url + ": " + e.getMessage() + ", ignoring it");

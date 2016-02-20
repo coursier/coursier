@@ -1,8 +1,9 @@
 package coursier
 
 import java.io.{ OutputStreamWriter, File }
-import java.nio.file.Files
 import java.util.concurrent.Executors
+
+import com.google.common.io.Files
 
 import coursier.core.Publication
 import coursier.ivy.IvyRepository
@@ -197,11 +198,11 @@ object Tasks {
         b += '\n'
         b ++= printer.format(MakeIvyXml(currentProject))
         cacheIvyFile.getParentFile.mkdirs()
-        Files.write(cacheIvyFile.toPath, b.result().getBytes("UTF-8"))
+        Files.write(b.result().getBytes("UTF-8"), cacheIvyFile)
 
         // Just writing an empty file here... Are these only used?
         cacheIvyPropertiesFile.getParentFile.mkdirs()
-        Files.write(cacheIvyPropertiesFile.toPath, "".getBytes("UTF-8"))
+        Files.write("".getBytes("UTF-8"), cacheIvyPropertiesFile)
       }
 
       def report = {
