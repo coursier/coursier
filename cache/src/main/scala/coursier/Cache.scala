@@ -41,7 +41,7 @@ object Cache {
     }
   }
 
-  private def withLocal(artifact: Artifact, cache: Seq[(String, File)]): Artifact = {
+  private def localArtifact(artifact: Artifact, cache: Seq[(String, File)]): Artifact = {
     def local(url: String) =
       if (url.startsWith("file:///"))
         url.stripPrefix("file://")
@@ -61,19 +61,16 @@ object Cache {
         }
       }
 
-    if (artifact.extra.contains("local"))
-      artifact
-    else
-      artifact.copy(extra = artifact.extra + ("local" ->
-        artifact.copy(
-          url = local(artifact.url),
-          checksumUrls = artifact.checksumUrls
-            .mapValues(local)
-            .toVector
-            .toMap,
-          extra = Map.empty
-        )
-      ))
+    artifact.extra.getOrElse("Local",
+      artifact.copy(
+        url = local(artifact.url),
+        checksumUrls = artifact.checksumUrls
+          .mapValues(local)
+          .toVector
+          .toMap,
+        extra = Map.empty
+      )
+    )
   }
 
   private def readFullyTo(
@@ -187,18 +184,14 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = withLocal(artifact, cache)
-      .extra
-      .getOrElse("local", artifact)
+    val artifact0 = localArtifact(artifact, cache)
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
-    val referenceFileOpt = {
-      val referenceOpt = artifact.extra.get("metadata").map(withLocal(_, cache))
-      val referenceOpt0 = referenceOpt.map(a => a.extra.getOrElse("local", a))
-
-      referenceOpt0.map(a => new File(a.url))
-    }
+    val referenceFileOpt = artifact
+      .extra
+      .get("metadata")
+      .map(a => new File(localArtifact(a, cache).url))
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
@@ -451,9 +444,7 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = withLocal(artifact, cache)
-      .extra
-      .getOrElse("local", artifact)
+    val artifact0 = localArtifact(artifact, cache)
 
     EitherT {
       artifact0.checksumUrls.get(sumType) match {
