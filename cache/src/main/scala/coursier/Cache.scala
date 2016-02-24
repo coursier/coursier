@@ -41,37 +41,24 @@ object Cache {
     }
   }
 
-  private def localArtifact(artifact: Artifact, cache: Seq[(String, File)]): Artifact = {
-    def local(url: String) =
-      if (url.startsWith("file:///"))
-        url.stripPrefix("file://")
-      else if (url.startsWith("file:/"))
-        url.stripPrefix("file:")
-      else {
-        val localPathOpt = cache.collectFirst {
-          case (base, cacheDir) if url.startsWith(base) =>
-            cacheDir.toString + "/" + escape(url.stripPrefix(base))
-        }
-
-        localPathOpt.getOrElse {
-          // FIXME Means we were handed an artifact from repositories other than the known ones
-          println(cache.mkString("\n"))
-          println(url)
-          ???
-        }
+  private def localPath(url: String, cache: Seq[(String, File)]): String =
+    if (url.startsWith("file:///"))
+      url.stripPrefix("file://")
+    else if (url.startsWith("file:/"))
+      url.stripPrefix("file:")
+    else {
+      val localPathOpt = cache.collectFirst {
+        case (base, cacheDir) if url.startsWith(base) =>
+          cacheDir.toString + "/" + escape(url.stripPrefix(base))
       }
 
-    artifact.extra.getOrElse("Local",
-      artifact.copy(
-        url = local(artifact.url),
-        checksumUrls = artifact.checksumUrls
-          .mapValues(local)
-          .toVector
-          .toMap,
-        extra = Map.empty
-      )
-    )
-  }
+      localPathOpt.getOrElse {
+        // FIXME Means we were handed an artifact from repositories other than the known ones
+        println(cache.mkString("\n"))
+        println(url)
+        ???
+      }
+    }
 
   private def readFullyTo(
     in: InputStream,
@@ -184,24 +171,21 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = localArtifact(artifact, cache)
-
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
     val referenceFileOpt = artifact
       .extra
       .get("metadata")
-      .map(a => new File(localArtifact(a, cache).url))
+      .map(a => new File(localPath(a.url, cache)))
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
-    val pairs =
-      Seq(artifact0.url -> artifact.url) ++ {
-        checksums
-          .intersect(artifact0.checksumUrls.keySet)
-          .intersect(artifact.checksumUrls.keySet)
+    val urls =
+      artifact.url +: {
+        artifact.checksumUrls
+          .filterKeys(checksums)
+          .values
           .toSeq
-          .map(sumType => artifact0.checksumUrls(sumType) -> artifact.checksumUrls(sumType))
       }
 
     def urlConn(url: String) = {
@@ -399,8 +383,8 @@ object Cache {
       }
 
     val tasks =
-      for ((f, url) <- pairs) yield {
-        val file = new File(f)
+      for (url <- urls) yield {
+        val file = new File(localPath(url, cache))
 
         val res =
           if (url.startsWith("file:/")) {
@@ -444,20 +428,21 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = localArtifact(artifact, cache)
+    val localPath0 = localPath(artifact.url, cache)
 
     EitherT {
-      artifact0.checksumUrls.get(sumType) match {
-        case Some(sumFile) =>
+      artifact.checksumUrls.get(sumType) match {
+        case Some(sumUrl) =>
+          val sumPath = localPath(sumUrl, cache)
           Task {
-            val sum = new String(NioFiles.readAllBytes(new File(sumFile).toPath), "UTF-8")
+            val sum = new String(NioFiles.readAllBytes(new File(sumPath).toPath), "UTF-8")
               .linesIterator
               .toStream
               .headOption
               .mkString
               .takeWhile(!_.isSpaceChar)
 
-            val f = new File(artifact0.url)
+            val f = new File(localPath0)
             val md = MessageDigest.getInstance(sumType)
             val is = new FileInputStream(f)
             val res = try {
@@ -485,12 +470,12 @@ object Cache {
               if (sum == calculatedSum)
                 \/-(())
               else
-                -\/(FileError.WrongChecksum(sumType, calculatedSum, sum, artifact0.url, sumFile))
+                -\/(FileError.WrongChecksum(sumType, calculatedSum, sum, localPath0, sumPath))
             }
           }
 
         case None =>
-          Task.now(-\/(FileError.ChecksumNotFound(sumType, artifact0.url)))
+          Task.now(-\/(FileError.ChecksumNotFound(sumType, localPath0)))
       }
     }
   }
