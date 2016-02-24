@@ -42,14 +42,20 @@ object Cache {
   }
 
   private def localPath(url: String, cache: Seq[(String, File)]): String =
+    localPathAndCache(url, cache) match {
+      case -\/(local) => local
+      case \/-((local, _)) => local
+    }
+
+  private def localPathAndCache(url: String, cache: Seq[(String, File)]): String \/ (String, File) =
     if (url.startsWith("file:///"))
-      url.stripPrefix("file://")
+      url.stripPrefix("file://").left
     else if (url.startsWith("file:/"))
-      url.stripPrefix("file:")
+      url.stripPrefix("file:").left
     else {
       val localPathOpt = cache.collectFirst {
         case (base, cacheDir) if url.startsWith(base) =>
-          cacheDir.toString + "/" + escape(url.stripPrefix(base))
+          (cacheDir.toString + "/" + escape(url.stripPrefix(base)), cacheDir).right
       }
 
       localPathOpt.getOrElse {
@@ -84,10 +90,45 @@ object Cache {
     helper(alreadyDownloaded)
   }
 
-  private def withLockFor[T](file: File)(f: => FileError \/ T): FileError \/ T = {
+  private def mkdirs(dir: File): Seq[File] = {
+
+    @tailrec
+    def helper(dir: File, notFound: List[File]): List[File] =
+      if (dir.exists())
+        notFound
+      else
+        Option(dir.getParentFile) match {
+          case None =>
+            notFound
+          case Some(parent) =>
+            helper(parent, dir :: notFound)
+        }
+
+    val notFound = helper(dir, Nil)
+
+    notFound.foreach(_.mkdir())
+
+    if (!dir.exists())
+      throw new IOException(s"Cannot create directory $dir")
+
+    notFound.reverse
+  }
+
+  @tailrec
+  private def removeUntil(file: File, base: File): Unit =
+    if (file != null && file != base && file.delete())
+      removeUntil(file.getParentFile, base)
+
+  private def withWriteLockFor[T](file: File, cache: File)(f: => FileError \/ T): FileError \/ T = {
+
+    // cache is used to remove any remaining empty directory between file.getParentFile and cache,
+    // so as not to leave plenty of empty directories if no files were written after acquiring /
+    // releasing the lock.
+
     val lockFile = new File(file.getParentFile, s"${file.getName}.lock")
 
     lockFile.getParentFile.mkdirs()
+
     var out = new FileOutputStream(lockFile)
 
     try {
@@ -111,7 +152,33 @@ object Cache {
           -\/(FileError.Locked(file))
       }
       finally if (lock != null) lock.release()
-    } finally if (out != null) out.close()
+    } finally {
+      if (out != null)
+        out.close()
+
+      removeUntil(lockFile.getParentFile, cache)
+    }
+  }
+
+  private def withReadLockFor[T](file: File)(f: InputStream => T): FileError \/ T = {
+
+    val is = new FileInputStream(file)
+
+    try {
+      var lock: FileLock = null
+      try {
+        lock = is.getChannel.tryLock(0L, Long.MaxValue, true)
+        if (lock == null)
+          -\/(FileError.Locked(file))
+        else
+          \/-(f(is))
+      }
+      catch {
+        case e: OverlappingFileLockException =>
+          -\/(FileError.Locked(file))
+      }
+      finally if (lock != null) lock.release()
+    } finally is.close()
   }
 
   private def downloading[T](
@@ -254,10 +321,10 @@ object Cache {
           false
       }
 
-    def remote(file: File, url: String): EitherT[Task, FileError, Unit] =
+    def remote(file: File, cache: File, url: String): EitherT[Task, FileError, Unit] =
       EitherT {
         Task {
-          withLockFor(file) {
+          withWriteLockFor(file, cache) {
             downloading(url, file, logger) {
               val tmp = temporaryFile(file)
 
@@ -314,7 +381,7 @@ object Cache {
         }
       }
 
-    def remoteKeepErrors(file: File, url: String): EitherT[Task, FileError, Unit] = {
+    def remoteKeepErrors(file: File, cache: File, url: String): EitherT[Task, FileError, Unit] = {
 
       val errFile = new File(file.getParentFile, "." + file.getName + ".error")
 
@@ -349,7 +416,7 @@ object Cache {
 
       def retainError =
         EitherT {
-          remote(file, url).run.flatMap {
+          remote(file, cache, url).run.flatMap {
             case err @ -\/(FileError.NotFound(_, Some(true))) =>
               createErrFile.run.map(_ => err)
             case other =>
@@ -384,10 +451,11 @@ object Cache {
 
     val tasks =
       for (url <- urls) yield {
-        val file = new File(localPath(url, cache))
+        val (res, file) = localPathAndCache(url, cache) match {
+          case -\/(local) =>
 
-        val res =
-          if (url.startsWith("file:/")) {
+            val file = new File(local)
+
             // for debug purposes, flaky with URL-encoded chars anyway
             // def filtered(s: String) =
             //   s.stripPrefix("file:/").stripPrefix("//").stripSuffix("/")
@@ -395,23 +463,30 @@ object Cache {
             //   filtered(url) == filtered(file.toURI.toString),
             //   s"URL: ${filtered(url)}, file: ${filtered(file.toURI.toString)}"
             // )
-            checkFileExists(file, url)
-          } else
-            cachePolicy match {
+            (checkFileExists(new File(local), url), file)
+
+          case \/-((localPath0, cache0)) =>
+
+            val file = new File(localPath0)
+
+            val res0 = cachePolicy match {
               case CachePolicy.LocalOnly =>
                 checkFileExists(file, url)
               case CachePolicy.UpdateChanging | CachePolicy.Update =>
                 shouldDownload(file, url).flatMap {
                   case true =>
-                    remoteKeepErrors(file, url)
+                    remoteKeepErrors(file, cache0, url)
                   case false =>
                     EitherT(Task.now(\/-(()) : FileError \/ Unit))
                 }
               case CachePolicy.FetchMissing =>
-                checkFileExists(file, url) orElse remoteKeepErrors(file, url)
+                checkFileExists(file, url) orElse remoteKeepErrors(file, cache0, url)
               case CachePolicy.ForceDownload =>
-                remoteKeepErrors(file, url)
+                remoteKeepErrors(file, cache0, url)
             }
+
+            (res0, file)
+        }
 
         res.run.map((file, url) -> _)
       }
@@ -444,24 +519,11 @@ object Cache {
 
             val f = new File(localPath0)
             val md = MessageDigest.getInstance(sumType)
-            val is = new FileInputStream(f)
-            val res = try {
-              var lock: FileLock = null
-              try {
-                lock = is.getChannel.tryLock(0L, Long.MaxValue, true)
-                if (lock == null)
-                  -\/(FileError.Locked(f))
-                else {
-                  withContent(is, md.update(_, 0, _))
-                  \/-(())
-                }
-              }
-              catch {
-                case e: OverlappingFileLockException =>
-                  -\/(FileError.Locked(f))
-              }
-              finally if (lock != null) lock.release()
-            } finally is.close()
+
+            val res = withReadLockFor(f) { is =>
+              withContent(is, md.update(_, 0, _))
+              ()
+            }
 
             res.flatMap { _ =>
               val digest = md.digest()
