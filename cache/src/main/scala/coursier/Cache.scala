@@ -1,6 +1,6 @@
 package coursier
 
-import java.net.{HttpURLConnection, URL}
+import java.net.{ HttpURLConnection, URL, URLConnection }
 import java.nio.channels.{ OverlappingFileLockException, FileLock }
 import java.nio.file.{ StandardCopyOption, Files => NioFiles }
 import java.security.MessageDigest
@@ -9,7 +9,9 @@ import java.util.concurrent.{ConcurrentHashMap, Executors, ExecutorService}
 import coursier.ivy.IvyRepository
 
 import scala.annotation.tailrec
+
 import scalaz._
+import scalaz.Scalaz.ToEitherOps
 import scalaz.concurrent.{ Task, Strategy }
 
 import java.io.{ Serializable => _, _ }
@@ -39,40 +41,30 @@ object Cache {
     }
   }
 
-  private def withLocal(artifact: Artifact, cache: Seq[(String, File)]): Artifact = {
-    def local(url: String) =
-      if (url.startsWith("file:///"))
-        url.stripPrefix("file://")
-      else if (url.startsWith("file:/"))
-        url.stripPrefix("file:")
-      else {
-        val localPathOpt = cache.collectFirst {
-          case (base, cacheDir) if url.startsWith(base) =>
-            cacheDir.toString + "/" + escape(url.stripPrefix(base))
-        }
+  private def localPath(url: String, cache: Seq[(String, File)]): String =
+    localPathAndCache(url, cache) match {
+      case -\/(local) => local
+      case \/-((local, _)) => local
+    }
 
-        localPathOpt.getOrElse {
-          // FIXME Means we were handed an artifact from repositories other than the known ones
-          println(cache.mkString("\n"))
-          println(url)
-          ???
-        }
+  private def localPathAndCache(url: String, cache: Seq[(String, File)]): String \/ (String, File) =
+    if (url.startsWith("file:///"))
+      url.stripPrefix("file://").left
+    else if (url.startsWith("file:/"))
+      url.stripPrefix("file:").left
+    else {
+      val localPathOpt = cache.collectFirst {
+        case (base, cacheDir) if url.startsWith(base) =>
+          (cacheDir.toString + "/" + escape(url.stripPrefix(base)), cacheDir).right
       }
 
-    if (artifact.extra.contains("local"))
-      artifact
-    else
-      artifact.copy(extra = artifact.extra + ("local" ->
-        artifact.copy(
-          url = local(artifact.url),
-          checksumUrls = artifact.checksumUrls
-            .mapValues(local)
-            .toVector
-            .toMap,
-          extra = Map.empty
-        )
-      ))
-  }
+      localPathOpt.getOrElse {
+        // FIXME Means we were handed an artifact from repositories other than the known ones
+        println(cache.mkString("\n"))
+        println(url)
+        ???
+      }
+    }
 
   private def readFullyTo(
     in: InputStream,
@@ -98,10 +90,45 @@ object Cache {
     helper(alreadyDownloaded)
   }
 
-  private def withLockFor[T](file: File)(f: => FileError \/ T): FileError \/ T = {
+  private def mkdirs(dir: File): Seq[File] = {
+
+    @tailrec
+    def helper(dir: File, notFound: List[File]): List[File] =
+      if (dir.exists())
+        notFound
+      else
+        Option(dir.getParentFile) match {
+          case None =>
+            notFound
+          case Some(parent) =>
+            helper(parent, dir :: notFound)
+        }
+
+    val notFound = helper(dir, Nil)
+
+    notFound.foreach(_.mkdir())
+
+    if (!dir.exists())
+      throw new IOException(s"Cannot create directory $dir")
+
+    notFound.reverse
+  }
+
+  @tailrec
+  private def removeUntil(file: File, base: File): Unit =
+    if (file != null && file != base && file.delete())
+      removeUntil(file.getParentFile, base)
+
+  private def withWriteLockFor[T](file: File, cache: File)(f: => FileError \/ T): FileError \/ T = {
+
+    // cache is used to remove any remaining empty directory between file.getParentFile and cache,
+    // so as not to leave plenty of empty directories if no files were written after acquiring /
+    // releasing the lock.
+
     val lockFile = new File(file.getParentFile, s"${file.getName}.lock")
 
     lockFile.getParentFile.mkdirs()
+
     var out = new FileOutputStream(lockFile)
 
     try {
@@ -125,7 +152,33 @@ object Cache {
           -\/(FileError.Locked(file))
       }
       finally if (lock != null) lock.release()
-    } finally if (out != null) out.close()
+    } finally {
+      if (out != null)
+        out.close()
+
+      removeUntil(lockFile.getParentFile, cache)
+    }
+  }
+
+  private def withReadLockFor[T](file: File)(f: InputStream => T): FileError \/ T = {
+
+    val is = new FileInputStream(file)
+
+    try {
+      var lock: FileLock = null
+      try {
+        lock = is.getChannel.tryLock(0L, Long.MaxValue, true)
+        if (lock == null)
+          -\/(FileError.Locked(file))
+        else
+          \/-(f(is))
+      }
+      catch {
+        case e: OverlappingFileLockException =>
+          -\/(FileError.Locked(file))
+      }
+      finally if (lock != null) lock.release()
+    } finally is.close()
   }
 
   private def downloading[T](
@@ -185,17 +238,21 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = withLocal(artifact, cache)
+    // Reference file - if it exists, and we get not found errors on some URLs, we assume
+    // we can keep track of these missing, and not try to get them again later.
+    val referenceFileOpt = artifact
       .extra
-      .getOrElse("local", artifact)
+      .get("metadata")
+      .map(a => new File(localPath(a.url, cache)))
 
-    val pairs =
-      Seq(artifact0.url -> artifact.url) ++ {
-        checksums
-          .intersect(artifact0.checksumUrls.keySet)
-          .intersect(artifact.checksumUrls.keySet)
+    def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
+
+    val urls =
+      artifact.url +: {
+        artifact.checksumUrls
+          .filterKeys(checksums)
+          .values
           .toSeq
-          .map(sumType => artifact0.checksumUrls(sumType) -> artifact.checksumUrls(sumType))
       }
 
     def urlConn(url: String) = {
@@ -256,10 +313,18 @@ object Cache {
         fromDatesOpt.getOrElse(true)
       }
 
-    def remote(file: File, url: String): EitherT[Task, FileError, Unit] =
+    def is404(conn: URLConnection) =
+      conn match {
+        case conn0: HttpURLConnection =>
+          conn0.getResponseCode == 404
+        case _ =>
+          false
+      }
+
+    def remote(file: File, cache: File, url: String): EitherT[Task, FileError, Unit] =
       EitherT {
         Task {
-          withLockFor(file) {
+          withWriteLockFor(file, cache) {
             downloading(url, file, logger) {
               val tmp = temporaryFile(file)
 
@@ -267,50 +332,111 @@ object Cache {
 
               val conn0 = urlConn(url)
 
-              val (partialDownload, conn) = conn0 match {
-                case conn0: HttpURLConnection if alreadyDownloaded > 0L =>
-                  conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
+              if (is404(conn0))
+                FileError.NotFound(url, permanent = Some(true)).left
+              else {
+                val (partialDownload, conn) = conn0 match {
+                  case conn0: HttpURLConnection if alreadyDownloaded > 0L =>
+                    conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
 
-                  if (conn0.getResponseCode == partialContentResponseCode) {
-                    val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
+                    if (conn0.getResponseCode == partialContentResponseCode) {
+                      val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
 
-                    if (ackRange.startsWith(s"bytes $alreadyDownloaded-"))
-                      (true, conn0)
-                    else
-                      // unrecognized Content-Range header -> start a new connection with no resume
-                      (false, urlConn(url))
-                  } else
-                    (false, conn0)
+                      if (ackRange.startsWith(s"bytes $alreadyDownloaded-"))
+                        (true, conn0)
+                      else
+                        // unrecognized Content-Range header -> start a new connection with no resume
+                        (false, urlConn(url))
+                    } else
+                      (false, conn0)
 
-                case _ => (false, conn0)
+                  case _ => (false, conn0)
+                }
+
+                for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
+                  val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
+                  logger.foreach(_.downloadLength(url, len))
+                }
+
+                val in = new BufferedInputStream(conn.getInputStream, bufferSize)
+
+                val result =
+                  try {
+                    tmp.getParentFile.mkdirs()
+                    val out = new FileOutputStream(tmp, partialDownload)
+                    try \/-(readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L))
+                    finally out.close()
+                  } finally in.close()
+
+                file.getParentFile.mkdirs()
+                NioFiles.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
+
+                for (lastModified <- Option(conn.getLastModified) if lastModified > 0L)
+                  file.setLastModified(lastModified)
+
+                result
               }
-
-              for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
-                val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
-                logger.foreach(_.downloadLength(url, len))
-              }
-
-              val in = new BufferedInputStream(conn.getInputStream, bufferSize)
-
-              val result =
-                try {
-                  tmp.getParentFile.mkdirs()
-                  val out = new FileOutputStream(tmp, partialDownload)
-                  try \/-(readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L))
-                  finally out.close()
-                } finally in.close()
-
-              file.getParentFile.mkdirs()
-              NioFiles.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
-
-              for (lastModified <- Option(conn.getLastModified) if lastModified > 0L)
-                file.setLastModified(lastModified)
-
-              result
             }
           }
         }
       }
+
+    def remoteKeepErrors(file: File, cache: File, url: String): EitherT[Task, FileError, Unit] = {
+
+      val errFile = new File(file.getParentFile, "." + file.getName + ".error")
+
+      def validErrFileExists =
+        EitherT {
+          Task {
+            (referenceFileExists && errFile.exists()).right[FileError]
+          }
+        }
+
+      def createErrFile =
+        EitherT {
+          Task {
+            if (referenceFileExists) {
+              if (!errFile.exists())
+                NioFiles.write(errFile.toPath, "".getBytes("UTF-8"))
+            }
+
+            ().right[FileError]
+          }
+        }
+
+      def deleteErrFile =
+        EitherT {
+          Task {
+            if (errFile.exists())
+              errFile.delete()
+
+            ().right[FileError]
+          }
+        }
+
+      def retainError =
+        EitherT {
+          remote(file, cache, url).run.flatMap {
+            case err @ -\/(FileError.NotFound(_, Some(true))) =>
+              createErrFile.run.map(_ => err)
+            case other =>
+              deleteErrFile.run.map(_ => other)
+          }
+        }
+
+      cachePolicy match {
+        case CachePolicy.FetchMissing | CachePolicy.LocalOnly =>
+          validErrFileExists.flatMap { exists =>
+            if (exists)
+              EitherT(Task.now(FileError.NotFound(url, Some(true)).left[Unit]))
+            else
+              retainError
+          }
+
+        case CachePolicy.ForceDownload | CachePolicy.Update | CachePolicy.UpdateChanging =>
+          retainError
+      }
+    }
 
     def checkFileExists(file: File, url: String): EitherT[Task, FileError, Unit] =
       EitherT {
@@ -324,11 +450,12 @@ object Cache {
       }
 
     val tasks =
-      for ((f, url) <- pairs) yield {
-        val file = new File(f)
+      for (url <- urls) yield {
+        val (res, file) = localPathAndCache(url, cache) match {
+          case -\/(local) =>
 
-        val res =
-          if (url.startsWith("file:/")) {
+            val file = new File(local)
+
             // for debug purposes, flaky with URL-encoded chars anyway
             // def filtered(s: String) =
             //   s.stripPrefix("file:/").stripPrefix("//").stripSuffix("/")
@@ -336,23 +463,30 @@ object Cache {
             //   filtered(url) == filtered(file.toURI.toString),
             //   s"URL: ${filtered(url)}, file: ${filtered(file.toURI.toString)}"
             // )
-            checkFileExists(file, url)
-          } else
-            cachePolicy match {
+            (checkFileExists(new File(local), url), file)
+
+          case \/-((localPath0, cache0)) =>
+
+            val file = new File(localPath0)
+
+            val res0 = cachePolicy match {
               case CachePolicy.LocalOnly =>
                 checkFileExists(file, url)
               case CachePolicy.UpdateChanging | CachePolicy.Update =>
                 shouldDownload(file, url).flatMap {
                   case true =>
-                    remote(file, url)
+                    remoteKeepErrors(file, cache0, url)
                   case false =>
                     EitherT(Task.now(\/-(()) : FileError \/ Unit))
                 }
               case CachePolicy.FetchMissing =>
-                checkFileExists(file, url) orElse remote(file, url)
+                checkFileExists(file, url) orElse remoteKeepErrors(file, cache0, url)
               case CachePolicy.ForceDownload =>
-                remote(file, url)
+                remoteKeepErrors(file, cache0, url)
             }
+
+            (res0, file)
+        }
 
         res.run.map((file, url) -> _)
       }
@@ -369,41 +503,27 @@ object Cache {
 
     implicit val pool0 = pool
 
-    val artifact0 = withLocal(artifact, cache)
-      .extra
-      .getOrElse("local", artifact)
+    val localPath0 = localPath(artifact.url, cache)
 
     EitherT {
-      artifact0.checksumUrls.get(sumType) match {
-        case Some(sumFile) =>
+      artifact.checksumUrls.get(sumType) match {
+        case Some(sumUrl) =>
+          val sumPath = localPath(sumUrl, cache)
           Task {
-            val sum = new String(NioFiles.readAllBytes(new File(sumFile).toPath), "UTF-8")
+            val sum = new String(NioFiles.readAllBytes(new File(sumPath).toPath), "UTF-8")
               .linesIterator
               .toStream
               .headOption
               .mkString
               .takeWhile(!_.isSpaceChar)
 
-            val f = new File(artifact0.url)
+            val f = new File(localPath0)
             val md = MessageDigest.getInstance(sumType)
-            val is = new FileInputStream(f)
-            val res = try {
-              var lock: FileLock = null
-              try {
-                lock = is.getChannel.tryLock(0L, Long.MaxValue, true)
-                if (lock == null)
-                  -\/(FileError.Locked(f))
-                else {
-                  withContent(is, md.update(_, 0, _))
-                  \/-(())
-                }
-              }
-              catch {
-                case e: OverlappingFileLockException =>
-                  -\/(FileError.Locked(f))
-              }
-              finally if (lock != null) lock.release()
-            } finally is.close()
+
+            val res = withReadLockFor(f) { is =>
+              withContent(is, md.update(_, 0, _))
+              ()
+            }
 
             res.flatMap { _ =>
               val digest = md.digest()
@@ -412,12 +532,12 @@ object Cache {
               if (sum == calculatedSum)
                 \/-(())
               else
-                -\/(FileError.WrongChecksum(sumType, calculatedSum, sum, artifact0.url, sumFile))
+                -\/(FileError.WrongChecksum(sumType, calculatedSum, sum, localPath0, sumPath))
             }
           }
 
         case None =>
-          Task.now(-\/(FileError.ChecksumNotFound(sumType, artifact0.url)))
+          Task.now(-\/(FileError.ChecksumNotFound(sumType, localPath0)))
       }
     }
   }
@@ -597,7 +717,7 @@ object FileError {
 
   final case class DownloadError(reason: String) extends FileError(s"Download error: $reason")
 
-  final case class NotFound(file: String) extends FileError(s"Not found: $file")
+  final case class NotFound(file: String, permanent: Option[Boolean] = None) extends FileError(s"Not found: $file")
 
   final case class ChecksumNotFound(
     sumType: String,
