@@ -26,19 +26,11 @@ object CentralTests extends TestSuite {
       .runF
   }
 
-  def repr(dep: Dependency) =
-    (
-      Seq(
-        dep.module,
-        dep.attributes.`type`
-      ) ++
-      Some(dep.attributes.classifier)
-        .filter(_.nonEmpty)
-        .toSeq ++
-      Seq(
-        dep.version
-      )
-    ).mkString(":")
+  def repr(dep: Dependency) = Seq(
+    dep.module,
+    dep.version,
+    dep.configuration
+  ).mkString(":")
 
   def resolutionCheck(
     module: Module,
