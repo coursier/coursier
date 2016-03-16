@@ -2,7 +2,8 @@ package coursier
 package test
 
 import java.io.File
-import java.nio.file.Files
+
+import com.google.common.io.Files
 
 import coursier.cache.protocol.TestprotocolHandler
 import utest._
@@ -15,7 +16,7 @@ object CustomProtocolTests extends TestSuite {
 
     def check(extraMavenRepo: String): Unit = {
 
-      val tmpDir = Files.createTempDirectory("coursier-protocol-tests").toFile
+      val tmpDir = Files.createTempDir()
 
       def cleanTmpDir() = {
         def delete(f: File): Boolean =

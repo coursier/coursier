@@ -217,10 +217,15 @@ object Tasks {
       val checksums = coursierChecksums.value
       val artifactsChecksums = coursierArtifactsChecksums.value
       val maxIterations = coursierMaxIterations.value
-      val cachePolicy = coursierCachePolicy.value
+      val cachePolicies = coursierCachePolicies.value
       val cache = coursierCache.value
 
       val sv = scalaVersion.value // is this always defined? (e.g. for Java only projects?)
+      val sbv = scalaBinaryVersion.value
+
+      val userForceVersions = dependencyOverrides.value.map(
+        FromSbt.moduleVersion(_, sv, sbv)
+      ).toMap
 
       val resolvers =
         if (sbtClassifiers)
@@ -228,13 +233,13 @@ object Tasks {
         else
           coursierResolvers.value
 
-      val verbosity = coursierVerbosity.value
+      val verbosityLevel = coursierVerbosity.value
 
 
       val startRes = Resolution(
         currentProject.dependencies.map { case (_, dep) => dep }.toSet,
         filter = Some(dep => !dep.optional),
-        forceVersions = forcedScalaModules(sv) ++ projects.map(_.moduleVersion)
+        forceVersions = userForceVersions ++ forcedScalaModules(sv) ++ projects.map(_.moduleVersion)
       )
 
       // required for publish to be fine, later on
@@ -253,7 +258,7 @@ object Tasks {
         Files.write("".getBytes("UTF-8"), cacheIvyPropertiesFile)
       }
 
-      if (verbosity >= 2) {
+      if (verbosityLevel >= 2) {
         println("InterProjectRepository")
         for (p <- projects)
           println(s"  ${p.module}:${p.version}")
@@ -284,8 +289,10 @@ object Tasks {
 
         val fetch = Fetch.from(
           repositories,
-          Cache.fetch(cache, CachePolicy.LocalOnly, checksums = checksums, logger = Some(resLogger), pool = pool),
-          Cache.fetch(cache, cachePolicy, checksums = checksums, logger = Some(resLogger), pool = pool)
+          Cache.fetch(cache, cachePolicies.head, checksums = checksums, logger = Some(resLogger), pool = pool),
+          cachePolicies.tail.map(p =>
+            Cache.fetch(cache, p, checksums = checksums, logger = Some(resLogger), pool = pool)
+          ): _*
         )
 
         def depsRepr(deps: Seq[(String, Dependency)]) =
@@ -298,7 +305,7 @@ object Tasks {
             s"${dep.module}:${dep.version}:${dep.configuration}"
           }.sorted.distinct
 
-        if (verbosity >= 1) {
+        if (verbosityLevel >= 1) {
           val repoReprs = repositories.map {
             case r: IvyRepository =>
               s"ivy:${r.pattern}"
@@ -314,9 +321,9 @@ object Tasks {
           errPrintln(s"Repositories:\n${repoReprs.map("  "+_).mkString("\n")}")
         }
 
-        if (verbosity >= 0)
+        if (verbosityLevel >= 0)
           errPrintln(s"Resolving ${currentProject.module.organization}:${currentProject.module.name}:${currentProject.version}")
-        if (verbosity >= 1)
+        if (verbosityLevel >= 1)
           for (depRepr <- depsRepr(currentProject.dependencies))
             errPrintln(s"  $depRepr")
 
@@ -375,9 +382,9 @@ object Tasks {
           }
         }
 
-        if (verbosity >= 0)
+        if (verbosityLevel >= 0)
           errPrintln("Resolution done")
-        if (verbosity >= 1) {
+        if (verbosityLevel >= 1) {
           val finalDeps = Config.dependenciesWithConfig(
             res,
             depsByConfig.map { case (k, l) => k -> l.toSet },
@@ -409,10 +416,23 @@ object Tasks {
         val artifactsLogger = createLogger()
 
         val artifactFileOrErrorTasks = allArtifacts.toVector.map { a =>
-          Cache.file(a, cache, cachePolicy, checksums = artifactsChecksums, logger = Some(artifactsLogger), pool = pool).run.map((a, _))
+          def f(p: CachePolicy) =
+            Cache.file(
+              a,
+              cache,
+              p,
+              checksums = artifactsChecksums,
+              logger = Some(artifactsLogger),
+              pool = pool
+            )
+
+          cachePolicies.tail
+            .foldLeft(f(cachePolicies.head))(_ orElse f(_))
+            .run
+            .map((a, _))
         }
 
-        if (verbosity >= 0)
+        if (verbosityLevel >= 0)
           errPrintln(s"Fetching artifacts")
 
         artifactsLogger.init()
@@ -426,7 +446,7 @@ object Tasks {
 
         artifactsLogger.stop()
 
-        if (verbosity >= 0)
+        if (verbosityLevel >= 0)
           errPrintln(s"Fetching artifacts: done")
 
         def artifactFileOpt(artifact: Artifact) = {
