@@ -5,35 +5,37 @@ import java.util.concurrent._
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 object Terminal {
-  // Mostly things from ammonite-terminal, cut-n-pasted here as ammonite-terminal
-  // is not compatible with Java 6
 
-  private val pathedTput = if (new File("/usr/bin/tput").exists()) "/usr/bin/tput" else "tput"
+  // Cut-n-pasted and adapted from
+  // https://github.com/lihaoyi/Ammonite/blob/10854e3b8b454a74198058ba258734a17af32023/terminal/src/main/scala/ammonite/terminal/Utils.scala
 
-  def consoleDim(s: String) = {
-    import sys.process._
-    Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty").!!.trim.toInt
-  }
+  private lazy val pathedTput = if (new File("/usr/bin/tput").exists()) "/usr/bin/tput" else "tput"
 
-  class Ansi(output: Writer) {
+  def consoleDim(s: String): Option[Int] =
+    if (new File("/dev/tty").exists()) {
+      import sys.process._
+      Try(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty").!!.trim.toInt).toOption
+    } else
+      None
 
-    def control(n: Int, c: Char) = output.write(s"\033[" + n + c)
+  class Ansi(val output: Writer) extends AnyVal {
+    private def control(n: Int, c: Char) = output.write(s"\033[" + n + c)
 
     /**
       * Move up `n` squares
       */
-    def up(n: Int) = if (n == 0) "" else control(n, 'A')
+    def up(n: Int): Unit = if (n == 0) "" else control(n, 'A')
     /**
       * Move down `n` squares
       */
-    def down(n: Int) = if (n == 0) "" else control(n, 'B')
-
+    def down(n: Int): Unit = if (n == 0) "" else control(n, 'B')
     /**
       * Move left `n` squares
       */
-    def left(n: Int) = if (n == 0) "" else control(n, 'D')
+    def left(n: Int): Unit = if (n == 0) "" else control(n, 'D')
 
     /**
       * Clear the current line
@@ -42,8 +44,7 @@ object Terminal {
       * n=1: clear from cursor to start of line
       * n=2: clear entire line
       */
-    def clearLine(n: Int) = control(n, 'K')
-
+    def clearLine(n: Int): Unit = control(n, 'K')
   }
 
 }
@@ -210,11 +211,12 @@ class TermDisplay(
   t.setDaemon(true)
 
   def init(): Unit = {
-    try {
-      width = Terminal.consoleDim("cols")
-      ansi.clearLine(2)
-    } catch { case _: Exception =>
-      fallbackMode = true
+    Terminal.consoleDim("cols") match {
+      case Some(cols) =>
+        width = cols
+        ansi.clearLine(2)
+      case None =>
+        fallbackMode = true
     }
 
     t.start()
