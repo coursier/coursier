@@ -397,7 +397,7 @@ lazy val plugin = project
   .settings(baseCommonSettings)
   .settings(noPublish211Settings)
   .settings(
-    name := "coursier-sbt-plugin-java-6",
+    name := "sbt-coursier-java-6",
     sbtPlugin := {
       scalaVersion.value.startsWith("2.10.")
     },
