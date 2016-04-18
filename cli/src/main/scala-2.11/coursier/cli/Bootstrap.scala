@@ -1,7 +1,7 @@
 package coursier
 package cli
 
-import java.io.{ FileInputStream, ByteArrayOutputStream, File, IOException }
+import java.io.{ FileInputStream, ByteArrayInputStream, ByteArrayOutputStream, File, IOException }
 import java.util.Properties
 import java.util.zip.{ ZipEntry, ZipOutputStream, ZipInputStream }
 
@@ -121,7 +121,7 @@ case class Bootstrap(
 
   val buffer = new ByteArrayOutputStream()
 
-  val bootstrapZip = new ZipInputStream(Thread.currentThread().getContextClassLoader.getResourceAsStream("bootstrap.jar"))
+  val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
   val outputZip = new ZipOutputStream(buffer)
 
   for ((ent, data) <- zipEntries(bootstrapZip)) {
