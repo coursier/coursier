@@ -750,9 +750,7 @@ object Cache {
   }
 
   lazy val ivy2Local = IvyRepository(
-    ivy2HomeUri + "local/" +
-      "[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/" +
-      "[artifact](-[classifier]).[ext]",
+    ivy2HomeUri + "local/" + coursier.ivy.Pattern.default,
     dropInfoAttributes = true
   )
 
