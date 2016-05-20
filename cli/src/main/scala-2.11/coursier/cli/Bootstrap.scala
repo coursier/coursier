@@ -193,7 +193,7 @@ case class Bootstrap(
 
   try Files.write(shellPreamble.getBytes("UTF-8") ++ buffer.toByteArray, output0)
   catch { case e: IOException =>
-    Console.err.println(s"Error while writing $output0: ${e.getMessage}")
+    Console.err.println(s"Error while writing $output0${Option(e.getMessage).fold("")(" (" + _ + ")")}")
     sys.exit(1)
   }
 
@@ -207,7 +207,10 @@ case class Bootstrap(
     case e: UnsupportedOperationException =>
       // Ignored
     case e: IOException =>
-      Console.err.println(s"Error while making $output0 executable: ${e.getMessage}")
+      Console.err.println(
+        s"Error while making $output0 executable" +
+          Option(e.getMessage).fold("")(" (" + _ + ")")
+      )
       sys.exit(1)
   }
 
