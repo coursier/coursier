@@ -7,5 +7,8 @@
     )
   )
 
-  addSbtPlugin("io.get-coursier" % "sbt-coursier" % pluginVersion)
+  val isCoursierJava6 = sys.props.contains("coursier.isJava6")
+  val sbtCoursierName = if (isCoursierJava6) "sbt-coursier-java-6" else "sbt-coursier"
+
+  addSbtPlugin("io.get-coursier" % sbtCoursierName % pluginVersion)
 }

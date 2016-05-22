@@ -31,7 +31,11 @@ if java -version 2>&1 | grep "java version" | grep "1\\.6\\."; then
   mv build.sbt build.sbt0
   grep -v http4s build.sbt0 > build.sbt
   rm -f build.sbt0
-  rm -rf simple-web-server/src tests/jvm/src/test/scala/coursier/test/CacheFetchTests.scala
+  rm -rf \
+    simple-web-server/src \
+    tests/jvm/src/test/scala/coursier/test/CacheFetchTests.scala \
+    plugin/src/sbt-test/sbt-coursier/credentials* \
+    plugin/src/sbt-test/sbt-coursier/exclude-dependencies
 else
   ~/sbt simple-web-server/publishLocal
 

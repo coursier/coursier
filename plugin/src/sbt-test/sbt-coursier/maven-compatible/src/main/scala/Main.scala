@@ -1,5 +1,4 @@
-import java.io.File
-import java.nio.file.Files
+import java.io.{ File, FileOutputStream }
 
 import scalaz.stream._
 import scalaz.concurrent.Task
@@ -10,5 +9,7 @@ object Main extends App {
   val count = Process.constant(1).toSource.to(pch).runLog.run.size
   assert(count == 3)
 
-  Files.write(new File("output").toPath, "OK".getBytes("UTF-8"))
+  val fos = new FileOutputStream(new File("output"))
+  fos.write("OK".getBytes("UTF-8"))
+  fos.close()
 }

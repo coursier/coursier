@@ -1,5 +1,4 @@
-import java.io.File
-import java.nio.file.Files
+import java.io.{ File, FileOutputStream }
 
 import scala.util.Try
 
@@ -19,5 +18,7 @@ object Main extends App {
   assert(!shapelessFound)
   assert(!argonautFound)
 
-  Files.write(new File("output").toPath, "OK".getBytes("UTF-8"))
+  val fos = new FileOutputStream(new File("output"))
+  fos.write("OK".getBytes("UTF-8"))
+  fos.close()
 }

@@ -502,6 +502,7 @@ lazy val plugin = project
     scriptedLaunchOpts ++= Seq(
       "-Xmx1024M",
       "-XX:MaxPermSize=256M",
+      "-Dcoursier.isJava6",
       "-Dplugin.version=" + version.value,
       "-Dsbttest.base=" + (sourceDirectory.value / "sbt-test").getAbsolutePath
     ),

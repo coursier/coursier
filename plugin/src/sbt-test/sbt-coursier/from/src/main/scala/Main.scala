@@ -1,5 +1,4 @@
-import java.io.File
-import java.nio.file.Files
+import java.io.{ File, FileOutputStream }
 
 import shapeless._
 
@@ -9,5 +8,7 @@ object Main extends App {
   val l = Generic[CC].to(cc)
   val msg = l.head
 
-  Files.write(new File("output").toPath, msg.getBytes("UTF-8"))
+  val fos = new FileOutputStream(new File("output"))
+  fos.write(msg.getBytes("UTF-8"))
+  fos.close()
 }
