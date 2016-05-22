@@ -27,28 +27,6 @@ function isMasterOrDevelop() {
   [ "$TRAVIS_BRANCH" = "master" -o "$TRAVIS_BRANCH" = "develop" ]
 }
 
-if java -version 2>&1 | grep "java version" | grep "1\\.6\\."; then
-  mv build.sbt build.sbt0
-  grep -v http4s build.sbt0 > build.sbt
-  rm -f build.sbt0
-  rm -rf \
-    simple-web-server/src \
-    tests/jvm/src/test/scala/coursier/test/CacheFetchTests.scala \
-    plugin/src/sbt-test/sbt-coursier/credentials* \
-    plugin/src/sbt-test/sbt-coursier/exclude-dependencies
-else
-  ~/sbt simple-web-server/publishLocal
-
-  # Required for HTTP authentication tests
-  ./coursier launch \
-    io.get-coursier:simple-web-server_2.11:1.0.0-SNAPSHOT \
-    -r http://dl.bintray.com/scalaz/releases \
-    -- \
-      -d tests/jvm/src/test/resources/test-repo/http/abc.com \
-      -u user -P pass -r realm \
-      -v &
-fi
-
 # Required for ~/.ivy2/local repo tests
 ~/sbt coreJVM/publishLocal
 

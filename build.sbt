@@ -511,20 +511,8 @@ lazy val plugin = project
 
 val http4sVersion = "0.8.6"
 
-lazy val `simple-web-server` = project
-  .settings(commonSettings)
-  .settings(packAutoSettings)
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-blazeserver" % http4sVersion,
-      "org.http4s" %% "http4s-dsl" % http4sVersion,
-      "org.slf4j" % "slf4j-nop" % "1.7.19",
-      "com.github.alexarchambault" %% "case-app" % "1.0.0-RC2"
-    )
-  )
-
 lazy val `coursier` = project.in(file("."))
-  .aggregate(coreJvm, coreJs, `fetch-js`, testsJvm, testsJs, cache, bootstrap, cli, plugin, web, doc, `simple-web-server`)
+  .aggregate(coreJvm, coreJs, `fetch-js`, testsJvm, testsJs, cache, bootstrap, cli, plugin, web, doc)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(releaseSettings)
