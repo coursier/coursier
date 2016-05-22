@@ -11,8 +11,11 @@ object IvyLocalTests extends TestSuite {
 
   val tests = TestSuite{
     'coursier{
-      val module = Module("io.get-coursier", "coursier_2.11")
-      val version = coursier.util.Properties.version
+      val version0 = coursier.util.Properties.version
+      val isJava6 = version0.contains("Java 6")
+
+      val module = Module("io.get-coursier", if (isJava6) "coursier-java-6_2.11" else "coursier_2.11")
+      val version = if (isJava6) version0.takeWhile(!_.isSpaceChar) else version0
 
       val extraRepo = Some(Cache.ivy2Local)
 
