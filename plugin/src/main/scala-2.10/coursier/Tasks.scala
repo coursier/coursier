@@ -6,7 +6,7 @@ import java.util.concurrent.Executors
 
 import com.google.common.io.Files
 
-import coursier.core.Publication
+import coursier.core.{ Authentication, Publication }
 import coursier.ivy.IvyRepository
 import coursier.Keys._
 import coursier.Structure._
@@ -20,6 +20,7 @@ import sbt.Keys._
 
 import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 import scalaz.{ \/-, -\/ }
 import scalaz.concurrent.{ Task, Strategy }
@@ -372,7 +373,18 @@ object Tasks {
         "ivy.home" -> (new File(sys.props("user.home")).toURI.getPath + ".ivy2")
       ) ++ sys.props
 
-      val credentials = coursierCredentials.value
+      val useSbtCredentials = coursierUseSbtCredentials.value
+
+      val authenticationByHost =
+        if (useSbtCredentials) {
+          val cred = sbt.Keys.credentials.value.map(sbt.Credentials.toDirect)
+          cred.map { c =>
+            c.host -> Authentication(c.userName, c.passwd)
+          }.toMap
+        } else
+          Map.empty[String, Authentication]
+
+      val authenticationByRepositoryId = coursierCredentials.value.mapValues(_.authentication)
 
       val sourceRepositories0 = sourceRepositories.map {
         base =>
@@ -393,6 +405,36 @@ object Tasks {
           )
         }
 
+      def withAuthenticationByHost(repo: Repository, credentials: Map[String, Authentication]): Repository = {
+
+        def httpHost(s: String) =
+          if (s.startsWith("http://") || s.startsWith("https://"))
+            Try(Cache.url(s).getHost).toOption
+          else
+            None
+
+        repo match {
+          case m: MavenRepository =>
+            if (m.authentication.isEmpty)
+              httpHost(m.root).flatMap(credentials.get).fold(m) { auth =>
+                m.copy(authentication = Some(auth))
+              }
+            else
+              m
+          case i: IvyRepository =>
+            if (i.authentication.isEmpty) {
+              val base = i.pattern.takeWhile(c => c != '[' && c != '(' && c != '$')
+
+              httpHost(base).flatMap(credentials.get).fold(i) { auth =>
+                i.copy(authentication = Some(auth))
+              }
+            } else
+              i
+          case _ =>
+            repo
+        }
+      }
+
       val repositories =
         Seq(globalPluginsRepo, interProjectRepo) ++
         sourceRepositories0 ++
@@ -401,9 +443,9 @@ object Tasks {
             resolver,
             ivyProperties,
             log,
-            credentials.get(resolver.name).map(_.authentication)
+            authenticationByRepositoryId.get(resolver.name)
           )
-        } ++
+        }.map(withAuthenticationByHost(_, authenticationByHost)) ++
         fallbackDependenciesRepositories
 
       def resolution = {
