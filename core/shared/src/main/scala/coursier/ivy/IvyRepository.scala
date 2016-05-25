@@ -93,7 +93,7 @@ case class IvyRepository(
               Map.empty,
               Map.empty,
               p.attributes,
-              changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
+              changing = changing.getOrElse(dependency.version.contains("-SNAPSHOT")), // could be more reliable
               authentication = authentication
             )
 
