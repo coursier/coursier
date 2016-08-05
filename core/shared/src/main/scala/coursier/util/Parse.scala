@@ -17,7 +17,7 @@ object Parse {
     *  possibly with attributes, like
     *    org:name;attr1=val1;attr2=val2
     */
-  def module(s: String): Either[String, Module] = {
+  def module(s: String, defaultScalaVersion: String): Either[String, Module] = {
 
     val parts = s.split(":", 2)
 
@@ -60,8 +60,8 @@ object Parse {
     *
     * @return Sequence of errors, and sequence of modules/versions
     */
-  def modules(l: Seq[String]): (Seq[String], Seq[Module]) =
-    valuesAndErrors(module, l)
+  def modules(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[Module]) =
+    valuesAndErrors(module(_, defaultScalaVersion), l)
 
   /**
     * Parses coordinates like
@@ -69,13 +69,13 @@ object Parse {
     *  possibly with attributes, like
     *    org:name;attr1=val1;attr2=val2:version
     */
-  def moduleVersion(s: String): Either[String, (Module, String)] = {
+  def moduleVersion(s: String, defaultScalaVersion: String): Either[String, (Module, String)] = {
 
     val parts = s.split(":", 3)
 
     parts match {
       case Array(org, rawName, version) =>
-         module(s"$org:$rawName")
+         module(s"$org:$rawName", defaultScalaVersion)
            .right
            .map((_, version))
 
@@ -94,18 +94,18 @@ object Parse {
     *  or
     *   org:name;attr1=val1;attr2=val2:version:config
     */
-  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
+  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
 
     val parts = s.split(":", 4)
 
     parts match {
       case Array(org, rawName, version, config) =>
-        module(s"$org:$rawName")
+        module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map((_, version, Some(config)))
 
       case Array(org, rawName, version) =>
-        module(s"$org:$rawName")
+        module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map((_, version, None))
 
@@ -119,16 +119,16 @@ object Parse {
     *
     * @return Sequence of errors, and sequence of modules / versions
     */
-  def moduleVersions(l: Seq[String]): (Seq[String], Seq[(Module, String)]) =
-    valuesAndErrors(moduleVersion, l)
+  def moduleVersions(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String)]) =
+    valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
   /**
     * Parses a sequence of coordinates having an optional configuration.
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) =
-    valuesAndErrors(moduleVersionConfig, l)
+  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) =
+    valuesAndErrors(moduleVersionConfig(_, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
     if (s == "central")
