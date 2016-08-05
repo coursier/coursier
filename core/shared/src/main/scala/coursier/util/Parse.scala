@@ -19,10 +19,20 @@ object Parse {
     */
   def module(s: String, defaultScalaVersion: String): Either[String, Module] = {
 
-    val parts = s.split(":", 2)
+    val parts = s.split(":", 3)
 
-    parts match {
+    val values = parts match {
       case Array(org, rawName) =>
+        Right((org, rawName, ""))
+      case Array(org, "", rawName) =>
+        Right((org, rawName, "_" + defaultScalaVersion.split('.').take(2).mkString(".")))
+      case _ =>
+        Left(s"malformed module: $s")
+    }
+
+    values.right.flatMap {
+      case (org, rawName, suffix) =>
+
         val splitName = rawName.split(';')
 
         if (splitName.tail.exists(!_.contains("=")))
@@ -33,11 +43,8 @@ object Parse {
             case Array(key, value) => key -> value
           }.toMap
 
-          Right(Module(org, name, attributes))
+          Right(Module(org, name + suffix, attributes))
         }
-
-      case _ =>
-        Left(s"malformed module: $s")
     }
   }
 
@@ -71,13 +78,18 @@ object Parse {
     */
   def moduleVersion(s: String, defaultScalaVersion: String): Either[String, (Module, String)] = {
 
-    val parts = s.split(":", 3)
+    val parts = s.split(":", 4)
 
     parts match {
       case Array(org, rawName, version) =>
          module(s"$org:$rawName", defaultScalaVersion)
            .right
            .map((_, version))
+
+      case Array(org, "", rawName, version) =>
+        module(s"$org::$rawName", defaultScalaVersion)
+          .right
+          .map((_, version))
 
       case _ =>
         Left(s"Malformed dependency: $s")
@@ -96,9 +108,19 @@ object Parse {
     */
   def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
 
-    val parts = s.split(":", 4)
+    val parts = s.split(":", 5)
 
     parts match {
+      case Array(org, "", rawName, version, config) =>
+        module(s"$org::$rawName", defaultScalaVersion)
+          .right
+          .map((_, version, Some(config)))
+
+      case Array(org, "", rawName, version) =>
+        module(s"$org::$rawName", defaultScalaVersion)
+          .right
+          .map((_, version, None))
+
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
