@@ -565,7 +565,7 @@ lazy val `http-server` = project
   )
 
 lazy val `coursier` = project.in(file("."))
-  .aggregate(coreJvm, coreJs, `fetch-js`, testsJvm, testsJs, cache, bootstrap, cli, plugin, web, doc, `http-server`)
+  .aggregate(`http-server`)
   .settings(commonSettings)
   .settings(noPublishSettings)
   .settings(releaseSettings)
