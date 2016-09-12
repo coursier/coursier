@@ -32,7 +32,7 @@ object HttpAuthenticationTests extends TestSuite {
         // no authentication -> should fail
 
         val failed = try {
-          CacheFetchTests.check(
+          Util.check(
             MavenRepository(
               s"http://$address"
             )
@@ -52,7 +52,7 @@ object HttpAuthenticationTests extends TestSuite {
         // with authentication -> should work
 
         try {
-          CacheFetchTests.check(
+          Util.check(
             MavenRepository(
               s"http://$address",
               authentication = Some(Authentication(user, password))
