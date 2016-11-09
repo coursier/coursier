@@ -7,6 +7,7 @@ import java.util.jar.{ Manifest => JManifest }
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
+import coursier.cli.typelevel.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.util.{Print, Parse}
 
@@ -360,7 +361,8 @@ class Helper(
     filter = Some(dep => keepOptional || !dep.optional),
     userActivations =
       if (userEnabledProfiles.isEmpty) None
-      else Some(userEnabledProfiles.iterator.map(_ -> true).toMap)
+      else Some(userEnabledProfiles.iterator.map(_ -> true).toMap),
+    mapDependencies = if (typelevel) Some(Typelevel.swap(_)) else None
   )
 
   val loggerFallbackMode =
