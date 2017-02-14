@@ -73,6 +73,7 @@ lazy val core = crossProject
       )
     }
   )
+  .jvmSettings(javaVersionCheckSettings)
   .jvmSettings(
     libraryDependencies ++=
       Seq(
@@ -155,6 +156,7 @@ lazy val cache = project
   .dependsOn(coreJvm)
   .settings(commonSettings)
   .settings(mimaPreviousArtifactSettings)
+  .settings(javaVersionCheckSettings)
   .settings(
     name := "coursier-cache",
     libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
@@ -368,11 +370,13 @@ lazy val doc = project
 lazy val `sbt-coursier` = project
   .dependsOn(coreJvm, cache)
   .settings(pluginSettings)
+  .settings(javaVersionCheckSettings)
 
 // Don't try to compile that if you're not in 2.10
 lazy val `sbt-shading` = project
   .dependsOn(`sbt-coursier`)
   .settings(pluginSettings)
+  .settings(javaVersionCheckSettings)
   .settings(
     // Warning: this version doesn't handle well class names with '$'s
     // (so basically any Scala library)
@@ -557,6 +561,10 @@ lazy val pluginSettings =
       Resolver.typesafeIvyRepo("releases")
     )
   )
+
+lazy val javaVersionCheckSettings = Seq(
+  javaVersionPrefix in javaVersionCheck := Some("1.6").filter(_ => !sys.env.contains("CI") || !isSnapshot.value)
+)
 
 lazy val mimaPreviousArtifactSettings = Seq(
   mimaPreviousArtifacts := {
