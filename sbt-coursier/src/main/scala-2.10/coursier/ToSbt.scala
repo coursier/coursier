@@ -1,14 +1,28 @@
 package coursier
 
 import java.util.GregorianCalendar
+import java.util.concurrent.ConcurrentHashMap
 
 import coursier.maven.MavenSource
-
 import sbt._
 
 object ToSbt {
 
-  def moduleId(dependency: Dependency): sbt.ModuleID =
+  private def caching[K, V](f: K => V): K => V = {
+
+    val cache = new ConcurrentHashMap[K, V]
+
+    key =>
+      val previousValueOpt = Option(cache.get(key))
+
+      previousValueOpt.getOrElse {
+        val value = f(key)
+        val concurrentValueOpt = Option(cache.putIfAbsent(key, value))
+        concurrentValueOpt.getOrElse(value)
+      }
+  }
+
+  val moduleId = caching[Dependency, sbt.ModuleID] { dependency =>
     sbt.ModuleID(
       dependency.module.organization,
       dependency.module.name,
@@ -16,75 +30,74 @@ object ToSbt {
       configurations = Some(dependency.configuration),
       extraAttributes = dependency.module.attributes
     )
+  }
 
-  def artifact(module: Module, artifact: Artifact): sbt.Artifact =
-    sbt.Artifact(
-      module.name,
-      // FIXME Get these two from publications
-      artifact.attributes.`type`,
-      MavenSource.typeExtension(artifact.attributes.`type`),
-      Some(artifact.attributes.classifier)
-        .filter(_.nonEmpty)
-        .orElse(MavenSource.typeDefaultClassifierOpt(artifact.attributes.`type`)),
-      Nil,
-      Some(url(artifact.url)),
-      Map.empty
-    )
+  val artifact = caching[(Module, Artifact), sbt.Artifact] {
+    case (module, artifact) =>
+      sbt.Artifact(
+        module.name,
+        // FIXME Get these two from publications
+        artifact.attributes.`type`,
+        MavenSource.typeExtension(artifact.attributes.`type`),
+        Some(artifact.attributes.classifier)
+          .filter(_.nonEmpty)
+          .orElse(MavenSource.typeDefaultClassifierOpt(artifact.attributes.`type`)),
+        Nil,
+        Some(url(artifact.url)),
+        Map.empty
+      )
+  }
 
-  def moduleReport(
-    dependency: Dependency,
-    dependees: Seq[(Dependency, Project)],
-    project: Project,
-    artifacts: Seq[(Artifact, Option[File])]
-  ): sbt.ModuleReport = {
+  val moduleReport = caching[(Dependency, Seq[(Dependency, Project)], Project, Seq[(Artifact, Option[File])]), sbt.ModuleReport] {
+    case (dependency, dependees, project, artifacts) =>
 
-    val sbtArtifacts = artifacts.collect {
-      case (artifact, Some(file)) =>
-        (ToSbt.artifact(dependency.module, artifact), file)
-    }
-    val sbtMissingArtifacts = artifacts.collect {
-      case (artifact, None) =>
-        ToSbt.artifact(dependency.module, artifact)
-    }
+      val sbtArtifacts = artifacts.collect {
+        case (artifact, Some(file)) =>
+          (ToSbt.artifact(dependency.module, artifact), file)
+      }
+      val sbtMissingArtifacts = artifacts.collect {
+        case (artifact, None) =>
+          ToSbt.artifact(dependency.module, artifact)
+      }
 
-    val publicationDate = project.info.publication.map { dt =>
-      new GregorianCalendar(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second).getTime
-    }
+      val publicationDate = project.info.publication.map { dt =>
+        new GregorianCalendar(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second).getTime
+      }
 
-    val callers = dependees.map {
-      case (dependee, dependeeProj) =>
-        new Caller(
-          ToSbt.moduleId(dependee),
-          dependeeProj.configurations.keys.toVector,
-          dependee.module.attributes ++ dependeeProj.properties,
-          // FIXME Set better values here
-          isForceDependency = false,
-          isChangingDependency = false,
-          isTransitiveDependency = false,
-          isDirectlyForceDependency = false
-        )
-    }
+      val callers = dependees.map {
+        case (dependee, dependeeProj) =>
+          new Caller(
+            ToSbt.moduleId(dependee),
+            dependeeProj.configurations.keys.toVector,
+            dependee.module.attributes ++ dependeeProj.properties,
+            // FIXME Set better values here
+            isForceDependency = false,
+            isChangingDependency = false,
+            isTransitiveDependency = false,
+            isDirectlyForceDependency = false
+          )
+      }
 
-    new sbt.ModuleReport(
-      module = ToSbt.moduleId(dependency),
-      artifacts = sbtArtifacts,
-      missingArtifacts = sbtMissingArtifacts,
-      status = None,
-      publicationDate = publicationDate,
-      resolver = None,
-      artifactResolver = None,
-      evicted = false,
-      evictedData = None,
-      evictedReason = None,
-      problem = None,
-      homepage = Some(project.info.homePage).filter(_.nonEmpty),
-      extraAttributes = dependency.module.attributes ++ project.properties,
-      isDefault = None,
-      branch = None,
-      configurations = project.configurations.keys.toVector,
-      licenses = project.info.licenses,
-      callers = callers
-    )
+      new sbt.ModuleReport(
+        module = ToSbt.moduleId(dependency),
+        artifacts = sbtArtifacts,
+        missingArtifacts = sbtMissingArtifacts,
+        status = None,
+        publicationDate = publicationDate,
+        resolver = None,
+        artifactResolver = None,
+        evicted = false,
+        evictedData = None,
+        evictedReason = None,
+        problem = None,
+        homepage = Some(project.info.homePage).filter(_.nonEmpty),
+        extraAttributes = dependency.module.attributes ++ project.properties,
+        isDefault = None,
+        branch = None,
+        configurations = project.configurations.keys.toVector,
+        licenses = project.info.licenses,
+        callers = callers
+      )
   }
 
   private def grouped[K, V](map: Seq[(K, V)]): Map[K, Seq[V]] =
