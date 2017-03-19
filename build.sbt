@@ -1,9 +1,6 @@
 import java.io.FileOutputStream
 import com.typesafe.sbt.pgp.PgpSettings
 
-val binaryCompatibilityVersion = "1.0.0-M14"
-val binaryCompatibility212Version = "1.0.0-M15"
-
 parallelExecution in Global := false
 
 lazy val IntegrationTest = config("it") extend Test
@@ -12,7 +9,7 @@ lazy val scalazVersion = "7.2.8"
 
 lazy val core = crossProject
   .settings(commonSettings)
-  .settings(mimaPreviousArtifactSettings)
+  .settings(Mima.settings)
   .jvmConfigure(_
     .enablePlugins(_root_.coursier.ShadingPlugin)
   )
@@ -176,25 +173,10 @@ lazy val testsJs = tests.js.dependsOn(`fetch-js` % "test")
 lazy val cache = project
   .dependsOn(coreJvm)
   .settings(commonSettings)
-  .settings(mimaPreviousArtifactSettings)
+  .settings(Mima.settings)
   .settings(
     name := "coursier-cache",
-    libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
-    mimaBinaryIssueFilters ++= {
-      import com.typesafe.tools.mima.core._
-
-      Seq(
-        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.TermDisplay#UpdateDisplayRunnable.cleanDisplay"),
-        ProblemFilters.exclude[FinalClassProblem]("coursier.TermDisplay$DownloadInfo"),
-        ProblemFilters.exclude[FinalClassProblem]("coursier.TermDisplay$CheckUpdateInfo"),
-        ProblemFilters.exclude[FinalClassProblem]("coursier.util.Base64$B64Scheme"),
-        ProblemFilters.exclude[MissingClassProblem]("coursier.TermDisplay$Message$Stop$"),
-        ProblemFilters.exclude[MissingClassProblem]("coursier.TermDisplay$Message"),
-        ProblemFilters.exclude[MissingClassProblem]("coursier.TermDisplay$Message$"),
-        ProblemFilters.exclude[MissingClassProblem]("coursier.TermDisplay$Message$Update$"),
-        ProblemFilters.exclude[MissingClassProblem]("coursier.TermDisplay$UpdateDisplayThread")
-      )
-    }
+    libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % scalazVersion
   )
 
 lazy val bootstrap = project
@@ -647,7 +629,7 @@ lazy val scalaVersionAgnosticCommonSettings = Seq(
 ) ++ releaseSettings
 
 lazy val commonSettings = scalaVersionAgnosticCommonSettings ++ Seq(
-  scalaVersion := "2.12.1",
+  scalaVersion := "2.10.6",
   crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6"),
   libraryDependencies ++= {
     if (scalaBinaryVersion.value == "2.10")
@@ -678,17 +660,6 @@ lazy val pluginSettings =
       Resolver.typesafeIvyRepo("releases")
     )
   )
-
-lazy val mimaPreviousArtifactSettings = Seq(
-  mimaPreviousArtifacts := {
-    val version = scalaBinaryVersion.value match {
-      case "2.12" => binaryCompatibility212Version
-      case _ => binaryCompatibilityVersion
-    }
-
-    Set(organization.value %% moduleName.value % version)
-  }
-)
 
 lazy val shadingSettings =
   inConfig(Shading)(PgpSettings.projectSettings) ++
