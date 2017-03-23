@@ -2,7 +2,7 @@ package coursier.util
 
 import scala.annotation.tailrec
 
-object Tree {
+private[util] object Tree {
 
   def apply[T](roots: Seq[T])(children: T => Seq[T],
                               show: T => String): String = {

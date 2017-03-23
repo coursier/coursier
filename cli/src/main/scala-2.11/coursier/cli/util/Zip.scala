@@ -4,7 +4,7 @@ import java.util.zip.{ZipEntry, ZipInputStream}
 
 import coursier.Platform
 
-object Zip {
+private[coursier] object Zip {
 
   def zipEntries(zipStream: ZipInputStream): Iterator[(ZipEntry, Array[Byte])] =
     new Iterator[(ZipEntry, Array[Byte])] {

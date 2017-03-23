@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 import scalaz.\/
 import scalaz.Scalaz.ToEitherOps
 
-object Parse {
+private[coursier] object Parse {
 
   private def defaultScalaVersion = scala.util.Properties.versionNumberString
 
