@@ -2,7 +2,7 @@ package coursier.util
 
 import coursier.core.{ Dependency, Resolution }
 
-object Config {
+private[coursier] object Config {
 
   // loose attempt at minimizing a set of dependencies from various configs
   // `configs` is assumed to be fully unfold

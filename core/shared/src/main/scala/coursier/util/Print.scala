@@ -2,7 +2,7 @@ package coursier.util
 
 import coursier.core.{ Attributes, Dependency, Module, Orders, Project, Resolution }
 
-object Print {
+private[coursier] object Print {
 
   def dependency(dep: Dependency): String = {
     val exclusionsStr = dep.exclusions.toVector.sorted.map {

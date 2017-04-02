@@ -1,6 +1,6 @@
 package coursier.util
 
-object WebPage {
+private[coursier] object WebPage {
 
   def listElements(url: String, page: String, directories: Boolean): Seq[String] =
     coursier.core.compatibility.listWebPageRawElements(page)
