@@ -19,7 +19,14 @@ object Mima {
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
 
-      Seq()
+      Seq(
+        // ignore shaded-stuff related errors
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
+        // was private, now removed
+        ProblemFilters.exclude[MissingClassProblem]("coursier.ivy.PropertiesPattern$Parser$"),
+        // made private so that the shaded fastparse stuff doesn't leak
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.ivy.PropertiesPattern.parser")
+      )
     }
   }
 
