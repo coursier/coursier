@@ -1,5 +1,7 @@
 # Coursier
 
+[![Join the chat at https://gitter.im/alexarchambault/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/alexarchambault/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 *Pure Scala Artifact Fetching*
 
 A Scala library to fetch dependencies from Maven / Ivy repositories
