@@ -4,10 +4,10 @@
 
 The [command-line tool](https://github.com/alexarchambault/coursier#command-line-1) of coursier allows to quickly test changes in the `core`, `cache`, and `cli` modules. To get a freshly compiled launcher for it, type
 ```
-$ sbt ++2.11.8 cli/pack
+$ sbt ++2.11.9 cli/pack
 ```
 
-`++2.11.8` sets the Scala version to `2.11.8`. This is the latest `2.11` Scala version. The launcher is only compiled for Scala `2.11` for now.
+`++2.11.9` sets the Scala version to `2.11.9`. This is the latest `2.11` Scala version. The launcher is only compiled for Scala `2.11` for now.
 
 `cli/pack` instructs sbt to create a "pack" directory, via the [sbt-pack](https://github.com/xerial/sbt-pack) plugin. Its result can be found under `cli/target/pack`. It mainly contains a `lib` sub-directory, containing the full launcher classpath, along with a `bin` sub-directory, that contains shell scripts allowing to launch applications contained in `lib`.
 
@@ -18,7 +18,7 @@ $ cli/target/pack/bin/coursier --help
 
 During development, it can be helpful to have the "pack" directory mirror what's in the sources. This can be achieved with
 ```
-$ sbt ++2.11.8 "~cli/pack"
+$ sbt ++2.11.9 "~cli/pack"
 ```
 which instructs sbt to watch the sources of coursier, and launch `cli/pack` whenever a change is detected.
 
@@ -98,7 +98,7 @@ and tweaked a bit more depending on what should be tested.
 
 The CI(s) of coursier (Linux and Mac with [Travis](https://travis-ci.org/alexarchambault/coursier/), Windows with [Appveyor](https://ci.appveyor.com/project/alexarchambault/coursier)) test a variety of things. Testing all of those locally can be quite cumbersome. Each of those is susceptible to make the CI fail - often for good reasons, sometimes for less good ones:
 
-- 3 Scala versions (currently, `2.10.6`, `2.11.8`, and `2.12.1`),
+- 3 Scala versions (currently, `2.10.6`, `2.11.9`, and `2.12.1`),
 - 2 sbt plugins (`sbt-coursier` and `sbt-shading`), each with its own test suite,
 - scala-js compilation and tests,
 - Windows CI,
