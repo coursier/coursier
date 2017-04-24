@@ -10,10 +10,10 @@ script:
 #    - bash <(curl -s https://codecov.io/bash)
 matrix:
   include:
-    - env: TRAVIS_SCALA_VERSION=2.12.1 PUBLISH=1
+    - env: TRAVIS_SCALA_VERSION=2.12.2 PUBLISH=1
       os: linux
       jdk: oraclejdk8
-    - env: TRAVIS_SCALA_VERSION=2.11.8 PUBLISH=1
+    - env: TRAVIS_SCALA_VERSION=2.11.11 PUBLISH=1
       os: linux
       jdk: oraclejdk8
       sudo: required
@@ -25,10 +25,10 @@ matrix:
       sudo: required
       services:
         - docker
-    - env: TRAVIS_SCALA_VERSION=2.12.1 PUBLISH=1 SCALA_JS=1
+    - env: TRAVIS_SCALA_VERSION=2.12.2 PUBLISH=1 SCALA_JS=1
       os: linux
       jdk: oraclejdk8
-    - env: TRAVIS_SCALA_VERSION=2.11.8 PUBLISH=1 SCALA_JS=1
+    - env: TRAVIS_SCALA_VERSION=2.11.11 PUBLISH=1 SCALA_JS=1
       os: linux
       jdk: oraclejdk8
     - env: TRAVIS_SCALA_VERSION=2.10.6 PUBLISH=1 SCALA_JS=1
