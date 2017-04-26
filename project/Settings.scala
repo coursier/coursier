@@ -54,8 +54,8 @@ object Settings {
   )
 
   lazy val shared = javaScalaPluginShared ++ Seq(
-    scalaVersion := "2.12.1",
-    crossScalaVersions := Seq("2.12.1", "2.11.11", "2.10.6"),
+    scalaVersion := "2.12.2",
+    crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6"),
     libs ++= {
       if (scalaBinaryVersion.value == "2.10")
         Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full))
