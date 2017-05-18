@@ -50,15 +50,15 @@ lazy val `fetch-js` = project
 
 lazy val tests = crossProject
   .dependsOn(core)
-  .jvmConfigure(_.dependsOn(cache % "test"))
+  .jvmConfigure(_.dependsOn(cache))
   .jsConfigure(_.dependsOn(`fetch-js` % "test"))
   .jsSettings(
-    scalaJSStage.in(Global) := FastOptStage
+    scalaJSStage.in(Global) := FastOptStage,
+    dontPublish
   )
   .configs(Integration)
   .settings(
     shared,
-    dontPublish,
     hasITs,
     coursierPrefix,
     libs += Deps.scalaAsync.value,
