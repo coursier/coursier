@@ -78,7 +78,7 @@ addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC3")
 to `~/.sbt/0.13/plugins/build.sbt` (enables it globally), or to the `project/plugins.sbt` file
 of an SBT project. Tested with SBT 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13 / 0.13.15 / 0.13.16-M1 / 1.0.0-M5.
 
-This is all that is needed for Coursier to serve as a replacement for the built-in dependency fetching of sbt. Use sbt as you otherwise would and Coursier will take care of fetching dependencies. Coursier will look in the ivy cache before downloading a dependency from internet while it populates its own cache in `~/.coursier` (default).
+This is all that is needed for Coursier to serve as a replacement for the built-in dependency fetching of sbt. Use sbt as you otherwise would and Coursier will take care of fetching dependencies. Coursier has its cache in `~/.coursier` (by default).
 
 If you run into a problem where a project used to resolve fine earlier but does no longer, try adding an appropriate resolver from here: http://www.scala-sbt.org/0.13/docs/Resolvers.html. 
 
