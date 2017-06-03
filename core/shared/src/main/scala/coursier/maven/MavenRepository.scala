@@ -210,6 +210,7 @@ final case class MavenRepository(
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
             mavenVersioning(snapshotVersioning, "", "jar")
+              .orElse(mavenVersioning(snapshotVersioning, "", "pom"))
               .orElse(mavenVersioning(snapshotVersioning, "", ""))
 
           versioningOption match {
