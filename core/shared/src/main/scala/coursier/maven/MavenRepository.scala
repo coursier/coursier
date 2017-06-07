@@ -12,7 +12,7 @@ object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
 
   def isSnapshot(version: String): Boolean =
-    version.endsWith("SNAPSHOT") || version.matches(SnapshotTimestamp.regex)
+    version.endsWith("SNAPSHOT") || SnapshotTimestamp.findFirstIn(version).nonEmpty
 
   def toBaseVersion(version: String): String = version match {
       case SnapshotTimestamp(null) => "SNAPSHOT"
