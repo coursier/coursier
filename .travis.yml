@@ -1,14 +1,16 @@
 language: java
 install:
   - npm install
-os:
-  - osx
 script:
   - scripts/travis.sh
 # Uncomment once https://github.com/scoverage/sbt-scoverage/issues/111 is fixed
 # after_success:
 #    - bash <(curl -s https://codecov.io/bash)
 matrix:
+  include:
+    - env: SCALA_VERSION=2.12.1
+      os: osx
+      osx_image: xcode8.3
   include:
     - env: SCALA_VERSION=2.12.1 PUBLISH=1
       os: linux
