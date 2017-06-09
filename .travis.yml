@@ -8,13 +8,12 @@ script:
 #    - bash <(curl -s https://codecov.io/bash)
 matrix:
   include:
-    - env: SCALA_VERSION=2.12.1
-      os: osx
-      osx_image: xcode8.3
-  include:
     - env: SCALA_VERSION=2.12.1 PUBLISH=1
-      os: linux
+      os:
+        - linux
+        - osx
       jdk: oraclejdk8
+      osx_image: xcode8.3
       sudo: required
       services:
         - docker
