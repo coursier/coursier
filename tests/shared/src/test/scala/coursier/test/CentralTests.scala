@@ -69,28 +69,25 @@ abstract class CentralTests extends TestSuite {
             case (k, v) => k + "_" + v
           }.mkString("_")
 
-      val expected =
-        await(
-          textResource(
-            Seq(
-              "resolutions",
-              module.organization,
-              module.name,
-              attrPathPart,
-              version + (
-                if (configuration.isEmpty)
-                  ""
-                else
-                  "_" + configuration.replace('(', '_').replace(')', '_')
-              )
-            ).filter(_.nonEmpty).mkString("/")
+      val path = Seq(
+        "resolutions",
+        module.organization,
+        module.name,
+        attrPathPart,
+        version + (
+          if (configuration.isEmpty)
+            ""
+          else
+            "_" + configuration.replace('(', '_').replace(')', '_')
           )
-        ).split('\n').toSeq
+      ).filter(_.nonEmpty).mkString("/")
+
+      def tryRead = textResource(path)
 
       val dep = Dependency(module, version, configuration = configuration)
       val res = await(resolve(Set(dep), extraRepo = extraRepo, profiles = profiles))
 
-      val result = res
+      lazy val result = res
         .minDependencies
         .toVector
         .map { dep =>
@@ -108,6 +105,15 @@ abstract class CentralTests extends TestSuite {
           case (org, name, ver, cfg) =>
             Seq(org, name, ver, cfg).mkString(":")
         }
+
+      val expected =
+        await(
+          tryRead.recoverWith {
+            case _: Exception =>
+              tryCreate(path, result.mkString("\n"))
+              tryRead
+          }
+        ).split('\n').toSeq
 
       for (((e, r), idx) <- expected.zip(result).zipWithIndex if e != r)
         println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
@@ -722,6 +728,13 @@ abstract class CentralTests extends TestSuite {
           assert(pomOpt.forall(sigHasSig))
         }
       }
+    }
+
+    'sbtPluginVersionRange - {
+      val mod = Module("org.ensime", "sbt-ensime", attributes = Map("scalaVersion" -> "2.10", "sbtVersion" -> "0.13"))
+      val ver = "1.12.+"
+
+      * - resolutionCheck(mod, ver)
     }
   }
 
