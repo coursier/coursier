@@ -9,6 +9,16 @@ import scala.language.higherKinds
 import scalaz._
 
 object MavenRepository {
+  val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
+
+  def isSnapshot(version: String): Boolean =
+    version.endsWith("SNAPSHOT") || SnapshotTimestamp.findFirstIn(version).nonEmpty
+
+  def toBaseVersion(version: String): String = version match {
+      case SnapshotTimestamp(null) => "SNAPSHOT"
+      case SnapshotTimestamp(base) => base + "SNAPSHOT"
+      case _ => version
+    }
 
   def ivyLikePath(
     org: String,
@@ -82,7 +92,7 @@ final case class MavenRepository(
   ): Seq[String] =
     module.organization.split('.').toSeq ++ Seq(
       dirModuleName(module, sbtAttrStub),
-      version
+      toBaseVersion(version)
     )
 
   private def urlFor(path: Seq[String]): String =
@@ -102,7 +112,7 @@ final case class MavenRepository(
       Map.empty,
       Map.empty,
       Attributes("pom", ""),
-      changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+      changing = changing.getOrElse(isSnapshot(version)),
       authentication = authentication
     )
     .withDefaultChecksums
@@ -210,6 +220,7 @@ final case class MavenRepository(
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
             mavenVersioning(snapshotVersioning, "", "jar")
+              .orElse(mavenVersioning(snapshotVersioning, "", "pom"))
               .orElse(mavenVersioning(snapshotVersioning, "", ""))
 
           versioningOption match {
@@ -224,7 +235,7 @@ final case class MavenRepository(
         }
 
       val res = F.bind(findVersioning(module, version, None, fetch).run) { eitherProj =>
-        if (eitherProj.isLeft && version.contains("-SNAPSHOT"))
+        if (eitherProj.isLeft && isSnapshot(version))
           F.map(withSnapshotVersioning.run)(eitherProj0 =>
             if (eitherProj0.isLeft)
               eitherProj
@@ -261,7 +272,7 @@ final case class MavenRepository(
         Map.empty,
         Map.empty,
         Attributes("", ""),
-        changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+        changing = changing.getOrElse(isSnapshot(version)),
         authentication
       )
 
@@ -297,7 +308,7 @@ final case class MavenRepository(
           "metadata" -> projectArtifact0
         ),
         Attributes("", ""),
-        changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+        changing = changing.getOrElse(isSnapshot(version)),
         authentication
       )
 
