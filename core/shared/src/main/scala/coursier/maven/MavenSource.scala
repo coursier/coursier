@@ -19,6 +19,13 @@ final case class MavenSource(
     overrideClassifiers: Option[Seq[String]]
   ): Seq[Artifact] = {
 
+    val packagingTpeMap = project.packagingOpt
+      .filter(_ != Pom.relocatedPackaging)
+      .map { packaging =>
+        (MavenSource.typeDefaultClassifier(packaging), MavenSource.typeExtension(packaging)) -> packaging
+      }
+      .toMap
+
     def artifactOf(publication: Publication) = {
 
       val versioning = project
@@ -29,11 +36,11 @@ final case class MavenSource(
 
       val path = dependency.module.organization.split('.').toSeq ++ Seq(
         MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
-        project.actualVersion,
+        toBaseVersion(project.actualVersion),
         s"${dependency.module.name}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"
       )
 
-      val changing0 = changing.getOrElse(project.actualVersion.contains("-SNAPSHOT"))
+      val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
       var artifact =
         Artifact(
           root + path.mkString("/"),
@@ -60,40 +67,61 @@ final case class MavenSource(
       )
     }
 
+    lazy val defaultPublication = {
+
+      val type0 = if (dependency.attributes.`type`.isEmpty) "jar" else dependency.attributes.`type`
+
+      val ext = MavenSource.typeExtension(type0)
+
+      val classifier =
+        if (dependency.attributes.classifier.isEmpty)
+          MavenSource.typeDefaultClassifier(type0)
+        else
+          dependency.attributes.classifier
+
+      val tpe = packagingTpeMap.getOrElse(
+        (classifier, ext),
+        MavenSource.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+      )
+
+      Publication(
+        dependency.module.name,
+        tpe,
+        ext,
+        classifier
+      )
+    }
+
     overrideClassifiers match {
       case Some(classifiers) =>
 
-        classifiers.map { classifier =>
-          Publication(
-            dependency.module.name,
-            "jar",
-            "jar",
-            classifier
-          )
-        }.map(artifactWithExtra)
+        classifiers
+          .map { classifier =>
+            if (classifier == dependency.attributes.classifier)
+              defaultPublication
+            else {
+              val ext = "jar"
+              val tpe = packagingTpeMap.getOrElse(
+                (classifier, ext),
+                MavenSource.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+              )
+
+              Publication(
+                dependency.module.name,
+                tpe,
+                ext,
+                classifier
+              )
+            }
+          }
+          .map(artifactWithExtra)
 
       case None =>
-
-        val type0 = if (dependency.attributes.`type`.isEmpty) "jar" else dependency.attributes.`type`
-
-        val extension = MavenSource.typeExtension(type0)
-
-        val classifier =
-          if (dependency.attributes.classifier.isEmpty)
-            MavenSource.typeDefaultClassifier(type0)
-          else
-            dependency.attributes.classifier
-
-        Seq(
-          Publication(
-            dependency.module.name,
-            type0,
-            extension,
-            classifier
-          )
-        ).map(artifactWithExtra)
+        Seq(defaultPublication).map(artifactWithExtra)
     }
   }
+
+  private val types = Map("sha1" -> "SHA-1", "md5" -> "MD5", "asc" -> "sig")
 
   private def artifactsKnownPublications(
     dependency: Dependency,
@@ -105,12 +133,14 @@ final case class MavenSource(
       publication: Publication,
       extra: Map[String, EnrichedPublication]
     ) {
-      def artifact: Artifact = {
+      def artifact: Artifact =
+        artifact(publication.`type`)
+      def artifact(versioningType: String): Artifact = {
 
         val versioning = project
           .snapshotVersioning
           .flatMap(versioning =>
-            mavenVersioning(versioning, publication.classifier, publication.`type`)
+            mavenVersioning(versioning, publication.classifier, versioningType)
           )
 
         val path = dependency.module.organization.split('.').toSeq ++ Seq(
@@ -119,9 +149,9 @@ final case class MavenSource(
           s"${dependency.module.name}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"
         )
 
-        val changing0 = changing.getOrElse(project.actualVersion.contains("-SNAPSHOT"))
+        val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 
-        val extra0 = extra.mapValues(_.artifact).iterator.toMap
+        val extra0 = extra.mapValues(_.artifact(versioningType)).iterator.toMap
 
         Artifact(
           root + path.mkString("/"),
@@ -134,40 +164,40 @@ final case class MavenSource(
       }
     }
 
-    def extensionIsExtra(publications: Seq[EnrichedPublication], ext: String, tpe: String): Seq[EnrichedPublication] = {
-
-      val (withExt, other) = publications.partition(_.publication.ext.endsWith("." + ext))
-
-      var withExtMap = withExt.map(p => (p.publication.classifier, p.publication.ext.stripSuffix("." + ext)) -> p).toMap
-
-      other.map { p =>
-        val key = (p.publication.classifier, p.publication.ext)
-        withExtMap.get(key).fold(p) { sigPub =>
-          withExtMap -= key
-          p.copy(
-            extra = p.extra + (tpe -> sigPub)
-          )
-        }
-      } ++ withExtMap.values
-    }
-
     def groupedEnrichedPublications(publications: Seq[Publication]): Seq[EnrichedPublication] = {
 
-      def helperSameName(publications: Seq[Publication]): Seq[EnrichedPublication] = {
+      def helper(publications: Seq[Publication]): Seq[EnrichedPublication] = {
 
-        val publications0 = publications.map { pub =>
-          EnrichedPublication(pub, Map())
+        var publications0 = publications
+          .map { pub =>
+            pub.ext -> EnrichedPublication(pub, Map())
+          }
+          .toMap
+
+        val byLength = publications0.toVector.sortBy(-_._1.length)
+
+        for {
+          (ext, _) <- byLength
+          idx = ext.lastIndexOf('.')
+          if idx >= 0
+          subExt = ext.substring(idx + 1)
+          baseExt = ext.substring(0, idx)
+          tpe <- types.get(subExt)
+          mainPub <- publications0.get(baseExt)
+        } {
+          val pub = publications0(ext)
+          publications0 += baseExt -> mainPub.copy(
+            extra = mainPub.extra + (tpe -> pub)
+          )
+          publications0 -= ext
         }
 
-        Seq("sha1" -> "SHA-1", "md5" -> "MD5", "asc" -> "sig").foldLeft(publications0) {
-          case (pub, (ext, tpe)) =>
-            extensionIsExtra(pub, ext, tpe)
-        }
+        publications0.values.toVector
       }
 
       publications
-        .groupBy(_.name)
-        .mapValues(helperSameName)
+        .groupBy(p => (p.name, p.classifier))
+        .mapValues(helper)
         .values
         .toVector
         .flatten
@@ -209,9 +239,10 @@ final case class MavenSource(
         else if (dependency.attributes.`type`.nonEmpty)
           enrichedPublications.collect {
             case p
-              if p.publication.`type` == dependency.attributes.`type` ||
-                (p.publication.ext == dependency.attributes.`type` && project.packagingOpt.toSeq.contains(p.publication.`type`)) // wow
-            =>
+              if p.publication.classifier.isEmpty && (
+                   p.publication.`type` == dependency.attributes.`type` ||
+                   (p.publication.ext == dependency.attributes.`type` && project.packagingOpt.toSeq.contains(p.publication.`type`)) // wow
+                ) =>
               p.artifact
           }
         else
@@ -224,17 +255,62 @@ final case class MavenSource(
     res.map(withMetadataExtra)
   }
 
+  private val dummyArtifact = Artifact("", Map(), Map(), Attributes("", ""), changing = false, None)
+
   def artifacts(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[String]]
-  ): Seq[Artifact] = {
+  ): Seq[Artifact] =
+    if (project.packagingOpt.toSeq.contains(Pom.relocatedPackaging))
+      Nil
+    else {
 
-    if (project.publications.isEmpty)
-      artifactsUnknownPublications(dependency, project, overrideClassifiers)
-    else
-      artifactsKnownPublications(dependency, project, overrideClassifiers)
-  }
+      def makeOptional(a: Artifact): Artifact =
+        a.copy(
+          extra = a.extra.mapValues(makeOptional).iterator.toMap + (Artifact.optionalKey -> dummyArtifact)
+        )
+
+      def merge(a: Artifact, other: Artifact): Artifact = {
+
+        assert(a.url == other.url, s"Merging artifacts with different URLs (${a.url}, ${other.url})")
+
+        val extra =
+          a.extra.map {
+            case (k, v) =>
+              k -> other.extra.get(k).fold(v)(merge(v, _))
+          } ++
+          other.extra
+            .filterKeys(k => !a.extra.contains(k))
+
+        a.copy(
+          checksumUrls = other.checksumUrls ++ a.checksumUrls,
+          extra = extra
+        )
+      }
+
+      val defaultPublications = artifactsUnknownPublications(dependency, project, overrideClassifiers)
+
+      if (project.publications.isEmpty)
+        defaultPublications
+      else {
+        val listedPublications = artifactsKnownPublications(dependency, project, overrideClassifiers)
+        val listedUrls = listedPublications.map(_.url).toSet
+        val defaultPublications0 = defaultPublications.map(makeOptional)
+        val defaultPublicationsMap = defaultPublications0
+          .map(a => a.url -> a)
+          .toMap
+        val listedPublications0 = listedPublications.map { a =>
+          defaultPublicationsMap
+            .get(a.url)
+            .fold(a)(merge(a, _))
+        }
+        val extraPublications = defaultPublications0
+          .filter(a => !listedUrls(a.url))
+
+        listedPublications0 ++ extraPublications
+      }
+    }
 }
 
 object MavenSource {
@@ -259,7 +335,7 @@ object MavenSource {
     typeExtensions.getOrElse(`type`, `type`)
 
   // see https://github.com/apache/maven/blob/c023e58104b71e27def0caa034d39ab0fa0373b6/maven-core/src/main/resources/META-INF/plexus/artifact-handlers.xml
-  // discussed in https://github.com/alexarchambault/coursier/issues/298
+  // discussed in https://github.com/coursier/coursier/issues/298
   val typeDefaultClassifiers: Map[String, String] = Map(
     "test-jar"    -> "tests",
     "javadoc"     -> "javadoc",

@@ -28,7 +28,7 @@ object MavenTests extends TestSuite {
       * - CentralTests.withArtifacts(
         dep = dep,
         artifactType = "jar",
-        extraRepo = Some(repo),
+        extraRepos = Seq(repo),
         classifierOpt = None
       ) {
         case Seq(artifact) =>
@@ -39,8 +39,8 @@ object MavenTests extends TestSuite {
 
       * - CentralTests.withArtifacts(
         dep = dep,
-        artifactType = "jar",
-        extraRepo = Some(repo),
+        artifactType = "src",
+        extraRepos = Seq(repo),
         classifierOpt = Some("sources")
       ) {
         case Seq(artifact) =>

@@ -1,6 +1,6 @@
 
 import Aliases._
-import CoursierSettings._
+import Settings._
 import Publish._
 
 parallelExecution.in(Global) := false
@@ -13,7 +13,12 @@ lazy val core = crossProject
     scalaXmlIfNecessary,
     libs ++= Seq(
       Deps.fastParse % "shaded",
-      Deps.jsoup
+      Deps.jsoup % "shaded"
+    ),
+    shadeNamespaces ++= Set(
+      "org.jsoup",
+      "fastparse",
+      "sourcecode"
     ),
     generatePropertyFile
   )
@@ -64,6 +69,25 @@ lazy val tests = crossProject
 lazy val testsJvm = tests.jvm
 lazy val testsJs = tests.js
 
+lazy val `proxy-tests` = project
+  .dependsOn(testsJvm % "test->test")
+  .configs(Integration)
+  .settings(
+    shared,
+    dontPublish,
+    hasITs,
+    coursierPrefix,
+    libs += Deps.scalaAsync.value,
+    utest,
+    sharedTestResources
+  )
+
+lazy val paths = project
+  .settings(
+    pureJava,
+    dontPublish
+  )
+
 lazy val cache = project
   .dependsOn(coreJvm)
   .settings(
@@ -71,18 +95,29 @@ lazy val cache = project
     Mima.previousArtifacts,
     coursierPrefix,
     libs += Deps.scalazConcurrent,
-    Mima.cacheFilters
+    Mima.cacheFilters,
+    addPathsSources
   )
 
 lazy val bootstrap = project
   .settings(
     pureJava,
     dontPublish,
+    addPathsSources,
+    // seems not to be automatically found with sbt 0.13.16-M1 :-/
+    mainClass := Some("coursier.Bootstrap"),
     renameMainJar("bootstrap.jar")
   )
 
+lazy val extra = project
+  .dependsOn(coreJvm)
+  .settings(
+    shared,
+    coursierPrefix
+  )
+
 lazy val cli = project
-  .dependsOn(coreJvm, cache)
+  .dependsOn(coreJvm, cache, extra)
   .settings(
     shared,
     dontPublishIn("2.10", "2.12"),
@@ -123,7 +158,7 @@ lazy val web = project
       if (scalaBinaryVersion.value == "2.11")
         dir
       else
-        dir / "dummy"
+        dir / "target" / "dummy"
     },
     noTests,
     webjarBintrayRepository,
@@ -149,20 +184,31 @@ lazy val web = project
 
 lazy val doc = project
   .dependsOn(coreJvm, cache)
+  .enablePlugins(TutPlugin)
   .settings(
     shared,
     dontPublish,
-    tutSettings,
     tutSourceDirectory := baseDirectory.value,
     tutTargetDirectory := baseDirectory.in(LocalRootProject).value
   )
 
-// Don't try to compile that if you're not in 2.10
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache)
+  .dependsOn(coreJvm, cache, extra)
   .settings(plugin)
 
-// Don't try to compile that if you're not in 2.10
+lazy val `sbt-pgp-coursier` = project
+  .dependsOn(`sbt-coursier`)
+  .settings(
+    plugin,
+    libs ++= {
+      scalaBinaryVersion.value match {
+        case "2.10" | "2.12" =>
+          Seq(Deps.sbtPgp.value)
+        case _ => Nil
+      }
+    }
+  )
+
 lazy val `sbt-shading` = project
   .enablePlugins(ShadingPlugin)
   .dependsOn(`sbt-coursier`)
@@ -180,29 +226,34 @@ lazy val `sbt-launcher` = project
   .settings(
     shared,
     generatePack,
-    libs ++= Seq(
-      Deps.caseApp,
-      Deps.sbtLauncherInterface,
-      Deps.typesafeConfig
-    )
+    dontPublishIn("2.10", "2.12"),
+    libs ++= {
+      if (scalaBinaryVersion.value == "2.11")
+        Seq(
+          Deps.caseApp12,
+          Deps.sbtLauncherInterface,
+          Deps.typesafeConfig
+        )
+      else
+        Nil
+    }
   )
 
 lazy val `http-server` = project
   .settings(
     shared,
     generatePack,
-    dontPublishIn("2.10", "2.12"),
-    name := "http-server-java7",
+    dontPublishIn("2.10", "2.11"),
     libs ++= {
-      if (scalaBinaryVersion.value == "2.11")
+      if (scalaBinaryVersion.value == "2.12")
         Seq(
           Deps.http4sBlazeServer,
           Deps.http4sDsl,
           Deps.slf4jNop,
-          Deps.caseApp
+          Deps.caseApp12
         )
       else
-        Seq()
+        Nil
     }
   )
 
@@ -215,16 +266,21 @@ lazy val okhttp = project
   )
 
 lazy val echo = project
-  .settings(shared)
+  .settings(pureJava)
 
 lazy val jvm = project
+  .dummy
   .aggregate(
     coreJvm,
     testsJvm,
+    `proxy-tests`,
+    paths,
     cache,
     bootstrap,
+    extra,
     cli,
     `sbt-coursier`,
+    `sbt-pgp-coursier`,
     `sbt-shading`,
     `sbt-launcher`,
     doc,
@@ -239,6 +295,7 @@ lazy val jvm = project
   )
 
 lazy val js = project
+  .dummy
   .aggregate(
     coreJs,
     `fetch-js`,
@@ -251,22 +308,43 @@ lazy val js = project
     moduleName := "coursier-js"
   )
 
+// run sbt-plugins/publishLocal to publish all that necessary for plugins
+lazy val `sbt-plugins` = project
+  .dummy
+  .aggregate(
+    coreJvm,
+    cache,
+    extra,
+    `sbt-coursier`,
+    `sbt-pgp-coursier`,
+    `sbt-shading`
+  )
+  .settings(
+    shared,
+    dontPublish
+  )
+
 lazy val coursier = project
-  .in(file("."))
+  .in(root)
   .aggregate(
     coreJvm,
     coreJs,
     `fetch-js`,
     testsJvm,
     testsJs,
+    `proxy-tests`,
+    paths,
     cache,
     bootstrap,
+    extra,
     cli,
     `sbt-coursier`,
+    `sbt-pgp-coursier`,
     `sbt-shading`,
     `sbt-launcher`,
     web,
     doc,
+    echo,
     `http-server`,
     okhttp
   )
@@ -278,24 +356,62 @@ lazy val coursier = project
 
 
 lazy val addBootstrapJarAsResource = {
-  resourceGenerators.in(Compile) += packageBin.in(bootstrap).in(Compile).map(Seq(_)).taskValue
+
+  import java.nio.file.Files
+
+  packageBin.in(Compile) := {
+    val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
+    val source = packageBin.in(Compile).value
+
+    val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
+
+    ZipUtil.addToZip(source, dest, Seq(
+      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath)
+    ))
+
+    dest
+  }
 }
 
 lazy val addBootstrapInProguardedJar = {
+
+  import java.nio.charset.StandardCharsets
+  import java.nio.file.Files
+
   ProguardKeys.proguard.in(Proguard) := {
     val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
     val source = proguardedJar.value
 
     val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
+    val dest0 = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap-and-prelude.jar")
 
-    ZipUtil.addToZip(source, dest, Seq("bootstrap.jar" -> bootstrapJar))
+    // TODO Get from cli original JAR
+    val manifest =
+      s"""Manifest-Version: 1.0
+         |Implementation-Title: ${name.value}
+         |Implementation-Version: ${version.value}
+         |Specification-Vendor: ${organization.value}
+         |Specification-Title: ${name.value}
+         |Implementation-Vendor-Id: ${organization.value}
+         |Specification-Version: ${version.value}
+         |Implementation-URL: ${homepage.value.getOrElse("")}
+         |Implementation-Vendor: ${organization.value}
+         |Main-Class: ${mainClass.in(Compile).value.getOrElse(sys.error("Main class not found"))}
+         |""".stripMargin
 
-    Seq(dest)
+    ZipUtil.addToZip(source, dest, Seq(
+      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
+      "META-INF/MANIFEST.MF" -> manifest.getBytes(StandardCharsets.UTF_8)
+    ))
+
+    ZipUtil.addPrelude(dest, dest0)
+
+    Seq(dest0)
   }
 }
 
 lazy val proguardedCli = Seq(
-  ProguardKeys.proguardVersion.in(Proguard) := "5.3",
+  ProguardKeys.proguardVersion.in(Proguard) := SharedVersions.proguard,
   ProguardKeys.options.in(Proguard) ++= Seq(
     "-dontwarn",
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
@@ -321,4 +437,8 @@ lazy val proguardedCli = Seq(
 
 lazy val sharedTestResources = {
   unmanagedResourceDirectories.in(Test) += baseDirectory.in(LocalRootProject).value / "tests" / "shared" / "src" / "test" / "resources"
+}
+
+lazy val addPathsSources = {
+  unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(Compile).in(paths).value
 }

@@ -1,9 +1,9 @@
 
 object SharedVersions {
 
-  val scalaz = "7.2.8"
-  
-  // last http4s version compatible with Java 7 (Travis-based Mac CI still on Java 7...)
-  val http4s = "0.8.6"
+  def fastParse = "0.4.3"
+  def http4s = "0.15.13a"
+  def proguard = "5.3.3"
+  def scalaz = "7.2.13"
 
 }

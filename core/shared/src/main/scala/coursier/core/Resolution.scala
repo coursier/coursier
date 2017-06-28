@@ -31,11 +31,7 @@ object Resolution {
 
     def fromActivation = profile.activation.isActive(properties, osInfo, jdkVersion)
 
-    val res = fromUserOrDefault.getOrElse(fromActivation)
-
-    // println(s"Profile\n$profile\n$res\n")
-
-    res
+    fromUserOrDefault.getOrElse(fromActivation)
   }
 
   /**
@@ -272,7 +268,7 @@ object Resolution {
           if (mgmtDep.version.nonEmpty)
             dep = dep.copy(version = mgmtDep.version)
 
-          if (mgmtConfig.nonEmpty)
+          if (config.isEmpty)
             config = mgmtConfig
 
           // FIXME The version and scope/config from dependency management, if any, are substituted
@@ -785,31 +781,42 @@ final case class Resolution(
     project: Project
   ): Set[ModuleVersion] = {
 
-    val approxProperties0 =
-      project.parent
-        .flatMap(projectCache.get)
-        .map(_._2.properties)
-        .fold(project.properties)(project.properties ++ _)
+    val needsParent =
+      project.parent.exists { par =>
+        val parentFound = projectCache.contains(par) || errorCache.contains(par)
+        !parentFound
+      }
 
-    val approxProperties = propertiesMap(approxProperties0) ++ projectProperties(project)
+    if (needsParent)
+      project.parent.toSet
+    else {
 
-    val profileDependencies =
-      profiles(
-        project,
-        approxProperties,
-        osInfo,
-        jdkVersion,
-        userActivations
-      ).flatMap(p => p.dependencies ++ p.dependencyManagement)
+      val approxProperties0 =
+        project.parent
+          .flatMap(projectCache.get)
+          .map(_._2.properties)
+          .fold(project.properties)(project.properties ++ _)
 
-    val modules = withProperties(
-      project.dependencies ++ project.dependencyManagement ++ profileDependencies,
-      approxProperties
-    ).collect {
-      case ("import", dep) => dep.moduleVersion
+      val approxProperties = propertiesMap(approxProperties0) ++ projectProperties(project)
+
+      val profileDependencies =
+        profiles(
+          project,
+          approxProperties,
+          osInfo,
+          jdkVersion,
+          userActivations
+        ).flatMap(p => p.dependencies ++ p.dependencyManagement)
+
+      val modules = withProperties(
+        project.dependencies ++ project.dependencyManagement ++ profileDependencies,
+        approxProperties
+      ).collect {
+        case ("import", dep) => dep.moduleVersion
+      }
+
+      modules.toSet
     }
-
-    modules.toSet ++ project.parent
   }
 
   /**
@@ -1010,9 +1017,10 @@ final case class Resolution(
 
   private def artifacts0(
     overrideClassifiers: Option[Seq[String]],
-    keepAttributes: Boolean
+    keepAttributes: Boolean,
+    optional: Boolean
   ): Seq[Artifact] =
-    dependencyArtifacts0(overrideClassifiers).map {
+    dependencyArtifacts0(overrideClassifiers, optional).map {
       case (_, artifact) =>
         if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", ""))
     }.distinct
@@ -1021,12 +1029,18 @@ final case class Resolution(
   // if one wants the attributes field of artifacts not to be cleared, call dependencyArtifacts
 
   def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
-    artifacts0(Some(classifiers), keepAttributes = false)
+    artifacts0(Some(classifiers), keepAttributes = false, optional = true)
 
   def artifacts: Seq[Artifact] =
-    artifacts0(None, keepAttributes = false)
+    artifacts0(None, keepAttributes = false, optional = false)
 
-  private def dependencyArtifacts0(overrideClassifiers: Option[Seq[String]]): Seq[(Dependency, Artifact)] =
+  def artifacts(withOptional: Boolean): Seq[Artifact] =
+    artifacts0(None, keepAttributes = false, optional = withOptional)
+
+  private def dependencyArtifacts0(
+    overrideClassifiers: Option[Seq[String]],
+    optional: Boolean
+  ): Seq[(Dependency, Artifact)] =
     for {
       dep <- minDependencies.toSeq
       (source, proj) <- projectCache
@@ -1037,10 +1051,13 @@ final case class Resolution(
     } yield dep -> artifact
 
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(None)
+    dependencyArtifacts0(None, optional = false)
+
+  def dependencyArtifacts(withOptional: Boolean): Seq[(Dependency, Artifact)] =
+    dependencyArtifacts0(None, optional = withOptional)
 
   def dependencyClassifiersArtifacts(classifiers: Seq[String]): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(Some(classifiers))
+    dependencyArtifacts0(Some(classifiers), optional = true)
 
   /**
     * Returns errors on dependencies

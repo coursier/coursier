@@ -5,7 +5,7 @@
 A Scala library to fetch dependencies from Maven / Ivy repositories
 
 [![Build Status](https://travis-ci.org/coursier/coursier.svg?branch=master)](https://travis-ci.org/coursier/coursier)
-[![Build status (Windows)](https://ci.appveyor.com/api/projects/status/trtum5b7washfbj9?svg=true)](https://ci.appveyor.com/project/coursier/coursier)
+[![Build status (Windows)](https://ci.appveyor.com/api/projects/status/yy3svc6ukqpykw5s?svg=true)](https://ci.appveyor.com/project/alexarchambault/coursier-a7n6k)
 [![Join the chat at https://gitter.im/coursier/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/coursier/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://img.shields.io/maven-central/v/io.get-coursier/coursier_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/io.get-coursier/coursier_2.11)
 [![Scaladoc](http://javadoc-badge.appspot.com/io.get-coursier/coursier_2.11.svg?label=scaladoc)](http://javadoc-badge.appspot.com/io.get-coursier/coursier_2.11)
@@ -73,10 +73,10 @@ Lastly, it can be used programmatically via its [API](#api) and has a Scala JS [
 
 Enable the SBT plugin by adding
 ```scala
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC1")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC6")
 ```
 to `~/.sbt/0.13/plugins/build.sbt` (enables it globally), or to the `project/plugins.sbt` file
-of an SBT project. Tested with SBT 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13.
+of an SBT project. Tested with SBT 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13 / 0.13.15 / 0.13.16-M1 / 1.0.0-M5.
 
 
 ### Command-line
@@ -86,9 +86,9 @@ Download and run its launcher with
 $ curl -L -o coursier https://git.io/vgvpD && chmod +x coursier && ./coursier --help
 ```
 
-Alternatively on OS X, install it via [@paulp](https://github.com/paulp/)'s homebrew formula,
+Alternatively on OS X, install it via homebrew,
 ```
-$ brew install --HEAD paulp/extras/coursier
+$ brew install coursier/formulas/coursier
 ```
 
 Run an application distributed via artifacts with
@@ -111,8 +111,8 @@ $ ./coursier fetch org.apache.spark:spark-sql_2.11:1.6.1 com.twitter:algebird-sp
 Add to your `build.sbt`
 ```scala
 libraryDependencies ++= Seq(
-  "io.get-coursier" %% "coursier" % "1.0.0-RC1",
-  "io.get-coursier" %% "coursier-cache" % "1.0.0-RC1"
+  "io.get-coursier" %% "coursier" % "1.0.0-RC6",
+  "io.get-coursier" %% "coursier-cache" % "1.0.0-RC6"
 )
 ```
 
@@ -242,7 +242,7 @@ of the cache used by a particular project, in case you have any doubt about what
 
 Enable the SBT plugin globally by adding
 ```scala
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC1")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC6")
 ```
 to `~/.sbt/0.13/plugins/build.sbt`
 
@@ -266,9 +266,9 @@ $ curl -L -o coursier https://git.io/vgvpD && chmod +x coursier && ./coursier --
 The launcher itself weighs only 8 kB and can be easily embedded as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
-Alternatively on OS X, install it via [@paulp](https://github.com/paulp/)'s homebrew formula, that puts the `coursier` launcher directly in your PATH,
+Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
 ```
-$ brew install --HEAD paulp/extras/coursier
+$ brew install coursier/formulas/coursier
 ```
 
 ```
@@ -397,7 +397,7 @@ The `bootstrap` generates tiny bootstrap launchers, able to pull their dependenc
 repositories on first launch. For example, the launcher of coursier is [generated](https://github.com/coursier/coursier/blob/master/project/generate-launcher.sh) with a command like
 ```
 $ ./coursier bootstrap \
-    io.get-coursier:coursier-cli_2.11:1.0.0-RC1 \
+    io.get-coursier:coursier-cli_2.11:1.0.0-RC6 \
     -b -f -o coursier \
     -M coursier.cli.Coursier
 ```
@@ -409,12 +409,12 @@ See `./coursier bootstrap --help` for a list of the available options.
 Add to your `build.sbt`
 ```scala
 libraryDependencies ++= Seq(
-  "io.get-coursier" %% "coursier" % "1.0.0-RC1",
-  "io.get-coursier" %% "coursier-cache" % "1.0.0-RC1"
+  "io.get-coursier" %% "coursier" % "1.0.0-RC6",
+  "io.get-coursier" %% "coursier-cache" % "1.0.0-RC6"
 )
 ```
 
-The first module, `"io.get-coursier" %% "coursier" % "1.0.0-RC1"`, mainly depends on
+The first module, `"io.get-coursier" %% "coursier" % "1.0.0-RC6"`, mainly depends on
 `scalaz-core` (and only it, *not* `scalaz-concurrent` for example). It contains among others,
 definitions,
 mainly in [`Definitions.scala`](https://github.com/coursier/coursier/blob/master/core/shared/src/main/scala/coursier/core/Definitions.scala),
@@ -424,7 +424,7 @@ that expects to be given metadata, wrapped in any `Monad`, then feeds these to `
 you the final `Resolution`, wrapped in the same `Monad` it was given input. This final `Resolution` has all the dependencies,
 including the transitive ones.
 
-The second module, `"io.get-coursier" %% "coursier-cache" % "1.0.0-RC1"`, is precisely in charge of fetching
+The second module, `"io.get-coursier" %% "coursier-cache" % "1.0.0-RC6"`, is precisely in charge of fetching
 these input metadata. It uses `scalaz.concurrent.Task` as a `Monad` to wrap them. It also fetches artifacts (JARs, etc.).
 It caches all of these (metadata and artifacts) on disk, and validates checksums too.
 
@@ -784,6 +784,7 @@ Once RCs will be considered stable enough, `1.0.0` should be released.
 
 ## Contributors
 
+- Claudio Bley ([@avdv](https://github.com/avdv))
 - Erem Boto ([@eboto](https://github.com/eboto))
 - Erik LaBianca ([@easel](https://github.com/easel))
 - Guillaume Massé ([@MasseGuillaume](https://github.com/MasseGuillaume))
@@ -793,10 +794,13 @@ Once RCs will be considered stable enough, `1.0.0` should be released.
 - joriscode ([@joriscode](https://github.com/joriscode))
 - Kazuyoshi Kato ([@kzys](https://github.com/kzys))
 - Lars Hupel ([@larsrh](https://github.com/larsrh))
+- Mirco Dotta ([@dotta](https://github.com/dotta))
 - n4to4 ([@n4to4](https://github.com/n4to4))
 - Ólafur Páll Geirsson ([@olafurpg](https://github.com/olafurpg))
 - Rodrigo Fernandes ([@rtfpessoa](https://github.com/rtfpessoa))
 - Roman Iakovlev ([@RomanIakovlev](https://github.com/RomanIakovlev))
+- Ryo Fukumuro ([@rfkm](https://github.com/rfkm))
+- Sebastian Schuberth ([@sschuberth](https://github.com/sschuberth))
 - Simon Ochsenreither ([@soc](https://github.com/soc))
 - Your name here :-)
 
@@ -813,7 +817,20 @@ for writing coursier),
 - [Apache Toree](https://github.com/apache/incubator-toree) - formerly known as [spark-kernel](https://github.com/ibm-et/spark-kernel), is now using coursier to
 add dependencies on-the-fly ([#4](https://github.com/apache/incubator-toree/pull/4)),
 - [Quill](https://github.com/getquill/quill) is using coursier for faster dependency resolution ([#591](https://github.com/getquill/quill/pull/591)),
+- [vscode-scala](https://github.com/dragos/dragos-vscode-scala) uses coursier to fetch and launch its ensime-based server,
+- [Ammonite](https://github.com/lihaoyi/Ammonite) uses coursier to fetch user-added dependencies since version `0.9.0`,
+- [ensime-sbt](https://github.com/ensime/ensime-sbt) uses coursier to get the ensime server classpath,
+- [scalafmt](https://github.com/scalameta/scalafmt) relies on coursier for its CLI installation,
+- [scalafiddle](https://scalafiddle.io) uses coursier to fetch user-added dependencies,
 - Your project here :-)
+
+## Acknowledgements
+
+<a href="https://www.ej-technologies.com/products/jprofiler/overview.html">
+  <img src="https://www.ej-technologies.com/images/product_banners/jprofiler_medium.png">
+</a>
+
+Thanks to [JProfiler](https://www.ej-technologies.com/products/jprofiler/overview.html) for having kindly granted an [Open Source license](https://www.ej-technologies.com/buy/jprofiler/openSource)  to help for the development of coursier.
 
 
 Released under the Apache license, v2.

@@ -89,7 +89,6 @@ final case class Project(
     */
   actualVersionOpt: Option[String],
 
-  // Ivy-specific
   // First String is configuration
   publications: Seq[(String, Publication)],
 
@@ -199,9 +198,15 @@ final case class Artifact(
 ) {
   def `type`: String = attributes.`type`
   def classifier: String = attributes.classifier
+
+  // TODO make that a proper field after 1.0 (instead of the hack via extra)
+  def isOptional: Boolean = extra.contains(Artifact.optionalKey)
 }
 
 object Artifact {
+
+  private[coursier] val optionalKey = s"$$optional"
+
   trait Source {
     def artifacts(
       dependency: Dependency,

@@ -4,14 +4,28 @@ import sbt.Keys._
 
 import com.typesafe.tools.mima.plugin.MimaKeys._
 
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+
 object Mima {
 
-  def binaryCompatibilityVersion = "1.0.0-RC1"
+  // Important: the line with the "binary compatibility versions" comment below is matched during releases
+  def binaryCompatibilityVersions = Set(
+    "1.0.0-RC1",
+    "1.0.0-RC2",
+    "1.0.0-RC3",
+    "1.0.0-RC4",
+    "1.0.0-RC5",
+    "1.0.0-RC6",
+    "" // binary compatibility versions
+  )
 
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      Set(organization.value %% moduleName.value % binaryCompatibilityVersion)
+      binaryCompatibilityVersions.collect {
+        case ver if ver.nonEmpty =>
+          organization.value %%% moduleName.value % ver
+      }
     }
   )
 
@@ -34,7 +48,14 @@ object Mima {
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
 
-      Seq()
+      Seq(
+        // these are private, don't know why they end-up appearing here
+        // (probably related to https://github.com/typesafehub/migration-manager/issues/34)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.TermDisplay#DownloadInfo")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.TermDisplay$DownloadInfo")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.TermDisplay#CheckUpdateInfo")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.TermDisplay#Info"))
+      )
     }
   }
 

@@ -7,7 +7,7 @@ import java.util.jar.{ Manifest => JManifest }
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
-import coursier.cli.typelevel.Typelevel
+import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.util.{Print, Parse}
 
@@ -162,6 +162,9 @@ class Helper(
       )
   }
 
+
+  val loggerFallbackMode =
+    !progress && TermDisplay.defaultFallbackMode
 
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
@@ -364,9 +367,6 @@ class Helper(
     mapDependencies = if (typelevel) Some(Typelevel.swap(_)) else None
   )
 
-  val loggerFallbackMode =
-    !progress && TermDisplay.defaultFallbackMode
-
   val logger =
     if (verbosityLevel >= 0)
       Some(new TermDisplay(
@@ -465,7 +465,7 @@ class Helper(
             iterationCounter,
             0
           )
-        ).run
+        ).unsafePerformSync
 
         Console.err.println(s"Overhead: ${resolutionCounter.value - iterationCounter.value} ms")
 
@@ -491,7 +491,7 @@ class Helper(
         val res0 = startRes
           .process
           .run(fetch0, maxIterations)
-          .run
+          .unsafePerformSync
         val end = System.currentTimeMillis()
 
         Console.err.println(s"Resolution ${index + 1} / ${-benchmark}: ${end - start} ms")
@@ -515,7 +515,7 @@ class Helper(
       startRes
         .process
         .run(fetch0, maxIterations)
-        .run
+        .unsafePerformSync
 
   logger.foreach(_.stop())
 
@@ -621,7 +621,7 @@ class Helper(
 
         res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted).map(_._2)
       } else
-        res0.dependencyArtifacts.map(_._2)
+        res0.dependencyArtifacts(withOptional = true).map(_._2)
 
     if (artifactTypes("*"))
       artifacts0
@@ -674,17 +674,48 @@ class Helper(
 
     val task = Task.gatherUnordered(tasks)
 
-    val results = task.run
-    val errors = results.collect{case (artifact, -\/(err)) => artifact -> err }
-    val files0 = results.collect{case (artifact, \/-(f)) => f }
+    val results = task.unsafePerformSync
+
+    val (ignoredErrors, errors) = results
+      .collect {
+        case (artifact, -\/(err)) =>
+          artifact -> err
+      }
+      .partition {
+        case (a, err) =>
+          val notFound = err match {
+            case _: FileError.NotFound => true
+            case _ => false
+          }
+          a.isOptional && notFound
+      }
+
+    val files0 = results.collect {
+      case (artifact, \/-(f)) =>
+        f
+    }
 
     logger.foreach(_.stop())
 
+    if (verbosityLevel >= 2)
+      errPrintln(
+        "  Ignoring error(s):\n" +
+        ignoredErrors
+          .map {
+            case (artifact, error) =>
+              s"${artifact.url}: $error"
+          }
+          .mkString("\n")
+      )
+
     exitIf(errors.nonEmpty) {
       s"  Error:\n" +
-      errors.map { case (artifact, error) =>
-        s"${artifact.url}: $error"
-      }.mkString("\n")
+      errors
+        .map {
+          case (artifact, error) =>
+            s"${artifact.url}: $error"
+        }
+        .mkString("\n")
     }
 
     files0

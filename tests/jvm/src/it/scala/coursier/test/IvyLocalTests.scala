@@ -10,23 +10,40 @@ import utest._
 object IvyLocalTests extends TestSuite {
 
   val tests = TestSuite{
-    'coursier{
+    'coursier {
       val module = Module("io.get-coursier", "coursier_2.11")
       val version = coursier.util.Properties.version
 
-      val extraRepo = Some(Cache.ivy2Local)
+      val extraRepos = Seq(Cache.ivy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
-      * - CentralTests.resolutionCheck(
+      'resolution - CentralTests.resolutionCheck(
         module, version,
-        extraRepo
+        extraRepos
       )
 
+      'uniqueArtifacts - async {
 
-      * - async {
+        val res = await(CentralTests.resolve(
+          Set(Dependency(Module("io.get-coursier", "coursier-cli_2.11"), version, transitive = false)),
+          extraRepos = extraRepos
+        ))
+
+        val artifacts = res.dependencyClassifiersArtifacts(Seq("standalone"))
+          .map(_._2)
+          .filter(a => a.`type` == "jar" && !a.isOptional)
+          .map(_.url)
+          .groupBy(s => s)
+
+        assert(artifacts.nonEmpty)
+        assert(artifacts.forall(_._2.length == 1))
+      }
+
+
+      'javadocSources - async {
         val res = await(CentralTests.resolve(
           Set(Dependency(module, version)),
-          extraRepo = extraRepo
+          extraRepos = extraRepos
         ))
 
         val artifacts = res.dependencyArtifacts.filter(_._2.`type` == "jar").map(_._2.url)

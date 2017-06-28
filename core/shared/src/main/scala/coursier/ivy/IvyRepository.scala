@@ -88,7 +88,7 @@ final case class IvyRepository(
                 }
             }
 
-          val retainedWithUrl = retained.flatMap { p =>
+          val retainedWithUrl = retained.distinct.flatMap { p =>
             pattern.substituteVariables(variables(
               dependency.module,
               Some(project.actualVersion),
@@ -135,6 +135,7 @@ final case class IvyRepository(
         findNoInverval(module, version, fetch)
       case Some(revisionListingPattern) =>
         Parse.versionInterval(version)
+          .orElse(Parse.multiVersionInterval(version))
           .orElse(Parse.ivyLatestSubRevisionInterval(version))
           .filter(_.isValid) match {
           case None =>

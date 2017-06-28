@@ -24,9 +24,17 @@ launchTestRepo() {
   ./scripts/launch-test-repo.sh "$@"
 }
 
+launchProxyRepos() {
+  if [ "$(uname)" != "Darwin" ]; then
+    ./scripts/launch-proxies.sh
+  fi
+}
+
 integrationTestsRequirements() {
   # Required for ~/.ivy2/local repo tests
-  sbt ++2.11.8 coreJVM/publishLocal http-server/publishLocal
+  sbt ++2.11.11 coreJVM/publishLocal cli/publishLocal
+
+  sbt ++2.12.1 http-server/publishLocal
 
   # Required for HTTP authentication tests
   launchTestRepo --port 8080 --list-pages
@@ -54,6 +62,14 @@ isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
 
+sbtCoursier() {
+  [ "$SBT_COURSIER" = 1 ]
+}
+
+sbtShading() {
+  [ "$SBT_SHADING" = 1 ]
+}
+
 is210() {
   echo "$SCALA_VERSION" | grep -q "^2\.10"
 }
@@ -62,12 +78,26 @@ is211() {
   echo "$SCALA_VERSION" | grep -q "^2\.11"
 }
 
+is212() {
+  echo "$SCALA_VERSION" | grep -q "^2\.12"
+}
+
 runSbtCoursierTests() {
-  sbt ++$SCALA_VERSION coreJVM/publishLocal cache/publishLocal sbt-coursier/scripted
+  addPgpKeys
+  sbt ++$SCALA_VERSION sbt-plugins/publishLocal
+  if [ "$SCALA_VERSION" = "2.10" ]; then
+    sbt ++$SCALA_VERSION "sbt-coursier/scripted sbt-coursier/*" "sbt-coursier/scripted sbt-coursier-0.13/*"
+  else
+    sbt ++$SCALA_VERSION "sbt-coursier/scripted sbt-coursier/simple" # full scripted suite currently taking too long on Travis CI...
+  fi
+  sbt ++$SCALA_VERSION sbt-pgp-coursier/scripted
 }
 
 runSbtShadingTests() {
-  sbt ++$SCALA_VERSION sbt-coursier/publishLocal sbt-shading/scripted
+  sbt ++$SCALA_VERSION coreJVM/publishLocal cache/publishLocal extra/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
+  if [ "$SCALA_VERSION" = "2.10" ]; then
+    sbt ++$SCALA_VERSION "sbt-shading/scripted sbt-shading-0.13/*"
+  fi
 }
 
 jsCompile() {
@@ -83,11 +113,28 @@ runJsTests() {
 }
 
 runJvmTests() {
-  sbt ++$SCALA_VERSION jvm/test jvm/it:test
+  if [ "$(uname)" == "Darwin" ]; then
+    IT="testsJVM/it:test" # don't run proxy-tests in particular
+  else
+    IT="jvm/it:test"
+  fi
+
+  sbt ++$SCALA_VERSION jvm/test $IT
 }
 
 validateReadme() {
+  # check that tut runs fine, and that the README doesn't change after a `sbt tut`
+  mv README.md README.md.orig
+
   sbt ++${SCALA_VERSION} tut
+
+  if cmp -s README.md.orig README.md; then
+    echo "README.md doesn't change"
+  else
+    echo "Error: README.md not the same after a \"sbt tut\":"
+    diff -u README.md.orig README.md
+    exit 1
+  fi
 }
 
 checkBinaryCompatibility() {
@@ -110,7 +157,7 @@ testLauncherJava6() {
 }
 
 testSbtCoursierJava6() {
-  sbt ++${SCALA_VERSION} coreJVM/publishLocal cache/publishLocal sbt-coursier/publishLocal
+  sbt ++${SCALA_VERSION} coreJVM/publishLocal cache/publishLocal extra/publishLocal sbt-coursier/publishLocal
 
   git clone https://github.com/alexarchambault/scalacheck-shapeless.git
   cd scalacheck-shapeless
@@ -158,6 +205,23 @@ publish() {
   sbt ++${SCALA_VERSION} publish
 }
 
+testBootstrap() {
+  if is211; then
+    sbt ++${SCALA_VERSION} echo/publishLocal cli/pack
+    cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.0-SNAPSHOT
+    if [ "$(./cs-echo foo)" != foo ]; then
+      echo "Error: unexpected output from bootstrapped echo command." 1>&2
+      exit 1
+    fi
+  fi
+}
+
+addPgpKeys() {
+  for key in b41f2bce 9fa47a44 ae548ced b4493b94 53a97466 36ee59d9 dc426429 3b80305d 69e0a56c fdd5c0cd 35543c27 70173ee5 111557de 39c263a9; do
+    gpg --keyserver keyserver.ubuntu.com --recv "$key"
+  done
+}
+
 
 # TODO Add coverage once https://github.com/scoverage/sbt-scoverage/issues/111 is fixed
 
@@ -172,27 +236,38 @@ if isScalaJs; then
 else
   integrationTestsRequirements
   jvmCompile
-  runJvmTests
 
-  if is210; then
-    runSbtCoursierTests
-    runSbtShadingTests
+  if sbtCoursier; then
+    if is210 || is212; then
+      runSbtCoursierTests
+    fi
+
+    if is210; then
+      testSbtCoursierJava6
+    fi
+  elif sbtShading; then
+    if is210 || is212; then
+      runSbtShadingTests
+    fi
+  else
+    # Required for the proxy tests (currently CentralNexus2ProxyTests and CentralNexus3ProxyTests)
+    launchProxyRepos
+
+    runJvmTests
+
+    testBootstrap
+
+    validateReadme
+    checkBinaryCompatibility
+
+    if is211; then
+      testLauncherJava6
+    fi
   fi
 
-  validateReadme
-  checkBinaryCompatibility
-
-  # We're not using a jdk6 matrix entry with Travis here as some sources of coursier require Java 7 to compile
+  # Not using a jdk6 matrix entry with Travis as some sources of coursier require Java 7 to compile
   # (even though it won't try to call Java 7 specific methods if it detects it runs under Java 6).
   # The tests here check that coursier is nonetheless fine when run under Java 6.
-
-  if is211; then
-    testLauncherJava6
-  fi
-
-  if is210; then
-    testSbtCoursierJava6
-  fi
 fi
 
 

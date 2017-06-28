@@ -8,6 +8,7 @@ import argonaut._, Argonaut._, ArgonautShapeless._
 import coursier.core.{ Artifact, Attributes }
 import coursier.{ Fetch, Module }
 
+import scala.language.higherKinds
 import scalaz.{ -\/, EitherT, Monad, Nondeterminism, \/, \/- }
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToEitherOpsFromEither
@@ -44,7 +45,7 @@ object Scaladex {
           coursier.Platform.readFullySync(conn.getInputStream)
         } finally {
           if (conn != null)
-            conn.disconnect()
+            coursier.Cache.closeConn(conn)
         }
 
         new String(b, StandardCharsets.UTF_8).right[String]

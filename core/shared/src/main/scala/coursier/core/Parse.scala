@@ -1,6 +1,7 @@
 package coursier.core
 
 import java.util.regex.Pattern.quote
+
 import coursier.core.compatibility._
 
 object Parse {
@@ -11,23 +12,28 @@ object Parse {
     else Some(Version(trimmed))
   }
 
+  // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
+  private val latestSubRevision = "(.*[^.-])[.-]?[+]".r
+
   def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
-    if (s.endsWith(".+")) {
-      for {
-        from <- version(s.stripSuffix(".+"))
-        if from.rawItems.nonEmpty
-        last <- Some(from.rawItems.last).collect { case n: Version.Numeric => n }
-        // a bit loose, but should do the job
-        if from.repr.endsWith(last.repr)
-        // appending -a1 to the next version, so has not to include things like
-        // nextVersion-RC1 in the interval - nothing like nextVersion* should be included
-        to <- version(from.repr.stripSuffix(last.repr) + last.next.repr + "-a1")
-        // the contrary would mean something went wrong in the loose substitution above
-        if from.rawItems.init == to.rawItems.dropRight(2).init
-        if to.rawItems.takeRight(2) == Seq(Version.Literal("a"), Version.Number(1))
-      } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = false)
-    } else
-      None
+    s match {
+      case latestSubRevision(prefix) =>
+        for {
+          from <- version(prefix)
+          if from.rawItems.nonEmpty
+          last <- Some(from.rawItems.last).collect { case n: Version.Numeric => n }
+          // a bit loose, but should do the job
+          if from.repr.endsWith(last.repr)
+          // appending -a1 to the next version, so has not to include things like
+          // nextVersion-RC1 in the interval - nothing like nextVersion* should be included
+          to <- version(from.repr.stripSuffix(last.repr) + last.next.repr + "-a1")
+          // the contrary would mean something went wrong in the loose substitution above
+          if from.rawItems.init == to.rawItems.dropRight(2).init
+          if to.rawItems.takeRight(2) == Seq(Version.Literal("a"), Version.Number(1))
+        } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = false)
+      case _ =>
+        None
+    }
 
   def versionInterval(s: String): Option[VersionInterval] = {
 
@@ -58,13 +64,28 @@ object Parse {
     } yield itv
   }
 
+  private val multiVersionIntervalSplit = ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
+
+  def multiVersionInterval(s: String): Option[VersionInterval] = {
+
+    // TODO Use a full-fledged (fastparsed-based) parser for this and versionInterval above
+
+    val openCount = s.count(c => c == '[' || c == '(')
+    val closeCount = s.count(c => c == ']' || c == ')')
+
+    if (openCount == closeCount && openCount >= 1)
+      versionInterval(multiVersionIntervalSplit.split(s).last)
+    else
+      None
+  }
+
   def versionConstraint(s: String): Option[VersionConstraint] = {
     def noConstraint = if (s.isEmpty) Some(VersionConstraint.all) else None
 
     noConstraint
       .orElse(ivyLatestSubRevisionInterval(s).map(VersionConstraint.interval))
       .orElse(version(s).map(VersionConstraint.preferred))
-      .orElse(versionInterval(s).map(VersionConstraint.interval))
+      .orElse(versionInterval(s).orElse(multiVersionInterval(s)).map(VersionConstraint.interval))
   }
 
   val fallbackConfigRegex = {

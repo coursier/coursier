@@ -1,8 +1,13 @@
 package coursier.test
 
-import coursier.Platform
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
+
+import coursier.util.TestEscape
+import coursier.{Cache, Fetch, Platform}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.{-\/, EitherT, \/, \/-}
 import scalaz.concurrent.Task
 
 package object compatibility {
@@ -10,7 +15,7 @@ package object compatibility {
   implicit val executionContext = scala.concurrent.ExecutionContext.global
 
   implicit class TaskExtensions[T](val underlying: Task[T]) extends AnyVal {
-    def runF: Future[T] = Future.successful(underlying.run)
+    def runF: Future[T] = Future.successful(underlying.unsafePerformSync)
   }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
@@ -21,5 +26,62 @@ package object compatibility {
 
     new String(Platform.readFullySync(is), "UTF-8")
   }
+
+  private val baseRepo = {
+    val dir = Paths.get("tests/metadata")
+    assert(Files.isDirectory(dir))
+    dir
+  }
+
+  private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
+
+  val artifact: Fetch.Content[Task] = { artifact =>
+
+    if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
+      EitherT(Platform.readFully(
+        Cache.urlConnection(artifact.url, artifact.authentication).getInputStream
+      ))
+    else {
+
+      assert(artifact.authentication.isEmpty)
+
+      val path = baseRepo.resolve(TestEscape.urlAsPath(artifact.url))
+
+      val init = EitherT[Task, String, Unit] {
+        if (Files.exists(path))
+          Task.now(\/-(()))
+        else if (fillChunks)
+          Task[String \/ Unit] {
+            Files.createDirectories(path.getParent)
+            def is() = Cache.urlConnection(artifact.url, artifact.authentication).getInputStream
+            val b = Platform.readFullySync(is())
+            Files.write(path, b)
+            \/-(())
+          }.handle {
+            case e: Exception =>
+              -\/(e.toString)
+          }
+        else
+          Task.now(-\/(s"not found: $path"))
+      }
+
+      init.flatMap { _ =>
+        EitherT(Platform.readFully(Files.newInputStream(path)))
+      }
+    }
+  }
+
+  private lazy val baseResources = {
+    val dir = Paths.get("tests/shared/src/test/resources")
+    assert(Files.isDirectory(dir))
+    dir
+  }
+
+  def tryCreate(path: String, content: String): Unit =
+    if (fillChunks) {
+      val path0 = baseResources.resolve(path)
+      Files.createDirectories(path0.getParent)
+      Files.write(path0, content.getBytes(StandardCharsets.UTF_8))
+    }
 
 }
