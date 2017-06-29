@@ -11,11 +11,9 @@ object Main extends App {
       .loadClass(clsName)
   ).toOption.nonEmpty
 
-  val classifierTest = classFound("org.jclouds.openstack.nova.compute.NovaComputeServiceLiveTest")
-  val noClassifier = classFound("org.jclouds.openstack.nova.compute.config.NovaComputeServiceContextModule")
+  val classifierTest = classFound("org.jclouds.openstack.nova.functions.ParseServerFromJsonResponseTest")
 
-  assert(classifierTest)
-  assert(noClassifier)
+  assert(classifierTest, s"Couldn't find classifierTest")
 
 
   Files.write(new File("output").toPath, "OK".getBytes("UTF-8"))
