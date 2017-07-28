@@ -40,8 +40,8 @@ object Cache {
   // java.nio.charset.StandardCharsets.UTF_8 not available in Java 6
   private val UTF_8 = Charset.forName("UTF-8")
 
-  // Check SHA-1 if available, else be fine with no checksum
-  val defaultChecksums = Seq(Some("SHA-1"), None)
+  // Check SHA-256 then SHA-1 if available, else be fine with no checksum
+  val defaultChecksums = Seq(Some("SHA-256"), Some("SHA-1"), None)
 
   def localFile(url: String, cache: File, user: Option[String]): File =
     CachePath.localFile(url, cache, user.orNull)
@@ -871,8 +871,8 @@ object Cache {
       parseChecksumLine(lines) orElse parseChecksumAlternative(lines)
     }
 
-  // matches md5 or sha1
-  private val checksumPattern = Pattern.compile("^[0-9a-f]{32}([0-9a-f]{8})?")
+  // matches md5 or sha1 or sha-256
+  private val checksumPattern = Pattern.compile("^[0-9a-f]{32}([0-9a-f]{8})?([0-9a-f]{24})?")
 
   private def findChecksum(elems: Seq[String]): Option[BigInteger] =
     elems.collectFirst {
