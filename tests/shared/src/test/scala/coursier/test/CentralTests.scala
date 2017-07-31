@@ -728,7 +728,6 @@ abstract class CentralTests extends TestSuite {
       val ver = "1.17"
 
       def hasSha1(a: Artifact) = a.checksumUrls.contains("SHA-1")
-      def hasSha256(a: Artifact) = a.checksumUrls.contains("SHA-256")
       def hasMd5(a: Artifact) = a.checksumUrls.contains("MD5")
       def hasSig(a: Artifact) = a.extra.contains("sig")
       def sigHasSig(a: Artifact) = a.extra.get("sig").exists(hasSig)
@@ -753,7 +752,6 @@ abstract class CentralTests extends TestSuite {
           assert(artifacts.length == 2)
           assert(pomOpt.nonEmpty)
           assert(pomOpt.forall(hasSha1))
-          assert(pomOpt.forall(hasSha256))
           assert(pomOpt.forall(hasMd5))
           assert(pomOpt.forall(hasSig))
           assert(jarOpt.forall(sigHasSig))
