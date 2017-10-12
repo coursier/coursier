@@ -49,21 +49,16 @@ object Tree {
 
     // Depth-first traverse
     @tailrec
-    def helper(stack: Seq[(T, Seq[Boolean])], seen: Set[T]): Unit = {
+    def helper(stack: Seq[(T, Seq[Boolean])]): Unit = {
       stack match {
         case (elem, isLast) +: next =>
           printLine(showLine(isLast) + show(elem))
-
-          if (!seen(elem))
-            helper(childrenWithLast(children(elem), isLast) ++ next,
-                   seen + elem)
-          else
-            helper(next, seen)
+          helper(childrenWithLast(children(elem), isLast) ++ next)
         case Seq() =>
       }
     }
 
-    helper(childrenWithLast(roots, Vector[Boolean]()), Set.empty)
+    helper(childrenWithLast(roots, Vector[Boolean]()))
 
     buffer
       .dropRight(1) // drop last appended '\n'
