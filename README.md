@@ -88,7 +88,7 @@ $ curl -L -o coursier https://git.io/vgvpD && chmod +x coursier && ./coursier --
 
 Alternatively on OS X, install it via homebrew,
 ```
-$ brew install coursier/formulas/coursier
+$ brew install --HEAD coursier/formulas/coursier
 ```
 
 Run an application distributed via artifacts with
