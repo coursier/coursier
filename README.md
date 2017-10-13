@@ -240,7 +240,7 @@ It downloads the artifacts required to launch coursier on the first run.
 
 Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
 ```
-$ brew install coursier/formulas/coursier
+$ brew install --HEAD coursier/formulas/coursier
 ```
 
 ```
