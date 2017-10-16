@@ -32,6 +32,7 @@ lazy val core = crossProject
     shared,
     name := "coursier",
     libs += CrossDeps.scalazCore.value,
+    libs += Deps.jackson,
     Mima.previousArtifacts,
     Mima.coreFilters
   )

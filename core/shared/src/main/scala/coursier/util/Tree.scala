@@ -1,5 +1,9 @@
 package coursier.util
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+
 import scala.annotation.tailrec
 
 object Tree {
@@ -58,7 +62,38 @@ object Tree {
       }
     }
 
+
+
+    def objectMapper = {
+      val mapper = new ObjectMapper with ScalaObjectMapper
+      mapper.registerModule(DefaultScalaModule)
+      mapper
+    }
+
+
     helper(childrenWithLast(roots, Vector[Boolean]()))
+
+//    case class SomeData(i: Int, s: Map[String, SomeData])
+
+    val depMap = Map()
+//    val jsonString = objectMapper.writeValueAsString( map)
+//    println(childrenWithLast(roots, Vector[Boolean]()))
+// Depth-first traverse
+    @tailrec
+    def helperMap(stack: Seq[(T, Seq[Boolean])]): Unit = {
+      stack match {
+        case (elem, isLast) +: next =>
+//          println(stack)
+          println("elem:", elem)
+          println("next:", next)
+//          printLine(showLine(isLast) + show(elem))
+          helperMap(childrenWithLast(children(elem), isLast) ++ next)
+        case Seq() =>
+      }
+    }
+    helperMap(childrenWithLast(roots, Vector[Boolean]()))
+
+//    println(jsonString)
 
     buffer
       .dropRight(1) // drop last appended '\n'
