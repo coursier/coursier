@@ -23,7 +23,7 @@ object Tree {
         val tee = if (isLast) "└─ " else "├─ "
         acc(prefix + tee + show(elem))
 
-        val extraPrefix = if (isLast) "   " else "|  "
+        val extraPrefix = if (isLast) "   " else "│  "
         recursivePrint(children(elem), ancestors + elem, prefix + extraPrefix, acc)
       }
     }
