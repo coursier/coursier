@@ -15,16 +15,16 @@ object Tree {
       * @param acc       accumulation method on a string
       */
     def recursivePrint(elems: Seq[T], ancestors: Set[T], prefix: String, acc: String => Unit): Unit = {
-      for (root <- elems) {
-        if (ancestors.contains(root)) {
+      for (elem <- elems) {
+        if (ancestors.contains(elem)) {
           return
         }
-        val isLast = elems.indexOf(root) == elems.length - 1
+        val isLast = elems.indexOf(elem) == elems.length - 1
         val tee = if (isLast) "└─ " else "├─ "
-        acc(prefix + tee + show(root))
+        acc(prefix + tee + show(elem))
 
         val extraPrefix = if (isLast) "   " else "|  "
-        recursivePrint(children(root), ancestors + root, prefix + extraPrefix, acc)
+        recursivePrint(children(elem), ancestors + elem, prefix + extraPrefix, acc)
       }
     }
 
