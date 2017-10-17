@@ -6,13 +6,20 @@ object Tree {
 
   def apply[T](roots: IndexedSeq[T])(children: T => Seq[T], show: T => String): String = {
 
-
-    def recursivePrint(roots: Seq[T], ancestors: Set[T], prefix: String, acc: String => Unit): Unit = {
-      for (root <- roots) {
+    /**
+      * Recursively go down the resolution for the elems to construct the tree for print out.
+      *
+      * @param elems     Seq of Elems that have been resolved
+      * @param ancestors a set of Elems to keep track for cycle detection
+      * @param prefix    prefix for the print out
+      * @param acc       accumulation method on a string
+      */
+    def recursivePrint(elems: Seq[T], ancestors: Set[T], prefix: String, acc: String => Unit): Unit = {
+      for (root <- elems) {
         if (ancestors.contains(root)) {
           return
         }
-        val isLast = roots.indexOf(root) == roots.length - 1
+        val isLast = elems.indexOf(root) == elems.length - 1
         val tee = if (isLast) "└─ " else "├─ "
         acc(prefix + tee + show(root))
 
