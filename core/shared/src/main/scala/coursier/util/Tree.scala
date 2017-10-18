@@ -16,8 +16,9 @@ object Tree {
       */
     def recursivePrint(elems: Seq[T], ancestors: Set[T], prefix: String, acc: String => Unit): Unit = {
       val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
-      for (elem <- unseenElems) {
-        val isLast = unseenElems.indexOf(elem) == unseenElems.length - 1
+      val unseenElemsLen = unseenElems.length
+      for ((elem, idx) <- unseenElems.iterator.zipWithIndex) {
+        val isLast = idx == unseenElemsLen - 1
         val tee = if (isLast) "└─ " else "├─ "
         acc(prefix + tee + show(elem))
 
