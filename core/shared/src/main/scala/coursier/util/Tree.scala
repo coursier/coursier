@@ -15,11 +15,9 @@ object Tree {
       * @param acc       accumulation method on a string
       */
     def recursivePrint(elems: Seq[T], ancestors: Set[T], prefix: String, acc: String => Unit): Unit = {
-      for (elem <- elems) {
-        if (ancestors.contains(elem)) {
-          return
-        }
-        val isLast = elems.indexOf(elem) == elems.length - 1
+      val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
+      for (elem <- unseenElems) {
+        val isLast = unseenElems.indexOf(elem) == unseenElems.length - 1
         val tee = if (isLast) "└─ " else "├─ "
         acc(prefix + tee + show(elem))
 
