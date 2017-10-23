@@ -85,7 +85,8 @@ lazy val `proxy-tests` = project
 lazy val paths = project
   .settings(
     pureJava,
-    dontPublish
+    dontPublish,
+    libs += Deps.directories
   )
 
 lazy val cache = project
@@ -96,7 +97,8 @@ lazy val cache = project
     coursierPrefix,
     libs += Deps.scalazConcurrent,
     Mima.cacheFilters,
-    addPathsSources
+    addPathsSources,
+    libs += Deps.directories
   )
 
 lazy val bootstrap = project
@@ -104,6 +106,7 @@ lazy val bootstrap = project
     pureJava,
     dontPublish,
     addPathsSources,
+    libs += Deps.directories,
     // seems not to be automatically found with sbt 0.13.16-M1 :-/
     mainClass := Some("coursier.Bootstrap"),
     renameMainJar("bootstrap.jar")
