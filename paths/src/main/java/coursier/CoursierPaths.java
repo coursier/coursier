@@ -27,7 +27,7 @@ public final class CoursierPaths {
         if (path == null) {
         	File coursierDotFile = new File(System.getProperty("user.home") + "/.coursier");
         	if (coursierDotFile.isDirectory())
-        		path = System.getProperty("user.home") + "/.coursier/cache/";
+                path = System.getProperty("user.home") + "/.coursier/cache/v1/";
         }
 
         if (path == null) {
@@ -35,11 +35,6 @@ public final class CoursierPaths {
         	 path = coursierDirectories.projectCacheDir;
         }
 
-        File coursierCacheDirectory = new File(path).getAbsoluteFile();
-
-        if (coursierCacheDirectory.getName().equals("v1"))
-        	coursierCacheDirectory = coursierCacheDirectory.getParentFile();
-        
-        return coursierCacheDirectory.getAbsoluteFile();
+        return new File(path).getAbsoluteFile();
 	}
 }
