@@ -1,11 +1,9 @@
 package coursier.util
 
-import scala.collection.mutable.ArrayBuffer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
-import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
 object Tree {
@@ -33,9 +31,20 @@ object Tree {
       }
     }
 
-    val b = new ArrayBuffer[String]
-    recursivePrint(roots, Set(), "", b += _)
-    b.mkString("\n")
+    case class JsonNode(label: String, children: ArrayBuffer[JsonNode]) {
+      def addChild(x: JsonNode): Unit = {
+        children.append(x)
+      }
+    }
+
+    def makeJson(elems: Seq[T], ancestors: Set[T], parentElem: JsonNode): Unit = {
+      val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
+      for (elem <- unseenElems) {
+        val childNode = JsonNode(show(elem), ArrayBuffer.empty)
+        parentElem.addChild(childNode)
+        makeJson(children(elem), ancestors + elem, childNode)
+      }
+    }
 
     def objectMapper = {
       val mapper = new ObjectMapper with ScalaObjectMapper
@@ -43,7 +52,19 @@ object Tree {
       mapper
     }
 
-    //    val jsonString = objectMapper.writeValueAsString( map)
+
+    //    var result: mutable.Map[Any, Any] = Map[Any, Any]()
+    //    makeJson(roots, Set(), "", result)
+    //    val jsonString = objectMapper.writeValueAsString(result)
+    //    println(jsonString)
+    val root = JsonNode("root", ArrayBuffer.empty)
+    makeJson(roots, Set(), root)
+    //    val node = JsonNode("123", JsonNode("456"))
+    objectMapper.writeValueAsString(root)
+//    val b = new ArrayBuffer[String]
+//    recursivePrint(roots, Set(), "", b += _)
+//    b.mkString("\n")
+
 
   }
 
