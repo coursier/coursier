@@ -85,7 +85,7 @@ public class CachePath {
     }
 
     public static File defaultCacheDirectory() {
-        return CoursierPaths.cacheDirectory();
+        return new File(CoursierPaths.cacheDirectory(), "v1");
     }
 
     private static ConcurrentHashMap<File, Object> processStructureLocks = new ConcurrentHashMap<File, Object>();
