@@ -1,12 +1,12 @@
 #!/bin/bash
 
-VERSION=1.0.0-RC12
+VERSION=1.0.0-RC13
 CACHE_VERSION=v1
 
 SBTPACK_LAUNCHER="$(dirname "$0")/../cli/target/pack/bin/coursier"
 
 if [ ! -f "$SBTPACK_LAUNCHER" ]; then
-  sbt ++2.11.11 cli/pack
+  sbt ++2.11.11 "project cli" pack
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
@@ -16,8 +16,5 @@ fi
   --no-default \
   -r central \
   -r sonatype:releases \
-  -d "\${user.home}/.coursier/bootstrap/$VERSION" \
   -f -o coursier \
-  -M coursier.cli.Coursier \
-  -D coursier.cache="\${user.home}/.coursier/cache/$CACHE_VERSION" \
   "$@"

@@ -128,7 +128,18 @@ checkBinaryCompatibility() {
 }
 
 testLauncherJava6() {
-  sbt ++${SCALA_VERSION} cli/pack
+  sbt ++${SCALA_VERSION} "project cli" pack
+
+  # Via docker, getting errors like
+  #   standard_init_linux.go:178: exec user process caused "exec format error"
+  # because of the initial empty line in the sbt-pack launchers.
+  # Required until something like https://github.com/xerial/sbt-pack/pull/120
+  # gets merged.
+  local DIR="cli/target/pack/bin"
+  mv "$DIR/coursier" "$DIR/coursier.orig"
+  sed '1{/^$/d}' < "$DIR/coursier.orig" > "$DIR/coursier"
+  chmod +x "$DIR/coursier"
+
   docker run -it --rm \
     -v $(pwd)/cli/target/pack:/opt/coursier \
     -e CI=true \
@@ -193,7 +204,7 @@ publish() {
 
 testBootstrap() {
   if is211; then
-    sbt ++${SCALA_VERSION} echo/publishLocal cli/pack
+    sbt ++${SCALA_VERSION} echo/publishLocal "project cli" pack
     cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.0-SNAPSHOT
     if [ "$(./cs-echo foo)" != foo ]; then
       echo "Error: unexpected output from bootstrapped echo command." 1>&2
@@ -204,7 +215,7 @@ testBootstrap() {
 
 testNativeBootstrap() {
   if is211; then
-    sbt ++${SCALA_VERSION} cli/pack
+    sbt ++${SCALA_VERSION} "project cli" pack
     cli/target/pack/bin/coursier bootstrap -S -o native-test io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1
     if [ "$(./native-test)" != "Hello, World!" ]; then
       echo "Error: unexpected output from native test bootstrap." 1>&2
