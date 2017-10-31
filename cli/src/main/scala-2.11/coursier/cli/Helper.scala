@@ -523,7 +523,6 @@ class Helper(
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
   if (!jsonOutputFile.isEmpty) {
-    println(s"format: ${jsonOutputFile}")
     val jsonStr =
       Print.dependencyTree(
         dependencies,
@@ -534,6 +533,7 @@ class Helper(
     val pw = new PrintWriter(new File(jsonOutputFile))
     pw.write(jsonStr)
     pw.close()
+    println(s"Output saved at: ${jsonOutputFile}")
   }
   else if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
