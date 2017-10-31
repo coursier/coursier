@@ -31,9 +31,9 @@ object Tree {
       }
     }
 
-    case class JsonNode(label: String, children: ArrayBuffer[JsonNode]) {
+    case class JsonNode(coord: String, dependencies: ArrayBuffer[JsonNode]) {
       def addChild(x: JsonNode): Unit = {
-        children.append(x)
+        dependencies.append(x)
       }
     }
 

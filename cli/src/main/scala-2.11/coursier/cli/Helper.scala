@@ -1,22 +1,21 @@
 package coursier
 package cli
 
-import java.io.{ OutputStreamWriter, File }
-import java.net.{ URL, URLClassLoader }
-import java.util.jar.{ Manifest => JManifest }
+import java.io.{File, OutputStreamWriter, PrintWriter}
+import java.net.{URL, URLClassLoader}
+import java.util.jar.{Manifest => JManifest}
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{Print, Parse}
+import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.util.Try
-
-import scalaz.{Failure, Nondeterminism, Success, \/-, -\/}
-import scalaz.concurrent.{ Task, Strategy }
+import scalaz.{-\/, Failure, Nondeterminism, Success, \/-}
+import scalaz.concurrent.{Strategy, Task}
 import scalaz.std.list._
 
 object Helper {
@@ -523,7 +522,20 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
-  if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
+  if (!jsonOutputFile.isEmpty) {
+    println(s"format: ${jsonOutputFile}")
+    val jsonStr =
+      Print.dependencyTree(
+        dependencies,
+        res,
+        printExclusions = verbosityLevel >= 1,
+        reverse = reverseTree
+      )
+    val pw = new PrintWriter(new File(jsonOutputFile))
+    pw.write(jsonStr)
+    pw.close()
+  }
+  else if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
 
