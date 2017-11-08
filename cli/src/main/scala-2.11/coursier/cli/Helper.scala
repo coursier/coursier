@@ -14,7 +14,7 @@ import coursier.util.{Parse, Print}
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.util.Try
-import scalaz.{-\/, Failure, Nondeterminism, Success, \/-}
+import scalaz.{-\/, EitherT, Failure, Nondeterminism, Success, \/-}
 import scalaz.concurrent.{Strategy, Task}
 import scalaz.std.list._
 
@@ -523,17 +523,22 @@ class Helper(
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
   if (!jsonOutputFile.isEmpty) {
-    val jsonStr =
-      Print.dependencyTree(
-        dependencies,
-        res,
-        printExclusions = verbosityLevel >= 1,
-        reverse = reverseTree
-      )
-    val pw = new PrintWriter(new File(jsonOutputFile))
-    pw.write(jsonStr)
-    pw.close()
-    println(s"Output saved at: ${jsonOutputFile}")
+//    for ( (dep, art) <- res.dependencyArtifacts) {
+//      println(dep)
+//      println(art)
+//    }
+//    val jsonStr =
+//      Print.dependencyTree(
+//        dependencies,
+//        res,
+//        printExclusions = verbosityLevel >= 1,
+//        reverse = reverseTree
+//      )
+//    val pw = new PrintWriter(new File(jsonOutputFile))
+//    pw.write(jsonStr)
+//    pw.close()
+////    println(s"Output saved at: ${jsonOutputFile}")
+////    println(jsonStr)
   }
   else if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
@@ -667,7 +672,7 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy) = Cache.file(
+      def file(policy: CachePolicy): EitherT[Task, FileError, File] = Cache.file(
         artifact,
         cache,
         policy,
@@ -676,7 +681,6 @@ class Helper(
         pool = pool,
         ttl = ttl0
       )
-
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
         .run
         .map(artifact.->)
@@ -702,10 +706,15 @@ class Helper(
           a.isOptional && notFound
       }
 
+    val fileByArtifact: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
-      case (artifact, \/-(f)) =>
+      case (artifact: Artifact, \/-(f)) =>
+        fileByArtifact.put(artifact.url, f)
+//        println(f)
         f
     }
+
+//    println(fileByArtifact)
 
     logger.foreach(_.stop())
 
@@ -728,6 +737,26 @@ class Helper(
             s"${artifact.url}: $error"
         }
         .mkString("\n")
+    }
+
+    if (!jsonOutputFile.isEmpty) {
+//      for ( (dep, art) <- res.dependencyArtifacts) {
+//        println(dep)
+//        println(art)
+//      }
+      val jsonStr =
+        Print.dependencyTree(
+          res.minDependencies.toSeq,
+          res,
+          printExclusions = verbosityLevel >= 1,
+          reverse = reverseTree,
+          fileByArtifact
+        )
+      val pw = new PrintWriter(new File(jsonOutputFile))
+      pw.write(jsonStr)
+      pw.close()
+      //    println(s"Output saved at: ${jsonOutputFile}")
+      //    println(jsonStr)
     }
 
     files0

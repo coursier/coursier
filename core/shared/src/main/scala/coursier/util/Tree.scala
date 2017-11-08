@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object Tree {
 
-  def apply[T](roots: IndexedSeq[T])(children: T => Seq[T], show: T => String): String = {
+  def apply[T](roots: IndexedSeq[T])(children: T => Seq[T], show: T => String, getFiles: T => Seq[String]): String = {
 
     /**
       * Recursively go down the resolution for the elems to construct the tree for print out.
@@ -31,7 +31,7 @@ object Tree {
       }
     }
 
-    case class JsonNode(coord: String, dependencies: ArrayBuffer[JsonNode]) {
+    case class JsonNode(coord: String, files: Seq[String], dependencies: ArrayBuffer[JsonNode]) {
       def addChild(x: JsonNode): Unit = {
         dependencies.append(x)
       }
@@ -40,8 +40,10 @@ object Tree {
     def makeJson(elems: Seq[T], ancestors: Set[T], parentElem: JsonNode): Unit = {
       val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
       for (elem <- unseenElems) {
-        val childNode = JsonNode(show(elem), ArrayBuffer.empty)
+//        println(show(elem))
+        val childNode = JsonNode(show(elem), getFiles(elem), ArrayBuffer.empty)
         parentElem.addChild(childNode)
+//        println(getFiles(elem))
         makeJson(children(elem), ancestors + elem, childNode)
       }
     }
@@ -57,8 +59,13 @@ object Tree {
     //    makeJson(roots, Set(), "", result)
     //    val jsonString = objectMapper.writeValueAsString(result)
     //    println(jsonString)
-    val root = JsonNode("root", ArrayBuffer.empty)
+    val root = JsonNode("root", Seq(), ArrayBuffer.empty)
+    println("starting json writing...")
+//    for (r <- roots) {
+//      println(r.len)
+//    }
     makeJson(roots, Set(), root)
+    println("finishing making json object")
     //    val node = JsonNode("123", JsonNode("456"))
     objectMapper.writeValueAsString(root)
 //    val b = new ArrayBuffer[String]
