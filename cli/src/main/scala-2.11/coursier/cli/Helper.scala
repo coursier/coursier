@@ -522,25 +522,7 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
-  if (!jsonOutputFile.isEmpty) {
-//    for ( (dep, art) <- res.dependencyArtifacts) {
-//      println(dep)
-//      println(art)
-//    }
-//    val jsonStr =
-//      Print.dependencyTree(
-//        dependencies,
-//        res,
-//        printExclusions = verbosityLevel >= 1,
-//        reverse = reverseTree
-//      )
-//    val pw = new PrintWriter(new File(jsonOutputFile))
-//    pw.write(jsonStr)
-//    pw.close()
-////    println(s"Output saved at: ${jsonOutputFile}")
-////    println(jsonStr)
-  }
-  else if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
+  if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
 
