@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.Artifact
-import coursier.core._
+import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
 
 import scala.collection.mutable.ArrayBuffer
 
