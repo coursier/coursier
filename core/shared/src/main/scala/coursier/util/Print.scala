@@ -192,7 +192,10 @@ object Print {
         }
     }
 
-   if (reverse) {
+    if (jsonPrintRequirement.isDefined) {
+      JsonFetchResult(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, _.downloadedFiles)
+    }
+    else if (reverse) {
 
       final case class Parent(
         module: Module,
@@ -252,9 +255,9 @@ object Print {
           .map(dep =>
             Parent(dep.module, dep.version, dep.module, dep.version, dep.version, excluding = false)
           )
-      )(children, _.repr, { x => Seq()})
+      )(children, _.repr)
     } else {
-     JsonFetchResult(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, _.downloadedFiles)
+      Tree(roots.toVector.map(Elem(_, excluded = false)))(_.children, _.repr)
     }
   }
 }
