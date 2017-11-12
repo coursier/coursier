@@ -1,7 +1,5 @@
 package coursier.util
 
-import java.io.File
-
 import coursier.Artifact
 import coursier.core._
 
@@ -75,9 +73,9 @@ object Print {
     resolution: Resolution,
     printExclusions: Boolean,
     reverse: Boolean,
-    fileByArtifact: collection.mutable.Map[String, File] = collection.mutable.Map()
+    jsonPrintRequirement: Option[JsonPrintRequirement] = Option.empty
   ): String =
-    dependencyTree(roots, resolution, printExclusions, reverse, colors = true, fileByArtifact)
+    dependencyTree(roots, resolution, printExclusions, reverse, colors = true, jsonPrintRequirement)
 
   def dependencyTree(
     roots: Seq[Dependency],
@@ -85,10 +83,8 @@ object Print {
     printExclusions: Boolean,
     reverse: Boolean,
     colors: Boolean,
-    fileByArtifact: collection.mutable.Map[String, File]
+    jsonPrintRequirement: Option[JsonPrintRequirement]
   ): String = {
-
-//    println(fileByArtifact)
 
     val (red, yellow, reset) =
       if (colors)
@@ -96,7 +92,27 @@ object Print {
       else
         ("", "", "")
 
-    object Elem {
+
+
+    trait BaseElem {
+      val reconciledVersion: String
+      val repr: String
+      val children: Seq[BaseElem]
+//      lazy val depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]] = {
+//        val x = collection.mutable.Map[Dependency, ArrayBuffer[Artifact]]()
+//        for ( (dep, art) <- resolution.dependencyArtifacts) {
+//          if (x.contains(dep)) {
+//            x(dep).append(art)
+//          }
+//          else {
+//            x.put(dep, ArrayBuffer(art))
+//          }
+//        }
+//        x.toMap
+//      }
+    }
+
+    object BaseElem {
       lazy val depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]] = {
         val x = collection.mutable.Map[Dependency, ArrayBuffer[Artifact]]()
         for ( (dep, art) <- resolution.dependencyArtifacts) {
@@ -111,25 +127,10 @@ object Print {
       }
     }
 
-    final case class Elem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) {
+    case class Elem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) extends BaseElem {
 
-      lazy val reconciledVersion = resolution.reconciledVersions
+      override lazy val reconciledVersion = resolution.reconciledVersions
         .getOrElse(dep.module, dep.version)
-
-
-      lazy val downloadedFiles: Seq[String] = {
-        //        println(fileByArtifact.size)
-        //
-        //        val maybeFiles: Seq[Option[File]] = resolution.dependencyArtifacts.filter(_._1 == dep).map(_._2.url).map(fileByArtifact.get)
-        //        maybeFiles.filter(_.isDefined).map(_.get).map(_.getPath)
-
-        Elem.depToArtifacts.getOrElse(dep, ArrayBuffer())
-          .map(x => fileByArtifact.get(x.url))
-          .filter(_.isDefined)
-          .map(_.get)
-          .map(_.getPath)
-        //        Seq()
-      }
 
       lazy val repr =
         if (excluded)
@@ -143,8 +144,8 @@ object Print {
                 else
                   s"version $version"
 
-                s"${dep.module}:${dep.version} " +
-                  s"$red(excluded, $versionMsg present anyway)$reset"
+              s"${dep.module}:${dep.version} " +
+                s"$red(excluded, $versionMsg present anyway)$reset"
           }
         else {
           val versionStr =
@@ -185,22 +186,81 @@ object Print {
             }
             .map(_.moduleVersion)
             .filterNot(dependencies.map(_.moduleVersion).toSet).map {
-              case (mod, ver) =>
-                Elem(
-                  Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
-                  excluded = true
-                )
-            }
+            case (mod, ver) =>
+              Elem(
+                Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                excluded = true
+              )
+          }
 
           dependencies.map(Elem(_, excluded = false)) ++
             (if (printExclusions) excluded else Nil)
         }
     }
 
+    case class JsonElem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) extends BaseElem {
 
+      override lazy val reconciledVersion = resolution.reconciledVersions
+        .getOrElse(dep.module, dep.version)
 
+      lazy val downloadedFiles: Seq[String] = {
+        jsonPrintRequirement match {
+          case Some(req) => {
+            BaseElem.depToArtifacts.getOrElse(dep, ArrayBuffer())
+              .map(x => req.fileByArtifact.get(x.url))
+              .filter(_.isDefined)
+              .map(_.get)
+              .map(_.getPath)
+          }
+          case None => Seq()
+        }
+      }
 
-    if (reverse) {
+      lazy val repr = s"${dep.module}:$reconciledVersion"
+
+      lazy val children: Seq[JsonElem] =
+        getChildren(excluded, dep)
+
+      private def getChildren(excluded: Boolean, dep: Dependency) = {
+        if (excluded)
+          Nil
+        else {
+          val dep0 = dep.copy(version = reconciledVersion)
+
+          val dependencies = resolution.dependenciesOf(
+            dep0,
+            withReconciledVersions = false
+          ).sortBy { trDep =>
+            (trDep.module.organization, trDep.module.name, trDep.version)
+          }
+
+          def excluded = resolution
+            .dependenciesOf(
+              dep0.copy(exclusions = Set.empty),
+              withReconciledVersions = false
+            )
+            .sortBy { trDep =>
+              (trDep.module.organization, trDep.module.name, trDep.version)
+            }
+            .map(_.moduleVersion)
+            .filterNot(dependencies.map(_.moduleVersion).toSet).map {
+            case (mod, ver) =>
+              JsonElem(
+                Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                excluded = true
+              )
+          }
+
+          dependencies.map(JsonElem(_, excluded = false)) ++
+            (if (printExclusions) excluded else Nil)
+        }
+      }
+    }
+
+    if (jsonPrintRequirement.isDefined) {
+      Tree(roots.toVector.map(JsonElem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, _.downloadedFiles)
+    }
+    else if (reverse) {
 
       final case class Parent(
         module: Module,
@@ -263,8 +323,12 @@ object Print {
             Parent(dep.module, dep.version, dep.module, dep.version, dep.version, excluding = false)
           )
       )(children, _.repr, _.getFiles)
-    } else
-      Tree(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, _.downloadedFiles)
+    } else {
+      Tree(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, {_ => Seq()})
+    }
   }
+
+
+
 
 }

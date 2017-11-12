@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{Parse, Print}
+import coursier.util.{Parse, Print, JsonPrintRequirement}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -692,11 +692,8 @@ class Helper(
     val files0 = results.collect {
       case (artifact: Artifact, \/-(f)) =>
         fileByArtifact.put(artifact.url, f)
-//        println(f)
         f
     }
-
-//    println(fileByArtifact)
 
     logger.foreach(_.stop())
 
@@ -722,17 +719,13 @@ class Helper(
     }
 
     if (!jsonOutputFile.isEmpty) {
-//      for ( (dep, art) <- res.dependencyArtifacts) {
-//        println(dep)
-//        println(art)
-//      }
       val jsonStr =
         Print.dependencyTree(
           res.minDependencies.toSeq,
           res,
           printExclusions = verbosityLevel >= 1,
           reverse = reverseTree,
-          fileByArtifact
+          Option(JsonPrintRequirement(fileByArtifact))
         )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
