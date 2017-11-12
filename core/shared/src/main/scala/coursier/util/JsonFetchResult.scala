@@ -58,7 +58,9 @@ object JsonFetchResult {
     }
 
     val root = JsonNode("root", Seq(), ArrayBuffer.empty)
+//    println("jsoning...")
     makeJson(roots, Set(), root)
+//    println("ending...")
     objectMapper.writeValueAsString(root)
   }
 
