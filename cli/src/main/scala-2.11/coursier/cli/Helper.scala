@@ -14,6 +14,7 @@ import coursier.util.{Parse, Print, JsonPrintRequirement}
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.util.Try
+
 import scalaz.{-\/, EitherT, Failure, Nondeterminism, Success, \/-}
 import scalaz.concurrent.{Strategy, Task}
 import scalaz.std.list._
@@ -654,7 +655,7 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy): EitherT[Task, FileError, File] = Cache.file(
+      def file(policy: CachePolicy) = Cache.file(
         artifact,
         cache,
         policy,
@@ -663,6 +664,7 @@ class Helper(
         pool = pool,
         ttl = ttl0
       )
+
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
         .run
         .map(artifact.->)

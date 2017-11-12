@@ -180,11 +180,11 @@ object Print {
             }
             .map(_.moduleVersion)
             .filterNot(dependencies.map(_.moduleVersion).toSet).map {
-            case (mod, ver) =>
-              Elem(
-                Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
-                excluded = true
-              )
+              case (mod, ver) =>
+                Elem(
+                  Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                  excluded = true
+                )
           }
 
           dependencies.map(Elem(_, excluded = false)) ++
