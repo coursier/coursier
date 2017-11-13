@@ -7,7 +7,6 @@ import java.util.jar.{Manifest => JManifest}
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
-import coursier.core.Dependency
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.util.{JsonPrintRequirement, Parse, Print}
@@ -327,9 +326,7 @@ class Helper(
         version,
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = excludes,
-        optional = true,
-        transitive = true
+        exclusions = excludes
       )
   }
 
@@ -341,7 +338,6 @@ class Helper(
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
         exclusions = excludes,
-        optional = true,
         transitive = false
       )
   }
