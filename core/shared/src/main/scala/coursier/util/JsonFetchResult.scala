@@ -5,11 +5,13 @@ import java.io.File
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import coursier.Artifact
+import coursier.core.Dependency
 
 import scala.collection.mutable.ArrayBuffer
 
 
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File])
+case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]])
 
 object JsonFetchResult {
 
@@ -58,9 +60,9 @@ object JsonFetchResult {
     }
 
     val root = JsonNode("root", Seq(), ArrayBuffer.empty)
-//    println("jsoning...")
+    //    println("jsoning...")
     makeJson(roots, Set(), root)
-//    println("ending...")
+    //    println("ending...")
     objectMapper.writeValueAsString(root)
   }
 
