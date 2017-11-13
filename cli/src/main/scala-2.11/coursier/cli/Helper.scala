@@ -327,7 +327,9 @@ class Helper(
         version,
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = excludes
+        exclusions = excludes,
+        optional = true,
+        transitive = true
       )
   }
 
@@ -339,6 +341,7 @@ class Helper(
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
         exclusions = excludes,
+        optional = true,
         transitive = false
       )
   }
@@ -748,20 +751,21 @@ class Helper(
 
     if (!jsonOutputFile.isEmpty) {
       val deps: Seq[Dependency] = getDepArtifactsForClassifier(sources, javadoc, res).map(_._1)
+      println(deps)
       val jsonReq = JsonPrintRequirement(fileByArtifact, depToArtifacts)
       val jsonStr =
         Print.dependencyTree(
-          dependencies,
+          deps,
           res,
           printExclusions = verbosityLevel >= 1,
           reverse = reverseTree,
-          jsonReq
+          Option(jsonReq)
         )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()
       //    println(s"Output saved at: ${jsonOutputFile}")
-          println(jsonStr)
+      println(jsonStr)
     }
     files0
   }
