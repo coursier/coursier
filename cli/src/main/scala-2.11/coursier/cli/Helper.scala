@@ -7,14 +7,15 @@ import java.util.jar.{Manifest => JManifest}
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
+import coursier.core.Dependency
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{Parse, Print, JsonPrintRequirement}
+import coursier.util.{JsonPrintRequirement, Parse, Print}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.util.Try
-
 import scalaz.{-\/, EitherT, Failure, Nondeterminism, Success, \/-}
 import scalaz.concurrent.{Strategy, Task}
 import scalaz.std.list._
@@ -611,17 +612,9 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 =
-      if (classifier0.nonEmpty || sources || javadoc) {
-        var classifiers = classifier0
-        if (sources)
-          classifiers = classifiers + "sources"
-        if (javadoc)
-          classifiers = classifiers + "javadoc"
+    val depArtTuples: Seq[(Dependency, Artifact)] = getDepArtifactsForClassifier(sources, javadoc, res0)
 
-        res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted).map(_._2)
-      } else
-        res0.dependencyArtifacts(withOptional = true).map(_._2)
+    val artifacts0 = depArtTuples.map(_._2)
 
     if (artifactTypes("*"))
       artifacts0
@@ -630,6 +623,24 @@ class Helper(
         artifactTypes(artifact.`type`)
       }
   }
+
+  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
+    if (classifier0.nonEmpty || sources || javadoc) {
+      var classifiers = classifier0
+      if (sources)
+        classifiers = classifiers + "sources"
+      if (javadoc)
+        classifiers = classifiers + "javadoc"
+
+      val tuples: Seq[(Dependency, Artifact)] = res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
+      tuples
+    } else {
+      val tuples1: Seq[(Dependency, Artifact)] = res0.dependencyArtifacts(withOptional = true)
+      tuples1
+    }
+  }
+
+
 
   def fetch(
     sources: Boolean,
@@ -690,6 +701,7 @@ class Helper(
           a.isOptional && notFound
       }
 
+    println(artifacts0.map(_.url))
     val fileByArtifact: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
       case (artifact: Artifact, \/-(f)) =>
@@ -720,22 +732,37 @@ class Helper(
         .mkString("\n")
     }
 
+    val depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]] = {
+      val x = collection.mutable.Map[Dependency, ArrayBuffer[Artifact]]()
+      for ((dep, art) <- getDepArtifactsForClassifier(sources, javadoc, res)) {
+        if (x.contains(dep)) {
+          x(dep).append(art)
+        }
+        else {
+          x.put(dep, ArrayBuffer(art))
+        }
+      }
+      x.toMap
+    }
+
+
     if (!jsonOutputFile.isEmpty) {
+      val deps: Seq[Dependency] = getDepArtifactsForClassifier(sources, javadoc, res).map(_._1)
+      val jsonReq = JsonPrintRequirement(fileByArtifact, depToArtifacts)
       val jsonStr =
         Print.dependencyTree(
-          res.minDependencies.toSeq,
+          dependencies,
           res,
           printExclusions = verbosityLevel >= 1,
           reverse = reverseTree,
-          Option(JsonPrintRequirement(fileByArtifact))
+          jsonReq
         )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()
       //    println(s"Output saved at: ${jsonOutputFile}")
-      //    println(jsonStr)
+          println(jsonStr)
     }
-
     files0
   }
 

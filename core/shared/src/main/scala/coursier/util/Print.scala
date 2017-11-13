@@ -125,8 +125,8 @@ object Print {
                 else
                   s"version $version"
 
-              s"${dep.module}:${dep.version} " +
-                s"$red(excluded, $versionMsg present anyway)$reset"
+                s"${dep.module}:${dep.version} " +
+                  s"$red(excluded, $versionMsg present anyway)$reset"
           }
         else {
           val versionStr =
