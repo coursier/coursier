@@ -92,19 +92,6 @@ object Print {
       else
         ("", "", "")
 
-    lazy val depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]] = {
-      val x = collection.mutable.Map[Dependency, ArrayBuffer[Artifact]]()
-      for ((dep, art) <- resolution.dependencyArtifacts) {
-        if (x.contains(dep)) {
-          x(dep).append(art)
-        }
-        else {
-          x.put(dep, ArrayBuffer(art))
-        }
-      }
-      x.toMap
-    }
-
     case class Elem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) {
 
       lazy val reconciledVersion: String = resolution.reconciledVersions
@@ -112,13 +99,12 @@ object Print {
 
       lazy val downloadedFiles: Seq[String] = {
         jsonPrintRequirement match {
-          case Some(req) => {
-            depToArtifacts.getOrElse(dep, ArrayBuffer())
+          case Some(req) =>
+            req.depToArtifacts.getOrElse(dep, ArrayBuffer())
               .map(x => req.fileByArtifact.get(x.url))
               .filter(_.isDefined)
               .map(_.get)
               .map(_.getPath)
-          }
           case None => Seq()
         }
       }
