@@ -1,8 +1,11 @@
 package coursier.util
 
+import java.io.File
+
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 object Print {
@@ -97,14 +100,15 @@ object Print {
       lazy val reconciledVersion: String = resolution.reconciledVersions
         .getOrElse(dep.module, dep.version)
 
-      lazy val downloadedFiles: Seq[String] = {
+      // Seq of (classifier, file path) tuple
+      lazy val downloadedFiles: Seq[(String, String)] = {
         jsonPrintRequirement match {
           case Some(req) =>
-            req.depToArtifacts.getOrElse(dep, ArrayBuffer())
-              .map(x => req.fileByArtifact.get(x.url))
-              .filter(_.isDefined)
-              .map(_.get)
-              .map(_.getPath)
+            req.depToArtifacts.getOrElse(dep, Seq())
+              .map(x => (x.classifier, req.fileByArtifact.get(x.url)))
+              .filter(_._2.isDefined)
+              .map( x => (x._1, x._2.get.getPath))
+
           case None => Seq()
         }
       }

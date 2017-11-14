@@ -15,7 +15,7 @@ case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, F
 
 object JsonFetchResult {
 
-  def apply[T](roots: IndexedSeq[T])(children: T => Seq[T], show: T => String, getFiles: T => Seq[String]): String = {
+  def apply[T](roots: IndexedSeq[T])(children: T => Seq[T], show: T => String, getFiles: T => Seq[(String, String)]): String = {
 
     /**
       * Recursively go down the resolution for the elems to construct the tree for print out.
@@ -38,7 +38,7 @@ object JsonFetchResult {
       }
     }
 
-    case class JsonNode(coord: String, files: Seq[String], dependencies: ArrayBuffer[JsonNode]) {
+    case class JsonNode(coord: String, files: Seq[(String, String)], dependencies: ArrayBuffer[JsonNode]) {
       def addChild(x: JsonNode): Unit = {
         dependencies.append(x)
       }

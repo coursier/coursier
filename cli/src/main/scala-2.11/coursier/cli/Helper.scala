@@ -701,10 +701,10 @@ class Helper(
       }
 
     println(artifacts0.map(_.url))
-    val fileByArtifact: collection.mutable.Map[String, File] = collection.mutable.Map()
+    val artifactToFile: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
       case (artifact: Artifact, \/-(f)) =>
-        fileByArtifact.put(artifact.url, f)
+        artifactToFile.put(artifact.url, f)
         f
     }
 
@@ -748,7 +748,7 @@ class Helper(
     if (!jsonOutputFile.isEmpty) {
       val deps: Seq[Dependency] = getDepArtifactsForClassifier(sources, javadoc, res).map(_._1)
       println(deps)
-      val jsonReq = JsonPrintRequirement(fileByArtifact, depToArtifacts)
+      val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val jsonStr =
         Print.dependencyTree(
           deps,
