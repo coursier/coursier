@@ -1,12 +1,7 @@
 package coursier.util
 
-import java.io.File
-
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 object Print {
 
@@ -115,10 +110,6 @@ object Print {
 
       // These are used to printing json output
       val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
-      val requested =  s"${dep.module}:${dep.version}"
-      if (reconciledVersionStr !=  requested) {
-        println("hi", requested, reconciledVersionStr)
-      }
 
       lazy val repr =
         if (excluded)
@@ -187,7 +178,20 @@ object Print {
     }
 
     if (jsonPrintRequirement.isDefined) {
-      JsonFetchResult(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.reconciledVersionStr, _.requested, _.downloadedFiles)
+
+
+      println("roots:")
+      roots.foreach({ dep =>
+        //        val requested =  ${}"
+        val reconciledVersion: String = resolution.reconciledVersions
+          .getOrElse(dep.module, dep.version)
+        println(dep)
+//        if (reconciledVersion != dep.version) {
+//          println("hi", dep.version, reconciledVersion)
+//        }
+      })
+
+      JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.reconciledVersionStr, _.downloadedFiles)
     }
     else if (reverse) {
 

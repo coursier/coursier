@@ -13,10 +13,10 @@ import scala.collection.mutable.ArrayBuffer
 
 case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]])
 
-object JsonFetchResult {
+object JsonReport {
 
   def apply[T](roots: IndexedSeq[T])
-              (children: T => Seq[T], reconciledVersionStr: T => String, originalVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
+              (children: T => Seq[T], reconciledVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
 
     case class JsonNode(coord: String, files: Seq[(String, String)], dependencies: ArrayBuffer[JsonNode]) {
       def addChild(x: JsonNode): Unit = {
@@ -30,12 +30,12 @@ object JsonFetchResult {
       val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
       for (elem <- unseenElems) {
         val finalVersionStr = reconciledVersionStr(elem)
-        val requestedVersionStr = originalVersionStr(elem)
-        println(finalVersionStr, requestedVersionStr)
-
-        if (!requestedVersionStr.equals(finalVersionStr)) {
-          conflictResolution.put(requestedVersionStr, finalVersionStr)
-        }
+//        val requestedVersionStr = originalVersionStr(elem)
+//        println(finalVersionStr, requestedVersionStr)
+//
+//        if (!requestedVersionStr.equals(finalVersionStr)) {
+//          conflictResolution.put(requestedVersionStr, finalVersionStr)
+//        }
 
         val childNode = JsonNode(finalVersionStr, getFiles(elem), ArrayBuffer.empty)
         parentElem.addChild(childNode)
