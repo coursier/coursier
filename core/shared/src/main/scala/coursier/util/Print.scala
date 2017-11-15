@@ -97,9 +97,7 @@ object Print {
 
     case class Elem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) {
 
-      lazy val reconciledVersion: String = resolution.reconciledVersions
-        .getOrElse(dep.module, dep.version)
-
+      // This is used to printing json output
       // Seq of (classifier, file path) tuple
       lazy val downloadedFiles: Seq[(String, String)] = {
         jsonPrintRequirement match {
@@ -108,17 +106,22 @@ object Print {
               .map(x => (x.classifier, req.fileByArtifact.get(x.url)))
               .filter(_._2.isDefined)
               .map( x => (x._1, x._2.get.getPath))
-
           case None => Seq()
         }
       }
 
+      lazy val reconciledVersion: String = resolution.reconciledVersions
+        .getOrElse(dep.module, dep.version)
+
+      // These are used to printing json output
+      val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
+      val requested =  s"${dep.module}:${dep.version}"
+      if (reconciledVersionStr !=  requested) {
+        println("hi", requested, reconciledVersionStr)
+      }
 
       lazy val repr =
-        if (jsonPrintRequirement.isDefined) {
-          s"${dep.module}:$reconciledVersion"
-        }
-        else if (excluded)
+        if (excluded)
           resolution.reconciledVersions.get(dep.module) match {
             case None =>
               s"$yellow(excluded)$reset ${dep.module}:${dep.version}"
@@ -184,7 +187,7 @@ object Print {
     }
 
     if (jsonPrintRequirement.isDefined) {
-      JsonFetchResult(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.repr, _.downloadedFiles)
+      JsonFetchResult(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.reconciledVersionStr, _.requested, _.downloadedFiles)
     }
     else if (reverse) {
 

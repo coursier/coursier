@@ -630,7 +630,7 @@ class Helper(
         classifiers = classifiers + "sources"
       if (javadoc)
         classifiers = classifiers + "javadoc"
-
+      //TODO: this function somehow gives duplicated things
       val tuples: Seq[(Dependency, Artifact)] = res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
       tuples
     } else {
@@ -700,7 +700,7 @@ class Helper(
           a.isOptional && notFound
       }
 
-    println(artifacts0.map(_.url))
+//    println(artifacts0.map(_.url))
     val artifactToFile: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
       case (artifact: Artifact, \/-(f)) =>
@@ -746,8 +746,9 @@ class Helper(
 
 
     if (!jsonOutputFile.isEmpty) {
-      val deps: Seq[Dependency] = getDepArtifactsForClassifier(sources, javadoc, res).map(_._1)
-      println(deps)
+      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
+//      println("deps:")
+//      deps.map(println(_))
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val jsonStr =
         Print.dependencyTree(
@@ -760,8 +761,7 @@ class Helper(
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()
-      //    println(s"Output saved at: ${jsonOutputFile}")
-      println(jsonStr)
+//      println(jsonStr)
     }
     files0
   }
