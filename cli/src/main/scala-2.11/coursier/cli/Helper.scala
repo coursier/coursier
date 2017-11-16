@@ -523,6 +523,18 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
+
+  val conflictResolutionForRoots = dependencies.map({ dep =>
+    val reconciledVersion: String = res.reconciledVersions
+      .getOrElse(dep.module, dep.version)
+    if (reconciledVersion != dep.version) {
+      Option((s"${dep.module}:${dep.version}", s"${dep.module}:$reconciledVersion"))
+    }
+    else {
+      Option.empty
+    }
+  }).filter(_.isDefined).map(_.get).toMap
+
   if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
@@ -749,7 +761,8 @@ class Helper(
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
 //      println("deps:")
 //      deps.map(println(_))
-      val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
+
+      val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
       val jsonStr =
         Print.dependencyTree(
           deps,

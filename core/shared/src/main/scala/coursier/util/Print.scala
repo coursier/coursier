@@ -110,6 +110,7 @@ object Print {
 
       // These are used to printing json output
       val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
+      val requestedVersionStr = s"${dep.module}:${dep.version}"
 
       lazy val repr =
         if (excluded)
@@ -177,21 +178,11 @@ object Print {
         }
     }
 
+
+
     if (jsonPrintRequirement.isDefined) {
-
-
-      println("roots:")
-      roots.foreach({ dep =>
-        //        val requested =  ${}"
-        val reconciledVersion: String = resolution.reconciledVersions
-          .getOrElse(dep.module, dep.version)
-        println(dep)
-//        if (reconciledVersion != dep.version) {
-//          println("hi", dep.version, reconciledVersion)
-//        }
-      })
-
-      JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)))(_.children, _.reconciledVersionStr, _.downloadedFiles)
+      println(Tree(roots.toVector.map(Elem(_, excluded = false)))(_.children, _.repr))
+      JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
     }
     else if (reverse) {
 
