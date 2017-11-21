@@ -326,8 +326,43 @@ object ResolutionTests extends TestSuite {
           rootDependencies = Set(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
-
+        println(expected)
         assert(res == expected)
+      }
+    }
+    'softExclude{
+      async {
+        /**
+        ├─ org.apache.avro:avro:1.7.4
+        │  ├─ com.thoughtworks.paranamer:paranamer:2.3
+        │  ├─ org.apache.commons:commons-compress:1.4.1
+        │  │  └─ org.tukaani:xz:1.0
+        │  ├─ org.codehaus.jackson:jackson-core-asl:1.8.8
+        │  ├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+        │  │  └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+        │  ├─ org.slf4j:slf4j-api:1.6.4
+        │  └─ org.xerial.snappy:snappy-java:1.0.4.1
+        └─ org.apache.commons:commons-compress:1.4.1
+           └─ org.tukaani:xz:1.0
+          */
+        val dep = Dependency(Module("org.apache.avro", "avro"), "1.7.4")
+//        val trDeps = Seq(
+//          Dependency(Module("acme", "play"), "2.4.1",
+//            exclusions = Set(("acme", "config"))),
+//          Dependency(Module("acme", "play-json"), "2.4.0",
+//            exclusions = Set(("acme", "config")))
+//        )
+        val res = await(resolve0(
+          Set(dep)
+        )).clearCaches
+
+        val expected = Resolution(
+          rootDependencies = Set(dep),
+          dependencies = Set(dep.withCompileScope)
+        )
+
+        println(res.transitiveDependencies)
+        assert(res != expected)
       }
     }
     'excludeOrgWildcard{
