@@ -366,9 +366,6 @@ class Helper(
       )
   }
 
-  println("base:", baseDependencies)
-  println("intrans:", intransitiveDependencies)
-
   val dependencies = baseDependencies ++ intransitiveDependencies
 
   val checksums = {
