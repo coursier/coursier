@@ -57,7 +57,7 @@ final case class CommonOptions(
     "Syntax: <org:name>--<org:name>. `--` means minus. For example: \n" +
     "com.twitter.penguin:korean-text--com.twitter:util-tunable-internal_2.11\n" +
     "org.apache.commons:commons-math--com.twitter.search:core-query-nodes\n" +
-    "Behavior: If module A excludes module X, but module B requires X, module X will still be fetched.")
+    "Behavior: If root module A excludes module X, but root module B requires X, module X will still be fetched.")
   softExcludeFile: String = "",
   @Help("Default scala version")
   @Short("e")
