@@ -11,7 +11,7 @@ import coursier.core.Dependency
 import scala.collection.mutable.ArrayBuffer
 
 
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]], conflictResolutionForRoots: Map[String, String])
+case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
 object JsonReport {
 

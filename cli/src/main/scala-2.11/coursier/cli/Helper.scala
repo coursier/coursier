@@ -343,8 +343,6 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
-  println("soft excludes:", softExcludeMap)
-
   val baseDependencies = allModuleVersionConfigs.map {
     case (module, version, configOpt) =>
       Dependency(
@@ -672,11 +670,9 @@ class Helper(
       if (javadoc)
         classifiers = classifiers + "javadoc"
       //TODO: this function somehow gives duplicated things
-      val tuples: Seq[(Dependency, Artifact)] = res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
-      tuples
+      res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
     } else {
-      val tuples1: Seq[(Dependency, Artifact)] = res0.dependencyArtifacts(withOptional = true)
-      tuples1
+      res0.dependencyArtifacts(withOptional = true)
     }
   }
 
@@ -741,7 +737,6 @@ class Helper(
           a.isOptional && notFound
       }
 
-//    println(artifacts0.map(_.url))
     val artifactToFile: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
       case (artifact: Artifact, \/-(f)) =>
@@ -772,26 +767,14 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, ArrayBuffer[Artifact]] = {
-      val x = collection.mutable.Map[Dependency, ArrayBuffer[Artifact]]()
-      for ((dep, art) <- getDepArtifactsForClassifier(sources, javadoc, res)) {
-        if (x.contains(dep)) {
-          x(dep).append(art)
-        }
-        else {
-          x.put(dep, ArrayBuffer(art))
-        }
-      }
-      x.toMap
-    }
+    val depToArtifacts: Map[Dependency, Seq[Artifact]] =
+      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toSeq).toMap
 
 
     if (!jsonOutputFile.isEmpty) {
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
-//      println("deps:")
-//      deps.map(println(_))
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
       val jsonStr =
@@ -805,7 +788,6 @@ class Helper(
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()
-//      println(jsonStr)
     }
     files0
   }
