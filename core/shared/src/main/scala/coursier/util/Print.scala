@@ -179,9 +179,7 @@ object Print {
     }
 
 
-
     if (jsonPrintRequirement.isDefined) {
-      println(Tree(roots.toVector.map(Elem(_, excluded = false)))(_.children, _.repr))
       JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
     }
     else if (reverse) {

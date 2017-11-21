@@ -315,9 +315,35 @@ class Helper(
       .mkString("\n")
   }
 
-  val excludes = excludesNoAttr.map { mod =>
+  val excludes: Set[(String, String)] = excludesNoAttr.map { mod =>
     (mod.organization, mod.name)
   }.toSet
+
+  private val softExcludeMap: Map[String, Set[(String, String)]] =
+    if (softExcludeFile.isEmpty) {
+      Map()
+    } else {
+      val source = scala.io.Source.fromFile(softExcludeFile)
+      val lines = try source.mkString.split("\n") finally source.close()
+
+      lines.map({ str =>
+        val parent_and_child = str.split("--")
+        if (parent_and_child.length != 2) {
+          System.err.println(s"Failed to parse $str")
+          System.exit(1)
+        }
+
+        val child_org_name = parent_and_child(1).split(":")
+        if (child_org_name.length != 2) {
+          System.err.println(s"Failed to parse $child_org_name")
+          System.exit(1)
+        }
+
+        (parent_and_child(0), (child_org_name(0), child_org_name(1)))
+      }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
+    }
+
+  println("soft excludes:", softExcludeMap)
 
   val baseDependencies = allModuleVersionConfigs.map {
     case (module, version, configOpt) =>
@@ -326,7 +352,7 @@ class Helper(
         version,
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = excludes
+        exclusions = softExcludeMap.getOrElse(module.orgName, Set()) | excludes
       )
   }
 
@@ -341,6 +367,9 @@ class Helper(
         transitive = false
       )
   }
+
+  println("base:", baseDependencies)
+  println("intrans:", intransitiveDependencies)
 
   val dependencies = baseDependencies ++ intransitiveDependencies
 
@@ -758,6 +787,8 @@ class Helper(
 
 
     if (!jsonOutputFile.isEmpty) {
+      // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
+      // a strict super set.
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
 //      println("deps:")
 //      deps.map(println(_))
