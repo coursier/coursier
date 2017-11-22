@@ -445,7 +445,9 @@ lazy val proguardedCli = Seq(
     "-dontwarn",
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
-    "-adaptresourcefilenames **.properties"
+    "-adaptresourcefilenames **.properties",
+    "-keep class com.fasterxml.jackson.** {\n  public protected private *;\n}",
+    "-keepattributes *Annotation*"
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",
