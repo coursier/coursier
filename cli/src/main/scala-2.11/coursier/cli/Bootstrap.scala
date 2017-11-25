@@ -39,36 +39,7 @@ final case class Bootstrap(
     else
       options.mainClass
 
-  if (options.native) {
-
-    val files = helper.fetch(
-      sources = false,
-      javadoc = false,
-      artifactTypes = artifactOptions.artifactTypes(sources = false, javadoc = false)
-    )
-
-    val log: String => Unit =
-      if (options.common.verbosityLevel >= 0)
-        s => Console.err.println(s)
-      else
-        _ => ()
-
-    val tmpDir = new File(options.target)
-
-    try {
-      coursier.extra.Native.create(
-        mainClass,
-        files,
-        output0,
-        tmpDir,
-        log,
-        verbosity = options.common.verbosityLevel
-      )
-    } finally {
-      if (!options.keepTarget)
-        coursier.extra.Native.deleteRecursive(tmpDir)
-    }
-  } else {
+  
 
     val (validProperties, wrongProperties) = options.property.partition(_.contains("="))
     if (wrongProperties.nonEmpty) {
@@ -247,6 +218,6 @@ final case class Bootstrap(
         )
         sys.exit(1)
     }
-  }
+  
 
 }

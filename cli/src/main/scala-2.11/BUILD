@@ -9,3 +9,11 @@ scala_library(
   	'extra/src/main/scala/coursier/extra:extra',
   ]
 )
+
+jvm_binary(name='coursier-cli',
+  basename='coursier-cli',
+  dependencies=[
+   ':cli'
+  ],
+  main='coursier.cli.Coursier'
+)
