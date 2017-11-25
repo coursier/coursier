@@ -28,9 +28,14 @@ jar_library(
   ],
 )
 
+jar_library(name='scalaz-concurrent',
+            jars = [
+              scala_jar(org='org.scalaz', name='scalaz-concurrent', rev='7.2.16'),
+            ])
+
 jar_library(name='scalaz-core',
             jars = [
-              scala_jar(org='org.scalaz', name='scalaz-core', rev='7.2.7'),
+              scala_jar(org='org.scalaz', name='scalaz-core', rev='7.2.16'),
             ])
 
 jar_library(name='jsoup', jars=[jar(org='org.jsoup', name='jsoup', rev='1.10.3')])
@@ -64,4 +69,21 @@ jar_library(name = 'dom',
 jar_library(name='jackson-module-scala',
             jars = [
               scala_jar(org='com.fasterxml.jackson.module', name='jackson-module-scala', rev='2.8.4'),
+            ])
+
+
+jar_library(name='caseapp',
+            jars = [
+              scala_jar(org='com.github.alexarchambault', name='case-app', rev='1.1.3'),
+            ])
+
+jar_library(name='argonaut-shapeless',
+            jars = [
+              scala_jar(org='com.github.alexarchambault', name='argonaut-shapeless_6.2', rev='1.2.0-M6'),
+            ])
+
+
+jar_library(name='soc',
+            jars = [
+              jar(org='io.github.soc', name='directories', rev='5'),
             ])
