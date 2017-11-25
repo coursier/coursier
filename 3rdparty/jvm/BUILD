@@ -15,6 +15,13 @@
 #  def jackson = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.4"
 
 jar_library(
+  name='scala-xml',
+  jars=[
+    scala_jar(org='org.scala-lang.modules', name='scala-xml', rev='1.0.6'),
+  ],
+)
+
+jar_library(
   name='quasiQuotes',
   jars=[
     scala_jar(org='org.scalamacros', name='quasiquotes', rev='2.1.0'),
