@@ -61,3 +61,7 @@ jar_library(name = 'dom',
     scala_jar(org='org.scala-js', name='scalajs-dom_sjs0.6', rev='0.9.1'),
   ],
 )
+jar_library(name='jackson-module-scala',
+            jars = [
+              scala_jar(org='com.fasterxml.jackson.module', name='jackson-module-scala', rev='2.8.4'),
+            ])
