@@ -53,10 +53,10 @@ final case class CommonOptions(
   exclude: List[String] = Nil,
 
   @Short("x")
-  @Help("Path to the soft exclusion file. \n" +
-    "Syntax: <org:name>--<org:name>. `--` means minus. For example: \n" +
-    "com.twitter.penguin:korean-text--com.twitter:util-tunable-internal_2.11\n" +
-    "org.apache.commons:commons-math--com.twitter.search:core-query-nodes\n" +
+  @Help("Path to the soft exclusion file. " +
+    "Syntax: <org:name>--<org:name>. `--` means minus. Example file content:\n\t" +
+    "com.twitter.penguin:korean-text--com.twitter:util-tunable-internal_2.11\n\t" +
+    "org.apache.commons:commons-math--com.twitter.search:core-query-nodes\n\t" +
     "Behavior: If root module A excludes module X, but root module B requires X, module X will still be fetched.")
   softExcludeFile: String = "",
   @Help("Default scala version")
