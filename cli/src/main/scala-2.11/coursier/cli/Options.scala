@@ -183,7 +183,7 @@ final case class IsolatedLoaderOptions(
 }
 
 object ArtifactOptions {
-  def defaultArtifactTypes = Set("jar", "bundle")
+  def defaultArtifactTypes = Set("jar", "bundle", "test-jar")
 }
 
 final case class ArtifactOptions(
