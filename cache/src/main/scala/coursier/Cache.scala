@@ -1075,7 +1075,9 @@ object Cache {
   private lazy val ivy2HomeUri = {
     // a bit touchy on Windows... - don't try to manually write down the URI with s"file://..."
     val home =
-      if (sys.props("sbt.ivy.home") != null)
+      if (sys.props("ivy.home") != null)
+        sys.props("ivy.home")
+      else if (sys.props("sbt.ivy.home") != null)
         sys.props("sbt.ivy.home")
       else
         sys.props("user.home")
