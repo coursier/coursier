@@ -1077,12 +1077,11 @@ object Cache {
     val home =
       if (sys.props("ivy.home") != null)
         sys.props("ivy.home")
-      else if (sys.props("sbt.ivy.home") != null)
-        sys.props("sbt.ivy.home")
+      else if (sys.props("coursier.ivy.home") != null)
+        sys.props("coursier.ivy.home")
       else
-        sys.props("user.home")
-    println(s"home is $home")
-    val str = new File(home + "/.ivy2/").toURI.toString
+        sys.props("user.home") +  "/.ivy2/"
+    val str = new File(home).toURI.toString
     if (str.endsWith("/"))
       str
     else
