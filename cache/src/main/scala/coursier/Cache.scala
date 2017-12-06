@@ -1075,7 +1075,7 @@ object Cache {
   private lazy val ivy2HomeUri = {
 
     val path =
-      sys.props("coursier.ivy.home")
+      sys.props.get("coursier.ivy.home")
         .orElse(sys.props.get("ivy.home"))
         .getOrElse(sys.props("user.home") + "/.ivy2/")
 
