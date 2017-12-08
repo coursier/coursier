@@ -94,3 +94,9 @@ jar_library(name='soc',
             jars = [
               jar(org='io.github.soc', name='directories', rev='5'),
             ])
+
+jar_library(name='scala-native',
+            jars = [
+              jar(org='org.scala-native', name='nativelib_native0.3_2.11', rev='0.3.3'),
+              jar(org='io.get-coursier.scala-native', name='tools_2.11', rev='0.3.0-coursier-1'),
+            ])
