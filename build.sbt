@@ -32,7 +32,6 @@ lazy val core = crossProject
     shared,
     name := "coursier",
     libs += CrossDeps.scalazCore.value,
-    libs += Deps.jackson,
     Mima.previousArtifacts,
     Mima.coreFilters
   )
@@ -445,12 +444,7 @@ lazy val proguardedCli = Seq(
     "-dontwarn",
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
-    "-adaptresourcefilenames **.properties",
-    // Jackson uses reflection.
-    "-keep class com.fasterxml.jackson.** {\n  public protected private *;\n}",
-    // Without this the output json file is empty. The config can be more fine grained.
-    "-keep class coursier.util.** {\n  public protected private *;\n}",
-    "-keepattributes *Annotation*"
+    "-adaptresourcefilenames **.properties"
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",

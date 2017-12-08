@@ -1,7 +1,6 @@
 package coursier.util
 
-import coursier.Artifact
-import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
+import coursier.core.{ Attributes, Dependency, Module, Orders, Project, Resolution }
 
 object Print {
 
@@ -70,18 +69,16 @@ object Print {
     roots: Seq[Dependency],
     resolution: Resolution,
     printExclusions: Boolean,
-    reverse: Boolean,
-    jsonPrintRequirement: Option[JsonPrintRequirement] = Option.empty
+    reverse: Boolean
   ): String =
-    dependencyTree(roots, resolution, printExclusions, reverse, colors = true, jsonPrintRequirement)
+    dependencyTree(roots, resolution, printExclusions, reverse, colors = true)
 
   def dependencyTree(
     roots: Seq[Dependency],
     resolution: Resolution,
     printExclusions: Boolean,
     reverse: Boolean,
-    colors: Boolean,
-    jsonPrintRequirement: Option[JsonPrintRequirement]
+    colors: Boolean
   ): String = {
 
     val (red, yellow, reset) =
@@ -90,27 +87,10 @@ object Print {
       else
         ("", "", "")
 
-    case class Elem(dep: Dependency, artifacts: Seq[(Dependency, Artifact)] = Seq(), excluded: Boolean) {
+    final case class Elem(dep: Dependency, excluded: Boolean) {
 
-      // This is used to printing json output
-      // Seq of (classifier, file path) tuple
-      lazy val downloadedFiles: Seq[(String, String)] = {
-        jsonPrintRequirement match {
-          case Some(req) =>
-            req.depToArtifacts.getOrElse(dep, Seq())
-              .map(x => (x.classifier, req.fileByArtifact.get(x.url)))
-              .filter(_._2.isDefined)
-              .map( x => (x._1, x._2.get.getPath))
-          case None => Seq()
-        }
-      }
-
-      lazy val reconciledVersion: String = resolution.reconciledVersions
+      lazy val reconciledVersion = resolution.reconciledVersions
         .getOrElse(dep.module, dep.version)
-
-      // These are used to printing json output
-      val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
-      val requestedVersionStr = s"${dep.module}:${dep.version}"
 
       lazy val repr =
         if (excluded)
@@ -171,18 +151,14 @@ object Print {
                   Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
                   excluded = true
                 )
-          }
+            }
 
           dependencies.map(Elem(_, excluded = false)) ++
             (if (printExclusions) excluded else Nil)
         }
     }
 
-
-    if (jsonPrintRequirement.isDefined) {
-      JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
-    }
-    else if (reverse) {
+    if (reverse) {
 
       final case class Parent(
         module: Module,
@@ -243,8 +219,8 @@ object Print {
             Parent(dep.module, dep.version, dep.module, dep.version, dep.version, excluding = false)
           )
       )(children, _.repr)
-    } else {
+    } else
       Tree(roots.toVector.map(Elem(_, excluded = false)))(_.children, _.repr)
-    }
   }
+
 }
