@@ -1,7 +1,7 @@
 scala_library(
-  name = 'extra',
-  sources = rglobs('*.scala'),
-  dependencies = [
-  	'core:core'
-   ]
+    name = "extra",
+    dependencies = [
+        "core:core",
+    ],
+    sources = rglobs("*.scala"),
 )

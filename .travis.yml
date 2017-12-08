@@ -56,6 +56,7 @@ matrix:
     - os: linux
       jdk: oraclejdk8
       script:
+        # Sanity check for Pants build path.
         - ./pants run cli/src/main/scala-2.11:coursier-cli -- fetch --help
 env:
   global:
