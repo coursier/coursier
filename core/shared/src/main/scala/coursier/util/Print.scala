@@ -180,7 +180,9 @@ object Print {
 
 
     if (jsonPrintRequirement.isDefined) {
-      JsonReport(roots.toVector.map(Elem(_, resolution.dependencyArtifacts, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
+      // NB: This value has to be eagerly computed, otherwise later it will be called many times to cause OOM.
+      val artifacts: Seq[(Dependency, Artifact)] = resolution.dependencyArtifacts
+      JsonReport(roots.toVector.map(Elem(_, artifacts, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
     }
     else if (reverse) {
 
