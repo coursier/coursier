@@ -1,7 +1,8 @@
-package coursier.util
+package coursier.cli
 
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
+import coursier.util.Tree
 
 object Print {
 

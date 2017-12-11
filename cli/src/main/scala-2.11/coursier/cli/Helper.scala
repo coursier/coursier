@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{JsonPrintRequirement, Parse, Print}
+import coursier.util.Parse
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
