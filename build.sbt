@@ -44,7 +44,6 @@ lazy val `print-util` = project
   .settings(
     shared,
     libs += Deps.jackson,
-    dontPublishIn("2.10", "2.12"),
     coursierPrefix
   )
 
