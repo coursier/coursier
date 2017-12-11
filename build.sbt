@@ -43,7 +43,7 @@ lazy val `print-util` = project
   .dependsOn(coreJvm)
   .settings(
     libs += Deps.jackson,
-    dontPublish
+    dontPublishIn("2.10", "2.12")
   )
 
 lazy val `fetch-js` = project
