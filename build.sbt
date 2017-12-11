@@ -32,7 +32,6 @@ lazy val core = crossProject
     shared,
     name := "coursier",
     libs += CrossDeps.scalazCore.value,
-    libs += Deps.jackson,
     Mima.previousArtifacts,
     Mima.coreFilters
   )
@@ -159,6 +158,7 @@ lazy val cli = project
       else
         Seq()
     },
+    libs += Deps.jackson,
     addBootstrapJarAsResource,
     proguardedCli
   )
