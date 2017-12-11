@@ -373,6 +373,7 @@ lazy val coursier = project
   .in(root)
   .aggregate(
     coreJvm,
+    `print-util`,
     coreJs,
     `fetch-js`,
     testsJvm,
