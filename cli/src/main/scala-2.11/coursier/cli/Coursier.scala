@@ -124,5 +124,5 @@ object Coursier extends CommandAppOf[
 ] {
   override def appName = "Coursier"
   override def progName = "coursier"
-  override def appVersion = coursier.util.Properties.version
+//  override def appVersion = coursier.util.Properties.version
 }
