@@ -1,22 +1,22 @@
 package coursier
 package cli
 
-import java.io.{ OutputStreamWriter, File }
-import java.net.{ URL, URLClassLoader }
-import java.util.jar.{ Manifest => JManifest }
+import java.io.{File, OutputStreamWriter, PrintWriter}
+import java.net.{URL, URLClassLoader}
+import java.util.jar.{Manifest => JManifest}
 import java.util.concurrent.Executors
 
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{Print, Parse}
+import coursier.util.{JsonPrintRequirement, Parse, Print}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.util.Try
-
-import scalaz.{Failure, Nondeterminism, Success, \/-, -\/}
-import scalaz.concurrent.{ Task, Strategy }
+import scalaz.{-\/, EitherT, Failure, Nondeterminism, Success, \/-}
+import scalaz.concurrent.{Strategy, Task}
 import scalaz.std.list._
 
 object Helper {
@@ -315,9 +315,33 @@ class Helper(
       .mkString("\n")
   }
 
-  val excludes = excludesNoAttr.map { mod =>
+  val excludes: Set[(String, String)] = excludesNoAttr.map { mod =>
     (mod.organization, mod.name)
   }.toSet
+
+  private val softExcludeMap: Map[String, Set[(String, String)]] =
+    if (softExcludeFile.isEmpty) {
+      Map()
+    } else {
+      val source = scala.io.Source.fromFile(softExcludeFile)
+      val lines = try source.mkString.split("\n") finally source.close()
+
+      lines.map({ str =>
+        val parent_and_child = str.split("--")
+        if (parent_and_child.length != 2) {
+          System.err.println(s"Failed to parse $str")
+          System.exit(1)
+        }
+
+        val child_org_name = parent_and_child(1).split(":")
+        if (child_org_name.length != 2) {
+          System.err.println(s"Failed to parse $child_org_name")
+          System.exit(1)
+        }
+
+        (parent_and_child(0), (child_org_name(0), child_org_name(1)))
+      }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
+    }
 
   val baseDependencies = allModuleVersionConfigs.map {
     case (module, version, configOpt) =>
@@ -326,7 +350,7 @@ class Helper(
         version,
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = excludes
+        exclusions = softExcludeMap.getOrElse(module.orgName, Set()) | excludes
       )
   }
 
@@ -523,6 +547,18 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
+
+  val conflictResolutionForRoots = dependencies.map({ dep =>
+    val reconciledVersion: String = res.reconciledVersions
+      .getOrElse(dep.module, dep.version)
+    if (reconciledVersion != dep.version) {
+      Option((s"${dep.module}:${dep.version}", s"${dep.module}:$reconciledVersion"))
+    }
+    else {
+      Option.empty
+    }
+  }).filter(_.isDefined).map(_.get).toMap
+
   if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
@@ -611,17 +647,9 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 =
-      if (classifier0.nonEmpty || sources || javadoc) {
-        var classifiers = classifier0
-        if (sources)
-          classifiers = classifiers + "sources"
-        if (javadoc)
-          classifiers = classifiers + "javadoc"
+    val depArtTuples: Seq[(Dependency, Artifact)] = getDepArtifactsForClassifier(sources, javadoc, res0)
 
-        res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted).map(_._2)
-      } else
-        res0.dependencyArtifacts(withOptional = true).map(_._2)
+    val artifacts0 = depArtTuples.map(_._2)
 
     if (artifactTypes("*"))
       artifacts0
@@ -630,6 +658,22 @@ class Helper(
         artifactTypes(artifact.`type`)
       }
   }
+
+  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
+    if (classifier0.nonEmpty || sources || javadoc) {
+      var classifiers = classifier0
+      if (sources)
+        classifiers = classifiers + "sources"
+      if (javadoc)
+        classifiers = classifiers + "javadoc"
+      //TODO: this function somehow gives duplicated things
+      res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
+    } else {
+      res0.dependencyArtifacts(withOptional = true)
+    }
+  }
+
+
 
   def fetch(
     sources: Boolean,
@@ -690,8 +734,10 @@ class Helper(
           a.isOptional && notFound
       }
 
+    val artifactToFile: collection.mutable.Map[String, File] = collection.mutable.Map()
     val files0 = results.collect {
-      case (artifact, \/-(f)) =>
+      case (artifact: Artifact, \/-(f)) =>
+        artifactToFile.put(artifact.url, f)
         f
     }
 
@@ -718,6 +764,28 @@ class Helper(
         .mkString("\n")
     }
 
+    val depToArtifacts: Map[Dependency, Seq[Artifact]] =
+      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toSeq).toMap
+
+
+    if (!jsonOutputFile.isEmpty) {
+      // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
+      // a strict super set.
+      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
+
+      val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
+      val jsonStr =
+        Print.dependencyTree(
+          deps,
+          res,
+          printExclusions = verbosityLevel >= 1,
+          reverse = reverseTree,
+          Option(jsonReq)
+        )
+      val pw = new PrintWriter(new File(jsonOutputFile))
+      pw.write(jsonStr)
+      pw.close()
+    }
     files0
   }
 
