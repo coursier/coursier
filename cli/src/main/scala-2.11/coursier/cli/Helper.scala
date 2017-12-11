@@ -3,21 +3,18 @@ package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader}
-import java.util.jar.{Manifest => JManifest}
 import java.util.concurrent.Executors
+import java.util.jar.{Manifest => JManifest}
 
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.Parse
+import coursier.util.{JsonPrintRequirement, Parse, Print}
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
-import scala.util.Try
-import scalaz.{-\/, EitherT, Failure, Nondeterminism, Success, \/-}
 import scalaz.concurrent.{Strategy, Task}
-import scalaz.std.list._
+import scalaz.{-\/, Failure, Nondeterminism, Success, \/-}
 
 object Helper {
   def fileRepr(f: File) = f.toString
@@ -84,10 +81,9 @@ class Helper(
   isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
   warnBaseLoaderNotFound: Boolean = true
 ) {
-  import common._
   import Helper.errPrintln
-
   import Util._
+  import common._
 
   val ttl0 =
     if (ttl.isEmpty)

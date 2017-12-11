@@ -1,4 +1,4 @@
-package coursier.cli
+package coursier.util
 
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}

@@ -1,4 +1,4 @@
-package coursier.cli
+package coursier.util
 
 import java.io.File
 
