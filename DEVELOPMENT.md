@@ -144,13 +144,13 @@ $ sbt ++2.12.4 proxy-tests/it:test
 
 Currently only the CLI command can be built via Pants with Scala 2.11.11.
 
-To iterate on code changes, invoke:
+To iterate on code changes:
 
 ```
 ./pants run cli/src/main/scala-2.11:coursier-cli -- fetch --help
 ```
 
-To build a distribute binary
+To build a distributable binary
 ```
 ./pants run cli/src/main/scala-2.11:coursier-cli
 
