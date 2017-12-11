@@ -149,7 +149,7 @@ lazy val extra = project
   )
 
 lazy val cli = project
-  .dependsOn(coreJvm, cache, extra)
+  .dependsOn(coreJvm, cache, extra, `print-util`)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
