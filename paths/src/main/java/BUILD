@@ -1,7 +1,7 @@
 java_library(
-  name = 'paths',
-  sources = rglobs('*.java'),
-  dependencies = [
-  '3rdparty/jvm:soc'
-   ]
+    name = "paths",
+    dependencies = [
+        "3rdparty/jvm:soc",
+    ],
+    sources = rglobs("*.java"),
 )
