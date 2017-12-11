@@ -42,8 +42,10 @@ lazy val coreJs = core.js
 lazy val `print-util` = project
   .dependsOn(coreJvm)
   .settings(
+    shared,
     libs += Deps.jackson,
-    dontPublishIn("2.10", "2.12")
+    dontPublishIn("2.10", "2.12"),
+    coursierPrefix
   )
 
 lazy val `fetch-js` = project
@@ -315,6 +317,7 @@ lazy val jvm = project
   .dummy
   .aggregate(
     coreJvm,
+    `print-util`,
     testsJvm,
     `proxy-tests`,
     paths,
