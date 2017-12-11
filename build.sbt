@@ -42,7 +42,8 @@ lazy val coreJs = core.js
 lazy val `print-util` = project
   .dependsOn(coreJvm)
   .settings(
-    libs += Deps.jackson
+    libs += Deps.jackson,
+    dontPublish
   )
 
 lazy val `fetch-js` = project
