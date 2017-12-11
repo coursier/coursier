@@ -39,6 +39,12 @@ lazy val core = crossProject
 lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
+lazy val `print-util` = project
+  .dependsOn(coreJvm)
+  .settings(
+    libs += Deps.jackson
+  )
+
 lazy val `fetch-js` = project
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(coreJs)
@@ -50,7 +56,7 @@ lazy val `fetch-js` = project
 
 lazy val tests = crossProject
   .dependsOn(core)
-  .jvmConfigure(_.dependsOn(cache % "test"))
+  .jvmConfigure(_.dependsOn(cache % "test", `print-util`))
   .jsConfigure(_.dependsOn(`fetch-js` % "test"))
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage
@@ -226,7 +232,7 @@ lazy val `sbt-shared` = project
   )
 
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache, extra, `sbt-shared`)
+  .dependsOn(coreJvm, cache, extra, `sbt-shared`, `print-util`)
   .settings(
     plugin,
     utest
