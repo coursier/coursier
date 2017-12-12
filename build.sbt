@@ -44,7 +44,8 @@ lazy val `print-util` = project
   .settings(
     shared,
     libs += Deps.jackson,
-    coursierPrefix
+    coursierPrefix,
+    moduleName := "coursier-print-util"
   )
 
 lazy val `fetch-js` = project
@@ -161,14 +162,13 @@ lazy val cli = project
       if (scalaBinaryVersion.value == "2.11")
         Seq(
           Deps.caseApp,
-          Deps.argonautShapeless
+          Deps.argonautShapeless,
+          Deps.jackson,
         )
       else
         Seq()
     },
-    libs += Deps.jackson,
-    addBootstrapJarAsResource,
-    proguardedCli
+    addBootstrapJarAsResource
   )
 
 lazy val web = project
