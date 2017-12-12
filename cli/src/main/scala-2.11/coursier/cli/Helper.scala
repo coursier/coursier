@@ -9,7 +9,8 @@ import java.util.jar.{Manifest => JManifest}
 import coursier.cli.scaladex.Scaladex
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.{JsonPrintRequirement, Parse, Print}
+import coursier.util.Print.Elem
+import coursier.util.{JsonPrintRequirement, JsonReport, Parse, Print}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -768,16 +769,11 @@ class Helper(
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
-
+      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
-      val jsonStr =
-        Print.dependencyTree(
-          deps,
-          res,
-          printExclusions = verbosityLevel >= 1,
-          reverse = reverseTree,
-          Option(jsonReq)
-        )
+      val jsonStr = JsonReport(
+        deps.toVector.map(Elem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false)), jsonReq.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
+
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()
