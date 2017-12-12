@@ -7,10 +7,12 @@ import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
 import coursier.cli.scaladex.Scaladex
+import coursier.cli.util.JsonReport
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.Print.Elem
-import coursier.util.{JsonPrintRequirement, JsonReport, Parse, Print}
+import shared.src.main.scala.coursier.util.Print.Elem
+import coursier.util.{Parse, Print}
+import shared.src.main.scala.coursier.util.{JsonPrintRequirement, Print}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration

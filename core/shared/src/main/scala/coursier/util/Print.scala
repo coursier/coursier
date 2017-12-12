@@ -1,7 +1,12 @@
-package coursier.util
+package shared.src.main.scala.coursier.util
+
+import java.io.File
 
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
+import coursier.util.Tree
+
+case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
 object Print {
 
@@ -194,8 +199,6 @@ object Print {
       else
         ("", "", "")
 
-
-
     if (reverse) {
 
       final case class Parent(
@@ -261,4 +264,5 @@ object Print {
       Tree(roots.toVector.map(Elem(_, artifacts=Seq(), jsonPrintRequirement = Option.empty, resolution, colors, printExclusions, excluded = false)))(_.children, _.repr)
     }
   }
+
 }

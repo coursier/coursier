@@ -1,17 +1,11 @@
-package coursier.util
-
-import java.io.File
+package coursier.cli.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-import coursier.Artifact
-import coursier.core.Dependency
 
 import scala.collection.mutable.ArrayBuffer
 
-
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
 object JsonReport {
 
