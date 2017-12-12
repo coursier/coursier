@@ -39,8 +39,20 @@ lazy val core = crossProject
 lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
-lazy val `print-util` = project
-  .dependsOn(coreJvm)
+lazy val `print-util` = crossProject
+  .dependsOn(core)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jvmSettings(
+    shading,
+    quasiQuotesIfNecessary,
+    scalaXmlIfNecessary,
+    shadeNamespaces ++= Set(
+      "org.jsoup",
+      "fastparse",
+      "sourcecode"
+    ),
+    generatePropertyFile
+  )
   .settings(
     shared,
     libs += Deps.jackson,
@@ -48,9 +60,12 @@ lazy val `print-util` = project
     moduleName := "coursier-print-util"
   )
 
+lazy val printUtilJvm = `print-util`.jvm
+lazy val printUtilJs = `print-util`.js
+
 lazy val `fetch-js` = project
   .enablePlugins(ScalaJSPlugin)
-  .dependsOn(coreJs)
+  .dependsOn(coreJs, printUtilJs)
   .settings(
     shared,
     dontPublish,
@@ -59,8 +74,8 @@ lazy val `fetch-js` = project
 
 lazy val tests = crossProject
   .dependsOn(core)
-  .jvmConfigure(_.dependsOn(cache % "test", `print-util`))
-  .jsConfigure(_.dependsOn(`fetch-js` % "test", `print-util`))
+  .jvmConfigure(_.dependsOn(cache % "test"))
+  .jsConfigure(_.dependsOn(`fetch-js` % "test"))
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage
   )
@@ -77,6 +92,7 @@ lazy val tests = crossProject
 
 lazy val testsJvm = tests.jvm
 lazy val testsJs = tests.js
+
 
 lazy val `proxy-tests` = project
   .dependsOn(testsJvm % "test->test")
@@ -152,7 +168,7 @@ lazy val extra = project
   )
 
 lazy val cli = project
-  .dependsOn(coreJvm, cache, extra, `print-util`)
+  .dependsOn(coreJvm, cache, extra, printUtilJvm)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -234,7 +250,7 @@ lazy val `sbt-shared` = project
   )
 
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache, extra, `sbt-shared`, `print-util`)
+  .dependsOn(coreJvm, cache, extra, `sbt-shared`, printUtilJvm)
   .settings(
     plugin,
     utest
@@ -316,7 +332,7 @@ lazy val jvm = project
   .dummy
   .aggregate(
     coreJvm,
-    `print-util`,
+    printUtilJvm,
     testsJvm,
     `proxy-tests`,
     paths,
@@ -344,10 +360,10 @@ lazy val js = project
   .dummy
   .aggregate(
     coreJs,
+    printUtilJs,
     `fetch-js`,
     testsJs,
-    web,
-    `print-util`
+    web
   )
   .settings(
     shared,
@@ -360,6 +376,7 @@ lazy val `sbt-plugins` = project
   .dummy
   .aggregate(
     coreJvm,
+    printUtilJvm,
     cache,
     extra,
     `sbt-shared`,
@@ -376,7 +393,7 @@ lazy val coursier = project
   .in(root)
   .aggregate(
     coreJvm,
-    `print-util`,
+    printUtilJvm,
     coreJs,
     `fetch-js`,
     testsJvm,
