@@ -50,7 +50,7 @@ final case class CommonOptions(
   @Value("organization:name")
   @Short("E")
   @Help("Global level exclude")
-  exclude: List[String] = Nil,
+    exclude: List[String] = Nil,
 
   @Short("x")
   @Help("Path to the soft exclusion file. " +

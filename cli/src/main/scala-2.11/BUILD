@@ -7,7 +7,6 @@ scala_library(
         "cache/src/main/scala:cache",
         "extra/src/main/scala/coursier/extra:extra",
         "extra/src/main/scala-2.11/coursier/extra:native",
-        "print-util/shared/src/main/scala:print-util",
     ],
     sources = rglobs("*.scala"),
 )
