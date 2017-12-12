@@ -7,17 +7,16 @@ import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
 import coursier.cli.scaladex.Scaladex
-import coursier.cli.util.JsonReport
+import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.Parse
-import shared.src.main.scala.coursier.util.Print.Elem
-import shared.src.main.scala.coursier.util.{JsonPrintRequirement, Print}
+import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scalaz.concurrent.{Strategy, Task}
 import scalaz.{-\/, Failure, Nondeterminism, Success, \/-}
+
 
 object Helper {
   def fileRepr(f: File) = f.toString
@@ -773,7 +772,7 @@ class Helper(
       val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
-      val roots = deps.toVector.map(Elem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
+      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
       val jsonStr = JsonReport(roots, jsonReq.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
 
       val pw = new PrintWriter(new File(jsonOutputFile))

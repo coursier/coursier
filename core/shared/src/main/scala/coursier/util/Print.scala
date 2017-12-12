@@ -1,12 +1,6 @@
-package shared.src.main.scala.coursier.util
+package coursier.util
 
-import java.io.File
-
-import coursier.Artifact
-import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
-import coursier.util.Tree
-
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
+import coursier.core.{ Attributes, Dependency, Module, Orders, Project, Resolution }
 
 object Print {
 
@@ -63,7 +57,7 @@ object Print {
     deps1.map(dependency(_, printExclusions)).mkString("\n")
   }
 
-  private def compatibleVersions(first: String, second: String): Boolean = {
+  def compatibleVersions(first: String, second: String): Boolean = {
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
@@ -79,112 +73,6 @@ object Print {
   ): String =
     dependencyTree(roots, resolution, printExclusions, reverse, colors = true)
 
-
-  case class Elem(dep: Dependency,
-                  artifacts: Seq[(Dependency, Artifact)] = Seq(),
-                  jsonPrintRequirement: Option[JsonPrintRequirement],
-                  resolution: Resolution,
-                  colors: Boolean,
-                  printExclusions: Boolean,
-                  excluded: Boolean) {
-
-    val (red, yellow, reset) =
-      if (colors)
-        (Console.RED, Console.YELLOW, Console.RESET)
-      else
-        ("", "", "")
-
-    // This is used to printing json output
-    // Seq of (classifier, file path) tuple
-    lazy val downloadedFiles: Seq[(String, String)] = {
-      jsonPrintRequirement match {
-        case Some(req) =>
-          req.depToArtifacts.getOrElse(dep, Seq())
-            .map(x => (x.classifier, req.fileByArtifact.get(x.url)))
-            .filter(_._2.isDefined)
-            .map( x => (x._1, x._2.get.getPath))
-        case None => Seq()
-      }
-    }
-
-    lazy val reconciledVersion: String = resolution.reconciledVersions
-      .getOrElse(dep.module, dep.version)
-
-    // These are used to printing json output
-    val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
-    val requestedVersionStr = s"${dep.module}:${dep.version}"
-
-    lazy val repr =
-      if (excluded)
-        resolution.reconciledVersions.get(dep.module) match {
-          case None =>
-            s"$yellow(excluded)$reset ${dep.module}:${dep.version}"
-          case Some(version) =>
-            val versionMsg =
-              if (version == dep.version)
-                "this version"
-              else
-                s"version $version"
-
-            s"${dep.module}:${dep.version} " +
-              s"$red(excluded, $versionMsg present anyway)$reset"
-        }
-      else {
-        val versionStr =
-          if (reconciledVersion == dep.version)
-            dep.version
-          else {
-            val assumeCompatibleVersions = compatibleVersions(dep.version, reconciledVersion)
-
-            (if (assumeCompatibleVersions) yellow else red) +
-              s"${dep.version} -> $reconciledVersion" +
-              (if (assumeCompatibleVersions || colors) "" else " (possible incompatibility)") +
-              reset
-          }
-
-        s"${dep.module}:$versionStr"
-      }
-
-    lazy val children: Seq[Elem] =
-      if (excluded)
-        Nil
-      else {
-        val dep0 = dep.copy(version = reconciledVersion)
-
-        val dependencies = resolution.dependenciesOf(
-          dep0,
-          withReconciledVersions = false
-        ).sortBy { trDep =>
-          (trDep.module.organization, trDep.module.name, trDep.version)
-        }
-
-        def excluded = resolution
-          .dependenciesOf(
-            dep0.copy(exclusions = Set.empty),
-            withReconciledVersions = false
-          )
-          .sortBy { trDep =>
-            (trDep.module.organization, trDep.module.name, trDep.version)
-          }
-          .map(_.moduleVersion)
-          .filterNot(dependencies.map(_.moduleVersion).toSet).map {
-          case (mod, ver) =>
-            Elem(
-              Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
-              artifacts,
-              jsonPrintRequirement,
-              resolution,
-              colors,
-              printExclusions,
-              excluded = true
-            )
-        }
-
-        dependencies.map(Elem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false)) ++
-          (if (printExclusions) excluded else Nil)
-      }
-  }
-
   def dependencyTree(
     roots: Seq[Dependency],
     resolution: Resolution,
@@ -198,6 +86,77 @@ object Print {
         (Console.RED, Console.YELLOW, Console.RESET)
       else
         ("", "", "")
+
+    final case class Elem(dep: Dependency, excluded: Boolean) {
+
+      lazy val reconciledVersion = resolution.reconciledVersions
+        .getOrElse(dep.module, dep.version)
+
+      lazy val repr =
+        if (excluded)
+          resolution.reconciledVersions.get(dep.module) match {
+            case None =>
+              s"$yellow(excluded)$reset ${dep.module}:${dep.version}"
+            case Some(version) =>
+              val versionMsg =
+                if (version == dep.version)
+                  "this version"
+                else
+                  s"version $version"
+
+                s"${dep.module}:${dep.version} " +
+                  s"$red(excluded, $versionMsg present anyway)$reset"
+          }
+        else {
+          val versionStr =
+            if (reconciledVersion == dep.version)
+              dep.version
+            else {
+              val assumeCompatibleVersions = compatibleVersions(dep.version, reconciledVersion)
+
+              (if (assumeCompatibleVersions) yellow else red) +
+                s"${dep.version} -> $reconciledVersion" +
+                (if (assumeCompatibleVersions || colors) "" else " (possible incompatibility)") +
+                reset
+            }
+
+          s"${dep.module}:$versionStr"
+        }
+
+      lazy val children: Seq[Elem] =
+        if (excluded)
+          Nil
+        else {
+          val dep0 = dep.copy(version = reconciledVersion)
+
+          val dependencies = resolution.dependenciesOf(
+            dep0,
+            withReconciledVersions = false
+          ).sortBy { trDep =>
+            (trDep.module.organization, trDep.module.name, trDep.version)
+          }
+
+          def excluded = resolution
+            .dependenciesOf(
+              dep0.copy(exclusions = Set.empty),
+              withReconciledVersions = false
+            )
+            .sortBy { trDep =>
+              (trDep.module.organization, trDep.module.name, trDep.version)
+            }
+            .map(_.moduleVersion)
+            .filterNot(dependencies.map(_.moduleVersion).toSet).map {
+              case (mod, ver) =>
+                Elem(
+                  Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                  excluded = true
+                )
+            }
+
+          dependencies.map(Elem(_, excluded = false)) ++
+            (if (printExclusions) excluded else Nil)
+        }
+    }
 
     if (reverse) {
 
@@ -227,7 +186,7 @@ object Print {
       val parents: Map[Module, Seq[Parent]] = {
         val links = for {
           dep <- resolution.dependencies.toVector
-          elem <- Elem(dep, artifacts = Seq(), jsonPrintRequirement = Option.empty, resolution, colors, printExclusions, excluded = false).children
+          elem <- Elem(dep, excluded = false).children
         }
           yield elem.dep.module -> Parent(
             dep.module,
@@ -260,9 +219,8 @@ object Print {
             Parent(dep.module, dep.version, dep.module, dep.version, dep.version, excluding = false)
           )
       )(children, _.repr)
-    } else {
-      Tree(roots.toVector.map(Elem(_, artifacts=Seq(), jsonPrintRequirement = Option.empty, resolution, colors, printExclusions, excluded = false)))(_.children, _.repr)
-    }
+    } else
+      Tree(roots.toVector.map(Elem(_, excluded = false)))(_.children, _.repr)
   }
 
 }
