@@ -169,3 +169,25 @@ jar_library(
         ),
     ],
 )
+
+jar_library(
+    name = "utest",
+    jars = [
+        scala_jar(
+            name = "utest",
+            org = "com.lihaoyi",
+            rev = "0.5.4",
+        ),
+    ],
+)
+
+jar_library(
+    name = "async",
+    jars = [
+        scala_jar(
+            name = "scala-async",
+            org = "org.scala-lang.modules",
+            rev = "0.9.7",
+        ),
+    ],
+)
