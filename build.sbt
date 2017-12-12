@@ -346,7 +346,8 @@ lazy val js = project
     coreJs,
     `fetch-js`,
     testsJs,
-    web
+    web,
+    `print-util`
   )
   .settings(
     shared,
