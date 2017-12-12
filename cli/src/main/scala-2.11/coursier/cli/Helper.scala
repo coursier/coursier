@@ -546,18 +546,6 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
-
-  val conflictResolutionForRoots = dependencies.map({ dep =>
-    val reconciledVersion: String = res.reconciledVersions
-      .getOrElse(dep.module, dep.version)
-    if (reconciledVersion != dep.version) {
-      Option((s"${dep.module}:${dep.version}", s"${dep.module}:$reconciledVersion"))
-    }
-    else {
-      Option.empty
-    }
-  }).filter(_.isDefined).map(_.get).toMap
-
   if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
     if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
@@ -672,8 +660,6 @@ class Helper(
     }
   }
 
-
-
   def fetch(
     sources: Boolean,
     javadoc: Boolean,
@@ -771,10 +757,24 @@ class Helper(
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
+
+      // A map from requested org:name:version to reconciled org:name:version
+      val conflictResolutionForRoots: Map[String, String] = dependencies.map({ dep =>
+        val reconciledVersion: String = res.reconciledVersions
+          .getOrElse(dep.module, dep.version)
+        if (reconciledVersion != dep.version) {
+          Option((s"${dep.module}:${dep.version}", s"${dep.module}:$reconciledVersion"))
+        }
+        else {
+          Option.empty
+        }
+      }).filter(_.isDefined).map(_.get).toMap
+
       val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
+
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts, conflictResolutionForRoots)
-      val jsonStr = JsonReport(
-        deps.toVector.map(Elem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false)), jsonReq.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
+      val roots = deps.toVector.map(Elem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
+      val jsonStr = JsonReport(roots, jsonReq.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
 
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
