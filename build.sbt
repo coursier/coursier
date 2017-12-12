@@ -244,7 +244,7 @@ lazy val `sbt-shared` = project
   )
 
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache, extra, `sbt-shared`, printUtilJvm)
+  .dependsOn(coreJvm, cache, extra, `sbt-shared`)
   .settings(
     plugin,
     utest
@@ -370,7 +370,6 @@ lazy val `sbt-plugins` = project
   .dummy
   .aggregate(
     coreJvm,
-    printUtilJvm,
     cache,
     extra,
     `sbt-shared`,
