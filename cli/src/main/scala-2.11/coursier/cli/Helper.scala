@@ -317,7 +317,7 @@ class Helper(
     (mod.organization, mod.name)
   }.toSet
 
-  private val softExcludeMap: Map[String, Set[(String, String)]] =
+  val softExcludeMap: Map[String, Set[(String, String)]] =
     if (softExcludeFile.isEmpty) {
       Map()
     } else {
