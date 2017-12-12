@@ -41,23 +41,17 @@ lazy val coreJs = core.js
 
 lazy val `print-util` = crossProject
   .dependsOn(core)
-  .jvmConfigure(_.enablePlugins(ShadingPlugin))
-  .jvmSettings(
-    shading,
-    quasiQuotesIfNecessary,
-    scalaXmlIfNecessary,
-    shadeNamespaces ++= Set(
-      "org.jsoup",
-      "fastparse",
-      "sourcecode"
-    ),
-    generatePropertyFile
+//  .jvmConfigure(_.dependsOn(coreJvm))
+//  .jsConfigure(_.dependsOn(coreJs))
+  .jsSettings(
+    libs ++= Seq(
+      CrossDeps.jackson.value
+    )
   )
   .settings(
     shared,
     libs += Deps.jackson,
-    coursierPrefix,
-    moduleName := "coursier-print-util"
+    name := "coursier-print-util"
   )
 
 lazy val printUtilJvm = `print-util`.jvm
@@ -73,7 +67,7 @@ lazy val `fetch-js` = project
   )
 
 lazy val tests = crossProject
-  .dependsOn(core)
+  .dependsOn(core, `print-util`)
   .jvmConfigure(_.dependsOn(cache % "test"))
   .jsConfigure(_.dependsOn(`fetch-js` % "test"))
   .jsSettings(

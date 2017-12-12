@@ -17,4 +17,6 @@ object CrossDeps {
   def utest = setting("com.lihaoyi" %%% "utest" % "0.5.4")
   def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "0.9.2")
   def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "0.9.0")
+  def jackson = setting("com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.4")
+
 }

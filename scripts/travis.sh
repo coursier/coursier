@@ -80,7 +80,7 @@ runSbtCoursierTests() {
 }
 
 runSbtShadingTests() {
-  sbt ++$SCALA_VERSION coreJVM/publishLocal print-util/publishLocal cache/publishLocal extra/publishLocal sbt-shared/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
+  sbt ++$SCALA_VERSION coreJVM/publishLocal print-utilJVM cache/publishLocal extra/publishLocal sbt-shared/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
   if [ "$SCALA_VERSION" = "2.10" ]; then
     sbt ++$SCALA_VERSION "sbt-shading/scripted sbt-shading-0.13/*"
   fi
@@ -161,7 +161,7 @@ testLauncherJava6() {
 }
 
 testSbtCoursierJava6() {
-  sbt ++${SCALA_VERSION} coreJVM/publishLocal print-util/publishLocal cache/publishLocal extra/publishLocal sbt-coursier/publishLocal
+  sbt ++${SCALA_VERSION} coreJVM/publishLocal print-utilJVM cache/publishLocal extra/publishLocal sbt-coursier/publishLocal
 
   git clone https://github.com/alexarchambault/scalacheck-shapeless.git
   cd scalacheck-shapeless
