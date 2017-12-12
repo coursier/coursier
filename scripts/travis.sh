@@ -45,7 +45,7 @@ launchProxyRepos() {
 
 integrationTestsRequirements() {
   # Required for ~/.ivy2/local repo tests
-  sbt ++2.11.11 coreJVM/publishLocal cli/publishLocal print-util/publish-local
+  sbt ++2.11.11 coreJVM/publishLocal cli/publishLocal print-util/publishLocal
 
   sbt ++2.12.4 http-server/publishLocal
 
@@ -70,7 +70,7 @@ sbtShading() {
 
 runSbtCoursierTests() {
   addPgpKeys
-  sbt ++$SCALA_VERSION sbt-plugins/publishLocal print-util/publish-local
+  sbt ++$SCALA_VERSION sbt-plugins/publishLocal print-util/publishLocal
   if [ "$SCALA_VERSION" = "2.10" ]; then
     sbt ++$SCALA_VERSION "sbt-coursier/scripted sbt-coursier/*" "sbt-coursier/scripted sbt-coursier-0.13/*"
   else
@@ -80,7 +80,7 @@ runSbtCoursierTests() {
 }
 
 runSbtShadingTests() {
-  sbt ++$SCALA_VERSION coreJVM/publishLocal print-util/publish-local cache/publishLocal extra/publishLocal sbt-shared/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
+  sbt ++$SCALA_VERSION coreJVM/publishLocal print-util/publishLocal cache/publishLocal extra/publishLocal sbt-shared/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
   if [ "$SCALA_VERSION" = "2.10" ]; then
     sbt ++$SCALA_VERSION "sbt-shading/scripted sbt-shading-0.13/*"
   fi
