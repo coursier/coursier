@@ -60,7 +60,7 @@ lazy val `fetch-js` = project
 lazy val tests = crossProject
   .dependsOn(core)
   .jvmConfigure(_.dependsOn(cache % "test", `print-util`))
-  .jsConfigure(_.dependsOn(`fetch-js` % "test"))
+  .jsConfigure(_.dependsOn(`fetch-js` % "test", `print-util`))
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage
   )
