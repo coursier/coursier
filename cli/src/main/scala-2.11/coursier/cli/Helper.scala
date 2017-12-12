@@ -83,9 +83,9 @@ class Helper(
   isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
   warnBaseLoaderNotFound: Boolean = true
 ) {
+  import common._
   import Helper.errPrintln
   import Util._
-  import common._
 
   val ttl0 =
     if (ttl.isEmpty)
