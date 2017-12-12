@@ -1411,8 +1411,7 @@ object Tasks {
                 subRes,
                 printExclusions = true,
                 inverse,
-                colors = !sys.props.get("sbt.log.noformat").toSeq.contains("true"),
-                Option.empty
+                colors = !sys.props.get("sbt.log.noformat").toSeq.contains("true")
               )
           )
         }
