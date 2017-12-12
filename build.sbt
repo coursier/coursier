@@ -39,27 +39,9 @@ lazy val core = crossProject
 lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
-lazy val `print-util` = crossProject
-  .dependsOn(core)
-//  .jvmConfigure(_.dependsOn(coreJvm))
-//  .jsConfigure(_.dependsOn(coreJs))
-  .jsSettings(
-    libs ++= Seq(
-      CrossDeps.jackson.value
-    )
-  )
-  .settings(
-    shared,
-    libs += Deps.jackson,
-    name := "coursier-print-util"
-  )
-
-lazy val printUtilJvm = `print-util`.jvm
-lazy val printUtilJs = `print-util`.js
-
 lazy val `fetch-js` = project
   .enablePlugins(ScalaJSPlugin)
-  .dependsOn(coreJs, printUtilJs)
+  .dependsOn(coreJs)
   .settings(
     shared,
     dontPublish,
@@ -67,7 +49,7 @@ lazy val `fetch-js` = project
   )
 
 lazy val tests = crossProject
-  .dependsOn(core, `print-util`)
+  .dependsOn(core)
   .jvmConfigure(_.dependsOn(cache % "test"))
   .jsConfigure(_.dependsOn(`fetch-js` % "test"))
   .jsSettings(
@@ -86,7 +68,6 @@ lazy val tests = crossProject
 
 lazy val testsJvm = tests.jvm
 lazy val testsJs = tests.js
-
 
 lazy val `proxy-tests` = project
   .dependsOn(testsJvm % "test->test")
@@ -162,7 +143,7 @@ lazy val extra = project
   )
 
 lazy val cli = project
-  .dependsOn(coreJvm, cache, extra, printUtilJvm)
+  .dependsOn(coreJvm, cache, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -244,7 +225,7 @@ lazy val `sbt-shared` = project
   )
 
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache, extra, `sbt-shared`, printUtilJvm)
+  .dependsOn(coreJvm, cache, extra, `sbt-shared`)
   .settings(
     plugin,
     utest
@@ -326,7 +307,6 @@ lazy val jvm = project
   .dummy
   .aggregate(
     coreJvm,
-    printUtilJvm,
     testsJvm,
     `proxy-tests`,
     paths,
@@ -354,7 +334,6 @@ lazy val js = project
   .dummy
   .aggregate(
     coreJs,
-    printUtilJs,
     `fetch-js`,
     testsJs,
     web
@@ -370,7 +349,6 @@ lazy val `sbt-plugins` = project
   .dummy
   .aggregate(
     coreJvm,
-    printUtilJvm,
     cache,
     extra,
     `sbt-shared`,
@@ -387,7 +365,6 @@ lazy val coursier = project
   .in(root)
   .aggregate(
     coreJvm,
-    printUtilJvm,
     coreJs,
     `fetch-js`,
     testsJvm,
