@@ -163,7 +163,7 @@ lazy val cli = project
         Seq(
           Deps.caseApp,
           Deps.argonautShapeless,
-          Deps.jackson,
+          Deps.jackson
         )
       else
         Seq()
