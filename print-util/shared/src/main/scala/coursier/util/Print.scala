@@ -3,8 +3,6 @@ package coursier.util
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Module, Orders, Project, Resolution}
 
-import scala.io.AnsiColor
-
 object Print {
 
   def dependency(dep: Dependency): String =
@@ -72,10 +70,9 @@ object Print {
     roots: Seq[Dependency],
     resolution: Resolution,
     printExclusions: Boolean,
-    reverse: Boolean,
-    jsonPrintRequirement: Option[JsonPrintRequirement] = Option.empty
+    reverse: Boolean
   ): String =
-    dependencyTree(roots, resolution, printExclusions, reverse, colors = true, jsonPrintRequirement)
+    dependencyTree(roots, resolution, printExclusions, reverse, colors = true)
 
 
   case class Elem(dep: Dependency,
@@ -188,8 +185,7 @@ object Print {
     resolution: Resolution,
     printExclusions: Boolean,
     reverse: Boolean,
-    colors: Boolean,
-    jsonPrintRequirement: Option[JsonPrintRequirement]
+    colors: Boolean
   ): String = {
 
     val (red, yellow, reset) =
@@ -200,12 +196,7 @@ object Print {
 
 
 
-    if (jsonPrintRequirement.isDefined) {
-      // NB: This value has to be eagerly computed, otherwise later it will be called many times to cause OOM.
-      val artifacts: Seq[(Dependency, Artifact)] = resolution.dependencyArtifacts
-      JsonReport(roots.toVector.map(Elem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false)), jsonPrintRequirement.get.conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
-    }
-    else if (reverse) {
+    if (reverse) {
 
       final case class Parent(
         module: Module,
