@@ -13,22 +13,32 @@ import scala.collection.mutable.ArrayBuffer
 
 case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
+case class DepNode(coord: String, files: Seq[(String, String)], dependencies: ArrayBuffer[DepNode]) {
+  def addChild(x: DepNode): Unit = {
+    dependencies.append(x)
+  }
+}
+
+/**
+  *
+  * @param conflict_resolution : map from requested org:name:version to reconciled org:name:version
+  * @param dependencies        : Seq of `DepNode`s
+  */
+case class ReportNode(conflict_resolution: Map[String, String], dependencies: Seq[DepNode])
+
+
 object JsonReport {
 
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
 
-    case class JsonNode(coord: String, files: Seq[(String, String)], dependencies: ArrayBuffer[JsonNode]) {
-      def addChild(x: JsonNode): Unit = {
-        dependencies.append(x)
-      }
-    }
-
-
-    def makeJson(elems: Seq[T], ancestors: Set[T], parentElem: JsonNode): Unit = {
+    /**
+      * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
+      */
+    def makeJson(elems: Seq[T], ancestors: Set[T], parentElem: DepNode): Unit = {
       val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
       for (elem <- unseenElems) {
-        val childNode = JsonNode(reconciledVersionStr(elem), getFiles(elem), ArrayBuffer.empty)
+        val childNode = DepNode(reconciledVersionStr(elem), getFiles(elem), ArrayBuffer.empty)
         parentElem.addChild(childNode)
         makeJson(children(elem), ancestors + elem, childNode)
       }
@@ -40,11 +50,9 @@ object JsonReport {
       mapper
     }
 
-    val root = JsonNode("root", Seq(), ArrayBuffer.empty)
+    val root = DepNode("root", Seq(), ArrayBuffer.empty)
     makeJson(roots, Set(), root)
-
-    case class Report(conflict_resolution: Map[String, String], dependencies: Seq[JsonNode])
-    objectMapper.writeValueAsString(Report(conflictResolutionForRoots, root.dependencies))
+    objectMapper.writeValueAsString(ReportNode(conflictResolutionForRoots, root.dependencies))
   }
 
 }

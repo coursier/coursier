@@ -2,6 +2,10 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import coursier.cli.util.ReportNode
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -50,18 +54,36 @@ class CliIntegrationTest extends FlatSpec {
 
   "Module level" should "exclude correctly" in withFile(
     "junit:junit--org.hamcrest:hamcrest-core") { (file, writer) =>
-    val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath)
-    val fetchOpt = FetchOptions(common = commonOpt)
+    withFile("") { (f2, w2) =>
+      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = f2.getCanonicalPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
-      override def remainingArgs: Seq[String] = Seq("junit:junit:4.12")
+      trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
+        override def remainingArgs: Seq[String] = Seq("junit:junit:4.12")
+      }
+
+      val fetch = new Fetch(fetchOpt) with ExtraArgsApp
+      fetch.apply()
+      val filesFetched = fetch.files0.map(_.getName).toSet
+      val expected = Set("junit-4.12.jar")
+      assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
+
+      // Parse back the output json file
+      val source = scala.io.Source.fromFile(f2.getCanonicalPath)
+      val str = try source.mkString finally source.close()
+
+      def objectMapper = {
+        val mapper = new ObjectMapper with ScalaObjectMapper
+        mapper.registerModule(DefaultScalaModule)
+        mapper
+      }
+
+      val node: ReportNode = objectMapper.readValue[ReportNode](str)
+
+      assert(node.dependencies.length == 1)
+      assert(node.dependencies.head.coord == "junit:junit:4.12")
     }
 
-    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
-    fetch.apply()
-    val filesFetched = fetch.files0.map(_.getName).toSet
-    val expected = Set("junit-4.12.jar")
-    assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
   }
 
   /**
