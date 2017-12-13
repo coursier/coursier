@@ -13,7 +13,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class CliIntegrationTest extends FlatSpec {
 
-  def withFile(content: String)(testCode: (File, FileWriter) => Any) {
+  def withFile(content: String = "")(testCode: (File, FileWriter) => Any) {
     val file = File.createTempFile("hello", "world") // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)
@@ -27,58 +27,58 @@ class CliIntegrationTest extends FlatSpec {
     }
   }
 
+  def getReportFromJson(f: File): ReportNode = {
+    // Parse back the output json file
+    val source = scala.io.Source.fromFile(f)
+    val str = try source.mkString finally source.close()
+
+    val objectMapper = {
+      val mapper = new ObjectMapper with ScalaObjectMapper
+      mapper.registerModule(DefaultScalaModule)
+      mapper
+    }
+
+    objectMapper.readValue[ReportNode](str)
+  }
+
+  trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
+    private var remainingArgs1 = Seq.empty[String]
+    private var extraArgs1 = Seq.empty[String]
+
+    override def setRemainingArgs(remainingArgs: Seq[String], extraArgs: Seq[String]): Unit = {
+      remainingArgs1 = remainingArgs
+    }
+
+    override def remainingArgs: Seq[String] = remainingArgs1
+
+    def extraArgs: Seq[String] =
+      extraArgs1
+  }
+
   "Normal fetch" should "get all files" in {
 
     val fetchOpt = FetchOptions(common = CommonOptions())
-
-    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
-      private var remainingArgs1 = Seq.empty[String]
-      private var extraArgs1 = Seq.empty[String]
-
-      override def setRemainingArgs(remainingArgs: Seq[String], extraArgs: Seq[String]): Unit = {
-        remainingArgs1 = remainingArgs
-        extraArgs1 = extraArgs
-      }
-
-      override def remainingArgs: Seq[String] = Seq("junit:junit:4.12")
-
-      def extraArgs: Seq[String] =
-        extraArgs1
-    }
-
-    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
+    val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+    fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
     fetch.apply()
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
 
   }
 
   "Module level" should "exclude correctly" in withFile(
-    "junit:junit--org.hamcrest:hamcrest-core") { (file, writer) =>
-    withFile("") { (f2, w2) =>
-      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = f2.getCanonicalPath)
+    "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
+    withFile() { (jsonFile, _) =>
+      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
-        override def remainingArgs: Seq[String] = Seq("junit:junit:4.12")
-      }
-
-      val fetch = new Fetch(fetchOpt) with ExtraArgsApp
+      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+      fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
       fetch.apply()
       val filesFetched = fetch.files0.map(_.getName).toSet
       val expected = Set("junit-4.12.jar")
       assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
 
-      // Parse back the output json file
-      val source = scala.io.Source.fromFile(f2.getCanonicalPath)
-      val str = try source.mkString finally source.close()
-
-      def objectMapper = {
-        val mapper = new ObjectMapper with ScalaObjectMapper
-        mapper.registerModule(DefaultScalaModule)
-        mapper
-      }
-
-      val node: ReportNode = objectMapper.readValue[ReportNode](str)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
       assert(node.dependencies.length == 1)
       assert(node.dependencies.head.coord == "junit:junit:4.12")
@@ -91,7 +91,7 @@ class CliIntegrationTest extends FlatSpec {
     * |└─ org.apache.avro:avro:1.7.4
     * |├─ com.thoughtworks.paranamer:paranamer:2.3
     * |├─ org.apache.commons:commons-compress:1.4.1
-    * |│  └─ org.tukaani:xz:1.0
+    * |│  └─ org.tukaani:xz:1.0 // this should be fetched
     * |├─ org.codehaus.jackson:jackson-core-asl:1.8.8
     * |├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
     * |│  └─ org.codehaus.jackson:jackson-core-asl:1.8.8
@@ -100,17 +100,35 @@ class CliIntegrationTest extends FlatSpec {
     */
   "avro exclude xz" should "not fetch xz" in withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
-    val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath)
-    val fetchOpt = FetchOptions(common = commonOpt)
+    withFile() { (jsonFile, _) =>
+      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
-      override def remainingArgs: Seq[String] = Seq("org.apache.avro:avro:1.7.4")
+      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+      fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq())
+      fetch.apply()
+
+      val filesFetched = fetch.files0.map(_.getName).toSet
+      assert(!filesFetched.contains("xz-1.0.jar"))
+
+      val node: ReportNode = getReportFromJson(jsonFile)
+
+      // assert root level dependencies
+      assert(node.dependencies.map(_.coord).toSet == Set(
+        "org.apache.avro:avro:1.7.4",
+        "com.thoughtworks.paranamer:paranamer:2.3",
+        "org.apache.commons:commons-compress:1.4.1",
+        "org.codehaus.jackson:jackson-core-asl:1.8.8",
+        "org.codehaus.jackson:jackson-mapper-asl:1.8.8",
+        "org.slf4j:slf4j-api:1.6.4",
+        "org.xerial.snappy:snappy-java:1.0.4.1"
+      ))
+
+      // org.apache.commons:commons-compress:1.4.1 should not deps underneath it.
+      val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+      assert(compressNode.isDefined)
+      assert(compressNode.get.dependencies.isEmpty)
     }
-
-    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
-    fetch.apply()
-    val filesFetched = fetch.files0.map(_.getName).toSet
-    assert(!filesFetched.contains("xz-1.0.jar"))
   }
 
   /**
@@ -128,18 +146,33 @@ class CliIntegrationTest extends FlatSpec {
     * |   └─ org.tukaani:xz:1.0
     */
   "avro excluding xz + commons-compress" should "still fetch xz" in withFile(
-    "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
-    val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath)
-    val fetchOpt = FetchOptions(common = commonOpt)
+    "org.apache.avro:avro--org.tukaani:xz") {
+    (file, writer) =>
 
-    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
-      override def remainingArgs: Seq[String] = Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1")
-    }
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
 
-    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
-    fetch.apply()
-    val filesFetched = fetch.files0.map(_.getName).toSet
-    assert(filesFetched.contains("xz-1.0.jar"))
+          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+          fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq())
+          fetch.apply()
+          val filesFetched = fetch.files0.map(_.getName).toSet
+          assert(filesFetched.contains("xz-1.0.jar"))
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          // Root level org.apache.commons:commons-compress:1.4.1 should have org.tukaani:xz:1.0 underneath it.
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          assert(compressNode.isDefined)
+          assert(compressNode.get.dependencies.head.coord.equals("org.tukaani:xz:1.0"))
+
+          val innerCompressNode = node.dependencies.find(_.coord == "org.apache.avro:avro:1.7.4").get.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          assert(innerCompressNode.isDefined)
+          assert(innerCompressNode.get.dependencies.isEmpty)
+        }
+      }
+
   }
 
 }
