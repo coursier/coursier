@@ -327,14 +327,12 @@ class Helper(
       lines.map({ str =>
         val parent_and_child = str.split("--")
         if (parent_and_child.length != 2) {
-          System.err.println(s"Failed to parse $str")
-          System.exit(1)
+          throw SoftExcludeParsingException(s"Failed to parse $str")
         }
 
         val child_org_name = parent_and_child(1).split(":")
         if (child_org_name.length != 2) {
-          System.err.println(s"Failed to parse $child_org_name")
-          System.exit(1)
+          throw SoftExcludeParsingException(s"Failed to parse $child_org_name")
         }
 
         (parent_and_child(0), (child_org_name(0), child_org_name(1)))
@@ -910,3 +908,7 @@ class Helper(
     mainClass
   }
 }
+
+case class SoftExcludeParsingException(private val message: String = "",
+                                       private val cause: Throwable = None.orNull)
+  extends Exception(message, cause)

@@ -16,9 +16,10 @@ class CliTests extends FlatSpec {
     try {
       testCode(file, writer) // "loan" the fixture to the test
     }
-    finally
+    finally {
       writer.close()
-    file.delete()
+      file.delete()
+    }
   }
 
   // This test needs the file fixture
@@ -43,6 +44,38 @@ class CliTests extends FlatSpec {
     assert(helper.softExcludeMap.equals(Map(
       "org1:name1" -> Set(("org2", "name2"), ("org3", "name3")),
       "org4:name4" -> Set(("org5", "name5")))))
+  }
+
+  // This test needs the file fixture
+  "extra --" should "error" in withFile { (file, writer) =>
+    writer.write("org1:name1--org2:name2--xxx\n" +
+      "org1:name1--org3:name3\n" +
+      "org4:name4--org5:name5")
+    writer.flush()
+    assertThrows[SoftExcludeParsingException]({
+      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      new Helper(opt, Seq())
+    })
+  }
+
+  // This test needs the file fixture
+  "child has no name" should "error" in withFile { (file, writer) =>
+    writer.write("org1:name1--org2:")
+    writer.flush()
+    assertThrows[SoftExcludeParsingException]({
+      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      new Helper(opt, Seq())
+    })
+  }
+
+  // This test needs the file fixture
+  "child has nothing" should "error" in withFile { (file, writer) =>
+    writer.write("org1:name1--:")
+    writer.flush()
+    assertThrows[SoftExcludeParsingException]({
+      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      new Helper(opt, Seq())
+    })
   }
 
 }
