@@ -175,4 +175,51 @@ class CliIntegrationTest extends FlatSpec {
 
   }
 
+  /**
+    * Result:
+    * |├─ org.apache.commons:commons-compress:1.4.1
+    * |│  └─ org.tukaani:xz:1.0 -> 1.1
+    * |└─ org.tukaani:xz:1.1
+    */
+  "requested xz:1.1" should "not have conflicts" in withFile() {
+    (excludeFile, writer) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq())
+          fetch.apply()
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+          assert(node.conflict_resolution.isEmpty)
+        }
+      }
+  }
+
+  /**
+    * Result:
+    * |├─ org.apache.commons:commons-compress:1.5
+    * |│  └─ org.tukaani:xz:1.2
+    * |└─ org.tukaani:xz:1.1 -> 1.2
+    */
+  "org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1" should "have conflicts" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq())
+          fetch.apply()
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+          assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" ->"org.tukaani:xz:1.2"))
+        }
+      }
+
+  }
+
 }

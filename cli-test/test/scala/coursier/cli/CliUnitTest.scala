@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class CliTests extends FlatSpec {
+class CliUnitTest extends FlatSpec {
 
   def withFile(content: String)(testCode: (File, FileWriter) => Any) {
     val file = File.createTempFile("hello", "world") // create the fixture
