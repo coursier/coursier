@@ -64,4 +64,60 @@ class CliIntegrationTest extends FlatSpec {
     assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
   }
 
+  /**
+    * Result without exclusion:
+    * |└─ org.apache.avro:avro:1.7.4
+    * |├─ com.thoughtworks.paranamer:paranamer:2.3
+    * |├─ org.apache.commons:commons-compress:1.4.1
+    * |│  └─ org.tukaani:xz:1.0
+    * |├─ org.codehaus.jackson:jackson-core-asl:1.8.8
+    * |├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+    * |│  └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+    * |├─ org.slf4j:slf4j-api:1.6.4
+    * |└─ org.xerial.snappy:snappy-java:1.0.4.1
+    */
+  "avro exclude xz" should "not fetch xz" in withFile(
+    "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
+    val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+    val fetchOpt = FetchOptions(common = commonOpt)
+
+    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
+      override def remainingArgs: Seq[String] = Seq("org.apache.avro:avro:1.7.4")
+    }
+
+    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
+    fetch.apply()
+    val filesFetched = fetch.files0.map(_.getName).toSet
+    assert(!filesFetched.contains("xz-1.0.jar"))
+  }
+
+  /**
+    * Result without exclusion:
+    * |├─ org.apache.avro:avro:1.7.4
+    * |│  ├─ com.thoughtworks.paranamer:paranamer:2.3
+    * |│  ├─ org.apache.commons:commons-compress:1.4.1
+    * |│  │  └─ org.tukaani:xz:1.0
+    * |│  ├─ org.codehaus.jackson:jackson-core-asl:1.8.8
+    * |│  ├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+    * |│  │  └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+    * |│  ├─ org.slf4j:slf4j-api:1.6.4
+    * |│  └─ org.xerial.snappy:snappy-java:1.0.4.1
+    * |└─ org.apache.commons:commons-compress:1.4.1
+    * |   └─ org.tukaani:xz:1.0
+    */
+  "avro excluding xz + commons-compress" should "still fetch xz" in withFile(
+    "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
+    val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+    val fetchOpt = FetchOptions(common = commonOpt)
+
+    trait ExtraArgsApp extends caseapp.core.DefaultArgsApp {
+      override def remainingArgs: Seq[String] = Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1")
+    }
+
+    val fetch = new Fetch(fetchOpt) with ExtraArgsApp
+    fetch.apply()
+    val filesFetched = fetch.files0.map(_.getName).toSet
+    assert(filesFetched.contains("xz-1.0.jar"))
+  }
+
 }
