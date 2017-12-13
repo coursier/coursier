@@ -22,7 +22,6 @@ class CliTests extends FlatSpec {
     }
   }
 
-  // This test needs the file fixture
   "Normal text" should "parse correctly" in withFile { (file, writer) =>
     writer.write("org1:name1--org2:name2")
     writer.flush()
@@ -32,7 +31,6 @@ class CliTests extends FlatSpec {
     assert(helper.softExcludeMap.equals(Map("org1:name1" -> Set(("org2", "name2")))))
   }
 
-  // This test needs the file fixture
   "Multiple excludes" should "be combined" in withFile { (file, writer) =>
     writer.write("org1:name1--org2:name2\n" +
       "org1:name1--org3:name3\n" +
@@ -46,7 +44,6 @@ class CliTests extends FlatSpec {
       "org4:name4" -> Set(("org5", "name5")))))
   }
 
-  // This test needs the file fixture
   "extra --" should "error" in withFile { (file, writer) =>
     writer.write("org1:name1--org2:name2--xxx\n" +
       "org1:name1--org3:name3\n" +
@@ -58,7 +55,6 @@ class CliTests extends FlatSpec {
     })
   }
 
-  // This test needs the file fixture
   "child has no name" should "error" in withFile { (file, writer) =>
     writer.write("org1:name1--org2:")
     writer.flush()
@@ -68,7 +64,6 @@ class CliTests extends FlatSpec {
     })
   }
 
-  // This test needs the file fixture
   "child has nothing" should "error" in withFile { (file, writer) =>
     writer.write("org1:name1--:")
     writer.flush()
