@@ -44,7 +44,7 @@ object JsonReport {
       }
     }
 
-    def objectMapper = {
+    val objectMapper = {
       val mapper = new ObjectMapper with ScalaObjectMapper
       mapper.registerModule(DefaultScalaModule)
       mapper
