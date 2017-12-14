@@ -9,7 +9,9 @@ import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Resolution}
 import coursier.util.Print
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.ParSeq
 
 case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
@@ -19,6 +21,7 @@ case class DepNode(coord: String, files: Seq[(String, String)], dependencies: Ar
   }
 }
 
+
 /**
   *
   * @param conflict_resolution : map from requested org:name:version to reconciled org:name:version
@@ -26,23 +29,15 @@ case class DepNode(coord: String, files: Seq[(String, String)], dependencies: Ar
   */
 case class ReportNode(conflict_resolution: Map[String, String], dependencies: Seq[DepNode])
 
+case class DepNodeV2(coord: String, files: Seq[(String, String)], dependencies: Set[String])
+
+case class ReportNodeV2(conflict_resolution: Map[String, String], dependencies: Seq[DepNodeV2])
+
 
 object JsonReport {
 
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
-
-    /**
-      * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
-      */
-    def makeJson(elems: Seq[T], ancestors: Set[T], parentElem: DepNode): Unit = {
-      val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
-      for (elem <- unseenElems) {
-        val childNode = DepNode(reconciledVersionStr(elem), getFiles(elem), ArrayBuffer.empty)
-        parentElem.addChild(childNode)
-        makeJson(children(elem), ancestors + elem, childNode)
-      }
-    }
 
     val objectMapper = {
       val mapper = new ObjectMapper with ScalaObjectMapper
@@ -50,9 +45,29 @@ object JsonReport {
       mapper
     }
 
-    val root = DepNode("root", Seq(), ArrayBuffer.empty)
-    makeJson(roots, Set(), root)
-    objectMapper.writeValueAsString(ReportNode(conflictResolutionForRoots, root.dependencies))
+    val rootDeps: ParSeq[DepNodeV2] = roots.par.map(r => {
+
+      /**
+        * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
+        */
+      def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
+        val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
+        for (elem <- unseenElems) {
+          val depElems = children(elem)
+          acc ++= depElems.map(reconciledVersionStr(_))
+
+          if (depElems.nonEmpty) {
+            flattenDeps(children(elem), ancestors + elem, acc)
+          }
+        }
+      }
+
+      val acc = scala.collection.mutable.Set[String]()
+      flattenDeps(Seq(r), Set(), acc)
+      DepNodeV2(reconciledVersionStr(r), getFiles(r), acc.toSet)
+
+    })
+    objectMapper.writeValueAsString(ReportNodeV2(conflictResolutionForRoots, rootDeps.toList))
   }
 
 }
