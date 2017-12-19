@@ -68,7 +68,7 @@ class CliIntegrationTest extends FlatSpec {
   "Module level" should "exclude correctly" in withFile(
     "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
     withFile() { (jsonFile, _) =>
-      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+      val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
@@ -101,7 +101,7 @@ class CliIntegrationTest extends FlatSpec {
   "avro exclude xz" should "not fetch xz" in withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
     withFile() { (jsonFile, _) =>
-      val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+      val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
@@ -151,7 +151,7 @@ class CliIntegrationTest extends FlatSpec {
 
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(softExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+          val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp

@@ -26,7 +26,7 @@ class CliUnitTest extends FlatSpec {
 
   "Normal text" should "parse correctly" in withFile(
     "org1:name1--org2:name2") { (file, writer) =>
-    val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+    val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
     assert(helper.softExcludeMap.equals(Map("org1:name1" -> Set(("org2", "name2")))))
   }
@@ -36,7 +36,7 @@ class CliUnitTest extends FlatSpec {
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, writer) =>
 
-    val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+    val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
     assert(helper.softExcludeMap.equals(Map(
       "org1:name1" -> Set(("org2", "name2"), ("org3", "name3")),
@@ -48,7 +48,7 @@ class CliUnitTest extends FlatSpec {
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
-      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
       new Helper(opt, Seq())
     })
   }
@@ -56,7 +56,7 @@ class CliUnitTest extends FlatSpec {
   "child has no name" should "error" in withFile(
     "org1:name1--org2:") { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
-      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
       new Helper(opt, Seq())
     })
   }
@@ -64,7 +64,7 @@ class CliUnitTest extends FlatSpec {
   "child has nothing" should "error" in withFile(
     "org1:name1--:") { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
-      val opt = CommonOptions(softExcludeFile = file.getAbsolutePath)
+      val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
       new Helper(opt, Seq())
     })
   }

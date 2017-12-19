@@ -318,10 +318,10 @@ class Helper(
   }.toSet
 
   val softExcludeMap: Map[String, Set[(String, String)]] =
-    if (softExcludeFile.isEmpty) {
+    if (localExcludeFile.isEmpty) {
       Map()
     } else {
-      val source = scala.io.Source.fromFile(softExcludeFile)
+      val source = scala.io.Source.fromFile(localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
       lines.map({ str =>
