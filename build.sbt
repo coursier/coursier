@@ -82,6 +82,18 @@ lazy val `proxy-tests` = project
     sharedTestResources
   )
 
+lazy val `cli-test` = project
+  .dependsOn(cli)
+  .configs(Integration)
+  .settings(
+    shared,
+    dontPublish,
+    hasITs,
+    coursierPrefix,
+    libs ++= Seq(Deps.scalatest, Deps.junit),
+    sharedTestResources
+  )
+
 lazy val paths = project
   .settings(
     pureJava,
