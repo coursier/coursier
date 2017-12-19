@@ -159,7 +159,8 @@ lazy val cli = project
       else
         Seq()
     },
-    addBootstrapJarAsResource
+    addBootstrapJarAsResource,
+    proguardedCli
   )
 
 lazy val web = project

@@ -192,8 +192,9 @@ jar_library(
     ],
 )
 
-
-jar_library(name='scalatest',
-            jars=[
-              scala_jar('org.scalatest', 'scalatest', '3.0.0')
-            ])
+jar_library(
+    name = "scalatest",
+    jars = [
+        scala_jar("org.scalatest", "scalatest", "3.0.0"),
+    ],
+)
