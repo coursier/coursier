@@ -82,24 +82,6 @@ lazy val `proxy-tests` = project
     sharedTestResources
   )
 
-lazy val `cli-test` = project
-  .dependsOn(cli)
-  .settings(
-    shared,
-    dontPublish,
-    coursierPrefix,
-    libs ++= {
-      if (scalaBinaryVersion.value == "2.11")
-        Seq(
-          Deps.junit,
-          Deps.scalatest
-        )
-      else
-        Nil
-    },
-    sharedTestResources
-  )
-
 lazy val paths = project
   .settings(
     pureJava,
@@ -171,7 +153,9 @@ lazy val cli = project
       if (scalaBinaryVersion.value == "2.11")
         Seq(
           Deps.caseApp,
-          Deps.argonautShapeless
+          Deps.argonautShapeless,
+          Deps.junit % "test", // to be able to run tests with pants
+          Deps.scalatest % "test"
         )
       else
         Seq()
@@ -332,7 +316,6 @@ lazy val jvm = project
     bootstrap,
     extra,
     cli,
-    `cli-test`,
     `sbt-shared`,
     `sbt-coursier`,
     `sbt-pgp-coursier`,
@@ -394,7 +377,6 @@ lazy val coursier = project
     bootstrap,
     extra,
     cli,
-    `cli-test`,
     `sbt-shared`,
     `sbt-coursier`,
     `sbt-pgp-coursier`,

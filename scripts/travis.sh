@@ -136,10 +136,6 @@ checkBinaryCompatibility() {
   sbt ++${SCALA_VERSION} coreJVM/mimaReportBinaryIssues cache/mimaReportBinaryIssues
 }
 
-testCli() {
-  sbt ++${SCALA_VERSION} "cli-test/test"
-}
-
 testLauncherJava6() {
   sbt ++${SCALA_VERSION} "project cli" pack
 
@@ -282,7 +278,7 @@ else
     checkBinaryCompatibility
 
     if is211; then
-      testCli && testLauncherJava6
+      testLauncherJava6
     fi
   fi
 
