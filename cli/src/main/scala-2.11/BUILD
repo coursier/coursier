@@ -3,7 +3,6 @@ scala_library(
     dependencies = [
         "3rdparty/jvm:argonaut-shapeless",
         "3rdparty/jvm:caseapp",
-        "3rdparty/jvm:jackson-module-scala",
         "cache/src/main/scala:cache",
         "core:core",
         "extra/src/main/scala/coursier/extra:extra",

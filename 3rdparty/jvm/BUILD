@@ -111,17 +111,6 @@ jar_library(
 )
 
 jar_library(
-    name = "jackson-module-scala",
-    jars = [
-        scala_jar(
-            name = "jackson-module-scala",
-            org = "com.fasterxml.jackson.module",
-            rev = "2.8.4",
-        ),
-    ],
-)
-
-jar_library(
     name = "caseapp",
     jars = [
         scala_jar(
