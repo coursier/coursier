@@ -120,7 +120,7 @@ class CliIntegrationTest extends FlatSpec {
         "org.xerial.snappy:snappy-java:1.0.4.1"
       ))
 
-      // org.apache.commons:commons-compress:1.4.1 should not deps underneath it.
+      // org.apache.commons:commons-compress:1.4.1 should not contain deps underneath it.
       val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
       assert(compressNode.isDefined)
       assert(compressNode.get.dependencies.isEmpty)
