@@ -5,7 +5,7 @@ import java.io.{File, FileWriter}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-import coursier.cli.util.ReportNodeV2
+import coursier.cli.util.ReportNode
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -27,7 +27,7 @@ class CliIntegrationTest extends FlatSpec {
     }
   }
 
-  def getReportFromJson(f: File): ReportNodeV2 = {
+  def getReportFromJson(f: File): ReportNode = {
     // Parse back the output json file
     val source = scala.io.Source.fromFile(f)
     val str = try source.mkString finally source.close()
@@ -38,7 +38,7 @@ class CliIntegrationTest extends FlatSpec {
       mapper
     }
 
-    objectMapper.readValue[ReportNodeV2](str)
+    objectMapper.readValue[ReportNode](str)
   }
 
   trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
@@ -78,7 +78,7 @@ class CliIntegrationTest extends FlatSpec {
       val expected = Set("junit-4.12.jar")
       assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
 
-      val node: ReportNodeV2 = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
       assert(node.dependencies.length == 1)
       assert(node.dependencies.head.coord == "junit:junit:4.12")
@@ -111,7 +111,7 @@ class CliIntegrationTest extends FlatSpec {
       val filesFetched = fetch.files0.map(_.getName).toSet
       assert(!filesFetched.contains("xz-1.0.jar"))
 
-      val node: ReportNodeV2 = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
       // assert root level dependencies
       assert(node.dependencies.map(_.coord).toSet == Set(
@@ -160,7 +160,7 @@ class CliIntegrationTest extends FlatSpec {
           val filesFetched = fetch.files0.map(_.getName).toSet
           assert(filesFetched.contains("xz-1.0.jar"))
 
-          val node: ReportNodeV2 = getReportFromJson(jsonFile)
+          val node: ReportNode = getReportFromJson(jsonFile)
 
           // Root level org.apache.commons:commons-compress:1.4.1 should have org.tukaani:xz:1.0 underneath it.
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
@@ -192,7 +192,7 @@ class CliIntegrationTest extends FlatSpec {
           fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq())
           fetch.apply()
 
-          val node: ReportNodeV2 = getReportFromJson(jsonFile)
+          val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution.isEmpty)
         }
       }
@@ -215,7 +215,7 @@ class CliIntegrationTest extends FlatSpec {
           fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq())
           fetch.apply()
 
-          val node: ReportNodeV2 = getReportFromJson(jsonFile)
+          val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" -> "org.tukaani:xz:1.2"))
         }
       }

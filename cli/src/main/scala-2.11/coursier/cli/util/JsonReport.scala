@@ -15,23 +15,9 @@ import scala.collection.parallel.ParSeq
 
 case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
 
-case class DepNode(coord: String, files: Seq[(String, String)], dependencies: ArrayBuffer[DepNode]) {
-  def addChild(x: DepNode): Unit = {
-    dependencies.append(x)
-  }
-}
+case class DepNode(coord: String, files: Seq[(String, String)], dependencies: Set[String])
 
-
-/**
-  *
-  * @param conflict_resolution : map from requested org:name:version to reconciled org:name:version
-  * @param dependencies        : Seq of `DepNode`s
-  */
 case class ReportNode(conflict_resolution: Map[String, String], dependencies: Seq[DepNode])
-
-case class DepNodeV2(coord: String, files: Seq[(String, String)], dependencies: Set[String])
-
-case class ReportNodeV2(conflict_resolution: Map[String, String], dependencies: Seq[DepNodeV2])
 
 
 object JsonReport {
@@ -45,7 +31,7 @@ object JsonReport {
       mapper
     }
 
-    val rootDeps: ParSeq[DepNodeV2] = roots.par.map(r => {
+    val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
 
       /**
         * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
@@ -64,10 +50,10 @@ object JsonReport {
 
       val acc = scala.collection.mutable.Set[String]()
       flattenDeps(Seq(r), Set(), acc)
-      DepNodeV2(reconciledVersionStr(r), getFiles(r), acc.toSet)
+      DepNode(reconciledVersionStr(r), getFiles(r), acc.toSet)
 
     })
-    objectMapper.writeValueAsString(ReportNodeV2(conflictResolutionForRoots, rootDeps.toList))
+    objectMapper.writeValueAsString(ReportNode(conflictResolutionForRoots, rootDeps.toList))
   }
 
 }
