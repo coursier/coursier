@@ -2,34 +2,31 @@ package coursier.cli.util
 
 import java.io.File
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import coursier.Artifact
 import coursier.core.{Attributes, Dependency, Resolution}
 import coursier.util.Print
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.parallel.ParSeq
 
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Seq[Artifact]], conflictResolutionForRoots: Map[String, String])
+import argonaut._, Argonaut._
 
-case class DepNode(coord: String, files: Seq[(String, String)], dependencies: Set[String])
+case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]], conflictResolutionForRoots: Map[String, String])
 
-case class ReportNode(conflict_resolution: Map[String, String], dependencies: Seq[DepNode])
+case class DepNode(coord: String, files: Vector[(String, String)], dependencies: Set[String])
+
+case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode])
+
+object ReportNode {
+  import argonaut.ArgonautShapeless._
+  implicit val encodeJson = EncodeJson.of[ReportNode]
+}
 
 
 object JsonReport {
 
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
-
-    val objectMapper = {
-      val mapper = new ObjectMapper with ScalaObjectMapper
-      mapper.registerModule(DefaultScalaModule)
-      mapper
-    }
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
 
@@ -50,10 +47,11 @@ object JsonReport {
 
       val acc = scala.collection.mutable.Set[String]()
       flattenDeps(Seq(r), Set(), acc)
-      DepNode(reconciledVersionStr(r), getFiles(r), acc.toSet)
+      DepNode(reconciledVersionStr(r), getFiles(r).toVector, acc.toSet)
 
     })
-    objectMapper.writeValueAsString(ReportNode(conflictResolutionForRoots, rootDeps.toList))
+    val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector)
+    report.asJson.nospaces
   }
 
 }

@@ -91,6 +91,7 @@ lazy val `cli-test` = project
     libs ++= {
       if (scalaBinaryVersion.value == "2.11")
         Seq(
+          Deps.jackson,
           Deps.junit,
           Deps.scalatest
         )
@@ -171,8 +172,7 @@ lazy val cli = project
       if (scalaBinaryVersion.value == "2.11")
         Seq(
           Deps.caseApp,
-          Deps.argonautShapeless,
-          Deps.jackson
+          Deps.argonautShapeless
         )
       else
         Seq()

@@ -746,8 +746,8 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, Seq[Artifact]] =
-      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toSeq).toMap
+    val depToArtifacts: Map[Dependency, Vector[Artifact]] =
+      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {
