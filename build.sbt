@@ -84,11 +84,9 @@ lazy val `proxy-tests` = project
 
 lazy val `cli-test` = project
   .dependsOn(cli)
-  .configs(Integration)
   .settings(
     shared,
     dontPublish,
-    hasITs,
     coursierPrefix,
     libs ++= {
       if (scalaBinaryVersion.value == "2.11")
