@@ -11,11 +11,11 @@ import scala.collection.parallel.ParSeq
 
 import argonaut._, Argonaut._
 
-case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]], conflictResolutionForRoots: Map[String, String])
+final case class JsonPrintRequirement(fileByArtifact: collection.mutable.Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]], conflictResolutionForRoots: Map[String, String])
 
-case class DepNode(coord: String, files: Vector[(String, String)], dependencies: Set[String])
+final case class DepNode(coord: String, files: Vector[(String, String)], dependencies: Set[String])
 
-case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode])
+final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode])
 
 object ReportNode {
   import argonaut.ArgonautShapeless._
@@ -58,13 +58,13 @@ object JsonReport {
 }
 
 
-case class JsonElem(dep: Dependency,
-                    artifacts: Seq[(Dependency, Artifact)] = Seq(),
-                    jsonPrintRequirement: Option[JsonPrintRequirement],
-                    resolution: Resolution,
-                    colors: Boolean,
-                    printExclusions: Boolean,
-                    excluded: Boolean) {
+final case class JsonElem(dep: Dependency,
+                          artifacts: Seq[(Dependency, Artifact)] = Seq(),
+                          jsonPrintRequirement: Option[JsonPrintRequirement],
+                          resolution: Resolution,
+                          colors: Boolean,
+                          printExclusions: Boolean,
+                          excluded: Boolean) {
 
   val (red, yellow, reset) =
     if (colors)
