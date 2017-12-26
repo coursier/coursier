@@ -20,6 +20,7 @@ case class ReportNode(conflict_resolution: Map[String, String], dependencies: Ve
 object ReportNode {
   import argonaut.ArgonautShapeless._
   implicit val encodeJson = EncodeJson.of[ReportNode]
+  implicit val decodeJson = DecodeJson.of[ReportNode]
 }
 
 

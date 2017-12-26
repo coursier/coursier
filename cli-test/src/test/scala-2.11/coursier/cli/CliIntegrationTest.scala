@@ -2,10 +2,8 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import coursier.cli.util.ReportNode
+import argonaut._, Argonaut._
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -32,13 +30,11 @@ class CliIntegrationTest extends FlatSpec {
     val source = scala.io.Source.fromFile(f)
     val str = try source.mkString finally source.close()
 
-    val objectMapper = {
-      val mapper = new ObjectMapper with ScalaObjectMapper
-      mapper.registerModule(DefaultScalaModule)
-      mapper
+    str.decodeEither[ReportNode] match {
+      case Left(error) =>
+        throw new Exception(s"Error while decoding report: $error")
+      case Right(report) => report
     }
-
-    objectMapper.readValue[ReportNode](str)
   }
 
   trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
