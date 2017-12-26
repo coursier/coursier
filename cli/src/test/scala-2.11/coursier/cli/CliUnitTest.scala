@@ -28,7 +28,7 @@ class CliUnitTest extends FlatSpec {
     "org1:name1--org2:name2") { (file, writer) =>
     val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
-    assert(helper.softExcludeMap.equals(Map("org1:name1" -> Set(("org2", "name2")))))
+    assert(helper.localExcludeMap.equals(Map("org1:name1" -> Set(("org2", "name2")))))
   }
 
   "Multiple excludes" should "be combined" in withFile(
@@ -38,7 +38,7 @@ class CliUnitTest extends FlatSpec {
 
     val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
-    assert(helper.softExcludeMap.equals(Map(
+    assert(helper.localExcludeMap.equals(Map(
       "org1:name1" -> Set(("org2", "name2"), ("org3", "name3")),
       "org4:name4" -> Set(("org5", "name5")))))
   }
