@@ -317,7 +317,7 @@ class Helper(
     (mod.organization, mod.name)
   }.toSet
 
-  val softExcludeMap: Map[String, Set[(String, String)]] =
+  val localExcludeMap: Map[String, Set[(String, String)]] =
     if (localExcludeFile.isEmpty) {
       Map()
     } else {
@@ -346,7 +346,7 @@ class Helper(
         version,
         attributes = Attributes("", ""),
         configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = softExcludeMap.getOrElse(module.orgName, Set()) | excludes
+        exclusions = localExcludeMap.getOrElse(module.orgName, Set()) | excludes
       )
   }
 
