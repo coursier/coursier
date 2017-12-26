@@ -26,6 +26,8 @@ object ReportNode {
 
 object JsonReport {
 
+  private val printer = PrettyParams.nospace.copy(preserveOrder = true)
+
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
 
@@ -52,7 +54,7 @@ object JsonReport {
 
     })
     val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector)
-    report.asJson.nospaces
+    printer.pretty(report.asJson)
   }
 
 }
