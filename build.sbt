@@ -90,7 +90,15 @@ lazy val `cli-test` = project
     dontPublish,
     hasITs,
     coursierPrefix,
-    libs ++= Seq(Deps.scalatest, Deps.junit),
+    libs ++= {
+      if (scalaBinaryVersion.value == "2.11")
+        Seq(
+          Deps.junit,
+          Deps.scalatest
+        )
+      else
+        Nil
+    },
     sharedTestResources
   )
 
@@ -327,6 +335,7 @@ lazy val jvm = project
     bootstrap,
     extra,
     cli,
+    `cli-test`,
     `sbt-shared`,
     `sbt-coursier`,
     `sbt-pgp-coursier`,
@@ -388,6 +397,7 @@ lazy val coursier = project
     bootstrap,
     extra,
     cli,
+    `cli-test`,
     `sbt-shared`,
     `sbt-coursier`,
     `sbt-pgp-coursier`,
