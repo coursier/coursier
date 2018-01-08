@@ -337,6 +337,7 @@ lazy val `sbt-plugins` = project
   )
   .settings(
     shared,
+    pluginOverrideCrossScalaVersion,
     dontPublish
   )
 
