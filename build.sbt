@@ -235,7 +235,8 @@ lazy val `sbt-shared` = project
   .disablePlugins(ScriptedPlugin)
   .settings(
     plugin,
-    utest
+    utest,
+    addSbtPlugin("com.dwijnand" % "sbt-compat" % "1.2.0")
   )
 
 lazy val `sbt-coursier` = project
