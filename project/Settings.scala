@@ -197,7 +197,6 @@ object Settings {
 
   lazy val plugin =
     javaScalaPluginShared ++
-    pluginOverrideCrossScalaVersion ++
     divertThingsPlugin ++
     withScriptedTests ++
     Seq(
