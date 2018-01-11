@@ -1058,7 +1058,7 @@ final case class Resolution(
         .get(dep.moduleVersion)
         .toSeq
       artifact <- source
-        .artifacts(dep, proj, overrideClassifiers)
+        .artifacts(dep, proj, Option(overrideClassifiers.getOrElse(Seq()) ++ Seq(dep.attributes.classifier)))
       if optional || !artifact.isOptional
     } yield dep -> artifact
 

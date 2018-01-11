@@ -114,8 +114,12 @@ object Parse {
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] =
+  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String], Map[String, String])] =
     moduleVersionConfig(s, defaultScalaVersion)
+
+  case class AttrError(private val message: String = "",
+                       private val cause: Throwable = None.orNull)
+    extends Exception(message, cause)
 
   /**
     * Parses coordinates like
@@ -125,32 +129,45 @@ object Parse {
     *  and a configuration, like
     *   org:name:version:config
     *  or
-    *   org:name;attr1=val1;attr2=val2:version:config
+    *   org:name:version:config;attr1=val1;attr2=val2
     */
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
+  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String], Map[String, String])] = {
 
-    val parts = s.split(":", 5)
+    // Assume org:name:version;attr1=val1;attr2=val2
+    // That is ';' has to go after ':'.
+    // E.g. "org:name;attr1=val1;attr2=val2:version:config" is illegal.
+    val strings = s.split(";")
+    val coords = strings.head
+    val attrs = strings.drop(1).map({ x => {
+      val y = x.split("=")
+      if (y.length != 2) {
+        throw AttrError(s"Failed to parse attr $x")
+      }
+      (y(0), y(1))
+    }}).toMap
+
+    val parts = coords.split(":", 5)
 
     parts match {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map((_, version, Some(config)))
+          .map((_, version, Some(config), attrs))
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map((_, version, None))
+          .map((_, version, None, attrs))
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map((_, version, Some(config)))
+          .map((_, version, Some(config), attrs))
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map((_, version, None))
+          .map((_, version, None, attrs))
 
       case _ =>
         Left(s"Malformed dependency: $s")
@@ -170,7 +187,7 @@ object Parse {
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) =
+  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String], Map[String, String])]) =
     moduleVersionConfigs(l, defaultScalaVersion)
 
   /**
@@ -178,7 +195,7 @@ object Parse {
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
-  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) =
+  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String], Map[String, String])]) =
     valuesAndErrors(moduleVersionConfig(_, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =

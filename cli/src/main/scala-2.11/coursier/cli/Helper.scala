@@ -167,7 +167,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexModuleVersionConfigs =
+  val scaladexModuleVersionConfigs: List[(Module, String, None.type, Map[String, String])] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -227,16 +227,16 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => (mod, ver, None) }
+        .map { case (mod, ver) => (mod, ver, None, Map[String, String]()) }
     }
 
 
-  val (modVerCfgErrors, moduleVersionConfigs) =
+  val (modVerCfgErrors, moduleVersionConfigs: Seq[(Module, String, Option[String], Map[String, String])]) =
     Parse.moduleVersionConfigs(otherRawDependencies, scalaVersion)
-  val (intransitiveModVerCfgErrors, intransitiveModuleVersionConfigs) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs) =
     Parse.moduleVersionConfigs(intransitive, scalaVersion)
 
-  def allModuleVersionConfigs =
+  def allModuleVersionConfigs: Seq[(Module, String, Option[String], Map[String, String])] =
     // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexModuleVersionConfigs ++ moduleVersionConfigs
 
@@ -340,22 +340,34 @@ class Helper(
     }
 
   val baseDependencies = allModuleVersionConfigs.map {
-    case (module, version, configOpt) =>
+    case (module, version, configOpt, attrs) =>
+
+      val attributes = attrs.get("classifier") match {
+        case Some(c) => Attributes("", c)
+        case None => Attributes("", "")
+      }
+
       Dependency(
         module,
         version,
-        attributes = Attributes("", ""),
+        attributes = attributes,
         configuration = configOpt.getOrElse(defaultConfiguration),
         exclusions = localExcludeMap.getOrElse(module.orgName, Set()) | excludes
       )
   }
 
   val intransitiveDependencies = intransitiveModuleVersionConfigs.map {
-    case (module, version, configOpt) =>
+    case (module, version, configOpt, attrs) =>
+
+      val attributes = attrs.get("classifier") match {
+        case Some(classifier) => Attributes("", classifier)
+        case None => Attributes("", "")
+      }
+
       Dependency(
         module,
         version,
-        attributes = Attributes("", ""),
+        attributes = attributes,
         configuration = configOpt.getOrElse(defaultConfiguration),
         exclusions = excludes,
         transitive = false
@@ -878,7 +890,7 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
-          (module, _, _) <- allModuleVersionConfigs.headOption
+          (module, _, _, _) <- allModuleVersionConfigs.headOption
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
               if org == module.organization && (
@@ -890,7 +902,7 @@ class Helper(
         } yield mainClass
 
         def sameOrgOnlyMainClassOpt = for {
-          (module, _, _) <- allModuleVersionConfigs.headOption
+          (module, _, _, _) <- allModuleVersionConfigs.headOption
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
               if org == module.organization =>
