@@ -16,7 +16,7 @@ object Deps {
   def jackson = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.4"
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.0"
   def junit = "junit" % "junit" % "4.12"
-
+  def soc = "io.github.soc" % "directories" % "5"
   def sbtPgp = Def.setting {
     val sbtv = CrossVersion.binarySbtVersion(sbtVersion.in(pluginCrossBuild).value)
     val sv = scalaBinaryVersion.value
