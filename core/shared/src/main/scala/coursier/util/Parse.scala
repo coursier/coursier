@@ -141,25 +141,23 @@ object Parse {
     // Assume org:name:version;attr1=val1;attr2=val2
     // That is ';' has to go after ':'.
     // E.g. "org:name;attr1=val1;attr2=val2:version:config" is illegal.
-    val attrSeparator = ","
+    val attrSeparator = "#"
 
     val strings = s.split(attrSeparator)
     val coords = strings.head
 
-    if (coords.contains(attrSeparator)){
-      throw ModuleParseError(s"'$attrSeparator' must go after ':")
-    }
-
     val attrs = strings.drop(1).map({ x => {
       if (x.mkString.contains(":")) {
-        throw ModuleParseError(s"':' is not allowed in attribute $x")
+        throw ModuleParseError(s"':' is not allowed in attribute $x in $s. " +
+          s"Please follow the format org:name[:version][:config];attr1=val1;attr2=val2")
       }
       val y = x.split("=")
       if (y.length != 2) {
-        throw ModuleParseError(s"Failed to parse attr $x")
+        throw ModuleParseError(s"Failed to parse attr $x in $s")
       }
       (y(0), y(1))
-    }}).toMap
+    }
+    }).toMap
 
     val parts = coords.split(":", 5)
 
