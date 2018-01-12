@@ -117,9 +117,14 @@ object Parse {
   def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String], Map[String, String])] =
     moduleVersionConfig(s, defaultScalaVersion)
 
-  case class AttrError(private val message: String = "",
-                       private val cause: Throwable = None.orNull)
+  case class ModuleParseError(private val message: String = "",
+                              private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
+
+  /**
+    * This class encapsulate the module info passed in as a string, such as org:name:version:config;classifier=tests
+    */
+  final case class ParsedModule(module: Module, version: String, config: Option[String], attrs: Map[String, String])
 
   /**
     * Parses coordinates like
@@ -136,12 +141,22 @@ object Parse {
     // Assume org:name:version;attr1=val1;attr2=val2
     // That is ';' has to go after ':'.
     // E.g. "org:name;attr1=val1;attr2=val2:version:config" is illegal.
-    val strings = s.split(";")
+    val attrSeparator = ","
+
+    val strings = s.split(attrSeparator)
     val coords = strings.head
+
+    if (coords.contains(attrSeparator)){
+      throw ModuleParseError(s"'$attrSeparator' must go after ':")
+    }
+
     val attrs = strings.drop(1).map({ x => {
+      if (x.mkString.contains(":")) {
+        throw ModuleParseError(s"':' is not allowed in attribute $x")
+      }
       val y = x.split("=")
       if (y.length != 2) {
-        throw AttrError(s"Failed to parse attr $x")
+        throw ModuleParseError(s"Failed to parse attr $x")
       }
       (y(0), y(1))
     }}).toMap
