@@ -114,7 +114,7 @@ object Parse {
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String], Map[String, String])] =
+  def moduleVersionConfig(s: String): Either[String, ParsedModule] =
     moduleVersionConfig(s, defaultScalaVersion)
 
   case class ModuleParseError(private val message: String = "",
@@ -136,7 +136,7 @@ object Parse {
     *  or
     *   org:name:version:config;attr1=val1;attr2=val2
     */
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String], Map[String, String])] = {
+  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, ParsedModule] = {
 
     // Assume org:name:version;attr1=val1;attr2=val2
     // That is ';' has to go after ':'.
@@ -165,22 +165,22 @@ object Parse {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map((_, version, Some(config), attrs))
+          .map(ParsedModule(_, version, Some(config), attrs))
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map((_, version, None, attrs))
+          .map(ParsedModule(_, version, None, attrs))
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map((_, version, Some(config), attrs))
+          .map(ParsedModule(_, version, Some(config), attrs))
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map((_, version, None, attrs))
+          .map(ParsedModule(_, version, None, attrs))
 
       case _ =>
         Left(s"Malformed dependency: $s")
@@ -200,7 +200,7 @@ object Parse {
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String], Map[String, String])]) =
+  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[ParsedModule]) =
     moduleVersionConfigs(l, defaultScalaVersion)
 
   /**
@@ -208,7 +208,7 @@ object Parse {
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
-  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String], Map[String, String])]) =
+  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[ParsedModule]) =
     valuesAndErrors(moduleVersionConfig(_, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =

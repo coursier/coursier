@@ -10,6 +10,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
+import coursier.util.Parse.ParsedModule
 import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
@@ -167,7 +168,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexModuleVersionConfigs: List[(Module, String, None.type, Map[String, String])] =
+  val scaladexModuleVersionConfigs: List[ParsedModule] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -227,16 +228,16 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => (mod, ver, None, Map[String, String]()) }
+        .map { case (mod, ver) => ParsedModule(mod, ver, None, Map[String, String]()) }
     }
 
 
-  val (modVerCfgErrors, moduleVersionConfigs: Seq[(Module, String, Option[String], Map[String, String])]) =
+  val (modVerCfgErrors, moduleVersionConfigs: Seq[ParsedModule]) =
     Parse.moduleVersionConfigs(otherRawDependencies, scalaVersion)
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs) =
     Parse.moduleVersionConfigs(intransitive, scalaVersion)
 
-  def allModuleVersionConfigs: Seq[(Module, String, Option[String], Map[String, String])] =
+  def allModuleVersionConfigs: Seq[ParsedModule] =
     // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexModuleVersionConfigs ++ moduleVersionConfigs
 
@@ -339,42 +340,33 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
-  val baseDependencies = allModuleVersionConfigs.map {
-    case (module, version, configOpt, attrs) =>
 
-      val attributes = attrs.get("classifier") match {
-        case Some(c) => Attributes("", c)
-        case None => Attributes("", "")
-      }
+  private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
+    val attributes = parsedModule.attrs.get("classifier") match {
+      case Some(c) => Attributes("", c)
+      case None => Attributes("", "")
+    }
 
-      Dependency(
-        module,
-        version,
-        attributes = attributes,
-        configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = localExcludeMap.getOrElse(module.orgName, Set()) | excludes
-      )
+    Dependency(
+      parsedModule.module,
+      parsedModule.version,
+      attributes = attributes,
+      configuration = parsedModule.config.getOrElse(defaultConfiguration),
+      exclusions = localExcludeMap.getOrElse(parsedModule.module.orgName, Set()) | excludes
+    )
   }
 
-  val intransitiveDependencies = intransitiveModuleVersionConfigs.map {
-    case (module, version, configOpt, attrs) =>
-
-      val attributes = attrs.get("classifier") match {
-        case Some(classifier) => Attributes("", classifier)
-        case None => Attributes("", "")
-      }
-
-      Dependency(
-        module,
-        version,
-        attributes = attributes,
-        configuration = configOpt.getOrElse(defaultConfiguration),
-        exclusions = excludes,
-        transitive = false
-      )
+  val baseDependencies: Seq[Dependency] = allModuleVersionConfigs.map {
+    case parsedModule =>
+      createDependency(parsedModule, transitive = true)
   }
 
-  val dependencies = baseDependencies ++ intransitiveDependencies
+  val intransitiveDependencies: Seq[Dependency] = intransitiveModuleVersionConfigs.map {
+    case parsedModule =>
+      createDependency(parsedModule, transitive = false)
+  }
+
+  val dependencies: Seq[Dependency] = baseDependencies ++ intransitiveDependencies
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -890,7 +882,8 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
-          (module, _, _, _) <- allModuleVersionConfigs.headOption
+          parsedModule: ParsedModule <- allModuleVersionConfigs.headOption
+          module = parsedModule.module
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
               if org == module.organization && (
@@ -902,7 +895,8 @@ class Helper(
         } yield mainClass
 
         def sameOrgOnlyMainClassOpt = for {
-          (module, _, _, _) <- allModuleVersionConfigs.headOption
+          parsedModule: ParsedModule <- allModuleVersionConfigs.headOption
+          module = parsedModule.module
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
               if org == module.organization =>
