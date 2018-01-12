@@ -232,9 +232,9 @@ class Helper(
     }
 
 
-  val (modVerCfgErrors, moduleVersionConfigs: Seq[ParsedModule]) =
+  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[ParsedModule]) =
     Parse.moduleVersionConfigs(otherRawDependencies, scalaVersion)
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[ParsedModule]) =
     Parse.moduleVersionConfigs(intransitive, scalaVersion)
 
   def allModuleVersionConfigs: Seq[ParsedModule] =
