@@ -237,7 +237,7 @@ class Helper(
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[ParsedModule]) =
     Parse.moduleVersionConfigs(intransitive, scalaVersion)
 
-  def allModuleVersionConfigs: Seq[ParsedModule] =
+  val allModuleVersionConfigs: Seq[ParsedModule] =
     // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexModuleVersionConfigs ++ moduleVersionConfigs
 
