@@ -74,8 +74,8 @@ object ParseTests extends TestSuite {
       }
     }
 
-    "org:name:version:conifg::attr1=val1" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime::classifier=tests") match {
+    "single attr" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime:::classifier=tests") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -86,8 +86,8 @@ object ParseTests extends TestSuite {
       }
     }
 
-    "org:name:version:conifg::attr1=val1::attr2=val2" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime::classifier=tests::nickname=superman") match {
+    "multiple attrs" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime:::classifier=tests:::nickname=superman") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -100,7 +100,7 @@ object ParseTests extends TestSuite {
 
     "illegal 1" - {
       try {
-        val s = "org.apache.avro:avro::1.7.4:runtime::classifier=tests"
+        val s = "org.apache.avro:avro:::1.7.4:runtime:::classifier=tests"
         Parse.moduleVersionConfig(s)
         assert(false) // Parsing should fail but succeeded.
       }
@@ -112,8 +112,7 @@ object ParseTests extends TestSuite {
 
     "illegal 2" - {
       try {
-        val s = "junit:junit:4.12::attr"
-        Parse.moduleVersionConfig(s)
+        Parse.moduleVersionConfig("junit:junit:4.12:::attr")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
