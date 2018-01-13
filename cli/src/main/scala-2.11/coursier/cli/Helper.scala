@@ -344,7 +344,7 @@ class Helper(
   private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
     val attributes = parsedModule.attrs.get("classifier") match {
       case Some(c) => Attributes("", c)
-      case None => Attributes("", "")
+      case None => Attributes()
     }
 
     Dependency(
