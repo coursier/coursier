@@ -75,7 +75,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime:::classifier=tests") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -87,7 +87,7 @@ object ParseTests extends TestSuite {
     }
 
     "multiple attrs" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime:::classifier=tests:::nickname=superman") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -98,9 +98,20 @@ object ParseTests extends TestSuite {
       }
     }
 
+    "single attr with org:<empty>:version" - {
+      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1") match {
+        case Left(err) => assert(false)
+        case Right(parsedModule) =>
+          assert(parsedModule.module.organization == "io.get-coursier.scala-native")
+          assert(parsedModule.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          assert(parsedModule.version == "0.3.0-coursier-1")
+          assert(parsedModule.attrs == Map("attr1" -> "val1"))
+      }
+    }
+
     "illegal 1" - {
       try {
-        val s = "org.apache.avro:avro:::1.7.4:runtime:::classifier=tests"
+        val s = "org.apache.avro:avro,1.7.4:runtime,classifier=tests"
         Parse.moduleVersionConfig(s)
         assert(false) // Parsing should fail but succeeded.
       }
@@ -112,7 +123,7 @@ object ParseTests extends TestSuite {
 
     "illegal 2" - {
       try {
-        Parse.moduleVersionConfig("junit:junit:4.12:::attr")
+        Parse.moduleVersionConfig("junit:junit:4.12,attr")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {

@@ -141,7 +141,7 @@ object Parse {
     // Assume org:name:version::attr1=val1::attr2=val2
     // That is ';' has to go after ':'.
     // E.g. "org:name::attr1=val1::attr2=val2:version:config" is illegal.
-    val attrSeparator = ":::"
+    val attrSeparator = ","
     val argSeparator = ":"
 
     val strings = s.split(attrSeparator)
