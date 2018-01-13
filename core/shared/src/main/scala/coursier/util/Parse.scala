@@ -149,7 +149,7 @@ object Parse {
 
     val attrs = strings.drop(1).map({ x => {
       if (x.mkString.contains(argSeparator)) {
-        throw ModuleParseError(s"'${argSeparator}' is not allowed in attribute '$x' in '$s'. Please follow the format " +
+        throw ModuleParseError(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
           s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
       }
       val y = x.split("=")

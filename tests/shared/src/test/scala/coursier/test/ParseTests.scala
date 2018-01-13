@@ -3,6 +3,7 @@ package coursier.test
 import coursier.{MavenRepository, Repository}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
+import coursier.util.Parse.ModuleParseError
 import utest._
 
 object ParseTests extends TestSuite {
@@ -46,6 +47,79 @@ object ParseTests extends TestSuite {
     "jitpack" - {
       val res = Parse.repository("jitpack")
       assert(res.exists(isMavenRepo))
+    }
+
+    // Module parsing tests
+    "org:name:version" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4") match {
+        case Left(err) => assert(false)
+        case Right(parsedModule) =>
+          assert(parsedModule.module.organization == "org.apache.avro")
+          assert(parsedModule.module.name == "avro")
+          assert(parsedModule.version == "1.7.4")
+          assert(parsedModule.config.isEmpty)
+          assert(parsedModule.attrs.isEmpty)
+      }
+    }
+
+    "org:name:version:conifg" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime") match {
+        case Left(err) => assert(false)
+        case Right(parsedModule) =>
+          assert(parsedModule.module.organization == "org.apache.avro")
+          assert(parsedModule.module.name == "avro")
+          assert(parsedModule.version == "1.7.4")
+          assert(parsedModule.config == Some("runtime"))
+          assert(parsedModule.attrs.isEmpty)
+      }
+    }
+
+    "org:name:version:conifg::attr1=val1" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime::classifier=tests") match {
+        case Left(err) => assert(false)
+        case Right(parsedModule) =>
+          assert(parsedModule.module.organization == "org.apache.avro")
+          assert(parsedModule.module.name == "avro")
+          assert(parsedModule.version == "1.7.4")
+          assert(parsedModule.config == Some("runtime"))
+          assert(parsedModule.attrs == Map("classifier" -> "tests"))
+      }
+    }
+
+    "org:name:version:conifg::attr1=val1::attr2=val2" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime::classifier=tests::nickname=superman") match {
+        case Left(err) => assert(false)
+        case Right(parsedModule) =>
+          assert(parsedModule.module.organization == "org.apache.avro")
+          assert(parsedModule.module.name == "avro")
+          assert(parsedModule.version == "1.7.4")
+          assert(parsedModule.config == Some("runtime"))
+          assert(parsedModule.attrs == Map("classifier" -> "tests", "nickname" -> "superman"))
+      }
+    }
+
+    "illegal 1" - {
+      try {
+        val s = "org.apache.avro:avro::1.7.4:runtime::classifier=tests"
+        Parse.moduleVersionConfig(s)
+        assert(false) // Parsing should fail but succeeded.
+      }
+      catch {
+        case foo: ModuleParseError => assert(foo.getMessage().contains("':' is not allowed in attribute")) // do nothing
+        case _: Throwable =>  assert(false) // Unexpected exception
+      }
+    }
+
+    "illegal 2" - {
+      try {
+        val s = "junit:junit:4.12::attr"
+        Parse.moduleVersionConfig(s)
+        assert(false) // Parsing should fail but succeeded.
+      }
+      catch {
+        case foo: ModuleParseError => assert(foo.getMessage().contains("Failed to parse attribute")) // do nothing
+        case _: Throwable =>  assert(false) // Unexpected exception
+      }
     }
   }
 }
