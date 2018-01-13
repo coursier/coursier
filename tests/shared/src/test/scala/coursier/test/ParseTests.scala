@@ -98,7 +98,7 @@ object ParseTests extends TestSuite {
       }
     }
 
-    "single attr with org:<empty>:version" - {
+    "single attr with org::name:version" - {
       Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
@@ -111,8 +111,7 @@ object ParseTests extends TestSuite {
 
     "illegal 1" - {
       try {
-        val s = "org.apache.avro:avro,1.7.4:runtime,classifier=tests"
-        Parse.moduleVersionConfig(s)
+        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
