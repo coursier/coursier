@@ -344,8 +344,6 @@ class Helper(
   private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
     val attributes = parsedModule.attrs.get("classifier") match {
       case Some(c) => Attributes("", c)
-      // TODO(wisechengyi): Cannot use Attributes() because it will be confused for with
-      // `java.util.jar.Attributes` for scalajs https://github.com/coursier/coursier/issues/741
       case None => Attributes("", "")
     }
 

@@ -51,7 +51,7 @@ object ParseTests extends TestSuite {
 
     // Module parsing tests
     "org:name:version" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -63,7 +63,7 @@ object ParseTests extends TestSuite {
     }
 
     "org:name:version:conifg" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -75,7 +75,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -87,7 +87,7 @@ object ParseTests extends TestSuite {
     }
 
     "multiple attrs" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", "2.11.11") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "org.apache.avro")
@@ -99,7 +99,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with org::name:version" - {
-      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1") match {
+      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", "2.11.11") match {
         case Left(err) => assert(false)
         case Right(parsedModule) =>
           assert(parsedModule.module.organization == "io.get-coursier.scala-native")
@@ -111,7 +111,7 @@ object ParseTests extends TestSuite {
 
     "illegal 1" - {
       try {
-        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests")
+        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
@@ -122,7 +122,7 @@ object ParseTests extends TestSuite {
 
     "illegal 2" - {
       try {
-        Parse.moduleVersionConfig("junit:junit:4.12,attr")
+        Parse.moduleVersionConfig("junit:junit:4.12,attr", "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
