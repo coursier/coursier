@@ -1,8 +1,9 @@
 language: java
 sudo: required
-dist: trusty
 install:
   - npm install
+os:
+  - osx
 script:
   - scripts/travis.sh
 # Uncomment once https://github.com/scoverage/sbt-scoverage/issues/111 is fixed
