@@ -1,5 +1,4 @@
 language: java
-sudo: required
 install:
   - npm install
 os:
