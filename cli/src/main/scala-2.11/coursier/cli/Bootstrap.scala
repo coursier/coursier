@@ -126,13 +126,8 @@ final case class Bootstrap(
       ).toList.foldLeft((List.empty[String], List.empty[File])){
         case ((urls, files), (url, file)) =>
           if (options.standalone) (urls, file :: files)
-          else url match {
-            case _ if url.startsWith("http://") || url.startsWith("https://") => (url :: urls, files)
-            case _ if url.startsWith("file:/") => (urls, file :: files)
-            case _ =>
-              Console.err.println(s"Warning: non HTTP or FILE URL:\n${url}")
-              (urls, files)
-          }
+          else if (url.startsWith("file:/")) (urls, file :: files)
+          else (url :: urls, files)
       }
 
     val isolatedUrls = isolatedArtifactFiles.map { case (k, (v, _)) => k -> v }
