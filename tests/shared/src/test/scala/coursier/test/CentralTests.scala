@@ -44,6 +44,9 @@ abstract class CentralTests extends TestSuite {
       .run(fetch0)
       .map { res =>
 
+        if (!res.metadataErrors.isEmpty) {
+          println(s"meta error: ${res.metadataErrors}")
+        }
         assert(res.metadataErrors.isEmpty)
         assert(res.conflicts.isEmpty)
         assert(res.isDone)
@@ -500,6 +503,43 @@ abstract class CentralTests extends TestSuite {
           "maven-plugin",
           "jar"
         )
+      }
+    }
+
+    'classifier - {
+
+      'vanilla - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1", attributes=Attributes("","tests")
+            )
+          )
+
+          val res = await(resolve(deps))
+          println(res.dependencyArtifacts)
+          assert(true)
+          //
+                    assert(res.metadataErrors.isEmpty)
+                    assert(res.conflicts.isEmpty)
+                    assert(res.isDone)
+
+                    val artifacts = res.artifacts
+
+                    val map = artifacts.groupBy(a => a)
+
+                    val nonUnique = map.filter {
+                      case (_, l) => l.length > 1
+                    }
+
+                    if (nonUnique.nonEmpty)
+                      println(
+                        "Found non unique artifacts:\n" +
+                          nonUnique.keys.toVector.map("  " + _).mkString("\n")
+                      )
+
+                    assert(nonUnique.isEmpty)
+        }
       }
     }
 
