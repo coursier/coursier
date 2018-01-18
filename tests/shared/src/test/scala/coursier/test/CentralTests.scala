@@ -512,35 +512,54 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1", attributes=Attributes("","tests")
+              Module("org.apache.avro", "avro"), "1.8.1"
             )
           )
 
           val res = await(resolve(deps))
-          println(res.dependencyArtifacts)
-          assert(true)
-          //
-                    assert(res.metadataErrors.isEmpty)
-                    assert(res.conflicts.isEmpty)
-                    assert(res.isDone)
+          val dependencyArtifacts = res.dependencyArtifacts
+          val artifacts = res.artifacts
+          for (art <- dependencyArtifacts.map(_._1)) {
+            println(art)
+          }
+//          println(artifacts.map(_.url).mkString("\n"))
 
-                    val artifacts = res.artifacts
-
-                    val map = artifacts.groupBy(a => a)
-
-                    val nonUnique = map.filter {
-                      case (_, l) => l.length > 1
-                    }
-
-                    if (nonUnique.nonEmpty)
-                      println(
-                        "Found non unique artifacts:\n" +
-                          nonUnique.keys.toVector.map("  " + _).mkString("\n")
-                      )
-
-                    assert(nonUnique.isEmpty)
         }
       }
+
+//      'vanilla - {
+//        async {
+//          val deps = Set(
+//            Dependency(
+//              Module("org.apache.avro", "avro"), "1.8.1", attributes=Attributes("","tests")
+//            )
+//          )
+//
+//          val res = await(resolve(deps))
+//          println(res.dependencyArtifacts)
+//          assert(true)
+//          //
+//                    assert(res.metadataErrors.isEmpty)
+//                    assert(res.conflicts.isEmpty)
+//                    assert(res.isDone)
+//
+//                    val artifacts = res.artifacts
+//
+//                    val map = artifacts.groupBy(a => a)
+//
+//                    val nonUnique = map.filter {
+//                      case (_, l) => l.length > 1
+//                    }
+//
+//                    if (nonUnique.nonEmpty)
+//                      println(
+//                        "Found non unique artifacts:\n" +
+//                          nonUnique.keys.toVector.map("  " + _).mkString("\n")
+//                      )
+//
+//                    assert(nonUnique.isEmpty)
+//        }
+//      }
     }
 
     'artifacts - {
