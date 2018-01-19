@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier.{MavenRepository, Repository}
+import coursier.{MavenRepository, Repository, Attributes}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
 import coursier.util.Parse.ModuleParseError
@@ -51,83 +51,82 @@ object ParseTests extends TestSuite {
 
     // Module parsing tests
     "org:name:version" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", Set(), Map(), "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(parsedModule) =>
-          assert(parsedModule.module.organization == "org.apache.avro")
-          assert(parsedModule.module.name == "avro")
-          assert(parsedModule.version == "1.7.4")
-          assert(parsedModule.config.isEmpty)
-          assert(parsedModule.attrs.isEmpty)
+        case Right(dep) =>
+          assert(dep.module.organization == "org.apache.avro")
+          assert(dep.module.name == "avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration.isEmpty)
+          assert(dep.attributes == Attributes())
       }
     }
 
     "org:name:version:conifg" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", Set(), Map(), "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(parsedModule) =>
-          assert(parsedModule.module.organization == "org.apache.avro")
-          assert(parsedModule.module.name == "avro")
-          assert(parsedModule.version == "1.7.4")
-          assert(parsedModule.config == Some("runtime"))
-          assert(parsedModule.attrs.isEmpty)
+        case Right(dep) =>
+          assert(dep.module.organization == "org.apache.avro")
+          assert(dep.module.name == "avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == "runtime")
+          assert(dep.attributes == Attributes())
       }
     }
 
     "single attr" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", Set(), Map(), "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(parsedModule) =>
-          assert(parsedModule.module.organization == "org.apache.avro")
-          assert(parsedModule.module.name == "avro")
-          assert(parsedModule.version == "1.7.4")
-          assert(parsedModule.config == Some("runtime"))
-          assert(parsedModule.attrs == Map("classifier" -> "tests"))
+        case Right(dep) =>
+          assert(dep.module.organization == "org.apache.avro")
+          assert(dep.module.name == "avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == "runtime")
+          assert(dep.attributes == Attributes("", "tests"))
       }
     }
 
     "multiple attrs" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", Set(), Map(), "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(parsedModule) =>
-          assert(parsedModule.module.organization == "org.apache.avro")
-          assert(parsedModule.module.name == "avro")
-          assert(parsedModule.version == "1.7.4")
-          assert(parsedModule.config == Some("runtime"))
-          assert(parsedModule.attrs == Map("classifier" -> "tests", "nickname" -> "superman"))
+        case Right(dep) =>
+          assert(dep.module.organization == "org.apache.avro")
+          assert(dep.module.name == "avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == "runtime")
+          assert(dep.attributes == Attributes("", "tests"))
       }
     }
 
     "single attr with org::name:version" - {
-      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", "2.11.11") match {
+      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", Set(), Map(), "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(parsedModule) =>
-          assert(parsedModule.module.organization == "io.get-coursier.scala-native")
-          assert(parsedModule.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
-          assert(parsedModule.version == "0.3.0-coursier-1")
-          assert(parsedModule.attrs == Map("attr1" -> "val1"))
+        case Right(dep) =>
+          assert(dep.module.organization == "io.get-coursier.scala-native")
+          assert(dep.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          assert(dep.version == "0.3.0-coursier-1")
       }
     }
 
     "illegal 1" - {
       try {
-        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", "2.11.11")
+        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", Set(), Map(), "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
         case foo: ModuleParseError => assert(foo.getMessage().contains("':' is not allowed in attribute")) // do nothing
-        case _: Throwable =>  assert(false) // Unexpected exception
+        case _: Throwable => assert(false) // Unexpected exception
       }
     }
 
     "illegal 2" - {
       try {
-        Parse.moduleVersionConfig("junit:junit:4.12,attr", "2.11.11")
+        Parse.moduleVersionConfig("junit:junit:4.12,attr", Set(), Map(), "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
         case foo: ModuleParseError => assert(foo.getMessage().contains("Failed to parse attribute")) // do nothing
-        case _: Throwable =>  assert(false) // Unexpected exception
+        case _: Throwable => assert(false) // Unexpected exception
       }
     }
   }
