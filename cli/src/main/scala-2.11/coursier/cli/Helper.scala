@@ -320,9 +320,10 @@ class Helper(
     }
 
   val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, scalaVersion)
+    Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, transitive=true, scalaVersion)
+
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(intransitive, globalExcludes, localExcludeMap, scalaVersion)
+    Parse.moduleVersionConfigs(intransitive, globalExcludes, localExcludeMap, transitive=false, scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")

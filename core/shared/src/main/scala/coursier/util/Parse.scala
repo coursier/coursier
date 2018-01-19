@@ -119,11 +119,11 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String, scalaVersion: String): Either[String, Dependency] =
-    moduleVersionConfig(s, Set.empty, Map.empty, scalaVersion)
+    moduleVersionConfig(s, Set.empty, Map.empty, transitive=true, scalaVersion)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String): Either[String, Dependency] =
-    moduleVersionConfig(s, Set.empty, Map.empty, defaultScalaVersion)
+    moduleVersionConfig(s, Set.empty, Map.empty, transitive=true, defaultScalaVersion)
 
   /**
     * Parses coordinates like
@@ -140,6 +140,7 @@ object Parse {
   def moduleVersionConfig(s: String,
                           globalExcludes: Set[(String, String)],
                           localExcludes: Map[String, Set[(String, String)]],
+                          transitive: Boolean,
                           defaultScalaVersion: String): Either[String, Dependency] = {
 
     // Assume org:name:version,attr1=val1,attr2=val2
@@ -176,28 +177,50 @@ object Parse {
         module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(mod, version, config, attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            Dependency(
+              mod,
+              version,
+              config,
+              attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map( mod => {
-            Dependency(mod, version, attributes=attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+          .map(mod => {
+            Dependency(
+              mod,
+              version,
+              attributes = attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(mod, version, config, attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            Dependency(
+              mod,
+              version,
+              config,
+              attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(mod, version, attributes=attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            Dependency(
+              mod,
+              version,
+              attributes = attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case _ =>
@@ -219,11 +242,11 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[Dependency]) =
-    moduleVersionConfigs(l, Set.empty, Map.empty, defaultScalaVersion)
+    moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String], scalaVersion: String): (Seq[String], Seq[Dependency]) =
-    moduleVersionConfigs(l, Set.empty, Map.empty, scalaVersion)
+    moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, scalaVersion)
 
   /**
     * Parses a sequence of coordinates having an optional configuration.
@@ -233,8 +256,9 @@ object Parse {
   def moduleVersionConfigs(l: Seq[String],
                            globalExcludes: Set[(String, String)],
                            localExcludes: Map[String, Set[(String, String)]],
+                           transitive: Boolean,
                            defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
-    valuesAndErrors(moduleVersionConfig(_, globalExcludes, localExcludes, defaultScalaVersion), l)
+    valuesAndErrors(moduleVersionConfig(_, globalExcludes, localExcludes, transitive, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
     if (s == "central")
