@@ -7,7 +7,7 @@ import java.net.{MalformedURLException, URL}
 import coursier.core.Authentication
 import sbt.internal.librarymanagement.mavenint.SbtPomExtraProperties
 import sbt.librarymanagement._
-import sbt.{CrossVersion, ModuleID, Resolver}
+import sbt.{CrossVersion, ModuleID}
 
 import scalaz.{-\/, \/-}
 
