@@ -232,23 +232,6 @@ class Helper(
     }
 
 
-  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, scalaVersion)
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(intransitive, scalaVersion)
-
-  val allModuleVersionConfigs: Seq[Dependency] =
-    // FIXME Order of the dependencies is not respected here (scaladex ones go first)
-    scaladexModuleVersionConfigs ++ moduleVersionConfigs
-
-  prematureExitIf(modVerCfgErrors.nonEmpty) {
-    s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
-  }
-
-  prematureExitIf(intransitiveModVerCfgErrors.nonEmpty) {
-    s"Cannot parse intransitive dependencies:\n" +
-      intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
-  }
 
 
   val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
@@ -307,7 +290,7 @@ class Helper(
 
   val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
-  val excludes: Set[(String, String)] = excludesNoAttr.map { mod =>
+  val globalExcludes: Set[(String, String)] = excludesNoAttr.map { mod =>
     (mod.organization, mod.name)
   }.toSet
 
@@ -340,6 +323,25 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
+  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[Dependency]) =
+    Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, scalaVersion)
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[Dependency]) =
+    Parse.moduleVersionConfigs(intransitive, globalExcludes, localExcludeMap, scalaVersion)
+
+  val allModuleVersionConfigs: Seq[Dependency] =
+  // FIXME Order of the dependencies is not respected here (scaladex ones go first)
+    scaladexModuleVersionConfigs ++ moduleVersionConfigs
+
+  prematureExitIf(modVerCfgErrors.nonEmpty) {
+    s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
+  }
+
+  prematureExitIf(intransitiveModVerCfgErrors.nonEmpty) {
+    s"Cannot parse intransitive dependencies:\n" +
+      intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
+  }
+
+
   private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
     val attributes = parsedModule.attrs.get("classifier") match {
       case Some(c) => Attributes("", c)
@@ -351,7 +353,7 @@ class Helper(
       parsedModule.version,
       attributes = attributes,
       configuration = parsedModule.config.getOrElse(defaultConfiguration),
-      exclusions = localExcludeMap.getOrElse(parsedModule.module.orgName, Set()) | excludes
+      exclusions = localExcludeMap.getOrElse(parsedModule.module.orgName, Set()) | globalExcludes
     )
   }
 

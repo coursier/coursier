@@ -113,11 +113,11 @@ object Parse {
     }
   }
 
-  // NB: Do not use this in tests. js tests will fail to find `java.util.jar.Attributes`
-  // https://github.com/coursier/coursier/issues/741
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, Dependency] =
-    moduleVersionConfig(s, defaultScalaVersion)
+//  // NB: Do not use this in tests. js tests will fail to find `java.util.jar.Attributes`
+//  // https://github.com/coursier/coursier/issues/741
+//  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
+//  def moduleVersionConfig(s: String): Either[String, Dependency] =
+//    moduleVersionConfig(s, defaultScalaVersion)
 
   case class ModuleParseError(private val message: String = "",
                               private val cause: Throwable = None.orNull)
@@ -138,8 +138,10 @@ object Parse {
     *  or
     *   org:name:version:config;attr1=val1;attr2=val2
     */
-  // TODO(wisechengyi): plumb exclusions
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, Dependency] = {
+  def moduleVersionConfig(s: String,
+                          globalExcludes: Set[(String, String)],
+                          localExcludes: Map[String, Set[(String, String)]],
+                          defaultScalaVersion: String): Either[String, Dependency] = {
 
     // Assume org:name:version::attr1=val1::attr2=val2
     // That is ';' has to go after ':'.
@@ -174,22 +176,30 @@ object Parse {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map(Dependency(_, version, config, attributes))
+          .map(mod => {
+            Dependency(mod, version, config, attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+          })
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map(Dependency(_, version, attributes=attributes))
+          .map( mod => {
+            Dependency(mod, version, attributes=attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+          })
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map(Dependency(_, version, config, attributes))
+          .map(mod => {
+            Dependency(mod, version, config, attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+          })
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map(Dependency(_, version, attributes=attributes))
+          .map(mod => {
+            Dependency(mod, version, attributes=attributes, exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+          })
 
       case _ =>
         Left(s"Malformed dependency: $s")
@@ -208,17 +218,16 @@ object Parse {
   def moduleVersions(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String)]) =
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[Dependency]) =
-    moduleVersionConfigs(l, defaultScalaVersion)
-
   /**
     * Parses a sequence of coordinates having an optional configuration.
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
-  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
-    valuesAndErrors(moduleVersionConfig(_, defaultScalaVersion), l)
+  def moduleVersionConfigs(l: Seq[String],
+                           globalExcludes: Set[(String, String)],
+                           localExcludes: Map[String, Set[(String, String)]],
+                           defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
+    valuesAndErrors(moduleVersionConfig(_, globalExcludes, localExcludes, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
     if (s == "central")
