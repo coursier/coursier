@@ -662,7 +662,7 @@ class Helper(
     javadoc: Boolean,
     artifactTypes: Set[String],
     subset: Set[Dependency] = null
-  ): Map[String,File] = {
+  ): Map[String, File] = {
 
     val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
       artifact.copy(attributes = Attributes())
