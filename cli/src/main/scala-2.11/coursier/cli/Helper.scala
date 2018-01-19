@@ -286,16 +286,16 @@ class Helper(
 
   val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
-  val globalExcludes: Set[(String, String)] = excludesNoAttr.map { mod =>
-    (mod.organization, mod.name)
-  }.toSet
-
   prematureExitIf(excludesWithAttr.nonEmpty) {
     s"Excluded modules with attributes not supported:\n" +
       excludesWithAttr
         .map("  " + _)
         .mkString("\n")
   }
+
+  val globalExcludes: Set[(String, String)] = excludesNoAttr.map { mod =>
+    (mod.organization, mod.name)
+  }.toSet
 
   val localExcludeMap: Map[String, Set[(String, String)]] =
     if (localExcludeFile.isEmpty) {
