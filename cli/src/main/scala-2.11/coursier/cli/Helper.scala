@@ -10,7 +10,6 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.Parse.ParsedModule
 import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
@@ -84,9 +83,9 @@ class Helper(
   isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
   warnBaseLoaderNotFound: Boolean = true
 ) {
-  import common._
   import Helper.errPrintln
   import Util._
+  import common._
 
   val ttl0 =
     if (ttl.isEmpty)
@@ -168,7 +167,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexModuleVersionConfigs: List[Dependency] =
+  val scaladexDeps: List[Dependency] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -228,11 +227,8 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => Dependency(mod, ver, attributes=Attributes("", "")) }
+        .map { case (mod, ver) => Dependency(mod, ver) }
     }
-
-
-
 
   val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
 
@@ -323,14 +319,10 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
-  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[Dependency]) =
+  val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
     Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, scalaVersion)
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[Dependency]) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
     Parse.moduleVersionConfigs(intransitive, globalExcludes, localExcludeMap, scalaVersion)
-
-  val allModuleVersionConfigs: Seq[Dependency] =
-  // FIXME Order of the dependencies is not respected here (scaladex ones go first)
-    scaladexModuleVersionConfigs ++ moduleVersionConfigs
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
@@ -341,33 +333,11 @@ class Helper(
       intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
   }
 
+  val transitiveDeps: Seq[Dependency] =
+  // FIXME Order of the dependencies is not respected here (scaladex ones go first)
+    scaladexDeps ++ normalDeps
 
-  private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
-    val attributes = parsedModule.attrs.get("classifier") match {
-      case Some(c) => Attributes("", c)
-      case None => Attributes("", "")
-    }
-
-    Dependency(
-      parsedModule.module,
-      parsedModule.version,
-      attributes = attributes,
-      configuration = parsedModule.config.getOrElse(defaultConfiguration),
-      exclusions = localExcludeMap.getOrElse(parsedModule.module.orgName, Set()) | globalExcludes
-    )
-  }
-
-//  val baseDependencies: Seq[Dependency] = allModuleVersionConfigs.map {
-//    case parsedModule =>
-//      createDependency(parsedModule, transitive = true)
-//  }
-//
-//  val intransitiveDependencies: Seq[Dependency] = intransitiveModuleVersionConfigs.map {
-//    case parsedModule =>
-//      createDependency(parsedModule, transitive = false)
-//  }
-
-  val dependencies: Seq[Dependency] = allModuleVersionConfigs ++ intransitiveModuleVersionConfigs
+  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -383,7 +353,7 @@ class Helper(
   val userEnabledProfiles = profile.toSet
 
   val startRes = Resolution(
-    dependencies.toSet,
+    allDependencies.toSet,
     forceVersions = forceVersions,
     filter = Some(dep => keepOptional || !dep.optional),
     userActivations =
@@ -424,7 +394,7 @@ class Helper(
     errPrintln(
       s"  Dependencies:\n" +
         Print.dependenciesUnknownConfigs(
-          dependencies,
+          allDependencies,
           Map.empty,
           printExclusions = verbosityLevel >= 2
         )
@@ -555,7 +525,7 @@ class Helper(
     val depsStr =
       if (reverseTree || tree)
         Print.dependencyTree(
-          dependencies,
+          allDependencies,
           res,
           printExclusions = verbosityLevel >= 1,
           reverse = reverseTree
@@ -761,7 +731,7 @@ class Helper(
       val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
 
       // A map from requested org:name:version to reconciled org:name:version
-      val conflictResolutionForRoots: Map[String, String] = dependencies.map({ dep =>
+      val conflictResolutionForRoots: Map[String, String] = allDependencies.map({ dep =>
         val reconciledVersion: String = res.reconciledVersions
           .getOrElse(dep.module, dep.version)
         if (reconciledVersion != dep.version) {
@@ -883,7 +853,7 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
-          dep: Dependency <- allModuleVersionConfigs.headOption
+          dep: Dependency <- transitiveDeps.headOption
           module = dep.module
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
@@ -896,7 +866,7 @@ class Helper(
         } yield mainClass
 
         def sameOrgOnlyMainClassOpt = for {
-          dep: Dependency <- allModuleVersionConfigs.headOption
+          dep: Dependency <- transitiveDeps.headOption
           module = dep.module
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
