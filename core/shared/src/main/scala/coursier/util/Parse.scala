@@ -117,6 +117,14 @@ object Parse {
                               private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
 
+  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
+  def moduleVersionConfig(s: String, scalaVersion: String): Either[String, Dependency] =
+    moduleVersionConfig(s, Set.empty, Map.empty, scalaVersion)
+
+  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
+  def moduleVersionConfig(s: String): Either[String, Dependency] =
+    moduleVersionConfig(s, Set.empty, Map.empty, defaultScalaVersion)
+
   /**
     * Parses coordinates like
     *   org:name:version
@@ -206,6 +214,14 @@ object Parse {
     */
   def moduleVersions(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String)]) =
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
+
+  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
+  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[Dependency]) =
+    moduleVersionConfigs(l, Set.empty, Map.empty, defaultScalaVersion)
+
+  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
+  def moduleVersionConfigs(l: Seq[String], scalaVersion: String): (Seq[String], Seq[Dependency]) =
+    moduleVersionConfigs(l, Set.empty, Map.empty, scalaVersion)
 
   /**
     * Parses a sequence of coordinates having an optional configuration.
