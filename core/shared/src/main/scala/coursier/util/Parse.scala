@@ -128,21 +128,23 @@ object Parse {
   /**
     * Parses coordinates like
     *   org:name:version
-    *  possibly with attributes, like
-    *   org:name;attr1=val1;attr2=val2:version
+    *  with attributes, like
+    *   org:name:version,attr1=val1,attr2=val2
     *  and a configuration, like
     *   org:name:version:config
     *  or
-    *   org:name:version:config;attr1=val1;attr2=val2
+    *   org:name:version:config,attr1=val1,attr2=val2
+    *
+    *  Currently only "classifier" attribute is used, and others are ignored.
     */
   def moduleVersionConfig(s: String,
                           globalExcludes: Set[(String, String)],
                           localExcludes: Map[String, Set[(String, String)]],
                           defaultScalaVersion: String): Either[String, Dependency] = {
 
-    // Assume org:name:version::attr1=val1::attr2=val2
-    // That is ';' has to go after ':'.
-    // E.g. "org:name::attr1=val1::attr2=val2:version:config" is illegal.
+    // Assume org:name:version,attr1=val1,attr2=val2
+    // That is ',' has to go after ':'.
+    // E.g. "org:name,attr1=val1,attr2=val2:version:config" is illegal.
     val attrSeparator = ","
     val argSeparator = ":"
 
