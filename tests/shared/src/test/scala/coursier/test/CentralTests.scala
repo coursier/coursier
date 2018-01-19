@@ -507,7 +507,6 @@ abstract class CentralTests extends TestSuite {
     }
 
     'classifier - {
-
       'vanilla - {
         async {
           val deps = Set(
@@ -515,51 +514,43 @@ abstract class CentralTests extends TestSuite {
               Module("org.apache.avro", "avro"), "1.8.1"
             )
           )
-
           val res = await(resolve(deps))
-          val dependencyArtifacts = res.dependencyArtifacts
-          val artifacts = res.artifacts
-          for (art <- dependencyArtifacts.map(_._1)) {
-            println(art)
-          }
-//          println(artifacts.map(_.url).mkString("\n"))
-
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(filenames.contains("avro-1.8.1.jar"))
+          assert(!filenames.contains("avro-1.8.1-tests.jar"))
         }
       }
 
-//      'vanilla - {
-//        async {
-//          val deps = Set(
-//            Dependency(
-//              Module("org.apache.avro", "avro"), "1.8.1", attributes=Attributes("","tests")
-//            )
-//          )
-//
-//          val res = await(resolve(deps))
-//          println(res.dependencyArtifacts)
-//          assert(true)
-//          //
-//                    assert(res.metadataErrors.isEmpty)
-//                    assert(res.conflicts.isEmpty)
-//                    assert(res.isDone)
-//
-//                    val artifacts = res.artifacts
-//
-//                    val map = artifacts.groupBy(a => a)
-//
-//                    val nonUnique = map.filter {
-//                      case (_, l) => l.length > 1
-//                    }
-//
-//                    if (nonUnique.nonEmpty)
-//                      println(
-//                        "Found non unique artifacts:\n" +
-//                          nonUnique.keys.toVector.map("  " + _).mkString("\n")
-//                      )
-//
-//                    assert(nonUnique.isEmpty)
-//        }
-//      }
+      'tests - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+            )
+          )
+          val res = await(resolve(deps))
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(!filenames.contains("avro-1.8.1.jar"))
+          assert(filenames.contains("avro-1.8.1-tests.jar"))
+        }
+      }
+
+      'mixed - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1"
+            ),
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+            )
+          )
+          val res = await(resolve(deps))
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(filenames.contains("avro-1.8.1.jar"))
+          assert(filenames.contains("avro-1.8.1-tests.jar"))
+        }
+      }
     }
 
     'artifacts - {
