@@ -2,8 +2,8 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
-import coursier.cli.util.ReportNode
-import argonaut._, Argonaut._
+import argonaut.Argonaut._
+import coursier.cli.util.{DepNode, ReportNode}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -222,7 +222,7 @@ class CliIntegrationTest extends FlatSpec {
     * |└─ org.apache.commons:commons-compress:1.5
     * |   └─ org.tukaani:xz:1.2
     */
-  "classifier" should "be fetched" in withFile() {
+  "classifier tests" should "have tests.jar" in withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -240,6 +240,43 @@ class CliIntegrationTest extends FlatSpec {
           assert(compressNode.get.files.head._1 == "tests")
           assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
           assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
+        }
+      }
+  }
+
+  /**
+    * Result:
+    * |├─ org.apache.commons:commons-compress:1.5
+    * |│  └─ org.tukaani:xz:1.2
+    * |└─ org.apache.commons:commons-compress:1.5
+    * |   └─ org.tukaani:xz:1.2
+    */
+  "mixed vanilla and classifier " should "have tests.jar and .jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+          fetch.setRemainingArgs(
+            Seq("org.apache.commons:commons-compress:1.5,classifier=tests",
+              "org.apache.commons:commons-compress:1.5"),
+            Seq())
+          fetch.apply()
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val compressNodes: Seq[DepNode] = node.dependencies
+            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+            .sortBy(_.files.head._1.length) // sort by first classifier length
+          println(compressNodes)
+          assert(compressNodes.length == 2)
+          assert(compressNodes.head.files.head._1 == "")
+          assert(compressNodes.head.files.head._2.contains("commons-compress-1.5.jar"))
+
+          assert(compressNodes.last.files.head._1 == "tests")
+          assert(compressNodes.last.files.head._2.contains("commons-compress-1.5-tests.jar"))
         }
       }
   }
