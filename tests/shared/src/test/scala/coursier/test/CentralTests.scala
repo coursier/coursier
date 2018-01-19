@@ -2,8 +2,9 @@ package coursier
 package test
 
 import utest._
-import scala.async.Async.{ async, await }
+import scala.async.Async.{async, await}
 
+import coursier.MavenRepository
 import coursier.Platform.fetch
 import coursier.test.compatibility._
 
@@ -507,6 +508,10 @@ abstract class CentralTests extends TestSuite {
     }
 
     'classifier - {
+
+      // Adding extra repo so it's agnostic from nexus which only has the poms
+      val extraRepo = MavenRepository("https://repo1.maven.org/maven2")
+
       'vanilla - {
         async {
           val deps = Set(
@@ -514,7 +519,7 @@ abstract class CentralTests extends TestSuite {
               Module("org.apache.avro", "avro"), "1.8.1"
             )
           )
-          val res = await(resolve(deps))
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
           val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(!filenames.contains("avro-1.8.1-tests.jar"))
@@ -528,7 +533,7 @@ abstract class CentralTests extends TestSuite {
               Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
             )
           )
-          val res = await(resolve(deps))
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
           val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
           assert(!filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
@@ -545,7 +550,7 @@ abstract class CentralTests extends TestSuite {
               Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
             )
           )
-          val res = await(resolve(deps))
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
           val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
