@@ -168,7 +168,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexModuleVersionConfigs: List[ParsedModule] =
+  val scaladexModuleVersionConfigs: List[Dependency] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -228,16 +228,16 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => ParsedModule(mod, ver, None, Map[String, String]()) }
+        .map { case (mod, ver) => Dependency(mod, ver, attributes=Attributes("", "")) }
     }
 
 
-  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[ParsedModule]) =
+  val (modVerCfgErrors: Seq[String], moduleVersionConfigs: Seq[Dependency]) =
     Parse.moduleVersionConfigs(otherRawDependencies, scalaVersion)
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[ParsedModule]) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveModuleVersionConfigs: Seq[Dependency]) =
     Parse.moduleVersionConfigs(intransitive, scalaVersion)
 
-  val allModuleVersionConfigs: Seq[ParsedModule] =
+  val allModuleVersionConfigs: Seq[Dependency] =
     // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexModuleVersionConfigs ++ moduleVersionConfigs
 
@@ -307,16 +307,16 @@ class Helper(
 
   val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
-  prematureExitIf(excludesWithAttr.nonEmpty) {
-    s"Excluded modules with attributes not supported:\n" +
-    excludesWithAttr
-      .map("  " + _)
-      .mkString("\n")
-  }
-
   val excludes: Set[(String, String)] = excludesNoAttr.map { mod =>
     (mod.organization, mod.name)
   }.toSet
+
+  prematureExitIf(excludesWithAttr.nonEmpty) {
+    s"Excluded modules with attributes not supported:\n" +
+      excludesWithAttr
+        .map("  " + _)
+        .mkString("\n")
+  }
 
   val localExcludeMap: Map[String, Set[(String, String)]] =
     if (localExcludeFile.isEmpty) {
@@ -340,7 +340,6 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
-
   private def createDependency(parsedModule: ParsedModule, transitive: Boolean) = {
     val attributes = parsedModule.attrs.get("classifier") match {
       case Some(c) => Attributes("", c)
@@ -356,17 +355,17 @@ class Helper(
     )
   }
 
-  val baseDependencies: Seq[Dependency] = allModuleVersionConfigs.map {
-    case parsedModule =>
-      createDependency(parsedModule, transitive = true)
-  }
+//  val baseDependencies: Seq[Dependency] = allModuleVersionConfigs.map {
+//    case parsedModule =>
+//      createDependency(parsedModule, transitive = true)
+//  }
+//
+//  val intransitiveDependencies: Seq[Dependency] = intransitiveModuleVersionConfigs.map {
+//    case parsedModule =>
+//      createDependency(parsedModule, transitive = false)
+//  }
 
-  val intransitiveDependencies: Seq[Dependency] = intransitiveModuleVersionConfigs.map {
-    case parsedModule =>
-      createDependency(parsedModule, transitive = false)
-  }
-
-  val dependencies: Seq[Dependency] = baseDependencies ++ intransitiveDependencies
+  val dependencies: Seq[Dependency] = allModuleVersionConfigs ++ intransitiveModuleVersionConfigs
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -882,8 +881,8 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
-          parsedModule: ParsedModule <- allModuleVersionConfigs.headOption
-          module = parsedModule.module
+          dep: Dependency <- allModuleVersionConfigs.headOption
+          module = dep.module
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
               if org == module.organization && (
@@ -895,8 +894,8 @@ class Helper(
         } yield mainClass
 
         def sameOrgOnlyMainClassOpt = for {
-          parsedModule: ParsedModule <- allModuleVersionConfigs.headOption
-          module = parsedModule.module
+          dep: Dependency <- allModuleVersionConfigs.headOption
+          module = dep.module
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
               if org == module.organization =>

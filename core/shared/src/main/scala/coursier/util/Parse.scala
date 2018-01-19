@@ -1,11 +1,11 @@
 package coursier.util
 
-import coursier.core.{Repository, Module}
+import coursier.{Attributes, Dependency}
+import coursier.core.{Module, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
 import scala.collection.mutable.ArrayBuffer
-
 import scalaz.\/
 import scalaz.Scalaz.ToEitherOps
 
@@ -116,7 +116,7 @@ object Parse {
   // NB: Do not use this in tests. js tests will fail to find `java.util.jar.Attributes`
   // https://github.com/coursier/coursier/issues/741
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, ParsedModule] =
+  def moduleVersionConfig(s: String): Either[String, Dependency] =
     moduleVersionConfig(s, defaultScalaVersion)
 
   case class ModuleParseError(private val message: String = "",
@@ -138,7 +138,8 @@ object Parse {
     *  or
     *   org:name:version:config;attr1=val1;attr2=val2
     */
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, ParsedModule] = {
+  // TODO(wisechengyi): plumb exclusions
+  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, Dependency] = {
 
     // Assume org:name:version::attr1=val1::attr2=val2
     // That is ';' has to go after ':'.
@@ -164,26 +165,31 @@ object Parse {
 
     val parts = coords.split(":", 5)
 
+    val attributes = attrs.get("classifier") match {
+      case Some(c) => Attributes("", c)
+      case None => Attributes("", "")
+    }
+
     parts match {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map(ParsedModule(_, version, Some(config), attrs))
+          .map(Dependency(_, version, config, attributes))
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
-          .map(ParsedModule(_, version, None, attrs))
+          .map(Dependency(_, version, attributes=attributes))
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map(ParsedModule(_, version, Some(config), attrs))
+          .map(Dependency(_, version, config, attributes))
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
-          .map(ParsedModule(_, version, None, attrs))
+          .map(Dependency(_, version, attributes=attributes))
 
       case _ =>
         Left(s"Malformed dependency: $s")
@@ -203,7 +209,7 @@ object Parse {
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[ParsedModule]) =
+  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[Dependency]) =
     moduleVersionConfigs(l, defaultScalaVersion)
 
   /**
@@ -211,7 +217,7 @@ object Parse {
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
-  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[ParsedModule]) =
+  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
     valuesAndErrors(moduleVersionConfig(_, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
