@@ -215,7 +215,33 @@ class CliIntegrationTest extends FlatSpec {
           assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" -> "org.tukaani:xz:1.2"))
         }
       }
+  }
 
+  /**
+    * Result:
+    * |└─ org.apache.commons:commons-compress:1.5
+    * |   └─ org.tukaani:xz:1.2
+    */
+  "classifier" should "be fetched" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
+          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
+          fetch.apply()
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+          assert(compressNode.isDefined)
+          assert(compressNode.get.files.head._1 == "tests")
+          assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
+        }
+      }
   }
 
 }
