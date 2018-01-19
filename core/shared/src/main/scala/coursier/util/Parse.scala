@@ -124,11 +124,6 @@ object Parse {
     extends Exception(message, cause)
 
   /**
-    * This class encapsulate the module info passed in as a string, such as org:name:version:config;classifier=tests
-    */
-  final case class ParsedModule(module: Module, version: String, config: Option[String], attrs: Map[String, String])
-
-  /**
     * Parses coordinates like
     *   org:name:version
     *  possibly with attributes, like
