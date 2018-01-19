@@ -113,12 +113,6 @@ object Parse {
     }
   }
 
-//  // NB: Do not use this in tests. js tests will fail to find `java.util.jar.Attributes`
-//  // https://github.com/coursier/coursier/issues/741
-//  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-//  def moduleVersionConfig(s: String): Either[String, Dependency] =
-//    moduleVersionConfig(s, defaultScalaVersion)
-
   case class ModuleParseError(private val message: String = "",
                               private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
