@@ -45,9 +45,6 @@ abstract class CentralTests extends TestSuite {
       .run(fetch0)
       .map { res =>
 
-        if (!res.metadataErrors.isEmpty) {
-          println(s"meta error: ${res.metadataErrors}")
-        }
         assert(res.metadataErrors.isEmpty)
         assert(res.conflicts.isEmpty)
         assert(res.isDone)
