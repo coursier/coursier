@@ -143,7 +143,6 @@ $ jq < x.out
       ],
       "dependencies": []
     }
-  ],
-  "version": "0.0.1"
+  ]
 }
 ```
