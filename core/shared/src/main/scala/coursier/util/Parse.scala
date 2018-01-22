@@ -265,6 +265,15 @@ object Parse {
   }
 
   /**
+    *
+    *
+    * @param globalExcludes global excludes that need to be applied to all modules
+    * @param localExcludes excludes to be applied to specific modules
+    * @param defaultConfiguration default config
+    */
+  case class AdditionalRequirements(globalExcludes: Set[(String, String)], localExcludes: Map[String, Set[(String, String)]], defaultConfiguration: String)
+
+  /**
     * Parses a sequence of coordinates having an optional configuration.
     *
     * @return Sequence of errors, and sequence of modules / versions / optional configurations

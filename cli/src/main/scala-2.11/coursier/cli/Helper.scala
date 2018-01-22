@@ -10,6 +10,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
+import coursier.util.Parse.AdditionalRequirements
 import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
@@ -318,6 +319,8 @@ class Helper(
         (parent_and_child(0), (child_org_name(0), child_org_name(1)))
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
+
+  val additionalRequirements = AdditionalRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
 
   val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
     Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, transitive=true, scalaVersion)
