@@ -28,7 +28,7 @@ final case class ReportNode(conflict_resolution: Map[String, String], dependenci
   * Patch version x.x.1 : Increment this field when a minor format change that just adds information
   *   that an application can safely ignore.
   *
-  * Note format changes in src/docs/export.md and update the Changelog section.
+  * Note format changes in cli/README.md and update the Changelog section.
   */
 object ReportNode {
   import argonaut.ArgonautShapeless._

@@ -9,7 +9,7 @@ fetch -t <modules...> --json-output-file <report.json>
 
 The report will contain the info about resolved modules and their relationships.
 
-## Versioning
+## Version Change Log
 
 ### 0.0.1
 
