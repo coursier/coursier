@@ -113,17 +113,28 @@ object Parse {
     }
   }
 
-  case class ModuleParseError(private val message: String = "",
+  class ModuleParseError(private val message: String = "",
                               private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String, scalaVersion: String): Either[String, Dependency] =
-    moduleVersionConfig(s, Set.empty, Map.empty, transitive=true, scalaVersion)
+  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
+    val mvc: Either[String, Dependency] = moduleVersionConfig(s, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    mvc match {
+      case Left(x) => Left(x)
+      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
+    }
+  }
+
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, Dependency] =
-    moduleVersionConfig(s, Set.empty, Map.empty, transitive=true, defaultScalaVersion)
+  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
+    val mvc: Either[String, Dependency] = moduleVersionConfig(s, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    mvc match {
+      case Left(x) => Left(x)
+      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
+    }
+  }
 
   /**
     * Parses coordinates like
@@ -154,12 +165,12 @@ object Parse {
 
     val attrs = strings.drop(1).map({ x => {
       if (x.mkString.contains(argSeparator)) {
-        throw ModuleParseError(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
+        throw new ModuleParseError(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
           s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
       }
       val y = x.split("=")
       if (y.length != 2) {
-        throw ModuleParseError(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
+        throw new ModuleParseError(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
       }
       (y(0), y(1))
     }
@@ -241,12 +252,17 @@ object Parse {
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[Dependency]) =
-    moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) = {
+    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    // convert empty config to None
+    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
+  }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String], scalaVersion: String): (Seq[String], Seq[Dependency]) =
-    moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, scalaVersion)
+  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) = {
+    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    (mvc._1, mvc._2.map( d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
+  }
 
   /**
     * Parses a sequence of coordinates having an optional configuration.
