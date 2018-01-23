@@ -119,7 +119,7 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
     mvc match {
       case Left(x) => Left(x)
       case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
@@ -129,7 +129,7 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
     mvc match {
       case Left(x) => Left(x)
       case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
@@ -149,8 +149,7 @@ object Parse {
     *  Currently only "classifier" attribute is used, and others are ignored.
     */
   def moduleVersionConfig(s: String,
-                          globalExcludes: Set[(String, String)],
-                          localExcludes: Map[String, Set[(String, String)]],
+                          req: ModuleRequirements,
                           transitive: Boolean,
                           defaultScalaVersion: String): Either[String, Dependency] = {
 
@@ -183,6 +182,10 @@ object Parse {
       case None => Attributes("", "")
     }
 
+    val localExcludes = req.localExcludes
+    val globalExcludes = req.globalExcludes
+    val defaultConfig = req.defaultConfiguration
+
     parts match {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
@@ -204,6 +207,7 @@ object Parse {
             Dependency(
               mod,
               version,
+              configuration = defaultConfig,
               attributes = attributes,
               transitive = transitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
@@ -229,6 +233,7 @@ object Parse {
             Dependency(
               mod,
               version,
+              configuration = defaultConfig,
               attributes = attributes,
               transitive = transitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
@@ -253,25 +258,27 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
+    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
     // convert empty config to None
     (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, Set.empty, Map.empty, transitive = true, defaultScalaVersion)
-    (mvc._1, mvc._2.map( d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
+    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
   }
 
   /**
-    *
+    * Data holder for additional info that needs to be considered when parsing the module.
     *
     * @param globalExcludes global excludes that need to be applied to all modules
     * @param localExcludes excludes to be applied to specific modules
-    * @param defaultConfiguration default config
+    * @param defaultConfiguration default configuration
     */
-  case class AdditionalRequirements(globalExcludes: Set[(String, String)], localExcludes: Map[String, Set[(String, String)]], defaultConfiguration: String)
+  case class ModuleRequirements(globalExcludes: Set[(String, String)] = Set(),
+                                localExcludes: Map[String, Set[(String, String)]] = Map(),
+                                defaultConfiguration: String = "default(compile)")
 
   /**
     * Parses a sequence of coordinates having an optional configuration.
@@ -279,11 +286,10 @@ object Parse {
     * @return Sequence of errors, and sequence of modules / versions / optional configurations
     */
   def moduleVersionConfigs(l: Seq[String],
-                           globalExcludes: Set[(String, String)],
-                           localExcludes: Map[String, Set[(String, String)]],
+                           req: ModuleRequirements,
                            transitive: Boolean,
                            defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
-    valuesAndErrors(moduleVersionConfig(_, globalExcludes, localExcludes, transitive, defaultScalaVersion), l)
+    valuesAndErrors(moduleVersionConfig(_, req, transitive, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
     if (s == "central")

@@ -10,7 +10,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.util.Parse.AdditionalRequirements
+import coursier.util.Parse.ModuleRequirements
 import coursier.util.{Parse, Print}
 
 import scala.annotation.tailrec
@@ -320,13 +320,13 @@ class Helper(
       }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
     }
 
-  val additionalRequirements = AdditionalRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
+  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
 
   val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, globalExcludes, localExcludeMap, transitive=true, scalaVersion)
+    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
-    Parse.moduleVersionConfigs(intransitive, globalExcludes, localExcludeMap, transitive=false, scalaVersion)
+    Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
