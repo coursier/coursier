@@ -1,9 +1,9 @@
 package coursier.test
 
-import coursier.{MavenRepository, Repository, Attributes}
+import coursier.{Attributes, MavenRepository, Repository}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
-import coursier.util.Parse.ModuleParseError
+import coursier.util.Parse.{ModuleParseError, ModuleRequirements}
 import utest._
 
 object ParseTests extends TestSuite {
@@ -51,19 +51,19 @@ object ParseTests extends TestSuite {
 
     // Module parsing tests
     "org:name:version" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", Set(), Map(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right(dep) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration.isEmpty)
+          assert(dep.configuration == "default(compile)")
           assert(dep.attributes == Attributes())
       }
     }
 
     "org:name:version:conifg" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", Set(), Map(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right(dep) =>
           assert(dep.module.organization == "org.apache.avro")
@@ -75,7 +75,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", Set(), Map(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right(dep) =>
           assert(dep.module.organization == "org.apache.avro")
@@ -87,7 +87,7 @@ object ParseTests extends TestSuite {
     }
 
     "multiple attrs" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", Set(), Map(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right(dep) =>
           assert(dep.module.organization == "org.apache.avro")
@@ -99,7 +99,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with org::name:version" - {
-      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", Set(), Map(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right(dep) =>
           assert(dep.module.organization == "io.get-coursier.scala-native")
@@ -110,7 +110,7 @@ object ParseTests extends TestSuite {
 
     "illegal 1" - {
       try {
-        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", Set(), Map(), transitive = true, "2.11.11")
+        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
@@ -121,7 +121,7 @@ object ParseTests extends TestSuite {
 
     "illegal 2" - {
       try {
-        Parse.moduleVersionConfig("junit:junit:4.12,attr", Set(), Map(), transitive = true, "2.11.11")
+        Parse.moduleVersionConfig("junit:junit:4.12,attr", ModuleRequirements(), transitive = true, "2.11.11")
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
