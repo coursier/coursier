@@ -119,18 +119,6 @@ class Helper(
     MavenRepository("https://repo1.maven.org/maven2")
   )
 
-  val sourceDirectories = common.sources.map { path =>
-    val subDir = "target/repository"
-    val dir = new File(path)
-    val repoDir = new File(dir, subDir)
-    if (!dir.exists())
-      Console.err.println(s"Warning: sources $path not found")
-    else if (!repoDir.exists())
-      Console.err.println(s"Warning: directory $subDir not found under sources path $path")
-
-    repoDir
-  }
-
   val repositoriesValidation = CacheParse.repositories(common.repository).map { repos0 =>
 
     var repos = (if (common.noDefault) Nil else defaultRepositories) ++ repos0
@@ -151,10 +139,7 @@ class Helper(
 
   val repositories = repositoriesValidation match {
     case Success(repos) =>
-      val sourceRepositories = sourceDirectories.map(dir =>
-        MavenRepository(dir.toURI.toString, changing = Some(true))
-      )
-      sourceRepositories ++ repos
+      repos
     case Failure(errors) =>
       prematureExit(
         s"Error with repositories:\n${errors.list.toList.map("  "+_).mkString("\n")}"
@@ -237,36 +222,8 @@ class Helper(
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
   }
 
-  val sourceRepositoryForceVersions = sourceDirectories.flatMap { base =>
-
-    // FIXME Also done in the plugin module
-
-    def pomDirComponents(f: File, components: Vector[String]): Stream[Vector[String]] =
-      if (f.isDirectory) {
-        val components0 = components :+ f.getName
-        Option(f.listFiles()).toStream.flatten.flatMap(pomDirComponents(_, components0))
-      } else if (f.getName.endsWith(".pom"))
-        Stream(components)
-      else
-        Stream.empty
-
-    Option(base.listFiles())
-      .toVector
-      .flatten
-      .flatMap(pomDirComponents(_, Vector()))
-      // at least 3 for org / name / version - the contrary should not happen, but who knows
-      .filter(_.length >= 3)
-      .map { components =>
-        val org = components.dropRight(2).mkString(".")
-        val name = components(components.length - 2)
-        val version = components.last
-
-        Module(org, name) -> version
-      }
-  }
-
   val forceVersions = {
-    val grouped = (forceVersions0 ++ sourceRepositoryForceVersions)
+    val grouped = forceVersions0
       .groupBy { case (mod, _) => mod }
       .map { case (mod, l) => mod -> l.map { case (_, version) => version } }
 
@@ -636,12 +593,12 @@ class Helper(
     }
   }
 
-  def fetch(
+  def fetchMap(
     sources: Boolean,
     javadoc: Boolean,
     artifactTypes: Set[String],
     subset: Set[Dependency] = null
-  ): Seq[File] = {
+  ): Map[String, File] = {
 
     val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
       artifact.copy(attributes = Attributes())
@@ -700,8 +657,6 @@ class Helper(
         (artifact.url, f)
     }.toMap
 
-    val files0 = artifactToFile.values.toSeq
-
     logger.foreach(_.stop())
 
     if (verbosityLevel >= 2)
@@ -756,7 +711,16 @@ class Helper(
       pw.write(jsonStr)
       pw.close()
     }
-    files0
+    artifactToFile
+  }
+
+  def fetch(
+    sources: Boolean,
+    javadoc: Boolean,
+    artifactTypes: Set[String],
+    subset: Set[Dependency] = null
+  ): Seq[File] = {
+    fetchMap(sources,javadoc,artifactTypes,subset).values.toSeq
   }
 
   def contextLoader = Thread.currentThread().getContextClassLoader
