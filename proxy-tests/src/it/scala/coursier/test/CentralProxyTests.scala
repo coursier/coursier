@@ -1,3 +1,4 @@
+// FIXME: https://github.com/coursier/coursier/issues/752
 // package coursier.test
 //
 // object CentralNexus2ProxyTests extends CentralTests {
