@@ -45,8 +45,11 @@ abstract class CentralTests extends TestSuite {
       .run(fetch0)
       .map { res =>
 
-        assert(res.metadataErrors.isEmpty)
-        assert(res.conflicts.isEmpty)
+        val metadataErrors = res.metadataErrors
+        val conflicts = res.conflicts
+
+        assert(metadataErrors.isEmpty)
+        assert(conflicts.isEmpty)
         assert(res.isDone)
 
         res
@@ -951,6 +954,16 @@ abstract class CentralTests extends TestSuite {
             assert(expectedUrls.forall(urls))
           }
       }
+    }
+
+    'depMgmtVersionOverride - {
+
+      // checks that the version in dep mgmt doesn't override the one in the main project if it's there
+
+      val mod = Module("org.apache.spark", "spark-tags_2.10")
+      val ver = "2.2.1"
+
+      resolutionCheck(mod, ver)
     }
   }
 
