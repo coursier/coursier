@@ -45,8 +45,11 @@ abstract class CentralTests extends TestSuite {
       .run(fetch0)
       .map { res =>
 
-        assert(res.metadataErrors.isEmpty)
-        assert(res.conflicts.isEmpty)
+        val metadataErrors = res.metadataErrors
+        val conflicts = res.conflicts
+
+        assert(metadataErrors.isEmpty)
+        assert(conflicts.isEmpty)
         assert(res.isDone)
 
         res
