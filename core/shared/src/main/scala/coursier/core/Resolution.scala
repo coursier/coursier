@@ -262,7 +262,7 @@ object Resolution {
 
         for ((mgmtConfig, mgmtDep) <- dict.get(DepMgmt.key(dep0))) {
 
-          if (mgmtDep.version.nonEmpty)
+          if (dep.version.isEmpty && mgmtDep.version.nonEmpty)
             dep = dep.copy(version = mgmtDep.version)
 
           if (config.isEmpty)
