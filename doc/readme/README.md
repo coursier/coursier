@@ -412,6 +412,7 @@ Loading...
 Welcome to the Ammonite Repl 0.7.0
 (Scala 2.11.8 Java 1.8.0_60)
 @
+```
 
 Fetch with module level attributes, as opposed to e.g. `--classifier` is applied globally.
 ```
