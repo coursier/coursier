@@ -219,7 +219,8 @@ lazy val web = project
     )
   )
 
-lazy val doc = project
+lazy val readme = project
+  .in(file("doc/readme"))
   .dependsOn(coreJvm, cache)
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(TutPlugin)
@@ -236,9 +237,9 @@ lazy val `sbt-shared` = project
   .settings(
     plugin,
     utest,
-//  addSbtPlugin("com.dwijnand" % "sbt-compat" % "1.2.0")
+//  addSbtPlugin("com.dwijnand" % "sbt-compat" % "1.2.0+2-f30b82f4")
     libs ++= {
-      val dependency = "com.dwijnand" % "sbt-compat" % "1.2.0"
+      val dependency = "com.dwijnand" % "sbt-compat" % "1.2.0+2-f30b82f4"
       val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
       val scalaV = (scalaBinaryVersion in update).value
       val m = Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
@@ -309,7 +310,7 @@ lazy val jvm = project
     `sbt-coursier`,
     `sbt-pgp-coursier`,
     `sbt-shading`,
-    doc,
+    readme,
     okhttp
   )
   .settings(
@@ -372,7 +373,7 @@ lazy val coursier = project
     `sbt-pgp-coursier`,
     `sbt-shading`,
     web,
-    doc,
+    readme,
     okhttp
   )
   .settings(

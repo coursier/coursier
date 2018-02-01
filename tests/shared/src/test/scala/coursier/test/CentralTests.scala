@@ -2,8 +2,9 @@ package coursier
 package test
 
 import utest._
-import scala.async.Async.{ async, await }
+import scala.async.Async.{async, await}
 
+import coursier.MavenRepository
 import coursier.Platform.fetch
 import coursier.test.compatibility._
 
@@ -38,7 +39,7 @@ abstract class CentralTests extends TestSuite {
     Resolution(
       deps,
       filter = filter,
-      userActivations = profiles.map(_.iterator.map(_ -> true).toMap)
+      userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
     )
       .process
       .run(fetch0)
@@ -261,10 +262,16 @@ abstract class CentralTests extends TestSuite {
     }
 
     'spark - {
-      resolutionCheck(
+      * - resolutionCheck(
         Module("org.apache.spark", "spark-core_2.11"),
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))
+      )
+
+      'scala210 - resolutionCheck(
+        Module("org.apache.spark", "spark-core_2.10"),
+        "2.1.1",
+        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
       )
     }
 
@@ -500,6 +507,57 @@ abstract class CentralTests extends TestSuite {
           "maven-plugin",
           "jar"
         )
+      }
+    }
+
+    'classifier - {
+
+      // Adding extra repo so it's agnostic from nexus which only has the poms
+      val extraRepo = MavenRepository("https://repo1.maven.org/maven2")
+
+      'vanilla - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1"
+            )
+          )
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(filenames.contains("avro-1.8.1.jar"))
+          assert(!filenames.contains("avro-1.8.1-tests.jar"))
+        }
+      }
+
+      'tests - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+            )
+          )
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(!filenames.contains("avro-1.8.1.jar"))
+          assert(filenames.contains("avro-1.8.1-tests.jar"))
+        }
+      }
+
+      'mixed - {
+        async {
+          val deps = Set(
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1"
+            ),
+            Dependency(
+              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+            )
+          )
+          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
+          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+          assert(filenames.contains("avro-1.8.1.jar"))
+          assert(filenames.contains("avro-1.8.1-tests.jar"))
+        }
       }
     }
 
