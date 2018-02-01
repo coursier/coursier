@@ -414,6 +414,11 @@ Welcome to the Ammonite Repl 0.7.0
 @
 ```
 
+Fetching and generate a machine readable json report. [Json Report Documentation](doc/cli.md)
+```
+$ ./coursier fetch org.apache.avro:avro:1.7.4 --json-output-file report.json
+
+```
 
 ```tut:invisible
 // TODO options: repositories, sources/javadoc, attributes
