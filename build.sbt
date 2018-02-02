@@ -238,9 +238,8 @@ lazy val `sbt-shared` = project
   .settings(
     plugin,
     utest,
-// once sbt 0.13.17 is released the following line can be used
-// instead of the verbose dependency declaration on sbt-compat below
-//  addSbtPlugin("com.dwijnand" % "sbt-compat" % "1.2.1")
+    // because we don't publish for 2.11 the following declaration
+    // is more wordy than usual
     libs ++= {
       val dependency = "com.dwijnand" % "sbt-compat" % "1.2.1"
       val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
