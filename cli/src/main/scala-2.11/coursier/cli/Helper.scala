@@ -285,6 +285,10 @@ class Helper(
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
     Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
+  // Parse module version configs with URL without transitive deps.
+  val (modWithUrlVerCfgErrors: Seq[String], modWithUrlDeps: Seq[Dependency]) =
+    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=false, scalaVersion)
+
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
   }
@@ -298,7 +302,7 @@ class Helper(
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexDeps ++ normalDeps
 
-  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps
+  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps ++ modWithUrlDeps
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -312,6 +316,9 @@ class Helper(
   }
 
   val userEnabledProfiles = profile.toSet
+
+  // If attribute contains url, don't resolve. We have enough info to get jar.
+  // Double check that this is the behavior we want.
 
   val startRes = Resolution(
     allDependencies.toSet,
@@ -370,6 +377,7 @@ class Helper(
 
   logger.foreach(_.init())
 
+  // Resolution starts here
   val res =
     if (benchmark > 0) {
       class Counter(var value: Int = 0) {
@@ -600,7 +608,7 @@ class Helper(
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
+    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact => {}
       artifact.copy(attributes = Attributes())
     }.distinct
 

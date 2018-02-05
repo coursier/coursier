@@ -1072,6 +1072,11 @@ final case class Resolution(
         }
       }
 
+//      if (!dep.attributes.url.isEmpty) {
+//        val urlAttr: String = dep.attributes.url
+//        i
+//      }
+
       artifact <- source
         .artifacts(dep, proj, classifiers)
       if optional || !artifact.isOptional
