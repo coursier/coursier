@@ -269,7 +269,7 @@ final case class MavenSource(
     res.map(withMetadataExtra)
   }
 
-  private val dummyArtifact = Artifact("", Map(), Map(), Attributes("", ""), changing = false, None)
+  private val dummyArtifact = Artifact("", Map(), Map(), Attributes("", "", ""), changing = false, None)
 
   def artifacts(
     dependency: Dependency,

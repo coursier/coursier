@@ -1033,7 +1033,7 @@ final case class Resolution(
   ): Seq[Artifact] =
     dependencyArtifacts0(overrideClassifiers, optional).map {
       case (_, artifact) =>
-        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", ""))
+        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", "", ""))
     }.distinct
 
   // keepAttributes to false is a temporary hack :-|

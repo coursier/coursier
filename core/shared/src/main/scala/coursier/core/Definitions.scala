@@ -63,13 +63,14 @@ final case class Dependency(
 // Maven-specific
 final case class Attributes(
   `type`: String,
-  classifier: String
+  classifier: String,
+  url: String
 ) {
   def publication(name: String, ext: String): Publication =
     Publication(name, `type`, ext, classifier)
 
   def isEmpty: Boolean =
-    `type`.isEmpty && classifier.isEmpty
+    `type`.isEmpty && classifier.isEmpty && url.isEmpty
 }
 
 final case class Project(
@@ -191,7 +192,7 @@ final case class Publication(
   ext: String,
   classifier: String
 ) {
-  def attributes: Attributes = Attributes(`type`, classifier)
+  def attributes: Attributes = Attributes(`type`, classifier, "")
 }
 
 final case class Artifact(

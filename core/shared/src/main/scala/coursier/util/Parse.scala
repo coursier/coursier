@@ -177,10 +177,12 @@ object Parse {
 
     val parts = coords.split(":", 5)
 
-    val attributes = attrs.get("classifier") match {
-      case Some(c) => Attributes("", c)
-      case None => Attributes("", "")
-    }
+//    val attributes0 = attrs.get("classifier") match {
+//      case Some(c) => Attributes("", c)
+//      case None => Attributes("", "")
+//    }
+//
+    val attributes = Attributes("", attrs.getOrElse("classifier", ""), attrs.getOrElse("url", ""))
 
     val localExcludes = req.localExcludes
     val globalExcludes = req.globalExcludes

@@ -45,7 +45,7 @@ object Print {
     )
 
     val deps1 = minDeps
-      .groupBy(_.copy(configuration = "", attributes = Attributes("", "")))
+      .groupBy(_.copy(configuration = "", attributes = Attributes("", "", "")))
       .toVector
       .map { case (k, l) =>
         k.copy(configuration = l.toVector.map(_.configuration).sorted.distinct.mkString(";"))
@@ -148,7 +148,7 @@ object Print {
             .filterNot(dependencies.map(_.moduleVersion).toSet).map {
               case (mod, ver) =>
                 Elem(
-                  Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                  Dependency(mod, ver, "", Set.empty, Attributes("", "", ""), false, false),
                   excluded = true
                 )
             }

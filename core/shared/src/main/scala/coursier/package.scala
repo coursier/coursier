@@ -34,9 +34,10 @@ package object coursier {
   object Attributes extends Serializable {
     def apply(
       `type`: String = "",
-      classifier: String = ""
+      classifier: String = "",
+      url: String = ""
     ): Attributes =
-      core.Attributes(`type`, classifier)
+      core.Attributes(`type`, classifier, url)
   }
 
   type Project = core.Project
