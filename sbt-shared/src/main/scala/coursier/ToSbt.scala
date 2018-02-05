@@ -26,7 +26,7 @@ object ToSbt {
 
   val moduleId = caching[(Dependency, Map[String, String]), ModuleID] {
     case (dependency, extraProperties) =>
-      ModuleID(
+      sbt.librarymanagement.ModuleID(
         dependency.module.organization,
         dependency.module.name,
         dependency.version
