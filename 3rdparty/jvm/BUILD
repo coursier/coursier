@@ -116,7 +116,7 @@ jar_library(
         scala_jar(
             name = "case-app",
             org = "com.github.alexarchambault",
-            rev = "1.1.3",
+            rev = "2.0.0-M3",
         ),
     ],
 )
@@ -127,7 +127,7 @@ jar_library(
         scala_jar(
             name = "argonaut-shapeless_6.2",
             org = "com.github.alexarchambault",
-            rev = "1.2.0-M6",
+            rev = "1.2.0-M8",
         ),
     ],
 )
@@ -146,13 +146,18 @@ jar_library(
 jar_library(
     name = "scala-native",
     jars = [
-        jar(
-            name = "nativelib_native0.3_2.12",
+        scala_jar(
+            name = "nir",
             org = "org.scala-native",
             rev = "0.3.6",
         ),
-        jar(
-            name = "tools_2.12",
+        scala_jar(
+            name = "tools",
+            org = "org.scala-native",
+            rev = "0.3.6",
+        ),
+        scala_jar(
+            name = "util",
             org = "org.scala-native",
             rev = "0.3.6",
         ),
