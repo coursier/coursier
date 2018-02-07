@@ -12,7 +12,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class CliIntegrationTest extends FlatSpec with CliTestLib {
+class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   def getReportFromJson(f: File): ReportNode = {
     // Parse back the output json file
