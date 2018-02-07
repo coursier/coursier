@@ -4,5 +4,5 @@ junit_tests(
         "3rdparty/jvm:scalatest",
         "cli/src/main/scala-2.11:cli",
     ],
-    sources = globs("*.scala"),
+    sources = ["CliFetchIntegrationTest.scala", "CliUnitTest.scala"],
 )
