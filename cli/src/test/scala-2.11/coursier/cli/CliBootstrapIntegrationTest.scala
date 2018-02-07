@@ -11,21 +11,7 @@ import org.scalatest.junit.JUnitRunner
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
   */
 @RunWith(classOf[JUnitRunner])
-class CliBootstrapIntegrationTest extends FlatSpec {
-
-  def withFile(content: String)(testCode: (File, FileWriter) => Any) {
-    val file = File.createTempFile("hello", "world") // create the fixture
-    val writer = new FileWriter(file)
-    writer.write(content)
-    writer.flush()
-    try {
-      testCode(file, writer) // "loan" the fixture to the test
-    }
-    finally {
-      writer.close()
-      file.delete()
-    }
-  }
+class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
   "bootstrap" should "not add POMs to the classpath" in withFile() {
 

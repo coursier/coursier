@@ -1,7 +1,6 @@
 package coursier.cli
 
 import java.io._
-import java.util.zip.ZipInputStream
 
 import argonaut.Argonaut._
 import coursier.cli.util.{DepNode, ReportNode}
@@ -9,22 +8,9 @@ import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
-class CliFetchIntegrationTest extends FlatSpec {
 
-  def withFile(content: String = "")(testCode: (File, FileWriter) => Any) {
-    val file = File.createTempFile("hello", "world") // create the fixture
-    val writer = new FileWriter(file)
-    writer.write(content)
-    writer.flush()
-    try {
-      testCode(file, writer) // "loan" the fixture to the test
-    }
-    finally {
-      writer.close()
-      file.delete()
-    }
-  }
+@RunWith(classOf[JUnitRunner])
+class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   def getReportFromJson(f: File): ReportNode = {
     // Parse back the output json file
@@ -38,19 +24,6 @@ class CliFetchIntegrationTest extends FlatSpec {
     }
   }
 
-  trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
-    private var remainingArgs1 = Seq.empty[String]
-    private var extraArgs1 = Seq.empty[String]
-
-    override def setRemainingArgs(remainingArgs: Seq[String], extraArgs: Seq[String]): Unit = {
-      remainingArgs1 = remainingArgs
-    }
-
-    override def remainingArgs: Seq[String] = remainingArgs1
-
-    def extraArgs: Seq[String] =
-      extraArgs1
-  }
 
   "Normal fetch" should "get all files" in {
 
