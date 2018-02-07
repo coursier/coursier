@@ -3,6 +3,8 @@ package coursier.cli
 import java.io._
 import java.util.zip.ZipInputStream
 
+import caseapp.core.RemainingArgs
+import coursier.cli.options._
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -34,15 +36,18 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         isolateTarget = List("foo"),
         isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
       )
-      val bootstrapOptions = BootstrapOptions(
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
         isolated = isolatedLoaderOptions,
-        force = true
+        force = true,
+        common = common
       )
+      val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
 
-      val bootstrap = new Bootstrap(artifactOptions, bootstrapOptions) with TestOnlyExtraArgsApp
-      bootstrap.setRemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
-      bootstrap.apply()
+      Bootstrap.run(
+        bootstrapOptions,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
 
       var fis: InputStream = null
 

@@ -19,18 +19,3 @@ trait CliTestLib {
     }
   }
 }
-
-
-trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
-  private var remainingArgs1 = Seq.empty[String]
-  private var extraArgs1 = Seq.empty[String]
-
-  override def setRemainingArgs(remainingArgs: Seq[String], extraArgs: Seq[String]): Unit = {
-    remainingArgs1 = remainingArgs
-  }
-
-  override def remainingArgs: Seq[String] = remainingArgs1
-
-  def extraArgs: Seq[String] =
-    extraArgs1
-}

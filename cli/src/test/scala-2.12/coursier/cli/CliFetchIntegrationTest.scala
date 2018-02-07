@@ -1,16 +1,18 @@
 package coursier.cli
 
 import java.io._
+import java.util.zip.ZipInputStream
 
 import argonaut.Argonaut._
 import coursier.cli.util.{DepNode, ReportNode}
+import caseapp.core.RemainingArgs
+import coursier.cli.options._
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 
-
 @RunWith(classOf[JUnitRunner])
-class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
+class CliIntegrationTest extends FlatSpec with CliTestLib {
 
   def getReportFromJson(f: File): ReportNode = {
     // Parse back the output json file
@@ -24,13 +26,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
     }
   }
 
-
   "Normal fetch" should "get all files" in {
 
     val fetchOpt = FetchOptions(common = CommonOptions())
-    val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-    fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
-    fetch.apply()
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
 
   }
@@ -41,9 +40,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
-      fetch.apply()
+      val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
       val filesFetched = fetch.files0.map(_.getName).toSet
       val expected = Set("junit-4.12.jar")
       assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
@@ -74,9 +71,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq())
-      fetch.apply()
+      val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq()))
 
       val filesFetched = fetch.files0.map(_.getName).toSet
       assert(!filesFetched.contains("xz-1.0.jar"))
@@ -124,9 +119,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq())
-          fetch.apply()
+          val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq()))
           val filesFetched = fetch.files0.map(_.getName).toSet
           assert(filesFetched.contains("xz-1.0.jar"))
 
@@ -158,9 +151,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution.isEmpty)
@@ -181,9 +172,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" -> "org.tukaani:xz:1.2"))
@@ -203,9 +192,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
-          fetch.apply()
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -232,12 +222,16 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(
-            Seq("org.apache.commons:commons-compress:1.5,classifier=tests",
-              "org.apache.commons:commons-compress:1.5"),
-            Seq())
-          fetch.apply()
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,classifier=tests",
+                "org.apache.commons:commons-compress:1.5"
+              ),
+              Seq()
+            )
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -266,8 +260,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Nil, Nil))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
@@ -292,9 +285,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq(), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -320,9 +311,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
-          fetch.apply()
+          Fetch(
+            fetchOpt,
+            RemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -353,9 +345,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
             forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq(), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -379,13 +369,15 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       )
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("org.apache.spark:spark-core_2.10:2.2.1"), Seq())
-      fetch.apply()
+      Fetch(
+        fetchOpt,
+        RemainingArgs(Seq("org.apache.spark:spark-core_2.10:2.2.1"), Seq())
+      )
 
       val node = getReportFromJson(jsonFile)
 
       assert(node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.10.")))
       assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
   }
+
 }
