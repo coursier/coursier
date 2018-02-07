@@ -13,6 +13,19 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class CliBootstrapIntegrationTest extends FlatSpec {
 
+  def withFile(content: String)(testCode: (File, FileWriter) => Any) {
+    val file = File.createTempFile("hello", "world") // create the fixture
+    val writer = new FileWriter(file)
+    writer.write(content)
+    writer.flush()
+    try {
+      testCode(file, writer) // "loan" the fixture to the test
+    }
+    finally {
+      writer.close()
+      file.delete()
+    }
+  }
 
   "bootstrap" should "not add POMs to the classpath" in withFile() {
 
