@@ -91,7 +91,7 @@ jsCompile() {
 }
 
 jvmCompile() {
-  sbt -d ++$SCALA_VERSION jvm/compile jvm/test:compile
+  sbt ++$SCALA_VERSION jvm/compile jvm/test:compile
 }
 
 runJsTests() {
