@@ -1,9 +1,9 @@
-sudo: false
+sudo: required
 language: java
 install:
   - npm install
-  - curl http://dl.bintray.com/sbt/debian/sbt-1.0.4.deb > sbt.deb
-  - dpkg -i sbt.deb
+  - curl -L -o sbt.deb http://dl.bintray.com/sbt/debian/sbt-1.0.4.deb
+  - sudo dpkg -i sbt.deb
 os:
   - osx
 script:
