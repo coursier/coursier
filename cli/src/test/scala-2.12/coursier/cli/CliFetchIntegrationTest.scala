@@ -5,26 +5,14 @@ import java.util.zip.ZipInputStream
 
 import argonaut.Argonaut._
 import coursier.cli.util.{DepNode, ReportNode}
+import caseapp.core.RemainingArgs
+import coursier.cli.options._
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class CliIntegrationTest extends FlatSpec {
-
-  def withFile(content: String = "")(testCode: (File, FileWriter) => Any) {
-    val file = File.createTempFile("hello", "world") // create the fixture
-    val writer = new FileWriter(file)
-    writer.write(content)
-    writer.flush()
-    try {
-      testCode(file, writer) // "loan" the fixture to the test
-    }
-    finally {
-      writer.close()
-      file.delete()
-    }
-  }
+class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   def getReportFromJson(f: File): ReportNode = {
     // Parse back the output json file
@@ -38,26 +26,10 @@ class CliIntegrationTest extends FlatSpec {
     }
   }
 
-  trait TestOnlyExtraArgsApp extends caseapp.core.DefaultArgsApp {
-    private var remainingArgs1 = Seq.empty[String]
-    private var extraArgs1 = Seq.empty[String]
-
-    override def setRemainingArgs(remainingArgs: Seq[String], extraArgs: Seq[String]): Unit = {
-      remainingArgs1 = remainingArgs
-    }
-
-    override def remainingArgs: Seq[String] = remainingArgs1
-
-    def extraArgs: Seq[String] =
-      extraArgs1
-  }
-
   "Normal fetch" should "get all files" in {
 
     val fetchOpt = FetchOptions(common = CommonOptions())
-    val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-    fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
-    fetch.apply()
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
 
   }
@@ -68,9 +40,7 @@ class CliIntegrationTest extends FlatSpec {
       val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("junit:junit:4.12"), Seq())
-      fetch.apply()
+      val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
       val filesFetched = fetch.files0.map(_.getName).toSet
       val expected = Set("junit-4.12.jar")
       assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
@@ -101,9 +71,7 @@ class CliIntegrationTest extends FlatSpec {
       val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq())
-      fetch.apply()
+      val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq()))
 
       val filesFetched = fetch.files0.map(_.getName).toSet
       assert(!filesFetched.contains("xz-1.0.jar"))
@@ -151,9 +119,7 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq())
-          fetch.apply()
+          val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq()))
           val filesFetched = fetch.files0.map(_.getName).toSet
           assert(filesFetched.contains("xz-1.0.jar"))
 
@@ -185,9 +151,7 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution.isEmpty)
@@ -208,9 +172,7 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" -> "org.tukaani:xz:1.2"))
@@ -230,9 +192,10 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
-          fetch.apply()
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -259,12 +222,16 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(
-            Seq("org.apache.commons:commons-compress:1.5,classifier=tests",
-              "org.apache.commons:commons-compress:1.5"),
-            Seq())
-          fetch.apply()
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,classifier=tests",
+                "org.apache.commons:commons-compress:1.5"
+              ),
+              Seq()
+            )
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -293,8 +260,7 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Nil, Nil))
 
           val node: ReportNode = getReportFromJson(jsonFile)
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
@@ -319,9 +285,7 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq(), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -347,9 +311,10 @@ class CliIntegrationTest extends FlatSpec {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
-          fetch.apply()
+          Fetch(
+            fetchOpt,
+            RemainingArgs(Seq("org.apache.commons:commons-compress:1.5,classifier=tests"), Seq())
+          )
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -380,9 +345,7 @@ class CliIntegrationTest extends FlatSpec {
             forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq(), Seq())
-          fetch.apply()
+          Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
@@ -406,9 +369,10 @@ class CliIntegrationTest extends FlatSpec {
       )
       val fetchOpt = FetchOptions(common = commonOpt)
 
-      val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-      fetch.setRemainingArgs(Seq("org.apache.spark:spark-core_2.10:2.2.1"), Seq())
-      fetch.apply()
+      Fetch(
+        fetchOpt,
+        RemainingArgs(Seq("org.apache.spark:spark-core_2.10:2.2.1"), Seq())
+      )
 
       val node = getReportFromJson(jsonFile)
 
@@ -416,139 +380,4 @@ class CliIntegrationTest extends FlatSpec {
       assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
   }
 
-  "bootstrap" should "not add POMs to the classpath" in withFile() {
-
-    def zipEntryContent(zis: ZipInputStream, path: String): Array[Byte] = {
-      val e = zis.getNextEntry
-      if (e == null)
-        throw new NoSuchElementException(s"Entry $path in zip file")
-      else if (e.getName == path)
-        coursier.Platform.readFullySync(zis)
-      else
-        zipEntryContent(zis, path)
-    }
-
-    (bootstrapFile, _) =>
-      val artifactOptions = ArtifactOptions()
-      val common = CommonOptions(
-        repository = List("bintray:scalameta/maven")
-      )
-      val isolatedLoaderOptions = IsolatedLoaderOptions(
-        isolateTarget = List("foo"),
-        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
-      )
-      val bootstrapOptions = BootstrapOptions(
-        output = bootstrapFile.getPath,
-        isolated = isolatedLoaderOptions,
-        force = true
-      )
-
-      val bootstrap = new Bootstrap(artifactOptions, bootstrapOptions) with TestOnlyExtraArgsApp
-      bootstrap.setRemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
-      bootstrap.apply()
-
-      var fis: InputStream = null
-
-      val content = try {
-        fis = new FileInputStream(bootstrapFile)
-        coursier.Platform.readFullySync(fis)
-      } finally {
-        if (fis != null) fis.close()
-      }
-
-      val actualContent = {
-        val header = Seq[Byte](0x50, 0x4b, 0x03, 0x04)
-        val idx = content.indexOfSlice(header)
-        if (idx < 0)
-          throw new Exception(s"ZIP header not found in ${bootstrapFile.getPath}")
-        else
-          content.drop(idx)
-      }
-
-      val zis = new ZipInputStream(new ByteArrayInputStream(actualContent))
-
-      val lines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), "UTF-8").lines.toVector
-
-      val extensions = lines
-        .map { l =>
-          val idx = l.lastIndexOf('.')
-          if (idx < 0)
-            l
-          else
-            l.drop(idx + 1)
-        }
-        .toSet
-
-      assert(extensions == Set("jar"))
-  }
-
-  /**
-   * Result:
-   * |└─ org.apache.commons:commons-compress:1.5
-   */
-  "local url" should "have dorothy.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
-
-          // generate temp jar with fake content
-          val file = new File("dorothy.jar")
-          val bw = new BufferedWriter(new FileWriter(file))
-          bw.write("tada")
-          bw.close()
-          val path = file.getAbsolutePath
-          val someUrl = "file://" + path
-          val someEncodedUrl = "file%3A%2F%2F" + path
-
-          // fetch with url set to temp jar
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,url=" + someUrl), Seq())
-          fetch.apply()
-
-          // check the json and verify that the contents of the jar in the json is the same as the temp jar
-          val node: ReportNode = getReportFromJson(jsonFile)
-
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-          assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._2.contains(path))
-
-          assert(compressNode.get.dependencies.isEmpty)
-        }
-      }
-  }
-
-  /**
-   * Result:
-   * |└─ org.apache.commons:commons-compress:1.5
-   */
-  "external url" should "have commons-compress-1.5.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
-
-          // generate temp jar with fake content
-          val someEncodedUrl = "https%3A%2F%2Fmvnrepository.com%2Fartifact%2Forg.apache.commons%2Fcommons-compress"
-          val someUrl = "https://mvnrepository.com/artifact/org.apache.commons/commons-compress"
-          val anotherUrl = "http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
-
-          // fetch with url set to temp jar
-          val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp
-          fetch.setRemainingArgs(Seq("org.apache.commons:commons-compress:1.5,url=" + someUrl), Seq())
-          fetch.apply()
-
-          // check the json and verify that the contents of the jar in the json is the same as the temp jar
-          val node: ReportNode = getReportFromJson(jsonFile)
-
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-          assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._2.contains("commons-compress"))
-
-          assert(compressNode.get.dependencies.isEmpty)
-        }
-      }
-  }
 }

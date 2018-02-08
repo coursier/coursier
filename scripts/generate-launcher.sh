@@ -1,12 +1,12 @@
 #!/bin/bash
 
-VERSION=1.0.1-M1
+VERSION=1.0.1
 CACHE_VERSION=v1
 
 SBTPACK_LAUNCHER="$(dirname "$0")/../cli/target/pack/bin/coursier"
 
 if [ ! -f "$SBTPACK_LAUNCHER" ]; then
-  sbt ++2.11.11 "project cli" pack
+  sbt ++2.12.4 "project cli" pack
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
