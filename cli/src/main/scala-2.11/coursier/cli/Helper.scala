@@ -285,10 +285,6 @@ class Helper(
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
     Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
-  // Parse module version configs with URL without transitive deps.
-//  val (modWithUrlVerCfgErrors: Seq[String], modWithUrlDeps: Seq[Dependency]) =
-//    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=false, scalaVersion)
-
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
   }
@@ -302,7 +298,7 @@ class Helper(
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexDeps ++ normalDeps
 
-  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps//++ modWithUrlDeps
+  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)

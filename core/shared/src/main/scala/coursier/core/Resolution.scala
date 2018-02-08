@@ -1051,9 +1051,26 @@ final case class Resolution(
   private def dependencyArtifacts0(
     overrideClassifiers: Option[Seq[String]],
     optional: Boolean
-  ): Seq[(Dependency, Artifact)] =
-    for {
-      dep <- minDependencies.toSeq
+  ): Seq[(Dependency, Artifact)] = {
+
+    val (depsWithUrls, otherDeps) = minDependencies.toSeq.partition(dep => !dep.attributes.url.isEmpty)
+    val depToArtifactsForDepsWithUrls = for {
+      dep <- depsWithUrls
+
+      artifact =
+      Artifact(
+        dep.attributes.url,
+        Map.empty,
+        Map.empty,
+        dep.attributes,
+        changing = true,
+        None
+      )
+
+    } yield dep -> artifact
+
+    val depToArtifactsForOtherDeps = for {
+      dep <- otherDeps
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
@@ -1072,15 +1089,13 @@ final case class Resolution(
         }
       }
 
-//      if (!dep.attributes.url.isEmpty) {
-//        val urlAttr: String = dep.attributes.url
-//        i
-//      }
-
       artifact <- source
         .artifacts(dep, proj, classifiers)
       if optional || !artifact.isOptional
     } yield dep -> artifact
+
+    depToArtifactsForOtherDeps ++ depToArtifactsForDepsWithUrls
+  }
 
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
     dependencyArtifacts0(None, optional = false)

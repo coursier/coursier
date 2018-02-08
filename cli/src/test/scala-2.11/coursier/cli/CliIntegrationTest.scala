@@ -533,6 +533,7 @@ class CliIntegrationTest extends FlatSpec {
           // generate temp jar with fake content
           val someEncodedUrl = "https%3A%2F%2Fmvnrepository.com%2Fartifact%2Forg.apache.commons%2Fcommons-compress"
           val someUrl = "https://mvnrepository.com/artifact/org.apache.commons/commons-compress"
+          val anotherUrl = "http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
 
           // fetch with url set to temp jar
           val fetch = new Fetch(fetchOpt) with TestOnlyExtraArgsApp

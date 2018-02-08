@@ -177,12 +177,14 @@ object Parse {
 
     val parts = coords.split(":", 5)
 
-//    val attributes0 = attrs.get("classifier") match {
-//      case Some(c) => Attributes("", c)
-//      case None => Attributes("", "")
-//    }
-//
     val attributes = Attributes("", attrs.getOrElse("classifier", ""), attrs.getOrElse("url", ""))
+    val revisedTransitive = {
+      if (!attributes.url.isEmpty)
+        // If url is present, the dep is intransitive.
+        false
+      else
+        transitive
+    }
 
     val localExcludes = req.localExcludes
     val globalExcludes = req.globalExcludes
@@ -198,7 +200,7 @@ object Parse {
               version,
               config,
               attributes,
-              transitive = transitive,
+              transitive = revisedTransitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
@@ -211,7 +213,7 @@ object Parse {
               version,
               configuration = defaultConfig,
               attributes = attributes,
-              transitive = transitive,
+              transitive = revisedTransitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
@@ -224,7 +226,7 @@ object Parse {
               version,
               config,
               attributes,
-              transitive = transitive,
+              transitive = revisedTransitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
@@ -237,7 +239,7 @@ object Parse {
               version,
               configuration = defaultConfig,
               attributes = attributes,
-              transitive = transitive,
+              transitive = revisedTransitive,
               exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
