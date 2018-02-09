@@ -380,4 +380,97 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
   }
 
+  /**
+    * Result:
+    * |└─ org.apache.commons:commons-compress:1.5
+    */
+  "fetch with local dep url" should "have dorothy.jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          // generate temp jar with fake content
+          val file = new File("dorothy.jar")
+          val bw = new BufferedWriter(new FileWriter(file))
+          bw.write("tada")
+          bw.close()
+          val path = file.getAbsolutePath
+          println(path)
+//          val someUrl = "file://" + path
+          val someEncodedUrl = "file%3A%2F%2F" + path.replace("/", "%2F")
+
+          // fetch with url set to temp jar
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,url=" + someEncodedUrl
+              ),
+              Seq()
+            )
+          )
+
+          // check the json and verify that the contents of the jar in the json is the same as the temp jar
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+//            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+//            .sortBy(_.files.head._1.length) // sort by first classifier length
+          assert(compressNode.isDefined)
+          println(compressNode.get.files)
+
+          assert(compressNode.get.files.head._1 == "")
+          assert(compressNode.get.files.head._2.contains(path))
+
+//          assert(compressNode.last.files.head._1 == "tests") //should fail
+//          assert(compressNode.last.files.head._2.contains("commons-compress-1.5-tests.jar")) //should fail
+        }
+      }
+  }
+//
+//  /**
+//   * Result:
+//   * |└─ org.apache.commons:commons-compress:1.5
+//   */
+//  "external url" should "have commons-compress-1.5.jar" in withFile() {
+//    (excludeFile, _) =>
+//      withFile() {
+//        (jsonFile, _) => {
+//          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+//          val fetchOpt = FetchOptions(common = commonOpt)
+//
+//          // generate temp jar with fake content
+//          val someEncodedUrl = "https%3A%2F%2Fmvnrepository.com%2Fartifact%2Forg.apache.commons%2Fcommons-compress"
+//          val someUrl = "https://mvnrepository.com/artifact/org.apache.commons/commons-compress"
+//          val anotherUrl = "http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+//
+//          // fetch with different package url
+//          Fetch.run(
+//            fetchOpt,
+//            RemainingArgs(
+//              Seq(
+//                "org.apache.commons:commons-compress:1.5,url=" + someUrl
+//              ),
+//              Seq()
+//            )
+//          )
+//
+//          // check the json and verify that the contents of the jar in the json is the same as the temp jar
+//          val node: ReportNode = getReportFromJson(jsonFile)
+//
+//          val compressNodes: Seq[DepNode] = node.dependencies
+//            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+//            .sortBy(_.files.head._1.length) // sort by first classifier length
+//          assert(compressNodes.length == 1)
+//          assert(compressNodes.head.files.head._1 == "")
+//          assert(compressNodes.head.files.head._2.contains(someUrl))
+//
+//          assert(compressNodes.last.files.head._1 == "tests") //should fail
+//          assert(compressNodes.last.files.head._2.contains("commons-compress-1.5-tests.jar")) //should fail
+//        }
+//      }
+//  }
+
 }

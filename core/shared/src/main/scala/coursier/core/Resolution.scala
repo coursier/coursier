@@ -1056,17 +1056,17 @@ final case class Resolution(
     val (depsWithUrls, otherDeps) = minDependencies.toSeq.partition(dep => !dep.attributes.url.isEmpty)
     val depToArtifactsForDepsWithUrls = for {
       dep <- depsWithUrls
+      attributes = dep.attributes.copy(`type` = "jar")
 
       artifact =
       Artifact(
         dep.attributes.url,
         Map.empty,
         Map.empty,
-        dep.attributes,
+        attributes,
         changing = true,
         None
       )
-
     } yield dep -> artifact
 
     val depToArtifactsForOtherDeps = for {

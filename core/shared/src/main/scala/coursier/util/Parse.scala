@@ -5,6 +5,8 @@ import coursier.core.{Module, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
+import fastparse.all._
+
 import scala.collection.mutable.ArrayBuffer
 import scalaz.\/
 import scalaz.Scalaz.ToEitherOps
