@@ -2,7 +2,7 @@ package coursier.cli
 
 import java.io._
 import java.util.zip.ZipInputStream
-
+import java.net.URLEncoder.encode
 import argonaut.Argonaut._
 import coursier.cli.util.{DepNode, ReportNode}
 import caseapp.core.RemainingArgs
@@ -10,6 +10,7 @@ import coursier.cli.options._
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
+import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
@@ -384,93 +385,228 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
     * Result:
     * |└─ org.apache.commons:commons-compress:1.5
     */
-  "fetch with local dep url" should "have dorothy.jar" in withFile() {
+  "local dep url" should "have coursier-fetch-test.jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          // generate temp jar with fake content
+          val filename = "coursier-fetch-test.jar"
+          val jarFileContent = "tada"
+          val file = new File(filename)
+          val bw = new BufferedWriter(new FileWriter(file))
+          bw.write(jarFileContent)
+          bw.close()
+          val path = file.getAbsolutePath
+          val encodedUrl = encode("file://" + path, "UTF-8")
+
+          try {
+            val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+            val fetchOpt = FetchOptions(common = commonOpt)
+
+            // fetch with encoded url set to temp jar
+            Fetch.run(
+              fetchOpt,
+              RemainingArgs(
+                Seq(
+                  "org.apache.commons:commons-compress:1.5,url=" + encodedUrl
+                ),
+                Seq()
+              )
+            )
+
+            val node: ReportNode = getReportFromJson(jsonFile)
+
+            val depNodes: Seq[DepNode] = node.dependencies
+              .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+              .sortBy(_.files.head._1.length)
+            assert(depNodes.length == 1)
+
+            val urlInJsonFile = depNodes.head.files.head._2
+            assert(depNodes.head.files.head._1 == "")
+            assert(urlInJsonFile.contains(path))
+
+            // open jar and inspect contents
+            val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
+            assert(fileContents == jarFileContent)
+
+          } finally {
+            file.delete()
+          }
+        }
+      }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   */
+  "external dep url" should "fetch junit-4.12.jar" in withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          // generate temp jar with fake content
-          val file = new File("dorothy.jar")
-          val bw = new BufferedWriter(new FileWriter(file))
-          bw.write("tada")
-          bw.close()
-          val path = file.getAbsolutePath
-          println(path)
-//          val someUrl = "file://" + path
-          val someEncodedUrl = "file%3A%2F%2F" + path.replace("/", "%2F")
+          // encode path to different jar than requested
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with url set to temp jar
+          // fetch with different package url
           Fetch.run(
             fetchOpt,
             RemainingArgs(
               Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + someEncodedUrl
+                "org.apache.commons:commons-compress:1.5,url=" + externalUrl
               ),
               Seq()
             )
           )
 
-          // check the json and verify that the contents of the jar in the json is the same as the temp jar
           val node: ReportNode = getReportFromJson(jsonFile)
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-//            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-//            .sortBy(_.files.head._1.length) // sort by first classifier length
-          assert(compressNode.isDefined)
-          println(compressNode.get.files)
-
-          assert(compressNode.get.files.head._1 == "")
-          assert(compressNode.get.files.head._2.contains(path))
-
-//          assert(compressNode.last.files.head._1 == "tests") //should fail
-//          assert(compressNode.last.files.head._2.contains("commons-compress-1.5-tests.jar")) //should fail
+          val depNodes: Seq[DepNode] = node.dependencies
+            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+            .sortBy(_.files.head._1.length)
+          assert(depNodes.length == 1)
+          assert(depNodes.head.files.head._1 == "")
+          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
         }
       }
   }
-//
-//  /**
-//   * Result:
-//   * |└─ org.apache.commons:commons-compress:1.5
-//   */
-//  "external url" should "have commons-compress-1.5.jar" in withFile() {
-//    (excludeFile, _) =>
-//      withFile() {
-//        (jsonFile, _) => {
-//          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-//          val fetchOpt = FetchOptions(common = commonOpt)
-//
-//          // generate temp jar with fake content
-//          val someEncodedUrl = "https%3A%2F%2Fmvnrepository.com%2Fartifact%2Forg.apache.commons%2Fcommons-compress"
-//          val someUrl = "https://mvnrepository.com/artifact/org.apache.commons/commons-compress"
-//          val anotherUrl = "http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
-//
-//          // fetch with different package url
-//          Fetch.run(
-//            fetchOpt,
-//            RemainingArgs(
-//              Seq(
-//                "org.apache.commons:commons-compress:1.5,url=" + someUrl
-//              ),
-//              Seq()
-//            )
-//          )
-//
-//          // check the json and verify that the contents of the jar in the json is the same as the temp jar
-//          val node: ReportNode = getReportFromJson(jsonFile)
-//
-//          val compressNodes: Seq[DepNode] = node.dependencies
-//            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-//            .sortBy(_.files.head._1.length) // sort by first classifier length
-//          assert(compressNodes.length == 1)
-//          assert(compressNodes.head.files.head._1 == "")
-//          assert(compressNodes.head.files.head._2.contains(someUrl))
-//
-//          assert(compressNodes.last.files.head._1 == "tests") //should fail
-//          assert(compressNodes.last.files.head._2.contains("commons-compress-1.5-tests.jar")) //should fail
-//        }
-//      }
-//  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   */
+  "external dep url with classifier" should "fetch junit-4.12.jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          // encode path to different jar than requested
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+          // fetch with different package url
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,url=" + externalUrl + ",classifier=tests"
+              ),
+              Seq()
+            )
+          )
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val depNodes: Seq[DepNode] = node.dependencies
+            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+            .sortBy(_.files.head._1.length)
+          assert(depNodes.length == 1)
+          assert(depNodes.head.files.head._1 == "tests")
+          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+        }
+      }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   * |└─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+   * |   └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+   */
+  "external dep url with another dep" should "fetch junit-4.12.jar and jars for jackson-mapper" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          // encode path to different jar than requested
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+          // fetch with different package url
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,url=" + externalUrl,
+                "org.codehaus.jackson:jackson-mapper-asl:1.8.8"
+              ),
+              Seq()
+            )
+          )
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val depNodes: Seq[DepNode] = node.dependencies
+          assert(depNodes.length == 3)
+
+          val compressNodes = depNodes
+            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+            .sortBy(_.files.head._1.length)
+          assert(compressNodes.length == 1)
+          assert(compressNodes.head.files.head._1 == "")
+          assert(compressNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+
+          val jacksonMapperNodes = depNodes
+            .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
+            .sortBy(_.files.head._1.length)
+          assert(jacksonMapperNodes.length == 1)
+          assert(jacksonMapperNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"))
+          assert(jacksonMapperNodes.head.dependencies.size == 1)
+          assert(jacksonMapperNodes.head.dependencies.head == "org.codehaus.jackson:jackson-core-asl:1.8.8")
+
+          val jacksonCoreNodes = depNodes
+            .filter(_.coord == "org.codehaus.jackson:jackson-core-asl:1.8.8")
+            .sortBy(_.files.head._1.length)
+          assert(jacksonCoreNodes.length == 1)
+          assert(jacksonCoreNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"))
+        }
+      }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
+   */
+  "external dep url with forced version" should "fetch junit-4.12.jar and assign to forced version" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(
+            jsonOutputFile = jsonFile.getPath,
+            forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          // encode path to different jar than requested
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+          // fetch with different package url
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+              ),
+              Seq()
+            )
+          )
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+
+          assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
+
+          val depNodes: Seq[DepNode] = node.dependencies
+          assert(depNodes.length == 1)
+
+          val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          assert(depNode.isDefined)
+          assert(depNode.get.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+        }
+      }
+  }
 
 }

@@ -5,8 +5,7 @@ import coursier.core.{Module, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
-import fastparse.all._
-
+import java.net.URLDecoder.decode
 import scala.collection.mutable.ArrayBuffer
 import scalaz.\/
 import scalaz.Scalaz.ToEitherOps
@@ -148,7 +147,7 @@ object Parse {
     *  or
     *   org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only "classifier" attribute is used, and others are ignored.
+    *  Currently only "classifier" and "url" attributes are used, and others are ignored.
     */
   def moduleVersionConfig(s: String,
                           req: ModuleRequirements,
@@ -179,7 +178,7 @@ object Parse {
 
     val parts = coords.split(":", 5)
 
-    val attributes = Attributes("", attrs.getOrElse("classifier", ""), attrs.getOrElse("url", ""))
+    val attributes = Attributes("", attrs.getOrElse("classifier", ""), decode(attrs.getOrElse("url", ""), "UTF-8"))
     val revisedTransitive = {
       if (!attributes.url.isEmpty)
         // If url is present, the dep is intransitive.

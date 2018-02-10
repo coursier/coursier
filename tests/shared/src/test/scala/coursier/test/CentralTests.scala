@@ -62,7 +62,8 @@ abstract class CentralTests extends TestSuite {
     version: String,
     extraRepos: Seq[Repository] = Nil,
     configuration: String = "",
-    profiles: Option[Set[String]] = None
+    profiles: Option[Set[String]] = None,
+    attributes: Attributes = Attributes()
   ) =
     async {
       val attrPathPart =
@@ -88,7 +89,7 @@ abstract class CentralTests extends TestSuite {
 
       def tryRead = textResource(path)
 
-      val dep = Dependency(module, version, configuration = configuration)
+      val dep = Dependency(module, version, configuration = configuration, attributes = attributes)
       val res = await(resolve(Set(dep), extraRepos = extraRepos, profiles = profiles))
 
       // making that lazy makes scalac crash in 2.10 with scalajs
@@ -409,6 +410,20 @@ abstract class CentralTests extends TestSuite {
       * - resolutionCheck(mod, version)
 
       * - withArtifact(mod, version, "jar") { artifact =>
+        assert(artifact.url == expectedArtifactUrl)
+      }
+    }
+
+    'urlForDependency - {
+      val depUrl = "http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+      val mod = Module("org.apache.ws.commons", "XmlSchema")
+      val version = "1.1"
+      val attributes = Attributes(url = depUrl)
+      val expectedArtifactUrl = depUrl
+
+      * - resolutionCheck(mod, version, attributes = attributes)
+
+      * - withArtifact(mod, version, "jar", attributes = attributes) { artifact =>
         assert(artifact.url == expectedArtifactUrl)
       }
     }

@@ -86,6 +86,19 @@ object ParseTests extends TestSuite {
       }
     }
 
+    "single attr with url" - {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,url=file%3A%2F%2Fsome%2Fencoded%2Furl", ModuleRequirements(), transitive = true, "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right(dep) =>
+          assert(dep.module.organization == "org.apache.avro")
+          assert(dep.module.name == "avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == "runtime")
+          assert(dep.attributes == Attributes("", "", "file://some/encoded/url"))
+          assert(dep.transitive == false)
+      }
+    }
+
     "multiple attrs with url" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=file%3A%2F%2Fsome%2Fencoded%2Furl,nickname=superman", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
@@ -94,7 +107,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes("", "tests", "file%3A%2F%2Fsome%2Fencoded%2Furl")
+          assert(dep.attributes == Attributes("", "tests", "file://some/encoded/url")
           assert(dep.transitive == false))
       }
     }
