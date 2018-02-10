@@ -107,7 +107,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes("", "tests", "file://some/encoded/url")
+          assert(dep.attributes == Attributes("", "tests", "file://some/encoded/url"))
           assert(dep.transitive == false)
       }
     }
