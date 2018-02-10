@@ -15,7 +15,7 @@ object PrintTests extends TestSuite {
       )
       val deps = Seq(
         dep,
-        dep.copy(attributes = Attributes("fooz", ""))
+        dep.copy(attributes = Attributes("fooz", "", ""))
       )
 
       val res = Print.dependenciesUnknownConfigs(deps, Map())
