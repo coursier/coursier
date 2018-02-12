@@ -475,6 +475,45 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   /**
    * Result:
+   * |└─ a:b:c
+   */
+  "external dep url with arbitrary coords" should "fetch junit-4.12.jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          // encode path to different jar than requested
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+          // fetch with different package url
+
+          // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "a:b:c,url=" + externalUrl
+              ),
+              Seq()
+            )
+          )
+
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val depNodes: Seq[DepNode] = node.dependencies
+            .filter(_.coord == "a:b:c")
+            .sortBy(_.files.head._1.length)
+          assert(depNodes.length == 1)
+          assert(depNodes.head.files.head._1 == "")
+          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+        }
+      }
+  }
+
+  /**
+   * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
   "external dep url with classifier" should "fetch junit-4.12.jar" in withFile() {

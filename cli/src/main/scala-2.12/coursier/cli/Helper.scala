@@ -292,9 +292,6 @@ class Helper(
 
   val userEnabledProfiles = profile.toSet
 
-  // If attribute contains url, don't resolve. We have enough info to get jar.
-  // Double check that this is the behavior we want.
-
   val startRes = Resolution(
     allDependencies.toSet,
     forceVersions = forceVersions,
@@ -352,7 +349,6 @@ class Helper(
 
   logger.foreach(_.init())
 
-  // Resolution starts here
   val res =
     if (benchmark > 0) {
       class Counter(var value: Int = 0) {
@@ -495,6 +491,7 @@ class Helper(
   }
 
   if (res.metadataErrors.nonEmpty) {
+    val st = (new RuntimeException).getStackTrace
     anyError = true
     errPrintln(
       "\nError:\n" +
@@ -583,7 +580,7 @@ class Helper(
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact => {}
+    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
       artifact.copy(attributes = Attributes())
     }.distinct
 
