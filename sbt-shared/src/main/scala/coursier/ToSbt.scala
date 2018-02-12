@@ -1,6 +1,7 @@
 package coursier
 
 import java.io.File
+import java.net.URL
 import java.util.GregorianCalendar
 import java.util.concurrent.ConcurrentHashMap
 
@@ -61,7 +62,7 @@ object ToSbt {
             .orElse(MavenSource.typeDefaultClassifierOpt(artifact.attributes.`type`))
         )
         // .withConfigurations(Vector())
-        .withUrl(Some(url(artifact.url)))
+        .withUrl(Some(new URL(artifact.url)))
         .withExtraAttributes(module.attributes ++ extraProperties)
   }
 
