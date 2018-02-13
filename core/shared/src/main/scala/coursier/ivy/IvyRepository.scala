@@ -187,7 +187,7 @@ final case class IvyRepository(
                 url,
                 Map.empty,
                 Map.empty,
-                Attributes("", "", ""),
+                Attributes("", ""),
                 changing = changing.getOrElse(version.contains("-SNAPSHOT")),
                 authentication
               )
@@ -219,7 +219,7 @@ final case class IvyRepository(
           url,
           Map.empty,
           Map.empty,
-          Attributes("ivy", "", ""),
+          Attributes("ivy", ""),
           changing = changing.getOrElse(version.contains("-SNAPSHOT")),
           authentication = authentication
         )

@@ -64,7 +64,7 @@ object Pom {
         version0,
         "",
         exclusions.map(mod => (mod.organization, mod.name)).toSet,
-        Attributes(typeOpt.getOrElse(""), classifierOpt.getOrElse(""), ""),
+        Attributes(typeOpt.getOrElse(""), classifierOpt.getOrElse("")),
         optional,
         transitive = true
       )

@@ -37,7 +37,7 @@ package object coursier {
       classifier: String = "",
       url: String = ""
     ): Attributes =
-      core.Attributes(`type`, classifier, url)
+      core.Attributes(`type`, classifier)
   }
 
   type Project = core.Project

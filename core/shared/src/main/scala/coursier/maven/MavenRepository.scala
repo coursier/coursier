@@ -108,7 +108,7 @@ final case class MavenRepository(
       urlFor(path),
       Map.empty,
       Map.empty,
-      Attributes("pom", "", ""),
+      Attributes("pom", ""),
       changing = changing.getOrElse(isSnapshot(version)),
       authentication = authentication
     )
@@ -128,7 +128,7 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", "", ""),
+        Attributes("pom", ""),
         changing = true,
         authentication = authentication
       )
@@ -150,7 +150,7 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", "", ""),
+        Attributes("pom", ""),
         changing = true,
         authentication = authentication
       )
@@ -298,7 +298,7 @@ final case class MavenRepository(
       url,
       Map.empty,
       Map.empty,
-      Attributes("", "", ""),
+      Attributes("", ""),
       changing = changing,
       authentication
     )
@@ -352,7 +352,7 @@ final case class MavenRepository(
         Map(
           "metadata" -> projectArtifact0
         ),
-        Attributes("", "", ""),
+        Attributes("", ""),
         changing = changing0,
         authentication
       )

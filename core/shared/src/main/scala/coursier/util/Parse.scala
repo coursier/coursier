@@ -120,20 +120,38 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    val mvc: Either[String, (Dependency, Map[String, String])] =
+      moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
     mvc match {
       case Left(x) => Left(x)
-      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
+      case Right(depsWithParams) =>
+        val (dep, _) = depsWithParams
+        Right(dep.module, dep.version, Option(dep.configuration).filter(_.trim.nonEmpty))
     }
   }
 
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    val mvc: Either[String, (Dependency, Map[String, String])] =
+      moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
     mvc match {
       case Left(x) => Left(x)
-      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
+      case Right(depsWithParams) =>
+        val (dep, _) = depsWithParams
+        Right(dep.module, dep.version, Option(dep.configuration).filter(_.trim.nonEmpty))
+    }
+  }
+
+  @deprecated("use the variant returning either a string on failure, or a tuple of Dependency and Map of strings of parameter names to values", "1.0.0-M14")
+  def moduleVersionConfig(s: String,
+                          req: ModuleRequirements,
+                          transitive: Boolean,
+                          defaultScalaVersion: String): Either[String, Dependency] = {
+    val mvc: Either[String, (Dependency, Map[String, String])] = moduleVersionConfig(s, req, transitive, defaultScalaVersion)
+    mvc match {
+      case Left(x) => Left(x)
+      case Right(depsWithParams) => Right(depsWithParams._1)
     }
   }
 
@@ -152,7 +170,7 @@ object Parse {
   def moduleVersionConfig(s: String,
                           req: ModuleRequirements,
                           transitive: Boolean,
-                          defaultScalaVersion: String): Either[String, Dependency] = {
+                          defaultScalaVersion: String): Either[String, (Dependency, Map[String, String])] = {
 
     // Assume org:name:version,attr1=val1,attr2=val2
     // That is ',' has to go after ':'.

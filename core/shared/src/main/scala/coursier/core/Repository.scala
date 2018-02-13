@@ -34,7 +34,7 @@ object Repository {
             underlying.url + ".asc",
             Map.empty,
             Map.empty,
-            Attributes("asc", "", ""),
+            Attributes("asc", ""),
             changing = underlying.changing,
             authentication = underlying.authentication
           )

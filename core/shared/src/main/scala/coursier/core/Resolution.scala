@@ -1033,7 +1033,7 @@ final case class Resolution(
   ): Seq[Artifact] =
     dependencyArtifacts0(overrideClassifiers, optional).map {
       case (_, artifact) =>
-        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", "", ""))
+        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", ""))
     }.distinct
 
   // keepAttributes to false is a temporary hack :-|
@@ -1051,26 +1051,9 @@ final case class Resolution(
   private def dependencyArtifacts0(
     overrideClassifiers: Option[Seq[String]],
     optional: Boolean
-  ): Seq[(Dependency, Artifact)] = {
-
-    val (depsWithUrls, otherDeps) = minDependencies.toSeq.partition(dep => !dep.attributes.url.isEmpty)
-    val depToArtifactsForDepsWithUrls = for {
-      dep <- depsWithUrls
-      attributes = dep.attributes.copy(`type` = "jar")
-
-      artifact =
-      Artifact(
-        dep.attributes.url,
-        Map.empty,
-        Map.empty,
-        attributes,
-        changing = true,
-        None
-      )
-    } yield dep -> artifact
-
-    val depToArtifactsForOtherDeps = for {
-      dep <- otherDeps
+  ): Seq[(Dependency, Artifact)] =
+    for {
+      dep <- minDependencies.toSeq
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
@@ -1093,9 +1076,6 @@ final case class Resolution(
         .artifacts(dep, proj, classifiers)
       if optional || !artifact.isOptional
     } yield dep -> artifact
-
-    depToArtifactsForOtherDeps ++ depToArtifactsForDepsWithUrls
-  }
 
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
     dependencyArtifacts0(None, optional = false)
