@@ -132,7 +132,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexDeps: List[Dependency] =
+  val scaladexDeps: List[(Dependency, Map[String, String])] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -192,7 +192,7 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => Dependency(mod, ver) }
+        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]())}
     }
 
   val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
@@ -258,10 +258,10 @@ class Helper(
 
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
 
-  val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
+  val (modVerCfgErrors: Seq[String], normalDeps: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)
 
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
@@ -273,11 +273,11 @@ class Helper(
       intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
   }
 
-  val transitiveDeps: Seq[Dependency] =
+  val transitiveDeps: Seq[(Dependency, Map[String, String])] =
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexDeps ++ normalDeps
 
-  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps
+  val allDependencies: Seq[(Dependency, Map[String, String])] = transitiveDeps ++ intransitiveDeps
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)

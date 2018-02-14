@@ -279,7 +279,7 @@ object Pom {
                 relocatedVersion,
                 "",
                 Set(),
-                Attributes("", "", ""),
+                Attributes("", ""),
                 optional = false,
                 transitive = true
               )

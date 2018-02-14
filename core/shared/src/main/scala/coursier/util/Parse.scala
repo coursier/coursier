@@ -143,18 +143,6 @@ object Parse {
     }
   }
 
-  @deprecated("use the variant returning either a string on failure, or a tuple of Dependency and Map of strings of parameter names to values", "1.0.0-M14")
-  def moduleVersionConfig(s: String,
-                          req: ModuleRequirements,
-                          transitive: Boolean,
-                          defaultScalaVersion: String): Either[String, Dependency] = {
-    val mvc: Either[String, (Dependency, Map[String, String])] = moduleVersionConfig(s, req, transitive, defaultScalaVersion)
-    mvc match {
-      case Left(x) => Left(x)
-      case Right(depsWithParams) => Right(depsWithParams._1)
-    }
-  }
-
   /**
     * Parses coordinates like
     *   org:name:version
@@ -165,7 +153,7 @@ object Parse {
     *  or
     *   org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only "classifier" and "url" attributes are used, and others are ignored.
+    *  Currently only the "classifier" attribute is used, and others are ignored.
     */
   def moduleVersionConfig(s: String,
                           req: ModuleRequirements,
@@ -196,9 +184,15 @@ object Parse {
 
     val parts = coords.split(":", 5)
 
-    val attributes = Attributes("", attrs.getOrElse("classifier", ""), decode(attrs.getOrElse("url", ""), "UTF-8"))
+    val attributes = Attributes("", attrs.getOrElse("classifier", ""))
+    val extraDependencyParams: Map[String, String] = {
+      if (attrs.isDefinedAt("url"))
+        Map("url" -> decode(attrs.getOrElse("url", ""), "UTF-8"))
+      else
+        Map()
+    }
     val revisedTransitive = {
-      if (!attributes.url.isEmpty)
+      if (extraDependencyParams.isDefinedAt("url"))
         // If url is present, the dep is intransitive.
         false
       else
@@ -214,52 +208,56 @@ object Parse {
         module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = revisedTransitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            (Dependency(
+                mod,
+                version,
+                config,
+                attributes,
+                transitive = revisedTransitive,
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
+              extraDependencyParams)
           })
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = revisedTransitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            (Dependency(
+                mod,
+                version,
+                configuration = defaultConfig,
+                attributes = attributes,
+                transitive = revisedTransitive,
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
+              extraDependencyParams)
           })
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = revisedTransitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            (Dependency(
+                mod,
+                version,
+                config,
+                attributes,
+                transitive = revisedTransitive,
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
+              extraDependencyParams)
           })
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = revisedTransitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+            (Dependency(
+                mod,
+                version,
+                configuration = defaultConfig,
+                attributes = attributes,
+                transitive = revisedTransitive,
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
+              extraDependencyParams)
           })
 
       case _ =>
@@ -281,15 +279,19 @@ object Parse {
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    val mvc: (Seq[String], Seq[(Dependency, Map[String, String])]) =
+      moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    val errorsAndDeps = (mvc._1, mvc._2.map(d => d._1))
     // convert empty config to None
-    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
+    (errorsAndDeps._1, errorsAndDeps._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
   def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
+    val mvc: (Seq[String], Seq[(Dependency, Map[String, String])]) =
+      moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
+    val errorsAndDeps = (mvc._1, mvc._2.map(d => d._1))
+    (errorsAndDeps._1, errorsAndDeps._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
   }
 
   /**
@@ -311,7 +313,7 @@ object Parse {
   def moduleVersionConfigs(l: Seq[String],
                            req: ModuleRequirements,
                            transitive: Boolean,
-                           defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
+                           defaultScalaVersion: String): (Seq[String], Seq[(Dependency, Map[String, String])]) =
     valuesAndErrors(moduleVersionConfig(_, req, transitive, defaultScalaVersion), l)
 
   def repository(s: String): String \/ Repository =
