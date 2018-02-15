@@ -63,6 +63,7 @@ lazy val tests = crossProject
     hasITs,
     coursierPrefix,
     libs += Deps.scalaAsync.value,
+    pureJava,
     utest,
     sharedTestResources
   )

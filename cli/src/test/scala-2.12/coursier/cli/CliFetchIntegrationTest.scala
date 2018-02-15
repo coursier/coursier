@@ -450,7 +450,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           // encode path to different jar than requested
           val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different package url
+          // fetch with different artifact url
           Fetch.run(
             fetchOpt,
             RemainingArgs(
@@ -487,8 +487,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           // encode path to different jar than requested
           val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different package url
-
           // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
           Fetch.run(
             fetchOpt,
@@ -516,7 +514,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
-  "external dep url with classifier" should "fetch junit-4.12.jar" in withFile() {
+  "external dep url with classifier" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -526,7 +524,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           // encode path to different jar than requested
           val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different package url
           Fetch.run(
             fetchOpt,
             RemainingArgs(
@@ -543,7 +540,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
             .filter(_.coord == "org.apache.commons:commons-compress:1.5")
             .sortBy(_.files.head._1.length)
           assert(depNodes.length == 1)
-          assert(depNodes.head.files.head._1 == "tests")
+          // classifier doesn't matter when we have a url so it is not listed
+          assert(depNodes.head.files.head._1 == "")
           assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
         }
       }
@@ -562,10 +560,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          // encode path to different jar than requested
           val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different package url
           Fetch.run(
             fetchOpt,
             RemainingArgs(
@@ -608,9 +604,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   /**
    * Result:
-   * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
+   *  Error
    */
-  "external dep url with forced version" should "fetch junit-4.12.jar and assign to forced version" in withFile() {
+  "external dep url with forced version" should "throw an error" in withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -619,10 +615,38 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
             forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
           val fetchOpt = FetchOptions(common = commonOpt)
 
-          // encode path to different jar than requested
           val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different package url
+          assertThrows[Exception]({
+            Fetch.run(
+              fetchOpt,
+              RemainingArgs(
+                Seq(
+                  "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+                ),
+                Seq()
+              )
+            )
+          })
+        }
+      }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   */
+  "external dep url with the same forced version" should "fetch junit-4.12.jar" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(
+            jsonOutputFile = jsonFile.getPath,
+            forceVersion = List("org.apache.commons:commons-compress:1.5"))
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
           Fetch.run(
             fetchOpt,
             RemainingArgs(
@@ -635,17 +659,11 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
-
-          assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
-
           val depNodes: Seq[DepNode] = node.dependencies
           assert(depNodes.length == 1)
-
-          val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
-          assert(depNode.isDefined)
-          assert(depNode.get.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+          assert(depNodes.head.files.head._1 == "")
+          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
         }
       }
   }
-
 }

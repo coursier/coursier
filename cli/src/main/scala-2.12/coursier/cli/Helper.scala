@@ -280,17 +280,30 @@ class Helper(
 
   val allDependenciesWithExtraParams: Seq[(Dependency, Map[String, String])] =
     transitiveDepsWithExtraParams ++ intransitiveDepsWithExtraParams
+
   val allDependencies: Seq[Dependency] = allDependenciesWithExtraParams.map(dep => dep._1)
 
+  // Any dependencies with URIs should not be resolved with pom so this is a
+  // hack to add all the deps with URIs to the FallbackDependenciesRepository
+  // which will be used during the resolve
   val depsWithUrls: Map[(Module, String), (URL, Boolean)] = {
     allDependenciesWithExtraParams
       .filter(depWithExtraParams => depWithExtraParams._2.isDefinedAt("url"))
       .map(depWithExtraParams =>
         (depWithExtraParams._1.moduleVersion, (new URL(depWithExtraParams._2.getOrElse("url", "")), true))).toMap
   }
+
   val depsWithUrlRepo: Seq[FallbackDependenciesRepository] = Seq(FallbackDependenciesRepository(depsWithUrls))
 
+
+  // Prepend FallbackDependenciesRepository to the repository list
+  // so that dependencies with URIs are resolved against this repo
   val repositories: Seq[Repository] = depsWithUrlRepo ++ standardRepositories
+
+  depsWithUrls.foreach(dep =>
+    if (forceVersions.contains(dep._1._1) && forceVersions.getOrElse(dep._1._1, dep._1._1) != dep._1._2)
+      throw new Exception("Cannot specify a URL for a dependency for which a version is being forced")
+  )
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -504,7 +517,6 @@ class Helper(
   }
 
   if (res.metadataErrors.nonEmpty) {
-    val st = (new RuntimeException).getStackTrace
     anyError = true
     errPrintln(
       "\nError:\n" +
