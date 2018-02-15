@@ -53,7 +53,7 @@ object ParseTests extends TestSuite {
     "org:name:version" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, _)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
@@ -65,7 +65,7 @@ object ParseTests extends TestSuite {
     "org:name:version:conifg" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, _)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
@@ -77,7 +77,7 @@ object ParseTests extends TestSuite {
     "single attr" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, _)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
@@ -89,33 +89,37 @@ object ParseTests extends TestSuite {
     "single attr with url" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,url=file%3A%2F%2Fsome%2Fencoded%2Furl", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, extraParams)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes("", "", "file://some/encoded/url"))
+          assert(dep.attributes == Attributes("", ""))
           assert(dep.transitive == false)
+          assert(extraParams.isDefinedAt("url"))
+          assert(extraParams.getOrElse("url", "") == "file://some/encoded/url")
       }
     }
 
     "multiple attrs with url" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=file%3A%2F%2Fsome%2Fencoded%2Furl,nickname=superman", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, extraParams)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes("", "tests", "file://some/encoded/url"))
           assert(dep.transitive == false)
+          assert(dep.attributes == Attributes("", "tests"))
+          assert(extraParams.isDefinedAt("url"))
+          assert(extraParams.getOrElse("url", "") == "file://some/encoded/url")
       }
     }
 
     "multiple attrs" - {
       Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, _)) =>
           assert(dep.module.organization == "org.apache.avro")
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
@@ -127,7 +131,7 @@ object ParseTests extends TestSuite {
     "single attr with org::name:version" - {
       Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
-        case Right(dep) =>
+        case Right((dep, _)) =>
           assert(dep.module.organization == "io.get-coursier.scala-native")
           assert(dep.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
           assert(dep.version == "0.3.0-coursier-1")
