@@ -116,7 +116,7 @@ class Helper(
     repos
   }
 
-  val repositories = repositoriesValidation match {
+  val standardRepositories = repositoriesValidation match {
     case Success(repos) =>
       repos
     case Failure(errors) =>
@@ -125,14 +125,13 @@ class Helper(
       )
   }
 
-
   val loggerFallbackMode =
     !progress && TermDisplay.defaultFallbackMode
 
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexDeps: List[(Dependency, Map[String, String])] =
+  val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -258,10 +257,10 @@ class Helper(
 
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
 
-  val (modVerCfgErrors: Seq[String], normalDeps: Seq[(Dependency, Map[String, String])]) =
+  val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)
 
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[(Dependency, Map[String, String])]) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
@@ -273,11 +272,25 @@ class Helper(
       intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
   }
 
-  val transitiveDeps: Seq[(Dependency, Map[String, String])] =
+  val transitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])] =
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
-    scaladexDeps ++ normalDeps
+    scaladexDepsWithExtraParams ++ normalDepsWithExtraParams
 
-  val allDependencies: Seq[(Dependency, Map[String, String])] = transitiveDeps ++ intransitiveDeps
+  val transitiveDeps: Seq[Dependency] = transitiveDepsWithExtraParams.map(dep => dep._1)
+
+  val allDependenciesWithExtraParams: Seq[(Dependency, Map[String, String])] =
+    transitiveDepsWithExtraParams ++ intransitiveDepsWithExtraParams
+  val allDependencies: Seq[Dependency] = allDependenciesWithExtraParams.map(dep => dep._1)
+
+  val depsWithUrls: Map[(Module, String), (URL, Boolean)] = {
+    allDependenciesWithExtraParams
+      .filter(depWithExtraParams => depWithExtraParams._2.isDefinedAt("url"))
+      .map(depWithExtraParams =>
+        (depWithExtraParams._1.moduleVersion, (new URL(depWithExtraParams._2.getOrElse("url", "")), true))).toMap
+  }
+  val depsWithUrlRepo: Seq[FallbackDependenciesRepository] = Seq(FallbackDependenciesRepository(depsWithUrls))
+
+  val repositories: Seq[Repository] = depsWithUrlRepo ++ standardRepositories
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -801,6 +814,7 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
+
           dep: Dependency <- transitiveDeps.headOption
           module = dep.module
           mainClass <- mainClasses.collectFirst {
