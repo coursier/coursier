@@ -118,12 +118,13 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with org::name:version" - {
-      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,attr1=val1", ModuleRequirements(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == "io.get-coursier.scala-native")
           assert(dep.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
           assert(dep.version == "0.3.0-coursier-1")
+          assert(dep.attributes == Attributes("", "tests"))
       }
     }
 
@@ -144,7 +145,7 @@ object ParseTests extends TestSuite {
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
-        case foo: ModuleParseError => assert(foo.getMessage().contains("The only attributes allowed are:")) // do nothing
+        case foo: ModuleParseError => assert(foo.getMessage().contains("Failed to parse attribute")) // do nothing
         case _: Throwable => assert(false) // Unexpected exception
       }
     }
