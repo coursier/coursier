@@ -14,7 +14,7 @@ import Argonaut._
 
 final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]])
 
-final case class DepNode(coord: String, files: Vector[(String, String)], dependencies: Set[String])
+final case class DepNode(coord: String, file: Option[String], dependencies: Set[String])
 
 final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode], version: String)
 
@@ -34,7 +34,7 @@ object ReportNode {
   import argonaut.ArgonautShapeless._
   implicit val encodeJson = EncodeJson.of[ReportNode]
   implicit val decodeJson = DecodeJson.of[ReportNode]
-  val version = "0.0.1"
+  val version = "0.1.0"
 }
 
 
@@ -43,7 +43,7 @@ object JsonReport {
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
-              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFiles: T => Seq[(String, String)]): String = {
+              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
 
@@ -64,7 +64,7 @@ object JsonReport {
 
       val acc = scala.collection.mutable.Set[String]()
       flattenDeps(Seq(r), Set(), acc)
-      DepNode(reconciledVersionStr(r), getFiles(r).toVector, acc.toSet)
+      DepNode(reconciledVersionStr(r), getFile(r), acc.toSet)
 
     })
     val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector, ReportNode.version)
@@ -89,23 +89,23 @@ final case class JsonElem(dep: Dependency,
       ("", "", "")
 
   // This is used to printing json output
-  // Seq of (classifier, file path) tuple
-  lazy val downloadedFiles: Seq[(String, String)] = {
-    jsonPrintRequirement match {
-      case Some(req) =>
+  // Option of the file path
+  lazy val downloadedFile: Option[String] = {
+    jsonPrintRequirement.flatMap(req =>
         req.depToArtifacts.getOrElse(dep, Seq())
-          .map(x => (x.classifier, req.fileByArtifact.get(x.url)))
-          .filter(_._2.isDefined)
-          .map(x => (x._1, x._2.get.getPath))
-      case None => Seq()
-    }
+          .filter(_.classifier == dep.attributes.classifier)
+          .map(x => req.fileByArtifact.get(x.url))
+          .filter(_.isDefined)
+          .map(_.get.getPath)
+          .headOption
+    )
   }
 
   lazy val reconciledVersion: String = resolution.reconciledVersions
     .getOrElse(dep.module, dep.version)
 
   // These are used to printing json output
-  val reconciledVersionStr = s"${dep.module}:$reconciledVersion"
+  val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion"
   val requestedVersionStr = s"${dep.module}:${dep.version}"
 
   lazy val repr =
@@ -183,5 +183,5 @@ final case class JsonElem(dep: Dependency,
       * children's children, causing performance issue. Hash collision should be rare, but when that happens, the
       * default equality check should take of the recursive aspect of `children`.
       */
-    override def hashCode(): Int = Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFiles)
+    override def hashCode(): Int = Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
 }

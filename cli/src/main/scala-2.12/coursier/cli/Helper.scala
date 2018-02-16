@@ -684,8 +684,15 @@ class Helper(
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
-      val jsonStr = JsonReport(roots, conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
-
+      val jsonStr = JsonReport(
+        roots,
+        conflictResolutionForRoots
+      )(
+        _.children,
+        _.reconciledVersionStr,
+        _.requestedVersionStr,
+        _.downloadedFile
+      )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()

@@ -1,7 +1,6 @@
 package coursier.cli
 
 import java.io._
-import java.util.zip.ZipInputStream
 
 import argonaut.Argonaut._
 import coursier.cli.util.{DepNode, ReportNode}
@@ -91,7 +90,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
       // org.apache.commons:commons-compress:1.4.1 should not contain deps underneath it.
       val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
-      assert(compressNode.isDefined)
+      assert(node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.4.1"))
       assert(compressNode.get.dependencies.isEmpty)
     }
   }
@@ -199,10 +198,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
+
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5-tests.jar"))
           assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
         }
       }
@@ -236,14 +235,15 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val node: ReportNode = getReportFromJson(jsonFile)
 
           val compressNodes: Seq[DepNode] = node.dependencies
-            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-            .sortBy(_.files.head._1.length) // sort by first classifier length
-          assert(compressNodes.length == 2)
-          assert(compressNodes.head.files.head._1 == "")
-          assert(compressNodes.head.files.head._2.contains("commons-compress-1.5.jar"))
+            .filter(_.coord.startsWith("org.apache.commons:commons-compress"))
+            .sortBy(_.coord.length) // sort by coord length
 
-          assert(compressNodes.last.files.head._1 == "tests")
-          assert(compressNodes.last.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNodes.length == 2)
+          assert(compressNodes.head.coord == "org.apache.commons:commons-compress:1.5")
+          assert(compressNodes.head.file.contains("commons-compress-1.5.jar"))
+
+          assert(compressNodes.last.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
+          assert(compressNodes.last.file.contains("commons-compress-1.5-tests.jar"))
         }
       }
   }
@@ -265,8 +265,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           val node: ReportNode = getReportFromJson(jsonFile)
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -289,10 +288,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5-tests.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -320,10 +318,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
           assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
+
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.4.1-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.4.1-tests.jar"))
 
           assert(compressNode.get.dependencies.size == 1)
           assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
@@ -351,10 +349,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
           assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
+
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.4.1-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.4.1-tests.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -380,4 +378,26 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
   }
 
+  "com.spotify:helios-testing:0.9.193" should "have dependencies with classifiers" in withFile() {
+    (excludeFile, _) =>
+      withFile() {
+        (jsonFile, _) => {
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
+
+          val heliosCoord = "com.spotify:helios-testing:0.9.193"
+
+          Fetch(
+            fetchOpt,
+            RemainingArgs(Seq(heliosCoord), Seq())
+          )
+          val node: ReportNode = getReportFromJson(jsonFile)
+          val testEntry: DepNode = node.dependencies.find(_.coord == heliosCoord).get
+          assert(
+            testEntry.dependencies.exists(_.startsWith("com.spotify:docker-client:jar:shaded:")))
+          assert(
+            node.dependencies.exists(_.coord.startsWith("com.spotify:docker-client:jar:shaded:")))
+        }
+      }
+  }
 }

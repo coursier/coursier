@@ -213,10 +213,9 @@ class CliIntegrationTest extends FlatSpec {
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5-tests.jar"))
           assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
         }
       }
@@ -250,14 +249,14 @@ class CliIntegrationTest extends FlatSpec {
           val node: ReportNode = getReportFromJson(jsonFile)
 
           val compressNodes: Seq[DepNode] = node.dependencies
-            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-            .sortBy(_.files.head._1.length) // sort by first classifier length
+            .filter(_.coord.startsWith("org.apache.commons:commons-compress:"))
+            .sortBy(_.file.getOrElse("").length) // sort by first classifier length
           assert(compressNodes.length == 2)
-          assert(compressNodes.head.files.head._1 == "")
-          assert(compressNodes.head.files.head._2.contains("commons-compress-1.5.jar"))
+          assert(compressNodes.head.coord == "org.apache.commons:commons-compress:1.5")
+          assert(compressNodes.head.file.contains("commons-compress-1.5.jar"))
 
-          assert(compressNodes.last.files.head._1 == "tests")
-          assert(compressNodes.last.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNodes.last.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
+          assert(compressNodes.last.file.contains("commons-compress-1.5-tests.jar"))
         }
       }
   }
@@ -279,8 +278,7 @@ class CliIntegrationTest extends FlatSpec {
           val node: ReportNode = getReportFromJson(jsonFile)
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -303,10 +301,9 @@ class CliIntegrationTest extends FlatSpec {
 
           val node: ReportNode = getReportFromJson(jsonFile)
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.5-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.5-tests.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -334,10 +331,9 @@ class CliIntegrationTest extends FlatSpec {
 
           assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.4.1-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.4.1-tests.jar"))
 
           assert(compressNode.get.dependencies.size == 1)
           assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
@@ -365,10 +361,9 @@ class CliIntegrationTest extends FlatSpec {
 
           assert(!node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5"))
 
-          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
+          val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
           assert(compressNode.isDefined)
-          assert(compressNode.get.files.head._1 == "tests")
-          assert(compressNode.get.files.head._2.contains("commons-compress-1.4.1-tests.jar"))
+          assert(compressNode.get.file.contains("commons-compress-1.4.1-tests.jar"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
