@@ -382,58 +382,55 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
   }
 
   /**
-    * Result:
-    * |└─ org.apache.commons:commons-compress:1.5
-    */
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   */
   "local dep url" should "have coursier-fetch-test.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          // generate temp jar with fake content
-          val filename = "coursier-fetch-test.jar"
-          val jarFileContent = "tada"
-          val file = new File(filename)
-          val bw = new BufferedWriter(new FileWriter(file))
-          bw.write(jarFileContent)
-          bw.close()
-          val path = file.getAbsolutePath
-          val encodedUrl = encode("file://" + path, "UTF-8")
+    (jsonFile, _) => {
+      // generate temp jar with fake content
+      val filename = "coursier-fetch-test.jar"
+      val jarFileContent = "tada"
+      val file = new File(filename)
+      val bw = new BufferedWriter(new FileWriter(file))
+      bw.write(jarFileContent)
+      bw.close()
+      val path = file.getAbsolutePath
+      val encodedUrl = encode("file://" + path, "UTF-8")
 
-          try {
-            val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-            val fetchOpt = FetchOptions(common = commonOpt)
+      try {
+        val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+        val fetchOpt = FetchOptions(common = commonOpt)
 
-            // fetch with encoded url set to temp jar
-            Fetch.run(
-              fetchOpt,
-              RemainingArgs(
-                Seq(
-                  "org.apache.commons:commons-compress:1.5,url=" + encodedUrl
-                ),
-                Seq()
-              )
-            )
+        // fetch with encoded url set to temp jar
+        Fetch.run(
+          fetchOpt,
+          RemainingArgs(
+            Seq(
+              "org.apache.commons:commons-compress:1.5,url=" + encodedUrl
+            ),
+            Seq()
+          )
+        )
 
-            val node: ReportNode = getReportFromJson(jsonFile)
+        val node: ReportNode = getReportFromJson(jsonFile)
 
-            val depNodes: Seq[DepNode] = node.dependencies
-              .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-              .sortBy(_.files.head._1.length)
-            assert(depNodes.length == 1)
+        val depNodes: Seq[DepNode] = node.dependencies
+          .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+          .sortBy(_.files.head._1.length)
+        assert(depNodes.length == 1)
 
-            val urlInJsonFile = depNodes.head.files.head._2
-            assert(depNodes.head.files.head._1 == "")
-            assert(urlInJsonFile.contains(path))
+        val urlInJsonFile = depNodes.head.files.head._2
+        assert(depNodes.head.files.head._1 == "")
+        assert(urlInJsonFile.contains(path))
 
-            // open jar and inspect contents
-            val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
-            assert(fileContents == jarFileContent)
+        // open jar and inspect contents
+        val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
+        assert(fileContents == jarFileContent)
 
-          } finally {
-            file.delete()
-          }
-        }
+      } finally {
+        file.delete()
       }
+    }
   }
 
   /**
@@ -441,36 +438,33 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * |└─ org.apache.commons:commons-compress:1.5
    */
   "external dep url" should "fetch junit-4.12.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          // encode path to different jar than requested
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      // encode path to different jar than requested
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // fetch with different artifact url
-          Fetch.run(
-            fetchOpt,
-            RemainingArgs(
-              Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-              ),
-              Seq()
-            )
-          )
+      // fetch with different artifact url
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+          ),
+          Seq()
+        )
+      )
 
-          val node: ReportNode = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
-          val depNodes: Seq[DepNode] = node.dependencies
-            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-            .sortBy(_.files.head._1.length)
-          assert(depNodes.length == 1)
-          assert(depNodes.head.files.head._1 == "")
-          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
-        }
-      }
+      val depNodes: Seq[DepNode] = node.dependencies
+        .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+        .sortBy(_.files.head._1.length)
+      assert(depNodes.length == 1)
+      assert(depNodes.head.files.head._1 == "")
+      assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+    }
   }
 
   /**
@@ -478,36 +472,33 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * |└─ a:b:c
    */
   "external dep url with arbitrary coords" should "fetch junit-4.12.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          // encode path to different jar than requested
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      // encode path to different jar than requested
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
-          Fetch.run(
-            fetchOpt,
-            RemainingArgs(
-              Seq(
-                "a:b:c,url=" + externalUrl
-              ),
-              Seq()
-            )
-          )
+      // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "a:b:c,url=" + externalUrl
+          ),
+          Seq()
+        )
+      )
 
-          val node: ReportNode = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
-          val depNodes: Seq[DepNode] = node.dependencies
-            .filter(_.coord == "a:b:c")
-            .sortBy(_.files.head._1.length)
-          assert(depNodes.length == 1)
-          assert(depNodes.head.files.head._1 == "")
-          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
-        }
-      }
+      val depNodes: Seq[DepNode] = node.dependencies
+        .filter(_.coord == "a:b:c")
+        .sortBy(_.files.head._1.length)
+      assert(depNodes.length == 1)
+      assert(depNodes.head.files.head._1 == "")
+      assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+    }
   }
 
   /**
@@ -515,36 +506,33 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * |└─ org.apache.commons:commons-compress:1.5
    */
   "external dep url with classifier" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          // encode path to different jar than requested
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      // encode path to different jar than requested
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          Fetch.run(
-            fetchOpt,
-            RemainingArgs(
-              Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + externalUrl + ",classifier=tests"
-              ),
-              Seq()
-            )
-          )
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.5,url=" + externalUrl + ",classifier=tests"
+          ),
+          Seq()
+        )
+      )
 
-          val node: ReportNode = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
-          val depNodes: Seq[DepNode] = node.dependencies
-            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-            .sortBy(_.files.head._1.length)
-          assert(depNodes.length == 1)
-          // classifier doesn't matter when we have a url so it is not listed
-          assert(depNodes.head.files.head._1 == "")
-          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
-        }
-      }
+      val depNodes: Seq[DepNode] = node.dependencies
+        .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+        .sortBy(_.files.head._1.length)
+      assert(depNodes.length == 1)
+      // classifier doesn't matter when we have a url so it is not listed
+      assert(depNodes.head.files.head._1 == "")
+      assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+    }
   }
 
   /**
@@ -554,52 +542,49 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * |   └─ org.codehaus.jackson:jackson-core-asl:1.8.8
    */
   "external dep url with another dep" should "fetch junit-4.12.jar and jars for jackson-mapper" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          Fetch.run(
-            fetchOpt,
-            RemainingArgs(
-              Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + externalUrl,
-                "org.codehaus.jackson:jackson-mapper-asl:1.8.8"
-              ),
-              Seq()
-            )
-          )
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.5,url=" + externalUrl,
+            "org.codehaus.jackson:jackson-mapper-asl:1.8.8"
+          ),
+          Seq()
+        )
+      )
 
-          val node: ReportNode = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
-          val depNodes: Seq[DepNode] = node.dependencies
-          assert(depNodes.length == 3)
+      val depNodes: Seq[DepNode] = node.dependencies
+      assert(depNodes.length == 3)
 
-          val compressNodes = depNodes
-            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-            .sortBy(_.files.head._1.length)
-          assert(compressNodes.length == 1)
-          assert(compressNodes.head.files.head._1 == "")
-          assert(compressNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+      val compressNodes = depNodes
+        .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+        .sortBy(_.files.head._1.length)
+      assert(compressNodes.length == 1)
+      assert(compressNodes.head.files.head._1 == "")
+      assert(compressNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
 
-          val jacksonMapperNodes = depNodes
-            .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
-            .sortBy(_.files.head._1.length)
-          assert(jacksonMapperNodes.length == 1)
-          assert(jacksonMapperNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"))
-          assert(jacksonMapperNodes.head.dependencies.size == 1)
-          assert(jacksonMapperNodes.head.dependencies.head == "org.codehaus.jackson:jackson-core-asl:1.8.8")
+      val jacksonMapperNodes = depNodes
+        .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
+        .sortBy(_.files.head._1.length)
+      assert(jacksonMapperNodes.length == 1)
+      assert(jacksonMapperNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"))
+      assert(jacksonMapperNodes.head.dependencies.size == 1)
+      assert(jacksonMapperNodes.head.dependencies.head == "org.codehaus.jackson:jackson-core-asl:1.8.8")
 
-          val jacksonCoreNodes = depNodes
-            .filter(_.coord == "org.codehaus.jackson:jackson-core-asl:1.8.8")
-            .sortBy(_.files.head._1.length)
-          assert(jacksonCoreNodes.length == 1)
-          assert(jacksonCoreNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"))
-        }
-      }
+      val jacksonCoreNodes = depNodes
+        .filter(_.coord == "org.codehaus.jackson:jackson-core-asl:1.8.8")
+        .sortBy(_.files.head._1.length)
+      assert(jacksonCoreNodes.length == 1)
+      assert(jacksonCoreNodes.head.files.head._2.contains("org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"))
+    }
   }
 
   /**
@@ -607,29 +592,26 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    *  Error
    */
   "external dep url with forced version" should "throw an error" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(
-            jsonOutputFile = jsonFile.getPath,
-            forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(
+        jsonOutputFile = jsonFile.getPath,
+        forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          assertThrows[Exception]({
-            Fetch.run(
-              fetchOpt,
-              RemainingArgs(
-                Seq(
-                  "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-                ),
-                Seq()
-              )
-            )
-          })
-        }
-      }
+      assertThrows[Exception]({
+        Fetch.run(
+          fetchOpt,
+          RemainingArgs(
+            Seq(
+              "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+            ),
+            Seq()
+          )
+        )
+      })
+    }
   }
 
   /**
@@ -637,33 +619,99 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
    * |└─ org.apache.commons:commons-compress:1.5
    */
   "external dep url with the same forced version" should "fetch junit-4.12.jar" in withFile() {
-    (excludeFile, _) =>
-      withFile() {
-        (jsonFile, _) => {
-          val commonOpt = CommonOptions(
-            jsonOutputFile = jsonFile.getPath,
-            forceVersion = List("org.apache.commons:commons-compress:1.5"))
-          val fetchOpt = FetchOptions(common = commonOpt)
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(
+        jsonOutputFile = jsonFile.getPath,
+        forceVersion = List("org.apache.commons:commons-compress:1.5"))
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-          val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-          Fetch.run(
-            fetchOpt,
-            RemainingArgs(
-              Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-              ),
-              Seq()
-            )
-          )
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+          ),
+          Seq()
+        )
+      )
 
-          val node: ReportNode = getReportFromJson(jsonFile)
+      val node: ReportNode = getReportFromJson(jsonFile)
 
-          val depNodes: Seq[DepNode] = node.dependencies
-          assert(depNodes.length == 1)
-          assert(depNodes.head.files.head._1 == "")
-          assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
-        }
-      }
+      val depNodes: Seq[DepNode] = node.dependencies
+      assert(depNodes.length == 1)
+      assert(depNodes.head.files.head._1 == "")
+      assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+    }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
+   */
+  "external dep url on higher version" should "fetch junit-4.12.jar" in withFile() {
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
+
+      // encode path to different jar than requested
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.4.1",
+            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+          ),
+          Seq()
+        )
+      )
+
+      val node: ReportNode = getReportFromJson(jsonFile)
+
+      val depNodes: Seq[DepNode] = node.dependencies
+        .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+        .sortBy(_.files.head._1.length)
+      assert(depNodes.length == 1)
+      assert(depNodes.head.files.head._1 == "")
+      assert(depNodes.head.files.head._2.contains("junit/junit/4.12/junit-4.12.jar"))
+    }
+  }
+
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
+   * |   └─ org.tukaani:xz:1.2
+   */
+  "external dep url on lower version" should "fetch higher version" in withFile() {
+    (jsonFile, _) => {
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
+
+      // encode path to different jar than requested
+      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+      Fetch.run(
+        fetchOpt,
+        RemainingArgs(
+          Seq(
+            "org.apache.commons:commons-compress:1.4.1,url=" + externalUrl,
+            "org.apache.commons:commons-compress:1.5"
+          ),
+          Seq()
+        )
+      )
+
+      val node: ReportNode = getReportFromJson(jsonFile)
+
+      val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
+      assert(depNode.isDefined)
+      assert(depNode.get.files.head._2.contains("commons-compress-1.5.jar"))
+
+      assert(depNode.get.dependencies.size == 1)
+      assert(depNode.get.dependencies.head.contains("org.tukaani:xz:1.2"))
+    }
   }
 }

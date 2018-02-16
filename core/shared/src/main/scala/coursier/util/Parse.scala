@@ -185,18 +185,12 @@ object Parse {
     val parts = coords.split(":", 5)
 
     val attributes = Attributes("", attrs.getOrElse("classifier", ""))
+
     val extraDependencyParams: Map[String, String] = {
       if (attrs.isDefinedAt("url"))
         Map("url" -> decode(attrs.getOrElse("url", ""), "UTF-8"))
       else
         Map()
-    }
-    val revisedTransitive = {
-      if (extraDependencyParams.isDefinedAt("url"))
-        // If url is present, the dep is intransitive.
-        false
-      else
-        transitive
     }
 
     val localExcludes = req.localExcludes
@@ -213,7 +207,7 @@ object Parse {
                 version,
                 config,
                 attributes,
-                transitive = revisedTransitive,
+                transitive = transitive,
                 exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
               extraDependencyParams)
           })
@@ -227,7 +221,7 @@ object Parse {
                 version,
                 configuration = defaultConfig,
                 attributes = attributes,
-                transitive = revisedTransitive,
+                transitive = transitive,
                 exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
               extraDependencyParams)
           })
@@ -241,7 +235,7 @@ object Parse {
                 version,
                 config,
                 attributes,
-                transitive = revisedTransitive,
+                transitive = transitive,
                 exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
               extraDependencyParams)
           })
@@ -255,7 +249,7 @@ object Parse {
                 version,
                 configuration = defaultConfig,
                 attributes = attributes,
-                transitive = revisedTransitive,
+                transitive = transitive,
                 exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
               extraDependencyParams)
           })
