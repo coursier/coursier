@@ -100,7 +100,7 @@ object ParseTests extends TestSuite {
           assert(dep.attributes == Attributes("", ""))
           assert(dep.transitive == false)
           assert(extraParams.isDefinedAt("url"))
-          assert(extraParams.getOrElse("url", "") == "file://some/encoded/url")
+          assert(extraParams.getOrElse("url", "") == url)
       }
     }
 
@@ -115,7 +115,7 @@ object ParseTests extends TestSuite {
           assert(dep.transitive == false)
           assert(dep.attributes == Attributes("", "tests"))
           assert(extraParams.isDefinedAt("url"))
-          assert(extraParams.getOrElse("url", "") == "file://some/encoded/url")
+          assert(extraParams.getOrElse("url", "") == url)
       }
     }
 

@@ -191,7 +191,7 @@ class Helper(
       res
         .collect { case \/-(l) => l }
         .flatten
-        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]())}
+        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]()) }
     }
 
   val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
@@ -283,7 +283,7 @@ class Helper(
 
   val allDependencies: Seq[Dependency] = allDependenciesWithExtraParams.map(dep => dep._1)
 
-  // Any dependencies with URIs should not be resolved with pom so this is a
+  // Any dependencies with URIs should not be resolved with a pom so this is a
   // hack to add all the deps with URIs to the FallbackDependenciesRepository
   // which will be used during the resolve
   val depsWithUrls: Map[(Module, String), (URL, Boolean)] = {
@@ -294,7 +294,6 @@ class Helper(
   }
 
   val depsWithUrlRepo: Seq[FallbackDependenciesRepository] = Seq(FallbackDependenciesRepository(depsWithUrls))
-
 
   // Prepend FallbackDependenciesRepository to the repository list
   // so that dependencies with URIs are resolved against this repo

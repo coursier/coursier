@@ -266,8 +266,8 @@ object Parse {
   /**
    * Validates the parsed attributes
    *
-   * Currently only classifier and url are allowed. If more are added, they should
-   * be passed in via the second parameter
+   * Currently only "classifier" and "url" are allowed. If more are
+   * added, they should be passed in via the second parameter
    *
    * @param attrs Attributes parsed
    * @param validAttrsKeys Valid attribute keys
