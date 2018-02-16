@@ -383,52 +383,70 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   /**
    * Result:
-   * |└─ org.apache.commons:commons-compress:1.5
+   * Error
    */
-  "local dep url" should "have coursier-fetch-test.jar" in withFile() {
-    (jsonFile, _) => {
-      // generate temp jar with fake content
-      val filename = "coursier-fetch-test.jar"
-      val jarFileContent = "tada"
-      val file = new File(filename)
-      val bw = new BufferedWriter(new FileWriter(file))
-      bw.write(jarFileContent)
-      bw.close()
-      val path = file.getAbsolutePath
-      val encodedUrl = encode("file://" + path, "UTF-8")
+  "extra attributes" should "cause an error" in withFile() {
+    (jsonFile, _) =>
+      val commonOpt = CommonOptions(
+        jsonOutputFile = jsonFile.getPath)
+      val fetchOpt = FetchOptions(common = commonOpt)
 
-      try {
-        val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-        val fetchOpt = FetchOptions(common = commonOpt)
-
-        // fetch with encoded url set to temp jar
+      assertThrows[Exception]({
         Fetch.run(
           fetchOpt,
           RemainingArgs(
             Seq(
-              "org.apache.commons:commons-compress:1.5,url=" + encodedUrl
+              "org.apache.commons:commons-compress:1.5,classifier=test,tada=nothing"
             ),
             Seq()
           )
         )
+      })
+  }
 
-        val node: ReportNode = getReportFromJson(jsonFile)
+  /**
+   * Result:
+   * |└─ org.apache.commons:commons-compress:1.5
+   */
+  "local dep url" should "have coursier-fetch-test.jar" in withFile() {
+    (jsonFile, _) => {
+      withFile("tada", "coursier-fetch-test", ".jar") {
+        (testFile, _) => {
+          val path = testFile.getAbsolutePath
+          val encodedUrl = encode("file://" + path, "UTF-8")
 
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-          .sortBy(_.files.head._1.length)
-        assert(depNodes.length == 1)
 
-        val urlInJsonFile = depNodes.head.files.head._2
-        assert(depNodes.head.files.head._1 == "")
-        assert(urlInJsonFile.contains(path))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
+          val fetchOpt = FetchOptions(common = commonOpt)
 
-        // open jar and inspect contents
-        val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
-        assert(fileContents == jarFileContent)
+          // fetch with encoded url set to temp jar
+          Fetch.run(
+            fetchOpt,
+            RemainingArgs(
+              Seq(
+                "org.apache.commons:commons-compress:1.5,url=" + encodedUrl
+              ),
+              Seq()
+            )
+          )
 
-      } finally {
-        file.delete()
+          val node: ReportNode = getReportFromJson(jsonFile)
+
+          val depNodes: Seq[DepNode] = node.dependencies
+            .filter(_.coord == "org.apache.commons:commons-compress:1.5")
+            .sortBy(_.files.head._1.length)
+          assert(depNodes.length == 1)
+
+          val urlInJsonFile = depNodes.head.files.head._2
+          assert(depNodes.head.files.head._1 == "")
+          assert(urlInJsonFile.contains(path))
+
+          // open jar and inspect contents
+          val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
+          assert(fileContents == "tada")
+
+
+        }
       }
     }
   }

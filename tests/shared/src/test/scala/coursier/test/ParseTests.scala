@@ -162,5 +162,16 @@ object ParseTests extends TestSuite {
         case _: Throwable => assert(false) // Unexpected exception
       }
     }
+
+    "illegal 3" - {
+      try {
+        Parse.moduleVersionConfig("a:b:c,batman=robin", ModuleRequirements(), transitive = true, "2.11.11")
+        assert(false) // Parsing should fail
+      }
+      catch {
+        case foo: ModuleParseError => assert(foo.getMessage().contains("The only attributes allowed are:"))
+        case _: Throwable => assert(false) // Unexpected exception
+      }
+    }
   }
 }

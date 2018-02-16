@@ -182,6 +182,10 @@ object Parse {
     }
     }).toMap
 
+    // Only "classifier" and "url" attributes are allowed
+    val validAttrsKeys = Set("classifier", "url")
+    validateAttributes(attrs, validAttrsKeys)
+
     val parts = coords.split(":", 5)
 
     val attributes = Attributes("", attrs.getOrElse("classifier", ""))
@@ -257,6 +261,24 @@ object Parse {
       case _ =>
         Left(s"Malformed dependency: $s")
     }
+  }
+
+  /**
+   * Validates the parsed attributes
+   *
+   * Currently only classifier and url are allowed. If more are added, they should
+   * be passed in via the second parameter
+   *
+   * @param attrs Attributes parsed
+   * @param validAttrsKeys Valid attribute keys
+   */
+  private def validateAttributes(attrs: Map[String, String], validAttrsKeys: Set[String]): Unit = {
+    val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
+
+    if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
+      throw new ModuleParseError(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
+        if (extraAttributes.nonEmpty) s"The following are invalid: ${extraAttributes.mkString(", ")}"
+      }")
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
