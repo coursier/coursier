@@ -98,7 +98,6 @@ object ParseTests extends TestSuite {
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
           assert(dep.attributes == Attributes("", ""))
-          assert(dep.transitive == false)
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
       }
@@ -112,22 +111,9 @@ object ParseTests extends TestSuite {
           assert(dep.module.name == "avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.transitive == false)
           assert(dep.attributes == Attributes("", "tests"))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
-      }
-    }
-
-    "multiple attrs" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,nickname=superman", ModuleRequirements(), transitive = true, "2.11.11") match {
-        case Left(err) => assert(false)
-        case Right((dep, _)) =>
-          assert(dep.module.organization == "org.apache.avro")
-          assert(dep.module.name == "avro")
-          assert(dep.version == "1.7.4")
-          assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes("", "tests"))
       }
     }
 
@@ -158,7 +144,7 @@ object ParseTests extends TestSuite {
         assert(false) // Parsing should fail but succeeded.
       }
       catch {
-        case foo: ModuleParseError => assert(foo.getMessage().contains("Failed to parse attribute")) // do nothing
+        case foo: ModuleParseError => assert(foo.getMessage().contains("The only attributes allowed are:")) // do nothing
         case _: Throwable => assert(false) // Unexpected exception
       }
     }
