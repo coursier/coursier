@@ -208,12 +208,12 @@ object Parse {
           .right
           .map(mod => {
             Dependency(
-                mod,
-                version,
-                config,
-                attributes,
-                transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+              mod,
+              version,
+              config,
+              attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, "", rawName, version) =>
@@ -221,12 +221,12 @@ object Parse {
           .right
           .map(mod => {
             Dependency(
-                mod,
-                version,
-                configuration = defaultConfig,
-                attributes = attributes,
-                transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+              mod,
+              version,
+              configuration = defaultConfig,
+              attributes = attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version, config) =>
@@ -234,12 +234,12 @@ object Parse {
           .right
           .map(mod => {
             Dependency(
-                mod,
-                version,
-                config,
-                attributes,
-                transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+              mod,
+              version,
+              config,
+              attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version) =>
@@ -247,12 +247,12 @@ object Parse {
           .right
           .map(mod => {
             Dependency(
-                mod,
-                version,
-                configuration = defaultConfig,
-                attributes = attributes,
-                transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+              mod,
+              version,
+              configuration = defaultConfig,
+              attributes = attributes,
+              transitive = transitive,
+              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case _ =>

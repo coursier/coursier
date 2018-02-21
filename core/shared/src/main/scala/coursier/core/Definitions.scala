@@ -238,4 +238,4 @@ final case class Authentication(
 ) {
   override def toString: String =
     s"Authentication($user, *******)"
-}
+

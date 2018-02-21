@@ -361,4 +361,4 @@ object IvyRepository {
       case -\/(msg) =>
         throw new IllegalArgumentException(s"Error while parsing Ivy patterns: $msg")
     }
-}
+
