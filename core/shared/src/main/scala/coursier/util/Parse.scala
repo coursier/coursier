@@ -188,7 +188,7 @@ object Parse {
     val validAttrsKeys = Set("classifier", "url")
 
     validateAttributes(attrs, validAttrsKeys) match {
-      case Some(err) => Left(err)
+      case Some(err) => return Left(err)
       case None =>
     }
 
