@@ -2,7 +2,7 @@ package coursier
 package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
-import java.net.{URL, URLClassLoader}
+import java.net.{URL, URLClassLoader, URLDecoder}
 import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
@@ -286,12 +286,13 @@ class Helper(
   // Any dependencies with URIs should not be resolved with a pom so this is a
   // hack to add all the deps with URIs to the FallbackDependenciesRepository
   // which will be used during the resolve
-  val depsWithUrls: Map[(Module, String), (URL, Boolean)] = {
-    allDependenciesWithExtraParams
-      .filter(depWithExtraParams => depWithExtraParams._2.isDefinedAt("url"))
-      .map(depWithExtraParams =>
-        (depWithExtraParams._1.moduleVersion, (new URL(depWithExtraParams._2.getOrElse("url", "")), true))).toMap
-  }
+  val depsWithUrls: Map[(Module, String), (URL, Boolean)] = allDependenciesWithExtraParams
+    .flatMap {
+      case (dep, extraParams) =>
+        extraParams.get("url").map { url =>
+          dep.moduleVersion -> (new URL(URLDecoder.decode(url, "UTF-8")), true)
+        }
+    }.toMap
 
   val depsWithUrlRepo: Seq[FallbackDependenciesRepository] = Seq(FallbackDependenciesRepository(depsWithUrls))
 
@@ -299,10 +300,9 @@ class Helper(
   // so that dependencies with URIs are resolved against this repo
   val repositories: Seq[Repository] = depsWithUrlRepo ++ standardRepositories
 
-  depsWithUrls.foreach(dep =>
-    if (forceVersions.contains(dep._1._1) && forceVersions.getOrElse(dep._1._1, dep._1._1) != dep._1._2)
-      throw new Exception("Cannot specify a URL for a dependency for which a version is being forced")
-  )
+  for (((mod, version), _) <- depsWithUrls if forceVersions.get(mod).exists(_ != version))
+    throw new Exception(s"Cannot force a version that is different from the one specified " +
+      s"for the module ${mod}:${version} with url")
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -825,7 +825,6 @@ class Helper(
 
         // Trying to get the main class of the first artifact
         val mainClassOpt = for {
-
           dep: Dependency <- transitiveDeps.headOption
           module = dep.module
           mainClass <- mainClasses.collectFirst {

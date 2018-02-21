@@ -5,7 +5,6 @@ import coursier.core.{Module, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
-import java.net.URLDecoder.decode
 import scala.collection.mutable.ArrayBuffer
 import scalaz.\/
 import scalaz.Scalaz.ToEitherOps
@@ -153,7 +152,8 @@ object Parse {
     *  or
     *   org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier" attribute is used, and others are ignored.
+    *  Currently only the "classifier" and "url attributes are
+    *  used, and others throw errors.
     */
   def moduleVersionConfig(s: String,
                           req: ModuleRequirements,
@@ -171,12 +171,12 @@ object Parse {
 
     val attrs = strings.drop(1).map({ x => {
       if (x.mkString.contains(argSeparator)) {
-        throw new ModuleParseError(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
+        return Left(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
           s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
       }
       val y = x.split("=")
       if (y.length != 2) {
-        throw new ModuleParseError(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
+        return Left(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
       }
       (y(0), y(1))
     }
@@ -184,83 +184,82 @@ object Parse {
 
     // Only "classifier" and "url" attributes are allowed
     val validAttrsKeys = Set("classifier", "url")
-    validateAttributes(attrs, validAttrsKeys)
+
+    val maybeErrorMsg = validateAttributes(attrs, validAttrsKeys)
+    if (maybeErrorMsg.isDefined)
+     return Left(maybeErrorMsg.get)
 
     val parts = coords.split(":", 5)
 
     val attributes = Attributes("", attrs.getOrElse("classifier", ""))
 
-    val extraDependencyParams: Map[String, String] = {
-      if (attrs.isDefinedAt("url"))
-        Map("url" -> decode(attrs.getOrElse("url", ""), "UTF-8"))
-      else
-        Map()
-    }
+    val extraDependencyParams: Map[String, String] = attrs.get("url") match {
+        case Some(url) => Map("url" -> url)
+        case None => Map()
+      }
 
     val localExcludes = req.localExcludes
     val globalExcludes = req.globalExcludes
     val defaultConfig = req.defaultConfiguration
 
-    parts match {
+    val depOrError = parts match {
       case Array(org, "", rawName, version, config) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            (Dependency(
+            Dependency(
                 mod,
                 version,
                 config,
                 attributes,
                 transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
-              extraDependencyParams)
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, "", rawName, version) =>
         module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            (Dependency(
+            Dependency(
                 mod,
                 version,
                 configuration = defaultConfig,
                 attributes = attributes,
                 transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
-              extraDependencyParams)
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version, config) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            (Dependency(
+            Dependency(
                 mod,
                 version,
                 config,
                 attributes,
                 transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
-              extraDependencyParams)
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case Array(org, rawName, version) =>
         module(s"$org:$rawName", defaultScalaVersion)
           .right
           .map(mod => {
-            (Dependency(
+            Dependency(
                 mod,
                 version,
                 configuration = defaultConfig,
                 attributes = attributes,
                 transitive = transitive,
-                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes),
-              extraDependencyParams)
+                exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
           })
 
       case _ =>
         Left(s"Malformed dependency: $s")
     }
+
+    depOrError.right.map(dep => (dep, extraDependencyParams))
   }
 
   /**
@@ -271,14 +270,16 @@ object Parse {
    *
    * @param attrs Attributes parsed
    * @param validAttrsKeys Valid attribute keys
+   * @return A string if there is an error, otherwise None
    */
-  private def validateAttributes(attrs: Map[String, String], validAttrsKeys: Set[String]): Unit = {
+  private def validateAttributes(attrs: Map[String, String], validAttrsKeys: Set[String]): Option[String] = {
     val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
 
     if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
-      throw new ModuleParseError(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
+      Some(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
         if (extraAttributes.nonEmpty) s"The following are invalid: ${extraAttributes.mkString(", ")}"
       }")
+    else None
   }
 
   @deprecated("use the variant accepting a default scala version", "1.0.0-M13")

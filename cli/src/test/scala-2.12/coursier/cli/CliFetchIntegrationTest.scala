@@ -444,8 +444,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
           // open jar and inspect contents
           val fileContents = Source.fromFile(urlInJsonFile).getLines.mkString
           assert(fileContents == "tada")
-
-
         }
       }
     }

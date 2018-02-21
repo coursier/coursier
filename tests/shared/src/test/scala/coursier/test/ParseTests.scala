@@ -4,7 +4,6 @@ import coursier.{Attributes, MavenRepository, Repository}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
 import coursier.util.Parse.{ModuleParseError, ModuleRequirements}
-import java.net.URLEncoder.encode
 import utest._
 
 object ParseTests extends TestSuite {
@@ -21,7 +20,7 @@ object ParseTests extends TestSuite {
       case _ => false
     }
 
-  val url = "file://some/encoded/url"
+  val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
   val tests = TestSuite {
     "bintray-ivy:" - {
@@ -90,7 +89,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with url" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,url=" + encode(url, "UTF-8"), ModuleRequirements(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,url=" + url, ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == "org.apache.avro")
@@ -104,7 +103,7 @@ object ParseTests extends TestSuite {
     }
 
     "multiple attrs with url" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + encode(url, "UTF-8"), ModuleRequirements(), transitive = true, "2.11.11") match {
+      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url, ModuleRequirements(), transitive = true, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == "org.apache.avro")
