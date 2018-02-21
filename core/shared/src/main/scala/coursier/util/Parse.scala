@@ -182,6 +182,8 @@ object Parse {
     }
     }).toMap
 
+    val parts = coords.split(":", 5)
+
     // Only "classifier" and "url" attributes are allowed
     val validAttrsKeys = Set("classifier", "url")
 
@@ -190,9 +192,10 @@ object Parse {
       case None =>
     }
 
-    val parts = coords.split(":", 5)
-
-    val attributes = Attributes("", attrs.getOrElse("classifier", ""))
+    val attributes = attrs.get("classifier") match {
+      case Some(c) => Attributes("", c)
+      case None => Attributes("", "")
+    }
 
     val extraDependencyParams: Map[String, String] = attrs.get("url") match {
         case Some(url) => Map("url" -> url)
