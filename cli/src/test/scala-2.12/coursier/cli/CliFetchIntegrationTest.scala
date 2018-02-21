@@ -383,29 +383,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
 
   /**
    * Result:
-   * Error
-   */
-  "extra attributes" should "cause an error" in withFile() {
-    (jsonFile, _) =>
-      val commonOpt = CommonOptions(
-        jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
-
-      assertThrows[Exception]({
-        Fetch.run(
-          fetchOpt,
-          RemainingArgs(
-            Seq(
-              "org.apache.commons:commons-compress:1.5,classifier=test,tada=nothing"
-            ),
-            Seq()
-          )
-        )
-      })
-  }
-
-  /**
-   * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
   "local dep url" should "have coursier-fetch-test.jar" in withFile() {
