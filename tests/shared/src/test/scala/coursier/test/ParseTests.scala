@@ -128,35 +128,23 @@ object ParseTests extends TestSuite {
     }
 
     "illegal 1" - {
-      try {
-        Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11")
-        assert(false) // Parsing should fail but succeeded.
-      }
-      catch {
-        case foo: ModuleParseError => assert(foo.getMessage().contains("':' is not allowed in attribute")) // do nothing
-        case _: Throwable => assert(false) // Unexpected exception
+      Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
+        case Left(err) => assert(err.contains("':' is not allowed in attribute"))
+        case Right(dep) => assert(false)
       }
     }
 
     "illegal 2" - {
-      try {
-        Parse.moduleVersionConfig("junit:junit:4.12,attr", ModuleRequirements(), transitive = true, "2.11.11")
-        assert(false) // Parsing should fail but succeeded.
-      }
-      catch {
-        case foo: ModuleParseError => assert(foo.getMessage().contains("Failed to parse attribute")) // do nothing
-        case _: Throwable => assert(false) // Unexpected exception
+      Parse.moduleVersionConfig("junit:junit:4.12,attr", ModuleRequirements(), transitive = true, "2.11.11") match {
+        case Left(err) => assert(err.contains("Failed to parse attribute"))
+        case Right(dep) => assert(false)
       }
     }
 
     "illegal 3" - {
-      try {
-        Parse.moduleVersionConfig("a:b:c,batman=robin", ModuleRequirements(), transitive = true, "2.11.11")
-        assert(false) // Parsing should fail
-      }
-      catch {
-        case foo: ModuleParseError => assert(foo.getMessage().contains("The only attributes allowed are:"))
-        case _: Throwable => assert(false) // Unexpected exception
+      Parse.moduleVersionConfig("a:b:c,batman=robin", ModuleRequirements(), transitive = true, "2.11.11") match {
+        case Left(err) => assert(err.contains("The only attributes allowed are:"))
+        case Right(dep) => assert(false)
       }
     }
   }
