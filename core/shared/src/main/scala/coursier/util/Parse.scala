@@ -169,7 +169,7 @@ object Parse {
     val strings = s.split(attrSeparator)
     val coords = strings.head
 
-    val attrs = strings.drop(1).map({ x => {
+    def parseAttributes(x: String): Either[String, (String, String)] = {
       if (x.mkString.contains(argSeparator)) {
         return Left(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
           s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
@@ -178,16 +178,31 @@ object Parse {
       if (y.length != 2) {
         return Left(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
       }
-      (y(0), y(1))
+      Right((y(0), y(1)))
     }
-    }).toMap
+
+    val attrsOrErrors: Either[String, Map[String, String]] = strings.drop(1).toSeq
+      .map(x => parseAttributes(x)).partition(_.isLeft) match {
+        case (Nil, results) => Right((for (Right(parsedAttrs) <- results) yield parsedAttrs).toMap)
+        case (errors, _) => Left((for (Left(err) <- errors) yield err).mkString("\n"))
+    }
+
+    attrsOrErrors match {
+      case Left(err) => Left(err)
+      case _ =>
+    }
+
+    val attrs = attrsOrErrors match {
+      case Right(parsedAttributes) => parsedAttributes
+    }
 
     // Only "classifier" and "url" attributes are allowed
     val validAttrsKeys = Set("classifier", "url")
 
-    val maybeErrorMsg = validateAttributes(attrs, validAttrsKeys)
-    if (maybeErrorMsg.isDefined)
-     return Left(maybeErrorMsg.get)
+    validateAttributes(attrs, validAttrsKeys) match {
+      case Some(err) => Left(err)
+      case None =>
+    }
 
     val parts = coords.split(":", 5)
 
