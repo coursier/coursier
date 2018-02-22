@@ -230,7 +230,7 @@ object Settings {
 
   lazy val shading =
     inConfig(_root_.coursier.ShadingPlugin.Shading)(PgpSettings.projectSettings) ++
-       // ytf does this have to be repeated here?
+       // Why does this have to be repeated here?
        // Can't figure out why configuration gets lost without this in particular...
       _root_.coursier.ShadingPlugin.projectSettings ++
       Seq(
@@ -276,5 +276,17 @@ object Settings {
   }
 
   lazy val Integration = config("it").extend(Test)
+
+  def runCommand(cmd: Seq[String], dir: File): Unit = {
+    val b = new ProcessBuilder(cmd: _*)
+    b.directory(dir)
+    b.inheritIO()
+    val p = b.start()
+    val retCode = p.waitFor()
+    if (retCode != 0)
+      sys.error(s"Command ${cmd.mkString(" ")} failed (return code $retCode)")
+  }
+
+  val gitLock = new Object
 
 }
