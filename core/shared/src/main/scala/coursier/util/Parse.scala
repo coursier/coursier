@@ -166,104 +166,117 @@ object Parse {
     val attrSeparator = ","
     val argSeparator = ":"
 
-    val strings = s.split(attrSeparator)
-    val coords = strings.head
+    val Array(coords, rawAttrs @ _*) = s.split(attrSeparator)
 
-    val attrs = strings.drop(1).map({ x => {
-      if (x.mkString.contains(argSeparator)) {
-        return Left(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
-          s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
-      }
-      val y = x.split("=")
-      if (y.length != 2) {
-        return Left(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
-      }
-      (y(0), y(1))
-    }
-    }).toMap
-
-    val parts = coords.split(":", 5)
-
-    // Only "classifier" and "url" attributes are allowed
-    val validAttrsKeys = Set("classifier", "url")
-
-    validateAttributes(attrs, s, validAttrsKeys) match {
-      case Some(err) => return Left(err)
-      case None =>
-    }
-
-    val attributes = attrs.get("classifier") match {
-      case Some(c) => Attributes("", c)
-      case None => Attributes("", "")
-    }
-
-    val extraDependencyParams: Map[String, String] = attrs.get("url") match {
-        case Some(url) => Map("url" -> url)
-        case None => Map()
+    val attrsOrErrors = rawAttrs
+      .map { x =>
+        if (x.contains(argSeparator))
+          Left(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
+            s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
+        else
+          x.split("=") match {
+            case Array(k, v) =>
+              Right(k -> v)
+            case _ =>
+              Left(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
+          }
       }
 
-    val localExcludes = req.localExcludes
-    val globalExcludes = req.globalExcludes
-    val defaultConfig = req.defaultConfiguration
+    attrsOrErrors
+      .collectFirst {
+        case Left(err) => Left(err)
+      }
+      .getOrElse {
 
-    val depOrError = parts match {
-      case Array(org, "", rawName, version, config) =>
-        module(s"$org::$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+        val attrs = attrsOrErrors
+          .collect {
+            case Right(attr) => attr
+          }
+          .toMap
 
-      case Array(org, "", rawName, version) =>
-        module(s"$org::$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+        val parts = coords.split(":", 5)
 
-      case Array(org, rawName, version, config) =>
-        module(s"$org:$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+        // Only "classifier" and "url" attributes are allowed
+        val validAttrsKeys = Set("classifier", "url")
 
-      case Array(org, rawName, version) =>
-        module(s"$org:$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+        validateAttributes(attrs, s, validAttrsKeys) match {
+          case Some(err) => Left(err)
+          case None =>
 
-      case _ =>
-        Left(s"Malformed dependency: $s")
+            val attributes = attrs.get("classifier") match {
+              case Some(c) => Attributes("", c)
+              case None => Attributes("", "")
+            }
+
+            val extraDependencyParams: Map[String, String] = attrs.get("url") match {
+                case Some(url) => Map("url" -> url)
+                case None => Map()
+              }
+
+            val localExcludes = req.localExcludes
+            val globalExcludes = req.globalExcludes
+            val defaultConfig = req.defaultConfiguration
+
+            val depOrError = parts match {
+              case Array(org, "", rawName, version, config) =>
+                module(s"$org::$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      config,
+                      attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, "", rawName, version) =>
+                module(s"$org::$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      configuration = defaultConfig,
+                      attributes = attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, rawName, version, config) =>
+                module(s"$org:$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      config,
+                      attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, rawName, version) =>
+                module(s"$org:$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      configuration = defaultConfig,
+                      attributes = attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case _ =>
+                Left(s"Malformed dependency: $s")
+            }
+
+            depOrError.right.map(dep => (dep, extraDependencyParams))
+        }
     }
-
-    depOrError.right.map(dep => (dep, extraDependencyParams))
   }
 
   /**
