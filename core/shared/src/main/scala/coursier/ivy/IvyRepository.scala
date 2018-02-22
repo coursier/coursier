@@ -296,8 +296,7 @@ object IvyRepository {
           .map(Some(_)))
 
       pattern <- propertiesPattern.substituteProperties(properties)
-      metadataPatternOpt <- metadataPropertiesPatternOpt
-        .fold(Option.empty[Pattern].right[String])(_.substituteProperties(properties).map(Some(_)))
+      metadataPatternOpt <- metadataPropertiesPatternOpt.fold(Option.empty[Pattern].right[String])(_.substituteProperties(properties).map(Some(_)))
 
     } yield
       IvyRepository(

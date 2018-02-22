@@ -294,11 +294,11 @@ class Helper(
         }
     }.toMap
 
-  val depsWithUrlRepo: Seq[FallbackDependenciesRepository] = Seq(FallbackDependenciesRepository(depsWithUrls))
+  val depsWithUrlRepo: FallbackDependenciesRepository = FallbackDependenciesRepository(depsWithUrls)
 
   // Prepend FallbackDependenciesRepository to the repository list
   // so that dependencies with URIs are resolved against this repo
-  val repositories: Seq[Repository] = depsWithUrlRepo ++ standardRepositories
+  val repositories: Seq[Repository] = Seq(depsWithUrlRepo) ++ standardRepositories
 
   for (((mod, version), _) <- depsWithUrls if forceVersions.get(mod).exists(_ != version))
     throw new Exception(s"Cannot force a version that is different from the one specified " +

@@ -187,7 +187,7 @@ object Parse {
     // Only "classifier" and "url" attributes are allowed
     val validAttrsKeys = Set("classifier", "url")
 
-    validateAttributes(attrs, validAttrsKeys) match {
+    validateAttributes(attrs, s, validAttrsKeys) match {
       case Some(err) => return Left(err)
       case None =>
     }
@@ -273,15 +273,19 @@ object Parse {
    * added, they should be passed in via the second parameter
    *
    * @param attrs Attributes parsed
+   * @param dep String representing the dep being parsed
    * @param validAttrsKeys Valid attribute keys
    * @return A string if there is an error, otherwise None
    */
-  private def validateAttributes(attrs: Map[String, String], validAttrsKeys: Set[String]): Option[String] = {
+  private def validateAttributes(attrs: Map[String, String],
+                                 dep: String,
+                                 validAttrsKeys: Set[String]): Option[String] = {
     val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
 
     if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
       Some(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
-        if (extraAttributes.nonEmpty) s"The following are invalid: ${extraAttributes.mkString(", ")}"
+        if (extraAttributes.nonEmpty) s"The following are invalid: " +
+          s"${extraAttributes.map(_ + s" in "+ dep).mkString(", ")}"
       }")
     else None
   }
