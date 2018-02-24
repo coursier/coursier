@@ -8,7 +8,7 @@ plugins_(
   "com.github.gseitz" % "sbt-release"     % "1.0.6",
   "org.scala-js"      % "sbt-scalajs"     % "0.6.20",
   "io.get-coursier"   % "sbt-shading"     % coursierVersion,
-  "org.xerial.sbt"    % "sbt-sonatype"    % "2.0",
+  "org.xerial.sbt"    % "sbt-sonatype"    % "2.3",
   "com.timushev.sbt"  % "sbt-updates"     % "0.3.3",
   "org.tpolecat"      % "tut-plugin"      % "0.6.1"
 )
