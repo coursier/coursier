@@ -67,7 +67,7 @@ object JsonReport {
       DepNode(reconciledVersionStr(r), getFile(r), acc.toSet)
 
     })
-    val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector, ReportNode.version)
+    val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
     printer.pretty(report.asJson)
   }
 
@@ -96,6 +96,7 @@ final case class JsonElem(dep: Dependency,
           .filter(_.classifier == dep.attributes.classifier)
           .map(x => req.fileByArtifact.get(x.url))
           .filter(_.isDefined)
+          .filter(_.nonEmpty)
           .map(_.get.getPath)
           .headOption
     )
