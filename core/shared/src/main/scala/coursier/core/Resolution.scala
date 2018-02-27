@@ -1074,7 +1074,7 @@ final case class Resolution(
       artifact <- source
         .artifacts(dep, proj, classifiers)
       if optional || !artifact.isOptional
-    } yield dep -> artifact
+    } yield dep.copy(attributes = dep.attributes.copy(classifier = artifact.classifier)) -> artifact
 
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
     dependencyArtifacts0(None, optional = false)
