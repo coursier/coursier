@@ -943,7 +943,9 @@ object Cache {
   /**
     * This method computes the task needed to get a file.
     *
-    * Retry only applies to [[coursier.FileError.WrongChecksum]] and [[coursier.FileError.DownloadError]]
+    * Retry only applies to [[coursier.FileError.WrongChecksum]].
+    *
+    * [[coursier.FileError.DownloadError]] is handled separately at [[downloading]]
     */
   def file(
     artifact: Artifact,
@@ -1005,23 +1007,6 @@ object Cache {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
           logger.foreach(_.log(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying...\n", None))
-          file(
-            artifact,
-            cache,
-            cachePolicy,
-            checksums,
-            logger,
-            pool,
-            ttl,
-            retry - 1
-          )
-        }
-      case err: FileError.DownloadError =>
-        if (retry == 0) {
-          EitherT(Task.now[Either[FileError, File]](Left(err)))
-        }
-        else {
-          logger.foreach(_.log(s"Download error ${artifact.url}. Retrying...\n", None))
           file(
             artifact,
             cache,
