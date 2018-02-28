@@ -16,11 +16,6 @@ sealed abstract class FileError(
 
 object FileError {
 
-  final case class RetryExhausted(reason: String) extends FileError(
-    "retry exhausted",
-    reason
-  )
-
   final case class DownloadError(reason: String) extends FileError(
     "download error",
     reason
