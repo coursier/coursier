@@ -23,6 +23,9 @@ import coursier.util.EitherT
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
 import scala.util.control.NonFatal
+import scala.Console
+
+import scalaz._
 
 object Cache {
 
@@ -894,7 +897,7 @@ object Cache {
     pool: ExecutorService
   ): EitherT[Task, FileError, Unit] = {
 
-    println("$$$ sum")
+    println("$$$")
 
     implicit val pool0 = pool
 
@@ -951,6 +954,7 @@ object Cache {
     ttl: Option[Duration] = defaultTtl,
     retry: Int = 1
   ): EitherT[Task, FileError, File] = {
+    println(s"retry: $retry")
     if (retry < 0) {
       EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
     }
@@ -960,7 +964,6 @@ object Cache {
       val checksums0: Seq[Option[String]] = if (checksums.isEmpty) Seq(None) else checksums
 
       val res: EitherT[Task, FileError, (File, Option[String])] = EitherT {
-        println("hehe")
         download(
           artifact,
           cache,
@@ -993,12 +996,44 @@ object Cache {
         }
       }
 
-      res.flatMap {
+      val ret: EitherT[Task, FileError, File] = res.flatMap {
         case (file0, None) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
         case (file0, Some(shaType)) =>
-          println(shaType, artifact.url)
-          validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+          if (retry == 1) {
+            EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
+          }
+          else {
+            validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+          }
       }
+
+      ret.leftFlatMap( fileError => {
+        val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
+        badFile.delete()
+        Console.err.println(s"Bad file deleted: ${badFile.getAbsolutePath}")
+        file(
+          artifact,
+          cache,
+          cachePolicy,
+          checksums,
+          logger,
+          pool,
+          ttl,
+          retry -1
+        )
+      })
+
+//      val value: scalaz.EitherT[Task, Nothing, File] = ret.scalaz.leftMap()
+//      val y: EitherT[Task, Nothing, File] = ret.leftMap()
+
+//      ret.flatMap{
+//        case (file0, Left(exception)) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
+//        case (file0, Some(shaType)) =>
+//          val x: EitherT[Task, FileError, File] = validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+//
+//      }
+//
+//      ret
     }
 
   }
@@ -1012,7 +1047,7 @@ object Cache {
     ttl: Option[Duration] = defaultTtl
   ): Fetch.Content[Task] = {
     artifact =>
-      file(
+      val tmp: EitherT[Task, String, File] = file(
         artifact,
         cache,
         cachePolicy,
@@ -1020,7 +1055,8 @@ object Cache {
         logger = logger,
         pool = pool,
         ttl = ttl
-      ).leftMap(_.describe).flatMap { f =>
+      ).leftMap(_.describe)
+      tmp.flatMap { f =>
 
         def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
 
