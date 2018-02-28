@@ -953,7 +953,7 @@ object Cache {
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl,
-    retry: Int = 0
+    retry: Int = 1
   ): EitherT[Task, FileError, File] = {
 
     implicit val pool0 = pool
@@ -1004,8 +1004,7 @@ object Cache {
         else {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
-//          logger.foreach(_.foundLocally())
-          Console.err.println(s"Bad file deleted: ${badFile.getAbsolutePath}")
+          logger.foreach(_.log(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying...\n", None))
           file(
             artifact,
             cache,
@@ -1022,6 +1021,7 @@ object Cache {
           EitherT(Task.now[Either[FileError, File]](Left(err)))
         }
         else {
+          logger.foreach(_.log(s"Download error ${artifact.url}. Retrying...\n", None))
           file(
             artifact,
             cache,
@@ -1188,6 +1188,7 @@ object Cache {
     def downloadedArtifact(url: String, success: Boolean): Unit = {}
     def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit = {}
     def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit = {}
+    def log(content: String, currentTimeOpt: Option[Long]): Unit = {}
   }
 
   object Logger {
@@ -1227,6 +1228,8 @@ object Cache {
                 logger.checkingUpdates(url, currentTimeOpt)
               override def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]) =
                 logger.checkingUpdatesResult(url, currentTimeOpt, remoteTimeOpt)
+              override def log(content: String, currentTimeOpt: Option[Long]): Unit =
+                logger.log(content, currentTimeOpt)
             }
         }
     }
