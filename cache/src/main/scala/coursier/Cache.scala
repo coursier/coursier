@@ -519,7 +519,7 @@ object Cache {
                       doTouchCheckFile(file)
                       Right(false)
                     }
-                  case other =>
+                  case other =>FileError
                     Task.now(other)
                 }
             }
@@ -940,6 +940,11 @@ object Cache {
     }
   }
 
+  /**
+    * This method computes the task needed to get a file.
+    *
+    * Retry only applies to [[coursier.FileError.WrongChecksum]] and [[coursier.FileError.DownloadError]]
+    */
   def file(
     artifact: Artifact,
     cache: File = default,
@@ -948,57 +953,58 @@ object Cache {
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl,
-    retry: Int = 1
+    retry: Int = 0
   ): EitherT[Task, FileError, File] = {
-    if (retry < 0) {
-      EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
-    }
-    else {
 
-      implicit val pool0 = pool
-      val checksums0: Seq[Option[String]] = if (checksums.isEmpty) Seq(None) else checksums
+    implicit val pool0 = pool
+    val checksums0: Seq[Option[String]] = if (checksums.isEmpty) Seq(None) else checksums
 
-      val res: EitherT[Task, FileError, (File, Option[String])] = EitherT {
-        download(
-          artifact,
-          cache,
-          checksums = checksums0.collect { case Some(c) => c }.toSet,
-          cachePolicy,
-          pool,
-          logger0 = logger,
-          ttl = ttl
-        ).map { results =>
-          val checksum = checksums0.find {
-            case None => true
-            case Some(c) =>
-              artifact.checksumUrls.get(c).exists { cUrl =>
-                results.exists { case ((_, u), b) =>
-                  u == cUrl && b.isRight
-                }
+    val res: EitherT[Task, FileError, (File, Option[String])] = EitherT {
+      download(
+        artifact,
+        cache,
+        checksums = checksums0.collect { case Some(c) => c }.toSet,
+        cachePolicy,
+        pool,
+        logger0 = logger,
+        ttl = ttl
+      ).map { results =>
+        val checksum = checksums0.find {
+          case None => true
+          case Some(c) =>
+            artifact.checksumUrls.get(c).exists { cUrl =>
+              results.exists { case ((_, u), b) =>
+                u == cUrl && b.isRight
               }
-          }
-
-          val ((f, _), res) = results.head
-          res.right.flatMap { _ =>
-            checksum match {
-              case None =>
-                // FIXME All the checksums should be in the error, possibly with their URLs
-                //       from artifact.checksumUrls
-                Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
-              case Some(c) => Right((f, c))
             }
+        }
+
+        val ((f, _), res) = results.head
+        res.right.flatMap { _ =>
+          checksum match {
+            case None =>
+              // FIXME All the checksums should be in the error, possibly with their URLs
+              //       from artifact.checksumUrls
+              Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
+            case Some(c) => Right((f, c))
           }
         }
       }
+    }
 
-      res.flatMap {
-        case (file0, None) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
-        case (file0, Some(shaType)) =>
-          validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
-      }.leftFlatMap {
-        case _: FileError.WrongChecksum =>
+    res.flatMap {
+      case (file0, None) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
+      case (file0, Some(shaType)) =>
+        validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+    }.leftFlatMap {
+      case err: FileError.WrongChecksum =>
+        if (retry == 0) {
+          EitherT(Task.now[Either[FileError, File]](Left(err)))
+        }
+        else {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
+//          logger.foreach(_.foundLocally())
           Console.err.println(s"Bad file deleted: ${badFile.getAbsolutePath}")
           file(
             artifact,
@@ -1010,7 +1016,12 @@ object Cache {
             ttl,
             retry - 1
           )
-        case _: FileError.DownloadError =>
+        }
+      case err: FileError.DownloadError =>
+        if (retry == 0) {
+          EitherT(Task.now[Either[FileError, File]](Left(err)))
+        }
+        else {
           file(
             artifact,
             cache,
@@ -1021,11 +1032,12 @@ object Cache {
             ttl,
             retry - 1
           )
-        case err: FileError.NotFound =>
-          EitherT(Task.now[Either[FileError, File]](Left(err)))
-      }
-
+        }
+      case err =>
+        EitherT(Task.now[Either[FileError, File]](Left(err)))
     }
+
+
   }
 
   def fetch(

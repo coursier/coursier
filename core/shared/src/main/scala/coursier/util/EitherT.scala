@@ -35,7 +35,6 @@ final case class EitherT[F[_], L, R](run: F[Either[L, R]]) {
       }
     )
 
-
   def orElse(other: => EitherT[F, L, R])(implicit M: Monad[F]): EitherT[F, L, R] =
     EitherT(
       M.bind(run) {
