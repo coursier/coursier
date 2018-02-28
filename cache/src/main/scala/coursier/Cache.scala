@@ -23,7 +23,6 @@ import coursier.util.EitherT
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
 import scala.util.control.NonFatal
-import scala.Console
 
 object Cache {
 
