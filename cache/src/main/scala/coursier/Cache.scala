@@ -25,8 +25,6 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.Console
 
-import scalaz._
-
 object Cache {
 
   private[coursier] def closeConn(conn: URLConnection): Unit = {
