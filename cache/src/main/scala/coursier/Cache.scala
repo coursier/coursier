@@ -1037,7 +1037,7 @@ object Cache {
     ttl: Option[Duration] = defaultTtl
   ): Fetch.Content[Task] = {
     artifact =>
-      val tmp: EitherT[Task, String, File] = file(
+      file(
         artifact,
         cache,
         cachePolicy,
@@ -1045,8 +1045,7 @@ object Cache {
         logger = logger,
         pool = pool,
         ttl = ttl
-      ).leftMap(_.describe)
-      tmp.flatMap { f =>
+      ).leftMap(_.describe).flatMap { f =>
 
         def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
 
