@@ -894,6 +894,8 @@ object Cache {
     pool: ExecutorService
   ): EitherT[Task, FileError, Unit] = {
 
+    println("$$$ sum")
+
     implicit val pool0 = pool
 
     val localFile0 = localFile(artifact.url, cache, artifact.authentication.map(_.user))
@@ -946,51 +948,59 @@ object Cache {
     checksums: Seq[Option[String]] = defaultChecksums,
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
-    ttl: Option[Duration] = defaultTtl
+    ttl: Option[Duration] = defaultTtl,
+    retry: Int = 1
   ): EitherT[Task, FileError, File] = {
+    if (retry < 0) {
+      EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
+    }
+    else {
 
-    implicit val pool0 = pool
+      implicit val pool0 = pool
+      val checksums0: Seq[Option[String]] = if (checksums.isEmpty) Seq(None) else checksums
 
-    val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
-
-    val res = EitherT {
-      download(
-        artifact,
-        cache,
-        checksums = checksums0.collect { case Some(c) => c }.toSet,
-        cachePolicy,
-        pool,
-        logger0 = logger,
-        ttl = ttl
-      ).map { results =>
-        val checksum = checksums0.find {
-          case None => true
-          case Some(c) =>
-            artifact.checksumUrls.get(c).exists { cUrl =>
-              results.exists { case ((_, u), b) =>
-                u == cUrl && b.isRight
+      val res: EitherT[Task, FileError, (File, Option[String])] = EitherT {
+        println("hehe")
+        download(
+          artifact,
+          cache,
+          checksums = checksums0.collect { case Some(c) => c }.toSet,
+          cachePolicy,
+          pool,
+          logger0 = logger,
+          ttl = ttl
+        ).map { results =>
+          val checksum = checksums0.find {
+            case None => true
+            case Some(c) =>
+              artifact.checksumUrls.get(c).exists { cUrl =>
+                results.exists { case ((_, u), b) =>
+                  u == cUrl && b.isRight
+                }
               }
-            }
-        }
+          }
 
-        val ((f, _), res) = results.head
-        res.right.flatMap { _ =>
-          checksum match {
-            case None =>
-              // FIXME All the checksums should be in the error, possibly with their URLs
-              //       from artifact.checksumUrls
-              Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
-            case Some(c) => Right((f, c))
+          val ((f, _), res) = results.head
+          res.right.flatMap { _ =>
+            checksum match {
+              case None =>
+                // FIXME All the checksums should be in the error, possibly with their URLs
+                //       from artifact.checksumUrls
+                Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
+              case Some(c) => Right((f, c))
+            }
           }
         }
       }
+
+      res.flatMap {
+        case (file0, None) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
+        case (file0, Some(shaType)) =>
+          println(shaType, artifact.url)
+          validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+      }
     }
 
-    res.flatMap {
-      case (f, None) => EitherT(Task.now[Either[FileError, File]](Right(f)))
-      case (f, Some(c)) =>
-        validateChecksum(artifact, c, cache, pool).map(_ => f)
-    }
   }
 
   def fetch(
