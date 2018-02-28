@@ -897,8 +897,6 @@ object Cache {
     pool: ExecutorService
   ): EitherT[Task, FileError, Unit] = {
 
-    println("$$$")
-
     implicit val pool0 = pool
 
     val localFile0 = localFile(artifact.url, cache, artifact.authentication.map(_.user))
@@ -954,7 +952,6 @@ object Cache {
     ttl: Option[Duration] = defaultTtl,
     retry: Int = 1
   ): EitherT[Task, FileError, File] = {
-    println(s"retry: $retry")
     if (retry < 0) {
       EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
     }
@@ -996,46 +993,41 @@ object Cache {
         }
       }
 
-      val ret: EitherT[Task, FileError, File] = res.flatMap {
+      res.flatMap {
         case (file0, None) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
         case (file0, Some(shaType)) =>
-          if (retry == 1) {
-            EitherT(Task.now[Either[FileError, File]](Left(FileError.RetryExhausted(artifact.url))))
-          }
-          else {
-            validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
-          }
+          validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
+      }.leftFlatMap {
+        case _: FileError.WrongChecksum =>
+          val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
+          badFile.delete()
+          Console.err.println(s"Bad file deleted: ${badFile.getAbsolutePath}")
+          file(
+            artifact,
+            cache,
+            cachePolicy,
+            checksums,
+            logger,
+            pool,
+            ttl,
+            retry - 1
+          )
+        case _: FileError.DownloadError =>
+          file(
+            artifact,
+            cache,
+            cachePolicy,
+            checksums,
+            logger,
+            pool,
+            ttl,
+            retry - 1
+          )
+        case err: FileError.NotFound =>
+          EitherT(Task.now[Either[FileError, File]](Left(err)))
       }
 
-      ret.leftFlatMap( fileError => {
-        val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
-        badFile.delete()
-        Console.err.println(s"Bad file deleted: ${badFile.getAbsolutePath}")
-        file(
-          artifact,
-          cache,
-          cachePolicy,
-          checksums,
-          logger,
-          pool,
-          ttl,
-          retry -1
-        )
-      })
-
-//      val value: scalaz.EitherT[Task, Nothing, File] = ret.scalaz.leftMap()
-//      val y: EitherT[Task, Nothing, File] = ret.leftMap()
-
-//      ret.flatMap{
-//        case (file0, Left(exception)) => EitherT(Task.now[Either[FileError, File]](Right(file0)))
-//        case (file0, Some(shaType)) =>
-//          val x: EitherT[Task, FileError, File] = validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
-//
-//      }
-//
-//      ret
     }
-
   }
 
   def fetch(
