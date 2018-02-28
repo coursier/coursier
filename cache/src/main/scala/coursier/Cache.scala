@@ -1001,6 +1001,7 @@ object Cache {
     }.leftFlatMap {
       case err: FileError.WrongChecksum =>
         if (retry == 0) {
+          logger.foreach(_.log(s"Retry exhausted for ${artifact.url}\n", None))
           EitherT(Task.now[Either[FileError, File]](Left(err)))
         }
         else {
