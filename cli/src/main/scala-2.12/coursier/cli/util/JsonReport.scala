@@ -12,8 +12,17 @@ import scala.collection.parallel.ParSeq
 import argonaut._
 import Argonaut._
 
+/**
+ * Lookup table for files and artifacts to print in the JsonReport.
+ */
 final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]])
 
+/**
+ * Represents a resolved dependency's artifact in the JsonReport.
+ * @param coord String representation of the artifact's maven coordinate.
+ * @param file The path to the file for the artifact.
+ * @param dependencies The dependencies of the artifact.
+ */
 final case class DepNode(coord: String, file: Option[String], dependencies: Set[String])
 
 final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode], version: String)
@@ -42,7 +51,7 @@ object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
+  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String], overrideClassifiers: Set[String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
@@ -80,7 +89,9 @@ final case class JsonElem(dep: Dependency,
                           resolution: Resolution,
                           colors: Boolean,
                           printExclusions: Boolean,
-                          excluded: Boolean) {
+                          excluded: Boolean,
+                          overrideClassifiers: Set[String]
+  ) {
 
   val (red, yellow, reset) =
     if (colors)
@@ -151,6 +162,12 @@ final case class JsonElem(dep: Dependency,
         withReconciledVersions = false
       ).sortBy { trDep =>
         (trDep.module.organization, trDep.module.name, trDep.version)
+      }.map { d =>
+        if (overrideClassifiers.contains(dep0.attributes.classifier)) {
+          d.copy(attributes = d.attributes.copy(classifier = dep0.attributes.classifier))
+        } else {
+          d
+        }
       }
 
       def excluded = resolution
@@ -165,17 +182,18 @@ final case class JsonElem(dep: Dependency,
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
         case (mod, ver) =>
           JsonElem(
-            Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+            Dependency(mod, ver, "", Set.empty, Attributes("", ""), optional = false, transitive = false),
             artifacts,
             jsonPrintRequirement,
             resolution,
             colors,
             printExclusions,
-            excluded = true
+            excluded = true,
+            overrideClassifiers = overrideClassifiers
           )
       }
 
-      dependencies.map(JsonElem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false)) ++
+      dependencies.map(JsonElem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false, overrideClassifiers = overrideClassifiers)) ++
         (if (printExclusions) excluded else Nil)
     }
 

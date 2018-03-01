@@ -584,17 +584,25 @@ class Helper(
   }
 
   private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    if (classifier0.nonEmpty || sources || javadoc) {
-      var classifiers = classifier0
-      if (sources)
-        classifiers = classifiers + "sources"
-      if (javadoc)
-        classifiers = classifiers + "javadoc"
+    if (hasOverrideClassifiers(sources, javadoc)) {
       //TODO: this function somehow gives duplicated things
-      res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
+      res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
     } else {
       res0.dependencyArtifacts(withOptional = true)
     }
+  }
+
+  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
+    var classifiers = classifier0
+    if (sources)
+      classifiers = classifiers + "sources"
+    if (javadoc)
+      classifiers = classifiers + "javadoc"
+    classifiers
+  }
+
+  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean): Boolean = {
+    classifier0.nonEmpty || sources || javadoc
   }
 
   def fetchMap(
@@ -708,10 +716,11 @@ class Helper(
       val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
+      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
       val jsonStr = JsonReport(
         roots,
-        conflictResolutionForRoots
+        conflictResolutionForRoots,
+        overrideClassifiers(sources, javadoc)
       )(
         _.children,
         _.reconciledVersionStr,
