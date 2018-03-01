@@ -37,7 +37,7 @@ object Cache {
   }
 
   // java.nio.charset.StandardCharsets.UTF_8 not available in Java 6
-  private val UTF_8 = Charset.forName("UTF-8")
+  val UTF_8: Charset = Charset.forName("UTF-8")
 
   // Check SHA-1 if available, else be fine with no checksum
   val defaultChecksums = Seq(Some("SHA-1"), None)

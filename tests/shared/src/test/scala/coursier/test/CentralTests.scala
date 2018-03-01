@@ -516,27 +516,6 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'Retry - {
-
-      'bad_pom - {
-        if (isActualCentral) {
-          async {
-            val deps = Set(
-              Dependency(
-                Module("org.apache.avro", "avro"), "1.8.1"
-              )
-            )
-            val res = await(resolve(deps))
-            val filenames: Set[String] = res.artifacts.map(_.url).toSet
-            println(filenames)
-//            assert(filenames.contains("avro-1.8.1.jar"))
-//            assert(!filenames.contains("avro-1.8.1-tests.jar"))
-          }
-        }
-
-      }
-    }
-
     'classifier - {
 
       // Adding extra repo so it's agnostic from nexus which only has the poms

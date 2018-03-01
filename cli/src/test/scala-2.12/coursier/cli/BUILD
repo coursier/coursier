@@ -12,6 +12,7 @@ scala_library(
     name='lib',
     dependencies = [
         "3rdparty/jvm:caseapp",
+        "cache/src/main/scala:cache"
     ],
     sources = ["CliTestLib.scala"],
 )

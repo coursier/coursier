@@ -1,7 +1,7 @@
 package coursier.cli
 
+import coursier.internal.FileUtil
 import java.io.{File, FileWriter}
-
 
 trait CliTestLib {
 
@@ -14,10 +14,36 @@ trait CliTestLib {
     writer.flush()
     try {
       testCode(file, writer) // "loan" the fixture to the test
-    }
-    finally {
+    } finally {
       writer.close()
       file.delete()
     }
+  }
+
+  def withDir(
+      prefix: String
+  )(testCode: File => Any) {
+    val dir = FileUtil.createTempDirectory(prefix) // create the fixture
+    try {
+      testCode(dir) // "loan" the fixture to the test
+    } finally {
+      cleanDir(dir)
+    }
+  }
+
+  def cleanDir(tmpDir: File): Unit = {
+    def delete(f: File): Boolean =
+      if (f.isDirectory) {
+        val removedContent =
+          Option(f.listFiles()).toSeq.flatten.map(delete).forall(x => x)
+        val removedDir = f.delete()
+
+        removedContent && removedDir
+      } else
+        f.delete()
+
+    if (!delete(tmpDir))
+      Console.err.println(
+        s"Warning: unable to remove temporary directory $tmpDir")
   }
 }
