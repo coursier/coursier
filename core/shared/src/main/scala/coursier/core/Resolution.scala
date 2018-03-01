@@ -1088,19 +1088,6 @@ final case class Resolution(
   def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
 
   /**
-    * Returns errors on dependencies, but that don't have POM-related errors
-    * @return errors
-    */
-  @deprecated("use metadataErrors instead", "1.0.0-RC1")
-  def errors: Seq[(Dependency, Seq[String])] =
-    for {
-      dep <- dependencies.toSeq
-      err <- errorCache
-        .get(dep.moduleVersion)
-        .toSeq
-    } yield (dep, err)
-
-  /**
     * Removes from this `Resolution` dependencies that are not in `dependencies` neither brought
     * transitively by them.
     *
