@@ -1006,7 +1006,7 @@ object Cache {
         else {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
-          logger.foreach(_.log(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying...\n", None))
+          logger.foreach(_.log(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n", None))
           file(
             artifact,
             cache,
