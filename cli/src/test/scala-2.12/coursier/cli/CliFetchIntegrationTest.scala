@@ -1,13 +1,13 @@
 package coursier.cli
 
-import java.io._
-import java.net.URLEncoder.encode
 import argonaut.Argonaut._
-import coursier.cli.util.{DepNode, ReportNode}
 import caseapp.core.RemainingArgs
 import coursier.Cache.UTF_8
 import coursier.cli.options._
+import coursier.cli.util.{DepNode, ReportNode}
 import coursier.internal.FileUtil
+import java.io._
+import java.net.URLEncoder.encode
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -709,7 +709,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
     }
   }
 
-  "Bad pom resolve" should "succeed with retry" in withDir("tmp_dir") {
+  "Bad pom resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit = {
         val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(cache = dir.getAbsolutePath)))
@@ -737,7 +737,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
     }
   }
 
-  "Bad jar resolve" should "succeed with retry" in withDir("tmp_dir") {
+  "Bad jar resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit = {
         val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(cache = dir.getAbsolutePath)))

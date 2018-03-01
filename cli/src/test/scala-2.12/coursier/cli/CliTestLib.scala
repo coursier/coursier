@@ -3,6 +3,7 @@ package coursier.cli
 import coursier.internal.FileUtil
 import java.io.{File, FileWriter}
 
+
 trait CliTestLib {
 
   def withFile(content: String = "",
@@ -20,7 +21,7 @@ trait CliTestLib {
     }
   }
 
-  def withDir(
+  def withTempDir(
       prefix: String
   )(testCode: File => Any) {
     val dir = FileUtil.createTempDirectory(prefix) // create the fixture
