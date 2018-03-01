@@ -756,9 +756,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib {
       // Corrupt the jar content
       FileUtil.write(originalJunitJar, "bad jar".getBytes(UTF_8))
 
-      // Run fetch again and it should pass because of retrying om the bad pom.
-      val pom = runFetchJunit
-      assert(FileUtil.readAllBytes(pom).sameElements(originalJunitJarContent))
+      // Run fetch again and it should pass because of retrying on the bad jar.
+      val jar = runFetchJunit
+      assert(FileUtil.readAllBytes(jar).sameElements(originalJunitJarContent))
     }
   }
 
