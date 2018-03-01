@@ -518,51 +518,55 @@ abstract class CentralTests extends TestSuite {
 
     'classifier - {
 
-      // Adding extra repo so it's agnostic from nexus which only has the poms
-      val extraRepo = MavenRepository("https://repo1.maven.org/maven2")
-
       'vanilla - {
-        async {
-          val deps = Set(
-            Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1"
+        if (isActualCentral) {
+          async {
+            val deps = Set(
+              Dependency(
+                Module("org.apache.avro", "avro"), "1.8.1"
+              )
             )
-          )
-          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
-          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
-          assert(filenames.contains("avro-1.8.1.jar"))
-          assert(!filenames.contains("avro-1.8.1-tests.jar"))
+            val res = await(resolve(deps))
+            val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+            assert(filenames.contains("avro-1.8.1.jar"))
+            assert(!filenames.contains("avro-1.8.1-tests.jar"))
+          }
         }
       }
 
       'tests - {
-        async {
-          val deps = Set(
-            Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+        if (isActualCentral) {
+          async {
+            val deps = Set(
+              Dependency(
+                Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+              )
             )
-          )
-          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
-          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
-          assert(!filenames.contains("avro-1.8.1.jar"))
-          assert(filenames.contains("avro-1.8.1-tests.jar"))
+            val res = await(resolve(deps))
+            val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+            assert(!filenames.contains("avro-1.8.1.jar"))
+            assert(filenames.contains("avro-1.8.1-tests.jar"))
+          }
         }
       }
 
       'mixed - {
-        async {
-          val deps = Set(
-            Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1"
-            ),
-            Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+        if (isActualCentral) {
+          async {
+            val deps = Set(
+              Dependency(
+                Module("org.apache.avro", "avro"), "1.8.1"
+              ),
+              Dependency(
+                Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+              )
             )
-          )
-          val res = await(resolve(deps, extraRepos = Seq(extraRepo)))
-          val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
-          assert(filenames.contains("avro-1.8.1.jar"))
-          assert(filenames.contains("avro-1.8.1-tests.jar"))
+            val res = await(resolve(deps))
+            val filenames: Set[String] = res.artifacts.map(_.url.split("/").last).toSet
+            assert(filenames.contains("avro-1.8.1.jar"))
+            assert(filenames.contains("avro-1.8.1-tests.jar"))
+          }
+
         }
       }
     }
