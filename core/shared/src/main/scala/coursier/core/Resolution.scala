@@ -116,10 +116,6 @@ object Resolution {
     }
   }
 
-  @deprecated("Originally intended for internal use only", "1.0.0-RC7")
-  def propertiesMap(props: Seq[(String, String)]): Map[String, String] =
-    substitute(props).toMap
-
   /**
    * Substitutes `properties` in `dependencies`.
    */

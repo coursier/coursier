@@ -115,31 +115,6 @@ object Parse {
                               private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
 
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, (Dependency, Map[String, String])] =
-      moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    mvc match {
-      case Left(x) => Left(x)
-      case Right(depsWithParams) =>
-        val (dep, _) = depsWithParams
-        Right(dep.module, dep.version, Option(dep.configuration).filter(_.trim.nonEmpty))
-    }
-  }
-
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, (Dependency, Map[String, String])] =
-      moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    mvc match {
-      case Left(x) => Left(x)
-      case Right(depsWithParams) =>
-        val (dep, _) = depsWithParams
-        Right(dep.module, dep.version, Option(dep.configuration).filter(_.trim.nonEmpty))
-    }
-  }
-
   /**
     * Parses coordinates like
     *   org:name:version
