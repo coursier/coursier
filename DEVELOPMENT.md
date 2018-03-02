@@ -181,10 +181,13 @@ When deprecating a method/field, we want to know
 
 Due to scala's builtin deprecation works like
 ```
-class deprecated(message: String = {},
-                 since: String = {})
+class deprecated(message: String = {}, since: String = {})
 ```
 we need to put 2) and 3) into `message`:
 ```
 @deprecated(message = "<migration path>. <version to be removed>", since: "deprecation start version")
 ```
+
+Typically there needs to be at least 2 minor versions between since-version and to-be-removed-version to help migration.
+
+For example, if since version is 1.1.0, then deprecation can be removed in 1.3.0
