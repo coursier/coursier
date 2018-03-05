@@ -987,13 +987,13 @@ object Cache {
     }.leftFlatMap {
       case err: FileError.WrongChecksum =>
         if (retry <= 0) {
-          logger.foreach(_.removedCorruptFile(s"Retry exhausted for ${artifact.url}\n", None))
           EitherT(S.point(Left(err)))
         }
         else {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
-          logger.foreach(_.removedCorruptFile(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n", None))
+          logger.foreach(_.removedCorruptFile(artifact.url, badFile,
+            Some(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n")))
           file(
             artifact,
             cache,
@@ -1156,7 +1156,7 @@ object Cache {
     def gettingLength(url: String): Unit = {}
     def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
-    def removedCorruptFile(content: String, currentTimeOpt: Option[Long])
+    def removedCorruptFile(url: String, file: File, reason: Option[String]): Unit
   }
 
   var bufferSize = 1024*1024

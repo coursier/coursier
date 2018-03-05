@@ -510,6 +510,6 @@ class TermDisplay(
   }
 
   // TODO(wisechengyi,alexarchambault): implement this
-  override def removedCorruptFile(content: String, currentTimeOpt: Option[Long]): Unit = {}
+  override def removedCorruptFile(url: String, file: File, reason: Option[String]): Unit = {}
 
 }
