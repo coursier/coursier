@@ -37,7 +37,7 @@ object Cache {
   }
 
   // java.nio.charset.StandardCharsets.UTF_8 not available in Java 6
-  val UTF_8: Charset = Charset.forName("UTF-8")
+  private val UTF_8 = Charset.forName("UTF-8")
 
   // Check SHA-1 if available, else be fine with no checksum
   val defaultChecksums = Seq(Some("SHA-1"), None)
@@ -518,7 +518,7 @@ object Cache {
                       doTouchCheckFile(file)
                       Right(false)
                     }
-                  case other =>FileError
+                  case other =>
                     Task.now(other)
                 }
             }
@@ -999,14 +999,14 @@ object Cache {
         validateChecksum(artifact, shaType, cache, pool).map(_ => file0)
     }.leftFlatMap {
       case err: FileError.WrongChecksum =>
-        if (retry == 0) {
-          logger.foreach(_.log(s"Retry exhausted for ${artifact.url}\n", None))
+        if (retry <= 0) {
+          logger.foreach(_.removedCorruptFile(s"Retry exhausted for ${artifact.url}\n", None))
           EitherT(Task.now[Either[FileError, File]](Left(err)))
         }
         else {
           val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
           badFile.delete()
-          logger.foreach(_.log(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n", None))
+          logger.foreach(_.removedCorruptFile(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n", None))
           file(
             artifact,
             cache,
@@ -1166,7 +1166,7 @@ object Cache {
     def downloadedArtifact(url: String, success: Boolean): Unit = {}
     def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit = {}
     def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit = {}
-    def log(content: String, currentTimeOpt: Option[Long]): Unit = {}
+    def removedCorruptFile(content: String, currentTimeOpt: Option[Long]): Unit = {}
   }
 
   object Logger {
@@ -1201,8 +1201,8 @@ object Cache {
                 logger.checkingUpdates(url, currentTimeOpt)
               override def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]) =
                 logger.checkingUpdatesResult(url, currentTimeOpt, remoteTimeOpt)
-              override def log(content: String, currentTimeOpt: Option[Long]): Unit =
-                logger.log(content, currentTimeOpt)
+              override def removedCorruptFile(content: String, currentTimeOpt: Option[Long]): Unit =
+                logger.removedCorruptFile(content, currentTimeOpt)
             }
         }
     }

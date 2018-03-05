@@ -509,9 +509,7 @@ class TermDisplay(
     }
   }
 
-  override def log(content: String, currentTimeOpt: Option[Long]): Unit = {
-    updateRunnable.newEntry(content, CheckUpdateInfo(currentTimeOpt, None, isDone = true), content)
-    updateRunnable.removeEntry(content, success = true, fallbackMessage = content)(x => x)
-  }
+  // TODO(wisechengyi,alexarchambault): implement this
+  override def removedCorruptFile(content: String, currentTimeOpt: Option[Long]): Unit = {}
 
 }

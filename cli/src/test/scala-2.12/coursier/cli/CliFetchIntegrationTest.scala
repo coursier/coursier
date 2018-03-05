@@ -2,12 +2,12 @@ package coursier.cli
 
 import argonaut.Argonaut._
 import caseapp.core.RemainingArgs
-import coursier.Cache.UTF_8
 import coursier.cli.options._
 import coursier.cli.util.{DepNode, ReportNode}
 import coursier.internal.FileUtil
 import java.io._
 import java.net.URLEncoder.encode
+import java.nio.charset.StandardCharsets.UTF_8
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
