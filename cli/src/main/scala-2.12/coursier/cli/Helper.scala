@@ -584,12 +584,20 @@ class Helper(
   }
 
   private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    if (hasOverrideClassifiers(sources, javadoc)) {
+    val raw: Seq[(Dependency, Artifact)] = if (hasOverrideClassifiers(sources, javadoc)) {
       //TODO: this function somehow gives duplicated things
       res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
     } else {
       res0.dependencyArtifacts(withOptional = true)
     }
+
+    raw.map({ case (dep, artifact) =>
+        (
+          dep.copy(
+            attributes = dep.attributes.copy(classifier = artifact.classifier)),
+          artifact
+        )
+    })
   }
 
   private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
