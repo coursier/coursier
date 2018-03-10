@@ -13,12 +13,10 @@ import coursier.internal.FileUtil
 import coursier.util.Base64.Encoder
 
 import scala.annotation.tailrec
-import scalaz.Nondeterminism
-import scalaz.concurrent.{Strategy, Task}
 import java.io.{Serializable => _, _}
 import java.nio.charset.Charset
 
-import coursier.util.EitherT
+import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
@@ -321,10 +319,8 @@ object Cache {
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
-    logger0: Option[Logger]
+    logger: Option[Logger]
   ): Either[FileError, Option[Long]] = {
-
-    val logger = logger0.map(Logger.Extended(_))
 
     var conn: URLConnection = null
 
@@ -362,19 +358,15 @@ object Cache {
     }
   }
 
-  private def download(
+  private def download[F[_]](
     artifact: Artifact,
     cache: File,
     checksums: Set[String],
     cachePolicy: CachePolicy,
     pool: ExecutorService,
-    logger0: Option[Logger] = None,
-    ttl: Option[Duration] = defaultTtl
-  ): Task[Seq[((File, String), Either[FileError, Unit])]] = {
-
-    implicit val pool0 = pool
-
-    val logger = logger0.map(Logger.Extended(_))
+    logger: Option[Logger],
+    ttl: Option[Duration]
+  )(implicit S: Schedulable[F]): F[Seq[((File, String), Either[FileError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
@@ -385,9 +377,9 @@ object Cache {
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
-    def fileLastModified(file: File): EitherT[Task, FileError, Option[Long]] =
+    def fileLastModified(file: File): EitherT[F, FileError, Option[Long]] =
       EitherT {
-        Task {
+        S.schedule(pool) {
           Right {
             val lastModified = file.lastModified()
             if (lastModified > 0L)
@@ -402,9 +394,9 @@ object Cache {
       url: String,
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: Option[Logger]
-    ): EitherT[Task, FileError, Option[Long]] =
+    ): EitherT[F, FileError, Option[Long]] =
       EitherT {
-        Task {
+        S.schedule(pool) {
           var conn: URLConnection = null
 
           try {
@@ -446,19 +438,19 @@ object Cache {
         }
       }
 
-    def fileExists(file: File): Task[Boolean] =
-      Task {
+    def fileExists(file: File): F[Boolean] =
+      S.schedule(pool) {
         file.exists()
       }
 
     def ttlFile(file: File): File =
       new File(file.getParent, s".${file.getName}.checked")
 
-    def lastCheck(file: File): Task[Option[Long]] = {
+    def lastCheck(file: File): F[Option[Long]] = {
 
       val ttlFile0 = ttlFile(file)
 
-      Task {
+      S.schedule(pool) {
         if (ttlFile0.exists())
           Some(ttlFile0.lastModified()).filter(_ > 0L)
         else
@@ -479,17 +471,17 @@ object Cache {
       }
     }
 
-    def shouldDownload(file: File, url: String): EitherT[Task, FileError, Boolean] = {
+    def shouldDownload(file: File, url: String): EitherT[F, FileError, Boolean] = {
 
-      def checkNeeded = ttl.fold(Task.now(true)) { ttl =>
+      def checkNeeded = ttl.fold(S.point(true)) { ttl =>
         if (ttl.isFinite())
-          lastCheck(file).flatMap {
-            case None => Task.now(true)
+          S.bind(lastCheck(file)) {
+            case None => S.point(true)
             case Some(ts) =>
-              Task(System.currentTimeMillis()).map(_ > ts + ttl.toMillis)
+              S.map(S.schedule(pool)(System.currentTimeMillis()))(_ > ts + ttl.toMillis)
           }
         else
-          Task.now(false)
+          S.point(false)
       }
 
       def check = for {
@@ -505,22 +497,22 @@ object Cache {
       }
 
       EitherT {
-        fileExists(file).flatMap {
+        S.bind(fileExists(file)) {
           case false =>
-            Task.now(Right(true))
+            S.point(Right(true))
           case true =>
-            checkNeeded.flatMap {
+            S.bind(checkNeeded) {
               case false =>
-                Task.now(Right(false))
+                S.point(Right(false))
               case true =>
-                check.run.flatMap {
+                S.bind(check.run) {
                   case Right(false) =>
-                    Task {
+                    S.schedule(pool) {
                       doTouchCheckFile(file)
                       Right(false)
                     }
                   case other =>
-                    Task.now(other)
+                    S.point(other)
                 }
             }
         }
@@ -548,9 +540,9 @@ object Cache {
     def remote(
       file: File,
       url: String
-    ): EitherT[Task, FileError, Unit] =
+    ): EitherT[F, FileError, Unit] =
       EitherT {
-        Task {
+        S.schedule(pool) {
 
           val tmp = CachePath.temporaryFile(file)
 
@@ -683,20 +675,20 @@ object Cache {
 
     def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
-    def remoteKeepErrors(file: File, url: String): EitherT[Task, FileError, Unit] = {
+    def remoteKeepErrors(file: File, url: String): EitherT[F, FileError, Unit] = {
 
       val errFile0 = errFile(file)
 
       def validErrFileExists =
         EitherT {
-          Task[Either[FileError, Boolean]] {
+          S.schedule[Either[FileError, Boolean]](pool) {
             Right(referenceFileExists && errFile0.exists())
           }
         }
 
       def createErrFile =
         EitherT {
-          Task[Either[FileError, Unit]] {
+          S.schedule[Either[FileError, Unit]](pool) {
             if (referenceFileExists) {
               if (!errFile0.exists())
                 FileUtil.write(errFile0, "".getBytes(UTF_8))
@@ -708,7 +700,7 @@ object Cache {
 
       def deleteErrFile =
         EitherT {
-          Task[Either[FileError, Unit]] {
+          S.schedule[Either[FileError, Unit]](pool) {
             if (errFile0.exists())
               errFile0.delete()
 
@@ -718,11 +710,11 @@ object Cache {
 
       def retainError =
         EitherT {
-          remote(file, url).run.flatMap {
+          S.bind(remote(file, url).run) {
             case err @ Left(FileError.NotFound(_, Some(true))) =>
-              createErrFile.run.map(_ => err)
+              S.map(createErrFile.run)(_ => err: Either[FileError, Unit])
             case other =>
-              deleteErrFile.run.map(_ => other)
+              S.map(deleteErrFile.run)(_ => other)
           }
         }
 
@@ -730,7 +722,7 @@ object Cache {
         case CachePolicy.FetchMissing | CachePolicy.LocalOnly | CachePolicy.LocalUpdate | CachePolicy.LocalUpdateChanging =>
           validErrFileExists.flatMap { exists =>
             if (exists)
-              EitherT(Task.now[Either[FileError, Unit]](Left(FileError.NotFound(url, Some(true)))))
+              EitherT(S.point[Either[FileError, Unit]](Left(FileError.NotFound(url, Some(true)))))
             else
               retainError
           }
@@ -740,7 +732,7 @@ object Cache {
       }
     }
 
-    def localInfo(file: File, url: String): EitherT[Task, FileError, Boolean] = {
+    def localInfo(file: File, url: String): EitherT[F, FileError, Boolean] = {
 
       val errFile0 = errFile(file)
 
@@ -754,12 +746,12 @@ object Cache {
         else
           Right(false)
 
-      EitherT(Task(res))
+      EitherT(S.schedule(pool)(res))
     }
 
-    def checkFileExists(file: File, url: String, log: Boolean = true): EitherT[Task, FileError, Unit] =
+    def checkFileExists(file: File, url: String, log: Boolean = true): EitherT[F, FileError, Unit] =
       EitherT {
-        Task {
+        S.schedule(pool) {
           if (file.exists()) {
             logger.foreach(_.foundLocally(url, file))
             Right(())
@@ -786,19 +778,19 @@ object Cache {
 
     val requiredArtifactCheck = artifact.extra.get("required") match {
       case None =>
-        EitherT(Task.now[Either[FileError, Unit]](Right(())))
+        EitherT(S.point[Either[FileError, Unit]](Right(())))
       case Some(required) =>
         cachePolicy0 match {
           case CachePolicy.LocalOnly | CachePolicy.LocalUpdateChanging | CachePolicy.LocalUpdate =>
             val file = localFile(required.url, cache, artifact.authentication.map(_.user))
             localInfo(file, required.url).flatMap {
               case true =>
-                EitherT(Task.now[Either[FileError, Unit]](Right(())))
+                EitherT(S.point[Either[FileError, Unit]](Right(())))
               case false =>
-                EitherT(Task.now[Either[FileError, Unit]](Left(FileError.NotFound(file.toString))))
+                EitherT(S.point[Either[FileError, Unit]](Left(FileError.NotFound(file.toString))))
             }
           case _ =>
-            EitherT(Task.now[Either[FileError, Unit]](Right(())))
+            EitherT(S.point[Either[FileError, Unit]](Right(())))
         }
     }
 
@@ -821,7 +813,7 @@ object Cache {
               case true =>
                 remoteKeepErrors(file, url)
               case false =>
-                EitherT(Task.now[Either[FileError, Unit]](Right(())))
+                EitherT(S.point[Either[FileError, Unit]](Right(())))
             }
 
             cachePolicy0 match {
@@ -840,13 +832,10 @@ object Cache {
             }
           }
 
-        requiredArtifactCheck
-          .flatMap(_ => res)
-          .run
-          .map((file, url) -> _)
+        S.map(requiredArtifactCheck.flatMap(_ => res).run)((file, url) -> _)
       }
 
-    Nondeterminism[Task].gather(tasks)
+    S.gather(tasks)
   }
 
   def parseChecksum(content: String): Option[BigInteger] = {
@@ -889,14 +878,12 @@ object Cache {
         .mkString))
     }
 
-  def validateChecksum(
+  def validateChecksum[F[_]](
     artifact: Artifact,
     sumType: String,
     cache: File,
     pool: ExecutorService
-  ): EitherT[Task, FileError, Unit] = {
-
-    implicit val pool0 = pool
+  )(implicit S: Schedulable[F]): EitherT[F, FileError, Unit] = {
 
     val localFile0 = localFile(artifact.url, cache, artifact.authentication.map(_.user))
 
@@ -905,7 +892,7 @@ object Cache {
         case Some(sumUrl) =>
           val sumFile = localFile(sumUrl, cache, artifact.authentication.map(_.user))
 
-          Task {
+          S.schedule(pool) {
             val sumOpt = parseRawChecksum(FileUtil.readAllBytes(sumFile))
 
             sumOpt match {
@@ -936,35 +923,42 @@ object Cache {
           }
 
         case None =>
-          Task.now(Left(FileError.ChecksumNotFound(sumType, localFile0.getPath)))
+          S.point[Either[FileError, Unit]](Left(FileError.ChecksumNotFound(sumType, localFile0.getPath)))
       }
     }
   }
 
-  def file(
+
+  /**
+    * This method computes the task needed to get a file.
+    *
+    * Retry only applies to [[coursier.FileError.WrongChecksum]].
+    *
+    * [[coursier.FileError.DownloadError]] is handled separately at [[downloading]]
+    */
+  def file[F[_]](
     artifact: Artifact,
     cache: File = default,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
     checksums: Seq[Option[String]] = defaultChecksums,
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
-    ttl: Option[Duration] = defaultTtl
-  ): EitherT[Task, FileError, File] = {
-
-    implicit val pool0 = pool
+    ttl: Option[Duration] = defaultTtl,
+    retry: Int = 1
+  )(implicit S: Schedulable[F]): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
 
     val res = EitherT {
-      download(
+      S.map(download(
         artifact,
         cache,
         checksums = checksums0.collect { case Some(c) => c }.toSet,
         cachePolicy,
         pool,
-        logger0 = logger,
+        logger = logger,
         ttl = ttl
-      ).map { results =>
+      )) { results =>
         val checksum = checksums0.find {
           case None => true
           case Some(c) =>
@@ -989,20 +983,49 @@ object Cache {
     }
 
     res.flatMap {
-      case (f, None) => EitherT(Task.now[Either[FileError, File]](Right(f)))
+      case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
       case (f, Some(c)) =>
         validateChecksum(artifact, c, cache, pool).map(_ => f)
+    }.leftFlatMap {
+      case err: FileError.WrongChecksum =>
+        if (retry <= 0) {
+          EitherT(S.point(Left(err)))
+        }
+        else {
+          EitherT {
+            S.schedule[Either[FileError, Unit]](pool) {
+              val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
+              badFile.delete()
+              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
+              Right(())
+            }
+          }.flatMap {
+            _ =>
+              file(
+                artifact,
+                cache,
+                cachePolicy,
+                checksums,
+                logger,
+                pool,
+                ttl,
+                retry - 1
+              )
+          }
+        }
+      case err =>
+        EitherT(S.point(Left(err)))
     }
   }
 
-  def fetch(
+  def fetch[F[_]](
     cache: File = default,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
     checksums: Seq[Option[String]] = defaultChecksums,
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl
-  ): Fetch.Content[Task] = {
+  )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     artifact =>
       file(
         artifact,
@@ -1066,7 +1089,7 @@ object Cache {
         } else
           notFound(f)
 
-        EitherT(Task.now[Either[String, String]](res))
+        EitherT(S.point[Either[String, String]](res))
       }
   }
 
@@ -1108,8 +1131,7 @@ object Cache {
 
   val defaultConcurrentDownloadCount = 6
 
-  lazy val defaultPool =
-    Executors.newFixedThreadPool(defaultConcurrentDownloadCount, Strategy.DefaultDaemonThreadFactory)
+  lazy val defaultPool = Schedulable.fixedThreadPool(defaultConcurrentDownloadCount)
 
   lazy val defaultTtl: Option[Duration] = {
     def fromString(s: String) =
@@ -1131,77 +1153,21 @@ object Cache {
 
     def downloadingArtifact(url: String, file: File): Unit = {}
 
-    @deprecated("extend Logger.Extended instead and use / override the variant with 4 arguments", "1.0.0-M10")
-    def downloadLength(url: String, length: Long): Unit = {}
-    @deprecated("extend Logger.Extended instead and use / override the variant with 4 arguments", "1.0.0-RC4")
-    def downloadLength(url: String, length: Long, alreadyDownloaded: Long): Unit = {
-      downloadLength(url, length)
-    }
-
     def downloadProgress(url: String, downloaded: Long): Unit = {}
 
     def downloadedArtifact(url: String, success: Boolean): Unit = {}
     def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit = {}
     def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit = {}
-  }
 
-  object Logger {
-    // adding new methods to this one, not to break bin compat in 2.10 / 2.11
-    abstract class Extended extends Logger {
-      def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {
-        downloadLength(url, totalLength, 0L)
-      }
+    def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {}
 
-      def gettingLength(url: String): Unit = {}
-      def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
-    }
+    def gettingLength(url: String): Unit = {}
+    def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
-    object Extended {
-      def apply(logger: Logger): Extended =
-        logger match {
-          case e: Extended => e
-          case _ =>
-            new Extended {
-              override def foundLocally(url: String, f: File) =
-                logger.foundLocally(url, f)
-
-              override def downloadingArtifact(url: String, file: File) =
-                logger.downloadingArtifact(url, file)
-
-              override def downloadLength(url: String, length: Long) =
-                logger.downloadLength(url, length)
-              override def downloadLength(url: String, length: Long, alreadyDownloaded: Long) =
-                logger.downloadLength(url, length, alreadyDownloaded)
-
-              override def downloadProgress(url: String, downloaded: Long) =
-                logger.downloadProgress(url, downloaded)
-
-              override def downloadedArtifact(url: String, success: Boolean) =
-                logger.downloadedArtifact(url, success)
-              override def checkingUpdates(url: String, currentTimeOpt: Option[Long]) =
-                logger.checkingUpdates(url, currentTimeOpt)
-              override def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]) =
-                logger.checkingUpdatesResult(url, currentTimeOpt, remoteTimeOpt)
-            }
-        }
-    }
+    def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit
   }
 
   var bufferSize = 1024*1024
-
-  def readFullySync(is: InputStream) = {
-    val buffer = new ByteArrayOutputStream()
-    val data = Array.ofDim[Byte](16384)
-
-    var nRead = is.read(data, 0, data.length)
-    while (nRead != -1) {
-      buffer.write(data, 0, nRead)
-      nRead = is.read(data, 0, data.length)
-    }
-
-    buffer.flush()
-    buffer.toByteArray
-  }
 
   def withContent(is: InputStream, f: (Array[Byte], Int) => Unit): Unit = {
     val data = Array.ofDim[Byte](16384)

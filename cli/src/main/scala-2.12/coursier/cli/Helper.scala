@@ -17,7 +17,7 @@ import coursier.util.{Parse, Print}
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scalaz.concurrent.{Strategy, Task}
-import scalaz.{Failure, Nondeterminism, Success}
+import scalaz.Nondeterminism
 
 
 object Helper {
@@ -81,11 +81,11 @@ class Helper(
     if (common.mode.isEmpty)
       CachePolicy.default
     else
-      CacheParse.cachePolicies(common.mode) match {
-        case Success(cp) => cp
-        case Failure(errors) =>
+      CacheParse.cachePolicies(common.mode).either match {
+        case Right(cp) => cp
+        case Left(errors) =>
           prematureExit(
-            s"Error parsing modes:\n${errors.list.toList.map("  "+_).mkString("\n")}"
+            s"Error parsing modes:\n${errors.map("  "+_).mkString("\n")}"
           )
       }
 
@@ -116,12 +116,12 @@ class Helper(
     repos
   }
 
-  val standardRepositories = repositoriesValidation match {
-    case Success(repos) =>
+  val standardRepositories = repositoriesValidation.either match {
+    case Right(repos) =>
       repos
-    case Failure(errors) =>
+    case Left(errors) =>
       prematureExit(
-        s"Error with repositories:\n${errors.list.toList.map("  "+_).mkString("\n")}"
+        s"Error with repositories:\n${errors.map("  "+_).mkString("\n")}"
       )
   }
 
@@ -515,11 +515,11 @@ class Helper(
     errPrintln("\nMaximum number of iterations reached!")
   }
 
-  if (res.metadataErrors.nonEmpty) {
+  if (res.errors.nonEmpty) {
     anyError = true
     errPrintln(
       "\nError:\n" +
-      res.metadataErrors.map {
+      res.errors.map {
         case ((module, version), errors) =>
           s"  $module:$version\n${errors.map("    " + _.replace("\n", "    \n")).mkString("\n")}"
       }.mkString("\n")
@@ -584,17 +584,33 @@ class Helper(
   }
 
   private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    if (classifier0.nonEmpty || sources || javadoc) {
-      var classifiers = classifier0
-      if (sources)
-        classifiers = classifiers + "sources"
-      if (javadoc)
-        classifiers = classifiers + "javadoc"
+    val raw: Seq[(Dependency, Artifact)] = if (hasOverrideClassifiers(sources, javadoc)) {
       //TODO: this function somehow gives duplicated things
-      res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
+      res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
     } else {
       res0.dependencyArtifacts(withOptional = true)
     }
+
+    raw.map({ case (dep, artifact) =>
+        (
+          dep.copy(
+            attributes = dep.attributes.copy(classifier = artifact.classifier)),
+          artifact
+        )
+    })
+  }
+
+  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
+    var classifiers = classifier0
+    if (sources)
+      classifiers = classifiers + "sources"
+    if (javadoc)
+      classifiers = classifiers + "javadoc"
+    classifiers
+  }
+
+  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean): Boolean = {
+    classifier0.nonEmpty || sources || javadoc
   }
 
   def fetchMap(
@@ -628,7 +644,8 @@ class Helper(
         checksums = checksums,
         logger = logger,
         pool = pool,
-        ttl = ttl0
+        ttl = ttl0,
+        retry = common.retryCount
       )
 
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
@@ -708,9 +725,17 @@ class Helper(
       val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
-      val jsonStr = JsonReport(roots, conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
-
+      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
+      val jsonStr = JsonReport(
+        roots,
+        conflictResolutionForRoots,
+        overrideClassifiers(sources, javadoc)
+      )(
+        _.children,
+        _.reconciledVersionStr,
+        _.requestedVersionStr,
+        _.downloadedFile
+      )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()

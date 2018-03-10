@@ -116,10 +116,6 @@ object Resolution {
     }
   }
 
-  @deprecated("Originally intended for internal use only", "1.0.0-RC7")
-  def propertiesMap(props: Seq[(String, String)]): Map[String, String] =
-    substitute(props).toMap
-
   /**
    * Substitutes `properties` in `dependencies`.
    */
@@ -1089,20 +1085,10 @@ final case class Resolution(
     * Returns errors on dependencies
     * @return errors
     */
-  def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
+  def errors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
 
-  /**
-    * Returns errors on dependencies, but that don't have POM-related errors
-    * @return errors
-    */
-  @deprecated("use metadataErrors instead", "1.0.0-RC1")
-  def errors: Seq[(Dependency, Seq[String])] =
-    for {
-      dep <- dependencies.toSeq
-      err <- errorCache
-        .get(dep.moduleVersion)
-        .toSeq
-    } yield (dep, err)
+  @deprecated("Use errors instead", "1.1.0")
+  def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
 
   /**
     * Removes from this `Resolution` dependencies that are not in `dependencies` neither brought

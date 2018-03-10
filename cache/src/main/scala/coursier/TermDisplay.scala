@@ -374,7 +374,7 @@ object TermDisplay {
 class TermDisplay(
   out: Writer,
   val fallbackMode: Boolean = TermDisplay.defaultFallbackMode
-) extends Cache.Logger.Extended {
+) extends Cache.Logger {
 
   import TermDisplay._
 
@@ -508,5 +508,8 @@ class TermDisplay(
         throw new Exception(s"Incoherent display state for $url")
     }
   }
+
+  // TODO(wisechengyi,alexarchambault): implement this
+  override def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
 
 }
