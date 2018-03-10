@@ -990,20 +990,27 @@ object Cache {
           EitherT(S.point(Left(err)))
         }
         else {
-          val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
-          badFile.delete()
-          logger.foreach(_.removedCorruptFile(artifact.url, badFile,
-            Some(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n")))
-          file(
-            artifact,
-            cache,
-            cachePolicy,
-            checksums,
-            logger,
-            pool,
-            ttl,
-            retry - 1
-          )
+          EitherT {
+            S.schedule[Either[FileError, Unit]](pool) {
+              val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user))
+              badFile.delete()
+              logger.foreach(_.removedCorruptFile(artifact.url, badFile,
+                Some(s"Bad file deleted: ${badFile.getAbsolutePath} due to wrong checksum. Retrying with count $retry...\n")))
+              Right(())
+            }
+          }.flatMap {
+            _ =>
+              file(
+                artifact,
+                cache,
+                cachePolicy,
+                checksums,
+                logger,
+                pool,
+                ttl,
+                retry - 1
+              )
+          }
         }
       case err =>
         EitherT(S.point(Left(err)))
