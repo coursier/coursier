@@ -80,6 +80,17 @@ object Print {
     reverse: Boolean,
     colors: Boolean
   ): String = {
+    val backwardCompatibleDependencies = if (reverse) resolution.dependencies.toSeq else roots
+    finalDependencyTree(backwardCompatibleDependencies, resolution, printExclusions, reverse, colors)
+  }
+
+  def finalDependencyTree(
+     roots: Seq[Dependency],
+     resolution: Resolution,
+     printExclusions: Boolean,
+     reverse: Boolean,
+     colors: Boolean
+   ): String = {
 
     val (red, yellow, reset) =
       if (colors)
@@ -211,8 +222,7 @@ object Print {
           parents.getOrElse(par.module, Nil)
 
       Tree(
-        resolution
-          .dependencies
+        roots
           .toVector
           .sortBy(dep => (dep.module.organization, dep.module.name, dep.version))
           .map(dep =>
