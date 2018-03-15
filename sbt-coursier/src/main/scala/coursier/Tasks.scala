@@ -1419,7 +1419,7 @@ object Tasks {
     val projectName = thisProjectRef.value.project
 
     for (ResolutionResult(subGraphConfigs, resolution, dependencies) <-
-           coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors)) {
+           coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value) {
       // use sbt logging?
       println(
         s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
@@ -1440,20 +1440,18 @@ object Tasks {
     sbtClassifiers: Boolean = false,
     ignoreArtifactErrors: Boolean = false
   ) = Def.task {
-    val projectName = thisProjectRef.value.project
-
     val module = Parse.module(moduleName, scalaVersion.value)
       .getOrElse(throw new RuntimeException(s"Could not parse module `$moduleName`"))
 
-    val colors = Colors.get(!sys.props.get("sbt.log.noformat").toSeq.contains("true"))
+    val projectName = thisProjectRef.value.project
 
-    for (ResolutionResult(subGraphConfigs, resolution, dependencies) <-
+    for (ResolutionResult(subGraphConfigs, resolution, _) <-
            coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value) {
-      val roots: Seq[Dependency] = resolution.dependencies.toSeq.filter(f => f.module == module)
+      val roots: Seq[Dependency] = resolution.transitiveDependencies.filter(f => f.module == module)
       println(
         s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
           Print.reverseTree(roots, resolution, withExclusions = true)
-            .render(_.repr(colors)))
+            .render(_.repr(Colors.get(!sys.props.get("sbt.log.noformat").toSeq.contains("true")))))
     }
   }
 

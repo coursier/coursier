@@ -1,0 +1,5 @@
+-> coursierWhatDependsOn
+> coursierDependencyTree
+> coursierWhatDependsOn log4j:log4j
+-> coursierWhatDependsOn log4j
+
