@@ -2,6 +2,14 @@ package coursier.util
 
 import scala.collection.mutable.ArrayBuffer
 
+object Tree {
+
+  def apply[A](roots: IndexedSeq[A])(children: A => Seq[A], show: A => String): String = {
+    Tree(roots, children).render(show)
+  }
+
+}
+
 case class Tree[A](roots: IndexedSeq[A], children: A => Seq[A]) {
 
   def render(show: A => String): String = {
