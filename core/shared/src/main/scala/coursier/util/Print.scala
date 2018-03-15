@@ -196,7 +196,7 @@ object Print {
 
   def normalTree(roots: Seq[Dependency], resolution: Resolution, withExclusions: Boolean): Tree[Elem] = {
     val elemFactory = getElemFactory(resolution, withExclusions)
-    Tree[Elem](roots.toVector.map(elemFactory), _.children)
+    Tree[Elem](roots.toVector.map(elemFactory), (elem: Elem) => elem.children)
   }
 
   def reverseTree(roots: Seq[Dependency], resolution: Resolution, withExclusions: Boolean): Tree[Parent] = {
@@ -257,7 +257,7 @@ object Print {
       .sortBy(dep => (dep.module.organization, dep.module.name, dep.version))
       .map(dep => {
         ParentImpl(dep.module, dep.version, dep.module, dep.version, dep.version, excluding = false)
-      }), children)
+      }), (par: Parent) => children(par))
   }
 
 }
