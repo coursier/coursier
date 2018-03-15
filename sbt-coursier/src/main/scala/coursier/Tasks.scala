@@ -1418,8 +1418,8 @@ object Tasks {
   ) = Def.task {
     val projectName = thisProjectRef.value.project
 
-    for (ResolutionResult(subGraphConfigs, resolution, dependencies) <-
-           coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value) {
+    val resolutions = coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value
+    for (ResolutionResult(subGraphConfigs, resolution, dependencies) <- resolutions) {
       // use sbt logging?
       println(
         s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
@@ -1441,12 +1441,13 @@ object Tasks {
     ignoreArtifactErrors: Boolean = false
   ) = Def.task {
     val module = Parse.module(moduleName, scalaVersion.value)
+      .right
       .getOrElse(throw new RuntimeException(s"Could not parse module `$moduleName`"))
 
     val projectName = thisProjectRef.value.project
 
-    for (ResolutionResult(subGraphConfigs, resolution, _) <-
-           coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value) {
+    val resolutions = coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value
+    for (ResolutionResult(subGraphConfigs, resolution, _) <- resolutions) {
       val roots: Seq[Dependency] = resolution.transitiveDependencies.filter(f => f.module == module)
       println(
         s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
