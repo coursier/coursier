@@ -1447,13 +1447,18 @@ object Tasks {
     val projectName = thisProjectRef.value.project
 
     val resolutions = coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value
+    val result = new mutable.StringBuilder()
     for (ResolutionResult(subGraphConfigs, resolution, _) <- resolutions) {
       val roots: Seq[Dependency] = resolution.transitiveDependencies.filter(f => f.module == module)
-      println(
-        s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
-          Print.reverseTree(roots, resolution, withExclusions = true)
-            .render(_.repr(Colors.get(!sys.props.get("sbt.log.noformat").toSeq.contains("true")))))
+      val strToPrint = s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
+        Print.reverseTree(roots, resolution, withExclusions = true)
+          .render(_.repr(Colors.get(!sys.props.get("sbt.log.noformat").toSeq.contains("true"))));
+      println(strToPrint)
+      result.append(strToPrint)
+      result.append("\n")
     }
+
+    result.toString
   }
 
 }

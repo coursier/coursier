@@ -62,7 +62,7 @@ object Keys {
     "Prints dependencies and transitive dependencies as an inverted tree (dependees as children)"
   )
 
-  val coursierWhatDependsOn = InputKey[Unit](
+  val coursierWhatDependsOn = InputKey[String](
     "coursier-what-depends-on",
     "Prints dependencies and transitive dependencies as an inverted tree for a specific module (dependees as children)"
   )
