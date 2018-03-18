@@ -29,7 +29,7 @@ object Print {
     def version: String
     def dependsOn: Module
     def wantVersion: String
-    def gotVersion: String
+    def reconciledVersion: String
     def excluding: Boolean
   }
 
@@ -207,20 +207,20 @@ object Print {
                                  version: String,
                                  dependsOn: Module,
                                  wantVersion: String,
-                                 gotVersion: String,
+                                 reconciledVersion: String,
                                  excluding: Boolean
                                ) extends Parent {
       def repr(colors: Colors): String =
         if (excluding)
           s"${colors.yellow}(excluded by)${colors.reset} $module:$version"
-        else if (wantVersion == gotVersion)
+        else if (wantVersion == reconciledVersion)
           s"$module:$version"
         else {
-          val assumeCompatibleVersions = compatibleVersions(wantVersion, gotVersion)
+          val assumeCompatibleVersions = compatibleVersions(wantVersion, reconciledVersion)
 
           s"$module:$version " +
             (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-            s"(wants $dependsOn:$wantVersion, got $gotVersion)" +
+            s"$dependsOn:$wantVersion -> $reconciledVersion" +
             colors.reset
         }
     }

@@ -10,15 +10,7 @@ object Tree {
 
 }
 
-case class AppliedTree[A](root: A, children: Seq[AppliedTree[A]])
-
 case class Tree[A](roots: IndexedSeq[A], children: A => Seq[A]) {
-
-  def apply(): Seq[AppliedTree[A]] = {
-    roots.map(root => {
-      AppliedTree[A](root, Tree(children(root).toIndexedSeq, children).apply())
-    })
-  }
 
   def render(show: A => String): String = {
 
