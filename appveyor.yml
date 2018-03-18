@@ -30,4 +30,4 @@ test_script:
   - sbt ++2.10.6 "sbt-coursier/scripted sbt-coursier/*" "sbt-coursier/scripted sbt-coursier-0.13/*" sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*" "sbt-shading/scripted sbt-shading-0.13/*" # for sbt 0.13
 branches:
   only:
-    - master
+    - series/1.0.x
