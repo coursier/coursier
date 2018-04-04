@@ -30,8 +30,10 @@ build_script:
   - sbt scala212 coreJVM/publishLocal cacheJVM/publishLocal extra/publishLocal scalazJVM/publishLocal cli/publishLocal
   - sbt scala211 compile coreJVM/publishLocal
 test_script:
+  - sbt scala213 testsJVM/test
   - sbt scala212 testsJVM/test
   - sbt scala211 testsJVM/test
+  - sbt scala213 testsJVM/it:test
   - sbt scala212 testsJVM/it:test
   - sbt scala211 testsJVM/it:test
 branches:
