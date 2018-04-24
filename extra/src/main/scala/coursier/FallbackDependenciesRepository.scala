@@ -78,7 +78,7 @@ object FallbackDependenciesRepository {
 
 final case class FallbackDependenciesRepository(
   fallbacks: Map[(Module, String), (URL, Boolean)],
-  localArtifactsShouldBeCached: Boolean
+  localArtifactsShouldBeCached: Boolean = false
 ) extends Repository {
 
   private val source: Artifact.Source =
