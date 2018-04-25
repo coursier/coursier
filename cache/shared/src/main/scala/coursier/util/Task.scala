@@ -31,14 +31,14 @@ object Task extends PlatformTask {
 
   def tailRecM[A, B](a: A)(fn: A => Task[Either[A, B]]): Task[B] =
     Task[B] { implicit ec =>
-      // this loop is safe, because
-      // Future.flatMap is stack-safe
-      // but Task.flatMap is not stack safe because it
-      // involves function composition
       def loop(a: A): Future[B] =
         fn(a).future().flatMap {
-          case Right(b) => Future.successful(b)
-          case Left(a) => loop(a)
+          case Right(b) =>
+            Future.successful(b)
+          case Left(a) =>
+            // this is safe because recursive
+            // flatMap is safe on Future
+            loop(a)
         }
       loop(a)
     }

@@ -16,7 +16,7 @@ object TaskTests extends TestSuite {
           case x if x >= i => Task.delay(Right(i))
           case toosmall => Task.delay(Left(toosmall + 1))
         }
-      assert(Await.result(countTo(500000).map(_ == 500000).future(), Duration.Inf))
+      countTo(500000).map(_ == 500000).future().map(assert(_))
     }
   }
 }
