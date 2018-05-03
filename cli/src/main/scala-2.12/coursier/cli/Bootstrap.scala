@@ -55,18 +55,39 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   private def createJarBootstrap(javaOpts: Seq[String], output: File, content: Array[Byte]): Unit = {
 
+    val argsPartitioner =
+      """|args=("$@")
+         |sys_args=""
+         |app_args=""
+         |for ((i=0; i < $#; i++))
+         |{
+         |  arg=${args[$i]}
+         |  if [[ $arg == -D* ]]; then
+         |    sys_args+=" $arg"
+         |  elif [[ $arg == -J* ]]; then
+         |    sys_args+=" $arg"
+         |  elif [[ $arg == -XX* ]]; then
+         |    sys_args+=" $arg"
+         |  else
+         |    app_args+=" $arg"
+         |  fi
+         |}
+      """.stripMargin
+
     val javaCmd = Seq("java") ++
       javaOpts
         // escaping possibly a bit loose :-|
         .map(s => "'" + s.replace("'", "\\'") + "'") ++
       Seq(
+        "$sys_args",
         "-jar",
         "\"$0\"",
-        "\"$@\""
+        "$app_args"
       )
 
     val shellPreamble = Seq(
       "#!/usr/bin/env sh",
+      argsPartitioner,
       "exec " + javaCmd.mkString(" ")
     ).mkString("", "\n", "\n")
 
