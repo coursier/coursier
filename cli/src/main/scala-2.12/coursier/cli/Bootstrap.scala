@@ -56,12 +56,11 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   private def createJarBootstrap(javaOpts: Seq[String], output: File, content: Array[Byte]): Unit = {
 
     val argsPartitioner =
-      """|args=("$@")
-         |sys_args=""
+      """|sys_args=""
          |app_args=""
-         |for ((i=0; i < $#; i++))
+         |for ((i=1; i <= $#; i++))
          |{
-         |  arg=${args[$i]}
+         |  arg=${!i}
          |  if [[ $arg == -D* ]]; then
          |    sys_args+=" $arg"
          |  elif [[ $arg == -J* ]]; then
