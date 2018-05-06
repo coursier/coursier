@@ -58,20 +58,19 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val argsPartitioner =
       """|sys_args=""
          |app_args=""
-         |for ((i=1; i <= $#; i++))
-         |{
-         |  arg=${!i}
-         |  if [[ $arg == -D* ]]; then
-         |    sys_args+=" $arg"
-         |  elif [[ $arg == -J* ]]; then
-         |    sys_args+=" $arg"
-         |  elif [[ $arg == -XX* ]]; then
-         |    sys_args+=" $arg"
-         |  else
-         |    app_args+=" $arg"
-         |  fi
-         |}
-      """.stripMargin
+         |i=1; while [ "$i" -le $# ]; do
+         |  eval arg=\${$i}
+         |  case $arg in
+         |    -D* | -J* | -XX*)
+         |      sys_args="$sys_args $arg"
+         |      ;;
+         |    *)
+         |      app_args="$app_args $arg"
+         |      ;;
+         |  esac
+         |  i=$((i + 1))
+         |done
+         |""".stripMargin
 
     val javaCmd = Seq("java") ++
       javaOpts
