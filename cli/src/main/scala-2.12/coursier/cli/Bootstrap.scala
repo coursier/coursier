@@ -61,8 +61,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
          |i=1; while [ "$i" -le $# ]; do
          |  eval arg=\${$i}
          |  case $arg in
-         |    -D[^\s]* | -XX*)
-         |      sys_args="$sys_args $arg"
+         |    -J-*)
+         |      sys_args="$sys_args ${arg#-J}"
          |      ;;
          |    *)
          |      app_args="$app_args $arg"
