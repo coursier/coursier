@@ -8,6 +8,7 @@ object CoursierCommand {
   val parser =
     CommandParser.nil
       .add(Bootstrap)
+      .add(Shoestrap)
       .add(Fetch)
       .add(Launch)
       .add(Resolve)
@@ -17,6 +18,7 @@ object CoursierCommand {
   val help =
     CommandsHelp.nil
       .add(Bootstrap)
+      .add(Shoestrap)
       .add(Fetch)
       .add(Launch)
       .add(Resolve)

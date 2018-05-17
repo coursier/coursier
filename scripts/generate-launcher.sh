@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=1.0.2
+VERSION=1.0.3-SNAPSHOT
 CACHE_VERSION=v1
 
 SBTPACK_LAUNCHER="$(dirname "$0")/../cli/target/pack/bin/coursier"
@@ -14,6 +14,7 @@ fi
   --classifier standalone \
   -J "-noverify" \
   --no-default \
+  -r file:$HOME/.m2/repository \
   -r central \
   -r sonatype:releases \
   -f -o coursier \

@@ -115,6 +115,17 @@ lazy val bootstrap = project
     renameMainJar("bootstrap.jar")
   )
 
+lazy val shoestrap = project
+  .disablePlugins(ScriptedPlugin)
+  .settings(
+    pureJava,
+    dontPublish,
+    addPathsSources,
+    // seems not to be automatically found with sbt 0.13.16-M1 :-/
+    mainClass := Some("coursier.Shoestrap"),
+    renameMainJar("shoestrap.jar")
+  )
+
 lazy val extra = project
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(ShadingPlugin)
@@ -158,6 +169,7 @@ lazy val cli = project
     dontPublishIn("2.10", "2.11"),
     coursierPrefix,
     unmanagedResources.in(Test) += packageBin.in(bootstrap).in(Compile).value,
+    unmanagedResources.in(Test) += packageBin.in(shoestrap).in(Compile).value,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -176,6 +188,7 @@ lazy val cli = project
         None
     },
     addBootstrapJarAsResource,
+    addShoestrapJarAsResource,
     proguardedCli
   )
 
@@ -374,6 +387,7 @@ lazy val coursier = project
     paths,
     cache,
     bootstrap,
+    shoestrap,
     extra,
     cli,
     `sbt-shared`,
@@ -403,6 +417,24 @@ lazy val addBootstrapJarAsResource = {
 
     ZipUtil.addToZip(source, dest, Seq(
       "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath)
+    ))
+
+    dest
+  }
+}
+
+lazy val addShoestrapJarAsResource = {
+
+  import java.nio.file.Files
+
+  packageBin.in(Compile) := {
+    val shoestrapJar = packageBin.in(shoestrap).in(Compile).value
+    val source = packageBin.in(Compile).value
+
+    val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-shoestrap.jar")
+
+    ZipUtil.addToZip(source, dest, Seq(
+      "shoestrap.jar" -> Files.readAllBytes(shoestrapJar.toPath)
     ))
 
     dest
