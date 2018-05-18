@@ -5,10 +5,9 @@ import java.net.URL
 
 import coursier.core.Publication
 import sbt.librarymanagement.GetClassifiersModule
-import sbt.{Resolver, SettingKey, TaskKey}
+import sbt.{InputKey, Resolver, SettingKey, TaskKey}
 
 import scala.concurrent.duration.Duration
-import scalaz.\/
 
 object Keys {
   val coursierParallelDownloads = SettingKey[Int]("coursier-parallel-downloads")
@@ -52,8 +51,6 @@ object Keys {
 
   private[coursier] val actualCoursierResolution = TaskKey[Resolution]("coursier-resolution")
 
-  @deprecated("Use coursierResolutions instead", "1.0.0-RC4")
-  val coursierResolution = actualCoursierResolution
   val coursierSbtClassifiersResolution = TaskKey[Resolution]("coursier-sbt-classifiers-resolution")
 
   val coursierDependencyTree = TaskKey[Unit](
@@ -65,8 +62,12 @@ object Keys {
     "Prints dependencies and transitive dependencies as an inverted tree (dependees as children)"
   )
 
-  val coursierArtifacts = TaskKey[Map[Artifact, FileError \/ File]]("coursier-artifacts")
-  val coursierSignedArtifacts = TaskKey[Map[Artifact, FileError \/ File]]("coursier-signed-artifacts")
-  val coursierClassifiersArtifacts = TaskKey[Map[Artifact, FileError \/ File]]("coursier-classifiers-artifacts")
-  val coursierSbtClassifiersArtifacts = TaskKey[Map[Artifact, FileError \/ File]]("coursier-sbt-classifiers-artifacts")
+  val coursierWhatDependsOn = InputKey[String](
+    "coursier-what-depends-on",
+    "Prints dependencies and transitive dependencies as an inverted tree for a specific module (dependees as children)"
+  )
+  val coursierArtifacts = TaskKey[Map[Artifact, Either[FileError, File]]]("coursier-artifacts")
+  val coursierSignedArtifacts = TaskKey[Map[Artifact, Either[FileError, File]]]("coursier-signed-artifacts")
+  val coursierClassifiersArtifacts = TaskKey[Map[Artifact, Either[FileError, File]]]("coursier-classifiers-artifacts")
+  val coursierSbtClassifiersArtifacts = TaskKey[Map[Artifact, Either[FileError, File]]]("coursier-sbt-classifiers-artifacts")
 }

@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
 set -evx
 
-SCALA_VERSION="${SCALA_VERSION:-${TRAVIS_SCALA_VERSION:-2.12.4}}"
-PULL_REQUEST="${PULL_REQUEST:-${TRAVIS_PULL_REQUEST:-false}}"
-BRANCH="${BRANCH:-${TRAVIS_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}}"
-PUBLISH="${PUBLISH:-0}"
-SCALA_JS="${SCALA_JS:-0}"
-
-VERSION="$(grep -oP '(?<=")[^"]*(?!<")' < version.sbt)"
-
-JARJAR_VERSION="${JARJAR_VERSION:-1.0.1-coursier-SNAPSHOT}"
-
-is210() {
-  echo "$SCALA_VERSION" | grep -q "^2\.10"
-}
-
-is211() {
-  echo "$SCALA_VERSION" | grep -q "^2\.11"
-}
-
-is212() {
-  echo "$SCALA_VERSION" | grep -q "^2\.12"
-}
-
 setupCoursierBinDir() {
   mkdir -p bin
   cp coursier bin/
@@ -39,15 +17,9 @@ launchTestRepo() {
   ./scripts/launch-test-repo.sh "$@"
 }
 
-launchProxyRepos() {
-  if [ "$(uname)" != "Darwin" ]; then
-    ./scripts/launch-proxies.sh
-  fi
-}
-
 integrationTestsRequirements() {
   # Required for ~/.ivy2/local repo tests
-  sbt ++2.11.12 coreJVM/publishLocal ++2.12.4 cli/publishLocal
+  sbt scala211 coreJVM/publishLocal scala212 cli/publishLocal
 
   # Required for HTTP authentication tests
   launchTestRepo --port 8080 --list-pages
@@ -70,32 +42,31 @@ sbtShading() {
 
 runSbtCoursierTests() {
   addPgpKeys
-  sbt ++$SCALA_VERSION sbt-plugins/publishLocal
   if [ "$SCALA_VERSION" = "2.10" ]; then
-    sbt ++$SCALA_VERSION "sbt-coursier/scripted sbt-coursier/*" "sbt-coursier/scripted sbt-coursier-0.13/*"
+    sbt scalaFromEnv "sbt-coursier/scripted sbt-coursier/*" "sbt-coursier/scripted sbt-coursier-0.13/*"
   else
-    sbt ++$SCALA_VERSION "sbt-coursier/scripted sbt-coursier/simple" # full scripted suite currently taking too long on Travis CI...
+    sbt scalaFromEnv "sbt-coursier/scripted sbt-coursier/simple" # full scripted suite currently taking too long on Travis CI...
   fi
-  sbt ++$SCALA_VERSION sbt-pgp-coursier/scripted
+  sbt scalaFromEnv sbt-pgp-coursier/scripted
 }
 
 runSbtShadingTests() {
-  sbt ++$SCALA_VERSION coreJVM/publishLocal cache/publishLocal extra/publishLocal sbt-shared/publishLocal sbt-coursier/publishLocal "sbt-shading/scripted sbt-shading/*"
+  sbt scalaFromEnv "sbt-shading/scripted sbt-shading/*"
   if [ "$SCALA_VERSION" = "2.10" ]; then
-    sbt ++$SCALA_VERSION "sbt-shading/scripted sbt-shading-0.13/*"
+    sbt scalaFromEnv "sbt-shading/scripted sbt-shading-0.13/*"
   fi
 }
 
 jsCompile() {
-  sbt ++$SCALA_VERSION js/compile js/test:compile coreJS/fastOptJS fetch-js/fastOptJS testsJS/test:fastOptJS js/test:fastOptJS
+  sbt scalaFromEnv js/compile js/test:compile coreJS/fastOptJS cacheJS/fastOptJS testsJS/test:fastOptJS js/test:fastOptJS
 }
 
 jvmCompile() {
-  sbt ++$SCALA_VERSION jvm/compile jvm/test:compile
+  sbt scalaFromEnv jvm/compile jvm/test:compile
 }
 
 runJsTests() {
-  sbt ++$SCALA_VERSION js/test
+  sbt scalaFromEnv js/test
 }
 
 runJvmTests() {
@@ -105,7 +76,7 @@ runJvmTests() {
     IT="jvm/it:test"
   fi
 
-  sbt ++$SCALA_VERSION jvm/test $IT
+  sbt scalaFromEnv jvm/test $IT
 }
 
 validateReadme() {
@@ -113,13 +84,12 @@ validateReadme() {
   mv README.md README.md.orig
 
 
-  if is212; then
-    TUT_SCALA_VERSION="2.12.1" # Later versions seem to make tut not see the coursier binaries
+  if [ "$SCALA_VERSION" = 2.12 ]; then
+    # Later 2.12 versions seem to make tut not see the coursier binaries
+    sbt '++2.12.1!' tut
   else
-    TUT_SCALA_VERSION="$SCALA_VERSION"
+    sbt scalaFromEnv tut
   fi
-
-  sbt ++${TUT_SCALA_VERSION} tut
 
   if cmp -s README.md.orig README.md; then
     echo "README.md doesn't change"
@@ -131,73 +101,73 @@ validateReadme() {
 }
 
 checkBinaryCompatibility() {
-  sbt ++${SCALA_VERSION} coreJVM/mimaReportBinaryIssues cache/mimaReportBinaryIssues
-}
-
-testSbtCoursierJava6() {
-  sbt ++${SCALA_VERSION} coreJVM/publishLocal cache/publishLocal extra/publishLocal sbt-coursier/publishLocal
-
-  git clone https://github.com/alexarchambault/scalacheck-shapeless.git
-  cd scalacheck-shapeless
-  git checkout e11ec8b2b069ee598b20ae3f3ad6e00f5edfd7ac
-  cd project
-  clean_plugin_sbt
-  cd project
-  clean_plugin_sbt
-  cd ../..
-  docker run -it --rm \
-    -v $HOME/.ivy2/local:/root/.ivy2/local \
-    -v $(pwd):/root/project \
-    -v $(pwd)/../bin:/root/bin \
-    -e CI=true \
-    openjdk:6-jre \
-      /bin/bash -c "cd /root/project && /root/bin/sbt update"
-  cd ..
-
-  # ensuring resolution error doesn't throw NoSuchMethodError
-  mkdir -p foo/project
-  cd foo
-  echo 'libraryDependencies += "foo" % "bar" % "1.0"' >> build.sbt
-  echo 'addSbtPlugin("io.get-coursier" % "sbt-coursier" % "'"$VERSION"'")' >> project/plugins.sbt
-  echo 'sbt.version=0.13.15' >> project/build.properties
-  docker run -it --rm \
-    -v $HOME/.ivy2/local:/root/.ivy2/local \
-    -v $(pwd):/root/project \
-    -v $(pwd)/../bin:/root/bin \
-    -e CI=true \
-    openjdk:6-jre \
-      /bin/bash -c "cd /root/project && /root/bin/sbt update || true" | tee -a output
-  grep "coursier.ResolutionException: Encountered 1 error" output
-  echo "Ok, found ResolutionException in output"
-  cd ..
-}
-
-clean_plugin_sbt() {
-  mv plugins.sbt plugins.sbt0
-  grep -v coursier plugins.sbt0 > plugins.sbt || true
-  echo '
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "'"$VERSION"'")
-  ' >> plugins.sbt
+  sbt scalaFromEnv coreJVM/mimaReportBinaryIssues cacheJVM/mimaReportBinaryIssues
 }
 
 publish() {
-  sbt ++${SCALA_VERSION} publish
+  sbt scalaFromEnv publish
 }
 
 testBootstrap() {
-  if is212; then
-    sbt ++${SCALA_VERSION} "project cli" pack
-    cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.0
-    if [ "$(./cs-echo foo)" != foo ]; then
+  if [ "$SCALA_VERSION" = 2.12 ]; then
+    sbt scalaFromEnv "project cli" pack
+
+    cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.1
+    local OUT="$(./cs-echo foo)"
+    if [ "$OUT" != foo ]; then
       echo "Error: unexpected output from bootstrapped echo command." 1>&2
+      exit 1
+    fi
+
+
+    if echo "$OSTYPE" | grep -q darwin; then
+      GREP="ggrep"
+    else
+      GREP="grep"
+    fi
+
+    CURRENT_VERSION="$("$GREP" -oP '(?<=")[^"]*(?<!")' version.sbt)"
+
+    sbt scalaFromEnv cli/publishLocal
+    ACTUAL_VERSION="$CURRENT_VERSION" OUTPUT="coursier-test" scripts/generate-launcher.sh -r ivy2Local
+    ./coursier-test bootstrap -o cs-echo-launcher io.get-coursier:echo:1.0.0
+    if [ "$(./cs-echo-launcher foo)" != foo ]; then
+      echo "Error: unexpected output from bootstrapped echo command (generated by proguarded launcher)." 1>&2
+      exit 1
+    fi
+
+    # run via the launcher rather than via the sbt-pack scripts, because the latter interprets -Dfoo=baz itself
+    # rather than passing it to coursier since https://github.com/xerial/sbt-pack/pull/118
+    ./coursier-test bootstrap -o cs-props -D other=thing -J -Dfoo=baz io.get-coursier:props:1.0.2
+    local OUT="$(./cs-props foo)"
+    if [ "$OUT" != baz ]; then
+      echo -e "Error: unexpected output from bootstrapped props command.\n$OUT" 1>&2
+      exit 1
+    fi
+    local OUT="$(./cs-props other)"
+    if [ "$OUT" != thing ]; then
+      echo -e "Error: unexpected output from bootstrapped props command.\n$OUT" 1>&2
+      exit 1
+    fi
+
+    # assembly tests
+    ./coursier-test bootstrap -a -o cs-props-assembly -D other=thing -J -Dfoo=baz io.get-coursier:props:1.0.2
+    local OUT="$(./cs-props-assembly foo)"
+    if [ "$OUT" != baz ]; then
+      echo -e "Error: unexpected output from assembly props command.\n$OUT" 1>&2
+      exit 1
+    fi
+    local OUT="$(./cs-props-assembly other)"
+    if [ "$OUT" != thing ]; then
+      echo -e "Error: unexpected output from assembly props command.\n$OUT" 1>&2
       exit 1
     fi
   fi
 }
 
 testNativeBootstrap() {
-  if is212 && [ "$NATIVE" = "1" ]; then
-    sbt ++${SCALA_VERSION} "project cli" pack
+  if [ "$SCALA_VERSION" = "2.12" -a "$NATIVE" = "1" ]; then
+    sbt scalaFromEnv "project cli" pack
     cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
     if [ "$(./native-echo -n foo a)" != "foo a" ]; then
       echo "Error: unexpected output from native test bootstrap." 1>&2
@@ -228,21 +198,14 @@ else
   jvmCompile
 
   if sbtCoursier; then
-    if is210 || is212; then
+    if [ "$SCALA_VERSION" = "2.10" -o "$SCALA_VERSION" = "2.12" ]; then
       runSbtCoursierTests
     fi
-
-    if is210; then
-      testSbtCoursierJava6
-    fi
   elif sbtShading; then
-    if is210 || is212; then
+    if [ "$SCALA_VERSION" = "2.10" -o "$SCALA_VERSION" = "2.12" ]; then
       runSbtShadingTests
     fi
   else
-    # Required for the proxy tests (currently CentralNexus2ProxyTests and CentralNexus3ProxyTests)
-    launchProxyRepos
-
     runJvmTests
 
     testBootstrap
@@ -250,17 +213,17 @@ else
     validateReadme
     checkBinaryCompatibility
   fi
-
-  # Not using a jdk6 matrix entry with Travis as some sources of coursier require Java 7 to compile
-  # (even though it won't try to call Java 7 specific methods if it detects it runs under Java 6).
-  # The tests here check that coursier is nonetheless fine when run under Java 6.
 fi
 
+
+PULL_REQUEST="${PULL_REQUEST:-${TRAVIS_PULL_REQUEST:-false}}"
+BRANCH="${BRANCH:-${TRAVIS_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}}"
+PUBLISH="${PUBLISH:-0}"
 
 if [ "$PUBLISH" = 1 -a "$PULL_REQUEST" = false -a "$BRANCH" = master ]; then
   publish
 
-  if is211 && isScalaJs; then
+  if [ "$SCALA_VERSION" = "2.11" ] && isScalaJs; then
     #"$(dirname "$0")/push-gh-pages.sh" "$SCALA_VERSION"
     :
   fi

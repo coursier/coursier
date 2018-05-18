@@ -131,6 +131,8 @@ libraryDependencies ++= Seq(
 )
 ```
 
+Note that the examples below are validated against the current sources of coursier. You may want to read the [documentation of the latest release](https://github.com/coursier/coursier/blob/v1.1.0-M3/README.md#api) of coursier instead.
+
 Add an import for coursier,
 ```scala
 import coursier._
@@ -158,17 +160,21 @@ val start = Resolution(
 
 Create a fetch function able to get things from a few repositories via a local cache,
 ```scala
+import coursier.util.Task
+
 val repositories = Seq(
   Cache.ivy2Local,
   MavenRepository("https://repo1.maven.org/maven2")
 )
 
-val fetch = Fetch.from(repositories, Cache.fetch())
+val fetch = Fetch.from(repositories, Cache.fetch[Task]())
 ```
 
 Then run the resolution per-se,
 ```scala
-val resolution = start.process.run(fetch).unsafePerformSync
+import scala.concurrent.ExecutionContext.Implicits.global
+
+val resolution = start.process.run(fetch).unsafeRun()
 ```
 That will fetch and use metadata.
 
@@ -181,12 +187,11 @@ These would mean that the resolution wasn't able to get metadata about some depe
 Then fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala
 import java.io.File
-import scalaz.\/
-import scalaz.concurrent.Task
+import coursier.util.Gather
 
-val localArtifacts: Seq[FileError \/ File] = Task.gatherUnordered(
-  resolution.artifacts.map(Cache.file(_).run)
-).unsafePerformSync
+val localArtifacts: Seq[Either[FileError, File]] = Gather[Task].gather(
+  resolution.artifacts.map(Cache.file[Task](_).run)
+).unsafeRun()
 ```
 
 
@@ -422,6 +427,8 @@ libraryDependencies ++= Seq(
 )
 ```
 
+Note that the examples below are validated against the current sources of coursier. You may want to read the [documentation of the latest release](https://github.com/coursier/coursier/blob/v1.1.0-M3/README.md#api-1) of coursier instead.
+
 The first module, `"io.get-coursier" %% "coursier" % "1.0.1"`, mainly depends on
 `scalaz-core` (and only it, *not* `scalaz-concurrent` for example). It contains among others,
 definitions,
@@ -465,7 +472,7 @@ The resolution process will go on by giving successive `Resolution`s, until the 
 `start` above is only the initial state - it is far from over, as the `isDone` method on it tells,
 ```scala
 scala> start.isDone
-res4: Boolean = false
+res2: Boolean = false
 ```
 
 
@@ -504,17 +511,17 @@ scala> MavenRepository(
      |   "https://nexus.corp.com/content/repositories/releases",
      |   authentication = Some(Authentication("user", "pass"))
      | )
-res6: coursier.maven.MavenRepository = MavenRepository(https://nexus.corp.com/content/repositories/releases,None,true,Some(Authentication(user, *******)))
+res4: coursier.maven.MavenRepository = MavenRepository(https://nexus.corp.com/content/repositories/releases,None,true,Some(Authentication(user, *******)))
 ```
 
 Now that we have repositories, we're going to mix these with things from the `coursier-cache` module,
 for resolution to happen via the cache. We'll create a function
-of type `Seq[(Module, String)] => F[Seq[((Module, String), Seq[String] \/ (Artifact.Source, Project))]]`.
+of type `Seq[(Module, String)] => F[Seq[((Module, String), Either[Seq[String], (Artifact.Source, Project)])]]`.
 Given a sequence of dependencies, designated by their `Module` (organisation and name in most cases)
 and version (just a `String`), it gives either errors (`Seq[String]`) or metadata (`(Artifact.Source, Project)`),
 wrapping the whole in a monad `F`.
 ```scala
-val fetch = Fetch.from(repositories, Cache.fetch())
+val fetch = Fetch.from(repositories, Cache.fetch[Task]())
 ```
 
 The monad used by `Fetch.from` is `scalaz.concurrent.Task`, but the resolution process is not tied to a particular
@@ -540,7 +547,9 @@ resolution is particularly complex, in which case `maxIterations` could be incre
 
 Let's run the whole resolution,
 ```scala
-val resolution = start.process.run(fetch).unsafePerformSync
+import scala.concurrent.ExecutionContext.Implicits.global
+
+val resolution = start.process.run(fetch).unsafeRun()
 ```
 
 To get additional feedback during the resolution, we can give the `Cache.default` method above
@@ -564,12 +573,11 @@ which are dependencies whose versions could not be unified.
 Then, if all went well, we can fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala
 import java.io.File
-import scalaz.\/
-import scalaz.concurrent.Task
+import coursier.util.Gather
 
-val localArtifacts: Seq[FileError \/ File] = Task.gatherUnordered(
-  resolution.artifacts.map(Cache.file(_).run)
-).unsafePerformSync
+val localArtifacts: Seq[Either[FileError, File]] = Gather[Task].gather(
+  resolution.artifacts.map(Cache.file[Task](_).run)
+).unsafeRun()
 ```
 
 We're using the `Cache.file` method, that can also be given a `Logger` (for more feedback) and a custom thread pool.
@@ -787,26 +795,7 @@ Once RCs will be considered stable enough, `1.0.1` should be released.
 
 ## Contributors
 
-- Claudio Bley ([@avdv](https://github.com/avdv))
-- Erem Boto ([@eboto](https://github.com/eboto))
-- Erik LaBianca ([@easel](https://github.com/easel))
-- Gabor Aranyossy ([@gaboraranyossy-da](https://github.com/gaboraranyossy-da))
-- Guillaume Massé ([@MasseGuillaume](https://github.com/MasseGuillaume))
-- Han Ju ([@darkjh](https://github.com/darkjh))
-- Jameel Al-Aziz ([@jalaziz](https://github.com/jalaziz))
-- Jentsch ([@Jentsch](https://github.com/Jentsch))
-- joriscode ([@joriscode](https://github.com/joriscode))
-- Kazuyoshi Kato ([@kzys](https://github.com/kzys))
-- Lars Hupel ([@larsrh](https://github.com/larsrh))
-- Mirco Dotta ([@dotta](https://github.com/dotta))
-- n4to4 ([@n4to4](https://github.com/n4to4))
-- Ólafur Páll Geirsson ([@olafurpg](https://github.com/olafurpg))
-- Rodrigo Fernandes ([@rtfpessoa](https://github.com/rtfpessoa))
-- Roman Iakovlev ([@RomanIakovlev](https://github.com/RomanIakovlev))
-- Ryo Fukumuro ([@rfkm](https://github.com/rfkm))
-- Sebastian Schuberth ([@sschuberth](https://github.com/sschuberth))
-- Simon Ochsenreither ([@soc](https://github.com/soc))
-- Your name here :-)
+See the [up-to-date list of contributors on GitHub](https://github.com/coursier/coursier/graphs/contributors).
 
 Don't hesitate to pick an issue to contribute, and / or ask for help for how to proceed
 on the [Gitter channel](https://gitter.im/coursier/coursier).

@@ -41,13 +41,11 @@ object CoursierPlugin extends AutoPlugin {
     val coursierParentProjectCache = Keys.coursierParentProjectCache
     val coursierResolutions = Keys.coursierResolutions
 
-    @deprecated("Use coursierResolutions instead", "1.0.0-RC4")
-    val coursierResolution = Keys.actualCoursierResolution
-
     val coursierSbtClassifiersResolution = Keys.coursierSbtClassifiersResolution
 
     val coursierDependencyTree = Keys.coursierDependencyTree
     val coursierDependencyInverseTree = Keys.coursierDependencyInverseTree
+    val coursierWhatDependsOn = Keys.coursierWhatDependsOn
 
     val coursierArtifacts = Keys.coursierArtifacts
     val coursierSignedArtifacts = Keys.coursierSignedArtifacts
@@ -68,7 +66,12 @@ object CoursierPlugin extends AutoPlugin {
     ).value,
     coursierDependencyInverseTree := Tasks.coursierDependencyTreeTask(
       inverse = true
-    ).value
+    ).value,
+    coursierWhatDependsOn := Def.inputTaskDyn {
+      import sbt.complete.DefaultParsers._
+      val input = token(SpaceClass ~ NotQuoted, "<arg>").parsed._2
+      Tasks.coursierWhatDependsOnTask(input)
+    }.evaluated
   )
 
   def makeIvyXmlBefore[T](
@@ -84,7 +87,7 @@ object CoursierPlugin extends AutoPlugin {
       IvyXml.writeFiles(currentProject, shadedConfigOpt, ivySbt.value, streams.value.log)
     }).value
 
-  private val pluginIvySnapshotsBase = Resolver.SbtPluginRepositoryRoot.stripSuffix("/") + "/ivy-snapshots"
+  private val pluginIvySnapshotsBase = Resolver.SbtRepositoryRoot.stripSuffix("/") + "/ivy-snapshots"
 
   // allows to get the actual repo list when sbt starts up
   private val hackHack = Seq(
@@ -96,25 +99,33 @@ object CoursierPlugin extends AutoPlugin {
 
       // hack to trigger https://github.com/sbt/sbt/blob/v1.0.1/main/src/main/scala/sbt/Defaults.scala#L2856,
       // to have the third case be used instead of the second one, at https://github.com/sbt/sbt/blob/v1.0.1/main/src/main/scala/sbt/Defaults.scala#L2069
-      // 😃🔫
       new xsbti.AppConfiguration {
         def provider() = {
+          import scala.language.reflectiveCalls
           val prov = app.provider()
+          val noWarningForDeprecatedStuffProv = prov.asInstanceOf[{
+            def mainClass(): Class[_ <: xsbti.AppMain]
+          }]
           new xsbti.AppProvider {
             def newMain() = prov.newMain()
             def components() = prov.components()
-            def mainClass() = prov.mainClass()
+            def mainClass() = noWarningForDeprecatedStuffProv.mainClass()
             def mainClasspath() = prov.mainClasspath()
             def loader() = prov.loader()
             def scalaProvider() = {
               val scalaProv = prov.scalaProvider()
+              val noWarningForDeprecatedStuffScalaProv = scalaProv.asInstanceOf[{
+                def libraryJar(): File
+                def compilerJar(): File
+              }]
+
               new xsbti.ScalaProvider {
                 def app(id: xsbti.ApplicationID) = scalaProv.app(id)
                 def loader() = scalaProv.loader()
                 def jars() = scalaProv.jars()
-                def libraryJar() = scalaProv.libraryJar()
+                def libraryJar() = noWarningForDeprecatedStuffScalaProv.libraryJar()
                 def version() = scalaProv.version()
-                def compilerJar() = scalaProv.compilerJar()
+                def compilerJar() = noWarningForDeprecatedStuffScalaProv.compilerJar()
                 def launcher() = {
                   val launch = scalaProv.launcher()
                   new xsbti.Launcher {
@@ -145,17 +156,12 @@ object CoursierPlugin extends AutoPlugin {
     }
   )
 
-  private val preloadedBase = {
-    val rawPattern = "file:///${sbt.preloaded-${sbt.global.base-${user.home}/.sbt}/preloaded/}"
-    Tasks.exceptionPatternParser().apply(rawPattern).string
-  }
-
   def coursierSettings(
     shadedConfigOpt: Option[(String, String)],
     packageConfigs: Seq[(Configuration, String)]
   ) = hackHack ++ Seq(
     clean := {
-      clean.value
+      val noWarningPlz = clean.value
       Tasks.resolutionsCache.clear()
       Tasks.reportsCache.clear()
     },

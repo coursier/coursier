@@ -6,10 +6,12 @@ import java.util.concurrent.{ConcurrentHashMap, ExecutorService, Executors}
 
 import coursier.core.{Authentication, Publication}
 import coursier.extra.Typelevel
+import coursier.interop.scalaz._
 import coursier.ivy.{IvyRepository, PropertiesPattern}
 import coursier.Keys._
 import coursier.Structure._
-import coursier.util.Print
+import coursier.util.Print.Colors
+import coursier.util.{Parse, Print}
 import sbt.librarymanagement._
 import sbt.{Classpaths, Def, Resolver, UpdateReport}
 import sbt.Keys._
@@ -17,7 +19,6 @@ import sbt.Keys._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
-import scalaz.{-\/, \/-}
 import scalaz.concurrent.{Strategy, Task}
 
 object Tasks {
@@ -450,16 +451,16 @@ object Tasks {
     {
       s =>
         val p = PropertiesPattern.parse(s) match {
-          case -\/(err) =>
+          case Left(err) =>
             throw new Exception(s"Cannot parse pattern $s: $err")
-          case \/-(p) =>
+          case Right(p) =>
             p
         }
 
         p.substituteProperties(props ++ extraProps) match {
-          case -\/(err) =>
+          case Left(err) =>
             throw new Exception(err)
-          case \/-(p) =>
+          case Right(p) =>
             p
         }
     }
@@ -754,7 +755,9 @@ object Tasks {
             .process
             .run(fetch, maxIterations)
             .unsafePerformSyncAttempt
-            .leftMap(ex =>
+            .toEither
+            .left
+            .map(ex =>
               ResolutionError.UnknownException(ex)
                 .throwException()
             )
@@ -780,17 +783,17 @@ object Tasks {
           ).throwException()
         }
 
-        if (res.metadataErrors.nonEmpty) {
+        if (res.errors.nonEmpty) {
           val internalRepositoriesLen = internalRepositories.length
           val errors =
             if (repositories.length > internalRepositoriesLen)
             // drop internal repository errors
-              res.metadataErrors.map {
+              res.errors.map {
                 case (dep, errs) =>
                   dep -> errs.drop(internalRepositoriesLen)
               }
             else
-              res.metadataErrors
+              res.errors
 
           ResolutionError.MetadataDownloadErrors(errors)
             .throwException()
@@ -1014,7 +1017,7 @@ object Tasks {
 
           val artifactFileOrErrorTasks = allArtifacts.toVector.distinct.map { a =>
             def f(p: CachePolicy) =
-              Cache.file(
+              Cache.file[Task](
                 a,
                 cache,
                 p,
@@ -1042,11 +1045,11 @@ object Tasks {
 
           artifactsLogger.init(if (printOptionalMessage) log.info(artifactInitialMessage))
 
-          Task.gatherUnordered(artifactFileOrErrorTasks).unsafePerformSyncAttempt match {
-            case -\/(ex) =>
+          Task.gatherUnordered(artifactFileOrErrorTasks).unsafePerformSyncAttempt.toEither match {
+            case Left(ex) =>
               ResolutionError.UnknownDownloadException(ex)
                 .throwException()
-            case \/-(l) =>
+            case Right(l) =>
               l.toMap
           }
         } finally {
@@ -1270,14 +1273,14 @@ object Tasks {
         }
 
         val artifactFiles = artifactFilesOrErrors0.collect {
-          case (artifact, \/-(file)) =>
+          case (artifact, Right(file)) =>
             artifact -> file
         }
 
         val artifactErrors = artifactFilesOrErrors0
           .toVector
           .collect {
-            case (a, -\/(err)) if !a.isOptional || !err.notFound =>
+            case (a, Left(err)) if !a.isOptional || !err.notFound =>
               a -> err
           }
 
@@ -1292,7 +1295,7 @@ object Tasks {
 
         // can be non empty only if ignoreArtifactErrors is true or some optional artifacts are not found
         val erroredArtifacts = artifactFilesOrErrors0.collect {
-          case (artifact, -\/(_)) =>
+          case (artifact, Left(_)) =>
             artifact
         }.toSet
 
@@ -1347,13 +1350,12 @@ object Tasks {
     }
   }
 
-  def coursierDependencyTreeTask(
-    inverse: Boolean,
+  case class ResolutionResult(configs: Set[String], resolution: Resolution, dependencies: Seq[Dependency])
+
+  private def coursierResolutionTask(
     sbtClassifiers: Boolean = false,
     ignoreArtifactErrors: Boolean = false
-  ) = Def.taskDyn {
-
-    val projectName = thisProjectRef.value.project
+  ): Def.Initialize[sbt.Task[Seq[ResolutionResult]]] = Def.taskDyn {
 
     val currentProjectTask =
       if (sbtClassifiers)
@@ -1391,9 +1393,9 @@ object Tasks {
         val resolutions = resolutionsTask.value
 
         for {
-          (subGraphConfigs, res) <- resolutions
+          (subGraphConfigs, res) <- resolutions.toSeq
           if subGraphConfigs.exists(includedConfigs)
-        } {
+        } yield {
 
           val dependencies0 = currentProject.dependencies.collect {
             case (cfg, dep) if includedConfigs(cfg) && subGraphConfigs(cfg) => dep
@@ -1403,20 +1405,60 @@ object Tasks {
 
           val subRes = res.subset(dependencies0.toSet)
 
-          // use sbt logging?
-          println(
-            s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
-              Print.dependencyTree(
-                dependencies0,
-                subRes,
-                printExclusions = true,
-                inverse,
-                colors = !sys.props.get("sbt.log.noformat").toSeq.contains("true")
-              )
-          )
+          ResolutionResult(subGraphConfigs, subRes, dependencies0)
         }
       }
     }
+  }
+
+  def coursierDependencyTreeTask(
+    inverse: Boolean,
+    sbtClassifiers: Boolean = false,
+    ignoreArtifactErrors: Boolean = false
+  ) = Def.task {
+    val projectName = thisProjectRef.value.project
+
+    val resolutions = coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value
+    for (ResolutionResult(subGraphConfigs, resolution, dependencies) <- resolutions) {
+      // use sbt logging?
+      println(
+        s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
+          Print.dependencyTree(
+            dependencies,
+            resolution,
+            printExclusions = true,
+            inverse,
+            colors = !sys.props.get("sbt.log.noformat").toSeq.contains("true")
+          )
+      )
+    }
+  }
+
+
+  def coursierWhatDependsOnTask(
+    moduleName: String,
+    sbtClassifiers: Boolean = false,
+    ignoreArtifactErrors: Boolean = false
+  ) = Def.task {
+    val module = Parse.module(moduleName, scalaVersion.value)
+      .right
+      .getOrElse(throw new RuntimeException(s"Could not parse module `$moduleName`"))
+
+    val projectName = thisProjectRef.value.project
+
+    val resolutions = coursierResolutionTask(sbtClassifiers, ignoreArtifactErrors).value
+    val result = new mutable.StringBuilder()
+    for (ResolutionResult(subGraphConfigs, resolution, _) <- resolutions) {
+      val roots: Seq[Dependency] = resolution.transitiveDependencies.filter(f => f.module == module)
+      val strToPrint = s"$projectName (configurations ${subGraphConfigs.toVector.sorted.mkString(", ")})" + "\n" +
+        Print.reverseTree(roots, resolution, withExclusions = true)
+          .render(_.repr(Colors.get(!sys.props.get("sbt.log.noformat").toSeq.contains("true"))));
+      println(strToPrint)
+      result.append(strToPrint)
+      result.append("\n")
+    }
+
+    result.toString
   }
 
 }

@@ -30,7 +30,6 @@ lazy val core = crossProject
   .settings(
     shared,
     name := "coursier",
-    libs += CrossDeps.scalazCore.value,
     Mima.previousArtifacts,
     Mima.coreFilters
   )
@@ -38,23 +37,12 @@ lazy val core = crossProject
 lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
-lazy val `fetch-js` = project
-  .disablePlugins(ScriptedPlugin)
-  .enablePlugins(ScalaJSPlugin)
-  .dependsOn(coreJs)
-  .settings(
-    shared,
-    dontPublish,
-    coursierPrefix
-  )
-
 lazy val tests = crossProject
   .disablePlugins(ScriptedPlugin)
-  .dependsOn(core)
-  .jvmConfigure(_.dependsOn(cache % "test"))
-  .jsConfigure(_.dependsOn(`fetch-js` % "test"))
+  .dependsOn(core, cache % "test", scalaz)
   .jsSettings(
-    scalaJSStage.in(Global) := FastOptStage
+    scalaJSStage.in(Global) := FastOptStage,
+    testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   )
   .configs(Integration)
   .settings(
@@ -79,7 +67,10 @@ lazy val `proxy-tests` = project
     dontPublish,
     hasITs,
     coursierPrefix,
-    libs += Deps.scalaAsync.value,
+    libs ++= Seq(
+      Deps.dockerClient,
+      Deps.scalaAsync.value
+    ),
     utest,
     sharedTestResources
   )
@@ -92,17 +83,43 @@ lazy val paths = project
     addDirectoriesSources
   )
 
-lazy val cache = project
+lazy val cache = crossProject
   .disablePlugins(ScriptedPlugin)
-  .dependsOn(coreJvm)
+  .dependsOn(core)
+  .jvmSettings(
+    addPathsSources
+  )
+  .jsSettings(
+    name := "fetch-js"
+  )
   .settings(
     shared,
     Mima.previousArtifacts,
     coursierPrefix,
-    libs += Deps.scalazConcurrent,
-    Mima.cacheFilters,
-    addPathsSources
+    Mima.cacheFilters
   )
+
+lazy val cacheJvm = cache.jvm
+lazy val cacheJs = cache.js
+
+lazy val scalaz = crossProject
+  .disablePlugins(ScriptedPlugin)
+  .dependsOn(cache)
+  .jvmSettings(
+    libs += Deps.scalazConcurrent
+  )
+  .jsSettings(
+    libs += CrossDeps.scalazCore.value
+  )
+  .settings(
+    name := "scalaz-interop",
+    shared,
+    Mima.previousArtifacts,
+    coursierPrefix
+  )
+
+lazy val scalazJvm = scalaz.jvm
+lazy val scalazJs = scalaz.js
 
 lazy val bootstrap = project
   .disablePlugins(ScriptedPlugin)
@@ -129,7 +146,7 @@ lazy val shoestrap = project
 lazy val extra = project
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(ShadingPlugin)
-  .dependsOn(coreJvm)
+  .dependsOn(coreJvm, cacheJvm)
   .settings(
     shared,
     coursierPrefix,
@@ -161,7 +178,7 @@ lazy val extra = project
   )
 
 lazy val cli = project
-  .dependsOn(coreJvm, cache, extra)
+  .dependsOn(coreJvm, cacheJvm, extra, scalazJvm)
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
@@ -195,7 +212,7 @@ lazy val cli = project
 lazy val web = project
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(ScalaJSPlugin)
-  .dependsOn(coreJs, `fetch-js`)
+  .dependsOn(coreJs, cacheJs)
   .settings(
     shared,
     dontPublish,
@@ -240,7 +257,7 @@ lazy val web = project
 
 lazy val readme = project
   .in(file("doc/readme"))
-  .dependsOn(coreJvm, cache)
+  .dependsOn(coreJvm, cacheJvm, scalazJvm)
   .disablePlugins(ScriptedPlugin)
   .enablePlugins(TutPlugin)
   .settings(
@@ -251,7 +268,7 @@ lazy val readme = project
   )
 
 lazy val `sbt-shared` = project
-  .dependsOn(coreJvm, cache)
+  .dependsOn(coreJvm, cacheJvm)
   .disablePlugins(ScriptedPlugin)
   .settings(
     plugin,
@@ -272,11 +289,22 @@ lazy val `sbt-shared` = project
   )
 
 lazy val `sbt-coursier` = project
-  .dependsOn(coreJvm, cache, extra, `sbt-shared`)
+  .dependsOn(coreJvm, cacheJvm, extra, `sbt-shared`, scalazJvm)
   .disablePlugins(ScriptedPlugin)
   .settings(
     plugin,
-    utest
+    utest,
+    scriptedDependencies := {
+      scriptedDependencies.value
+
+      // TODO Get dependency projects automatically
+      // (but shouldn't scripted itself handle that…?)
+      publishLocal.in(coreJvm).value
+      publishLocal.in(cacheJvm).value
+      publishLocal.in(extra).value
+      publishLocal.in(`sbt-shared`).value
+      publishLocal.in(scalazJvm).value
+    }
   )
 
 lazy val `sbt-pgp-coursier` = project
@@ -290,6 +318,11 @@ lazy val `sbt-pgp-coursier` = project
           Seq(Deps.sbtPgp.value)
         case _ => Nil
       }
+    },
+    scriptedDependencies := {
+      scriptedDependencies.value
+      // TODO Get dependency projects automatically
+      scriptedDependencies.in(`sbt-coursier`).value
     }
   )
 
@@ -303,11 +336,16 @@ lazy val `sbt-shading` = project
     localM2Repository, // for a possibly locally published jarjar
     libs += Deps.jarjar % "shaded",
     // dependencies of jarjar-core - directly depending on these so that they don't get shaded
-    libs ++= Deps.jarjarTransitiveDeps
+    libs ++= Deps.jarjarTransitiveDeps,
+    scriptedDependencies := {
+      scriptedDependencies.value
+      // TODO Get dependency projects automatically
+      scriptedDependencies.in(`sbt-coursier`).value
+    }
   )
 
 lazy val okhttp = project
-  .dependsOn(cache)
+  .dependsOn(cacheJvm)
   .disablePlugins(ScriptedPlugin)
   .settings(
     shared,
@@ -323,7 +361,8 @@ lazy val jvm = project
     testsJvm,
     `proxy-tests`,
     paths,
-    cache,
+    cacheJvm,
+    scalazJvm,
     bootstrap,
     extra,
     cli,
@@ -345,7 +384,7 @@ lazy val js = project
   .disablePlugins(ScriptedPlugin)
   .aggregate(
     coreJs,
-    `fetch-js`,
+    cacheJs,
     testsJs,
     web
   )
@@ -355,37 +394,18 @@ lazy val js = project
     moduleName := "coursier-js"
   )
 
-// run sbt-plugins/publishLocal to publish all that necessary for plugins
-lazy val `sbt-plugins` = project
-  .dummy
-  .disablePlugins(ScriptedPlugin)
-  .aggregate(
-    coreJvm,
-    cache,
-    extra,
-    `sbt-shared`,
-    `sbt-coursier`,
-    `sbt-pgp-coursier`,
-    `sbt-shading`
-  )
-  .settings(
-    shared,
-    pluginOverrideCrossScalaVersion,
-    dontPublish
-  )
-
 lazy val coursier = project
   .in(root)
   .disablePlugins(ScriptedPlugin)
   .aggregate(
     coreJvm,
     coreJs,
-    `fetch-js`,
     testsJvm,
     testsJs,
     `proxy-tests`,
     paths,
-    cache,
+    cacheJvm,
+    cacheJs,
     bootstrap,
     shoestrap,
     extra,
@@ -394,6 +414,8 @@ lazy val coursier = project
     `sbt-coursier`,
     `sbt-pgp-coursier`,
     `sbt-shading`,
+    scalazJvm,
+    scalazJs,
     web,
     readme,
     okhttp
@@ -482,9 +504,11 @@ lazy val proguardedCli = Seq(
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
+    "-dontoptimize", // required since the switch to scala 2.12
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
-    "-adaptresourcefilenames **.properties"
+    "-adaptresourcefilenames **.properties",
+    """-keep class scala.Symbol { *; }"""
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",

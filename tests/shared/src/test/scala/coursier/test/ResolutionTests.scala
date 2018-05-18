@@ -18,7 +18,7 @@ object ResolutionTests extends TestSuite {
     Resolution(deps, filter = filter, forceVersions = forceVersions)
       .process
       .run(Platform.fetch(repositories))
-      .runF
+      .future()
 
   implicit class ProjectOps(val p: Project) extends AnyVal {
     def kv: (ModuleVersion, (Artifact.Source, Project)) = p.moduleVersion -> (testRepository.source, p)
@@ -206,7 +206,7 @@ object ResolutionTests extends TestSuite {
     testRepository
   )
 
-  val tests = TestSuite {
+  val tests = Tests {
     'empty{
       async{
         val res = await(resolve0(
@@ -251,7 +251,7 @@ object ResolutionTests extends TestSuite {
         assert(directDependencyErrors.isEmpty)
 
         // metadataErrors have that
-        assert(res.metadataErrors == Seq((Module("acme", "missing-pom"), "1.0.0") -> List("Not found")))
+        assert(res.errors == Seq((Module("acme", "missing-pom"), "1.0.0") -> List("Not found")))
       }
     }
     'single{

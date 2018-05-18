@@ -5,15 +5,11 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import argonaut._, Argonaut._, ArgonautShapeless._
-import coursier.core.{ Artifact, Attributes }
-import coursier.{ Fetch, Module }
-
-import scala.language.higherKinds
-import scalaz.{ -\/, EitherT, Monad, Nondeterminism, \/, \/- }
-import scalaz.Scalaz.ToEitherOps
-import scalaz.Scalaz.ToEitherOpsFromEither
+import coursier.core.{Artifact, Attributes}
+import coursier.interop.scalaz._
+import coursier.util.{EitherT, Gather}
+import coursier.{Fetch, Module}
 import scalaz.concurrent.Task
-import scalaz.std.list._
 
 object Scaladex {
 
@@ -37,20 +33,20 @@ object Scaladex {
 
   def apply(pool: ExecutorService): Scaladex[Task] =
     Scaladex({ url =>
-      EitherT(Task({
+      EitherT(Task[Either[String, String]]({
         var conn: HttpURLConnection = null
 
         val b = try {
           conn = new java.net.URL(url).openConnection().asInstanceOf[HttpURLConnection]
-          coursier.Platform.readFullySync(conn.getInputStream)
+          coursier.internal.FileUtil.readFully(conn.getInputStream)
         } finally {
           if (conn != null)
             coursier.Cache.closeConn(conn)
         }
 
-        new String(b, StandardCharsets.UTF_8).right[String]
+        Right(new String(b, StandardCharsets.UTF_8))
       })(pool))
-    }, Nondeterminism[Task])
+    }, Gather[Task])
 
   def cached(fetch: Fetch.Content[Task]*): Scaladex[Task] =
     Scaladex({
@@ -61,13 +57,13 @@ object Scaladex {
           )
 
         (get(fetch.head) /: fetch.tail)(_ orElse get(_))
-    }, Nondeterminism[Task])
+    }, Gather[Task])
 }
 
 // TODO Add F[_] type param, change `fetch` type to `String => EitherT[F, String, String]`, adjust method signatures accordingly, ...
-case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], F: Nondeterminism[F]) {
+case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], G: Gather[F]) {
 
-  private implicit def F0 = F
+  private implicit val G0 = G
 
   // quick & dirty API for querying scaladex
 
@@ -78,7 +74,7 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], F: Nondet
       s"https://index.scala-lang.org/api/search?q=$name&target=$target&scalaVersion=$scalaVersion"
     )
 
-    s.flatMap(s => EitherT.fromDisjunction[F](s.decodeEither[List[Scaladex.SearchResult]].disjunction))
+    s.flatMap(s => EitherT.fromEither(s.decodeEither[List[Scaladex.SearchResult]]))
   }
 
   /**
@@ -95,7 +91,7 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], F: Nondet
       s"https://index.scala-lang.org/api/project?organization=$organization&repository=$repository&artifact=$artifactName"
     )
 
-    s.flatMap(s => EitherT.fromDisjunction[F](s.decodeEither[Scaladex.ArtifactInfos].disjunction))
+    s.flatMap(s => EitherT.fromEither(s.decodeEither[Scaladex.ArtifactInfos]))
   }
 
   /**
@@ -113,7 +109,7 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], F: Nondet
 
     case class Result(artifacts: List[String])
 
-    s.flatMap(s => EitherT.fromDisjunction[F](s.decodeEither[Result].disjunction.map(_.artifacts)))
+    s.flatMap(s => EitherT.fromEither(s.decodeEither[Result].map(_.artifacts)))
   }
 
 
@@ -135,30 +131,30 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], F: Nondet
           .flatMap {
             case Seq(first, _*) =>
               logger(s"Using ${first.organization}/${first.repository} for $name")
-              EitherT.fromDisjunction[F]((first.organization, first.repository, first.artifacts).right): EitherT[F, String, (String, String, Seq[String])]
+              EitherT.fromEither[F](Right((first.organization, first.repository, first.artifacts)): Either[String, (String, String, Seq[String])])
             case Seq() =>
-              EitherT.fromDisjunction[F](s"No project found for $name".left): EitherT[F, String, (String, String, Seq[String])]
+              EitherT.fromEither[F](Left(s"No project found for $name"): Either[String, (String, String, Seq[String])])
           }
 
     orgNameOrError.flatMap {
       case (ghOrg, ghRepo, artifactNames) =>
 
-        val moduleVersions = F.map(F.gather(artifactNames.map { artifactName =>
-          F.map(artifactInfos(ghOrg, ghRepo, artifactName).run) {
-            case -\/(err) =>
+        val moduleVersions = G.map(G.gather(artifactNames.map { artifactName =>
+          G.map(artifactInfos(ghOrg, ghRepo, artifactName).run) {
+            case Left(err) =>
               logger(s"Cannot get infos about artifact $artifactName from $ghOrg/$ghRepo: $err, ignoring it")
               Nil
-            case \/-(infos) =>
+            case Right(infos) =>
               logger(s"Found module ${infos.groupId}:${infos.artifactId}:${infos.version}")
               Seq(Module(infos.groupId, infos.artifactId) -> infos.version)
           }
         }))(_.flatten)
 
-        EitherT(F.map(moduleVersions) { l =>
+        EitherT(G.map(moduleVersions) { l =>
           if (l.isEmpty)
-            s"No module found for $ghOrg/$ghRepo".left
+            Left(s"No module found for $ghOrg/$ghRepo")
           else
-            l.right
+            Right(l)
         })
     }
   }

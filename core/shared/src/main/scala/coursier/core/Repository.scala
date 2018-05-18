@@ -2,11 +2,8 @@ package coursier.core
 
 import coursier.Fetch
 
-import scala.language.higherKinds
-
-import scalaz._
-
 import coursier.core.compatibility.encodeURIComponent
+import coursier.util.{EitherT, Monad}
 
 trait Repository extends Product with Serializable {
   def find[F[_]](

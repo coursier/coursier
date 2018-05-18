@@ -1,10 +1,9 @@
 package coursier
 package core
 
+import coursier.util.Monad
+
 import scala.annotation.tailrec
-import scala.language.higherKinds
-import scalaz.{-\/, Monad, \/, \/-}
-import scalaz.Scalaz.{ToFunctorOps, ToBindOps, ToTraverseOps, vectorInstance}
 
 
 sealed abstract class ResolutionProcess {
@@ -64,11 +63,11 @@ final case class Missing(
   def next(results: Fetch.MD): ResolutionProcess = {
 
     val errors = results.collect {
-      case (modVer, -\/(errs)) =>
+      case (modVer, Left(errs)) =>
         modVer -> errs
     }
     val successes = results.collect {
-      case (modVer, \/-(repoProj)) =>
+      case (modVer, Right(repoProj)) =>
         modVer -> repoProj
     }
 
@@ -127,10 +126,6 @@ final case class Missing(
     cont0(current0)
   }
 
-  @deprecated("Intended for internal use only", "1.0.0-RC7")
-  def uniqueModules: Missing =
-    this
-
 }
 
 final case class Continue(
@@ -168,7 +163,7 @@ object ResolutionProcess {
   private[coursier] def fetchAll[F[_]](
     modVers: Seq[(Module, String)],
     fetch: Fetch.Metadata[F]
-  )(implicit F: Monad[F]): F[Vector[((Module, String), Seq[String] \/ (Artifact.Source, Project))]] = {
+  )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (Artifact.Source, Project)])]] = {
 
     def uniqueModules(modVers: Seq[(Module, String)]): Stream[Seq[(Module, String)]] = {
 
@@ -193,10 +188,13 @@ object ResolutionProcess {
 
     uniqueModules(modVers)
       .toVector
-      .foldLeft(F.point(Vector.empty[((Module, String), Seq[String] \/ (Artifact.Source, Project))])) {
+      .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (Artifact.Source, Project)])])) {
         (acc, l) =>
-          for (v <- acc; e <- fetch(l))
-            yield v ++ e
+          F.bind(acc) { v =>
+            F.map(fetch(l)) { e =>
+              v ++ e
+            }
+          }
       }
   }
 

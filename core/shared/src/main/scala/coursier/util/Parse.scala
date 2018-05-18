@@ -6,16 +6,10 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
 import scala.collection.mutable.ArrayBuffer
-import scalaz.\/
-import scalaz.Scalaz.ToEitherOps
 
 object Parse {
 
   private def defaultScalaVersion = scala.util.Properties.versionNumberString
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def module(s: String): Either[String, Module] =
-    module(s, defaultScalaVersion)
 
   /**
     * Parses a module like
@@ -71,10 +65,6 @@ object Parse {
     (errors, values)
   }
 
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def modules(l: Seq[String]): (Seq[String], Seq[Module]) =
-    modules(l, defaultScalaVersion)
-
   /**
     * Parses a sequence of coordinates.
     *
@@ -82,10 +72,6 @@ object Parse {
     */
   def modules(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[Module]) =
     valuesAndErrors(module(_, defaultScalaVersion), l)
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersion(s: String): Either[String, (Module, String)] =
-    moduleVersion(s, defaultScalaVersion)
 
   /**
     * Parses coordinates like
@@ -117,25 +103,6 @@ object Parse {
                               private val cause: Throwable = None.orNull)
     extends Exception(message, cause)
 
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String, defaultScalaVersion: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    mvc match {
-      case Left(x) => Left(x)
-      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
-    }
-  }
-
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfig(s: String): Either[String, (Module, String, Option[String])] = {
-    val mvc: Either[String, Dependency] = moduleVersionConfig(s, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    mvc match {
-      case Left(x) => Left(x)
-      case Right(d) => Right(d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))
-    }
-  }
-
   /**
     * Parses coordinates like
     *   org:name:version
@@ -146,12 +113,13 @@ object Parse {
     *  or
     *   org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only "classifier" attribute is used, and others are ignored.
+    *  Currently only the "classifier" and "url attributes are
+    *  used, and others throw errors.
     */
   def moduleVersionConfig(s: String,
                           req: ModuleRequirements,
                           transitive: Boolean,
-                          defaultScalaVersion: String): Either[String, Dependency] = {
+                          defaultScalaVersion: String): Either[String, (Dependency, Map[String, String])] = {
 
     // Assume org:name:version,attr1=val1,attr2=val2
     // That is ',' has to go after ':'.
@@ -159,94 +127,142 @@ object Parse {
     val attrSeparator = ","
     val argSeparator = ":"
 
-    val strings = s.split(attrSeparator)
-    val coords = strings.head
+    val Array(coords, rawAttrs @ _*) = s.split(attrSeparator)
 
-    val attrs = strings.drop(1).map({ x => {
-      if (x.mkString.contains(argSeparator)) {
-        throw new ModuleParseError(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
-          s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
+    val attrsOrErrors = rawAttrs
+      .map { x =>
+        if (x.contains(argSeparator))
+          Left(s"'$argSeparator' is not allowed in attribute '$x' in '$s'. Please follow the format " +
+            s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
+        else
+          x.split("=") match {
+            case Array(k, v) =>
+              Right(k -> v)
+            case _ =>
+              Left(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
+          }
       }
-      val y = x.split("=")
-      if (y.length != 2) {
-        throw new ModuleParseError(s"Failed to parse attribute '$x' in '$s'. Keyword argument expected such as 'classifier=tests'")
+
+    attrsOrErrors
+      .collectFirst {
+        case Left(err) => Left(err)
       }
-      (y(0), y(1))
-    }
-    }).toMap
+      .getOrElse {
 
-    val parts = coords.split(":", 5)
+        val attrs = attrsOrErrors
+          .collect {
+            case Right(attr) => attr
+          }
+          .toMap
 
-    val attributes = attrs.get("classifier") match {
-      case Some(c) => Attributes("", c)
-      case None => Attributes("", "")
-    }
+        val parts = coords.split(":", 5)
 
-    val localExcludes = req.localExcludes
-    val globalExcludes = req.globalExcludes
-    val defaultConfig = req.defaultConfiguration
+        // Only "classifier" and "url" attributes are allowed
+        val validAttrsKeys = Set("classifier", "url")
 
-    parts match {
-      case Array(org, "", rawName, version, config) =>
-        module(s"$org::$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+        validateAttributes(attrs, s, validAttrsKeys) match {
+          case Some(err) => Left(err)
+          case None =>
 
-      case Array(org, "", rawName, version) =>
-        module(s"$org::$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+            val attributes = attrs.get("classifier") match {
+              case Some(c) => Attributes("", c)
+              case None => Attributes("", "")
+            }
 
-      case Array(org, rawName, version, config) =>
-        module(s"$org:$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              config,
-              attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+            val extraDependencyParams: Map[String, String] = attrs.get("url") match {
+                case Some(url) => Map("url" -> url)
+                case None => Map()
+              }
 
-      case Array(org, rawName, version) =>
-        module(s"$org:$rawName", defaultScalaVersion)
-          .right
-          .map(mod => {
-            Dependency(
-              mod,
-              version,
-              configuration = defaultConfig,
-              attributes = attributes,
-              transitive = transitive,
-              exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-          })
+            val localExcludes = req.localExcludes
+            val globalExcludes = req.globalExcludes
+            val defaultConfig = req.defaultConfiguration
 
-      case _ =>
-        Left(s"Malformed dependency: $s")
+            val depOrError = parts match {
+              case Array(org, "", rawName, version, config) =>
+                module(s"$org::$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      config,
+                      attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, "", rawName, version) =>
+                module(s"$org::$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      configuration = defaultConfig,
+                      attributes = attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, rawName, version, config) =>
+                module(s"$org:$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      config,
+                      attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case Array(org, rawName, version) =>
+                module(s"$org:$rawName", defaultScalaVersion)
+                  .right
+                  .map(mod => {
+                    Dependency(
+                      mod,
+                      version,
+                      configuration = defaultConfig,
+                      attributes = attributes,
+                      transitive = transitive,
+                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
+                  })
+
+              case _ =>
+                Left(s"Malformed dependency: $s")
+            }
+
+            depOrError.right.map(dep => (dep, extraDependencyParams))
+        }
     }
   }
 
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersions(l: Seq[String]): (Seq[String], Seq[(Module, String)]) =
-    moduleVersions(l, defaultScalaVersion)
+  /**
+   * Validates the parsed attributes
+   *
+   * Currently only "classifier" and "url" are allowed. If more are
+   * added, they should be passed in via the second parameter
+   *
+   * @param attrs Attributes parsed
+   * @param dep String representing the dep being parsed
+   * @param validAttrsKeys Valid attribute keys
+   * @return A string if there is an error, otherwise None
+   */
+  private def validateAttributes(attrs: Map[String, String],
+                                 dep: String,
+                                 validAttrsKeys: Set[String]): Option[String] = {
+    val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
+
+    if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
+      Some(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
+        if (extraAttributes.nonEmpty) s"The following are invalid: " +
+          s"${extraAttributes.map(_ + s" in "+ dep).mkString(", ")}"
+      }")
+    else None
+  }
 
   /**
     * Parses a sequence of coordinates.
@@ -255,19 +271,6 @@ object Parse {
     */
   def moduleVersions(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String)]) =
     valuesAndErrors(moduleVersion(_, defaultScalaVersion), l)
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String]): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    // convert empty config to None
-    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
-  }
-
-  @deprecated("use the variant accepting a default scala version", "1.0.0-M13")
-  def moduleVersionConfigs(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[(Module, String, Option[String])]) = {
-    val mvc: (Seq[String], Seq[Dependency]) = moduleVersionConfigs(l, ModuleRequirements(), transitive = true, defaultScalaVersion)
-    (mvc._1, mvc._2.map(d => (d.module, d.version, Option(d.configuration).filter(_.trim.nonEmpty))))
-  }
 
   /**
     * Data holder for additional info that needs to be considered when parsing the module.
@@ -288,38 +291,38 @@ object Parse {
   def moduleVersionConfigs(l: Seq[String],
                            req: ModuleRequirements,
                            transitive: Boolean,
-                           defaultScalaVersion: String): (Seq[String], Seq[Dependency]) =
+                           defaultScalaVersion: String): (Seq[String], Seq[(Dependency, Map[String, String])]) =
     valuesAndErrors(moduleVersionConfig(_, req, transitive, defaultScalaVersion), l)
 
-  def repository(s: String): String \/ Repository =
+  def repository(s: String): Either[String, Repository] =
     if (s == "central")
-      MavenRepository("https://repo1.maven.org/maven2").right
+      Right(MavenRepository("https://repo1.maven.org/maven2"))
     else if (s.startsWith("sonatype:"))
-      MavenRepository(s"https://oss.sonatype.org/content/repositories/${s.stripPrefix("sonatype:")}").right
+      Right(MavenRepository(s"https://oss.sonatype.org/content/repositories/${s.stripPrefix("sonatype:")}"))
     else if (s.startsWith("bintray:"))
-      MavenRepository(s"https://dl.bintray.com/${s.stripPrefix("bintray:")}").right
+      Right(MavenRepository(s"https://dl.bintray.com/${s.stripPrefix("bintray:")}"))
     else if (s.startsWith("bintray-ivy:"))
-      IvyRepository.fromPattern(
+      Right(IvyRepository.fromPattern(
         s"https://dl.bintray.com/${s.stripPrefix("bintray-ivy:").stripSuffix("/")}/" +:
           coursier.ivy.Pattern.default
-      ).right
+      ))
     else if (s.startsWith("typesafe:ivy-"))
-      IvyRepository.fromPattern(
+      Right(IvyRepository.fromPattern(
         s"https://repo.typesafe.com/typesafe/ivy-${s.stripPrefix("typesafe:ivy-")}/" +:
           coursier.ivy.Pattern.default
-      ).right
+      ))
     else if (s.startsWith("typesafe:"))
-      MavenRepository(s"https://repo.typesafe.com/typesafe/${s.stripPrefix("typesafe:")}").right
+      Right(MavenRepository(s"https://repo.typesafe.com/typesafe/${s.stripPrefix("typesafe:")}"))
     else if (s.startsWith("sbt-plugin:"))
-      IvyRepository.fromPattern(
+      Right(IvyRepository.fromPattern(
         s"https://repo.scala-sbt.org/scalasbt/sbt-plugin-${s.stripPrefix("sbt-plugin:")}/" +:
           coursier.ivy.Pattern.default
-      ).right
+      ))
     else if (s.startsWith("ivy:"))
       IvyRepository.parse(s.stripPrefix("ivy:"))
     else if (s == "jitpack")
-      MavenRepository("https://jitpack.io").right
+      Right(MavenRepository("https://jitpack.io"))
     else
-      MavenRepository(s).right
+      Right(MavenRepository(s))
 
 }

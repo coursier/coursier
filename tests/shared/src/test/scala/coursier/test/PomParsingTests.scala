@@ -1,16 +1,14 @@
 package coursier
 package test
 
-import utest._
-import scalaz._
-
-import coursier.maven.Pom
-
 import coursier.core.compatibility._
+import coursier.util.Traverse.TraverseOps
+import coursier.maven.Pom
+import utest._
 
 object PomParsingTests extends TestSuite {
 
-  val tests = TestSuite {
+  val tests = Tests {
     'readClassifier{
       val depNode ="""
         <dependency>
@@ -21,7 +19,7 @@ object PomParsingTests extends TestSuite {
         </dependency>
                    """
 
-      val expected = \/-(
+      val expected = Right(
         "" -> Dependency(
           Module("comp", "lib"),
           "2.1",
@@ -40,7 +38,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile("profile1", None, Profile.Activation(Nil), Nil, Nil, Map.empty))
+      val expected = Right(Profile("profile1", None, Profile.Activation(Nil), Nil, Nil, Map.empty))
 
       val result = Pom.profile(xmlParse(profileNode).right.get)
 
@@ -55,7 +53,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile("", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
+      val expected = Right(Profile("", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
       val result = Pom.profile(xmlParse(profileNode).right.get)
 
@@ -71,7 +69,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
+      val expected = Right(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
       val result = Pom.profile(xmlParse(profileNode).right.get)
 
@@ -88,7 +86,7 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = \/-(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> None)), Nil, Nil, Map.empty))
+      val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> None)), Nil, Nil, Map.empty))
       val result = Pom.profile(xmlParse(profileNode).right.get)
 
       assert(result == expected)
@@ -106,7 +104,7 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = \/-(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> Some("yes"))), Nil, Nil, Map.empty))
+      val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> Some("yes"))), Nil, Nil, Map.empty))
       val result = Pom.profile(xmlParse(profileNode).right.get)
 
       assert(result == expected)
@@ -126,7 +124,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile(
+      val expected = Right(Profile(
         "profile1",
         None,
         Profile.Activation(Nil),
@@ -157,7 +155,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile(
+      val expected = Right(Profile(
         "profile1",
         None,
         Profile.Activation(Nil),
@@ -181,7 +179,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile(
+      val expected = Right(Profile(
         "profile1",
         None,
         Profile.Activation(Nil),
@@ -204,7 +202,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = \/-(Profile(
+      val expected = Right(Profile(
         "profile1",
         None,
         Profile.Activation(Nil),
@@ -218,7 +216,6 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
     'beFineWithCommentsInProperties{
-      import scalaz._, Scalaz._
 
       val properties =
         """
@@ -258,12 +255,12 @@ object PomParsingTests extends TestSuite {
       val node = parsed.right.get
       assert(node.label == "properties")
 
-      val children = node.children.collect{case elem if elem.isElement => elem}
-      val props0 = children.toList.traverseU(Pom.property)
+      val children = node.children.collect { case elem if elem.isElement => elem }
+      val props0 = children.eitherTraverse(Pom.property)
 
       assert(props0.isRight)
 
-      val props = props0.getOrElse(???).toMap
+      val props = props0.right.getOrElse(???).toMap
 
       assert(props.contains("commons.release.2.desc"))
       assert(props.contains("commons.osgi.export"))

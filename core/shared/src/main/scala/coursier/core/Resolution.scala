@@ -5,7 +5,6 @@ import java.util.regex.Pattern.quote
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scalaz.{ \/-, -\/ }
 
 object Resolution {
 
@@ -117,10 +116,6 @@ object Resolution {
     }
   }
 
-  @deprecated("Originally intended for internal use only", "1.0.0-RC7")
-  def propertiesMap(props: Seq[(String, String)]): Map[String, String] =
-    substitute(props).toMap
-
   /**
    * Substitutes `properties` in `dependencies`.
    */
@@ -201,7 +196,7 @@ object Resolution {
         module -> {
           val (versionOpt, updatedDeps) = forceVersions.get(module) match {
             case None =>
-              if (deps.lengthCompare(1) == 0) (Some(deps.head.version), \/-(deps))
+              if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
               else {
                 val versions = deps
                   .map(_.version)
@@ -210,14 +205,14 @@ object Resolution {
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
-                    \/-(deps.map(dep => dep.copy(version = version)))
+                    Right(deps.map(dep => dep.copy(version = version)))
                   case None =>
-                    -\/(deps)
+                    Left(deps)
                 })
               }
 
             case Some(forcedVersion) =>
-              (Some(forcedVersion), \/-(deps.map(dep => dep.copy(version = forcedVersion))))
+              (Some(forcedVersion), Right(deps.map(dep => dep.copy(version = forcedVersion))))
           }
 
           (updatedDeps, versionOpt)
@@ -230,10 +225,10 @@ object Resolution {
 
     (
       merged
-        .collect { case (-\/(dep), _) => dep }
+        .collect { case (Left(dep), _) => dep }
         .flatten,
       merged
-        .collect { case (\/-(dep), _) => dep }
+        .collect { case (Right(dep), _) => dep }
         .flatten,
       mergedByModVer
         .collect { case (mod, (_, Some(ver))) => mod -> ver }
@@ -1090,20 +1085,10 @@ final case class Resolution(
     * Returns errors on dependencies
     * @return errors
     */
-  def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
+  def errors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
 
-  /**
-    * Returns errors on dependencies, but that don't have POM-related errors
-    * @return errors
-    */
-  @deprecated("use metadataErrors instead", "1.0.0-RC1")
-  def errors: Seq[(Dependency, Seq[String])] =
-    for {
-      dep <- dependencies.toSeq
-      err <- errorCache
-        .get(dep.moduleVersion)
-        .toSeq
-    } yield (dep, err)
+  @deprecated("Use errors instead", "1.1.0")
+  def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
 
   /**
     * Removes from this `Resolution` dependencies that are not in `dependencies` neither brought

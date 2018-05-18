@@ -2,12 +2,7 @@ package coursier.ivy
 
 import coursier.Fetch
 import coursier.core._
-import coursier.util.WebPage
-
-import scala.language.higherKinds
-
-import scalaz._
-import scalaz.Scalaz._
+import coursier.util.{EitherT, Monad, WebPage}
 
 final case class IvyRepository(
   pattern: Pattern,
@@ -115,7 +110,7 @@ final case class IvyRepository(
               p.name,
               p.ext,
               Some(p.classifier).filter(_.nonEmpty)
-            )).toList.map(p -> _) // FIXME Validation errors are ignored
+            )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
           }
 
           retainedWithUrl.map { case (p, url) =>
@@ -160,22 +155,26 @@ final case class IvyRepository(
           case None =>
             findNoInverval(module, version, fetch)
           case Some(itv) =>
-            val listingUrl = revisionListingPattern.substituteVariables(
-              variables(module, None, "ivy", "ivy", "xml", None)
-            ).flatMap { s =>
-              if (s.endsWith("/"))
-                s.right
-              else
-                s"Don't know how to list revisions of ${metadataPattern.string}".left
-            }
+            val listingUrl = revisionListingPattern
+              .substituteVariables(variables(module, None, "ivy", "ivy", "xml", None))
+              .right
+              .flatMap { s =>
+                if (s.endsWith("/"))
+                  Right(s)
+                else
+                  Left(s"Don't know how to list revisions of ${metadataPattern.string}")
+              }
 
             def fromWebPage(url: String, s: String) = {
+
               val subDirs = WebPage.listDirectories(url, s)
               val versions = subDirs.map(Parse.version).collect { case Some(v) => v }
               val versionsInItv = versions.filter(itv.contains)
 
               if (versionsInItv.isEmpty)
-                EitherT(F.point(s"No version found for $version".left[(Artifact.Source, Project)]))
+                EitherT(
+                  F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
+                )
               else {
                 val version0 = versionsInItv.max
                 findNoInverval(module, version0.repr, fetch)
@@ -209,11 +208,11 @@ final case class IvyRepository(
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
-    val eitherArtifact: String \/ Artifact =
+    val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(
           variables(module, Some(version), "ivy", "ivy", "xml", None)
-        )
+        ).right
       } yield {
         var artifact = Artifact(
           url,
@@ -235,13 +234,15 @@ final case class IvyRepository(
     for {
       artifact <- EitherT(F.point(eitherArtifact))
       ivy <- fetch(artifact)
-      proj0 <- EitherT(F.point {
-        for {
-          xml <- \/.fromEither(compatibility.xmlParse(ivy))
-          _ <- if (xml.label == "ivy-module") \/-(()) else -\/("Module definition not found")
-          proj <- IvyXml.project(xml)
-        } yield proj
-      })
+      proj0 <- EitherT(
+        F.point {
+          for {
+            xml <- compatibility.xmlParse(ivy).right
+            _ <- (if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")).right
+            proj <- IvyXml.project(xml).right
+          } yield proj
+        }
+      )
     } yield {
       val proj =
         if (dropInfoAttributes)
@@ -287,14 +288,18 @@ object IvyRepository {
     // hack for SBT putting infos in properties
     dropInfoAttributes: Boolean = false,
     authentication: Option[Authentication] = None
-  ): String \/ IvyRepository =
+  ): Either[String, IvyRepository] =
 
     for {
-      propertiesPattern <- PropertiesPattern.parse(pattern)
-      metadataPropertiesPatternOpt <- metadataPatternOpt.fold(Option.empty[PropertiesPattern].right[String])(PropertiesPattern.parse(_).map(Some(_)))
+      propertiesPattern <- PropertiesPattern.parse(pattern).right
+      metadataPropertiesPatternOpt <- metadataPatternOpt
+        .fold[Either[String, Option[PropertiesPattern]]](Right(None))(PropertiesPattern.parse(_).right.map(Some(_)))
+        .right
 
-      pattern <- propertiesPattern.substituteProperties(properties)
-      metadataPatternOpt <- metadataPropertiesPatternOpt.fold(Option.empty[Pattern].right[String])(_.substituteProperties(properties).map(Some(_)))
+      pattern <- propertiesPattern.substituteProperties(properties).right
+      metadataPatternOpt <- metadataPropertiesPatternOpt
+        .fold[Either[String, Option[Pattern]]](Right(None))(_.substituteProperties(properties).right.map(Some(_)))
+        .right
 
     } yield
       IvyRepository(
@@ -332,33 +337,4 @@ object IvyRepository {
       dropInfoAttributes,
       authentication
     )
-
-  @deprecated("Can now raise exceptions - use parse instead", "1.0.0-M13")
-  def apply(
-    pattern: String,
-    metadataPatternOpt: Option[String] = None,
-    changing: Option[Boolean] = None,
-    properties: Map[String, String] = Map.empty,
-    withChecksums: Boolean = true,
-    withSignatures: Boolean = true,
-    withArtifacts: Boolean = true,
-    // hack for SBT putting infos in properties
-    dropInfoAttributes: Boolean = false,
-    authentication: Option[Authentication] = None
-  ): IvyRepository =
-    parse(
-      pattern,
-      metadataPatternOpt,
-      changing,
-      properties,
-      withChecksums,
-      withSignatures,
-      withArtifacts,
-      dropInfoAttributes,
-      authentication
-    ) match {
-      case \/-(repo) => repo
-      case -\/(msg) =>
-        throw new IllegalArgumentException(s"Error while parsing Ivy patterns: $msg")
-    }
 }

@@ -2,7 +2,7 @@ package coursier
 package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
-import java.net.{URL, URLClassLoader}
+import java.net.{URL, URLClassLoader, URLDecoder}
 import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
@@ -10,14 +10,14 @@ import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.extra.Typelevel
+import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
 import coursier.util.Parse.ModuleRequirements
-import coursier.util.{Parse, Print}
+import coursier.util.{Gather, Parse, Print}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scalaz.concurrent.{Strategy, Task}
-import scalaz.{-\/, Failure, Nondeterminism, Success, \/-}
 
 
 object Helper {
@@ -43,7 +43,7 @@ object Helper {
       def attributeOpt(name: String) =
         Option(attributes.getValue(name))
 
-      val vendor = attributeOpt("Specification-Vendor").getOrElse("")
+      val vendor = attributeOpt("Implementation-Vendor-Id").getOrElse("")
       val title = attributeOpt("Specification-Title").getOrElse("")
       val mainClass = attributeOpt("Main-Class")
 
@@ -81,11 +81,11 @@ class Helper(
     if (common.mode.isEmpty)
       CachePolicy.default
     else
-      CacheParse.cachePolicies(common.mode) match {
-        case Success(cp) => cp
-        case Failure(errors) =>
+      CacheParse.cachePolicies(common.mode).either match {
+        case Right(cp) => cp
+        case Left(errors) =>
           prematureExit(
-            s"Error parsing modes:\n${errors.list.toList.map("  "+_).mkString("\n")}"
+            s"Error parsing modes:\n${errors.map("  "+_).mkString("\n")}"
           )
       }
 
@@ -116,15 +116,14 @@ class Helper(
     repos
   }
 
-  val repositories = repositoriesValidation match {
-    case Success(repos) =>
+  val standardRepositories = repositoriesValidation.either match {
+    case Right(repos) =>
       repos
-    case Failure(errors) =>
+    case Left(errors) =>
       prematureExit(
-        s"Error with repositories:\n${errors.list.toList.map("  "+_).mkString("\n")}"
+        s"Error with repositories:\n${errors.map("  "+_).mkString("\n")}"
       )
   }
-
 
   val loggerFallbackMode =
     !progress && TermDisplay.defaultFallbackMode
@@ -132,7 +131,7 @@ class Helper(
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
 
-  val scaladexDeps: List[Dependency] =
+  val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
     if (scaladexRawDependencies.isEmpty)
       Nil
     else {
@@ -146,14 +145,14 @@ class Helper(
           None
 
       val fetchs = cachePolicies.map(p =>
-        Cache.fetch(cache, p, checksums = Nil, logger = logger, pool = pool, ttl = ttl0)
+        Cache.fetch[Task](cache, p, checksums = Nil, logger = logger, pool = pool, ttl = ttl0)
       )
 
       logger.foreach(_.init())
 
       val scaladex = Scaladex.cached(fetchs: _*)
 
-      val res = Nondeterminism[Task].gather(scaladexRawDependencies.map { s =>
+      val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
           s,
           scalaVersion,
@@ -183,16 +182,17 @@ class Helper(
 
       logger.foreach(_.stop())
 
-      val errors = res.collect { case -\/(err) => err }
+      val errors = res.collect { case Left(err) => err }
 
       prematureExitIf(errors.nonEmpty) {
         s"Error getting scaladex infos:\n" + errors.map("  " + _).mkString("\n")
       }
 
       res
-        .collect { case \/-(l) => l }
+        .collect { case Right(l) => l }
         .flatten
-        .map { case (mod, ver) => Dependency(mod, ver) }
+        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]()) }
+        .toList
     }
 
   val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
@@ -258,10 +258,10 @@ class Helper(
 
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
 
-  val (modVerCfgErrors: Seq[String], normalDeps: Seq[Dependency]) =
+  val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)
 
-  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDeps: Seq[Dependency]) =
+  val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
@@ -273,11 +273,37 @@ class Helper(
       intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
   }
 
-  val transitiveDeps: Seq[Dependency] =
+  val transitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])] =
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
-    scaladexDeps ++ normalDeps
+    scaladexDepsWithExtraParams ++ normalDepsWithExtraParams
 
-  val allDependencies: Seq[Dependency] = transitiveDeps ++ intransitiveDeps
+  val transitiveDeps: Seq[Dependency] = transitiveDepsWithExtraParams.map(dep => dep._1)
+
+  val allDependenciesWithExtraParams: Seq[(Dependency, Map[String, String])] =
+    transitiveDepsWithExtraParams ++ intransitiveDepsWithExtraParams
+
+  val allDependencies: Seq[Dependency] = allDependenciesWithExtraParams.map(dep => dep._1)
+
+  // Any dependencies with URIs should not be resolved with a pom so this is a
+  // hack to add all the deps with URIs to the FallbackDependenciesRepository
+  // which will be used during the resolve
+  val depsWithUrls: Map[(Module, String), (URL, Boolean)] = allDependenciesWithExtraParams
+    .flatMap {
+      case (dep, extraParams) =>
+        extraParams.get("url").map { url =>
+          dep.moduleVersion -> (new URL(URLDecoder.decode(url, "UTF-8")), true)
+        }
+    }.toMap
+
+  val depsWithUrlRepo: FallbackDependenciesRepository = FallbackDependenciesRepository(depsWithUrls, cacheFileArtifacts)
+
+  // Prepend FallbackDependenciesRepository to the repository list
+  // so that dependencies with URIs are resolved against this repo
+  val repositories: Seq[Repository] = Seq(depsWithUrlRepo) ++ standardRepositories
+
+  for (((mod, version), _) <- depsWithUrls if forceVersions.get(mod).exists(_ != version))
+    throw new Exception(s"Cannot force a version that is different from the one specified " +
+      s"for the module ${mod}:${version} with url")
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -490,11 +516,11 @@ class Helper(
     errPrintln("\nMaximum number of iterations reached!")
   }
 
-  if (res.metadataErrors.nonEmpty) {
+  if (res.errors.nonEmpty) {
     anyError = true
     errPrintln(
       "\nError:\n" +
-      res.metadataErrors.map {
+      res.errors.map {
         case ((module, version), errors) =>
           s"  $module:$version\n${errors.map("    " + _.replace("\n", "    \n")).mkString("\n")}"
       }.mkString("\n")
@@ -559,17 +585,33 @@ class Helper(
   }
 
   private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    if (classifier0.nonEmpty || sources || javadoc) {
-      var classifiers = classifier0
-      if (sources)
-        classifiers = classifiers + "sources"
-      if (javadoc)
-        classifiers = classifiers + "javadoc"
+    val raw: Seq[(Dependency, Artifact)] = if (hasOverrideClassifiers(sources, javadoc)) {
       //TODO: this function somehow gives duplicated things
-      res0.dependencyClassifiersArtifacts(classifiers.toVector.sorted)
+      res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
     } else {
       res0.dependencyArtifacts(withOptional = true)
     }
+
+    raw.map({ case (dep, artifact) =>
+        (
+          dep.copy(
+            attributes = dep.attributes.copy(classifier = artifact.classifier)),
+          artifact
+        )
+    })
+  }
+
+  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
+    var classifiers = classifier0
+    if (sources)
+      classifiers = classifiers + "sources"
+    if (javadoc)
+      classifiers = classifiers + "javadoc"
+    classifiers
+  }
+
+  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean): Boolean = {
+    classifier0.nonEmpty || sources || javadoc
   }
 
   def fetchMap(
@@ -603,7 +645,9 @@ class Helper(
         checksums = checksums,
         logger = logger,
         pool = pool,
-        ttl = ttl0
+        ttl = ttl0,
+        retry = common.retryCount,
+        cacheFileArtifacts
       )
 
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
@@ -619,7 +663,7 @@ class Helper(
 
     val (ignoredErrors, errors) = results
       .collect {
-        case (artifact, -\/(err)) =>
+        case (artifact, Left(err)) =>
           artifact -> err
       }
       .partition {
@@ -632,7 +676,7 @@ class Helper(
       }
 
     val artifactToFile = results.collect {
-      case (artifact: Artifact, \/-(f)) =>
+      case (artifact: Artifact, Right(f)) =>
         (artifact.url, f)
     }.toMap
 
@@ -683,9 +727,17 @@ class Helper(
       val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false))
-      val jsonStr = JsonReport(roots, conflictResolutionForRoots)(_.children, _.reconciledVersionStr, _.requestedVersionStr, _.downloadedFiles)
-
+      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
+      val jsonStr = JsonReport(
+        roots,
+        conflictResolutionForRoots,
+        overrideClassifiers(sources, javadoc)
+      )(
+        _.children,
+        _.reconciledVersionStr,
+        _.requestedVersionStr,
+        _.downloadedFile
+      )
       val pw = new PrintWriter(new File(jsonOutputFile))
       pw.write(jsonStr)
       pw.close()

@@ -1,4 +1,6 @@
 
+import java.nio.file.Files
+
 import sbt._
 import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{sbtLauncher, scriptedBufferLog, ScriptedLaunchConf, scriptedLaunchOpts}
@@ -8,11 +10,9 @@ import com.typesafe.sbt.pgp._
 import coursier.ShadingPlugin.autoImport._
 
 import Aliases._
+import ScalaVersion._
 
 object Settings {
-  val scala212 = "2.12.4"
-  val scala211 = "2.11.12"
-  val scala210 = "2.10.7"
 
   lazy val scalazBintrayRepository = {
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases"
@@ -31,29 +31,41 @@ object Settings {
     scalazBintrayRepository,
     sonatypeRepository("releases"),
     crossScalaVersions := Seq(scala212, scala211, scala210), // defined for all projects to trump sbt-doge
-    scalacOptions ++= {
-      val targetJvm = scalaBinaryVersion.value match {
-        case "2.10" | "2.11" =>
-          Seq("-target:jvm-1.6")
-        case _ =>
-          Seq()
-      }
-  
-      targetJvm ++ Seq("-feature", "-deprecation")
-    },
-    javacOptions ++= {
-      scalaBinaryVersion.value match {
-        case "2.10" | "2.11" =>
-          Seq(
-            "-source", "1.6",
-            "-target", "1.6"
-          )
-        case _ =>
-          Seq()
-      }
-    },
+    scalacOptions ++= Seq(
+      "-target:jvm-1.8",
+      "-feature",
+      "-deprecation",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    javacOptions ++= Seq(
+      "-source", "1.8",
+      "-target", "1.8"
+    ),
     javacOptions.in(Keys.doc) := Seq()
   )
+
+  val runNpmInstallIfNeeded = Def.task {
+    val baseDir = baseDirectory.in(ThisBuild).value
+    val evFile = baseDir / "node_modules" / ".npm_run"
+    val log = streams.value.log
+    if (!evFile.exists()) {
+      val cmd = Seq("npm", "install")
+      val b = new ProcessBuilder(cmd: _*)
+      b.directory(baseDir)
+      b.inheritIO()
+      log.info(s"Running  ${cmd.mkString(" ")}")
+      val p = b.start()
+      val retCode = p.waitFor()
+      if (retCode == 0)
+        log.info(s"${cmd.mkString(" ")}  ran successfully")
+      else
+        sys.error(s"${cmd.mkString(" ")}  failed (return code $retCode)")
+
+      // Parent dir should have been created by npm install
+      Files.write(evFile.toPath, Array.emptyByteArray)
+    }
+  }
 
   lazy val shared = javaScalaPluginShared ++ Seq(
     scalaVersion := scala212,
@@ -230,7 +242,7 @@ object Settings {
 
   lazy val shading =
     inConfig(_root_.coursier.ShadingPlugin.Shading)(PgpSettings.projectSettings) ++
-       // ytf does this have to be repeated here?
+       // Why does this have to be repeated here?
        // Can't figure out why configuration gets lost without this in particular...
       _root_.coursier.ShadingPlugin.projectSettings ++
       Seq(

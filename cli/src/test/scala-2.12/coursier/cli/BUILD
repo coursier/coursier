@@ -5,13 +5,13 @@ junit_tests(
         "3rdparty/jvm:scalatest",
         "cli/src/main/scala-2.12:cli",
     ],
-    sources = ["CliFetchIntegrationTest.scala", "CliUnitTest.scala"],
+    sources = rglobs("*.scala", exclude = ["CliTestLib.scala", "CliBootstrapIntegrationTest.scala"]),
 )
 
 scala_library(
     name='lib',
     dependencies = [
-        "3rdparty/jvm:caseapp",
+        "cache:cache"
     ],
     sources = ["CliTestLib.scala"],
 )
