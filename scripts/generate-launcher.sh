@@ -17,5 +17,15 @@ fi
   -r file:$HOME/.m2/repository \
   -r central \
   -r sonatype:releases \
+  -f -o coursier-standalone \
+  "$@"
+
+"$SBTPACK_LAUNCHER" shoestrap \
+  --intransitive io.get-coursier::coursier-cli:$VERSION \
+  -J "-noverify" \
+  --no-default \
+  -r file:$HOME/.m2/repository \
+  -r central \
+  -r sonatype:releases \
   -f -o coursier \
   "$@"
