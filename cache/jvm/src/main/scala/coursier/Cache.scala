@@ -1128,6 +1128,8 @@ object Cache {
     throw new Exception("Cannot happen")
   )
 
+  lazy val maven2Local = MavenRepository(s"file://${System.getProperty("user.home")}/.m2/repository")
+
   lazy val default: File = CachePath.defaultCacheDirectory()
 
   val defaultConcurrentDownloadCount = 6
