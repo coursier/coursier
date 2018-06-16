@@ -1166,6 +1166,19 @@ object Cache {
     def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
     def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit
+
+    /***
+     *
+     * @param beforeOutput: called before any output is printed, iff something else is outputed.
+     *                      (That is, if that `Logger` doesn't print any progress,
+     *                      `initialMessage` won't be printed either.)
+     */
+    def init(beforeOutput: => Unit): Unit = {}
+    /**
+      *
+      * @return whether any message was printed by `Logger`
+      */
+    def stopDidPrintSomething(): Boolean = false
   }
 
   var bufferSize = 1024*1024
