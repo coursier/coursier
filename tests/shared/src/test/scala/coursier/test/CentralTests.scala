@@ -790,6 +790,13 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    'parentVersionInPom - {
+      * - resolutionCheck(
+          Module("io.swagger.parser.v3", "swagger-parser-v3"),
+          "2.0.1"
+        )
+    }
+
     'parentBeforeImports - {
       * - resolutionCheck(
         Module("org.kie", "kie-api"),
