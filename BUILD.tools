@@ -7,7 +7,7 @@ jar_library(
             rev = "2.12.6",
         ),
     ],
-    scope = 'runtime'
+    scope = "runtime",
 )
 
 jar_library(
@@ -17,6 +17,17 @@ jar_library(
             org = "org.scala-lang",
             name = "scala-compiler",
             rev = "2.12.6",
+        ),
+    ],
+)
+
+jar_library(
+    name = "scalafmt",
+    jars = [
+        jar(
+            org = "com.geirsson",
+            name = "scalafmt-cli_2.12",
+            rev = "1.5.1",
         ),
     ],
 )
