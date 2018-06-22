@@ -791,14 +791,14 @@ abstract class CentralTests extends TestSuite {
     }
 
     'parentVersionInPom - {
-      * - resolutionCheck(
+      resolutionCheck(
           Module("io.swagger.parser.v3", "swagger-parser-v3"),
           "2.0.1"
         )
     }
 
     'parentBeforeImports - {
-      * - resolutionCheck(
+      resolutionCheck(
         Module("org.kie", "kie-api"),
         "6.5.0.Final",
         extraRepos = Seq(MavenRepository("https://repository.jboss.org/nexus/content/repositories/public"))
