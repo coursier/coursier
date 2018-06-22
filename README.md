@@ -167,7 +167,6 @@ import coursier.util.Task
 
 val repositories = Seq(
   Cache.ivy2Local,
-  Cache.maven2Local,
   MavenRepository("https://repo1.maven.org/maven2")
 )
 

@@ -1128,8 +1128,6 @@ object Cache {
     throw new Exception("Cannot happen")
   )
 
-  lazy val maven2Local = MavenRepository(s"file://${System.getProperty("user.home")}/.m2/repository")
-
   lazy val default: File = CachePath.defaultCacheDirectory()
 
   val defaultConcurrentDownloadCount = 6
@@ -1182,4 +1180,13 @@ object Cache {
     }
   }
 
+  object Dangerous {
+    /**
+      * m2 local isn't guaranteed to always work fine with coursier (it sometimes has only the
+      * metadata of some dependencies, and coursier isn't fine with that - coursier requires
+      * both the metadata and the JARs to be in the same repo)
+      * see https://github.com/coursier/coursier/pull/868#issuecomment-398779799
+      */
+    lazy val maven2Local = MavenRepository(s"file://${System.getProperty("user.home")}/.m2/repository")
+  }
 }
