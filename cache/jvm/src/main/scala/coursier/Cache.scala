@@ -1165,7 +1165,7 @@ object Cache {
     def gettingLength(url: String): Unit = {}
     def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
-    def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit
+    def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
 
     /***
      *
