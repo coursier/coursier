@@ -16,10 +16,10 @@ coursierLoggerFactory := {
         log.println("init")
       }
       override def foundLocally(url: String, file: File): Unit = {
-        log.println(s"found $url at ${IO.relativize(cacheFile, file).get}")
+        log.println(s"found $url at ${IO.relativize(cacheFile, file).getOrElse(file)}")
       }
       override def downloadingArtifact(url: String, file: File): Unit = {
-        log.println(s"downloading $url to ${IO.relativize(cacheFile, file).get}")
+        log.println(s"downloading $url to ${IO.relativize(cacheFile, file).getOrElse(file)}")
       }
       override def downloadedArtifact(url: String, success: Boolean): Unit = {
         log.println(s"downloaded $url: $success")
