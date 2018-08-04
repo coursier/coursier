@@ -33,7 +33,13 @@ package object compatibility {
 
     def parse =
       try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+      catch {
+        case e: Exception =>
+          val message = e.toString +
+            Option(e.getMessage).fold("")(" (" + _ + ")") +
+            s" while parsing following content:\n $content"
+          Left(message)
+      }
 
     def fromNode(node: scala.xml.Node): Xml.Node =
       new Xml.Node {
