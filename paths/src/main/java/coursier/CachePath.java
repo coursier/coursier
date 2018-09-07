@@ -69,7 +69,7 @@ public class CachePath {
 
         String userPart = "";
         if (user != null)
-            userPart = user + "@";
+            userPart = user + "_at_";
 
         return new File(cache, escape(protocol + "/" + userPart + remaining));
     }
