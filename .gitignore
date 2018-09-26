@@ -12,3 +12,4 @@ node_modules/
 
 # generated site
 generated/
+processed-docs/
