@@ -9,3 +9,6 @@ node_modules/
 .pants.d
 .pants.workdir.file_lock
 .pids
+
+# generated site
+generated/
