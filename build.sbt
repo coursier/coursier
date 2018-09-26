@@ -1,11 +1,9 @@
 
 import Aliases._
-import Settings._
+import Settings.{crossProject, project, _}
 import Publish._
 
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
-
-lazy val core = crossProject(JSPlatform, JVMPlatform)
+lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading,
@@ -37,7 +35,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
-lazy val tests = crossProject(JSPlatform, JVMPlatform)
+lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
   .dependsOn(core, cache % Test, scalaz)
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage,
@@ -57,7 +55,7 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
 lazy val testsJvm = tests.jvm
 lazy val testsJs = tests.js
 
-lazy val `proxy-tests` = project
+lazy val `proxy-tests` = project("proxy-tests")
   .dependsOn(testsJvm % "test->test")
   .configs(Integration)
   .settings(
@@ -74,14 +72,14 @@ lazy val `proxy-tests` = project
     sharedTestResources
   )
 
-lazy val paths = project
+lazy val paths = project("paths")
   .settings(
     pureJava,
     dontPublish,
     addDirectoriesSources
   )
 
-lazy val cache = crossProject(JSPlatform, JVMPlatform)
+lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(core)
   .jvmSettings(
     addPathsSources
@@ -99,7 +97,7 @@ lazy val cache = crossProject(JSPlatform, JVMPlatform)
 lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
-lazy val scalaz = crossProject(JSPlatform, JVMPlatform)
+lazy val scalaz = crossProject("scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache)
   .jvmSettings(
     libs += Deps.scalazConcurrent
@@ -117,7 +115,7 @@ lazy val scalaz = crossProject(JSPlatform, JVMPlatform)
 lazy val scalazJvm = scalaz.jvm
 lazy val scalazJs = scalaz.js
 
-lazy val bootstrap = project
+lazy val bootstrap = project("bootstrap")
   .settings(
     pureJava,
     dontPublish,
@@ -127,7 +125,7 @@ lazy val bootstrap = project
     renameMainJar("bootstrap.jar")
   )
 
-lazy val extra = project
+lazy val extra = project("extra")
   .enablePlugins(ShadingPlugin)
   .dependsOn(coreJvm, cacheJvm)
   .settings(
@@ -160,7 +158,7 @@ lazy val extra = project
         .map("scala.scalanative." + _)
   )
 
-lazy val cli = project
+lazy val cli = project("cli")
   .dependsOn(coreJvm, cacheJvm, extra, scalazJvm)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
@@ -189,7 +187,7 @@ lazy val cli = project
     proguardedCli
   )
 
-lazy val web = project
+lazy val web = project("web")
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
   .dependsOn(coreJs, cacheJs)
   .settings(
@@ -227,7 +225,7 @@ lazy val web = project
     )
   )
 
-lazy val readme = project
+lazy val readme = project("readme")
   .in(file("doc/readme"))
   .dependsOn(coreJvm, cacheJvm, scalazJvm)
   .enablePlugins(TutPlugin)
@@ -238,7 +236,7 @@ lazy val readme = project
     tutTargetDirectory := baseDirectory.in(LocalRootProject).value
   )
 
-lazy val `sbt-shared` = project
+lazy val `sbt-shared` = project("sbt-shared")
   .dependsOn(coreJvm, cacheJvm)
   .settings(
     plugin,
@@ -258,7 +256,7 @@ lazy val `sbt-shared` = project
     }
   )
 
-lazy val `sbt-coursier` = project
+lazy val `sbt-coursier` = project("sbt-coursier")
   .dependsOn(coreJvm, cacheJvm, extra, `sbt-shared`, scalazJvm)
   .settings(
     plugin,
@@ -276,7 +274,7 @@ lazy val `sbt-coursier` = project
     }
   )
 
-lazy val `sbt-pgp-coursier` = project
+lazy val `sbt-pgp-coursier` = project("sbt-pgp-coursier")
   .dependsOn(`sbt-coursier`)
   .settings(
     plugin,
@@ -294,7 +292,7 @@ lazy val `sbt-pgp-coursier` = project
     }
   )
 
-lazy val `sbt-shading` = project
+lazy val `sbt-shading` = project("sbt-shading")
   .enablePlugins(ShadingPlugin)
   .dependsOn(`sbt-coursier`)
   .settings(
@@ -311,7 +309,7 @@ lazy val `sbt-shading` = project
     }
   )
 
-lazy val okhttp = project
+lazy val okhttp = project("okhttp")
   .dependsOn(cacheJvm)
   .settings(
     shared,
@@ -319,7 +317,7 @@ lazy val okhttp = project
     libs += Deps.okhttpUrlConnection
   )
 
-lazy val jvm = project
+lazy val jvm = project("jvm")
   .dummy
   .aggregate(
     coreJvm,
@@ -344,7 +342,7 @@ lazy val jvm = project
     moduleName := "coursier-jvm"
   )
 
-lazy val js = project
+lazy val js = project("js")
   .dummy
   .aggregate(
     coreJs,
@@ -358,7 +356,7 @@ lazy val js = project
     moduleName := "coursier-js"
   )
 
-lazy val coursier = project
+lazy val coursier = project("coursier")
   .in(root)
   .aggregate(
     coreJvm,
@@ -469,7 +467,7 @@ lazy val proguardedCli = Seq(
 lazy val sharedTestResources = {
   unmanagedResourceDirectories.in(Test) += {
     val baseDir = baseDirectory.in(LocalRootProject).value
-    val testsMetadataDir = baseDir / "tests" / "metadata" / "https"
+    val testsMetadataDir = baseDir / "modules" / "tests" / "metadata" / "https"
     if (!testsMetadataDir.exists())
       gitLock.synchronized {
         if (!testsMetadataDir.exists()) {
@@ -477,7 +475,7 @@ lazy val sharedTestResources = {
           runCommand(cmd, baseDir)
         }
       }
-    baseDir / "tests" / "shared" / "src" / "test" / "resources"
+    baseDir / "modules" / "tests" / "shared" / "src" / "test" / "resources"
   }
 }
 

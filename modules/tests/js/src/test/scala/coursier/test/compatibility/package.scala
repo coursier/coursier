@@ -27,9 +27,9 @@ package object compatibility {
   }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
-    textResource0("tests/shared/src/test/resources/" + path)
+    textResource0("modules/tests/shared/src/test/resources/" + path)
 
-  private val baseRepo = "tests/metadata"
+  private val baseRepo = "modules/tests/metadata"
 
   val artifact: Fetch.Content[Task] = { artifact =>
     EitherT {

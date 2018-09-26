@@ -22,7 +22,7 @@ package object compatibility {
   }
 
   private val baseRepo = {
-    val dir = Paths.get("tests/metadata")
+    val dir = Paths.get("modules/tests/metadata")
     assert(Files.isDirectory(dir))
     dir
   }
@@ -66,7 +66,7 @@ package object compatibility {
   }
 
   private lazy val baseResources = {
-    val dir = Paths.get("tests/shared/src/test/resources")
+    val dir = Paths.get("modules/tests/shared/src/test/resources")
     assert(Files.isDirectory(dir))
     dir
   }

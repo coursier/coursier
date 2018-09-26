@@ -302,9 +302,9 @@ object Release {
         val vcs = state.vcs
         val log = toProcessLogger(state)
 
-        val originalFile = Paths.get(s"tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$initialVer")
+        val originalFile = Paths.get(s"modules/tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$initialVer")
         val originalContent = new String(Files.readAllBytes(originalFile), StandardCharsets.UTF_8)
-        val destFile = Paths.get(s"tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$nextVer")
+        val destFile = Paths.get(s"modules/tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$nextVer")
         val destContent = originalContent.replace(initialVer, nextVer)
         log.out(s"Writing $destFile")
         Files.write(destFile, destContent.getBytes(StandardCharsets.UTF_8))

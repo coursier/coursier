@@ -42,7 +42,7 @@ jobs:
       jdk: oraclejdk8
       script:
         # Sanity check for Pants build path.
-        - ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
+        - ./pants run modules/cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - stage: release
       script: scripts/update-website.sh
 env:
