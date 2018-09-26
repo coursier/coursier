@@ -485,11 +485,11 @@ lazy val sharedTestResources = {
 lazy val addDirectoriesSources = {
   unmanagedSourceDirectories.in(Compile) += {
     val baseDir = baseDirectory.in(LocalRootProject).value
-    val directoriesDir = baseDir / "directories" / "src" / "main" / "java"
+    val directoriesDir = baseDir / "modules" / "directories" / "src" / "main" / "java"
     if (!directoriesDir.exists())
       gitLock.synchronized {
         if (!directoriesDir.exists()) {
-          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "directories")
+          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/directories")
           runCommand(cmd, baseDir)
         }
       }
