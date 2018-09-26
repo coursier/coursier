@@ -2,5 +2,5 @@
 	path = modules/tests/metadata
 	url = https://github.com/coursier/test-metadata.git
 [submodule "directories"]
-	path = directories
+	path = modules/directories
 	url = https://github.com/soc/directories.git
