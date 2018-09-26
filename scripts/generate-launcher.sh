@@ -7,7 +7,7 @@ CACHE_VERSION=v1
 
 OUTPUT="${OUTPUT:-"coursier"}"
 
-SBTPACK_LAUNCHER="$(dirname "$0")/../cli/target/pack/bin/coursier"
+SBTPACK_LAUNCHER="$(dirname "$0")/../modules/cli/target/pack/bin/coursier"
 
 if [ ! -f "$SBTPACK_LAUNCHER" ]; then
   sbt ++2.12.4 "project cli" pack

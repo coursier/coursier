@@ -276,4 +276,12 @@ object Settings {
 
   val gitLock = new Object
 
+  // macros could get the ids automatically…
+
+  def crossProject(id: String)(platforms: sbtcrossproject.Platform*): sbtcrossproject.CrossProject.Builder =
+    sbtcrossproject.CrossProject(id, file(s"modules/$id"))(platforms: _*)
+
+  def project(id: String) =
+    Project(id, file(s"modules/$id"))
+
 }
