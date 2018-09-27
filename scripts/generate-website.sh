@@ -25,13 +25,16 @@ echo "Processing Markdown files"
     --in ../doc/docs \
     --out ../doc/processed-docs
 
-# website generation based on https://github.com/szeiger/ornate
-
 echo "Generating website"
 
-java -Dversion="$VERSION" -jar ../coursier launch com.novocode:ornate_2.11:0.5 -- ../doc/ornate.conf
+cd ../doc/website
+npm install
+yarn run build
+cd -
 
-DIR="$(cd ../doc/generated; pwd)"
+../scripts/relativize.sh ../doc/website/build
+
+DIR="$(cd ../doc/website/build/coursier; pwd)"
 
 echo
 echo "Generated website available under $DIR"
@@ -46,6 +49,6 @@ fi
 cat << EOF
 Open the generated website with
 
-  $OPEN_CMD doc/generated/index.html
+  $OPEN_CMD doc/website/build/coursier/index.html
 
 EOF

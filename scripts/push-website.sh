@@ -3,8 +3,8 @@ set -eu
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-if [ ! -e doc/generated/index.html ]; then
-  echo "Generated website not found under doc/generated"
+if [ ! -e doc/website/build/coursier/index.html ]; then
+  echo "Generated website not found under doc/website/build/coursier"
   exit 1
 fi
 
@@ -42,7 +42,7 @@ fi
 
 mkdir -p "$VERSION"
 echo "Copying new website"
-cp -pR ../../doc/generated/* "$VERSION/"
+cp -pR ../../doc/website/build/coursier/* "$VERSION/"
 git add "$VERSION"
 
 DIRS=()
