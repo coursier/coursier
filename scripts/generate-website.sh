@@ -27,6 +27,7 @@ echo "Processing Markdown files"
     --in ../doc/docs \
     --out ../doc/processed-docs \
     --site.VERSION "$VERSION" \
+    --site.PLUGIN_VERSION "$VERSION" \
     --site.SCALA_VERSION "$SCALA_VERSION"
 
 echo "Generating website"

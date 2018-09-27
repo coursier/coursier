@@ -1,8 +1,10 @@
 {
   "docs": {
-    "Coursier": ["intro", "api"]
-  },
-  "docs-other": {
-    "Quick start": ["intro", "api"]
+    "Quick start": ["intro", "quick-start-sbt", "quick-start-cli", "quick-start-api"],
+    "sbt plugins": ["sbt-coursier", "sbt-shading", "sbt-pgp-coursier"],
+    "Command-line": ["cli-intro", "cli-resolve", "cli-fetch", "cli-launch", "cli-bootstrap"],
+    "API": ["api", "scala-js"],
+    "Other": ["cache", "ttl", "json-report", "extra", "limitations", "faq"],
+    "About": ["motivations", "contributing", "users"]
   }
 }

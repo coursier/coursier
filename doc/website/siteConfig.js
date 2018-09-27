@@ -38,6 +38,8 @@ const siteConfig = {
   cleanUrl: true,
 
   enableUpdateTime: true, // doesn't seem to work
+
+  editUrl: 'https://github.com/coursier/coursier/edit/master/doc/docs/',
 };
 
 module.exports = siteConfig;
