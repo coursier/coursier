@@ -1,4 +1,6 @@
-# API
+---
+title: API
+---
 
 Add to your `build.sbt`
 ```scala

@@ -1,3 +1,8 @@
+---
+title: Intro
+hide_title: true
+---
+
 # coursier
 
 *Pure Scala Artifact Fetching*
