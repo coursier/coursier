@@ -12,6 +12,8 @@ fi
 VERSION="$("$GREP" -oP '(?<=")[^"]*(?<!")' ../version.sbt)"
 echo "Current version is $VERSION"
 
+SCALA_VERSION="$(grep scala212 ../project/ScalaVersion.scala | "$GREP" -oP '(?<=")[^"]*(?<!")')"
+
 echo "Processing Markdown files"
 
 # first processing md files via https://github.com/olafurpg/mdoc
@@ -19,11 +21,13 @@ echo "Processing Markdown files"
 # with
 #   sbt coreJVM/publishLocal cacheJVM/publishLocal
 ../coursier launch \
-  com.geirsson:mdoc_2.12.6:0.4.5 \
+  "com.geirsson:mdoc_$SCALA_VERSION:0.4.5" \
   "io.get-coursier:coursier-cache_2.12:$VERSION" \
   -- \
     --in ../doc/docs \
-    --out ../doc/processed-docs
+    --out ../doc/processed-docs \
+    --site.VERSION "$VERSION" \
+    --site.SCALA_VERSION "$SCALA_VERSION"
 
 echo "Generating website"
 
