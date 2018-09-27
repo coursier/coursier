@@ -36,6 +36,8 @@ const siteConfig = {
 
   onPageNav: 'separate',
   cleanUrl: true,
+
+  enableUpdateTime: true, // doesn't seem to work
 };
 
 module.exports = siteConfig;
