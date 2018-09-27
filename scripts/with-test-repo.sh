@@ -32,7 +32,7 @@ runServerBg() {
   java -jar ./coursier launch \
     "io.get-coursier:http-server_2.12:1.0.0" \
     -- \
-      -d tests/jvm/src/test/resources/test-repo/http/abc.com \
+      -d modules/tests/jvm/src/test/resources/test-repo/http/abc.com \
       -u "$TEST_REPOSITORY_USER" -P "$TEST_REPOSITORY_PASSWORD" -r realm \
       -v \
       --host "$TEST_REPOSITORY_HOST" \

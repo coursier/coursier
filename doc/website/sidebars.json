@@ -1,0 +1,8 @@
+{
+  "docs": {
+    "Coursier": ["intro", "api"]
+  },
+  "docs-other": {
+    "Quick start": ["intro", "api"]
+  }
+}
