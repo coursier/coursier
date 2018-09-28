@@ -23,7 +23,10 @@ jobs:
     - env: PANTS=1 # unused in the script, just to tag the job on the Travis CI UI
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
+    - env: WEBSITE=1 # unused from the script, just to know what the job does from the Travis UI
+      script: scripts/update-website.sh
     - stage: release
+      env: PUSH_WEBSITE=1
       script: scripts/update-website.sh
 env:
   global:
