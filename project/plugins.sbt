@@ -11,8 +11,7 @@ plugins_(
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.4.0",
   "io.get-coursier"    % "sbt-shading"              % coursierVersion,
   "org.xerial.sbt"     % "sbt-sonatype"             % "2.3",
-  "com.timushev.sbt"   % "sbt-updates"              % "0.3.4",
-  "org.tpolecat"       % "tut-plugin"               % "0.6.4"
+  "com.timushev.sbt"   % "sbt-updates"              % "0.3.4"
 )
 
 libs ++= Seq(

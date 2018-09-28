@@ -44,27 +44,6 @@ runJvmTests() {
   ./modules/tests/handmade-metadata/scripts/with-test-repo.sh sbt scalaFromEnv jvm/test $IT
 }
 
-validateReadme() {
-  # check that tut runs fine, and that the README doesn't change after a `sbt tut`
-  mv README.md README.md.orig
-
-
-  if [ "$SCALA_VERSION" = 2.12 ]; then
-    # Later 2.12 versions seem to make tut not see the coursier binaries
-    sbt '++2.12.1!' tut
-  else
-    sbt scalaFromEnv tut
-  fi
-
-  if cmp -s README.md.orig README.md; then
-    echo "README.md doesn't change"
-  else
-    echo "Error: README.md not the same after a \"sbt tut\":"
-    diff -u README.md.orig README.md
-    exit 1
-  fi
-}
-
 checkBinaryCompatibility() {
   sbt scalaFromEnv coreJVM/mimaReportBinaryIssues cacheJVM/mimaReportBinaryIssues
 }
@@ -177,7 +156,6 @@ else
 
   testBootstrap
 
-  validateReadme
   checkBinaryCompatibility
 fi
 
