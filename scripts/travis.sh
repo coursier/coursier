@@ -22,24 +22,6 @@ isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
 
-sbtCoursier() {
-  [ "$SBT_COURSIER" = 1 ]
-}
-
-sbtShading() {
-  [ "$SBT_SHADING" = 1 ]
-}
-
-runSbtCoursierTests() {
-  addPgpKeys
-  ./scripts/with-test-repo.sh sbt scalaFromEnv sbt-coursier/scripted
-  sbt scalaFromEnv sbt-pgp-coursier/scripted
-}
-
-runSbtShadingTests() {
-  sbt scalaFromEnv sbt-shading/scripted
-}
-
 jsCompile() {
   sbt scalaFromEnv js/compile js/test:compile coreJS/fastOptJS cacheJS/fastOptJS testsJS/test:fastOptJS js/test:fastOptJS
 }
@@ -191,21 +173,11 @@ else
   integrationTestsRequirements
   jvmCompile
 
-  if sbtCoursier; then
-    if [ "$SCALA_VERSION" = "2.12" ]; then
-      runSbtCoursierTests
-    fi
-  elif sbtShading; then
-    if [ "$SCALA_VERSION" = "2.12" ]; then
-      runSbtShadingTests
-    fi
-  else
-    runJvmTests
+  runJvmTests
 
-    testBootstrap
+  testBootstrap
 
-    validateReadme
-    checkBinaryCompatibility
-  fi
+  validateReadme
+  checkBinaryCompatibility
 fi
 

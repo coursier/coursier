@@ -1,4 +1,0 @@
-$ delete output
-> run
-$ exists output
-> updateSbtClassifiers
