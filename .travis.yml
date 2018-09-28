@@ -25,12 +25,6 @@ matrix:
       sudo: required
       services:
         - docker
-    - env: SCALA_VERSION=2.12 SBT_COURSIER=1
-      os: linux
-      jdk: oraclejdk8
-    - env: SCALA_VERSION=2.12 SBT_SHADING=1
-      os: linux
-      jdk: oraclejdk8
     - env: SCALA_VERSION=2.12 SCALA_JS=1
       os: linux
       jdk: oraclejdk8

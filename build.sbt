@@ -236,79 +236,6 @@ lazy val readme = project("readme")
     tutTargetDirectory := baseDirectory.in(LocalRootProject).value
   )
 
-lazy val `sbt-shared` = project("sbt-shared")
-  .dependsOn(coreJvm, cacheJvm)
-  .settings(
-    plugin,
-    utest,
-    // because we don't publish for 2.11 the following declaration
-    // is more wordy than usual
-    // once support for sbt 0.13 is removed, this dependency can go away
-    libs ++= {
-      val dependency = "com.dwijnand" % "sbt-compat" % "1.2.6"
-      val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
-      val scalaV = (scalaBinaryVersion in update).value
-      val m = Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
-      CrossVersion.partialVersion(scalaVersion.value).collect {
-        case (2, 10) => m
-        case (2, 12) => m
-      }.toList
-    }
-  )
-
-lazy val `sbt-coursier` = project("sbt-coursier")
-  .dependsOn(coreJvm, cacheJvm, extra, `sbt-shared`, scalazJvm)
-  .settings(
-    plugin,
-    utest,
-    scriptedDependencies := {
-      scriptedDependencies.value
-
-      // TODO Get dependency projects automatically
-      // (but shouldn't scripted itself handle that…?)
-      publishLocal.in(coreJvm).value
-      publishLocal.in(cacheJvm).value
-      publishLocal.in(extra).value
-      publishLocal.in(`sbt-shared`).value
-      publishLocal.in(scalazJvm).value
-    }
-  )
-
-lazy val `sbt-pgp-coursier` = project("sbt-pgp-coursier")
-  .dependsOn(`sbt-coursier`)
-  .settings(
-    plugin,
-    libs ++= {
-      scalaBinaryVersion.value match {
-        case "2.10" | "2.12" =>
-          Seq(Deps.sbtPgp.value)
-        case _ => Nil
-      }
-    },
-    scriptedDependencies := {
-      scriptedDependencies.value
-      // TODO Get dependency projects automatically
-      scriptedDependencies.in(`sbt-coursier`).value
-    }
-  )
-
-lazy val `sbt-shading` = project("sbt-shading")
-  .enablePlugins(ShadingPlugin)
-  .dependsOn(`sbt-coursier`)
-  .settings(
-    plugin,
-    shading,
-    localM2Repository, // for a possibly locally published jarjar
-    libs += Deps.jarjar % "shaded",
-    // dependencies of jarjar-core - directly depending on these so that they don't get shaded
-    libs ++= Deps.jarjarTransitiveDeps,
-    scriptedDependencies := {
-      scriptedDependencies.value
-      // TODO Get dependency projects automatically
-      scriptedDependencies.in(`sbt-coursier`).value
-    }
-  )
-
 lazy val okhttp = project("okhttp")
   .dependsOn(cacheJvm)
   .settings(
@@ -329,10 +256,6 @@ lazy val jvm = project("jvm")
     bootstrap,
     extra,
     cli,
-    `sbt-shared`,
-    `sbt-coursier`,
-    `sbt-pgp-coursier`,
-    `sbt-shading`,
     readme,
     okhttp
   )
@@ -370,10 +293,6 @@ lazy val coursier = project("coursier")
     bootstrap,
     extra,
     cli,
-    `sbt-shared`,
-    `sbt-coursier`,
-    `sbt-pgp-coursier`,
-    `sbt-shading`,
     scalazJvm,
     scalazJs,
     web,

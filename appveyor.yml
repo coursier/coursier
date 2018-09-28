@@ -30,7 +30,6 @@ test_script:
   - sbt scala211 testsJVM/test
   - sbt scala212 testsJVM/it:test
   - sbt scala211 testsJVM/it:test
-  - sbt scala212 sbt-coursier/scripted sbt-shading/scripted
 branches:
   only:
     - master
