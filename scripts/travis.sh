@@ -91,7 +91,7 @@ testBootstrap() {
   if [ "$SCALA_VERSION" = 2.12 ]; then
     sbt scalaFromEnv "project cli" pack
 
-    cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.1
+    modules/cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.1
     local OUT="$(./cs-echo foo)"
     if [ "$OUT" != foo ]; then
       echo "Error: unexpected output from bootstrapped echo command." 1>&2
@@ -162,7 +162,7 @@ testBootstrap() {
 testNativeBootstrap() {
   if [ "$SCALA_VERSION" = "2.12" -a "$NATIVE" = "1" ]; then
     sbt scalaFromEnv "project cli" pack
-    cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
+    modules/cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
     if [ "$(./native-echo -n foo a)" != "foo a" ]; then
       echo "Error: unexpected output from native test bootstrap." 1>&2
       exit 1
