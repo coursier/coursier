@@ -153,8 +153,10 @@ object Release {
 
     val cmd = Seq(state.vcs.commandName, "tag", "--sort", "version:refname")
 
-    val tag = scala.sys.process.Process(cmd)
-      .!!
+    val tag =
+      // work around scala/bug#11125
+      Predef.augmentString(
+        scala.sys.process.Process(cmd).!!)
       .lines
       .toVector
       .lastOption
