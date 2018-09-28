@@ -471,7 +471,7 @@ lazy val sharedTestResources = {
     if (!testsMetadataDir.exists())
       gitLock.synchronized {
         if (!testsMetadataDir.exists()) {
-          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "tests/metadata")
+          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/metadata")
           runCommand(cmd, baseDir)
         }
       }
