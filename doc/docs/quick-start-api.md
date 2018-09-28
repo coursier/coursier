@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
   "io.get-coursier" %% "coursier-cache" % "@VERSION@"
 )
 ```
-s
+
 Add an import for coursier,
 ```scala mdoc:silent
 import coursier._

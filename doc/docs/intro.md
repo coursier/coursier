@@ -7,9 +7,7 @@ hide_title: true
 
 *Pure Scala Artifact Fetching*
 
-A Scala library to fetch dependencies from Maven / Ivy repositories
-
-*This is the documentation for version @VERSION@*.
+**A Scala library to fetch dependencies from Maven / Ivy repositories**
 
 
 *coursier* is a dependency resolver / fetcher *à la* Maven / Ivy, entirely
@@ -20,16 +18,16 @@ It handles many features of the Maven model, and is able to fetch metadata and
 artifacts from both Maven and Ivy repositories. It handles parallel downloads
 out-of-the-box without resorting to global locks.
 
-It can be used [as an sbt plugin](quick-start-sbt.md), making it handle
-most dependency resolutions in sbt.
+It can be used
+- [as an **sbt plugin**](quick-start-sbt.md), making it handle most dependency resolutions in sbt,
+- via its [**command-line** tool](quick-start-cli.md), that allows to
+  - [easily list the transitive dependencies of applications or libraries](cli-resolve.md),
+  - [download and list their artifacts](cli-fetch.md),
+  - [run applications published via Maven / Ivy repositories](cli-launch.md),
+  - [and many other things](cli-intro.md).
+- [as a **library** via its API](quick-start-api.md), on the JVM or [from Scala JS](scala-js.md).
 
-Its command-line tool allows to
-- easily list the transitive dependencies of applications or libraries,
-- download and list their artifacts,
-- run applications published via Maven / Ivy repositories,
-- and many other things.
-
-Lastly, it can be used as a library via its [API](quick-start-api.md) and has a Scala JS [demo](scala-js.md).
+*This is the documentation for version @VERSION@*.
 
 
 
