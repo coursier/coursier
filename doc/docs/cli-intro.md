@@ -16,6 +16,12 @@ $ curl -L -o coursier https://git.io/coursier &&
 The launcher itself weighs only 30 kB and can be easily embedded as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
+The short URL [`https://git.io.coursier`](https://git.io.coursier) redirects to
+[`https://github.com/coursier/coursier/raw/master/coursier`](https://github.com/coursier/coursier/raw/master/coursier).
+Since version `1.0.0-RC1`, `master` in the latter URL can be replaced by the
+tag of a specific version, to download the launcher of that exact version, like
+[`https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier`](https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier).
+
 ### brew
 
 Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
