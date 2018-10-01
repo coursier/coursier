@@ -3,7 +3,9 @@ set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-source scripts/setup-sbt-extra.sh
+if [ "$TRAVIS_BRANCH" != "" ]; then
+  source scripts/setup-sbt-extra.sh
+fi
 
 sbt scala212 coreJVM/publishLocal cacheJVM/publishLocal
 
