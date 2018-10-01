@@ -131,15 +131,6 @@ testNativeBootstrap() {
   fi
 }
 
-addPgpKeys() {
-  for key in b41f2bce 9fa47a44 ae548ced b4493b94 53a97466 36ee59d9 dc426429 3b80305d 69e0a56c fdd5c0cd 35543c27 70173ee5 111557de 39c263a9; do
-    gpg --keyserver keyserver.ubuntu.com --recv "$key"
-  done
-}
-
-
-# TODO Add coverage once https://github.com/scoverage/sbt-scoverage/issues/111 is fixed
-
 downloadInstallSbtExtras
 setupCoursierBinDir
 
