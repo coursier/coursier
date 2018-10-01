@@ -9,7 +9,7 @@ setupCoursierBinDir() {
 
 downloadInstallSbtExtras() {
   mkdir -p bin
-  curl -L -o bin/sbt https://github.com/paulp/sbt-extras/raw/9ade5fa54914ca8aded44105bf4b9a60966f3ccd/sbt
+  curl -L -o bin/sbt https://github.com/paulp/sbt-extras/raw/1d8ee2c0a75374afa1cb687f450aeb095180882b/sbt
   chmod +x bin/sbt
 }
 
