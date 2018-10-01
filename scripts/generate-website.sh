@@ -45,15 +45,9 @@ echo
 echo "Generated website available under $DIR"
 
 
-if echo "$OSTYPE" | grep -q darwin; then
-  OPEN_CMD="open"
-else
-  OPEN_CMD="xdg-open"
-fi
-
 cat << EOF
 Open the generated website with
 
-  $OPEN_CMD doc/website/build/coursier/index.html
+  npx http-server doc/website/build/coursier
 
 EOF

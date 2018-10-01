@@ -42,13 +42,7 @@ object Relativize {
       val absoluteHref = URI.create(element.attr(s"abs:$attribute"))
       if (absoluteHref.getHost == baseUri.getHost) {
         val hrefPath = Paths.get(absoluteHref.getPath)
-        val relativeHref = {
-          val relativePath = originPath.relativize(hrefPath)
-          val absolutePath = file.getParent.resolve(relativePath)
-          val isDirectory = Files.isDirectory(absolutePath)
-          if (isDirectory) relativePath.resolve("index.html")
-          else relativePath
-        }
+        val relativeHref = originPath.relativize(hrefPath)
         val fragment =
           if (absoluteHref.getFragment == null) ""
           else "#" + absoluteHref.getFragment
