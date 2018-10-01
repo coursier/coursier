@@ -3,6 +3,8 @@ set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+source scripts/setup-sbt-extra.sh
+
 sbt scala212 coreJVM/publishLocal cacheJVM/publishLocal
 
 ./scripts/generate-website.sh

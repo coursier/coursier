@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 set -evx
 
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 setupCoursierBinDir() {
   mkdir -p bin
   cp coursier bin/
   export PATH="$(pwd)/bin:$PATH"
-}
-
-downloadInstallSbtExtras() {
-  mkdir -p bin
-  curl -L -o bin/sbt https://github.com/paulp/sbt-extras/raw/1d8ee2c0a75374afa1cb687f450aeb095180882b/sbt
-  chmod +x bin/sbt
 }
 
 integrationTestsRequirements() {
@@ -131,7 +127,7 @@ testNativeBootstrap() {
   fi
 }
 
-downloadInstallSbtExtras
+source scripts/setup-sbt-extra.sh
 setupCoursierBinDir
 
 if isScalaJs; then
