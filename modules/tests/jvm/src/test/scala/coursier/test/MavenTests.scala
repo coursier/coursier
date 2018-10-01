@@ -20,7 +20,7 @@ object MavenTests extends TestSuite {
         attributes = Attributes()
       )
 
-      val repoBase = new File("modules/tests/jvm/src/test/resources/test-repo/http/abc.com")
+      val repoBase = new File(HandmadeMetadata.repoBase, "http/abc.com")
         .toURI
         .toASCIIString
         .stripSuffix("/") + "/"

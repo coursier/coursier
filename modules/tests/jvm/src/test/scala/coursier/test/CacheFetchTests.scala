@@ -72,7 +72,7 @@ object CacheFetchTests extends TestSuite {
 
     * - {
       // test that everything's fine with basic file protocol
-      val f = new File("modules/tests/jvm/src/test/resources/test-repo/http/abc.com").getAbsoluteFile
+      val f = new File(HandmadeMetadata.repoBase, "http/abc.com").getAbsoluteFile
       check(MavenRepository(f.toURI.toString))
     }
 

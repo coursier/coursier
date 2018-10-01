@@ -80,7 +80,7 @@ object ChecksumTests extends TestSuite {
     'artifact - {
 
       // not sure we should that directory as cache...
-      val cache = new File("modules/tests/jvm/src/test/resources/test-repo")
+      val cache = HandmadeMetadata.repoBase
 
       def validate(artifact: Artifact, sumType: String): Task[Either[FileError, Unit]] =
         Cache.validateChecksum[Task](

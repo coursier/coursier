@@ -61,7 +61,7 @@ object IvyTests extends TestSuite {
         attributes = Attributes()
       )
 
-      val repoBase = new File("modules/tests/jvm/src/test/resources/test-repo/http/ivy.abc.com")
+      val repoBase = new File(HandmadeMetadata.repoBase, "http/ivy.abc.com")
         .toURI
         .toASCIIString
         .stripSuffix("/") + "/"
