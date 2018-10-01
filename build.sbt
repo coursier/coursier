@@ -27,7 +27,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
-    name := "coursier",
+    coursierPrefix,
     Mima.previousArtifacts,
     Mima.coreFilters
   )
@@ -244,6 +244,20 @@ lazy val okhttp = project("okhttp")
     libs += Deps.okhttpUrlConnection
   )
 
+lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
+  .dependsOn(core, cache)
+  .settings(
+    shared,
+    moduleName := "coursier",
+    // POM only
+    publishArtifact.in(Compile, packageDoc) := false,
+    publishArtifact.in(Compile, packageSrc) := false,
+    publishArtifact.in(Compile, packageBin) := false
+  )
+
+lazy val metaJvm = meta.jvm
+lazy val metaJs = meta.js
+
 lazy val jvm = project("jvm")
   .dummy
   .aggregate(
@@ -257,7 +271,8 @@ lazy val jvm = project("jvm")
     extra,
     cli,
     readme,
-    okhttp
+    okhttp,
+    metaJvm
   )
   .settings(
     shared,
@@ -271,7 +286,8 @@ lazy val js = project("js")
     coreJs,
     cacheJs,
     testsJs,
-    web
+    web,
+    metaJs
   )
   .settings(
     shared,
@@ -297,7 +313,9 @@ lazy val coursier = project("coursier")
     scalazJs,
     web,
     readme,
-    okhttp
+    okhttp,
+    metaJvm,
+    metaJs
   )
   .settings(
     shared,
