@@ -41,7 +41,7 @@ runJvmTests() {
     IT="jvm/it:test"
   fi
 
-  ./scripts/with-test-repo.sh sbt scalaFromEnv jvm/test $IT
+  ./modules/tests/handmade-metadata/scripts/with-test-repo.sh sbt scalaFromEnv jvm/test $IT
 }
 
 validateReadme() {

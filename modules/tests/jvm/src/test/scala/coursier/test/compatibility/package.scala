@@ -1,5 +1,6 @@
 package coursier.test
 
+import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
@@ -13,12 +14,15 @@ package object compatibility {
   implicit val executionContext = scala.concurrent.ExecutionContext.global
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
-    val res = Option(getClass.getClassLoader.getResource(path)).getOrElse {
-      throw new Exception(s"Not found: resource $path")
+    val f = new File("modules/tests/shared/src/test/resources/" + path)
+    var is0: FileInputStream = null
+    try {
+      is0 = new FileInputStream(f)
+      new String(Platform.readFullySync(is0), UTF_8)
+    } finally {
+      if (is0 != null)
+        is0.close()
     }
-    val is = res.openStream()
-
-    new String(Platform.readFullySync(is), UTF_8)
   }
 
   private val baseRepo = {

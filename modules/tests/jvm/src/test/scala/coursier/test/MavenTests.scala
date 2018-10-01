@@ -1,8 +1,9 @@
 package coursier.test
 
-import coursier.{ Attributes, Dependency, Module }
-import coursier.maven.MavenRepository
+import java.io.File
 
+import coursier.{Attributes, Dependency, Module}
+import coursier.maven.MavenRepository
 import utest._
 
 object MavenTests extends TestSuite {
@@ -19,7 +20,10 @@ object MavenTests extends TestSuite {
         attributes = Attributes()
       )
 
-      val repoBase = getClass.getResource("/test-repo/http/abc.com").toString.stripSuffix("/") + "/"
+      val repoBase = new File(HandmadeMetadata.repoBase, "http/abc.com")
+        .toURI
+        .toASCIIString
+        .stripSuffix("/") + "/"
       val repo = MavenRepository(repoBase)
 
       val mainJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82.jar"
