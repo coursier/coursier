@@ -8,7 +8,7 @@ title: Intro
 
 Download and run its launcher with
 ```
-$ curl -L -o coursier https://git.io/vgvpD &&
+$ curl -L -o coursier https://git.io/coursier &&
     chmod +x coursier &&
     ./coursier --help
 ```
