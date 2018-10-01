@@ -1,18 +1,19 @@
 package coursier.cache.protocol
 
-import java.net.{ URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory }
+import java.io.File
+import java.net.{URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
 
 class TestprotocolHandler extends URLStreamHandlerFactory {
 
   def createURLStreamHandler(protocol: String): URLStreamHandler = new URLStreamHandler {
     protected def openConnection(url: URL): URLConnection = {
-      val resPath = "/test-repo/http/abc.com" + url.getPath
-      val resURLOpt = Option(getClass.getResource(resPath))
+      val f = new File("modules/tests/jvm/src/test/resources/test-repo/http/abc.com" + url.getPath)
+      val resURLOpt = Option(f.toURI.toURL)
 
       resURLOpt match {
         case None =>
           new URLConnection(url) {
-            def connect() = throw new NoSuchElementException(s"Resource $resPath")
+            def connect() = throw new NoSuchElementException(f.getAbsolutePath)
           }
         case Some(resURL) =>
           resURL.openConnection()

@@ -72,8 +72,8 @@ object CacheFetchTests extends TestSuite {
 
     * - {
       // test that everything's fine with basic file protocol
-      val repoPath = new File(getClass.getResource("/test-repo/http/abc.com").getPath)
-      check(MavenRepository(repoPath.toURI.toString))
+      val f = new File("modules/tests/jvm/src/test/resources/test-repo/http/abc.com").getAbsoluteFile
+      check(MavenRepository(f.toURI.toString))
     }
 
     'customProtocol - {

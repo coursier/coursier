@@ -79,9 +79,8 @@ object ChecksumTests extends TestSuite {
 
     'artifact - {
 
-      val cachePath = getClass.getResource("/test-repo").getPath
-
-      val cache = new File(cachePath)
+      // not sure we should that directory as cache...
+      val cache = new File("modules/tests/jvm/src/test/resources/test-repo")
 
       def validate(artifact: Artifact, sumType: String): Task[Either[FileError, Unit]] =
         Cache.validateChecksum[Task](

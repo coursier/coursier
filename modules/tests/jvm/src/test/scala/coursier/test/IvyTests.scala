@@ -1,8 +1,9 @@
 package coursier.test
 
-import coursier.{ Attributes, Dependency, Module }
-import coursier.ivy.IvyRepository
+import java.io.File
 
+import coursier.{Attributes, Dependency, Module}
+import coursier.ivy.IvyRepository
 import utest._
 
 object IvyTests extends TestSuite {
@@ -60,7 +61,10 @@ object IvyTests extends TestSuite {
         attributes = Attributes()
       )
 
-      val repoBase = getClass.getResource("/test-repo/http/ivy.abc.com").toString.stripSuffix("/") + "/"
+      val repoBase = new File("modules/tests/jvm/src/test/resources/test-repo/http/ivy.abc.com")
+        .toURI
+        .toASCIIString
+        .stripSuffix("/") + "/"
 
       val repo = IvyRepository.fromPattern(
         repoBase +: coursier.ivy.Pattern.default,
