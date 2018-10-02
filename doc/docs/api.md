@@ -58,14 +58,14 @@ assert(!start.isDone)
 ```
 
 In order for the resolution to go on, we'll need things from a few repositories,
-```scala mdoc
+```scala mdoc:silent
 val repositories = Seq(
   Cache.ivy2Local,
   MavenRepository("https://repo1.maven.org/maven2")
 )
 ```
 The first one, `Cache.ivy2Local`, is defined in `coursier.Cache`, itself from the `coursier-cache` module that
-we added above. As we can see, it is an `IvyRepository`, picking things under `~/.ivy2/local`. An `IvyRepository`
+we added above. It is an `IvyRepository`, picking things under `~/.ivy2/local`. An `IvyRepository`
 is related to the [Ivy](http://ant.apache.org/ivy/) build tool. This kind of repository involves a so-called [pattern](http://ant.apache.org/ivy/history/2.4.0/concept.html#patterns), with
 various properties. These are not of very common use in Scala, although SBT uses them a bit.
 
@@ -81,7 +81,7 @@ Both `IvyRepository` and `MavenRepository` are case classes, so that it's straig
 repositories.
 
 To set credentials for a `MavenRepository` or `IvyRepository`, set their `authentication` field, like
-```scala mdoc
+```scala mdoc:silent
 import coursier.core.Authentication
 
 MavenRepository(
@@ -130,11 +130,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 val resolution = start.process.run(fetch).unsafeRun()
 ```
 
-To get additional feedback during the resolution, we can give the `Cache.default` method above
+To get additional feedback during the resolution, we can give the `Cache.fetch` method above
 a [`Cache.Logger`](https://github.com/coursier/coursier/blob/cf269c6895e19f2d590f08811406724304332950/cache/src/main/scala/coursier/Cache.scala#L484-L490).
 
 By default, downloads happen in a global fixed thread pool (with 6 threads, allowing for 6 parallel downloads), but
-you can supply your own thread pool to `Cache.default`.
+you can supply your own thread pool to `Cache.fetch`.
 
 Now that the resolution is done, we can check for errors in
 ```scala mdoc:silent
@@ -153,9 +153,10 @@ Then, if all went well, we can fetch and get local copies of the artifacts thems
 import java.io.File
 import coursier.util.Gather
 
-val localArtifacts: Seq[Either[FileError, File]] = Gather[Task].gather(
-  resolution.artifacts.map(Cache.file[Task](_).run)
-).unsafeRun()
+val localArtifacts: Seq[Either[FileError, File]] =
+  Gather[Task].gather(
+    resolution.artifacts.map(Cache.file[Task](_).run)
+  ).unsafeRun()
 ```
 
 We're using the `Cache.file` method, that can also be given a `Logger` (for more feedback) and a custom thread pool.
