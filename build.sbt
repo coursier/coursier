@@ -225,17 +225,6 @@ lazy val web = project("web")
     )
   )
 
-lazy val readme = project("readme")
-  .in(file("doc/readme"))
-  .dependsOn(coreJvm, cacheJvm, scalazJvm)
-  .enablePlugins(TutPlugin)
-  .settings(
-    shared,
-    dontPublish,
-    tutSourceDirectory := baseDirectory.value,
-    tutTargetDirectory := baseDirectory.in(LocalRootProject).value
-  )
-
 lazy val okhttp = project("okhttp")
   .dependsOn(cacheJvm)
   .settings(
@@ -270,7 +259,6 @@ lazy val jvm = project("jvm")
     bootstrap,
     extra,
     cli,
-    readme,
     okhttp,
     metaJvm
   )
@@ -312,7 +300,6 @@ lazy val coursier = project("coursier")
     scalazJvm,
     scalazJs,
     web,
-    readme,
     okhttp,
     metaJvm,
     metaJs

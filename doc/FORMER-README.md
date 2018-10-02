@@ -140,41 +140,14 @@ Add an import for coursier,
 import coursier._
 ```
 
-```tut:invisible
-import coursier.{ Cache => _, _ }
-```
 
-```tut:invisible
-object Cache {
-  val ivy2LocalIsIvy = coursier.Cache.ivy2Local match {
-    case _: coursier.ivy.IvyRepository => true
-    case _ => false
-  }
 
-  assert(ivy2LocalIsIvy)
 
-  // The goal of this is to make the printed ivy2Local below more anonymous,
-  // with literally ${user.home} in it rather than the current home dir.
-  // ${user.home} could have been used in the definition of ivy2Local itself,
-  // but it would then have required properties, which would have cluttered
-  // output here.
 
-  import coursier.ivy.Pattern.Chunk, Chunk._
 
-  val ivy2Local = coursier.ivy.IvyRepository.fromPattern(
-    coursier.ivy.Pattern(
-      Seq[Chunk]("file://", Var("user.home"), "/local/") ++ coursier.ivy.Pattern.default.chunks
-    ),
-    dropInfoAttributes = true
-  )
-
-  def fetch[F[_]: coursier.util.Schedulable]() = coursier.Cache.fetch[F]()
-  def file[F[_]: coursier.util.Schedulable](artifact: Artifact) = coursier.Cache.file[F](artifact)
-}
-```
 
 To resolve dependencies, first create a `Resolution` case class with your dependencies in it,
-```tut:silent
+```scala
 val start = Resolution(
   Set(
     Dependency(
@@ -188,7 +161,7 @@ val start = Resolution(
 ```
 
 Create a fetch function able to get things from a few repositories via a local cache,
-```tut:silent
+```scala
 import coursier.util.Task
 
 val repositories = Seq(
@@ -200,7 +173,7 @@ val fetch = Fetch.from(repositories, Cache.fetch[Task]())
 ```
 
 Then run the resolution per-se,
-```tut:silent
+```scala
 import scala.concurrent.ExecutionContext.Implicits.global
 
 val resolution = start.process.run(fetch).unsafeRun()
@@ -208,13 +181,13 @@ val resolution = start.process.run(fetch).unsafeRun()
 That will fetch and use metadata.
 
 Check for errors in
-```tut:silent
+```scala
 val errors: Seq[((Module, String), Seq[String])] = resolution.errors
 ```
 These would mean that the resolution wasn't able to get metadata about some dependencies.
 
 Then fetch and get local copies of the artifacts themselves (the JARs) with
-```tut:silent
+```scala
 import java.io.File
 import coursier.util.Gather
 
@@ -485,13 +458,12 @@ In the code below, we'll assume some imports are around,
 import coursier._
 ```
 
-```tut:invisible
-import coursier.{ Cache => _, _ }
-```
+
+
 
 
 Resolving dependencies involves create an initial resolution state, with all the initial dependencies in it, like
-```tut:silent
+```scala
 val start = Resolution(
   Set(
     Dependency(
@@ -508,20 +480,21 @@ It goes without saying that a `Resolution` is immutable, as are all the classes 
 The resolution process will go on by giving successive `Resolution`s, until the final one.
 
 `start` above is only the initial state - it is far from over, as the `isDone` method on it tells,
-```tut
-start.isDone
+```scala
+scala> start.isDone
+res0: Boolean = false
 ```
 
-```tut:invisible
-assert(!start.isDone)
-```
+
+
 
 In order for the resolution to go on, we'll need things from a few repositories,
-```tut
-val repositories = Seq(
-  Cache.ivy2Local,
-  MavenRepository("https://repo1.maven.org/maven2")
-)
+```scala
+scala> val repositories = Seq(
+     |   Cache.ivy2Local,
+     |   MavenRepository("https://repo1.maven.org/maven2")
+     | )
+repositories: Seq[coursier.core.Repository] = List(IvyRepository(Pattern(List(Const(file://), Var(user.home), Const(/local/), Var(organisation), Const(/), Var(module), Const(/), Opt(WrappedArray(Const(scala_), Var(scalaVersion), Const(/))), Opt(WrappedArray(Const(sbt_), Var(sbtVersion), Const(/))), Var(revision), Const(/), Var(type), Const(s/), Var(artifact), Opt(WrappedArray(Const(-), Var(classifier))), Const(.), Var(ext))),None,None,true,true,true,true,None), MavenRepository(https://repo1.maven.org/maven2,None,true,None))
 ```
 The first one, `Cache.ivy2Local`, is defined in `coursier.Cache`, itself from the `coursier-cache` module that
 we added above. As we can see, it is an `IvyRepository`, picking things under `~/.ivy2/local`. An `IvyRepository`
@@ -540,13 +513,15 @@ Both `IvyRepository` and `MavenRepository` are case classes, so that it's straig
 repositories.
 
 To set credentials for a `MavenRepository` or `IvyRepository`, set their `authentication` field, like
-```tut
+```scala
+scala> import coursier.core.Authentication
 import coursier.core.Authentication
 
-MavenRepository(
-  "https://nexus.corp.com/content/repositories/releases",
-  authentication = Some(Authentication("user", "pass"))
-)
+scala> MavenRepository(
+     |   "https://nexus.corp.com/content/repositories/releases",
+     |   authentication = Some(Authentication("user", "pass"))
+     | )
+res2: coursier.maven.MavenRepository = MavenRepository(https://nexus.corp.com/content/repositories/releases,None,true,Some(Authentication(user, *******)))
 ```
 
 Now that we have repositories, we're going to mix these with things from the `coursier-cache` module,
@@ -555,7 +530,7 @@ of type `Seq[(Module, String)] => F[Seq[((Module, String), Either[Seq[String], (
 Given a sequence of dependencies, designated by their `Module` (organisation and name in most cases)
 and version (just a `String`), it gives either errors (`Seq[String]`) or metadata (`(Artifact.Source, Project)`),
 wrapping the whole in a monad `F`.
-```tut:silent
+```scala
 val fetch = Fetch.from(repositories, Cache.fetch[Task]())
 ```
 
@@ -581,7 +556,7 @@ the contrary means that `maxIterations` were reached, likely signaling an issue,
 resolution is particularly complex, in which case `maxIterations` could be increased.
 
 Let's run the whole resolution,
-```tut:silent
+```scala
 import scala.concurrent.ExecutionContext.Implicits.global
 
 val resolution = start.process.run(fetch).unsafeRun()
@@ -594,19 +569,19 @@ By default, downloads happen in a global fixed thread pool (with 6 threads, allo
 you can supply your own thread pool to `Cache.default`.
 
 Now that the resolution is done, we can check for errors in
-```tut:silent
+```scala
 val errors: Seq[((Module, String), Seq[String])] = resolution.metadataErrors
 ```
 These would mean that the resolution wasn't able to get metadata about some dependencies.
 
 We can also check for version conflicts, in
-```tut:silent
+```scala
 val conflicts: Set[Dependency] = resolution.conflicts
 ```
 which are dependencies whose versions could not be unified.
 
 Then, if all went well, we can fetch and get local copies of the artifacts themselves (the JARs) with
-```tut:silent
+```scala
 import java.io.File
 import coursier.util.Gather
 
@@ -631,15 +606,8 @@ Changing things in cache are given a time-to-live (TTL) of **24 hours** by defau
 
 The most straightforward way of changing that consists in setting `COURSIER_TTL` in the environment. It's parsed with `scala.concurrent.duration.Duration`, so that things like `24 hours`, `5 min`, `10s`, or `0s`, are fine, and it accepts infinity (`Inf`) as a duration.
 
-```tut:invisible
-import scala.concurrent.duration.Duration
 
-Duration("24 hours")
-Duration("5 min")
-Duration("10s")
-Duration("0s")
-Duration("Inf")
-```
+
 
 ### Printing trees
 

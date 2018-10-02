@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 set -evx
 
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 setupCoursierBinDir() {
   mkdir -p bin
   cp coursier bin/
   export PATH="$(pwd)/bin:$PATH"
-}
-
-downloadInstallSbtExtras() {
-  mkdir -p bin
-  curl -L -o bin/sbt https://github.com/paulp/sbt-extras/raw/1d8ee2c0a75374afa1cb687f450aeb095180882b/sbt
-  chmod +x bin/sbt
 }
 
 integrationTestsRequirements() {
@@ -42,27 +38,6 @@ runJvmTests() {
   fi
 
   ./modules/tests/handmade-metadata/scripts/with-test-repo.sh sbt scalaFromEnv jvm/test $IT
-}
-
-validateReadme() {
-  # check that tut runs fine, and that the README doesn't change after a `sbt tut`
-  mv README.md README.md.orig
-
-
-  if [ "$SCALA_VERSION" = 2.12 ]; then
-    # Later 2.12 versions seem to make tut not see the coursier binaries
-    sbt '++2.12.1!' tut
-  else
-    sbt scalaFromEnv tut
-  fi
-
-  if cmp -s README.md.orig README.md; then
-    echo "README.md doesn't change"
-  else
-    echo "Error: README.md not the same after a \"sbt tut\":"
-    diff -u README.md.orig README.md
-    exit 1
-  fi
 }
 
 checkBinaryCompatibility() {
@@ -152,16 +127,7 @@ testNativeBootstrap() {
   fi
 }
 
-addPgpKeys() {
-  for key in b41f2bce 9fa47a44 ae548ced b4493b94 53a97466 36ee59d9 dc426429 3b80305d 69e0a56c fdd5c0cd 35543c27 70173ee5 111557de 39c263a9; do
-    gpg --keyserver keyserver.ubuntu.com --recv "$key"
-  done
-}
-
-
-# TODO Add coverage once https://github.com/scoverage/sbt-scoverage/issues/111 is fixed
-
-downloadInstallSbtExtras
+source scripts/setup-sbt-extra.sh
 setupCoursierBinDir
 
 if isScalaJs; then
@@ -177,7 +143,6 @@ else
 
   testBootstrap
 
-  validateReadme
   checkBinaryCompatibility
 fi
 

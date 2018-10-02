@@ -1,6 +1,6 @@
-# CLI Documentation
-
-## Json Report
+---
+title: JSON report
+---
 
 When invoking coursier cli with
 ```
