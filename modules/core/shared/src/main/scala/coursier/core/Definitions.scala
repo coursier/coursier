@@ -222,18 +222,17 @@ final case class Artifact(
   extra: Map[String, Artifact],
   attributes: Attributes,
   changing: Boolean,
+  optional: Boolean,
   authentication: Option[Authentication]
 ) {
   def `type`: String = attributes.`type`
   def classifier: String = attributes.classifier
 
-  // TODO make that a proper field after 1.0 (instead of the hack via extra)
-  def isOptional: Boolean = extra.contains(Artifact.optionalKey)
+  @deprecated("Use optional instead", "1.1.0-M8")
+  def isOptional: Boolean = optional
 }
 
 object Artifact {
-
-  private[coursier] val optionalKey = s"$$optional"
 
   trait Source {
     def artifacts(

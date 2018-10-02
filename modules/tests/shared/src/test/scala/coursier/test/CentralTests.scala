@@ -821,7 +821,7 @@ abstract class CentralTests extends TestSuite {
       * - withArtifacts(mod, ver, Attributes("jar")) { artifacts =>
         val mainArtifactOpt = artifacts.find(_.url == mainUrl)
         assert(mainArtifactOpt.nonEmpty)
-        assert(mainArtifactOpt.forall(_.isOptional))
+        assert(mainArtifactOpt.forall(_.optional))
       }
 
       * - withArtifacts(Module("com.lihaoyi", "scalatags_2.12"), "0.6.2", Attributes("jar"), transitive = true) { artifacts =>

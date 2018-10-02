@@ -53,7 +53,7 @@ object Scaladex {
       url =>
         def get(fetch: Fetch.Content[Task]) =
           fetch(
-            Artifact(url, Map(), Map(), Attributes("", ""), changing = true, None)
+            Artifact(url, Map(), Map(), Attributes("", ""), changing = true, optional = false, None)
           )
 
         (get(fetch.head) /: fetch.tail)(_ orElse get(_))
