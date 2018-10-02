@@ -107,6 +107,7 @@ final case class MavenRepository(
       Map.empty,
       Attributes("pom", ""),
       changing = changing.getOrElse(isSnapshot(version)),
+      optional = false,
       authentication = authentication
     )
     .withDefaultChecksums
@@ -127,6 +128,7 @@ final case class MavenRepository(
         Map.empty,
         Attributes("pom", ""),
         changing = true,
+        optional = false,
         authentication = authentication
       )
       .withDefaultChecksums
@@ -149,6 +151,7 @@ final case class MavenRepository(
         Map.empty,
         Attributes("pom", ""),
         changing = true,
+        optional = false,
         authentication = authentication
       )
       .withDefaultChecksums
@@ -297,6 +300,7 @@ final case class MavenRepository(
       Map.empty,
       Attributes("", ""),
       changing = changing,
+      optional = false,
       authentication
     )
 

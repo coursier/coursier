@@ -123,6 +123,7 @@ final case class IvyRepository(
               Map.empty,
               p.attributes,
               changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
+              optional = false,
               authentication = authentication
             )
 
@@ -191,6 +192,7 @@ final case class IvyRepository(
                 Map.empty,
                 Attributes("", ""),
                 changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+                optional = false,
                 authentication
               )
 
@@ -223,6 +225,7 @@ final case class IvyRepository(
           Map.empty,
           Attributes("ivy", ""),
           changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+          optional = false,
           authentication = authentication
         )
 

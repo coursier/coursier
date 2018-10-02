@@ -100,6 +100,7 @@ object ChecksumTests extends TestSuite {
         Map.empty,
         Attributes("jar"),
         changing = false,
+        optional = false,
         authentication = None
       )
 

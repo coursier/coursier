@@ -53,6 +53,7 @@ final case class MavenSource(
         Map.empty,
         publication.attributes,
         changing = changing0,
+        optional = false,
         authentication = authentication
       )
         .withDefaultChecksums
@@ -133,8 +134,6 @@ final case class MavenSource(
       .map(artifactWithExtra)
   }
 
-  private val dummyArtifact = Artifact("", Map(), Map(), Attributes("", ""), changing = false, None)
-
   def artifacts(
     dependency: Dependency,
     project: Project,
@@ -146,7 +145,8 @@ final case class MavenSource(
 
       def makeOptional(a: Artifact): Artifact =
         a.copy(
-          extra = a.extra.mapValues(makeOptional).iterator.toMap + (Artifact.optionalKey -> dummyArtifact)
+          extra = a.extra.mapValues(makeOptional).iterator.toMap,
+          optional = true
         )
 
       artifactsUnknownPublications(dependency, project, overrideClassifiers)

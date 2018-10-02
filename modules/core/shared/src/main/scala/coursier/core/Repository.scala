@@ -41,6 +41,7 @@ object Repository {
             Map.empty,
             Attributes(s"$underlyingExt.asc", ""),
             changing = underlying.changing,
+            optional = underlying.optional,
             authentication = underlying.authentication
           )
             .withDefaultChecksums
