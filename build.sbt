@@ -389,7 +389,7 @@ lazy val proguardedCli = Seq(
 )
 
 lazy val sharedTestResources = {
-  unmanagedResourceDirectories.in(Test) += {
+  unmanagedResourceDirectories.in(Test) ++= {
     val baseDir = baseDirectory.in(LocalRootProject).value
     val testsMetadataDir = baseDir / "modules" / "tests" / "metadata" / "https"
     if (!testsMetadataDir.exists())
@@ -399,7 +399,15 @@ lazy val sharedTestResources = {
           runCommand(cmd, baseDir)
         }
       }
-    baseDir / "modules" / "tests" / "shared" / "src" / "test" / "resources"
+    val testsHandmadeMetadataDir = baseDir / "modules" / "tests" / "handmade-metadata" / "data"
+    if (!testsHandmadeMetadataDir.exists())
+      gitLock.synchronized {
+        if (!testsHandmadeMetadataDir.exists()) {
+          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/handmade-metadata")
+          runCommand(cmd, baseDir)
+        }
+      }
+    Nil
   }
 }
 
