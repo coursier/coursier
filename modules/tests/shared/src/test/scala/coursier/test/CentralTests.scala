@@ -165,9 +165,7 @@ abstract class CentralTests extends TestSuite {
     assert(conflicts.isEmpty)
     assert(isDone)
 
-    val artifacts = classifierOpt
-      .fold(res.dependencyArtifacts(withOptional = true))(c => res.dependencyClassifiersArtifacts(Seq(c)))
-      .map(_._2)
+    val artifacts = res.artifacts(classifiers = classifierOpt.map(Seq(_)))
 
     f(artifacts)
   }
@@ -490,7 +488,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(!filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -504,7 +502,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(!filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -521,7 +519,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -549,7 +547,7 @@ abstract class CentralTests extends TestSuite {
           assert(conflicts.isEmpty)
           assert(isDone)
 
-          val artifacts = res.artifacts(withOptional = true)
+          val artifacts = res.artifacts()
 
           val map = artifacts.groupBy(a => a)
 
@@ -587,22 +585,22 @@ abstract class CentralTests extends TestSuite {
           assert(conflicts.isEmpty)
           assert(isDone)
 
-          val dependencyArtifacts = res.dependencyArtifacts(withOptional = true)
+          val dependencyArtifacts = res.dependencyArtifacts()
 
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
-            case (dep, artifact)
+            case (dep, attributes, artifact)
               if dep.module == Module("org.apache.zookeeper", "zookeeper") &&
-                 dep.attributes.`type` == "test-jar" =>
-              artifact
+                 attributes.`type` == "test-jar" =>
+              (attributes, artifact)
           }
 
           assert(zookeeperTestArtifacts.length == 1)
 
-          val zookeeperTestArtifact = zookeeperTestArtifacts.head
+          val (attr, artifact) = zookeeperTestArtifacts.head
 
-          assert(zookeeperTestArtifact.attributes.`type` == "test-jar")
-          assert(zookeeperTestArtifact.attributes.classifier == "tests")
-          zookeeperTestArtifact.url.endsWith("-tests.jar")
+          assert(attr.`type` == "test-jar")
+          assert(attr.classifier == "tests")
+          artifact.url.endsWith("-tests.jar")
         }
       }
     }

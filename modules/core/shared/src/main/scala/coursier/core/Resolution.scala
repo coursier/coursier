@@ -1045,65 +1045,55 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
-  private def artifacts0(
-    overrideClassifiers: Option[Seq[String]],
-    keepAttributes: Boolean,
-    optional: Boolean
-  ): Seq[Artifact] =
-    dependencyArtifacts0(overrideClassifiers, optional).map {
-      case (_, artifact) =>
-        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", ""))
-    }.distinct
+  def artifacts(types: Set[String] = Set("jar", "bundle"), classifiers: Option[Seq[String]] = None): Seq[Artifact] =
+    dependencyArtifacts(classifiers)
+      .collect {
+        case (_, attr, artifact) if types(attr.`type`) =>
+          artifact
+      }
+      .distinct
 
-  // keepAttributes to false is a temporary hack :-|
-  // if one wants the attributes field of artifacts not to be cleared, call dependencyArtifacts
-
-  def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
-    artifacts0(Some(classifiers), keepAttributes = false, optional = true)
-
-  def artifacts: Seq[Artifact] =
-    artifacts0(None, keepAttributes = false, optional = false)
-
-  def artifacts(withOptional: Boolean): Seq[Artifact] =
-    artifacts0(None, keepAttributes = false, optional = withOptional)
-
-  private def dependencyArtifacts0(
-    overrideClassifiers: Option[Seq[String]],
-    optional: Boolean
-  ): Seq[(Dependency, Artifact)] =
+  def dependencyArtifacts(classifiers: Option[Seq[String]] = None): Seq[(Dependency, Attributes, Artifact)] =
     for {
       dep <- minDependencies.toSeq
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
 
-      classifiers = {
-        if (!dep.attributes.classifier.isEmpty) {
-          val stringSeq: Seq[String] = overrideClassifiers.getOrElse(Seq()) ++ Seq(dep.attributes.classifier)
-          if (stringSeq.isEmpty) {
-            Option.empty
-          }
-          else {
-            Some(stringSeq)
-          }
-        } else {
-          overrideClassifiers
-        }
-      }
+      classifiers0 =
+        if (dep.attributes.classifier.isEmpty)
+          classifiers
+        else
+          Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
-      artifact <- source
-        .artifacts(dep, proj, classifiers)
-      if optional || !artifact.optional
-    } yield dep -> artifact
+      artifact <- source.artifacts(dep, proj, classifiers0)
+    } yield (dep, artifact.attributes, artifact)
 
+
+  @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
+    artifacts(classifiers = Some(classifiers))
+
+  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def artifacts: Seq[Artifact] =
+    artifacts()
+
+  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def artifacts(withOptional: Boolean): Seq[Artifact] =
+    artifacts()
+
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(None, optional = false)
+    dependencyArtifacts(None).map(t => (t._1, t._3))
 
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts(withOptional: Boolean): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(None, optional = withOptional)
+    dependencyArtifacts().map(t => (t._1, t._3))
 
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyClassifiersArtifacts(classifiers: Seq[String]): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(Some(classifiers), optional = true)
+    dependencyArtifacts(Some(classifiers)).map(t => (t._1, t._3))
+
 
   /**
     * Returns errors on dependencies

@@ -596,20 +596,21 @@ class Helper(
   }
 
   private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    val raw: Seq[(Dependency, Artifact)] = if (hasOverrideClassifiers(sources, javadoc)) {
-      //TODO: this function somehow gives duplicated things
-      res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
-    } else {
-      res0.dependencyArtifacts(withOptional = true)
-    }
+    val raw =
+      if (hasOverrideClassifiers(sources, javadoc))
+        //TODO: this function somehow gives duplicated things
+        res0.dependencyArtifacts(Some(overrideClassifiers(sources, javadoc).toVector.sorted))
+      else
+        res0.dependencyArtifacts(None)
 
-    raw.map({ case (dep, artifact) =>
+    raw.map {
+      case (dep, _, artifact) =>
         (
           dep.copy(
             attributes = dep.attributes.copy(classifier = artifact.classifier)),
           artifact
         )
-    })
+    }
   }
 
   private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
@@ -683,7 +684,7 @@ class Helper(
             case _: FileError.NotFound => true
             case _ => false
           }
-          a.isOptional && notFound
+          a.optional && notFound
       }
 
     val artifactToFile = results.collect {
@@ -735,7 +736,9 @@ class Helper(
         }
       }).filter(_.isDefined).map(_.get).toMap
 
-      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
+      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts().map {
+        case (dep, _, artifact) => (dep, artifact)
+      }
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
