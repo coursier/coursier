@@ -242,15 +242,6 @@ object Artifact {
     ): Seq[(Attributes, Artifact)]
   }
 
-  object Source {
-    val empty: Source = new Source {
-      def artifacts(
-        dependency: Dependency,
-        project: Project,
-        overrideClassifiers: Option[Seq[String]]
-      ): Seq[(Attributes, Artifact)] = Nil
-    }
-  }
 }
 
 final case class Authentication(

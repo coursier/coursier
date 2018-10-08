@@ -22,7 +22,7 @@ object ResolutionTests extends TestSuite {
       .future()
 
   implicit class ProjectOps(val p: Project) extends AnyVal {
-    def kv: (ModuleVersion, (Artifact.Source, Project)) = p.moduleVersion -> (testRepository.source, p)
+    def kv: (ModuleVersion, (Artifact.Source, Project)) = p.moduleVersion -> (testRepository, p)
   }
 
   val projects = Seq(
@@ -265,7 +265,7 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution(
           rootDependencies = Set(dep),
           dependencies = Set(dep.withCompileScope),
-          projectCache = Map(dep.moduleVersion -> (testRepository.source, projectsMap(dep.moduleVersion)))
+          projectCache = Map(dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion)))
         )
 
         assert(res == expected)
