@@ -1,6 +1,6 @@
 package coursier.web
 
-import coursier.core.{ModuleName, Organization}
+import coursier.core.{ModuleName, Organization, Type}
 import coursier.{Dependency, MavenRepository, Module, Resolution, moduleNameString, organizationString}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
@@ -42,7 +42,7 @@ object App {
             <.td(finalVersionOpt.fold(dep.version)(finalVersion => s"$finalVersion (for ${dep.version})")),
             <.td(TagMod(
               if (dep.configuration == "compile") TagMod() else TagMod(infoLabel(dep.configuration)),
-              if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == "jar") TagMod() else TagMod(infoLabel(dep.attributes.`type`)),
+              if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == Type.jar) TagMod() else TagMod(infoLabel(dep.attributes.`type`.value)),
               if (dep.attributes.classifier.isEmpty) TagMod() else TagMod(infoLabel(dep.attributes.classifier)),
               Some(dep.exclusions).filter(_.nonEmpty).map(excls => infoPopOver("Exclusions", excls.toList.sorted.map{case (org, name) => s"$org:$name"}.mkString("; "))).toSeq.toTagMod,
               if (dep.optional) TagMod(infoLabel("optional")) else TagMod(),

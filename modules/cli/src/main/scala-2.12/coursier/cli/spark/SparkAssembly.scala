@@ -11,6 +11,7 @@ import coursier.Cache
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
 import coursier.cli.util.Assembly
+import coursier.core.Type
 
 object SparkAssembly {
 
@@ -76,7 +77,7 @@ object SparkAssembly {
     default: Boolean,
     extraDependencies: Seq[String],
     options: CommonOptions,
-    artifactTypes: Set[String]
+    artifactTypes: Set[Type]
   ): Seq[File] = {
 
     val helper = sparkJarsHelper(scalaVersion, sparkVersion, yarnVersion, default, extraDependencies, options)
@@ -91,7 +92,7 @@ object SparkAssembly {
     default: Boolean,
     extraDependencies: Seq[String],
     options: CommonOptions,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     checksumSeed: Array[Byte] = "v1".getBytes(UTF_8),
     localArtifactsShouldBeCached: Boolean = false
   ): Either[String, (File, Seq[File])] = {

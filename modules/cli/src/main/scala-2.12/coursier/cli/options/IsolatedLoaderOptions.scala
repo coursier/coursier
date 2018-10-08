@@ -68,7 +68,7 @@ final case class IsolatedLoaderOptions(
               mod,
               ver,
               configuration = "runtime",
-              attributes = Attributes("", "")
+              attributes = Attributes()
             )
         }
     }

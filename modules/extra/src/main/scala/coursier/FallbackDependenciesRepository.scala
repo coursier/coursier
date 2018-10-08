@@ -3,6 +3,7 @@ package coursier
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
+import coursier.core.Type
 import coursier.util.{EitherT, Monad}
 
 object FallbackDependenciesRepository {
@@ -142,7 +143,7 @@ final case class FallbackDependenciesRepository(
         case (url, changing) =>
           val url0 = url.toString
           val ext = url0.substring(url0.lastIndexOf('.') + 1)
-          val attr = Attributes(ext)
+          val attr = Attributes(Type(ext))
           (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
       }
 

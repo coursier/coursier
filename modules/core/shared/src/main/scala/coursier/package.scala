@@ -1,4 +1,4 @@
-import coursier.core.{Activation, Parse, Version}
+import coursier.core.{Activation, Parse, Type, Version}
 import coursier.util.StringInterpolators.{SafeModuleName, SafeOrganization}
 
 import scala.language.implicitConversions
@@ -42,7 +42,7 @@ package object coursier {
   type Attributes = core.Attributes
   object Attributes extends Serializable {
     def apply(
-      `type`: String = "",
+      `type`: Type = Type.empty,
       classifier: String = ""
     ): Attributes =
       core.Attributes(`type`, classifier)

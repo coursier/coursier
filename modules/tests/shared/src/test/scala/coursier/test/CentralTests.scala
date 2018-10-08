@@ -2,10 +2,11 @@ package coursier
 package test
 
 import utest._
-import scala.async.Async.{async, await}
 
+import scala.async.Async.{async, await}
 import coursier.MavenRepository
 import coursier.Platform.fetch
+import coursier.core.Type
 import coursier.test.compatibility._
 
 import scala.concurrent.Future
@@ -282,7 +283,7 @@ abstract class CentralTests extends TestSuite {
           mod,
           version,
           "jar",
-          Attributes("jar"),
+          Attributes(Type.jar),
           extraRepos = Seq(extraRepo)
         )
       }
@@ -388,7 +389,7 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, version)
 
-      * - withArtifacts(mod, version, Attributes("jar")) { artifacts =>
+      * - withArtifacts(mod, version, Attributes(Type.jar)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
@@ -418,7 +419,7 @@ abstract class CentralTests extends TestSuite {
           Module(org"org.scala-lang", name"scala-compiler"), "2.11.8",
           configuration = config,
           transitive = false,
-          attributes = Attributes("jar")
+          attributes = Attributes(Type.jar)
         )
 
       withArtifacts(
@@ -443,19 +444,18 @@ abstract class CentralTests extends TestSuite {
         // random aar-based module found on Central
         val module = Module(org"com.yandex.android", name"speechkit")
         val version = "2.5.0"
-        val tpe = "aar"
 
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          tpe,
-          attributes = Attributes(tpe)
+          "aar",
+          attributes = Attributes(Type("aar"))
         )
 
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          tpe
+          "aar"
         )
       }
 
@@ -473,7 +473,7 @@ abstract class CentralTests extends TestSuite {
           Module(org"com.google.guava", name"guava"),
           "17.0",
           "jar",
-          attributes = Attributes("jar")
+          attributes = Attributes(Type.jar)
         )
       }
 
@@ -483,7 +483,7 @@ abstract class CentralTests extends TestSuite {
           Module(org"org.bytedeco", name"javacpp"),
           "1.1",
           "jar",
-          Attributes("maven-plugin")
+          Attributes(Type("maven-plugin"))
         )
       }
     }
@@ -508,7 +508,7 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes("", "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, "tests")
             )
           )
           val res = await(resolve(deps))
@@ -525,7 +525,7 @@ abstract class CentralTests extends TestSuite {
               Module(org"org.apache.avro", name"avro"), "1.8.1"
             ),
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes("", "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, "tests")
             )
           )
           val res = await(resolve(deps))
@@ -600,7 +600,7 @@ abstract class CentralTests extends TestSuite {
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
             case (dep, attributes, artifact)
               if dep.module == Module(org"org.apache.zookeeper", name"zookeeper") &&
-                 attributes.`type` == "test-jar" =>
+                 attributes.`type` == Type.testJar =>
               (attributes, artifact)
           }
 
@@ -608,7 +608,7 @@ abstract class CentralTests extends TestSuite {
 
           val (attr, artifact) = zookeeperTestArtifacts.head
 
-          assert(attr.`type` == "test-jar")
+          assert(attr.`type` == Type.testJar)
           assert(attr.classifier == "tests")
           artifact.url.endsWith("-tests.jar")
         }
@@ -674,14 +674,14 @@ abstract class CentralTests extends TestSuite {
 
       'tarGz - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes("tar.gz", "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), "bin"), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes("tar.gz", "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
@@ -691,14 +691,14 @@ abstract class CentralTests extends TestSuite {
 
       'zip - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes("zip", "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), "bin"), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes("zip", "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
@@ -766,10 +766,10 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver)
 
-      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes("bundle"))), Nil, None) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
 
         val jarOpt = artifacts.collect {
-          case (attr, artifact) if attr.`type` == "bundle" || attr.`type` == "jar" =>
+          case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
             artifact
         }
 
@@ -779,10 +779,10 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes("pom"))), Nil, None) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
 
         val pomOpt = artifacts.collect {
-          case (attr, artifact) if attr.`type` == "pom" =>
+          case (attr, artifact) if attr.`type` == Type.pom =>
             artifact
         }
 
@@ -832,13 +832,13 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver)
 
-      * - withArtifacts(mod, ver, Attributes("jar")) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type.jar)) { artifacts =>
         val mainArtifactOpt = artifacts.find(_.url == mainUrl)
         assert(mainArtifactOpt.nonEmpty)
         assert(mainArtifactOpt.forall(_.optional))
       }
 
-      * - withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", Attributes("jar"), transitive = true) { artifacts =>
+      * - withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", Attributes(Type.jar), transitive = true) { artifacts =>
 
         val urls = artifacts.map(_.url).toSet
 
@@ -859,7 +859,7 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver, extraRepos = Seq(extraRepo))
 
-      * - withArtifacts(mod, ver, Attributes("aar"), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
@@ -896,7 +896,7 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver, extraRepos = extraRepos)
 
-      * - withArtifacts(mod, ver, Attributes("jar"), extraRepos = extraRepos, transitive = true) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",

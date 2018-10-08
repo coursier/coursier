@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Objects
 
 import coursier.Artifact
-import coursier.core.{Attributes, Dependency, Resolution}
+import coursier.core.{Attributes, Dependency, Resolution, Type}
 import coursier.util.Print
 
 import scala.collection.mutable
@@ -182,7 +182,7 @@ final case class JsonElem(dep: Dependency,
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
         case (mod, ver) =>
           JsonElem(
-            Dependency(mod, ver, "", Set.empty, Attributes("", ""), optional = false, transitive = false),
+            Dependency(mod, ver, "", Set.empty, Attributes(Type.empty, ""), optional = false, transitive = false),
             artifacts,
             jsonPrintRequirement,
             resolution,

@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.{Attributes, Dependency}
-import coursier.core.{Module, ModuleName, Organization, Repository}
+import coursier.core._
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
@@ -165,8 +165,8 @@ object Parse {
           case None =>
 
             val attributes = attrs.get("classifier") match {
-              case Some(c) => Attributes("", c)
-              case None => Attributes("", "")
+              case Some(c) => Attributes(classifier = c)
+              case None => Attributes()
             }
 
             val extraDependencyParams: Map[String, String] = attrs.get("url") match {

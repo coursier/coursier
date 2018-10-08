@@ -88,16 +88,45 @@ final case class Dependency(
   }
 }
 
+final case class Type(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
+  def nonEmpty: Boolean =
+    value.nonEmpty
+  def map(f: String => String): Type =
+    Type(f(value))
+}
+
+object Type {
+  implicit val ordering: Ordering[Type] =
+    Ordering[String].on(_.value)
+
+  val jar = Type("jar")
+  val testJar = Type("test-jar")
+  val bundle = Type("bundle")
+  val doc = Type("doc")
+  val source = Type("src")
+
+  // Typo for doc and src ???
+  val javadoc = Type("javadoc")
+  val javaSource = Type("java-source")
+
+  val ivy = Type("ivy")
+  val pom = Type("pom")
+
+  val empty = Type("")
+}
+
 // Maven-specific
 final case class Attributes(
-  `type`: String,
+  `type`: Type,
   classifier: String
 ) {
   def packaging: String =
     if (`type`.isEmpty)
       "jar"
     else
-      `type`
+      `type`.value
 
   def packagingAndClassifier: String =
     if (isEmpty)
@@ -129,7 +158,7 @@ final case class Project(
   profiles: Seq[Profile],
   versions: Option[Versions],
   snapshotVersioning: Option[SnapshotVersioning],
-  packagingOpt: Option[String],
+  packagingOpt: Option[Type],
   relocated: Boolean,
 
   /**
@@ -230,7 +259,7 @@ final case class SnapshotVersioning(
 // Ivy-specific
 final case class Publication(
   name: String,
-  `type`: String,
+  `type`: Type,
   ext: String,
   classifier: String
 ) {

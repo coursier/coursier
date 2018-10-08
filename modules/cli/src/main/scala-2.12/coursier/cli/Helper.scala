@@ -9,6 +9,7 @@ import java.util.jar.{Manifest => JManifest}
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.core.Type
 import coursier.extra.Typelevel
 import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
@@ -564,7 +565,7 @@ class Helper(
   def artifacts(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
 
@@ -589,7 +590,7 @@ class Helper(
 
     val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, res0).map(t => (t._2, t._3))
 
-    if (artifactTypes("*"))
+    if (artifactTypes(Type("*")))
       artifacts0.map(_._2)
     else
       artifacts0.collect {
@@ -633,7 +634,7 @@ class Helper(
   def fetchMap(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
@@ -764,10 +765,10 @@ class Helper(
   def fetch(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Seq[File] = {
-    fetchMap(sources,javadoc,artifactTypes,subset).values.toSeq
+    fetchMap(sources, javadoc, artifactTypes, subset).values.toSeq
   }
 
   def contextLoader = Thread.currentThread().getContextClassLoader
@@ -788,7 +789,7 @@ class Helper(
 
     // FIXME That shouldn't be hard-coded this way...
     // This whole class ought to be rewritten more cleanly.
-    val artifactTypes = Set("jar", "bundle")
+    val artifactTypes = core.Resolution.defaultTypes
 
     val files0 = fetch(
       sources = false,

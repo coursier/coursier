@@ -103,7 +103,7 @@ object IvyXml {
             version,
             toConf,
             allConfsExcludes ++ excludes.getOrElse(fromConf, Set.empty),
-            Attributes("", ""), // should come from possible artifact nodes
+            Attributes(Type.empty, ""), // should come from possible artifact nodes
             optional = false,
             transitive = transitive
           )
@@ -115,8 +115,10 @@ object IvyXml {
       .filter(_.label == "artifact")
       .flatMap { node =>
         val name = node.attribute("name").right.getOrElse("")
-        val type0 = node.attribute("type").right.getOrElse("jar")
-        val ext = node.attribute("ext").right.getOrElse(type0)
+        val type0 = node.attribute("type")
+          .right.map(Type(_))
+          .right.getOrElse(Type.jar)
+        val ext = node.attribute("ext").right.getOrElse(type0.value)
         val confs = node.attribute("conf").fold(_ => Seq("*"), _.split(',').toSeq)
         val classifier = node.attribute("classifier").right.getOrElse("")
         confs.map(_ -> Publication(name, type0, ext, classifier))
@@ -187,7 +189,7 @@ object IvyXml {
         None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq("*" -> Publication(module.name.value, "jar", "jar", ""))
+          Seq("*" -> Publication(module.name.value, Type.jar, "jar", ""))
         else {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)

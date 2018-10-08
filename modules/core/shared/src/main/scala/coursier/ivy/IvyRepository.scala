@@ -37,7 +37,7 @@ final case class IvyRepository(
   private def variables(
     module: Module,
     versionOpt: Option[String],
-    `type`: String,
+    `type`: Type,
     artifact: String,
     ext: String,
     classifierOpt: Option[String]
@@ -47,7 +47,7 @@ final case class IvyRepository(
       "organisation" -> module.organization.value,
       "orgPath" -> module.organization.value.replace('.', '/'),
       "module" -> module.name.value,
-      "type" -> `type`,
+      "type" -> `type`.value,
       "artifact" -> artifact,
       "ext" -> ext
     ) ++
@@ -83,7 +83,7 @@ final case class IvyRepository(
                     project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
                     (
                       p.`type` == dependency.attributes.`type` ||
-                      (p.ext == dependency.attributes.`type` && project.packagingOpt.toSeq.contains(p.`type`)) // wow
+                      (p.ext == dependency.attributes.`type`.value && project.packagingOpt.toSeq.contains(p.`type`)) // wow
                     ) =>
                   p
               }
@@ -156,7 +156,7 @@ final case class IvyRepository(
             findNoInverval(module, version, fetch)
           case Some(itv) =>
             val listingUrl = revisionListingPattern
-              .substituteVariables(variables(module, None, "ivy", "ivy", "xml", None))
+              .substituteVariables(variables(module, None, Type.ivy, "ivy", "xml", None))
               .right
               .flatMap { s =>
                 if (s.endsWith("/"))
@@ -211,7 +211,7 @@ final case class IvyRepository(
     val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(
-          variables(module, Some(version), "ivy", "ivy", "xml", None)
+          variables(module, Some(version), Type.ivy, "ivy", "xml", None)
         ).right
       } yield {
         var artifact = Artifact(

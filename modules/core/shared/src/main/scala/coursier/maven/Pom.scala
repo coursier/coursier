@@ -54,7 +54,9 @@ object Pom {
 
       val version0 = readVersion(node)
       val scopeOpt = text(node, "scope", "").right.toOption
-      val typeOpt = text(node, "type", "").right.toOption
+      val typeOpt = text(node, "type", "")
+        .right.map(Type(_))
+        .right.toOption
       val classifierOpt = text(node, "classifier", "").right.toOption
       val xmlExclusions = node.children
         .find(_.label == "exclusions")
@@ -73,7 +75,7 @@ object Pom {
             version0,
             "",
             exclusions.map(mod => (mod.organization, mod.name)).toSet,
-            Attributes(typeOpt.getOrElse(""), classifierOpt.getOrElse("")),
+            Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse("")),
             optional,
             transitive = true
           )
@@ -156,8 +158,10 @@ object Pom {
     } yield Profile(id, activeByDefault, activation, deps, depMgmts, properties.toMap)
   }
 
-  def packagingOpt(pom: Node): Option[String] =
-    text(pom, "packaging", "").right.toOption
+  def packagingOpt(pom: Node): Option[Type] =
+    text(pom, "packaging", "")
+      .right.map(Type(_))
+      .right.toOption
 
   def project(pom: Node): Either[String, Project] =
     project(pom, relocationAsDependency = false)
@@ -307,7 +311,7 @@ object Pom {
                 relocatedVersion,
                 "",
                 Set(),
-                Attributes("", ""),
+                Attributes(Type.empty, ""),
                 optional = false,
                 transitive = true
               )

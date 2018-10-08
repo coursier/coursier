@@ -55,10 +55,10 @@ object Resolution {
     }
 
   object DepMgmt {
-    type Key = (Organization, ModuleName, String)
+    type Key = (Organization, ModuleName, Type)
 
     def key(dep: Dependency): Key =
-      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) "jar" else dep.attributes.`type`)
+      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`)
 
     def add(
       dict: Map[Key, (String, Dependency)],
@@ -136,7 +136,7 @@ object Resolution {
           ),
           version = substituteProps0(dep.version),
           attributes = dep.attributes.copy(
-            `type` = substituteProps0(dep.attributes.`type`),
+            `type` = dep.attributes.`type`.map(substituteProps0),
             classifier = substituteProps0(dep.attributes.classifier)
           ),
           configuration = substituteProps0(dep.configuration),
@@ -373,7 +373,7 @@ object Resolution {
       "project.artifactId"  -> project.module.name.value,
       "project.version"     -> project.actualVersion
     ) ++ packagingOpt.toSeq.map { packaging =>
-      "project.packaging"   -> packaging
+      "project.packaging"   -> packaging.value
     } ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
@@ -529,6 +529,8 @@ object Resolution {
    */
   def defaultFilter(dep: Dependency): Boolean =
     !dep.optional
+
+  val defaultTypes = Set[Type](Type.jar, Type.testJar, Type.bundle)
 
 }
 
@@ -1045,7 +1047,7 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
-  def artifacts(types: Set[String] = Set("jar", "test-jar", "bundle"), classifiers: Option[Seq[String]] = None): Seq[Artifact] =
+  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[String]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
         case (_, attr, artifact) if types(attr.`type`) =>

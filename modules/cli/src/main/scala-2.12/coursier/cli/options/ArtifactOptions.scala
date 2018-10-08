@@ -1,9 +1,10 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.core.{Resolution, Type}
 
 object ArtifactOptions {
-  def defaultArtifactTypes = Set("jar", "bundle", "test-jar")
+  def defaultArtifactTypes = Resolution.defaultTypes
 
   implicit val parser = Parser[ArtifactOptions]
   implicit val help = caseapp.core.help.Help[ArtifactOptions]
@@ -17,19 +18,21 @@ final case class ArtifactOptions(
   @Help("Fetch artifacts even if the resolution is errored")
     force: Boolean = false
 ) {
-  def artifactTypes(sources: Boolean, javadoc: Boolean) = {
+  def artifactTypes(sources: Boolean, javadoc: Boolean): Set[Type] = {
+
     val types0 = artifactType
       .flatMap(_.split(','))
       .filter(_.nonEmpty)
+      .map(Type(_))
       .toSet
 
     if (types0.isEmpty) {
       if (sources || javadoc)
-        Some("src").filter(_ => sources).toSet ++ Some("doc").filter(_ => javadoc)
+        Some(Type.source).filter(_ => sources).toSet ++ Some(Type.doc).filter(_ => javadoc)
       else
         ArtifactOptions.defaultArtifactTypes
-    } else if (types0("*"))
-      Set("*")
+    } else if (types0(Type("*")))
+      Set(Type("*"))
     else
       types0
   }

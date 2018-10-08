@@ -431,7 +431,7 @@ final case class MavenRepository(
       (publication.attributes, artifact)
     }
 
-    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, "pom", "pom", ""))
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, "pom", ""))
 
     def artifactWithExtra(publication: Publication) = {
       val (attr, artifact) = artifactOf(publication)
@@ -454,7 +454,7 @@ final case class MavenRepository(
           )
         }
 
-      val type0 = if (dependency.attributes.`type`.isEmpty) "jar" else dependency.attributes.`type`
+      val type0 = if (dependency.attributes.`type`.isEmpty) Type.jar else dependency.attributes.`type`
 
       val ext = MavenAttributes.typeExtension(type0)
 
@@ -466,7 +466,7 @@ final case class MavenRepository(
 
       val tpe = packagingTpeMap.getOrElse(
         (classifier, ext),
-        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(Type(ext))
       )
 
       val pubs = packagingPublicationOpt.toSeq :+
@@ -489,7 +489,7 @@ final case class MavenRepository(
             val ext = "jar"
             val tpe = packagingTpeMap.getOrElse(
               (classifier, ext),
-              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(Type(ext))
             )
 
             Seq(
