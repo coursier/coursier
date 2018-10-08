@@ -5,8 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import argonaut._
-import Argonaut._
-import ArgonautShapeless._
+import argonaut.Argonaut._
 import coursier.core.{Artifact, ModuleName, Organization}
 import coursier.interop.scalaz._
 import coursier.util.{EitherT, Gather}
@@ -15,7 +14,7 @@ import scalaz.concurrent.Task
 
 object Scaladex {
 
-  case class SearchResult(
+  final case class SearchResult(
     /** GitHub organization */
     organization: String,
     /** GitHub repository */
@@ -24,14 +23,29 @@ object Scaladex {
     artifacts: List[String] = Nil
   )
 
-  case class ArtifactInfos(
+  object SearchResult {
+    import argonaut.ArgonautShapeless._
+    implicit val decoder = DecodeJson.of[SearchResult]
+  }
+
+  final case class ArtifactInfos(
     /** Dependency group ID (aka organization) */
-    groupId: Organization,
+    groupId: String,
     /** Dependency artifact ID (aka name or module name) */
-    artifactId: ModuleName,
+    artifactId: String,
     /** Dependency version */
     version: String
-  )
+  ) {
+    def organization: Organization =
+      Organization(groupId)
+    def name: ModuleName =
+      ModuleName(artifactId)
+  }
+
+  object ArtifactInfos {
+    import argonaut.ArgonautShapeless._
+    implicit val decoder = DecodeJson.of[ArtifactInfos]
+  }
 
   def apply(pool: ExecutorService): Scaladex[Task] =
     Scaladex({ url =>
@@ -109,7 +123,9 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], G: Gather
       s"https://index.scala-lang.org/api/project?organization=$organization&repository=$repository"
     )
 
-    case class Result(artifacts: List[String])
+    import argonaut.ArgonautShapeless._
+
+    final case class Result(artifacts: List[String])
 
     s.flatMap(s => EitherT.fromEither(s.decodeEither[Result].map(_.artifacts)))
   }
@@ -148,7 +164,7 @@ case class Scaladex[F[_]](fetch: String => EitherT[F, String, String], G: Gather
               Nil
             case Right(infos) =>
               logger(s"Found module ${infos.groupId}:${infos.artifactId}:${infos.version}")
-              Seq(Module(infos.groupId, infos.artifactId) -> infos.version)
+              Seq(Module(infos.organization, infos.name) -> infos.version)
           }
         }))(_.flatten)
 
