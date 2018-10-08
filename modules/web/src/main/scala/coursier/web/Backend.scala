@@ -1,6 +1,6 @@
 package coursier.web
 
-import coursier.{Dependency, Fetch, MavenRepository, Module, Platform, Repository, Resolution, organizationString}
+import coursier.{Dependency, Fetch, MavenRepository, Module, Platform, Repository, Resolution, moduleNameString, organizationString}
 import coursier.util.{EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
@@ -253,7 +253,7 @@ final class Backend($: BackendScope[_, State]) {
   def addModule(e: raw.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency(Module(org"", ""), "")
+      val modules = state.modules :+ Dependency(Module(org"", name""), "")
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,

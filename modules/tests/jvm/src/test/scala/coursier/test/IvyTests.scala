@@ -2,7 +2,7 @@ package coursier.test
 
 import java.io.File
 
-import coursier.{Attributes, Dependency, Module, organizationString}
+import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import utest._
 
@@ -23,7 +23,7 @@ object IvyTests extends TestSuite {
     'dropInfoAttributes - {
       CentralTests.resolutionCheck(
         module = Module(
-          org"org.scala-js", "sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+          org"org.scala-js", name"sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
         ),
         version = "0.6.6",
         extraRepos = Seq(sbtRepo),
@@ -35,7 +35,7 @@ object IvyTests extends TestSuite {
       // will likely break if new 0.6.x versions are published :-)
 
       val mod = Module(
-        org"com.github.ddispaltro", "sbt-reactjs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+        org"com.github.ddispaltro", name"sbt-reactjs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
       )
       val ver = "0.6.+"
 
@@ -55,7 +55,7 @@ object IvyTests extends TestSuite {
     'testArtifacts - {
 
       val dep = Dependency(
-        Module(org"com.example", "a_2.11"),
+        Module(org"com.example", name"a_2.11"),
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()

@@ -1,5 +1,5 @@
 import coursier.core.{Activation, Parse, Version}
-import coursier.util.StringInterpolators.SafeOrganization
+import coursier.util.StringInterpolators.{SafeModuleName, SafeOrganization}
 
 import scala.language.implicitConversions
 
@@ -13,6 +13,9 @@ package object coursier {
   type Organization = core.Organization
   val Organization = core.Organization
 
+  type ModuleName = core.ModuleName
+  val ModuleName = core.ModuleName
+
   type Dependency = core.Dependency
   object Dependency extends Serializable {
     def apply(
@@ -21,7 +24,7 @@ package object coursier {
       // Substituted by Resolver with its own default configuration (compile)
       configuration: String = "",
       attributes: Attributes = Attributes(),
-      exclusions: Set[(Organization, String)] = Set.empty,
+      exclusions: Set[(Organization, ModuleName)] = Set.empty,
       optional: Boolean = false,
       transitive: Boolean = true
     ): Dependency =
@@ -56,7 +59,7 @@ package object coursier {
 
   type Module = core.Module
   object Module extends Serializable {
-    def apply(organization: Organization, name: String, attributes: Map[String, String] = Map.empty): Module =
+    def apply(organization: Organization, name: ModuleName, attributes: Map[String, String] = Map.empty): Module =
       core.Module(organization, name, attributes)
   }
 
@@ -118,5 +121,7 @@ package object coursier {
 
   implicit def organizationString(sc: StringContext): SafeOrganization =
     SafeOrganization(sc)
+  implicit def moduleNameString(sc: StringContext): SafeModuleName =
+    SafeModuleName(sc)
 
 }

@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.Organization
+import coursier.core.{ModuleName, Organization}
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -19,6 +19,21 @@ object StringInterpolators {
       case Apply(_, List(Apply(_, Literal(Constant(orgString: String)) :: Nil))) =>
         // TODO Check for invalid characters
         c.Expr(q"""_root_.coursier.core.Organization($orgString)""")
+      case _ =>
+        c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
+    }
+  }
+
+  implicit class SafeModuleName(val sc: StringContext) extends AnyVal {
+    def name(args: Any*): ModuleName = macro safeModuleName
+  }
+
+  def safeModuleName(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleName] = {
+    import c.universe._
+    c.prefix.tree match {
+      case Apply(_, List(Apply(_, Literal(Constant(nameString: String)) :: Nil))) =>
+        // TODO Check for invalid characters
+        c.Expr(q"""_root_.coursier.core.ModuleName($nameString)""")
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }

@@ -2,7 +2,7 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
-import coursier.organizationString
+import coursier.{moduleNameString, organizationString}
 import coursier.cli.options.CommonOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -30,7 +30,7 @@ class CliUnitTest extends FlatSpec {
     "org1:name1--org2:name2") { (file, writer) =>
     val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
-    assert(helper.localExcludeMap.equals(Map("org1:name1" -> Set((org"org2", "name2")))))
+    assert(helper.localExcludeMap.equals(Map("org1:name1" -> Set((org"org2", name"name2")))))
   }
 
   "Multiple excludes" should "be combined" in withFile(
@@ -41,8 +41,8 @@ class CliUnitTest extends FlatSpec {
     val opt = CommonOptions(localExcludeFile = file.getAbsolutePath)
     val helper = new Helper(opt, Seq())
     assert(helper.localExcludeMap.equals(Map(
-      "org1:name1" -> Set((org"org2", "name2"), (org"org3", "name3")),
-      "org4:name4" -> Set((org"org5", "name5")))))
+      "org1:name1" -> Set((org"org2", name"name2"), (org"org3", name"name3")),
+      "org4:name4" -> Set((org"org5", name"name5")))))
   }
 
   "extra --" should "error" in withFile(

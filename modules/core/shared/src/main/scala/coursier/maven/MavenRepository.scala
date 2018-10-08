@@ -56,16 +56,16 @@ object MavenRepository {
     "test" -> Seq("runtime")
   )
 
-  def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
+  private def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
     if (sbtAttrStub) {
-      var name = module.name
+      var name = module.name.value
       for (scalaVersion <- module.attributes.get("scalaVersion"))
         name = name + "_" + scalaVersion
       for (sbtVersion <- module.attributes.get("sbtVersion"))
         name = name + "_" + sbtVersion
       name
     } else
-      module.name
+      module.name.value
 
 }
 
@@ -101,7 +101,7 @@ final case class MavenRepository(
   ): Artifact = {
 
     val path = moduleVersionPath(module, version) :+
-      s"${module.name}-${versioningValue getOrElse version}.pom"
+      s"${module.name.value}-${versioningValue getOrElse version}.pom"
 
     Artifact(
       urlFor(path),
@@ -412,7 +412,7 @@ final case class MavenRepository(
       val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
         MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
         toBaseVersion(project.actualVersion),
-        s"${dependency.module.name}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"
+        s"${dependency.module.name.value}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"
       )
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
@@ -431,7 +431,7 @@ final case class MavenRepository(
       (publication.attributes, artifact)
     }
 
-    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name, "pom", "pom", ""))
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, "pom", "pom", ""))
 
     def artifactWithExtra(publication: Publication) = {
       val (attr, artifact) = artifactOf(publication)
@@ -447,7 +447,7 @@ final case class MavenRepository(
         .filter(_ => dependency.attributes.isEmpty)
         .map { packaging =>
           Publication(
-            dependency.module.name,
+            dependency.module.name.value,
             packaging,
             MavenAttributes.typeExtension(packaging),
             MavenAttributes.typeDefaultClassifier(packaging)
@@ -471,7 +471,7 @@ final case class MavenRepository(
 
       val pubs = packagingPublicationOpt.toSeq :+
         Publication(
-          dependency.module.name,
+          dependency.module.name.value,
           tpe,
           ext,
           classifier
@@ -494,7 +494,7 @@ final case class MavenRepository(
 
             Seq(
               Publication(
-                dependency.module.name,
+                dependency.module.name.value,
                 tpe,
                 ext,
                 classifier

@@ -14,7 +14,11 @@ object IvyXml {
         .right
         .map(Organization(_))
         .right
-      name <- node.attribute("module").right
+      name <- node
+        .attribute("module")
+        .right
+        .map(ModuleName(_))
+        .right
       version <- node.attribute("revision").right
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
@@ -58,9 +62,11 @@ object IvyXml {
           .filter(_.label == "exclude")
           .flatMap { node0 =>
             val org = Organization(node0.attribute("org").right.getOrElse("*"))
-            val name = node0.attribute("module").right.toOption
-              .orElse(node0.attribute("name").right.toOption)
-              .getOrElse("*")
+            val name = ModuleName(
+              node0.attribute("module").right.toOption
+                .orElse(node0.attribute("name").right.toOption)
+                .getOrElse("*")
+            )
             val confs = node0.attribute("conf").right.toOption.filter(_.nonEmpty).fold(Seq("*"))(_.split(','))
             confs.map(_ -> (org, name))
           }
@@ -76,7 +82,12 @@ object IvyXml {
             .toOption
             .toSeq
             .map(Organization(_))
-          name <- node.attribute("name").right.toOption.toSeq
+          name <- node
+            .attribute("name")
+            .right
+            .toOption
+            .toSeq
+            .map(ModuleName(_))
           version <- node.attribute("rev").right.toOption.toSeq
           rawConf <- node.attribute("conf").right.toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
@@ -176,7 +187,7 @@ object IvyXml {
         None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq("*" -> Publication(module.name, "jar", "jar", ""))
+          Seq("*" -> Publication(module.name.value, "jar", "jar", ""))
         else {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)

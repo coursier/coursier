@@ -1,7 +1,7 @@
 package coursier.web
 
-import coursier.core.Organization
-import coursier.{Dependency, MavenRepository, Module, Resolution, organizationString}
+import coursier.core.{ModuleName, Organization}
+import coursier.{Dependency, MavenRepository, Module, Resolution, moduleNameString, organizationString}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -38,7 +38,7 @@ object App {
           <.tr(
             ^.`class` := (if (res.errorCache.contains(dep.moduleVersion)) "danger" else ""),
             <.td(dep.module.organization.value),
-            <.td(dep.module.name),
+            <.td(dep.module.name.value),
             <.td(finalVersionOpt.fold(dep.version)(finalVersion => s"$finalVersion (for ${dep.version})")),
             <.td(TagMod(
               if (dep.configuration == "compile") TagMod() else TagMod(infoLabel(dep.configuration)),
@@ -143,8 +143,8 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputName", "Name"),
                   <.input(^.`class` := "form-control", ^.id := "inputName", ^.placeholder := "Name",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(name = value))),
-                    ^.value := module.name
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(name = ModuleName(value)))),
+                    ^.value := module.name.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
@@ -171,7 +171,7 @@ object App {
         def depItem(dep: Dependency, idx: Int) =
           <.tr(
             <.td(dep.module.organization.value),
-            <.td(dep.module.name),
+            <.td(dep.module.name.value),
             <.td(dep.version),
             <.td(
               <.a(Attr("data-toggle") := "modal", Attr("data-target") := "#moduleEdit", ^.`class` := "icon-action",
@@ -216,7 +216,7 @@ object App {
           moduleEditModal((
             deps
               .lift(editModuleIdx)
-              .fold(Module(org"", "") -> "")(_.moduleVersion),
+              .fold(Module(org"", name"") -> "")(_.moduleVersion),
             editModuleIdx,
             backend
           ))
@@ -375,7 +375,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(Module(org"io.get-coursier", "coursier-cache_2.12"), "1.1.0-M7") // DEBUG
+      Dependency(Module(org"io.get-coursier", name"coursier-cache_2.12"), "1.1.0-M7") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),

@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.{Attributes, Dependency}
-import coursier.core.{Module, Organization, Repository}
+import coursier.core.{Module, ModuleName, Organization, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
@@ -46,7 +46,7 @@ object Parse {
             case Array(key, value) => key -> value
           }.toMap
 
-          Right(Module(org, name + suffix, attributes))
+          Right(Module(org, ModuleName(name + suffix), attributes))
         }
     }
   }
@@ -279,8 +279,8 @@ object Parse {
     * @param localExcludes excludes to be applied to specific modules
     * @param defaultConfiguration default configuration
     */
-  case class ModuleRequirements(globalExcludes: Set[(Organization, String)] = Set(),
-                                localExcludes: Map[String, Set[(Organization, String)]] = Map(),
+  case class ModuleRequirements(globalExcludes: Set[(Organization, ModuleName)] = Set(),
+                                localExcludes: Map[String, Set[(Organization, ModuleName)]] = Map(),
                                 defaultConfiguration: String = "default(compile)")
 
   /**

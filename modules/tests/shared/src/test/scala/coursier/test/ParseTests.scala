@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier.{Attributes, MavenRepository, Repository, organizationString}
+import coursier.{Attributes, MavenRepository, Repository, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
 import coursier.util.Parse.ModuleRequirements
@@ -57,7 +57,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
-          assert(dep.module.name == "avro")
+          assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "default(compile)")
           assert(dep.attributes == Attributes())
@@ -69,7 +69,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
-          assert(dep.module.name == "avro")
+          assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
           assert(dep.attributes == Attributes())
@@ -81,7 +81,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
-          assert(dep.module.name == "avro")
+          assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
           assert(dep.attributes == Attributes("", "tests"))
@@ -93,7 +93,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
-          assert(dep.module.name == "avro")
+          assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
           assert(dep.attributes == Attributes("", ""))
@@ -107,7 +107,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
-          assert(dep.module.name == "avro")
+          assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
           assert(dep.attributes == Attributes("", "tests"))
@@ -121,7 +121,7 @@ object ParseTests extends TestSuite {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
-          assert(dep.module.name.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
           assert(dep.version == "0.3.0-coursier-1")
           assert(dep.attributes == Attributes("", "tests"))
       }

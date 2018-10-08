@@ -28,7 +28,7 @@ object Pom {
   private def module(
     node: Node,
     defaultGroupId: Option[Organization] = None,
-    defaultArtifactId: Option[String] = None
+    defaultArtifactId: Option[ModuleName] = None
   ): Either[String, Module] = {
     for {
       organization <- {
@@ -39,6 +39,8 @@ object Pom {
       }
       name <- {
         val n = text(node, "artifactId", "Name")
+          .right
+          .map(ModuleName(_))
         defaultArtifactId.fold(n)(n0 => Right(n.right.getOrElse(n0))).right
       }
     } yield Module(organization, name, Map.empty).trim
@@ -60,7 +62,7 @@ object Pom {
         .getOrElse(Seq.empty)
 
       xmlExclusions
-        .eitherTraverse(module(_, defaultArtifactId = Some("*")))
+        .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
         .right
         .map { exclusions =>
 
@@ -292,7 +294,9 @@ object Pom {
               val relocatedGroupId = text(n, "groupId", "")
                 .right.map(Organization(_))
                 .right.getOrElse(finalProjModule.organization)
-              val relocatedArtifactId = text(n, "artifactId", "").right.getOrElse(finalProjModule.name)
+              val relocatedArtifactId = text(n, "artifactId", "")
+                .right.map(ModuleName(_))
+                .right.getOrElse(finalProjModule.name)
               val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
               "" -> Dependency(
@@ -417,10 +421,11 @@ object Pom {
     // FIXME Quite similar to Versions above
     for {
       organization <- text(node, "groupId", "Organization")
+        .right.map(Organization(_))
         .right
-        .map(Organization(_))
+      name <- text(node, "artifactId", "Name")
+        .right.map(ModuleName(_))
         .right
-      name <- text(node, "artifactId", "Name").right
 
       xmlVersioning <- node
         .children
@@ -555,10 +560,11 @@ object Pom {
           .toMap
       )
       org <- attrFrom(attrs, extraAttributeOrg)
+        .right.map(Organization(_))
         .right
-        .map(Organization(_))
+      name <- attrFrom(attrs, extraAttributeName)
+        .right.map(ModuleName(_))
         .right
-      name <- attrFrom(attrs, extraAttributeName).right
       version <- attrFrom(attrs, extraAttributeVersion).right
     } yield {
       val remainingAttrs = attrs.filterKeys(!extraAttributeBase(_))

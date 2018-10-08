@@ -46,7 +46,7 @@ final case class IvyRepository(
       "organization" -> module.organization.value,
       "organisation" -> module.organization.value,
       "orgPath" -> module.organization.value.replace('.', '/'),
-      "module" -> module.name,
+      "module" -> module.name.value,
       "type" -> `type`,
       "artifact" -> artifact,
       "ext" -> ext

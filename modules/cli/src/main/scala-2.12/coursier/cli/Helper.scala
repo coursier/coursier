@@ -230,12 +230,12 @@ class Helper(
         .mkString("\n")
   }
 
-  val globalExcludes: Set[(Organization, String)] =
+  val globalExcludes: Set[(Organization, ModuleName)] =
     excludesNoAttr
       .map(mod =>  (mod.organization, mod.name))
       .toSet
 
-  val localExcludeMap: Map[String, Set[(Organization, String)]] =
+  val localExcludeMap: Map[String, Set[(Organization, ModuleName)]] =
     if (localExcludeFile.isEmpty) {
       Map()
     } else {
@@ -252,7 +252,7 @@ class Helper(
           if (child_org_name.length != 2)
             throw new SoftExcludeParsingException(s"Failed to parse $child_org_name")
 
-          (parent_and_child(0), (Organization(child_org_name(0)), child_org_name(1)))
+          (parent_and_child(0), (Organization(child_org_name(0)), ModuleName(child_org_name(1))))
         }
         .groupBy(_._1)
         .mapValues(_.map(_._2).toSet)
@@ -873,8 +873,8 @@ class Helper(
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
               if org == module.organization.value && (
-                module.name == name ||
-                  module.name.startsWith(name + "_") // Ignore cross version suffix
+                module.name.value == name ||
+                  module.name.value.startsWith(name + "_") // Ignore cross version suffix
                 ) =>
               mainClass
           }

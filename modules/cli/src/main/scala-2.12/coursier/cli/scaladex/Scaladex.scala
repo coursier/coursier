@@ -4,8 +4,10 @@ import java.net.HttpURLConnection
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
-import argonaut._, Argonaut._, ArgonautShapeless._
-import coursier.core.{Artifact, Organization}
+import argonaut._
+import Argonaut._
+import ArgonautShapeless._
+import coursier.core.{Artifact, ModuleName, Organization}
 import coursier.interop.scalaz._
 import coursier.util.{EitherT, Gather}
 import coursier.{Fetch, Module}
@@ -26,7 +28,7 @@ object Scaladex {
     /** Dependency group ID (aka organization) */
     groupId: Organization,
     /** Dependency artifact ID (aka name or module name) */
-    artifactId: String,
+    artifactId: ModuleName,
     /** Dependency version */
     version: String
   )

@@ -10,6 +10,16 @@ object Organization {
     Ordering[String].on(_.value)
 }
 
+final case class ModuleName(value: String) extends AnyVal {
+  def map(f: String => String): ModuleName =
+    ModuleName(f(value))
+}
+
+object ModuleName {
+  implicit val ordering: Ordering[ModuleName] =
+    Ordering[String].on(_.value)
+}
+
 /**
  * Identifies a "module".
  *
@@ -21,13 +31,13 @@ object Organization {
  */
 final case class Module(
   organization: Organization,
-  name: String,
+  name: ModuleName,
   attributes: Map[String, String]
 ) {
 
   def trim: Module = copy(
     organization = organization.map(_.trim),
-    name = name.trim
+    name = name.map(_.trim)
   )
 
   private def attributesStr = attributes.toSeq
@@ -36,13 +46,13 @@ final case class Module(
     .mkString(";")
 
   def nameWithAttributes: String =
-    name + (if (attributes.nonEmpty) s";$attributesStr" else "")
+    name.value + (if (attributes.nonEmpty) s";$attributesStr" else "")
 
   override def toString: String =
-    s"$organization:$nameWithAttributes"
+    s"${organization.value}:$nameWithAttributes"
 
   def orgName: String =
-    s"$organization:$name"
+    s"${organization.value}:${name.value}"
 
   override final lazy val hashCode = Module.unapply(this).get.hashCode()
 }
@@ -57,7 +67,7 @@ final case class Dependency(
   module: Module,
   version: String,
   configuration: String,
-  exclusions: Set[(Organization, String)],
+  exclusions: Set[(Organization, ModuleName)],
 
   // Maven-specific
   attributes: Attributes,
