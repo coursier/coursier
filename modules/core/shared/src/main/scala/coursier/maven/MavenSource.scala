@@ -52,7 +52,7 @@ final case class MavenSource(
         Map.empty,
         Map.empty,
         changing = changing0,
-        optional = false,
+        optional = true,
         authentication = authentication
       )
         .withDefaultChecksums
@@ -142,17 +142,8 @@ final case class MavenSource(
   ): Seq[(Attributes, Artifact)] =
     if (project.packagingOpt.toSeq.contains(Pom.relocatedPackaging))
       Nil
-    else {
-
-      def makeOptional(a: Artifact): Artifact =
-        a.copy(
-          extra = a.extra.mapValues(makeOptional).iterator.toMap,
-          optional = true
-        )
-
+    else
       artifactsUnknownPublications(dependency, project, overrideClassifiers)
-        .map(t => (t._1, makeOptional(t._2)))
-    }
 }
 
 object MavenSource {

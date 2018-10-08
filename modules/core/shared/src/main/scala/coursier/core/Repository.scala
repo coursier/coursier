@@ -32,7 +32,7 @@ object Repository {
             Map.empty,
             Map.empty,
             changing = underlying.changing,
-            optional = underlying.optional,
+            optional = true,
             authentication = underlying.authentication
           )
             .withDefaultChecksums
