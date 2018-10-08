@@ -390,9 +390,8 @@ final case class MavenRepository(
     overrideClassifiers: Option[Seq[String]]
   ): Seq[(Attributes, Artifact)] = {
 
-    val packagingOpt = project.packagingOpt.filter(_ != Pom.relocatedPackaging)
-
-    val packagingTpeMap = packagingOpt
+    val packagingTpeMap = project
+      .packagingOpt
       .map { packaging =>
         (MavenAttributes.typeDefaultClassifier(packaging), MavenAttributes.typeExtension(packaging)) -> packaging
       }
@@ -443,7 +442,8 @@ final case class MavenRepository(
 
     lazy val defaultPublications = {
 
-      val packagingPublicationOpt = packagingOpt
+      val packagingPublicationOpt = project
+        .packagingOpt
         .filter(_ => dependency.attributes.isEmpty)
         .map { packaging =>
           Publication(
@@ -511,7 +511,7 @@ final case class MavenRepository(
     project: Project,
     overrideClassifiers: Option[Seq[String]]
   ): Seq[(Attributes, Artifact)] =
-    if (project.packagingOpt.toSeq.contains(Pom.relocatedPackaging))
+    if (project.relocated)
       Nil
     else
       artifacts0(dependency, project, overrideClassifiers)

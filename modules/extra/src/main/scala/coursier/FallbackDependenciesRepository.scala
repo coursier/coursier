@@ -115,6 +115,7 @@ final case class FallbackDependenciesRepository(
                 None,
                 None,
                 None,
+                relocated = false,
                 None,
                 Nil,
                 Info.empty

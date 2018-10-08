@@ -110,6 +110,7 @@ final case class Project(
   versions: Option[Versions],
   snapshotVersioning: Option[SnapshotVersioning],
   packagingOpt: Option[String],
+  relocated: Boolean,
 
   /**
     * Optional exact version used to get this project metadata.

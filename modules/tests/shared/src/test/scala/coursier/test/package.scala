@@ -92,6 +92,7 @@ package object test {
       versions: Option[core.Versions] = None,
       snapshotVersioning: Option[core.SnapshotVersioning] = None,
       packaging: Option[String] = None,
+      relocated: Boolean = false,
       publications: Seq[(String, core.Publication)] = Nil
     ): Project =
       core.Project(
@@ -105,8 +106,9 @@ package object test {
         profiles,
         versions,
         snapshotVersioning,
-        None,
         packaging,
+        relocated,
+        None,
         publications,
         Info.empty
       )

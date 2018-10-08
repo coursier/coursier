@@ -162,6 +162,7 @@ object IvyXml {
         None,
         None,
         None,
+        relocated = false,
         None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
