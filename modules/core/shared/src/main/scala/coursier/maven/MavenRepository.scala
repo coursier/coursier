@@ -37,13 +37,13 @@ object MavenRepository {
   def mavenVersioning(
     snapshotVersioning: SnapshotVersioning,
     classifier: Classifier,
-    extension: String
+    extension: Extension
   ): Option[String] =
     snapshotVersioning
       .snapshotVersions
       .find(v =>
         (v.classifier == classifier || v.classifier == Classifier("*")) &&
-        (v.extension == extension || v.extension == "*")
+        (v.extension == extension || v.extension == Extension("*"))
        )
       .map(_.value)
       .filter(_.nonEmpty)
@@ -261,9 +261,9 @@ final case class MavenRepository(
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
-            mavenVersioning(snapshotVersioning, Classifier.empty, "jar")
-              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, "pom"))
-              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, ""))
+            mavenVersioning(snapshotVersioning, Classifier.empty, Extension.jar)
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.pom))
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.empty))
 
           versioningOption match {
             case None =>
@@ -412,7 +412,7 @@ final case class MavenRepository(
       val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
         MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
         toBaseVersion(project.actualVersion),
-        s"${dependency.module.name.value}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"
+        s"${dependency.module.name.value}-${versioning getOrElse project.actualVersion}${Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext.value}"
       )
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
@@ -431,7 +431,7 @@ final case class MavenRepository(
       (publication.attributes, artifact)
     }
 
-    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, "pom", Classifier.empty))
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, Extension.pom, Classifier.empty))
 
     def artifactWithExtra(publication: Publication) = {
       val (attr, artifact) = artifactOf(publication)
@@ -466,7 +466,7 @@ final case class MavenRepository(
 
       val tpe = packagingTpeMap.getOrElse(
         (classifier, ext),
-        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(Type(ext))
+        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
       )
 
       val pubs = packagingPublicationOpt.toSeq :+
@@ -486,10 +486,10 @@ final case class MavenRepository(
           if (classifier == dependency.attributes.classifier)
             defaultPublications
           else {
-            val ext = "jar"
+            val ext = Extension.jar
             val tpe = packagingTpeMap.getOrElse(
               (classifier, ext),
-              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(Type(ext))
+              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
             )
 
             Seq(

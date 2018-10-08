@@ -95,6 +95,9 @@ final case class Type(value: String) extends AnyVal {
     value.nonEmpty
   def map(f: String => String): Type =
     Type(f(value))
+
+  def asExtension: Extension =
+    Extension(value)
 }
 
 object Type {
@@ -137,6 +140,24 @@ object Classifier {
   val sources = Classifier("sources")
 }
 
+final case class Extension(value: String) extends AnyVal {
+  def map(f: String => String): Extension =
+    Extension(f(value))
+
+  def asType: Type =
+    Type(value)
+}
+
+object Extension {
+  implicit val ordering: Ordering[Extension] =
+    Ordering[String].on(_.value)
+
+  val jar = Extension("jar")
+  val pom = Extension("pom")
+
+  val empty = Extension("")
+}
+
 // Maven-specific
 final case class Attributes(
   `type`: Type,
@@ -156,7 +177,7 @@ final case class Attributes(
     else
       s"$packaging:$classifier"
 
-  def publication(name: String, ext: String): Publication =
+  def publication(name: String, ext: Extension): Publication =
     Publication(name, `type`, ext, classifier)
 
   def isEmpty: Boolean =
@@ -262,7 +283,7 @@ object Versions {
 // Maven-specific
 final case class SnapshotVersion(
   classifier: Classifier,
-  extension: String,
+  extension: Extension,
   value: String,
   updated: Option[Versions.DateTime]
 )
@@ -284,7 +305,7 @@ final case class SnapshotVersioning(
 final case class Publication(
   name: String,
   `type`: Type,
-  ext: String,
+  ext: Extension,
   classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)

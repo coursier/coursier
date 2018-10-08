@@ -39,7 +39,7 @@ final case class IvyRepository(
     versionOpt: Option[String],
     `type`: Type,
     artifact: String,
-    ext: String,
+    ext: Extension,
     classifierOpt: Option[Classifier]
   ): Map[String, String] =
     Map(
@@ -49,7 +49,7 @@ final case class IvyRepository(
       "module" -> module.name.value,
       "type" -> `type`.value,
       "artifact" -> artifact,
-      "ext" -> ext
+      "ext" -> ext.value
     ) ++
     module.attributes ++
     classifierOpt.map("classifier" -> _.value).toSeq ++
@@ -156,7 +156,7 @@ final case class IvyRepository(
             findNoInverval(module, version, fetch)
           case Some(itv) =>
             val listingUrl = revisionListingPattern
-              .substituteVariables(variables(module, None, Type.ivy, "ivy", "xml", None))
+              .substituteVariables(variables(module, None, Type.ivy, "ivy", Extension("xml"), None))
               .right
               .flatMap { s =>
                 if (s.endsWith("/"))
@@ -211,7 +211,7 @@ final case class IvyRepository(
     val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(
-          variables(module, Some(version), Type.ivy, "ivy", "xml", None)
+          variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
         ).right
       } yield {
         var artifact = Artifact(

@@ -394,7 +394,7 @@ object Pom {
         .getOrElse("")
 
     val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
-    val ext = textOrEmpty("extension", "Extensions")
+    val ext = Extension(textOrEmpty("extension", "Extensions"))
     val value = textOrEmpty("value", "Value")
 
     val updatedOpt = text(node, "updated", "Updated")
@@ -420,7 +420,7 @@ object Pom {
     buildNumber: Int
   ): SnapshotVersion = {
     val value = s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber"
-    SnapshotVersion(Classifier("*"), "*", value, None)
+    SnapshotVersion(Classifier("*"), Extension("*"), value, None)
   }
 
   def snapshotVersioning(node: Node): Either[String, SnapshotVersioning] =
