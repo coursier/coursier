@@ -80,7 +80,7 @@ final case class MavenRepository(
   import Repository._
   import MavenRepository._
 
-  val root0 = if (root.endsWith("/")) root else root + "/"
+  private val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
     module.organization.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
