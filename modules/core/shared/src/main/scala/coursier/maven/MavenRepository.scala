@@ -80,6 +80,9 @@ final case class MavenRepository(
   import Repository._
   import MavenRepository._
 
+  // FIXME Ideally, we should silently drop a '/' suffix from `root`
+  // so that
+  //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
   private val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
