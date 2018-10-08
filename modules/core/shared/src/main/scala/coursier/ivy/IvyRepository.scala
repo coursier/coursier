@@ -14,7 +14,7 @@ final case class IvyRepository(
   // hack for SBT putting infos in properties
   dropInfoAttributes: Boolean,
   authentication: Option[Authentication]
-) extends Repository {
+) extends Repository with Artifact.Source {
 
   def metadataPattern: Pattern = metadataPatternOpt.getOrElse(pattern)
 
@@ -56,90 +56,85 @@ final case class IvyRepository(
     versionOpt.map("revision" -> _).toSeq
 
 
-  val source: Artifact.Source =
-    if (withArtifacts)
-      new Artifact.Source {
-        def artifacts(
-          dependency: Dependency,
-          project: Project,
-          overrideClassifiers: Option[Seq[String]]
-        ) = {
+  def artifacts(
+    dependency: Dependency,
+    project: Project,
+    overrideClassifiers: Option[Seq[String]]
+  ): Seq[(Attributes, Artifact)] =
+    if (withArtifacts) {
 
-          val retained =
-            overrideClassifiers match {
-              case None =>
+      val retained =
+        overrideClassifiers match {
+          case None =>
 
-                // FIXME Some duplication with what's done in MavenSource
+            // FIXME Some duplication with what's done in MavenSource
 
-                if (dependency.attributes.classifier.nonEmpty)
-                  // FIXME We're ignoring dependency.attributes.`type` in this case
-                  project.publications.collect {
-                    case (_, p) if p.classifier == dependency.attributes.classifier =>
-                      p
-                  }
-                else if (dependency.attributes.`type`.nonEmpty)
-                  project.publications.collect {
-                    case (conf, p)
-                      if (conf == "*" ||
-                        conf == dependency.configuration ||
-                        project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
-                        (
-                          p.`type` == dependency.attributes.`type` ||
-                          (p.ext == dependency.attributes.`type` && project.packagingOpt.toSeq.contains(p.`type`)) // wow
-                        ) =>
-                      p
-                  }
-                else
-                  project.publications.collect {
-                    case (conf, p)
-                      if conf == "*" ||
-                         conf == dependency.configuration ||
-                         project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
-                      p
-                  }
-              case Some(classifiers) =>
-                val classifiersSet = classifiers.toSet
-                project.publications.collect {
-                  case (_, p) if classifiersSet(p.classifier) =>
-                    p
-                }
+            if (dependency.attributes.classifier.nonEmpty)
+              // FIXME We're ignoring dependency.attributes.`type` in this case
+              project.publications.collect {
+                case (_, p) if p.classifier == dependency.attributes.classifier =>
+                  p
+              }
+            else if (dependency.attributes.`type`.nonEmpty)
+              project.publications.collect {
+                case (conf, p)
+                  if (conf == "*" ||
+                    conf == dependency.configuration ||
+                    project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
+                    (
+                      p.`type` == dependency.attributes.`type` ||
+                      (p.ext == dependency.attributes.`type` && project.packagingOpt.toSeq.contains(p.`type`)) // wow
+                    ) =>
+                  p
+              }
+            else
+              project.publications.collect {
+                case (conf, p)
+                  if conf == "*" ||
+                     conf == dependency.configuration ||
+                     project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
+                  p
+              }
+          case Some(classifiers) =>
+            val classifiersSet = classifiers.toSet
+            project.publications.collect {
+              case (_, p) if classifiersSet(p.classifier) =>
+                p
             }
-
-          val retainedWithUrl = retained.distinct.flatMap { p =>
-            pattern.substituteVariables(variables(
-              dependency.module,
-              Some(project.actualVersion),
-              p.`type`,
-              p.name,
-              p.ext,
-              Some(p.classifier).filter(_.nonEmpty)
-            )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
-          }
-
-          retainedWithUrl.map {
-            case (p, url) =>
-
-              var artifact = Artifact(
-                url,
-                Map.empty,
-                Map.empty,
-                changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
-                optional = false,
-                authentication = authentication
-              )
-
-              if (withChecksums)
-                artifact = artifact.withDefaultChecksums
-              if (withSignatures)
-                artifact = artifact.withDefaultSignature
-
-              (p.attributes, artifact)
-          }
         }
-      }
-    else
-      Artifact.Source.empty
 
+      val retainedWithUrl = retained.distinct.flatMap { p =>
+        pattern.substituteVariables(variables(
+          dependency.module,
+          Some(project.actualVersion),
+          p.`type`,
+          p.name,
+          p.ext,
+          Some(p.classifier).filter(_.nonEmpty)
+        )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
+      }
+
+      retainedWithUrl.map {
+        case (p, url) =>
+
+          var artifact = Artifact(
+            url,
+            Map.empty,
+            Map.empty,
+            changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
+            optional = false,
+            authentication = authentication
+          )
+
+          if (withChecksums)
+            artifact = artifact.withDefaultChecksums
+          if (withSignatures)
+            artifact = artifact.withDefaultSignature
+
+          (p.attributes, artifact)
+      }
+    } else
+      Nil
 
   def find[F[_]](
     module: Module,
@@ -273,7 +268,7 @@ final case class IvyRepository(
         else
           proj0
 
-      source -> proj.copy(
+      this -> proj.copy(
         actualVersionOpt = Some(version)
       )
     }
