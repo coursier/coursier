@@ -51,7 +51,7 @@ object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String], overrideClassifiers: Set[Classifier])
+  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {

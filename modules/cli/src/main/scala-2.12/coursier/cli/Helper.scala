@@ -747,8 +747,7 @@ class Helper(
       val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
       val jsonStr = JsonReport(
         roots,
-        conflictResolutionForRoots,
-        overrideClassifiers(sources, javadoc)
+        conflictResolutionForRoots
       )(
         _.children,
         _.reconciledVersionStr,
