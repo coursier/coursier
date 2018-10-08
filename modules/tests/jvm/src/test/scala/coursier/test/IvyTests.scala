@@ -2,7 +2,7 @@ package coursier.test
 
 import java.io.File
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import utest._
@@ -109,7 +109,7 @@ object IvyTests extends TestSuite {
       }
 
       "tests classifier" - {
-        val testsDep = dep.copy(attributes = Attributes(Type.jar, "tests"))
+        val testsDep = dep.copy(attributes = Attributes(Type.jar, Classifier.tests))
 
         * - CentralTests.withArtifacts(
           deps = Set(dep, testsDep),

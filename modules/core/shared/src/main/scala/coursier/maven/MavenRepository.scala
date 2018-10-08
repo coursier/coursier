@@ -36,13 +36,13 @@ object MavenRepository {
 
   def mavenVersioning(
     snapshotVersioning: SnapshotVersioning,
-    classifier: String,
+    classifier: Classifier,
     extension: String
   ): Option[String] =
     snapshotVersioning
       .snapshotVersions
       .find(v =>
-        (v.classifier == classifier || v.classifier == "*") &&
+        (v.classifier == classifier || v.classifier == Classifier("*")) &&
         (v.extension == extension || v.extension == "*")
        )
       .map(_.value)
@@ -261,9 +261,9 @@ final case class MavenRepository(
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
-            mavenVersioning(snapshotVersioning, "", "jar")
-              .orElse(mavenVersioning(snapshotVersioning, "", "pom"))
-              .orElse(mavenVersioning(snapshotVersioning, "", ""))
+            mavenVersioning(snapshotVersioning, Classifier.empty, "jar")
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, "pom"))
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, ""))
 
           versioningOption match {
             case None =>
@@ -387,7 +387,7 @@ final case class MavenRepository(
   private def artifacts0(
     dependency: Dependency,
     project: Project,
-    overrideClassifiers: Option[Seq[String]]
+    overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Attributes, Artifact)] = {
 
     val packagingTpeMap = project
@@ -431,7 +431,7 @@ final case class MavenRepository(
       (publication.attributes, artifact)
     }
 
-    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, "pom", ""))
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, "pom", Classifier.empty))
 
     def artifactWithExtra(publication: Publication) = {
       val (attr, artifact) = artifactOf(publication)
@@ -509,7 +509,7 @@ final case class MavenRepository(
   def artifacts(
     dependency: Dependency,
     project: Project,
-    overrideClassifiers: Option[Seq[String]]
+    overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Attributes, Artifact)] =
     if (project.relocated)
       Nil

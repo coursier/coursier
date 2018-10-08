@@ -43,7 +43,7 @@ object App {
             <.td(TagMod(
               if (dep.configuration == "compile") TagMod() else TagMod(infoLabel(dep.configuration)),
               if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == Type.jar) TagMod() else TagMod(infoLabel(dep.attributes.`type`.value)),
-              if (dep.attributes.classifier.isEmpty) TagMod() else TagMod(infoLabel(dep.attributes.classifier)),
+              if (dep.attributes.classifier.isEmpty) TagMod() else TagMod(infoLabel(dep.attributes.classifier.value)),
               Some(dep.exclusions).filter(_.nonEmpty).map(excls => infoPopOver("Exclusions", excls.toList.sorted.map{case (org, name) => s"$org:$name"}.mkString("; "))).toSeq.toTagMod,
               if (dep.optional) TagMod(infoLabel("optional")) else TagMod(),
               res.errorCache.get(dep.moduleVersion).map(errs => errorPopOver("Error", errs.mkString("; "))).toSeq.toTagMod

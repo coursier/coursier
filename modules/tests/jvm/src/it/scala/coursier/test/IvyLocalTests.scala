@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.{Cache, Dependency, Module, moduleNameString, organizationString}
 import coursier.test.compatibility._
 
@@ -29,7 +29,7 @@ object IvyLocalTests extends TestSuite {
           extraRepos = extraRepos
         ))
 
-        val artifacts = res.dependencyArtifacts(classifiers = Some(Seq("standalone")))
+        val artifacts = res.dependencyArtifacts(classifiers = Some(Seq(Classifier("standalone"))))
           .filter(t => t._2.`type` == Type.jar && !t._3.optional)
           .map(_._3)
           .map(_.url)

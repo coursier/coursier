@@ -9,7 +9,7 @@ import java.util.jar.{Manifest => JManifest}
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.extra.Typelevel
 import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
@@ -618,12 +618,12 @@ class Helper(
     }
   }
 
-  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
+  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[Classifier] = {
     var classifiers = classifier0
     if (sources)
-      classifiers = classifiers + "sources"
+      classifiers = classifiers + Classifier.sources
     if (javadoc)
-      classifiers = classifiers + "javadoc"
+      classifiers = classifiers + Classifier.javadoc
     classifiers
   }
 

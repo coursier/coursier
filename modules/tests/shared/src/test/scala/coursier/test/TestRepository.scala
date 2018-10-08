@@ -22,7 +22,7 @@ final case class TestRepository(projects: Map[(Module, String), Project]) extend
   def artifacts(
     dependency: Dependency,
     project: Project,
-    overrideClassifiers: Option[Seq[String]]
+    overrideClassifiers: Option[Seq[Classifier]]
   ) = ???
 
 }

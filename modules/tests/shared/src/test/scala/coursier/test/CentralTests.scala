@@ -6,7 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.MavenRepository
 import coursier.Platform.fetch
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.test.compatibility._
 
 import scala.concurrent.Future
@@ -132,7 +132,7 @@ abstract class CentralTests extends TestSuite {
     version: String,
     attributes: Attributes = Attributes(),
     extraRepos: Seq[Repository] = Nil,
-    classifierOpt: Option[String] = None,
+    classifierOpt: Option[Classifier] = None,
     transitive: Boolean = false
   )(
     f: Seq[Artifact] => T
@@ -144,7 +144,7 @@ abstract class CentralTests extends TestSuite {
   def withArtifacts[T](
     dep: Dependency,
     extraRepos: Seq[Repository],
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   )(
     f: Seq[Artifact] => T
   ): Future[T] = 
@@ -153,7 +153,7 @@ abstract class CentralTests extends TestSuite {
   def withArtifacts[T](
     deps: Set[Dependency],
     extraRepos: Seq[Repository],
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   )(
     f: Seq[Artifact] => T
   ): Future[T] =
@@ -162,7 +162,7 @@ abstract class CentralTests extends TestSuite {
   def withDetailedArtifacts[T](
     deps: Set[Dependency],
     extraRepos: Seq[Repository],
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   )(
     f: Seq[(Attributes, Artifact)] => T
   ): Future[T] =
@@ -508,7 +508,7 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(resolve(deps))
@@ -525,7 +525,7 @@ abstract class CentralTests extends TestSuite {
               Module(org"org.apache.avro", name"avro"), "1.8.1"
             ),
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(resolve(deps))
@@ -609,7 +609,7 @@ abstract class CentralTests extends TestSuite {
           val (attr, artifact) = zookeeperTestArtifacts.head
 
           assert(attr.`type` == Type.testJar)
-          assert(attr.classifier == "tests")
+          assert(attr.classifier == Classifier.tests)
           artifact.url.endsWith("-tests.jar")
         }
       }
@@ -674,14 +674,14 @@ abstract class CentralTests extends TestSuite {
 
       'tarGz - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
@@ -691,14 +691,14 @@ abstract class CentralTests extends TestSuite {
 
       'zip - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes(Type("zip"), "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes(Type("zip"), "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))

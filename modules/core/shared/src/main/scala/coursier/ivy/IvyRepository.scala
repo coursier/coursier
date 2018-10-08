@@ -40,7 +40,7 @@ final case class IvyRepository(
     `type`: Type,
     artifact: String,
     ext: String,
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   ): Map[String, String] =
     Map(
       "organization" -> module.organization.value,
@@ -52,14 +52,14 @@ final case class IvyRepository(
       "ext" -> ext
     ) ++
     module.attributes ++
-    classifierOpt.map("classifier" -> _).toSeq ++
+    classifierOpt.map("classifier" -> _.value).toSeq ++
     versionOpt.map("revision" -> _).toSeq
 
 
   def artifacts(
     dependency: Dependency,
     project: Project,
-    overrideClassifiers: Option[Seq[String]]
+    overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Attributes, Artifact)] =
     if (withArtifacts) {
 

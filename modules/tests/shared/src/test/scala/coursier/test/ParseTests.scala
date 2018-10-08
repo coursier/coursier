@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.{Attributes, MavenRepository, Repository, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
@@ -85,7 +85,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes(Type.empty, "tests"))
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
 
@@ -111,7 +111,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == "runtime")
-          assert(dep.attributes == Attributes(Type.empty, "tests"))
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
       }
@@ -124,7 +124,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
           assert(dep.version == "0.3.0-coursier-1")
-          assert(dep.attributes == Attributes(Type.empty, "tests"))
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
 

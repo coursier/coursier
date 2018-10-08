@@ -57,7 +57,9 @@ object Pom {
       val typeOpt = text(node, "type", "")
         .right.map(Type(_))
         .right.toOption
-      val classifierOpt = text(node, "classifier", "").right.toOption
+      val classifierOpt = text(node, "classifier", "")
+        .right.map(Classifier(_))
+        .right.toOption
       val xmlExclusions = node.children
         .find(_.label == "exclusions")
         .map(_.children.filter(_.label == "exclusion"))
@@ -75,7 +77,7 @@ object Pom {
             version0,
             "",
             exclusions.map(mod => (mod.organization, mod.name)).toSet,
-            Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse("")),
+            Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
             optional,
             transitive = true
           )
@@ -311,7 +313,7 @@ object Pom {
                 relocatedVersion,
                 "",
                 Set(),
-                Attributes(Type.empty, ""),
+                Attributes.empty,
                 optional = false,
                 transitive = true
               )
@@ -391,7 +393,7 @@ object Pom {
         .right
         .getOrElse("")
 
-    val classifier = textOrEmpty("classifier", "Classifier")
+    val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
     val ext = textOrEmpty("extension", "Extensions")
     val value = textOrEmpty("value", "Value")
 
@@ -418,7 +420,7 @@ object Pom {
     buildNumber: Int
   ): SnapshotVersion = {
     val value = s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber"
-    SnapshotVersion("*", "*", value, None)
+    SnapshotVersion(Classifier("*"), "*", value, None)
   }
 
   def snapshotVersioning(node: Node): Either[String, SnapshotVersioning] =

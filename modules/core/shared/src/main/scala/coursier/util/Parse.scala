@@ -165,7 +165,7 @@ object Parse {
           case None =>
 
             val attributes = attrs.get("classifier") match {
-              case Some(c) => Attributes(classifier = c)
+              case Some(c) => Attributes(classifier = Classifier(c))
               case None => Attributes()
             }
 

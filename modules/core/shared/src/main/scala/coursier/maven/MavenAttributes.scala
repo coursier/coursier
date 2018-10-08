@@ -1,6 +1,6 @@
 package coursier.maven
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 
 object MavenAttributes {
 
@@ -23,27 +23,27 @@ object MavenAttributes {
 
   // see https://github.com/apache/maven/blob/c023e58104b71e27def0caa034d39ab0fa0373b6/maven-core/src/main/resources/META-INF/plexus/artifact-handlers.xml
   // discussed in https://github.com/coursier/coursier/issues/298
-  val typeDefaultClassifiers: Map[Type, String] = Map(
-    Type.testJar       -> "tests",
-    Type.javadoc       -> "javadoc",
-    Type.javaSource    -> "sources",
-    Type("ejb-client") -> "client"
+  val typeDefaultClassifiers: Map[Type, Classifier] = Map(
+    Type.testJar       -> Classifier.tests,
+    Type.javadoc       -> Classifier.javadoc,
+    Type.javaSource    -> Classifier.sources,
+    Type("ejb-client") -> Classifier("client")
   )
 
-  def typeDefaultClassifierOpt(`type`: Type): Option[String] =
+  def typeDefaultClassifierOpt(`type`: Type): Option[Classifier] =
     typeDefaultClassifiers.get(`type`)
 
-  def typeDefaultClassifier(`type`: Type): String =
-    typeDefaultClassifierOpt(`type`).getOrElse("")
+  def typeDefaultClassifier(`type`: Type): Classifier =
+    typeDefaultClassifierOpt(`type`).getOrElse(Classifier.empty)
 
-  val classifierExtensionDefaultTypes: Map[(String, String), Type] = Map(
-    ("tests", "jar")   -> Type.testJar,
-    ("javadoc", "jar") -> Type.doc,
-    ("sources", "jar") -> Type.source
+  val classifierExtensionDefaultTypes: Map[(Classifier, String), Type] = Map(
+    (Classifier.tests, "jar")   -> Type.testJar,
+    (Classifier.javadoc, "jar") -> Type.doc,
+    (Classifier.sources, "jar") -> Type.source
     // don't know much about "client" classifier, not including it here
   )
 
-  def classifierExtensionDefaultTypeOpt(classifier: String, ext: String): Option[Type] =
+  def classifierExtensionDefaultTypeOpt(classifier: Classifier, ext: String): Option[Type] =
     classifierExtensionDefaultTypes.get((classifier, ext))
 
 }

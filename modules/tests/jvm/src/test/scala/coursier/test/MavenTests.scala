@@ -2,7 +2,7 @@ package coursier.test
 
 import java.io.File
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.maven.MavenRepository
 import utest._
@@ -44,7 +44,7 @@ object MavenTests extends TestSuite {
       * - CentralTests.withArtifacts(
         dep = dep.copy(attributes = Attributes(Type.source)),
         extraRepos = Seq(repo),
-        classifierOpt = Some("sources")
+        classifierOpt = Some(Classifier.sources)
       ) {
         case Seq(artifact) =>
           assert(artifact.url == sourcesJarUrl)

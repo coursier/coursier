@@ -1,6 +1,7 @@
 package coursier
 package test
 
+import coursier.core.Classifier
 import coursier.core.compatibility._
 import coursier.util.Traverse.TraverseOps
 import coursier.maven.Pom
@@ -23,7 +24,7 @@ object PomParsingTests extends TestSuite {
         "" -> Dependency(
           Module(org"comp", name"lib"),
           "2.1",
-          attributes = Attributes(classifier = "extra")
+          attributes = Attributes(classifier = Classifier("extra"))
         )
       )
 

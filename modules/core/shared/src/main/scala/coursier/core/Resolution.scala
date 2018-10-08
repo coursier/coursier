@@ -137,7 +137,7 @@ object Resolution {
           version = substituteProps0(dep.version),
           attributes = dep.attributes.copy(
             `type` = dep.attributes.`type`.map(substituteProps0),
-            classifier = substituteProps0(dep.attributes.classifier)
+            classifier = dep.attributes.classifier.map(substituteProps0)
           ),
           configuration = substituteProps0(dep.configuration),
           exclusions = dep.exclusions
@@ -1047,7 +1047,7 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
-  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[String]] = None): Seq[Artifact] =
+  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
         case (_, attr, artifact) if types(attr.`type`) =>
@@ -1055,7 +1055,7 @@ final case class Resolution(
       }
       .distinct
 
-  def dependencyArtifacts(classifiers: Option[Seq[String]] = None): Seq[(Dependency, Attributes, Artifact)] =
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Attributes, Artifact)] =
     for {
       dep <- minDependencies.toSeq
       (source, proj) <- projectCache
@@ -1074,7 +1074,7 @@ final case class Resolution(
 
   @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")
   def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
-    artifacts(classifiers = Some(classifiers))
+    artifacts(classifiers = Some(classifiers.map(Classifier(_))))
 
   @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
   def artifacts: Seq[Artifact] =
@@ -1094,7 +1094,7 @@ final case class Resolution(
 
   @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyClassifiersArtifacts(classifiers: Seq[String]): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts(Some(classifiers)).map(t => (t._1, t._3))
+    dependencyArtifacts(Some(classifiers.map(Classifier(_)))).map(t => (t._1, t._3))
 
 
   /**

@@ -117,10 +117,30 @@ object Type {
   val empty = Type("")
 }
 
+final case class Classifier(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
+  def nonEmpty: Boolean =
+    value.nonEmpty
+  def map(f: String => String): Classifier =
+    Classifier(f(value))
+}
+
+object Classifier {
+  implicit val ordering: Ordering[Classifier] =
+    Ordering[String].on(_.value)
+
+  val empty = Classifier("")
+
+  val tests = Classifier("tests")
+  val javadoc = Classifier("javadoc")
+  val sources = Classifier("sources")
+}
+
 // Maven-specific
 final case class Attributes(
   `type`: Type,
-  classifier: String
+  classifier: Classifier
 ) {
   def packaging: String =
     if (`type`.isEmpty)
@@ -141,6 +161,10 @@ final case class Attributes(
 
   def isEmpty: Boolean =
     `type`.isEmpty && classifier.isEmpty
+}
+
+object Attributes {
+  val empty = Attributes(Type.empty, Classifier.empty)
 }
 
 final case class Project(
@@ -237,7 +261,7 @@ object Versions {
 
 // Maven-specific
 final case class SnapshotVersion(
-  classifier: String,
+  classifier: Classifier,
   extension: String,
   value: String,
   updated: Option[Versions.DateTime]
@@ -261,7 +285,7 @@ final case class Publication(
   name: String,
   `type`: Type,
   ext: String,
-  classifier: String
+  classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
 }
@@ -288,7 +312,7 @@ object Artifact {
     def artifacts(
       dependency: Dependency,
       project: Project,
-      overrideClassifiers: Option[Seq[String]]
+      overrideClassifiers: Option[Seq[Classifier]]
     ): Seq[(Attributes, Artifact)]
   }
 

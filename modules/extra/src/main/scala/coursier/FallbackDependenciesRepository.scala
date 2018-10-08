@@ -3,7 +3,7 @@ package coursier
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
-import coursier.core.Type
+import coursier.core.{Classifier, Type}
 import coursier.util.{EitherT, Monad}
 
 object FallbackDependenciesRepository {
@@ -134,7 +134,7 @@ final case class FallbackDependenciesRepository(
   def artifacts(
     dependency: Dependency,
     project: Project,
-    overrideClassifiers: Option[Seq[String]]
+    overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Attributes, Artifact)] =
     fallbacks
       .get(dependency.moduleVersion)
