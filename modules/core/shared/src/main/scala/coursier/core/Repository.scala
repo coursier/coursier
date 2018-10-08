@@ -2,7 +2,6 @@ package coursier.core
 
 import coursier.Fetch
 import coursier.core.compatibility.encodeURIComponent
-import coursier.maven.MavenSource
 import coursier.util.{EitherT, Monad}
 
 trait Repository extends Product with Serializable {

@@ -1,7 +1,6 @@
 package coursier.web
 
 import coursier.{Dependency, MavenRepository, Module, Resolution}
-import coursier.maven.MavenSource
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -50,7 +49,7 @@ object App {
             )),
            <.td(TagMod(
              res.projectCache.get(dep.moduleVersion) match {
-               case Some((source: MavenSource, proj)) =>
+               case Some((source: MavenRepository, proj)) =>
                  // FIXME Maven specific, generalize with source.artifacts
                  val version0 = finalVersionOpt getOrElse dep.version
                  val relPath =
@@ -60,7 +59,7 @@ object App {
                      s"${dep.module.name}-$version0"
                    )
 
-                 val root = source.root
+                 val root = source.root.stripSuffix("/") + "/"
 
                  TagMod(
                    <.a(^.href := s"$root${relPath.mkString("/")}.pom",

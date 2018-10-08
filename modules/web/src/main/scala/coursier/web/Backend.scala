@@ -1,7 +1,6 @@
 package coursier.web
 
 import coursier.{Dependency, Fetch, MavenRepository, Module, Platform, Repository, Resolution}
-import coursier.maven.MavenSource
 import coursier.util.{EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
