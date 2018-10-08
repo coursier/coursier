@@ -206,7 +206,7 @@ object Cache {
       case None =>
         val clsName = s"coursier.cache.protocol.${protocol.capitalize}Handler"
         def clsOpt(loader: ClassLoader): Option[Class[_]] =
-          try Option(loader).map(_.loadClass(clsName))
+          try Some(Class.forName(clsName, false, loader))
           catch {
             case _: ClassNotFoundException =>
               None
