@@ -1,5 +1,15 @@
 package coursier.core
 
+final case class Organization(value: String) extends AnyVal {
+  def map(f: String => String): Organization =
+    Organization(f(value))
+}
+
+object Organization {
+  implicit val ordering: Ordering[Organization] =
+    Ordering[String].on(_.value)
+}
+
 /**
  * Identifies a "module".
  *
@@ -10,13 +20,13 @@ package coursier.core
  * Using the same terminology as Ivy.
  */
 final case class Module(
-  organization: String,
+  organization: Organization,
   name: String,
   attributes: Map[String, String]
 ) {
 
   def trim: Module = copy(
-    organization = organization.trim,
+    organization = organization.map(_.trim),
     name = name.trim
   )
 
@@ -47,7 +57,7 @@ final case class Dependency(
   module: Module,
   version: String,
   configuration: String,
-  exclusions: Set[(String, String)],
+  exclusions: Set[(Organization, String)],
 
   // Maven-specific
   attributes: Attributes,

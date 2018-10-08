@@ -86,7 +86,7 @@ final case class MavenRepository(
   private val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
-    module.organization.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
+    module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
 
   private def moduleVersionPath(module: Module, version: String): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
@@ -117,7 +117,7 @@ final case class MavenRepository(
 
   def versionsArtifact(module: Module): Option[Artifact] = {
 
-    val path = module.organization.split('.').toSeq ++ Seq(
+    val path = module.organization.value.split('.').toSeq ++ Seq(
       dirModuleName(module, sbtAttrStub),
       "maven-metadata.xml"
     )
@@ -409,7 +409,7 @@ final case class MavenRepository(
           )
         )
 
-      val path = dependency.module.organization.split('.').toSeq ++ Seq(
+      val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
         MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
         toBaseVersion(project.actualVersion),
         s"${dependency.module.name}-${versioning getOrElse project.actualVersion}${Some(publication.classifier).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext}"

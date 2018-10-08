@@ -55,7 +55,7 @@ object Resolution {
     }
 
   object DepMgmt {
-    type Key = (String, String, String)
+    type Key = (Organization, String, String)
 
     def key(dep: Dependency): Key =
       (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) "jar" else dep.attributes.`type`)
@@ -131,7 +131,7 @@ object Resolution {
       .map {case (config, dep) =>
         substituteProps0(config) -> dep.copy(
           module = dep.module.copy(
-            organization = substituteProps0(dep.module.organization),
+            organization = dep.module.organization.map(substituteProps0),
             name = substituteProps0(dep.module.name)
           ),
           version = substituteProps0(dep.version),
@@ -142,7 +142,7 @@ object Resolution {
           configuration = substituteProps0(dep.configuration),
           exclusions = dep.exclusions
             .map{case (org, name) =>
-              (substituteProps0(org), substituteProps0(name))
+              (org.map(substituteProps0), substituteProps0(name))
             }
           // FIXME The content of the optional tag may also be a property in
           // the original POM. Maybe not parse it that earlier?
@@ -293,7 +293,7 @@ object Resolution {
    */
   def withExclusions(
     dependencies: Seq[(String, Dependency)],
-    exclusions: Set[(String, String)]
+    exclusions: Set[(Organization, String)]
   ): Seq[(String, Dependency)] = {
 
     val filter = Exclusions(exclusions)
@@ -362,14 +362,14 @@ object Resolution {
     val properties0 = project.properties ++ Seq(
       // some artifacts seem to require these (e.g. org.jmock:jmock-legacy:2.5.1)
       // although I can find no mention of them in any manual / spec
-      "pom.groupId"         -> project.module.organization,
+      "pom.groupId"         -> project.module.organization.value,
       "pom.artifactId"      -> project.module.name,
       "pom.version"         -> project.actualVersion,
       // Required by some dependencies too (org.apache.directory.shared:shared-ldap:0.9.19 in particular)
-      "groupId"             -> project.module.organization,
+      "groupId"             -> project.module.organization.value,
       "artifactId"          -> project.module.name,
       "version"             -> project.actualVersion,
-      "project.groupId"     -> project.module.organization,
+      "project.groupId"     -> project.module.organization.value,
       "project.artifactId"  -> project.module.name,
       "project.version"     -> project.actualVersion
     ) ++ packagingOpt.toSeq.map { packaging =>
@@ -377,10 +377,10 @@ object Resolution {
     } ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
-          "project.parent.groupId"     -> parModule.organization,
+          "project.parent.groupId"     -> parModule.organization.value,
           "project.parent.artifactId"  -> parModule.name,
           "project.parent.version"     -> parVersion,
-          "parent.groupId"     -> parModule.organization,
+          "parent.groupId"     -> parModule.organization.value,
           "parent.artifactId"  -> parModule.name,
           "parent.version"     -> parVersion
         )

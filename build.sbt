@@ -28,6 +28,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
+    libs += Deps.scalaReflect.value % Provided,
     Mima.previousArtifacts,
     Mima.coreFilters
   )

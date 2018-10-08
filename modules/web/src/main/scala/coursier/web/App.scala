@@ -1,6 +1,7 @@
 package coursier.web
 
-import coursier.{Dependency, MavenRepository, Module, Resolution}
+import coursier.core.Organization
+import coursier.{Dependency, MavenRepository, Module, Resolution, organizationString}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -36,7 +37,7 @@ object App {
         def depItem(dep: Dependency, finalVersionOpt: Option[String]) = {
           <.tr(
             ^.`class` := (if (res.errorCache.contains(dep.moduleVersion)) "danger" else ""),
-            <.td(dep.module.organization),
+            <.td(dep.module.organization.value),
             <.td(dep.module.name),
             <.td(finalVersionOpt.fold(dep.version)(finalVersion => s"$finalVersion (for ${dep.version})")),
             <.td(TagMod(
@@ -53,7 +54,7 @@ object App {
                  // FIXME Maven specific, generalize with source.artifacts
                  val version0 = finalVersionOpt getOrElse dep.version
                  val relPath =
-                   dep.module.organization.split('.').toSeq ++ Seq(
+                   dep.module.organization.value.split('.').toSeq ++ Seq(
                      dep.module.name,
                      version0,
                      s"${dep.module.name}-$version0"
@@ -135,8 +136,8 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputOrganization", "Organization"),
                   <.input(^.`class` := "form-control", ^.id := "inputOrganization", ^.placeholder := "Organization",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(organization = value))),
-                    ^.value := module.organization
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(organization = Organization(value)))),
+                    ^.value := module.organization.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
@@ -169,7 +170,7 @@ object App {
 
         def depItem(dep: Dependency, idx: Int) =
           <.tr(
-            <.td(dep.module.organization),
+            <.td(dep.module.organization.value),
             <.td(dep.module.name),
             <.td(dep.version),
             <.td(
@@ -215,7 +216,7 @@ object App {
           moduleEditModal((
             deps
               .lift(editModuleIdx)
-              .fold(Module("", "") -> "")(_.moduleVersion),
+              .fold(Module(org"", "") -> "")(_.moduleVersion),
             editModuleIdx,
             backend
           ))
@@ -374,7 +375,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(Module("io.get-coursier", "coursier-cache_2.12"), "1.1.0-M7") // DEBUG
+      Dependency(Module(org"io.get-coursier", "coursier-cache_2.12"), "1.1.0-M7") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),

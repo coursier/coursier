@@ -9,7 +9,11 @@ object IvyXml {
 
   private def info(node: Node): Either[String, (Module, String)] =
     for {
-      org <- node.attribute("organisation").right
+      org <- node
+        .attribute("organisation")
+        .right
+        .map(Organization(_))
+        .right
       name <- node.attribute("module").right
       version <- node.attribute("revision").right
     } yield {
@@ -49,10 +53,11 @@ object IvyXml {
       .flatMap { node =>
         // artifact and include sub-nodes are ignored here
 
-        val excludes = node.children
+        val excludes = node
+          .children
           .filter(_.label == "exclude")
           .flatMap { node0 =>
-            val org = node0.attribute("org").right.getOrElse("*")
+            val org = Organization(node0.attribute("org").right.getOrElse("*"))
             val name = node0.attribute("module").right.toOption
               .orElse(node0.attribute("name").right.toOption)
               .getOrElse("*")
@@ -65,7 +70,12 @@ object IvyXml {
         val allConfsExcludes = excludes.getOrElse("*", Set.empty)
 
         for {
-          org <- node.attribute("org").right.toOption.toSeq
+          org <- node
+            .attribute("org")
+            .right
+            .toOption
+            .toSeq
+            .map(Organization(_))
           name <- node.attribute("name").right.toOption.toSeq
           version <- node.attribute("rev").right.toOption.toSeq
           rawConf <- node.attribute("conf").right.toOption.toSeq

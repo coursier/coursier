@@ -2,23 +2,23 @@ package coursier.core
 
 object Exclusions {
 
-  def partition(exclusions: Set[(String, String)]): (Boolean, Set[String], Set[String], Set[(String, String)]) = {
+  def partition(exclusions: Set[(Organization, String)]): (Boolean, Set[Organization], Set[String], Set[(Organization, String)]) = {
 
     val (wildCards, remaining) = exclusions
-      .partition{case (org, name) => org == "*" || name == "*" }
+      .partition{case (org, name) => org == allOrganizations || name == "*" }
 
     val all = wildCards
       .contains(one.head)
 
     val excludeByOrg = wildCards
-      .collect{case (org, "*") if org != "*" => org }
+      .collect{case (org, "*") if org != allOrganizations => org }
     val excludeByName = wildCards
-      .collect{case ("*", name) if name != "*" => name }
+      .collect{case (allOrganizations, name) if name != "*" => name }
 
     (all, excludeByOrg, excludeByName, remaining)
   }
 
-  def apply(exclusions: Set[(String, String)]): (String, String) => Boolean = {
+  def apply(exclusions: Set[(Organization, String)]): (Organization, String) => Boolean = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
 
@@ -31,7 +31,7 @@ object Exclusions {
       }
   }
 
-  def minimize(exclusions: Set[(String, String)]): Set[(String, String)] = {
+  def minimize(exclusions: Set[(Organization, String)]): Set[(Organization, String)] = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
 
@@ -44,18 +44,20 @@ object Exclusions {
         }
 
       excludeByOrg.map((_, "*")) ++
-        excludeByName.map(("*", _)) ++
+        excludeByName.map((allOrganizations, _)) ++
         filteredRemaining
     }
   }
 
-  val zero = Set.empty[(String, String)]
-  val one = Set(("*", "*"))
+  val allOrganizations = Organization("*")
 
-  def join(x: Set[(String, String)], y: Set[(String, String)]): Set[(String, String)] =
+  val zero = Set.empty[(Organization, String)]
+  val one = Set((allOrganizations, "*"))
+
+  def join(x: Set[(Organization, String)], y: Set[(Organization, String)]): Set[(Organization, String)] =
     minimize(x ++ y)
 
-  def meet(x: Set[(String, String)], y: Set[(String, String)]): Set[(String, String)] = {
+  def meet(x: Set[(Organization, String)], y: Set[(Organization, String)]): Set[(Organization, String)] = {
 
     val ((xAll, xExcludeByOrg, xExcludeByName, xRemaining), (yAll, yExcludeByOrg, yExcludeByName, yRemaining)) =
       (partition(x), partition(y))
@@ -79,7 +81,7 @@ object Exclusions {
           (xRemaining intersect yRemaining)
 
       excludeByOrg.map((_, "*")) ++
-        excludeByName.map(("*", _)) ++
+        excludeByName.map((allOrganizations, _)) ++
         remaining
     }
   }

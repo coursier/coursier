@@ -74,8 +74,8 @@ object Orders {
    *
    * In particular, no exclusions <= anything <= Set(("*", "*"))
    */
-  val exclusionsPartialOrder: PartialOrdering[Set[(String, String)]] =
-    new PartialOrdering[Set[(String, String)]] {
+  val exclusionsPartialOrder: PartialOrdering[Set[(Organization, String)]] =
+    new PartialOrdering[Set[(Organization, String)]] {
       def boolCmp(a: Boolean, b: Boolean) = (a, b) match {
         case (true, true) => Some(0)
         case (true, false) => Some(1)
@@ -83,12 +83,12 @@ object Orders {
         case (false, false) => None
       }
 
-      def tryCompare(x: Set[(String, String)], y: Set[(String, String)]) = {
+      def tryCompare(x: Set[(Organization, String)], y: Set[(Organization, String)]) = {
         val (xAll, xExcludeByOrg1, xExcludeByName1, xRemaining0) = Exclusions.partition(x)
         val (yAll, yExcludeByOrg1, yExcludeByName1, yRemaining0) = Exclusions.partition(y)
 
         boolCmp(xAll, yAll).orElse {
-          def filtered(e: Set[(String, String)]) =
+          def filtered(e: Set[(Organization, String)]) =
             e.filter{case (org, name) =>
               !xExcludeByOrg1(org) && !yExcludeByOrg1(org) &&
                 !xExcludeByName1(name) && !yExcludeByName1(name)

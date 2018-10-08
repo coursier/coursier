@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import argonaut._, Argonaut._, ArgonautShapeless._
-import coursier.core.{Artifact, Attributes}
+import coursier.core.{Artifact, Organization}
 import coursier.interop.scalaz._
 import coursier.util.{EitherT, Gather}
 import coursier.{Fetch, Module}
@@ -24,7 +24,7 @@ object Scaladex {
 
   case class ArtifactInfos(
     /** Dependency group ID (aka organization) */
-    groupId: String,
+    groupId: Organization,
     /** Dependency artifact ID (aka name or module name) */
     artifactId: String,
     /** Dependency version */

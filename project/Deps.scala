@@ -1,5 +1,6 @@
 
 import sbt._
+import sbt.Def.setting
 import sbt.Defaults.sbtPluginExtra
 import sbt.Keys._
 
@@ -40,4 +41,6 @@ object Deps {
   def scalaNativeUtil = "org.scala-native" %% "util" % SharedVersions.scalaNative
 
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.25"
+  
+  def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value) 
 }

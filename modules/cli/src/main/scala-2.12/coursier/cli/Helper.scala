@@ -230,30 +230,34 @@ class Helper(
         .mkString("\n")
   }
 
-  val globalExcludes: Set[(String, String)] = excludesNoAttr.map { mod =>
-    (mod.organization, mod.name)
-  }.toSet
+  val globalExcludes: Set[(Organization, String)] =
+    excludesNoAttr
+      .map(mod =>  (mod.organization, mod.name))
+      .toSet
 
-  val localExcludeMap: Map[String, Set[(String, String)]] =
+  val localExcludeMap: Map[String, Set[(Organization, String)]] =
     if (localExcludeFile.isEmpty) {
       Map()
     } else {
       val source = scala.io.Source.fromFile(localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
-      lines.map({ str =>
-        val parent_and_child = str.split("--")
-        if (parent_and_child.length != 2) {
-          throw new SoftExcludeParsingException(s"Failed to parse $str")
-        }
+      lines
+        .map { str =>
+          val parent_and_child = str.split("--")
+          if (parent_and_child.length != 2)
+            throw new SoftExcludeParsingException(s"Failed to parse $str")
 
-        val child_org_name = parent_and_child(1).split(":")
-        if (child_org_name.length != 2) {
-          throw new SoftExcludeParsingException(s"Failed to parse $child_org_name")
-        }
+          val child_org_name = parent_and_child(1).split(":")
+          if (child_org_name.length != 2)
+            throw new SoftExcludeParsingException(s"Failed to parse $child_org_name")
 
-        (parent_and_child(0), (child_org_name(0), child_org_name(1)))
-      }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
+          (parent_and_child(0), (Organization(child_org_name(0)), child_org_name(1)))
+        }
+        .groupBy(_._1)
+        .mapValues(_.map(_._2).toSet)
+        .iterator
+        .toMap
     }
 
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
@@ -303,7 +307,7 @@ class Helper(
 
   for (((mod, version), _) <- depsWithUrls if forceVersions.get(mod).exists(_ != version))
     throw new Exception(s"Cannot force a version that is different from the one specified " +
-      s"for the module ${mod}:${version} with url")
+      s"for the module $mod:$version with url")
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -868,7 +872,7 @@ class Helper(
           module = dep.module
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
-              if org == module.organization && (
+              if org == module.organization.value && (
                 module.name == name ||
                   module.name.startsWith(name + "_") // Ignore cross version suffix
                 ) =>
@@ -881,7 +885,7 @@ class Helper(
           module = dep.module
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
-              if org == module.organization =>
+              if org == module.organization.value =>
               mainClass
           }.toSet
           if orgMainClasses.size == 1

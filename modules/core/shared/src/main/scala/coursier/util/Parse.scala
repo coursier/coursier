@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.{Attributes, Dependency}
-import coursier.core.{Module, Repository}
+import coursier.core.{Module, Organization, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
@@ -26,9 +26,9 @@ object Parse {
 
     val values = parts match {
       case Array(org, rawName) =>
-        Right((org, rawName, ""))
+        Right((Organization(org), rawName, ""))
       case Array(org, "", rawName) =>
-        Right((org, rawName, "_" + defaultScalaVersion.split('.').take(2).mkString(".")))
+        Right((Organization(org), rawName, "_" + defaultScalaVersion.split('.').take(2).mkString(".")))
       case _ =>
         Left(s"malformed module: $s")
     }
@@ -279,8 +279,8 @@ object Parse {
     * @param localExcludes excludes to be applied to specific modules
     * @param defaultConfiguration default configuration
     */
-  case class ModuleRequirements(globalExcludes: Set[(String, String)] = Set(),
-                                localExcludes: Map[String, Set[(String, String)]] = Map(),
+  case class ModuleRequirements(globalExcludes: Set[(Organization, String)] = Set(),
+                                localExcludes: Map[String, Set[(Organization, String)]] = Map(),
                                 defaultConfiguration: String = "default(compile)")
 
   /**

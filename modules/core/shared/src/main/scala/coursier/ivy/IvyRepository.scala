@@ -41,11 +41,11 @@ final case class IvyRepository(
     artifact: String,
     ext: String,
     classifierOpt: Option[String]
-  ) =
+  ): Map[String, String] =
     Map(
-      "organization" -> module.organization,
-      "organisation" -> module.organization,
-      "orgPath" -> module.organization.replace('.', '/'),
+      "organization" -> module.organization.value,
+      "organisation" -> module.organization.value,
+      "orgPath" -> module.organization.value.replace('.', '/'),
       "module" -> module.name,
       "type" -> `type`,
       "artifact" -> artifact,

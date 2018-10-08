@@ -2,7 +2,7 @@ package coursier.util
 
 import coursier.core.Attributes
 import coursier.test.CentralTests
-import coursier.{Dependency, Module}
+import coursier.{Dependency, Module, organizationString}
 import utest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +23,7 @@ object PrintTests extends TestSuite {
   val tests = Tests {
     'ignoreAttributes - {
       val dep = Dependency(
-        Module("org", "name"),
+        Module(org"org", "name"),
         "0.1",
         configuration = "foo"
       )
@@ -39,11 +39,11 @@ object PrintTests extends TestSuite {
     }
 
     'reverseTree - {
-      val junit = Module("junit", "junit")
+      val junit = Module(org"junit", "junit")
       val junitVersion = "4.10"
 
       CentralTests.resolve(Set(Dependency(junit, junitVersion))).map(result => {
-        val hamcrest = Module("org.hamcrest", "hamcrest-core")
+        val hamcrest = Module(org"org.hamcrest", "hamcrest-core")
         val hamcrestVersion = "1.1"
         val reverseTree = Print.reverseTree(Seq(Dependency(hamcrest, hamcrestVersion)),
           result, withExclusions = true)

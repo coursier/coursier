@@ -27,12 +27,14 @@ object Pom {
   // TODO Allow no version in some contexts
   private def module(
     node: Node,
-    defaultGroupId: Option[String] = None,
+    defaultGroupId: Option[Organization] = None,
     defaultArtifactId: Option[String] = None
   ): Either[String, Module] = {
     for {
       organization <- {
         val e = text(node, "groupId", "Organization")
+          .right
+          .map(Organization(_))
         defaultGroupId.fold(e)(g => Right(e.right.getOrElse(g))).right
       }
       name <- {
@@ -164,7 +166,7 @@ object Pom {
   ): Either[String, Project] = {
 
     for {
-      projModule <- module(pom, defaultGroupId = Some("")).right
+      projModule <- module(pom, defaultGroupId = Some(Organization(""))).right
 
       parentOpt <- point(pom.children.find(_.label == "parent"))
       parentModuleOpt <- parentOpt
@@ -190,8 +192,8 @@ object Pom {
       )
       depMgmts <- xmlDepMgmts.eitherTraverse(dependency).right
 
-      groupId <- Some(projModule.organization).filter(_.nonEmpty)
-        .orElse(parentModuleOpt.map(_.organization).filter(_.nonEmpty))
+      groupId <- Some(projModule.organization).filter(_.value.nonEmpty)
+        .orElse(parentModuleOpt.map(_.organization).filter(_.value.nonEmpty))
         .toRight("No organization found")
         .right
       version <- Some(readVersion(pom)).filter(_.nonEmpty)
@@ -204,7 +206,7 @@ object Pom {
         .getOrElse(Right(()))
         .right
       _ <- parentModuleOpt
-        .map(mod => if (mod.organization.isEmpty) Left("Parent organization missing") else Right(()))
+        .map(mod => if (mod.organization.value.isEmpty) Left("Parent organization missing") else Right(()))
         .getOrElse(Right(()))
         .right
 
@@ -287,7 +289,9 @@ object Pom {
 
               // see https://maven.apache.org/guides/mini/guide-relocation.html
 
-              val relocatedGroupId = text(n, "groupId", "").right.getOrElse(finalProjModule.organization)
+              val relocatedGroupId = text(n, "groupId", "")
+                .right.map(Organization(_))
+                .right.getOrElse(finalProjModule.organization)
               val relocatedArtifactId = text(n, "artifactId", "").right.getOrElse(finalProjModule.name)
               val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
@@ -412,7 +416,10 @@ object Pom {
   def snapshotVersioning(node: Node): Either[String, SnapshotVersioning] =
     // FIXME Quite similar to Versions above
     for {
-      organization <- text(node, "groupId", "Organization").right
+      organization <- text(node, "groupId", "Organization")
+        .right
+        .map(Organization(_))
+        .right
       name <- text(node, "artifactId", "Name").right
 
       xmlVersioning <- node
@@ -547,7 +554,10 @@ object Pom {
           }
           .toMap
       )
-      org <- attrFrom(attrs, extraAttributeOrg).right
+      org <- attrFrom(attrs, extraAttributeOrg)
+        .right
+        .map(Organization(_))
+        .right
       name <- attrFrom(attrs, extraAttributeName).right
       version <- attrFrom(attrs, extraAttributeVersion).right
     } yield {
