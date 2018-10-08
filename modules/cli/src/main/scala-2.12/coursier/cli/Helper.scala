@@ -583,19 +583,18 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val depArtTuples: Seq[(Dependency, Artifact)] = getDepArtifactsForClassifier(sources, javadoc, res0)
-
-    val artifacts0 = depArtTuples.map(_._2)
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, res0).map(t => (t._2, t._3))
 
     if (artifactTypes("*"))
-      artifacts0
+      artifacts0.map(_._2)
     else
-      artifacts0.filter { artifact =>
-        artifactTypes(artifact.`type`)
+      artifacts0.collect {
+        case (attr, artifact) if artifactTypes(attr.`type`) =>
+          artifact
       }
   }
 
-  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
+  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Attributes, Artifact)] = {
     val raw =
       if (hasOverrideClassifiers(sources, javadoc))
         //TODO: this function somehow gives duplicated things
@@ -604,10 +603,11 @@ class Helper(
         res0.dependencyArtifacts(None)
 
     raw.map {
-      case (dep, _, artifact) =>
+      case (dep, attr, artifact) =>
         (
           dep.copy(
-            attributes = dep.attributes.copy(classifier = artifact.classifier)),
+            attributes = dep.attributes.copy(classifier = attr.classifier)),
+          attr,
           artifact
         )
     }
@@ -633,9 +633,7 @@ class Helper(
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
-      artifact.copy(attributes = Attributes())
-    }.distinct
+    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).distinct
 
     val logger =
       if (verbosityLevel >= 0)
@@ -715,8 +713,8 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, Vector[Artifact]] =
-      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toVector)
+    val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
+      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {

@@ -15,7 +15,7 @@ import Argonaut._
 /**
  * Lookup table for files and artifacts to print in the JsonReport.
  */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]])
+final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]])
 
 /**
  * Represents a resolved dependency's artifact in the JsonReport.
@@ -104,8 +104,8 @@ final case class JsonElem(dep: Dependency,
   lazy val downloadedFile: Option[String] = {
     jsonPrintRequirement.flatMap(req =>
         req.depToArtifacts.getOrElse(dep, Seq())
-          .filter(_.classifier == dep.attributes.classifier)
-          .map(x => req.fileByArtifact.get(x.url))
+          .filter(_._1.classifier == dep.attributes.classifier)
+          .map(x => req.fileByArtifact.get(x._2.url))
           .filter(_.isDefined)
           .filter(_.nonEmpty)
           .map(_.get.getPath)

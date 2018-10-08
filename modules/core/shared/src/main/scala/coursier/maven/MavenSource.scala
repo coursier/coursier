@@ -17,7 +17,7 @@ final case class MavenSource(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[String]]
-  ): Seq[Artifact] = {
+  ): Seq[(Attributes, Artifact)] = {
 
     val packagingOpt = project.packagingOpt.filter(_ != Pom.relocatedPackaging)
 
@@ -47,26 +47,27 @@ final case class MavenSource(
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 
-      Artifact(
+      val artifact = Artifact(
         root + path.mkString("/"),
         Map.empty,
         Map.empty,
-        publication.attributes,
         changing = changing0,
         optional = false,
         authentication = authentication
       )
         .withDefaultChecksums
         .withDefaultSignature
+
+      (publication.attributes, artifact)
     }
 
-    val metadataArtifact = artifactOf(Publication(dependency.module.name, "pom", "pom", ""))
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name, "pom", "pom", ""))
 
     def artifactWithExtra(publication: Publication) = {
-      val a = artifactOf(publication)
-      a.copy(
-        extra = a.extra + ("metadata" -> metadataArtifact)
-      )
+      val (attr, artifact) = artifactOf(publication)
+      (attr, artifact.copy(
+        extra = artifact.extra + ("metadata" -> metadataArtifact)
+      ))
     }
 
     lazy val defaultPublications = {
@@ -138,7 +139,7 @@ final case class MavenSource(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[String]]
-  ): Seq[Artifact] =
+  ): Seq[(Attributes, Artifact)] =
     if (project.packagingOpt.toSeq.contains(Pom.relocatedPackaging))
       Nil
     else {
@@ -150,7 +151,7 @@ final case class MavenSource(
         )
 
       artifactsUnknownPublications(dependency, project, overrideClassifiers)
-        .map(makeOptional)
+        .map(t => (t._1, makeOptional(t._2)))
     }
 }
 

@@ -105,7 +105,6 @@ final case class MavenRepository(
       urlFor(path),
       Map.empty,
       Map.empty,
-      Attributes("pom", ""),
       changing = changing.getOrElse(isSnapshot(version)),
       optional = false,
       authentication = authentication
@@ -126,7 +125,6 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", ""),
         changing = true,
         optional = false,
         authentication = authentication
@@ -149,7 +147,6 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", ""),
         changing = true,
         optional = false,
         authentication = authentication
@@ -298,7 +295,6 @@ final case class MavenRepository(
       url,
       Map.empty,
       Map.empty,
-      Attributes("", ""),
       changing = changing,
       optional = false,
       authentication

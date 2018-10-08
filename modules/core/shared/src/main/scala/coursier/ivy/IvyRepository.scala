@@ -116,23 +116,24 @@ final case class IvyRepository(
             )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
           }
 
-          retainedWithUrl.map { case (p, url) =>
-            var artifact = Artifact(
-              url,
-              Map.empty,
-              Map.empty,
-              p.attributes,
-              changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
-              optional = false,
-              authentication = authentication
-            )
+          retainedWithUrl.map {
+            case (p, url) =>
 
-            if (withChecksums)
-              artifact = artifact.withDefaultChecksums
-            if (withSignatures)
-              artifact = artifact.withDefaultSignature
+              var artifact = Artifact(
+                url,
+                Map.empty,
+                Map.empty,
+                changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
+                optional = false,
+                authentication = authentication
+              )
 
-            artifact
+              if (withChecksums)
+                artifact = artifact.withDefaultChecksums
+              if (withSignatures)
+                artifact = artifact.withDefaultSignature
+
+              (p.attributes, artifact)
           }
         }
       }
@@ -190,7 +191,6 @@ final case class IvyRepository(
                 url,
                 Map.empty,
                 Map.empty,
-                Attributes("", ""),
                 changing = changing.getOrElse(version.contains("-SNAPSHOT")),
                 optional = false,
                 authentication
@@ -223,7 +223,6 @@ final case class IvyRepository(
           url,
           Map.empty,
           Map.empty,
-          Attributes("ivy", ""),
           changing = changing.getOrElse(version.contains("-SNAPSHOT")),
           optional = false,
           authentication = authentication

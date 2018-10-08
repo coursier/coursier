@@ -1045,7 +1045,7 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
-  def artifacts(types: Set[String] = Set("jar", "bundle"), classifiers: Option[Seq[String]] = None): Seq[Artifact] =
+  def artifacts(types: Set[String] = Set("jar", "test-jar", "bundle"), classifiers: Option[Seq[String]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
         case (_, attr, artifact) if types(attr.`type`) =>
@@ -1066,8 +1066,8 @@ final case class Resolution(
         else
           Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
-      artifact <- source.artifacts(dep, proj, classifiers0)
-    } yield (dep, artifact.attributes, artifact)
+      (attributes, artifact) <- source.artifacts(dep, proj, classifiers0)
+    } yield (dep, attributes, artifact)
 
 
   @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")

@@ -155,20 +155,30 @@ abstract class CentralTests extends TestSuite {
     classifierOpt: Option[String]
   )(
     f: Seq[Artifact] => T
-  ): Future[T] = async {
-    val res = await(resolve(deps, extraRepos = extraRepos))
+  ): Future[T] =
+    withDetailedArtifacts(deps, extraRepos, classifierOpt)(l => f(l.map(_._2)))
 
-    val metadataErrors = res.errors
-    val conflicts = res.conflicts
-    val isDone = res.isDone
-    assert(metadataErrors.isEmpty)
-    assert(conflicts.isEmpty)
-    assert(isDone)
+  def withDetailedArtifacts[T](
+    deps: Set[Dependency],
+    extraRepos: Seq[Repository],
+    classifierOpt: Option[String]
+  )(
+    f: Seq[(Attributes, Artifact)] => T
+  ): Future[T] =
+    async {
+      val res = await(resolve(deps, extraRepos = extraRepos))
 
-    val artifacts = res.artifacts(classifiers = classifierOpt.map(Seq(_)))
+      val metadataErrors = res.errors
+      val conflicts = res.conflicts
+      val isDone = res.isDone
+      assert(metadataErrors.isEmpty)
+      assert(conflicts.isEmpty)
+      assert(isDone)
 
-    f(artifacts)
-  }
+      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_))).map(t => (t._2, t._3))
+
+      f(artifacts)
+    }
 
   def ensureHasArtifactWithExtension(
     module: Module,
@@ -756,9 +766,12 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver)
 
-      * - withArtifacts(mod, ver, Attributes("bundle")) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes("bundle"))), Nil, None) { artifacts =>
 
-        val jarOpt = artifacts.find(_.`type` == "bundle").orElse(artifacts.find(_.`type` == "jar"))
+        val jarOpt = artifacts.collect {
+          case (attr, artifact) if attr.`type` == "bundle" || attr.`type` == "jar" =>
+            artifact
+        }
 
         assert(jarOpt.nonEmpty)
         assert(jarOpt.forall(hasSha1))
@@ -766,9 +779,12 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - withArtifacts(mod, ver, Attributes("pom")) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes("pom"))), Nil, None) { artifacts =>
 
-        val pomOpt = artifacts.find(_.`type` == "pom")
+        val pomOpt = artifacts.collect {
+          case (attr, artifact) if attr.`type` == "pom" =>
+            artifact
+        }
 
         assert(pomOpt.nonEmpty)
         assert(pomOpt.forall(hasSha1))

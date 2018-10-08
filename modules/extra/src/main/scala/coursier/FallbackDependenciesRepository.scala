@@ -95,7 +95,8 @@ final case class FallbackDependenciesRepository(
             case (url, changing) =>
               val url0 = url.toString
               val ext = url0.substring(url0.lastIndexOf('.') + 1)
-              Artifact(url0, Map.empty, Map.empty, Attributes(ext, ""), changing, optional = false, None)
+              val attr = Attributes(ext)
+              (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
           }
     }
 

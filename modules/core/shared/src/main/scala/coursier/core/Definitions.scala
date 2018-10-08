@@ -220,13 +220,13 @@ final case class Artifact(
   url: String,
   checksumUrls: Map[String, String],
   extra: Map[String, Artifact],
-  attributes: Attributes,
   changing: Boolean,
   optional: Boolean,
   authentication: Option[Authentication]
 ) {
-  def `type`: String = attributes.`type`
-  def classifier: String = attributes.classifier
+
+  // attributes, `type`, and classifier don't live here anymore.
+  // Get them via the dependencyArtifacts method on Resolution.
 
   @deprecated("Use optional instead", "1.1.0-M8")
   def isOptional: Boolean = optional
@@ -239,7 +239,7 @@ object Artifact {
       dependency: Dependency,
       project: Project,
       overrideClassifiers: Option[Seq[String]]
-    ): Seq[Artifact]
+    ): Seq[(Attributes, Artifact)]
   }
 
   object Source {
@@ -248,7 +248,7 @@ object Artifact {
         dependency: Dependency,
         project: Project,
         overrideClassifiers: Option[Seq[String]]
-      ): Seq[Artifact] = Nil
+      ): Seq[(Attributes, Artifact)] = Nil
     }
   }
 }

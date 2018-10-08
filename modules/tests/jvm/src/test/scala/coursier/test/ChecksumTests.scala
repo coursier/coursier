@@ -98,7 +98,6 @@ object ChecksumTests extends TestSuite {
           "SHA-256" -> (url + ".sha256")
         ),
         Map.empty,
-        Attributes("jar"),
         changing = false,
         optional = false,
         authentication = None

@@ -24,29 +24,19 @@ object Repository {
         "SHA-1" -> (underlying.url + ".sha1"),
         "SHA-256" -> (underlying.url + ".sha256")
       ))
-    def withDefaultSignature: Artifact = {
-
-      val underlyingExt =
-        if (underlying.attributes.`type`.isEmpty)
-          "jar"
-        else
-          // TODO move MavenSource.typeExtension elsewhere
-          MavenSource.typeExtension(underlying.attributes.`type`)
-
+    def withDefaultSignature: Artifact =
       underlying.copy(extra = underlying.extra ++ Seq(
         "sig" ->
           Artifact(
             underlying.url + ".asc",
             Map.empty,
             Map.empty,
-            Attributes(s"$underlyingExt.asc", ""),
             changing = underlying.changing,
             optional = underlying.optional,
             authentication = underlying.authentication
           )
             .withDefaultChecksums
       ))
-    }
   }
 }
 
