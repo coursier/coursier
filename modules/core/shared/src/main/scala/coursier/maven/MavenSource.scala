@@ -13,7 +13,7 @@ final case class MavenSource(
   import Repository._
   import MavenRepository._
 
-  private def artifactsUnknownPublications(
+  private def artifacts0(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[String]]
@@ -23,7 +23,7 @@ final case class MavenSource(
 
     val packagingTpeMap = packagingOpt
       .map { packaging =>
-        (MavenSource.typeDefaultClassifier(packaging), MavenSource.typeExtension(packaging)) -> packaging
+        (MavenAttributes.typeDefaultClassifier(packaging), MavenAttributes.typeExtension(packaging)) -> packaging
       }
       .toMap
 
@@ -35,7 +35,7 @@ final case class MavenSource(
           mavenVersioning(
             versioning,
             publication.classifier,
-            MavenSource.typeExtension(publication.`type`)
+            MavenAttributes.typeExtension(publication.`type`)
           )
         )
 
@@ -78,24 +78,24 @@ final case class MavenSource(
           Publication(
             dependency.module.name,
             packaging,
-            MavenSource.typeExtension(packaging),
-            MavenSource.typeDefaultClassifier(packaging)
+            MavenAttributes.typeExtension(packaging),
+            MavenAttributes.typeDefaultClassifier(packaging)
           )
         }
 
       val type0 = if (dependency.attributes.`type`.isEmpty) "jar" else dependency.attributes.`type`
 
-      val ext = MavenSource.typeExtension(type0)
+      val ext = MavenAttributes.typeExtension(type0)
 
       val classifier =
         if (dependency.attributes.classifier.isEmpty)
-          MavenSource.typeDefaultClassifier(type0)
+          MavenAttributes.typeDefaultClassifier(type0)
         else
           dependency.attributes.classifier
 
       val tpe = packagingTpeMap.getOrElse(
         (classifier, ext),
-        MavenSource.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
       )
 
       val pubs = packagingPublicationOpt.toSeq :+
@@ -118,7 +118,7 @@ final case class MavenSource(
             val ext = "jar"
             val tpe = packagingTpeMap.getOrElse(
               (classifier, ext),
-              MavenSource.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
+              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext)
             )
 
             Seq(
@@ -143,51 +143,6 @@ final case class MavenSource(
     if (project.packagingOpt.toSeq.contains(Pom.relocatedPackaging))
       Nil
     else
-      artifactsUnknownPublications(dependency, project, overrideClassifiers)
-}
-
-object MavenSource {
-
-  val typeExtensions: Map[String, String] = Map(
-    "eclipse-plugin" -> "jar",
-    "maven-plugin"   -> "jar",
-    "hk2-jar"        -> "jar",
-    "orbit"          -> "jar",
-    "scala-jar"      -> "jar",
-    "jar"            -> "jar",
-    "bundle"         -> "jar",
-    "doc"            -> "jar",
-    "src"            -> "jar",
-    "test-jar"       -> "jar",
-    "ejb-client"     -> "jar"
-  )
-
-  def typeExtension(`type`: String): String =
-    typeExtensions.getOrElse(`type`, `type`)
-
-  // see https://github.com/apache/maven/blob/c023e58104b71e27def0caa034d39ab0fa0373b6/maven-core/src/main/resources/META-INF/plexus/artifact-handlers.xml
-  // discussed in https://github.com/coursier/coursier/issues/298
-  val typeDefaultClassifiers: Map[String, String] = Map(
-    "test-jar"    -> "tests",
-    "javadoc"     -> "javadoc",
-    "java-source" -> "sources",
-    "ejb-client"  -> "client"
-  )
-
-  def typeDefaultClassifierOpt(`type`: String): Option[String] =
-    typeDefaultClassifiers.get(`type`)
-
-  def typeDefaultClassifier(`type`: String): String =
-    typeDefaultClassifierOpt(`type`).getOrElse("")
-
-  val classifierExtensionDefaultTypes: Map[(String, String), String] = Map(
-    ("tests", "jar")   -> "test-jar",
-    ("javadoc", "jar") -> "doc",
-    ("sources", "jar") -> "src"
-    // don't know much about "client" classifier, not including it here
-  )
-
-  def classifierExtensionDefaultTypeOpt(classifier: String, ext: String): Option[String] =
-    classifierExtensionDefaultTypes.get((classifier, ext))
+      artifacts0(dependency, project, overrideClassifiers)
 
 }
