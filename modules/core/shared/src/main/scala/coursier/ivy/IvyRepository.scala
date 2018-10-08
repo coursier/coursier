@@ -14,7 +14,7 @@ final case class IvyRepository(
   // hack for SBT putting infos in properties
   dropInfoAttributes: Boolean,
   authentication: Option[Authentication]
-) extends Repository with Artifact.Source {
+) extends Repository {
 
   def metadataPattern: Pattern = metadataPatternOpt.getOrElse(pattern)
 

@@ -75,7 +75,7 @@ final case class MavenRepository(
   /** Hackish hack for sbt plugins mainly - what this does really sucks */
   sbtAttrStub: Boolean = true,
   authentication: Option[Authentication] = None
-) extends Repository with Artifact.Source {
+) extends Repository {
 
   import Repository._
   import MavenRepository._

@@ -4,7 +4,7 @@ package test
 import coursier.core._
 import coursier.util.{EitherT, Monad}
 
-final case class TestRepository(projects: Map[(Module, String), Project]) extends Repository with core.Artifact.Source {
+final case class TestRepository(projects: Map[(Module, String), Project]) extends Repository {
 
   def find[F[_]](
     module: Module,

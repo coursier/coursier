@@ -4,7 +4,7 @@ import coursier.Fetch
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{EitherT, Monad}
 
-trait Repository extends Product with Serializable {
+trait Repository extends Product with Serializable with Artifact.Source {
   def find[F[_]](
     module: Module,
     version: String,

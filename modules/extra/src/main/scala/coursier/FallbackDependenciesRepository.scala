@@ -79,7 +79,7 @@ object FallbackDependenciesRepository {
 final case class FallbackDependenciesRepository(
   fallbacks: Map[(Module, String), (URL, Boolean)],
   localArtifactsShouldBeCached: Boolean = false
-) extends Repository with Artifact.Source {
+) extends Repository {
 
   def find[F[_]](
     module: Module,
