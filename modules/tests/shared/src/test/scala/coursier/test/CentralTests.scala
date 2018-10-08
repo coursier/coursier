@@ -6,7 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.MavenRepository
 import coursier.Platform.fetch
-import coursier.core.{Classifier, Type}
+import coursier.core.{Classifier, Extension, Type}
 import coursier.test.compatibility._
 
 import scala.concurrent.Future
@@ -184,12 +184,12 @@ abstract class CentralTests extends TestSuite {
   def ensureHasArtifactWithExtension(
     module: Module,
     version: String,
-    extension: String,
+    extension: Extension,
     attributes: Attributes = Attributes(),
     extraRepos: Seq[Repository] = Nil
   ): Future[Unit] =
     withArtifacts(module, version, attributes = attributes, extraRepos = extraRepos) { artifacts =>
-      assert(artifacts.exists(_.url.endsWith("." + extension)))
+      assert(artifacts.exists(_.url.endsWith("." + extension.value)))
     }
 
   val tests = Tests {
@@ -282,7 +282,7 @@ abstract class CentralTests extends TestSuite {
         * - ensureHasArtifactWithExtension(
           mod,
           version,
-          "jar",
+          Extension.jar,
           Attributes(Type.jar),
           extraRepos = Seq(extraRepo)
         )
@@ -448,14 +448,14 @@ abstract class CentralTests extends TestSuite {
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          "aar",
+          Extension("aar"),
           attributes = Attributes(Type("aar"))
         )
 
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          "aar"
+          Extension("aar")
         )
       }
 
@@ -464,7 +464,7 @@ abstract class CentralTests extends TestSuite {
         * - ensureHasArtifactWithExtension(
           Module(org"com.google.guava", name"guava"),
           "17.0",
-          "jar"
+          Extension.jar
         )
 
         // even though packaging is bundle, depending on attribute type "jar" should still find
@@ -472,7 +472,7 @@ abstract class CentralTests extends TestSuite {
         * - ensureHasArtifactWithExtension(
           Module(org"com.google.guava", name"guava"),
           "17.0",
-          "jar",
+          Extension.jar,
           attributes = Attributes(Type.jar)
         )
       }
@@ -482,7 +482,7 @@ abstract class CentralTests extends TestSuite {
         ensureHasArtifactWithExtension(
           Module(org"org.bytedeco", name"javacpp"),
           "1.1",
-          "jar",
+          Extension.jar,
           Attributes(Type("maven-plugin"))
         )
       }
