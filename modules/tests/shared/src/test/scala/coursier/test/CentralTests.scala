@@ -8,6 +8,7 @@ import coursier.MavenRepository
 import coursier.Platform.fetch
 import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.test.compatibility._
+import coursier.util.Task
 
 import scala.concurrent.Future
 
@@ -23,8 +24,7 @@ abstract class CentralTests extends TestSuite {
     MavenRepository(centralBase)
   )
 
-  // different return type on JVM and JS...
-  private def fetch(repositories: Seq[Repository]) =
+  private def fetch(repositories: Seq[Repository]): Fetch.Metadata[Task] =
     Fetch.from(repositories, compatibility.artifact)
 
   def resolve(
