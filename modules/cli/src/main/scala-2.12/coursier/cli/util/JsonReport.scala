@@ -182,7 +182,7 @@ final case class JsonElem(dep: Dependency,
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
         case (mod, ver) =>
           JsonElem(
-            Dependency(mod, ver, "", Set.empty, Attributes.empty, optional = false, transitive = false),
+            Dependency(mod, ver, Configuration.empty, Set.empty, Attributes.empty, optional = false, transitive = false),
             artifacts,
             jsonPrintRequirement,
             resolution,

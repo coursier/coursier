@@ -49,11 +49,13 @@ object Pom {
   private def readVersion(node: Node) =
     text(node, "version", "Version").right.getOrElse("").trim
 
-  def dependency(node: Node): Either[String, (String, Dependency)] =
+  def dependency(node: Node): Either[String, (Configuration, Dependency)] =
     module(node).right.flatMap { mod =>
 
       val version0 = readVersion(node)
-      val scopeOpt = text(node, "scope", "").right.toOption
+      val scopeOpt = text(node, "scope", "")
+        .right.map(Configuration(_))
+        .right.toOption
       val typeOpt = text(node, "type", "")
         .right.map(Type(_))
         .right.toOption
@@ -72,10 +74,10 @@ object Pom {
 
           val optional = text(node, "optional", "").right.toSeq.contains("true")
 
-          scopeOpt.getOrElse("") -> Dependency(
+          scopeOpt.getOrElse(Configuration.empty) -> Dependency(
             mod,
             version0,
-            "",
+            Configuration.empty,
             exclusions.map(mod => (mod.organization, mod.name)).toSet,
             Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
             optional,
@@ -305,13 +307,13 @@ object Pom {
                 .right.getOrElse(finalProjModule.name)
               val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
-              "" -> Dependency(
+              Configuration.empty -> Dependency(
                 finalProjModule.copy(
                   organization = relocatedGroupId,
                   name = relocatedArtifactId
                 ),
                 relocatedVersion,
-                "",
+                Configuration.empty,
                 Set(),
                 Attributes.empty,
                 optional = false,
@@ -593,8 +595,8 @@ object Pom {
 
   def addOptionalDependenciesInConfig(
     proj: Project,
-    fromConfigs: Set[String],
-    optionalConfig: String
+    fromConfigs: Set[Configuration],
+    optionalConfig: Configuration
   ): Project = {
 
     val optionalDeps = proj.dependencies.collect {

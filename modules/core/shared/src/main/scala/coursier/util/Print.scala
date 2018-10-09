@@ -48,7 +48,7 @@ object Print {
       }
       .mkString
 
-    s"${dep.module}:${dep.version}:${dep.configuration}" + (if (printExclusions) exclusionsStr else "")
+    s"${dep.module}:${dep.version}:${dep.configuration.value}" + (if (printExclusions) exclusionsStr else "")
   }
 
   def dependenciesUnknownConfigs(deps: Seq[Dependency], projects: Map[(Module, String), Project]): String =
@@ -74,10 +74,10 @@ object Print {
     )
 
     val deps1 = minDeps
-      .groupBy(_.copy(configuration = "", attributes = Attributes.empty))
+      .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
       .toVector
       .map { case (k, l) =>
-        k.copy(configuration = l.toVector.map(_.configuration).sorted.distinct.mkString(";"))
+        k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
       }
       .sortBy { dep =>
         (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
@@ -181,7 +181,7 @@ object Print {
             .filterNot(dependencies.map(_.moduleVersion).toSet).map {
             case (mod, ver) =>
               ElemImpl(
-                Dependency(mod, ver, "", Set.empty, Attributes.empty, false, false),
+                Dependency(mod, ver, Configuration.empty, Set.empty, Attributes.empty, false, false),
                 excluded = true
               )
           }

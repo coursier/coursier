@@ -22,7 +22,7 @@ package object coursier {
       module: Module,
       version: String,
       // Substituted by Resolver with its own default configuration (compile)
-      configuration: String = "",
+      configuration: Configuration = Configuration.empty,
       attributes: Attributes = Attributes(),
       exclusions: Set[(Organization, ModuleName)] = Set.empty,
       optional: Boolean = false,

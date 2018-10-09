@@ -1,11 +1,11 @@
 package coursier
 
-import coursier.core.Type
+import coursier.core.{Configuration, Type}
 
 package object test {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withCompileScope: Dependency = underlying.copy(configuration = "compile")
+    def withCompileScope: Dependency = underlying.copy(configuration = Configuration.compile)
   }
 
   private val projectProperties = Set(
@@ -67,8 +67,8 @@ package object test {
       id: String,
       activeByDefault: Option[Boolean] = None,
       activation: Activation = Activation(),
-      dependencies: Seq[(String, Dependency)] = Nil,
-      dependencyManagement: Seq[(String, Dependency)] = Nil,
+      dependencies: Seq[(Configuration, Dependency)] = Nil,
+      dependencyManagement: Seq[(Configuration, Dependency)] = Nil,
       properties: Map[String, String] = Map.empty
     ) =
       core.Profile(
@@ -85,17 +85,17 @@ package object test {
     def apply(
       module: Module,
       version: String,
-      dependencies: Seq[(String, Dependency)] = Seq.empty,
+      dependencies: Seq[(Configuration, Dependency)] = Seq.empty,
       parent: Option[ModuleVersion] = None,
-      dependencyManagement: Seq[(String, Dependency)] = Seq.empty,
-      configurations: Map[String, Seq[String]] = Map.empty,
+      dependencyManagement: Seq[(Configuration, Dependency)] = Seq.empty,
+      configurations: Map[Configuration, Seq[Configuration]] = Map.empty,
       properties: Seq[(String, String)] = Seq.empty,
       profiles: Seq[Profile] = Seq.empty,
       versions: Option[core.Versions] = None,
       snapshotVersioning: Option[core.SnapshotVersioning] = None,
       packaging: Option[Type] = None,
       relocated: Boolean = false,
-      publications: Seq[(String, core.Publication)] = Nil
+      publications: Seq[(Configuration, core.Publication)] = Nil
     ): Project =
       core.Project(
         module,

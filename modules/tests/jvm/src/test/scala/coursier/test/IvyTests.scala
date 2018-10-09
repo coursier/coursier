@@ -2,7 +2,7 @@ package coursier.test
 
 import java.io.File
 
-import coursier.core.{Classifier, Type}
+import coursier.core.{Classifier, Configuration, Type}
 import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import utest._
@@ -28,7 +28,7 @@ object IvyTests extends TestSuite {
         ),
         version = "0.6.6",
         extraRepos = Seq(sbtRepo),
-        configuration = "default(compile)"
+        configuration = Configuration.defaultCompile
       )
     }
 
@@ -88,7 +88,7 @@ object IvyTests extends TestSuite {
 
       "test conf" - {
         "no attributes" - CentralTests.withArtifacts(
-          dep = dep.copy(configuration = "test"),
+          dep = dep.copy(configuration = Configuration.test),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>
@@ -98,7 +98,7 @@ object IvyTests extends TestSuite {
         }
 
         "attributes" - CentralTests.withArtifacts(
-          dep = dep.copy(configuration = "test", attributes = Attributes(Type.jar)),
+          dep = dep.copy(configuration = Configuration.test, attributes = Attributes(Type.jar)),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>

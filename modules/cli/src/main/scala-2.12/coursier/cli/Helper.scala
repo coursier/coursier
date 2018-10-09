@@ -261,7 +261,7 @@ class Helper(
         .toMap
     }
 
-  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
+  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)

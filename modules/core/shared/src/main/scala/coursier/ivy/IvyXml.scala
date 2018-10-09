@@ -26,32 +26,34 @@ object IvyXml {
     }
 
   // FIXME Errors are ignored here
-  private def configurations(node: Node): Seq[(String, Seq[String])] =
-    node.children
+  private def configurations(node: Node): Seq[(Configuration, Seq[Configuration])] =
+    node
+      .children
       .filter(_.label == "conf")
       .flatMap { node =>
         node.attribute("name").right.toOption.toSeq.map(_ -> node)
       }
-      .map { case (name, node) =>
-        name -> node.attribute("extends").right.toSeq.flatMap(_.split(','))
+      .map {
+        case (name, node) =>
+          Configuration(name) -> node.attribute("extends").right.toSeq.flatMap(_.split(',').map(Configuration(_)))
       }
 
   // FIXME "default(compile)" likely not to be always the default
-  def mappings(mapping: String): Seq[(String, String)] =
+  def mappings(mapping: String): Seq[(Configuration, Configuration)] =
     mapping.split(';').flatMap { m =>
       val (froms, tos) = m.split("->", 2) match {
-        case Array(from) => (from, "default(compile)")
+        case Array(from) => (from, Configuration.defaultCompile.value)
         case Array(from, to) => (from, to)
       }
 
       for {
         from <- froms.split(',')
         to <- tos.split(',')
-      } yield (from.trim, to.trim)
+      } yield (Configuration(from.trim), Configuration(to.trim))
     }
 
   // FIXME Errors ignored as above - warnings should be reported at least for anything suspicious
-  private def dependencies(node: Node): Seq[(String, Dependency)] =
+  private def dependencies(node: Node): Seq[(Configuration, Dependency)] =
     node.children
       .filter(_.label == "dependency")
       .flatMap { node =>
@@ -67,13 +69,17 @@ object IvyXml {
                 .orElse(node0.attribute("name").right.toOption)
                 .getOrElse("*")
             )
-            val confs = node0.attribute("conf").right.toOption.filter(_.nonEmpty).fold(Seq("*"))(_.split(','))
+            val confs = node0
+              .attribute("conf")
+              .right.toOption
+              .filter(_.nonEmpty)
+              .fold(Seq(Configuration.all))(_.split(',').map(Configuration(_)))
             confs.map(_ -> (org, name))
           }
           .groupBy { case (conf, _) => conf }
           .map { case (conf, l) => conf -> l.map { case (_, e) => e }.toSet }
 
-        val allConfsExcludes = excludes.getOrElse("*", Set.empty)
+        val allConfsExcludes = excludes.getOrElse(Configuration.all, Set.empty)
 
         for {
           org <- node
@@ -110,7 +116,7 @@ object IvyXml {
         }
       }
 
-  private def publications(node: Node): Map[String, Seq[Publication]] =
+  private def publications(node: Node): Map[Configuration, Seq[Publication]] =
     node.children
       .filter(_.label == "artifact")
       .flatMap { node =>
@@ -121,7 +127,9 @@ object IvyXml {
         val ext = node.attribute("ext")
           .right.map(Extension(_))
           .right.getOrElse(type0.asExtension)
-        val confs = node.attribute("conf").fold(_ => Seq("*"), _.split(',').toSeq)
+        val confs = node
+          .attribute("conf")
+          .fold(_ => Seq(Configuration.all), _.split(',').toSeq.map(Configuration(_)))
         val classifier = node.attribute("classifier")
           .right.map(Classifier(_))
           .right.getOrElse(Classifier.empty)
@@ -152,7 +160,7 @@ object IvyXml {
 
       val configurationsOpt = configurationsNodeOpt.map(configurations)
 
-      val configurations0 = configurationsOpt.getOrElse(Seq("default" -> Seq.empty[String]))
+      val configurations0 = configurationsOpt.getOrElse(Seq(Configuration.default -> Seq.empty[Configuration]))
 
       val publicationsNodeOpt = node.children
         .find(_.label == "publications")
@@ -193,11 +201,11 @@ object IvyXml {
         None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq("*" -> Publication(module.name.value, Type.jar, Extension.jar, Classifier.empty))
+          Seq(Configuration.all -> Publication(module.name.value, Type.jar, Extension.jar, Classifier.empty))
         else {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)
-          val inAllConfs = publicationsOpt.flatMap(_.get("*")).getOrElse(Nil)
+          val inAllConfs = publicationsOpt.flatMap(_.get(Configuration.all)).getOrElse(Nil)
           configurations0.flatMap { case (conf, _) =>
             (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf -> _)
           }

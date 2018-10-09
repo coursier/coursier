@@ -186,7 +186,7 @@ object Parse {
                     Dependency(
                       mod,
                       version,
-                      config,
+                      Configuration(config),
                       attributes,
                       transitive = transitive,
                       exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
@@ -212,7 +212,7 @@ object Parse {
                     Dependency(
                       mod,
                       version,
-                      config,
+                      Configuration(config),
                       attributes,
                       transitive = transitive,
                       exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
@@ -281,7 +281,7 @@ object Parse {
     */
   case class ModuleRequirements(globalExcludes: Set[(Organization, ModuleName)] = Set(),
                                 localExcludes: Map[String, Set[(Organization, ModuleName)]] = Map(),
-                                defaultConfiguration: String = "default(compile)")
+                                defaultConfiguration: Configuration = Configuration.defaultCompile)
 
   /**
     * Parses a sequence of coordinates having an optional configuration.

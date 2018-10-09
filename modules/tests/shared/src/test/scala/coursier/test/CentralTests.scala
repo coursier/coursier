@@ -6,7 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.MavenRepository
 import coursier.Platform.fetch
-import coursier.core.{Classifier, Extension, Type}
+import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.test.compatibility._
 
 import scala.concurrent.Future
@@ -62,7 +62,7 @@ abstract class CentralTests extends TestSuite {
     module: Module,
     version: String,
     extraRepos: Seq[Repository] = Nil,
-    configuration: String = "",
+    configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None
   ): Future[Unit] =
     async {
@@ -83,7 +83,7 @@ abstract class CentralTests extends TestSuite {
           if (configuration.isEmpty)
             ""
           else
-            "_" + configuration.replace('(', '_').replace(')', '_')
+            "_" + configuration.value.replace('(', '_').replace(')', '_')
         )
       ).filter(_.nonEmpty).mkString("/")
 
@@ -103,7 +103,7 @@ abstract class CentralTests extends TestSuite {
           val dep0 = dep.copy(
             version = projOpt.fold(dep.version)(_.actualVersion)
           )
-          (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration)
+          (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration.value)
         }
         .sorted
         .distinct
@@ -275,7 +275,7 @@ abstract class CentralTests extends TestSuite {
         * - resolutionCheck(
           mod,
           version,
-          configuration = "runtime",
+          configuration = Configuration.runtime,
           extraRepos = Seq(extraRepo)
         )
 
@@ -402,19 +402,19 @@ abstract class CentralTests extends TestSuite {
     }
 
     'mavenScopes - {
-      def check(config: String) = resolutionCheck(
+      def check(config: Configuration) = resolutionCheck(
         Module(org"com.android.tools", name"sdklib"),
         "24.5.0",
         configuration = config
       )
 
-      'compile - check("compile")
-      'runtime - check("runtime")
+      'compile - check(Configuration.compile)
+      'runtime - check(Configuration.runtime)
     }
 
     'optionalScope - {
 
-      def intransitiveCompiler(config: String) =
+      def intransitiveCompiler(config: Configuration) =
         Dependency(
           Module(org"org.scala-lang", name"scala-compiler"), "2.11.8",
           configuration = config,
@@ -424,8 +424,8 @@ abstract class CentralTests extends TestSuite {
 
       withArtifacts(
         Set(
-          intransitiveCompiler("default"),
-          intransitiveCompiler("optional")
+          intransitiveCompiler(Configuration.default),
+          intransitiveCompiler(Configuration.optional)
         ),
         extraRepos = Nil,
         classifierOpt = None
@@ -652,7 +652,7 @@ abstract class CentralTests extends TestSuite {
       * - resolutionCheck(
         Module(org"org.scala-lang", name"scala-compiler"),
         "2.11.8",
-        configuration = "optional"
+        configuration = Configuration.optional
       )
     }
 

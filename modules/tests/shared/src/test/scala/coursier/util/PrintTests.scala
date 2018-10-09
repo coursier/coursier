@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.{Attributes, Classifier, Type}
+import coursier.core.{Attributes, Classifier, Configuration, Type}
 import coursier.test.CentralTests
 import coursier.{Dependency, Module, moduleNameString, organizationString}
 import utest._
@@ -25,7 +25,7 @@ object PrintTests extends TestSuite {
       val dep = Dependency(
         Module(org"org", name"name"),
         "0.1",
-        configuration = "foo"
+        configuration = Configuration("foo")
       )
       val deps = Seq(
         dep,

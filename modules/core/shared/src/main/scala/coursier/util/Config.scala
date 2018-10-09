@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.{ Dependency, Resolution }
+import coursier.core.{Configuration, Dependency, Resolution}
 
 object Config {
 
@@ -8,9 +8,9 @@ object Config {
   // `configs` is assumed to be fully unfold
   def allDependenciesByConfig(
     res: Resolution,
-    depsByConfig: Map[String, Set[Dependency]],
-    configs: Map[String, Set[String]]
-  ): Map[String, Set[Dependency]] = {
+    depsByConfig: Map[Configuration, Set[Dependency]],
+    configs: Map[Configuration, Set[Configuration]]
+  ): Map[Configuration, Set[Dependency]] = {
 
     val allDepsByConfig = depsByConfig.map {
       case (config, deps) =>
@@ -31,18 +31,18 @@ object Config {
 
   def dependenciesWithConfig(
     res: Resolution,
-    depsByConfig: Map[String, Set[Dependency]],
-    configs: Map[String, Set[String]]
+    depsByConfig: Map[Configuration, Set[Dependency]],
+    configs: Map[Configuration, Set[Configuration]]
   ): Set[Dependency] =
     allDependenciesByConfig(res, depsByConfig, configs)
       .flatMap {
         case (config, deps) =>
-          deps.map(dep => dep.copy(configuration = s"$config->${dep.configuration}"))
+          deps.map(dep => dep.copy(configuration = config --> dep.configuration))
       }
-      .groupBy(_.copy(configuration = ""))
+      .groupBy(_.copy(configuration = Configuration.empty))
       .map {
         case (dep, l) =>
-          dep.copy(configuration = l.map(_.configuration).mkString(";"))
+          dep.copy(configuration = Configuration.join(l.map(_.configuration).toSeq.distinct.sorted: _*))
       }
       .toSet
 
