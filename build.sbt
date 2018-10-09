@@ -99,7 +99,7 @@ lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
 lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
-  .dependsOn(cache)
+  .dependsOn(cache, tests % "test->test")
   .jvmSettings(
     libs += Deps.scalazConcurrent
   )
@@ -109,6 +109,7 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .settings(
     name := "scalaz-interop",
     shared,
+    utest,
     Mima.previousArtifacts,
     coursierPrefix
   )
