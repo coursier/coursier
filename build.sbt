@@ -37,7 +37,7 @@ lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
 lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
-  .dependsOn(core, cache % Test, scalaz)
+  .dependsOn(core, cache % Test)
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage,
     testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
