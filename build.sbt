@@ -98,7 +98,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
 lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
-lazy val scalaz = crossProject("scalaz")(JSPlatform, JVMPlatform)
+lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache)
   .jvmSettings(
     libs += Deps.scalazConcurrent

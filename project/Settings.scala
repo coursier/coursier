@@ -278,6 +278,9 @@ object Settings {
 
   // macros could get the ids automatically…
 
+  def crossProject(dir: String, id: String)(platforms: sbtcrossproject.Platform*): sbtcrossproject.CrossProject.Builder =
+    sbtcrossproject.CrossProject(id, file(s"modules/$dir/$id"))(platforms: _*)
+
   def crossProject(id: String)(platforms: sbtcrossproject.Platform*): sbtcrossproject.CrossProject.Builder =
     sbtcrossproject.CrossProject(id, file(s"modules/$id"))(platforms: _*)
 
