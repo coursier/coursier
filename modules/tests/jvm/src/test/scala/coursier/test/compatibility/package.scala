@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
-import coursier.util.{EitherT, Task, TestEscape}
+import coursier.util.{EitherT, Schedulable, Task, TestEscape}
 import coursier.{Cache, Fetch, Platform}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +33,7 @@ package object compatibility {
 
   private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
 
-  val artifact: Fetch.Content[Task] = { artifact =>
+  def artifact[F[_]: Schedulable]: Fetch.Content[F] = { artifact =>
 
     if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
       EitherT(Platform.readFully(
@@ -45,22 +45,24 @@ package object compatibility {
 
       val path = baseRepo.resolve(TestEscape.urlAsPath(artifact.url))
 
-      val init = EitherT[Task, String, Unit] {
+      val init = EitherT[F, String, Unit] {
         if (Files.exists(path))
-          Task.point(Right(()))
-        else if (fillChunks)
-          Task.delay[Either[String, Unit]] {
+          Schedulable[F].point(Right(()))
+        else if (fillChunks) {
+          val f = Schedulable[F].delay[Either[String, Unit]] {
             Files.createDirectories(path.getParent)
             def is() = Cache.urlConnection(artifact.url, artifact.authentication).getInputStream
             val b = Platform.readFullySync(is())
             Files.write(path, b)
             Right(())
-          }.handle {
+          }
+
+          Schedulable[F].handle(f) {
             case e: Exception =>
               Left(e.toString)
           }
-        else
-          Task.point(Left(s"not found: $path"))
+        } else
+          Schedulable[F].point(Left(s"not found: $path"))
       }
 
       init.flatMap { _ =>
@@ -68,6 +70,8 @@ package object compatibility {
       }
     }
   }
+
+  val taskArtifact = artifact[Task]
 
   private lazy val baseResources = {
     val dir = Paths.get("modules/tests/shared/src/test/resources")

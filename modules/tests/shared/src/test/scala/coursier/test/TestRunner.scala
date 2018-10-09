@@ -12,7 +12,7 @@ import coursier.util.Gather
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestRunner[F[_]: Gather : ToFuture](
-  artifact: Fetch.Content[F] = compatibility.artifact,
+  artifact: Fetch.Content[F] = compatibility.taskArtifact,
   repositories: Seq[Repository] = Seq(MavenRepository("https://repo1.maven.org/maven2"))
 )(implicit ec: ExecutionContext) {
 

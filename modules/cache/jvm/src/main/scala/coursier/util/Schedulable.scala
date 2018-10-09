@@ -3,10 +3,15 @@ package coursier.util
 import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
 
 trait Schedulable[F[_]] extends Gather[F] {
+  def delay[A](a: => A): F[A]
+  def handle[A](a: F[A])(f: PartialFunction[Throwable, A]): F[A]
   def schedule[A](pool: ExecutorService)(f: => A): F[A]
 }
 
 object Schedulable {
+
+  def apply[F[_]](implicit schedulable: Schedulable[F]): Schedulable[F] =
+    schedulable
 
   lazy val defaultThreadPool =
     fixedThreadPool(4 max Runtime.getRuntime.availableProcessors())

@@ -11,6 +11,10 @@ abstract class PlatformScalazImplicits {
     new Schedulable[ScalazTask] {
       def point[A](a: A) =
         ScalazTask.point(a)
+      def delay[A](a: => A): ScalazTask[A] =
+        ScalazTask.delay(a)
+      def handle[A](a: ScalazTask[A])(f: PartialFunction[Throwable, A]) =
+        a.handle(f)
       def schedule[A](pool: ExecutorService)(f: => A) =
         ScalazTask(f)(pool)
 
