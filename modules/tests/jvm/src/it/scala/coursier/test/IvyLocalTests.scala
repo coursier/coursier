@@ -9,6 +9,8 @@ import utest._
 
 object IvyLocalTests extends TestSuite {
 
+  private val runner = new TestRunner
+
   val tests = TestSuite{
     'coursier {
       val module = Module(org"io.get-coursier", name"coursier-core_2.11")
@@ -17,14 +19,14 @@ object IvyLocalTests extends TestSuite {
       val extraRepos = Seq(Cache.ivy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
-      'resolution - CentralTests.resolutionCheck(
+      'resolution - runner.resolutionCheck(
         module, version,
         extraRepos
       )
 
       'uniqueArtifacts - async {
 
-        val res = await(CentralTests.resolve(
+        val res = await(runner.resolve(
           Set(Dependency(Module(org"io.get-coursier", name"coursier-cli_2.12"), version, transitive = false)),
           extraRepos = extraRepos
         ))
@@ -41,7 +43,7 @@ object IvyLocalTests extends TestSuite {
 
 
       'javadocSources - async {
-        val res = await(CentralTests.resolve(
+        val res = await(runner.resolve(
           Set(Dependency(module, version)),
           extraRepos = extraRepos
         ))

@@ -17,8 +17,10 @@ object DirectoryListingTests extends TestSuite {
   val module = Module(org"com.abc", name"test")
   val version = "0.1"
 
+  private val runner = new TestRunner
+
   val tests = Tests {
-    'jar - CentralTests.withArtifacts(
+    'jar - runner.withArtifacts(
       module,
       version,
       attributes = Attributes(Type.jar),
@@ -29,7 +31,7 @@ object DirectoryListingTests extends TestSuite {
         assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
     }
 
-    'jarFoo - CentralTests.withArtifacts(
+    'jarFoo - runner.withArtifacts(
       module,
       version,
       attributes = Attributes(Type("jar-foo")),
