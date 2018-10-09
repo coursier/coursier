@@ -1,7 +1,7 @@
 package coursier.test
 
 import coursier._
-import coursier.core.Authentication
+import coursier.core.{Authentication, Type}
 import utest._
 
 object DirectoryListingTests extends TestSuite {
@@ -14,14 +14,14 @@ object DirectoryListingTests extends TestSuite {
     authentication = Some(Authentication(user, password))
   )
 
-  val module = Module("com.abc", "test")
+  val module = Module(org"com.abc", name"test")
   val version = "0.1"
 
   val tests = Tests {
     'jar - CentralTests.withArtifacts(
       module,
       version,
-      attributes = Attributes("jar"),
+      attributes = Attributes(Type.jar),
       extraRepos = Seq(repo)
     ) {
       artifacts =>
@@ -32,7 +32,7 @@ object DirectoryListingTests extends TestSuite {
     'jarFoo - CentralTests.withArtifacts(
       module,
       version,
-      attributes = Attributes("jar-foo"),
+      attributes = Attributes(Type("jar-foo")),
       extraRepos = Seq(repo)
     ) {
       artifacts =>

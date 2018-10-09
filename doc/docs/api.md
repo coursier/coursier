@@ -36,10 +36,10 @@ Resolving dependencies involves create an initial resolution state, with all the
 val start = Resolution(
   Set(
     Dependency(
-      Module("org.typelevel", "cats-core_2.11"), "0.6.0"
+      Module(org"org.typelevel", name"cats-core_2.11"), "0.6.0"
     ),
     Dependency(
-      Module("org.scalaz", "scalaz-core_2.11"), "7.2.3"
+      Module(org"org.scalaz", name"scalaz-core_2.11"), "7.2.3"
     )
   )
 )

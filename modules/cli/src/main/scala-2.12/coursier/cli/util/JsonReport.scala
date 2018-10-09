@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Objects
 
 import coursier.Artifact
-import coursier.core.{Attributes, Dependency, Resolution}
+import coursier.core._
 import coursier.util.Print
 
 import scala.collection.mutable
@@ -15,7 +15,7 @@ import Argonaut._
 /**
  * Lookup table for files and artifacts to print in the JsonReport.
  */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[Artifact]])
+final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]])
 
 /**
  * Represents a resolved dependency's artifact in the JsonReport.
@@ -51,7 +51,7 @@ object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String], overrideClassifiers: Set[String])
+  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
@@ -90,7 +90,7 @@ final case class JsonElem(dep: Dependency,
                           colors: Boolean,
                           printExclusions: Boolean,
                           excluded: Boolean,
-                          overrideClassifiers: Set[String]
+                          overrideClassifiers: Set[Classifier]
   ) {
 
   val (red, yellow, reset) =
@@ -104,8 +104,8 @@ final case class JsonElem(dep: Dependency,
   lazy val downloadedFile: Option[String] = {
     jsonPrintRequirement.flatMap(req =>
         req.depToArtifacts.getOrElse(dep, Seq())
-          .filter(_.classifier == dep.attributes.classifier)
-          .map(x => req.fileByArtifact.get(x.url))
+          .filter(_._1.classifier == dep.attributes.classifier)
+          .map(x => req.fileByArtifact.get(x._2.url))
           .filter(_.isDefined)
           .filter(_.nonEmpty)
           .map(_.get.getPath)
@@ -182,7 +182,7 @@ final case class JsonElem(dep: Dependency,
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
         case (mod, ver) =>
           JsonElem(
-            Dependency(mod, ver, "", Set.empty, Attributes("", ""), optional = false, transitive = false),
+            Dependency(mod, ver, "", Set.empty, Attributes.empty, optional = false, transitive = false),
             artifacts,
             jsonPrintRequirement,
             resolution,

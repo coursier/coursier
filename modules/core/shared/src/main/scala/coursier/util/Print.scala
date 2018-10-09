@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.{ Attributes, Dependency, Module, Orders, Project, Resolution }
+import coursier.core._
 
 object Print {
 
@@ -74,7 +74,7 @@ object Print {
     )
 
     val deps1 = minDeps
-      .groupBy(_.copy(configuration = "", attributes = Attributes("", "")))
+      .groupBy(_.copy(configuration = "", attributes = Attributes.empty))
       .toVector
       .map { case (k, l) =>
         k.copy(configuration = l.toVector.map(_.configuration).sorted.distinct.mkString(";"))
@@ -181,7 +181,7 @@ object Print {
             .filterNot(dependencies.map(_.moduleVersion).toSet).map {
             case (mod, ver) =>
               ElemImpl(
-                Dependency(mod, ver, "", Set.empty, Attributes("", ""), false, false),
+                Dependency(mod, ver, "", Set.empty, Attributes.empty, false, false),
                 excluded = true
               )
           }

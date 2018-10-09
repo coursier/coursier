@@ -1,7 +1,7 @@
 package coursier.web
 
-import coursier.{Dependency, MavenRepository, Module, Resolution}
-import coursier.maven.MavenSource
+import coursier.core.{ModuleName, Organization, Type}
+import coursier.{Dependency, MavenRepository, Module, Resolution, moduleNameString, organizationString}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -37,30 +37,30 @@ object App {
         def depItem(dep: Dependency, finalVersionOpt: Option[String]) = {
           <.tr(
             ^.`class` := (if (res.errorCache.contains(dep.moduleVersion)) "danger" else ""),
-            <.td(dep.module.organization),
-            <.td(dep.module.name),
+            <.td(dep.module.organization.value),
+            <.td(dep.module.name.value),
             <.td(finalVersionOpt.fold(dep.version)(finalVersion => s"$finalVersion (for ${dep.version})")),
             <.td(TagMod(
               if (dep.configuration == "compile") TagMod() else TagMod(infoLabel(dep.configuration)),
-              if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == "jar") TagMod() else TagMod(infoLabel(dep.attributes.`type`)),
-              if (dep.attributes.classifier.isEmpty) TagMod() else TagMod(infoLabel(dep.attributes.classifier)),
+              if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == Type.jar) TagMod() else TagMod(infoLabel(dep.attributes.`type`.value)),
+              if (dep.attributes.classifier.isEmpty) TagMod() else TagMod(infoLabel(dep.attributes.classifier.value)),
               Some(dep.exclusions).filter(_.nonEmpty).map(excls => infoPopOver("Exclusions", excls.toList.sorted.map{case (org, name) => s"$org:$name"}.mkString("; "))).toSeq.toTagMod,
               if (dep.optional) TagMod(infoLabel("optional")) else TagMod(),
               res.errorCache.get(dep.moduleVersion).map(errs => errorPopOver("Error", errs.mkString("; "))).toSeq.toTagMod
             )),
            <.td(TagMod(
              res.projectCache.get(dep.moduleVersion) match {
-               case Some((source: MavenSource, proj)) =>
+               case Some((source: MavenRepository, proj)) =>
                  // FIXME Maven specific, generalize with source.artifacts
                  val version0 = finalVersionOpt getOrElse dep.version
                  val relPath =
-                   dep.module.organization.split('.').toSeq ++ Seq(
+                   dep.module.organization.value.split('.').toSeq ++ Seq(
                      dep.module.name,
                      version0,
                      s"${dep.module.name}-$version0"
                    )
 
-                 val root = source.root
+                 val root = source.root.stripSuffix("/") + "/"
 
                  TagMod(
                    <.a(^.href := s"$root${relPath.mkString("/")}.pom",
@@ -136,15 +136,15 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputOrganization", "Organization"),
                   <.input(^.`class` := "form-control", ^.id := "inputOrganization", ^.placeholder := "Organization",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(organization = value))),
-                    ^.value := module.organization
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(organization = Organization(value)))),
+                    ^.value := module.organization.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputName", "Name"),
                   <.input(^.`class` := "form-control", ^.id := "inputName", ^.placeholder := "Name",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(name = value))),
-                    ^.value := module.name
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(name = ModuleName(value)))),
+                    ^.value := module.name.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
@@ -170,8 +170,8 @@ object App {
 
         def depItem(dep: Dependency, idx: Int) =
           <.tr(
-            <.td(dep.module.organization),
-            <.td(dep.module.name),
+            <.td(dep.module.organization.value),
+            <.td(dep.module.name.value),
             <.td(dep.version),
             <.td(
               <.a(Attr("data-toggle") := "modal", Attr("data-target") := "#moduleEdit", ^.`class` := "icon-action",
@@ -216,7 +216,7 @@ object App {
           moduleEditModal((
             deps
               .lift(editModuleIdx)
-              .fold(Module("", "") -> "")(_.moduleVersion),
+              .fold(Module(org"", name"") -> "")(_.moduleVersion),
             editModuleIdx,
             backend
           ))
@@ -375,7 +375,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(Module("io.get-coursier", "coursier-cache_2.12"), "1.1.0-M7") // DEBUG
+      Dependency(Module(org"io.get-coursier", name"coursier-cache_2.12"), "1.1.0-M7") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),

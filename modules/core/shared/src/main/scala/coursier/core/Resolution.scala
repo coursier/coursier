@@ -55,10 +55,10 @@ object Resolution {
     }
 
   object DepMgmt {
-    type Key = (String, String, String)
+    type Key = (Organization, ModuleName, Type)
 
     def key(dep: Dependency): Key =
-      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) "jar" else dep.attributes.`type`)
+      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`)
 
     def add(
       dict: Map[Key, (String, Dependency)],
@@ -131,18 +131,18 @@ object Resolution {
       .map {case (config, dep) =>
         substituteProps0(config) -> dep.copy(
           module = dep.module.copy(
-            organization = substituteProps0(dep.module.organization),
-            name = substituteProps0(dep.module.name)
+            organization = dep.module.organization.map(substituteProps0),
+            name = dep.module.name.map(substituteProps0)
           ),
           version = substituteProps0(dep.version),
           attributes = dep.attributes.copy(
-            `type` = substituteProps0(dep.attributes.`type`),
-            classifier = substituteProps0(dep.attributes.classifier)
+            `type` = dep.attributes.`type`.map(substituteProps0),
+            classifier = dep.attributes.classifier.map(substituteProps0)
           ),
           configuration = substituteProps0(dep.configuration),
           exclusions = dep.exclusions
             .map{case (org, name) =>
-              (substituteProps0(org), substituteProps0(name))
+              (org.map(substituteProps0), name.map(substituteProps0))
             }
           // FIXME The content of the optional tag may also be a property in
           // the original POM. Maybe not parse it that earlier?
@@ -293,7 +293,7 @@ object Resolution {
    */
   def withExclusions(
     dependencies: Seq[(String, Dependency)],
-    exclusions: Set[(String, String)]
+    exclusions: Set[(Organization, ModuleName)]
   ): Seq[(String, Dependency)] = {
 
     val filter = Exclusions(exclusions)
@@ -362,26 +362,26 @@ object Resolution {
     val properties0 = project.properties ++ Seq(
       // some artifacts seem to require these (e.g. org.jmock:jmock-legacy:2.5.1)
       // although I can find no mention of them in any manual / spec
-      "pom.groupId"         -> project.module.organization,
-      "pom.artifactId"      -> project.module.name,
+      "pom.groupId"         -> project.module.organization.value,
+      "pom.artifactId"      -> project.module.name.value,
       "pom.version"         -> project.actualVersion,
       // Required by some dependencies too (org.apache.directory.shared:shared-ldap:0.9.19 in particular)
-      "groupId"             -> project.module.organization,
-      "artifactId"          -> project.module.name,
+      "groupId"             -> project.module.organization.value,
+      "artifactId"          -> project.module.name.value,
       "version"             -> project.actualVersion,
-      "project.groupId"     -> project.module.organization,
-      "project.artifactId"  -> project.module.name,
+      "project.groupId"     -> project.module.organization.value,
+      "project.artifactId"  -> project.module.name.value,
       "project.version"     -> project.actualVersion
     ) ++ packagingOpt.toSeq.map { packaging =>
-      "project.packaging"   -> packaging
+      "project.packaging"   -> packaging.value
     } ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
-          "project.parent.groupId"     -> parModule.organization,
-          "project.parent.artifactId"  -> parModule.name,
+          "project.parent.groupId"     -> parModule.organization.value,
+          "project.parent.artifactId"  -> parModule.name.value,
           "project.parent.version"     -> parVersion,
-          "parent.groupId"     -> parModule.organization,
-          "parent.artifactId"  -> parModule.name,
+          "parent.groupId"     -> parModule.organization.value,
+          "parent.artifactId"  -> parModule.name.value,
           "parent.version"     -> parVersion
         )
     }
@@ -529,6 +529,8 @@ object Resolution {
    */
   def defaultFilter(dep: Dependency): Boolean =
     !dep.optional
+
+  val defaultTypes = Set[Type](Type.jar, Type.testJar, Type.bundle)
 
 }
 
@@ -1045,65 +1047,55 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
-  private def artifacts0(
-    overrideClassifiers: Option[Seq[String]],
-    keepAttributes: Boolean,
-    optional: Boolean
-  ): Seq[Artifact] =
-    dependencyArtifacts0(overrideClassifiers, optional).map {
-      case (_, artifact) =>
-        if (keepAttributes) artifact else artifact.copy(attributes = Attributes("", ""))
-    }.distinct
+  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
+    dependencyArtifacts(classifiers)
+      .collect {
+        case (_, attr, artifact) if types(attr.`type`) =>
+          artifact
+      }
+      .distinct
 
-  // keepAttributes to false is a temporary hack :-|
-  // if one wants the attributes field of artifacts not to be cleared, call dependencyArtifacts
-
-  def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
-    artifacts0(Some(classifiers), keepAttributes = false, optional = true)
-
-  def artifacts: Seq[Artifact] =
-    artifacts0(None, keepAttributes = false, optional = false)
-
-  def artifacts(withOptional: Boolean): Seq[Artifact] =
-    artifacts0(None, keepAttributes = false, optional = withOptional)
-
-  private def dependencyArtifacts0(
-    overrideClassifiers: Option[Seq[String]],
-    optional: Boolean
-  ): Seq[(Dependency, Artifact)] =
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Attributes, Artifact)] =
     for {
       dep <- minDependencies.toSeq
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
 
-      classifiers = {
-        if (!dep.attributes.classifier.isEmpty) {
-          val stringSeq: Seq[String] = overrideClassifiers.getOrElse(Seq()) ++ Seq(dep.attributes.classifier)
-          if (stringSeq.isEmpty) {
-            Option.empty
-          }
-          else {
-            Some(stringSeq)
-          }
-        } else {
-          overrideClassifiers
-        }
-      }
+      classifiers0 =
+        if (dep.attributes.classifier.isEmpty)
+          classifiers
+        else
+          Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
-      artifact <- source
-        .artifacts(dep, proj, classifiers)
-      if optional || !artifact.optional
-    } yield dep -> artifact
+      (attributes, artifact) <- source.artifacts(dep, proj, classifiers0)
+    } yield (dep, attributes, artifact)
 
+
+  @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def classifiersArtifacts(classifiers: Seq[String]): Seq[Artifact] =
+    artifacts(classifiers = Some(classifiers.map(Classifier(_))))
+
+  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def artifacts: Seq[Artifact] =
+    artifacts()
+
+  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
+  def artifacts(withOptional: Boolean): Seq[Artifact] =
+    artifacts()
+
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts: Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(None, optional = false)
+    dependencyArtifacts(None).map(t => (t._1, t._3))
 
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts(withOptional: Boolean): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(None, optional = withOptional)
+    dependencyArtifacts().map(t => (t._1, t._3))
 
+  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyClassifiersArtifacts(classifiers: Seq[String]): Seq[(Dependency, Artifact)] =
-    dependencyArtifacts0(Some(classifiers), optional = true)
+    dependencyArtifacts(Some(classifiers.map(Classifier(_)))).map(t => (t._1, t._3))
+
 
   /**
     * Returns errors on dependencies

@@ -9,6 +9,7 @@ import java.util.jar.{Manifest => JManifest}
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.core.{Classifier, Type}
 import coursier.extra.Typelevel
 import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
@@ -230,30 +231,34 @@ class Helper(
         .mkString("\n")
   }
 
-  val globalExcludes: Set[(String, String)] = excludesNoAttr.map { mod =>
-    (mod.organization, mod.name)
-  }.toSet
+  val globalExcludes: Set[(Organization, ModuleName)] =
+    excludesNoAttr
+      .map(mod =>  (mod.organization, mod.name))
+      .toSet
 
-  val localExcludeMap: Map[String, Set[(String, String)]] =
+  val localExcludeMap: Map[String, Set[(Organization, ModuleName)]] =
     if (localExcludeFile.isEmpty) {
       Map()
     } else {
       val source = scala.io.Source.fromFile(localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
-      lines.map({ str =>
-        val parent_and_child = str.split("--")
-        if (parent_and_child.length != 2) {
-          throw new SoftExcludeParsingException(s"Failed to parse $str")
-        }
+      lines
+        .map { str =>
+          val parent_and_child = str.split("--")
+          if (parent_and_child.length != 2)
+            throw new SoftExcludeParsingException(s"Failed to parse $str")
 
-        val child_org_name = parent_and_child(1).split(":")
-        if (child_org_name.length != 2) {
-          throw new SoftExcludeParsingException(s"Failed to parse $child_org_name")
-        }
+          val child_org_name = parent_and_child(1).split(":")
+          if (child_org_name.length != 2)
+            throw new SoftExcludeParsingException(s"Failed to parse $child_org_name")
 
-        (parent_and_child(0), (child_org_name(0), child_org_name(1)))
-      }).groupBy(_._1).mapValues(_.map(_._2).toSet).toMap
+          (parent_and_child(0), (Organization(child_org_name(0)), ModuleName(child_org_name(1))))
+        }
+        .groupBy(_._1)
+        .mapValues(_.map(_._2).toSet)
+        .iterator
+        .toMap
     }
 
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration)
@@ -303,7 +308,7 @@ class Helper(
 
   for (((mod, version), _) <- depsWithUrls if forceVersions.get(mod).exists(_ != version))
     throw new Exception(s"Cannot force a version that is different from the one specified " +
-      s"for the module ${mod}:${version} with url")
+      s"for the module $mod:$version with url")
 
   val checksums = {
     val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
@@ -560,7 +565,7 @@ class Helper(
   def artifacts(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
 
@@ -583,41 +588,42 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val depArtTuples: Seq[(Dependency, Artifact)] = getDepArtifactsForClassifier(sources, javadoc, res0)
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, res0).map(t => (t._2, t._3))
 
-    val artifacts0 = depArtTuples.map(_._2)
-
-    if (artifactTypes("*"))
-      artifacts0
+    if (artifactTypes(Type("*")))
+      artifacts0.map(_._2)
     else
-      artifacts0.filter { artifact =>
-        artifactTypes(artifact.`type`)
+      artifacts0.collect {
+        case (attr, artifact) if artifactTypes(attr.`type`) =>
+          artifact
       }
   }
 
-  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Artifact)] = {
-    val raw: Seq[(Dependency, Artifact)] = if (hasOverrideClassifiers(sources, javadoc)) {
-      //TODO: this function somehow gives duplicated things
-      res0.dependencyClassifiersArtifacts(overrideClassifiers(sources, javadoc).toVector.sorted)
-    } else {
-      res0.dependencyArtifacts(withOptional = true)
-    }
+  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Attributes, Artifact)] = {
+    val raw =
+      if (hasOverrideClassifiers(sources, javadoc))
+        //TODO: this function somehow gives duplicated things
+        res0.dependencyArtifacts(Some(overrideClassifiers(sources, javadoc).toVector.sorted))
+      else
+        res0.dependencyArtifacts(None)
 
-    raw.map({ case (dep, artifact) =>
+    raw.map {
+      case (dep, attr, artifact) =>
         (
           dep.copy(
-            attributes = dep.attributes.copy(classifier = artifact.classifier)),
+            attributes = dep.attributes.copy(classifier = attr.classifier)),
+          attr,
           artifact
         )
-    })
+    }
   }
 
-  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[String] = {
+  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[Classifier] = {
     var classifiers = classifier0
     if (sources)
-      classifiers = classifiers + "sources"
+      classifiers = classifiers + Classifier.sources
     if (javadoc)
-      classifiers = classifiers + "javadoc"
+      classifiers = classifiers + Classifier.javadoc
     classifiers
   }
 
@@ -628,13 +634,11 @@ class Helper(
   def fetchMap(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).map { artifact =>
-      artifact.copy(attributes = Attributes())
-    }.distinct
+    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).distinct
 
     val logger =
       if (verbosityLevel >= 0)
@@ -683,7 +687,7 @@ class Helper(
             case _: FileError.NotFound => true
             case _ => false
           }
-          a.isOptional && notFound
+          a.optional && notFound
       }
 
     val artifactToFile = results.collect {
@@ -714,8 +718,8 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, Vector[Artifact]] =
-      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(_._2).toVector)
+    val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
+      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {
@@ -735,14 +739,15 @@ class Helper(
         }
       }).filter(_.isDefined).map(_.get).toMap
 
-      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts
+      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts().map {
+        case (dep, _, artifact) => (dep, artifact)
+      }
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
       val jsonStr = JsonReport(
         roots,
-        conflictResolutionForRoots,
-        overrideClassifiers(sources, javadoc)
+        conflictResolutionForRoots
       )(
         _.children,
         _.reconciledVersionStr,
@@ -759,10 +764,10 @@ class Helper(
   def fetch(
     sources: Boolean,
     javadoc: Boolean,
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Seq[File] = {
-    fetchMap(sources,javadoc,artifactTypes,subset).values.toSeq
+    fetchMap(sources, javadoc, artifactTypes, subset).values.toSeq
   }
 
   def contextLoader = Thread.currentThread().getContextClassLoader
@@ -783,7 +788,7 @@ class Helper(
 
     // FIXME That shouldn't be hard-coded this way...
     // This whole class ought to be rewritten more cleanly.
-    val artifactTypes = Set("jar", "bundle")
+    val artifactTypes = core.Resolution.defaultTypes
 
     val files0 = fetch(
       sources = false,
@@ -867,9 +872,9 @@ class Helper(
           module = dep.module
           mainClass <- mainClasses.collectFirst {
             case ((org, name), mainClass)
-              if org == module.organization && (
-                module.name == name ||
-                  module.name.startsWith(name + "_") // Ignore cross version suffix
+              if org == module.organization.value && (
+                module.name.value == name ||
+                  module.name.value.startsWith(name + "_") // Ignore cross version suffix
                 ) =>
               mainClass
           }
@@ -880,7 +885,7 @@ class Helper(
           module = dep.module
           orgMainClasses = mainClasses.collect {
             case ((org, name), mainClass)
-              if org == module.organization =>
+              if org == module.organization.value =>
               mainClass
           }.toSet
           if orgMainClasses.size == 1

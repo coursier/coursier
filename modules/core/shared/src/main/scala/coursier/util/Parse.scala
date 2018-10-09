@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.{Attributes, Dependency}
-import coursier.core.{Module, Repository}
+import coursier.core._
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
@@ -26,9 +26,9 @@ object Parse {
 
     val values = parts match {
       case Array(org, rawName) =>
-        Right((org, rawName, ""))
+        Right((Organization(org), rawName, ""))
       case Array(org, "", rawName) =>
-        Right((org, rawName, "_" + defaultScalaVersion.split('.').take(2).mkString(".")))
+        Right((Organization(org), rawName, "_" + defaultScalaVersion.split('.').take(2).mkString(".")))
       case _ =>
         Left(s"malformed module: $s")
     }
@@ -46,7 +46,7 @@ object Parse {
             case Array(key, value) => key -> value
           }.toMap
 
-          Right(Module(org, name + suffix, attributes))
+          Right(Module(org, ModuleName(name + suffix), attributes))
         }
     }
   }
@@ -165,8 +165,8 @@ object Parse {
           case None =>
 
             val attributes = attrs.get("classifier") match {
-              case Some(c) => Attributes("", c)
-              case None => Attributes("", "")
+              case Some(c) => Attributes(classifier = Classifier(c))
+              case None => Attributes()
             }
 
             val extraDependencyParams: Map[String, String] = attrs.get("url") match {
@@ -279,8 +279,8 @@ object Parse {
     * @param localExcludes excludes to be applied to specific modules
     * @param defaultConfiguration default configuration
     */
-  case class ModuleRequirements(globalExcludes: Set[(String, String)] = Set(),
-                                localExcludes: Map[String, Set[(String, String)]] = Map(),
+  case class ModuleRequirements(globalExcludes: Set[(Organization, ModuleName)] = Set(),
+                                localExcludes: Map[String, Set[(Organization, ModuleName)]] = Map(),
                                 defaultConfiguration: String = "default(compile)")
 
   /**

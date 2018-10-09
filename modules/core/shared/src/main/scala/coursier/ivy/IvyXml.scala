@@ -9,8 +9,16 @@ object IvyXml {
 
   private def info(node: Node): Either[String, (Module, String)] =
     for {
-      org <- node.attribute("organisation").right
-      name <- node.attribute("module").right
+      org <- node
+        .attribute("organisation")
+        .right
+        .map(Organization(_))
+        .right
+      name <- node
+        .attribute("module")
+        .right
+        .map(ModuleName(_))
+        .right
       version <- node.attribute("revision").right
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
@@ -49,13 +57,16 @@ object IvyXml {
       .flatMap { node =>
         // artifact and include sub-nodes are ignored here
 
-        val excludes = node.children
+        val excludes = node
+          .children
           .filter(_.label == "exclude")
           .flatMap { node0 =>
-            val org = node0.attribute("org").right.getOrElse("*")
-            val name = node0.attribute("module").right.toOption
-              .orElse(node0.attribute("name").right.toOption)
-              .getOrElse("*")
+            val org = Organization(node0.attribute("org").right.getOrElse("*"))
+            val name = ModuleName(
+              node0.attribute("module").right.toOption
+                .orElse(node0.attribute("name").right.toOption)
+                .getOrElse("*")
+            )
             val confs = node0.attribute("conf").right.toOption.filter(_.nonEmpty).fold(Seq("*"))(_.split(','))
             confs.map(_ -> (org, name))
           }
@@ -65,8 +76,18 @@ object IvyXml {
         val allConfsExcludes = excludes.getOrElse("*", Set.empty)
 
         for {
-          org <- node.attribute("org").right.toOption.toSeq
-          name <- node.attribute("name").right.toOption.toSeq
+          org <- node
+            .attribute("org")
+            .right
+            .toOption
+            .toSeq
+            .map(Organization(_))
+          name <- node
+            .attribute("name")
+            .right
+            .toOption
+            .toSeq
+            .map(ModuleName(_))
           version <- node.attribute("rev").right.toOption.toSeq
           rawConf <- node.attribute("conf").right.toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
@@ -82,7 +103,7 @@ object IvyXml {
             version,
             toConf,
             allConfsExcludes ++ excludes.getOrElse(fromConf, Set.empty),
-            Attributes("", ""), // should come from possible artifact nodes
+            Attributes.empty, // should come from possible artifact nodes
             optional = false,
             transitive = transitive
           )
@@ -94,10 +115,16 @@ object IvyXml {
       .filter(_.label == "artifact")
       .flatMap { node =>
         val name = node.attribute("name").right.getOrElse("")
-        val type0 = node.attribute("type").right.getOrElse("jar")
-        val ext = node.attribute("ext").right.getOrElse(type0)
+        val type0 = node.attribute("type")
+          .right.map(Type(_))
+          .right.getOrElse(Type.jar)
+        val ext = node.attribute("ext")
+          .right.map(Extension(_))
+          .right.getOrElse(type0.asExtension)
         val confs = node.attribute("conf").fold(_ => Seq("*"), _.split(',').toSeq)
-        val classifier = node.attribute("classifier").right.getOrElse("")
+        val classifier = node.attribute("classifier")
+          .right.map(Classifier(_))
+          .right.getOrElse(Classifier.empty)
         confs.map(_ -> Publication(name, type0, ext, classifier))
       }
       .groupBy { case (conf, _) => conf }
@@ -162,10 +189,11 @@ object IvyXml {
         None,
         None,
         None,
+        relocated = false,
         None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq("*" -> Publication(module.name, "jar", "jar", ""))
+          Seq("*" -> Publication(module.name.value, Type.jar, Extension.jar, Classifier.empty))
         else {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)

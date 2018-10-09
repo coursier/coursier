@@ -5,6 +5,7 @@ import java.io.File
 
 import caseapp._
 import coursier.cli.options.FetchOptions
+import coursier.core.Classifier
 
 final class Fetch(options: FetchOptions, args: RemainingArgs) {
 
@@ -14,8 +15,8 @@ final class Fetch(options: FetchOptions, args: RemainingArgs) {
     sources = options.sources,
     javadoc = options.javadoc,
     artifactTypes = options.artifactOptions.artifactTypes(
-      options.sources || options.common.classifier0("sources"),
-      options.javadoc || options.common.classifier0("javadoc")
+      options.sources || options.common.classifier0(Classifier.sources),
+      options.javadoc || options.common.classifier0(Classifier.javadoc)
     )
   )
 

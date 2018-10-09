@@ -1,5 +1,7 @@
 package coursier
 
+import coursier.core.Type
+
 package object test {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
@@ -91,7 +93,8 @@ package object test {
       profiles: Seq[Profile] = Seq.empty,
       versions: Option[core.Versions] = None,
       snapshotVersioning: Option[core.SnapshotVersioning] = None,
-      packaging: Option[String] = None,
+      packaging: Option[Type] = None,
+      relocated: Boolean = false,
       publications: Seq[(String, core.Publication)] = Nil
     ): Project =
       core.Project(
@@ -105,8 +108,9 @@ package object test {
         profiles,
         versions,
         snapshotVersioning,
-        None,
         packaging,
+        relocated,
+        None,
         publications,
         Info.empty
       )

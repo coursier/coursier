@@ -2,10 +2,11 @@ package coursier
 package test
 
 import utest._
-import scala.async.Async.{async, await}
 
+import scala.async.Async.{async, await}
 import coursier.MavenRepository
 import coursier.Platform.fetch
+import coursier.core.{Classifier, Extension, Type}
 import coursier.test.compatibility._
 
 import scala.concurrent.Future
@@ -75,8 +76,8 @@ abstract class CentralTests extends TestSuite {
 
       val path = Seq(
         "resolutions",
-        module.organization,
-        module.name,
+        module.organization.value,
+        module.name.value,
         attrPathPart,
         version + (
           if (configuration.isEmpty)
@@ -102,7 +103,7 @@ abstract class CentralTests extends TestSuite {
           val dep0 = dep.copy(
             version = projOpt.fold(dep.version)(_.actualVersion)
           )
-          (dep0.module.organization, dep0.module.nameWithAttributes, dep0.version, dep0.configuration)
+          (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration)
         }
         .sorted
         .distinct
@@ -131,7 +132,7 @@ abstract class CentralTests extends TestSuite {
     version: String,
     attributes: Attributes = Attributes(),
     extraRepos: Seq[Repository] = Nil,
-    classifierOpt: Option[String] = None,
+    classifierOpt: Option[Classifier] = None,
     transitive: Boolean = false
   )(
     f: Seq[Artifact] => T
@@ -143,7 +144,7 @@ abstract class CentralTests extends TestSuite {
   def withArtifacts[T](
     dep: Dependency,
     extraRepos: Seq[Repository],
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   )(
     f: Seq[Artifact] => T
   ): Future[T] = 
@@ -152,50 +153,58 @@ abstract class CentralTests extends TestSuite {
   def withArtifacts[T](
     deps: Set[Dependency],
     extraRepos: Seq[Repository],
-    classifierOpt: Option[String]
+    classifierOpt: Option[Classifier]
   )(
     f: Seq[Artifact] => T
-  ): Future[T] = async {
-    val res = await(resolve(deps, extraRepos = extraRepos))
+  ): Future[T] =
+    withDetailedArtifacts(deps, extraRepos, classifierOpt)(l => f(l.map(_._2)))
 
-    val metadataErrors = res.errors
-    val conflicts = res.conflicts
-    val isDone = res.isDone
-    assert(metadataErrors.isEmpty)
-    assert(conflicts.isEmpty)
-    assert(isDone)
+  def withDetailedArtifacts[T](
+    deps: Set[Dependency],
+    extraRepos: Seq[Repository],
+    classifierOpt: Option[Classifier]
+  )(
+    f: Seq[(Attributes, Artifact)] => T
+  ): Future[T] =
+    async {
+      val res = await(resolve(deps, extraRepos = extraRepos))
 
-    val artifacts = classifierOpt
-      .fold(res.dependencyArtifacts(withOptional = true))(c => res.dependencyClassifiersArtifacts(Seq(c)))
-      .map(_._2)
+      val metadataErrors = res.errors
+      val conflicts = res.conflicts
+      val isDone = res.isDone
+      assert(metadataErrors.isEmpty)
+      assert(conflicts.isEmpty)
+      assert(isDone)
 
-    f(artifacts)
-  }
+      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_))).map(t => (t._2, t._3))
+
+      f(artifacts)
+    }
 
   def ensureHasArtifactWithExtension(
     module: Module,
     version: String,
-    extension: String,
+    extension: Extension,
     attributes: Attributes = Attributes(),
     extraRepos: Seq[Repository] = Nil
   ): Future[Unit] =
     withArtifacts(module, version, attributes = attributes, extraRepos = extraRepos) { artifacts =>
-      assert(artifacts.exists(_.url.endsWith("." + extension)))
+      assert(artifacts.exists(_.url.endsWith("." + extension.value)))
     }
 
   val tests = Tests {
 
     'logback - {
       async {
-        val dep = Dependency(Module("ch.qos.logback", "logback-classic"), "1.1.3")
+        val dep = Dependency(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")
         val res = await(resolve(Set(dep))).clearCaches
 
         val expected = Resolution(
           rootDependencies = Set(dep),
           dependencies = Set(
             dep.withCompileScope,
-            Dependency(Module("ch.qos.logback", "logback-core"), "1.1.3").withCompileScope,
-            Dependency(Module("org.slf4j", "slf4j-api"), "1.7.7").withCompileScope))
+            Dependency(Module(org"ch.qos.logback", name"logback-core"), "1.1.3").withCompileScope,
+            Dependency(Module(org"org.slf4j", name"slf4j-api"), "1.7.7").withCompileScope))
 
         assert(res == expected)
       }
@@ -203,15 +212,15 @@ abstract class CentralTests extends TestSuite {
 
     'asm - {
       async {
-        val dep = Dependency(Module("org.ow2.asm", "asm-commons"), "5.0.2")
+        val dep = Dependency(Module(org"org.ow2.asm", name"asm-commons"), "5.0.2")
         val res = await(resolve(Set(dep))).clearCaches
 
         val expected = Resolution(
           rootDependencies = Set(dep),
           dependencies = Set(
             dep.withCompileScope,
-            Dependency(Module("org.ow2.asm", "asm-tree"), "5.0.2").withCompileScope,
-            Dependency(Module("org.ow2.asm", "asm"), "5.0.2").withCompileScope))
+            Dependency(Module(org"org.ow2.asm", name"asm-tree"), "5.0.2").withCompileScope,
+            Dependency(Module(org"org.ow2.asm", name"asm"), "5.0.2").withCompileScope))
 
         assert(res == expected)
       }
@@ -219,7 +228,7 @@ abstract class CentralTests extends TestSuite {
 
     'jodaVersionInterval - {
       async {
-        val dep = Dependency(Module("joda-time", "joda-time"), "[2.2,2.8]")
+        val dep = Dependency(Module(org"joda-time", name"joda-time"), "[2.2,2.8]")
         val res0 = await(resolve(Set(dep)))
         val res = res0.clearCaches
 
@@ -238,13 +247,13 @@ abstract class CentralTests extends TestSuite {
 
     'spark - {
       * - resolutionCheck(
-        Module("org.apache.spark", "spark-core_2.11"),
+        Module(org"org.apache.spark", name"spark-core_2.11"),
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))
       )
 
       'scala210 - resolutionCheck(
-        Module("org.apache.spark", "spark-core_2.10"),
+        Module(org"org.apache.spark", name"spark-core_2.10"),
         "2.1.1",
         profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
       )
@@ -252,14 +261,14 @@ abstract class CentralTests extends TestSuite {
 
     'argonautShapeless - {
       resolutionCheck(
-        Module("com.github.alexarchambault", "argonaut-shapeless_6.1_2.11"),
+        Module(org"com.github.alexarchambault", name"argonaut-shapeless_6.1_2.11"),
         "0.2.0"
       )
     }
 
     'snapshotMetadata - {
       'simple - {
-        val mod = Module("com.github.fommil", "java-logging")
+        val mod = Module(org"com.github.fommil", name"java-logging")
         val version = "1.2-SNAPSHOT"
         val extraRepo = MavenRepository("https://oss.sonatype.org/content/repositories/public/")
 
@@ -273,14 +282,14 @@ abstract class CentralTests extends TestSuite {
         * - ensureHasArtifactWithExtension(
           mod,
           version,
-          "jar",
-          Attributes("jar"),
+          Extension.jar,
+          Attributes(Type.jar),
           extraRepos = Seq(extraRepo)
         )
       }
 
       * - {
-        val mod = Module("org.jitsi", "jitsi-videobridge")
+        val mod = Module(org"org.jitsi", name"jitsi-videobridge")
         val version = "1.0-SNAPSHOT"
         val extraRepos = Seq(
           MavenRepository("https://github.com/jitsi/jitsi-maven-repository/raw/master/releases"),
@@ -299,42 +308,42 @@ abstract class CentralTests extends TestSuite {
     'versionProperty - {
       // nasty one - in its POM, its version contains "${parent.project.version}"
       resolutionCheck(
-        Module("org.bytedeco.javacpp-presets", "opencv"),
+        Module(org"org.bytedeco.javacpp-presets", name"opencv"),
         "3.0.0-1.1"
       )
     }
 
     'parentProjectProperties - {
       resolutionCheck(
-        Module("com.github.fommil.netlib", "all"),
+        Module(org"com.github.fommil.netlib", name"all"),
         "1.1.2"
       )
     }
 
     'projectProperties - {
       resolutionCheck(
-        Module("org.glassfish.jersey.core", "jersey-client"),
+        Module(org"org.glassfish.jersey.core", name"jersey-client"),
         "2.19"
       )
     }
 
     'parentDependencyManagementProperties - {
       resolutionCheck(
-        Module("com.nativelibs4java", "jnaerator-runtime"),
+        Module(org"com.nativelibs4java", name"jnaerator-runtime"),
         "0.12"
       )
     }
 
     'propertySubstitution - {
       resolutionCheck(
-        Module("org.drools", "drools-compiler"),
+        Module(org"org.drools", name"drools-compiler"),
         "7.0.0.Final"
       )
     }
 
     'artifactIdProperties - {
       resolutionCheck(
-        Module("cc.factorie", "factorie_2.11"),
+        Module(org"cc.factorie", name"factorie_2.11"),
         "1.2"
       )
     }
@@ -344,7 +353,7 @@ abstract class CentralTests extends TestSuite {
         // that one involves version intervals, thus changing versions, so only
         // running it against our cached Central stuff
         resolutionCheck(
-          Module("org.webjars.bower", "malihu-custom-scrollbar-plugin"),
+          Module(org"org.webjars.bower", name"malihu-custom-scrollbar-plugin"),
           "3.1.5"
         )
       else
@@ -353,40 +362,40 @@ abstract class CentralTests extends TestSuite {
 
     'latestRevision - {
       * - resolutionCheck(
-        Module("com.chuusai", "shapeless_2.11"),
+        Module(org"com.chuusai", name"shapeless_2.11"),
         "[2.2.0,2.3-a1)"
       )
 
       * - resolutionCheck(
-        Module("com.chuusai", "shapeless_2.11"),
+        Module(org"com.chuusai", name"shapeless_2.11"),
         "2.2.+"
       )
 
       * - resolutionCheck(
-        Module("com.googlecode.libphonenumber", "libphonenumber"),
+        Module(org"com.googlecode.libphonenumber", name"libphonenumber"),
         "[7.0,7.1)"
       )
 
       * - resolutionCheck(
-        Module("com.googlecode.libphonenumber", "libphonenumber"),
+        Module(org"com.googlecode.libphonenumber", name"libphonenumber"),
         "7.0.+"
       )
     }
 
     'versionFromDependency - {
-      val mod = Module("org.apache.ws.commons", "XmlSchema")
+      val mod = Module(org"org.apache.ws.commons", name"XmlSchema")
       val version = "1.1"
       val expectedArtifactUrl = s"$centralBase/org/apache/ws/commons/XmlSchema/1.1/XmlSchema-1.1.jar"
 
       * - resolutionCheck(mod, version)
 
-      * - withArtifacts(mod, version, Attributes("jar")) { artifacts =>
+      * - withArtifacts(mod, version, Attributes(Type.jar)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
 
     'fixedVersionDependency - {
-      val mod = Module("io.grpc", "grpc-netty")
+      val mod = Module(org"io.grpc", name"grpc-netty")
       val version = "0.14.1"
 
       resolutionCheck(mod, version)
@@ -394,7 +403,7 @@ abstract class CentralTests extends TestSuite {
 
     'mavenScopes - {
       def check(config: String) = resolutionCheck(
-        Module("com.android.tools", "sdklib"),
+        Module(org"com.android.tools", name"sdklib"),
         "24.5.0",
         configuration = config
       )
@@ -407,10 +416,10 @@ abstract class CentralTests extends TestSuite {
 
       def intransitiveCompiler(config: String) =
         Dependency(
-          Module("org.scala-lang", "scala-compiler"), "2.11.8",
+          Module(org"org.scala-lang", name"scala-compiler"), "2.11.8",
           configuration = config,
           transitive = false,
-          attributes = Attributes("jar")
+          attributes = Attributes(Type.jar)
         )
 
       withArtifacts(
@@ -433,49 +442,48 @@ abstract class CentralTests extends TestSuite {
     'packaging - {
       'aar - {
         // random aar-based module found on Central
-        val module = Module("com.yandex.android", "speechkit")
+        val module = Module(org"com.yandex.android", name"speechkit")
         val version = "2.5.0"
-        val tpe = "aar"
 
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          tpe,
-          attributes = Attributes(tpe)
+          Extension("aar"),
+          attributes = Attributes(Type("aar"))
         )
 
         * - ensureHasArtifactWithExtension(
           module,
           version,
-          tpe
+          Extension("aar")
         )
       }
 
       'bundle - {
         // has packaging bundle - ensuring coursier gives its artifact the .jar extension
         * - ensureHasArtifactWithExtension(
-          Module("com.google.guava", "guava"),
+          Module(org"com.google.guava", name"guava"),
           "17.0",
-          "jar"
+          Extension.jar
         )
 
         // even though packaging is bundle, depending on attribute type "jar" should still find
         // an artifact
         * - ensureHasArtifactWithExtension(
-          Module("com.google.guava", "guava"),
+          Module(org"com.google.guava", name"guava"),
           "17.0",
-          "jar",
-          attributes = Attributes("jar")
+          Extension.jar,
+          attributes = Attributes(Type.jar)
         )
       }
 
       'mavenPlugin - {
         // has packaging maven-plugin - ensuring coursier gives its artifact the .jar extension
         ensureHasArtifactWithExtension(
-          Module("org.bytedeco", "javacpp"),
+          Module(org"org.bytedeco", name"javacpp"),
           "1.1",
-          "jar",
-          Attributes("maven-plugin")
+          Extension.jar,
+          Attributes(Type("maven-plugin"))
         )
       }
     }
@@ -486,11 +494,11 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1"
+              Module(org"org.apache.avro", name"avro"), "1.8.1"
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(!filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -500,11 +508,11 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(!filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -514,14 +522,14 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1"
+              Module(org"org.apache.avro", name"avro"), "1.8.1"
             ),
             Dependency(
-              Module("org.apache.avro", "avro"), "1.8.1", attributes = Attributes("", "tests")
+              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(resolve(deps))
-          val filenames: Set[String] = res.artifacts(withOptional = true).map(_.url.split("/").last).toSet
+          val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
           assert(filenames.contains("avro-1.8.1.jar"))
           assert(filenames.contains("avro-1.8.1-tests.jar"))
         }
@@ -533,10 +541,10 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.scala-lang", "scala-compiler"), "2.11.8"
+              Module(org"org.scala-lang", name"scala-compiler"), "2.11.8"
             ),
             Dependency(
-              Module("org.scala-js", "scalajs-compiler_2.11.8"), "0.6.8"
+              Module(org"org.scala-js", name"scalajs-compiler_2.11.8"), "0.6.8"
             )
           )
 
@@ -549,7 +557,7 @@ abstract class CentralTests extends TestSuite {
           assert(conflicts.isEmpty)
           assert(isDone)
 
-          val artifacts = res.artifacts(withOptional = true)
+          val artifacts = res.artifacts()
 
           val map = artifacts.groupBy(a => a)
 
@@ -573,7 +581,7 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Set(
             Dependency(
-              Module("org.apache.hadoop", "hadoop-yarn-server-resourcemanager"),
+              Module(org"org.apache.hadoop", name"hadoop-yarn-server-resourcemanager"),
               "2.7.1"
             )
           )
@@ -587,36 +595,36 @@ abstract class CentralTests extends TestSuite {
           assert(conflicts.isEmpty)
           assert(isDone)
 
-          val dependencyArtifacts = res.dependencyArtifacts(withOptional = true)
+          val dependencyArtifacts = res.dependencyArtifacts()
 
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
-            case (dep, artifact)
-              if dep.module == Module("org.apache.zookeeper", "zookeeper") &&
-                 dep.attributes.`type` == "test-jar" =>
-              artifact
+            case (dep, attributes, artifact)
+              if dep.module == Module(org"org.apache.zookeeper", name"zookeeper") &&
+                 attributes.`type` == Type.testJar =>
+              (attributes, artifact)
           }
 
           assert(zookeeperTestArtifacts.length == 1)
 
-          val zookeeperTestArtifact = zookeeperTestArtifacts.head
+          val (attr, artifact) = zookeeperTestArtifacts.head
 
-          assert(zookeeperTestArtifact.attributes.`type` == "test-jar")
-          assert(zookeeperTestArtifact.attributes.classifier == "tests")
-          zookeeperTestArtifact.url.endsWith("-tests.jar")
+          assert(attr.`type` == Type.testJar)
+          assert(attr.classifier == Classifier.tests)
+          artifact.url.endsWith("-tests.jar")
         }
       }
     }
 
     'ignoreUtf8Bom - {
       resolutionCheck(
-        Module("dk.brics.automaton", "automaton"),
+        Module(org"dk.brics.automaton", name"automaton"),
         "1.11-8"
       )
     }
 
     'ignoreWhitespaces - {
       resolutionCheck(
-        Module("org.jboss.resteasy", "resteasy-jaxrs"),
+        Module(org"org.jboss.resteasy", name"resteasy-jaxrs"),
         "3.0.9.Final"
       )
     }
@@ -627,7 +635,7 @@ abstract class CentralTests extends TestSuite {
       // - requires converting a "x86-64" to "x86_64" in it, and
       // - uses "project.packaging" property
       resolutionCheck(
-        Module("org.nd4j", "nd4j-native"),
+        Module(org"org.nd4j", name"nd4j-native"),
         "0.5.0"
       )
     }
@@ -637,12 +645,12 @@ abstract class CentralTests extends TestSuite {
       // optional should bring jline
 
       * - resolutionCheck(
-        Module("org.scala-lang", "scala-compiler"),
+        Module(org"org.scala-lang", name"scala-compiler"),
         "2.11.8"
       )
 
       * - resolutionCheck(
-        Module("org.scala-lang", "scala-compiler"),
+        Module(org"org.scala-lang", name"scala-compiler"),
         "2.11.8",
         configuration = "optional"
       )
@@ -650,13 +658,13 @@ abstract class CentralTests extends TestSuite {
 
     'deepLearning4j - {
       resolutionCheck(
-        Module("org.deeplearning4j", "deeplearning4j-core"),
+        Module(org"org.deeplearning4j", name"deeplearning4j-core"),
         "0.8.0"
       )
     }
 
     'tarGzZipArtifacts - {
-      val mod = Module("org.apache.maven", "apache-maven")
+      val mod = Module(org"org.apache.maven", name"apache-maven")
       val version = "3.3.9"
 
       * - resolutionCheck(mod, version)
@@ -666,14 +674,14 @@ abstract class CentralTests extends TestSuite {
 
       'tarGz - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes("tar.gz", "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes("tar.gz", "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
@@ -683,14 +691,14 @@ abstract class CentralTests extends TestSuite {
 
       'zip - {
         * - {
-          withArtifacts(mod, version, attributes = Attributes("zip", "bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
           }
         }
         * - {
-          withArtifacts(mod, version, attributes = Attributes("zip", "bin"), classifierOpt = Some("bin"), transitive = true) { artifacts =>
+          withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
@@ -701,19 +709,19 @@ abstract class CentralTests extends TestSuite {
 
     'groupIdVersionProperties - {
       resolutionCheck(
-        Module("org.apache.directory.shared", "shared-ldap"),
+        Module(org"org.apache.directory.shared", name"shared-ldap"),
         "0.9.19"
       )
     }
 
     'relocation - {
       * - resolutionCheck(
-        Module("bouncycastle", "bctsp-jdk14"),
+        Module(org"bouncycastle", name"bctsp-jdk14"),
         "138"
       )
 
       'ignoreRelocationJars - {
-        val mod = Module("org.apache.commons", "commons-io")
+        val mod = Module(org"org.apache.commons", name"commons-io")
         val ver = "1.3.2"
 
         val expectedUrl = s"$centralBase/commons-io/commons-io/1.3.2/commons-io-1.3.2.jar"
@@ -728,28 +736,28 @@ abstract class CentralTests extends TestSuite {
 
     'entities - {
       'odash - resolutionCheck(
-        Module("org.codehaus.plexus", "plexus"),
+        Module(org"org.codehaus.plexus", name"plexus"),
         "1.0.4"
       )
     }
 
     'parentVersionInPom - {
       resolutionCheck(
-          Module("io.swagger.parser.v3", "swagger-parser-v3"),
+          Module(org"io.swagger.parser.v3", name"swagger-parser-v3"),
           "2.0.1"
         )
     }
 
     'parentBeforeImports - {
       resolutionCheck(
-        Module("org.kie", "kie-api"),
+        Module(org"org.kie", name"kie-api"),
         "6.5.0.Final",
         extraRepos = Seq(MavenRepository("https://repository.jboss.org/nexus/content/repositories/public"))
       )
     }
 
     'signaturesOfSignatures - {
-      val mod = Module("org.yaml", "snakeyaml")
+      val mod = Module(org"org.yaml", name"snakeyaml")
       val ver = "1.17"
 
       def hasSha1(a: Artifact) = a.checksumUrls.contains("SHA-1")
@@ -758,9 +766,12 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver)
 
-      * - withArtifacts(mod, ver, Attributes("bundle")) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
 
-        val jarOpt = artifacts.find(_.`type` == "bundle").orElse(artifacts.find(_.`type` == "jar"))
+        val jarOpt = artifacts.collect {
+          case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
+            artifact
+        }
 
         assert(jarOpt.nonEmpty)
         assert(jarOpt.forall(hasSha1))
@@ -768,9 +779,12 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - withArtifacts(mod, ver, Attributes("pom")) { artifacts =>
+      * - withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
 
-        val pomOpt = artifacts.find(_.`type` == "pom")
+        val pomOpt = artifacts.collect {
+          case (attr, artifact) if attr.`type` == Type.pom =>
+            artifact
+        }
 
         assert(pomOpt.nonEmpty)
         assert(pomOpt.forall(hasSha1))
@@ -780,7 +794,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     'sbtPluginVersionRange - {
-      val mod = Module("org.ensime", "sbt-ensime", attributes = Map("scalaVersion" -> "2.10", "sbtVersion" -> "0.13"))
+      val mod = Module(org"org.ensime", name"sbt-ensime", attributes = Map("scalaVersion" -> "2.10", "sbtVersion" -> "0.13"))
       val ver = "1.12.+"
 
       * - {
@@ -792,7 +806,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     'multiVersionRanges - {
-      val mod = Module("org.webjars.bower", "dgrid")
+      val mod = Module(org"org.webjars.bower", name"dgrid")
       val ver = "1.0.0"
 
       * - {
@@ -804,27 +818,27 @@ abstract class CentralTests extends TestSuite {
     }
 
     'dependencyManagementScopeOverriding - {
-      val mod = Module("org.apache.tika", "tika-app")
+      val mod = Module(org"org.apache.tika", name"tika-app")
       val ver = "1.13"
 
       * - resolutionCheck(mod, ver)
     }
 
     'optionalArtifacts - {
-      val mod = Module("io.monix", "monix_2.12")
+      val mod = Module(org"io.monix", name"monix_2.12")
       val ver = "2.3.0"
 
       val mainUrl = s"$centralBase/io/monix/monix_2.12/2.3.0/monix_2.12-2.3.0.jar"
 
       * - resolutionCheck(mod, ver)
 
-      * - withArtifacts(mod, ver, Attributes("jar")) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type.jar)) { artifacts =>
         val mainArtifactOpt = artifacts.find(_.url == mainUrl)
         assert(mainArtifactOpt.nonEmpty)
         assert(mainArtifactOpt.forall(_.optional))
       }
 
-      * - withArtifacts(Module("com.lihaoyi", "scalatags_2.12"), "0.6.2", Attributes("jar"), transitive = true) { artifacts =>
+      * - withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", Attributes(Type.jar), transitive = true) { artifacts =>
 
         val urls = artifacts.map(_.url).toSet
 
@@ -838,14 +852,14 @@ abstract class CentralTests extends TestSuite {
     }
 
     'packagingTpe - {
-      val mod = Module("android.arch.lifecycle", "extensions")
+      val mod = Module(org"android.arch.lifecycle", name"extensions")
       val ver = "1.0.0-alpha3"
 
       val extraRepo = MavenRepository("https://maven.google.com")
 
       * - resolutionCheck(mod, ver, extraRepos = Seq(extraRepo))
 
-      * - withArtifacts(mod, ver, Attributes("aar"), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
@@ -865,14 +879,14 @@ abstract class CentralTests extends TestSuite {
     }
 
     'noArtifactIdExclusion - {
-      val mod = Module("org.datavec", "datavec-api")
+      val mod = Module(org"org.datavec", name"datavec-api")
       val ver = "0.9.1"
 
       * - resolutionCheck(mod, ver)
     }
 
     'snapshotVersioningBundlePackaging - {
-      val mod = Module("org.talend.daikon", "daikon")
+      val mod = Module(org"org.talend.daikon", name"daikon")
       val ver = "0.19.0-SNAPSHOT"
 
       val extraRepos = Seq(
@@ -882,7 +896,7 @@ abstract class CentralTests extends TestSuite {
 
       * - resolutionCheck(mod, ver, extraRepos = extraRepos)
 
-      * - withArtifacts(mod, ver, Attributes("jar"), extraRepos = extraRepos, transitive = true) { artifacts =>
+      * - withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",

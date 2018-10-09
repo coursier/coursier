@@ -27,16 +27,20 @@ object Pom {
   // TODO Allow no version in some contexts
   private def module(
     node: Node,
-    defaultGroupId: Option[String] = None,
-    defaultArtifactId: Option[String] = None
+    defaultGroupId: Option[Organization] = None,
+    defaultArtifactId: Option[ModuleName] = None
   ): Either[String, Module] = {
     for {
       organization <- {
         val e = text(node, "groupId", "Organization")
+          .right
+          .map(Organization(_))
         defaultGroupId.fold(e)(g => Right(e.right.getOrElse(g))).right
       }
       name <- {
         val n = text(node, "artifactId", "Name")
+          .right
+          .map(ModuleName(_))
         defaultArtifactId.fold(n)(n0 => Right(n.right.getOrElse(n0))).right
       }
     } yield Module(organization, name, Map.empty).trim
@@ -50,15 +54,19 @@ object Pom {
 
       val version0 = readVersion(node)
       val scopeOpt = text(node, "scope", "").right.toOption
-      val typeOpt = text(node, "type", "").right.toOption
-      val classifierOpt = text(node, "classifier", "").right.toOption
+      val typeOpt = text(node, "type", "")
+        .right.map(Type(_))
+        .right.toOption
+      val classifierOpt = text(node, "classifier", "")
+        .right.map(Classifier(_))
+        .right.toOption
       val xmlExclusions = node.children
         .find(_.label == "exclusions")
         .map(_.children.filter(_.label == "exclusion"))
         .getOrElse(Seq.empty)
 
       xmlExclusions
-        .eitherTraverse(module(_, defaultArtifactId = Some("*")))
+        .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
         .right
         .map { exclusions =>
 
@@ -69,7 +77,7 @@ object Pom {
             version0,
             "",
             exclusions.map(mod => (mod.organization, mod.name)).toSet,
-            Attributes(typeOpt.getOrElse(""), classifierOpt.getOrElse("")),
+            Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
             optional,
             transitive = true
           )
@@ -152,8 +160,10 @@ object Pom {
     } yield Profile(id, activeByDefault, activation, deps, depMgmts, properties.toMap)
   }
 
-  def packagingOpt(pom: Node): Option[String] =
-    text(pom, "packaging", "").right.toOption
+  def packagingOpt(pom: Node): Option[Type] =
+    text(pom, "packaging", "")
+      .right.map(Type(_))
+      .right.toOption
 
   def project(pom: Node): Either[String, Project] =
     project(pom, relocationAsDependency = false)
@@ -164,7 +174,7 @@ object Pom {
   ): Either[String, Project] = {
 
     for {
-      projModule <- module(pom, defaultGroupId = Some("")).right
+      projModule <- module(pom, defaultGroupId = Some(Organization(""))).right
 
       parentOpt <- point(pom.children.find(_.label == "parent"))
       parentModuleOpt <- parentOpt
@@ -190,8 +200,8 @@ object Pom {
       )
       depMgmts <- xmlDepMgmts.eitherTraverse(dependency).right
 
-      groupId <- Some(projModule.organization).filter(_.nonEmpty)
-        .orElse(parentModuleOpt.map(_.organization).filter(_.nonEmpty))
+      groupId <- Some(projModule.organization).filter(_.value.nonEmpty)
+        .orElse(parentModuleOpt.map(_.organization).filter(_.value.nonEmpty))
         .toRight("No organization found")
         .right
       version <- Some(readVersion(pom)).filter(_.nonEmpty)
@@ -204,7 +214,7 @@ object Pom {
         .getOrElse(Right(()))
         .right
       _ <- parentModuleOpt
-        .map(mod => if (mod.organization.isEmpty) Left("Parent organization missing") else Right(()))
+        .map(mod => if (mod.organization.value.isEmpty) Left("Parent organization missing") else Right(()))
         .getOrElse(Right(()))
         .right
 
@@ -287,8 +297,12 @@ object Pom {
 
               // see https://maven.apache.org/guides/mini/guide-relocation.html
 
-              val relocatedGroupId = text(n, "groupId", "").right.getOrElse(finalProjModule.organization)
-              val relocatedArtifactId = text(n, "artifactId", "").right.getOrElse(finalProjModule.name)
+              val relocatedGroupId = text(n, "groupId", "")
+                .right.map(Organization(_))
+                .right.getOrElse(finalProjModule.organization)
+              val relocatedArtifactId = text(n, "artifactId", "")
+                .right.map(ModuleName(_))
+                .right.getOrElse(finalProjModule.name)
               val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
               "" -> Dependency(
@@ -299,7 +313,7 @@ object Pom {
                 relocatedVersion,
                 "",
                 Set(),
-                Attributes("", ""),
+                Attributes.empty,
                 optional = false,
                 transitive = true
               )
@@ -324,7 +338,8 @@ object Pom {
         profiles,
         None,
         None,
-        relocationDependencyOpt.fold(packagingOpt(pom))(_ => Some(relocatedPackaging)),
+        packagingOpt(pom),
+        relocationDependencyOpt.nonEmpty,
         None,
         Nil,
         Info(
@@ -378,8 +393,8 @@ object Pom {
         .right
         .getOrElse("")
 
-    val classifier = textOrEmpty("classifier", "Classifier")
-    val ext = textOrEmpty("extension", "Extensions")
+    val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
+    val ext = Extension(textOrEmpty("extension", "Extensions"))
     val value = textOrEmpty("value", "Value")
 
     val updatedOpt = text(node, "updated", "Updated")
@@ -405,14 +420,18 @@ object Pom {
     buildNumber: Int
   ): SnapshotVersion = {
     val value = s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber"
-    SnapshotVersion("*", "*", value, None)
+    SnapshotVersion(Classifier("*"), Extension("*"), value, None)
   }
 
   def snapshotVersioning(node: Node): Either[String, SnapshotVersioning] =
     // FIXME Quite similar to Versions above
     for {
-      organization <- text(node, "groupId", "Organization").right
-      name <- text(node, "artifactId", "Name").right
+      organization <- text(node, "groupId", "Organization")
+        .right.map(Organization(_))
+        .right
+      name <- text(node, "artifactId", "Name")
+        .right.map(ModuleName(_))
+        .right
 
       xmlVersioning <- node
         .children
@@ -496,8 +515,6 @@ object Pom {
       )
     }
 
-  val relocatedPackaging = s"$$relocated"
-
   val extraAttributeSeparator = ":#@#:"
   val extraAttributePrefix = "+"
 
@@ -548,8 +565,12 @@ object Pom {
           }
           .toMap
       )
-      org <- attrFrom(attrs, extraAttributeOrg).right
-      name <- attrFrom(attrs, extraAttributeName).right
+      org <- attrFrom(attrs, extraAttributeOrg)
+        .right.map(Organization(_))
+        .right
+      name <- attrFrom(attrs, extraAttributeName)
+        .right.map(ModuleName(_))
+        .right
       version <- attrFrom(attrs, extraAttributeVersion).right
     } yield {
       val remainingAttrs = attrs.filterKeys(!extraAttributeBase(_))

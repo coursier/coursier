@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URLClassLoader
 
 import caseapp._
-import coursier.Dependency
+import coursier.{Dependency, moduleNameString, organizationString}
 import coursier.cli.options.SparkSubmitOptions
 import coursier.cli.spark.{SparkAssembly, Submit}
 
@@ -22,15 +22,15 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
   def scalaSparkVersions(dependencies: Iterable[Dependency]): Either[String, (String, String)] = {
 
     val sparkCoreMods = dependencies.collect {
-      case dep if dep.module.organization == "org.apache.spark" &&
-        (dep.module.name == "spark-core_2.10" || dep.module.name == "spark-core_2.11") =>
+      case dep if dep.module.organization == org"org.apache.spark" &&
+        (dep.module.name == name"spark-core_2.10" || dep.module.name == name"spark-core_2.11") =>
         (dep.module, dep.version)
     }
 
     if (sparkCoreMods.isEmpty)
       Left("Cannot find spark among dependencies")
     else if (sparkCoreMods.size == 1) {
-      val scalaVersion = sparkCoreMods.head._1.name match {
+      val scalaVersion = sparkCoreMods.head._1.name.value match {
         case "spark-core_2.10" => "2.10"
         case "spark-core_2.11" => "2.11"
         case _ => throw new Exception("Cannot happen")

@@ -3,6 +3,7 @@ package coursier
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
+import coursier.core.{Classifier, Type}
 import coursier.util.{EitherT, Monad}
 
 object FallbackDependenciesRepository {
@@ -81,24 +82,6 @@ final case class FallbackDependenciesRepository(
   localArtifactsShouldBeCached: Boolean = false
 ) extends Repository {
 
-  private val source: Artifact.Source =
-    new Artifact.Source {
-      def artifacts(
-        dependency: Dependency,
-        project: Project,
-        overrideClassifiers: Option[Seq[String]]
-      ) =
-        fallbacks
-          .get(dependency.moduleVersion)
-          .toSeq
-          .map {
-            case (url, changing) =>
-              val url0 = url.toString
-              val ext = url0.substring(url0.lastIndexOf('.') + 1)
-              Artifact(url0, Map.empty, Map.empty, Attributes(ext, ""), changing, optional = false, None)
-          }
-    }
-
   def find[F[_]](
     module: Module,
     version: String,
@@ -133,12 +116,13 @@ final case class FallbackDependenciesRepository(
                 None,
                 None,
                 None,
+                relocated = false,
                 None,
                 Nil,
                 Info.empty
               )
 
-              Right((source, proj))
+              Right((this, proj))
             } else
               Left(s"$fileName not found under $dirUrlStr")
           }
@@ -146,4 +130,21 @@ final case class FallbackDependenciesRepository(
 
     EitherT(F.point(res))
   }
+
+  def artifacts(
+    dependency: Dependency,
+    project: Project,
+    overrideClassifiers: Option[Seq[Classifier]]
+  ): Seq[(Attributes, Artifact)] =
+    fallbacks
+      .get(dependency.moduleVersion)
+      .toSeq
+      .map {
+        case (url, changing) =>
+          val url0 = url.toString
+          val ext = url0.substring(url0.lastIndexOf('.') + 1)
+          val attr = Attributes(Type(ext))
+          (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
+      }
+
 }

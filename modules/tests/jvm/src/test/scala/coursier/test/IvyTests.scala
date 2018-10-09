@@ -2,7 +2,8 @@ package coursier.test
 
 import java.io.File
 
-import coursier.{Attributes, Dependency, Module}
+import coursier.core.{Classifier, Type}
+import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import utest._
 
@@ -23,7 +24,7 @@ object IvyTests extends TestSuite {
     'dropInfoAttributes - {
       CentralTests.resolutionCheck(
         module = Module(
-          "org.scala-js", "sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+          org"org.scala-js", name"sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
         ),
         version = "0.6.6",
         extraRepos = Seq(sbtRepo),
@@ -35,7 +36,7 @@ object IvyTests extends TestSuite {
       // will likely break if new 0.6.x versions are published :-)
 
       val mod = Module(
-        "com.github.ddispaltro", "sbt-reactjs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+        org"com.github.ddispaltro", name"sbt-reactjs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
       )
       val ver = "0.6.+"
 
@@ -47,7 +48,7 @@ object IvyTests extends TestSuite {
         extraRepos = Seq(sbtRepo)
       )
 
-      * - CentralTests.withArtifacts(mod, ver, Attributes("jar"), extraRepos = Seq(sbtRepo)) { artifacts =>
+      * - CentralTests.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
@@ -55,7 +56,7 @@ object IvyTests extends TestSuite {
     'testArtifacts - {
 
       val dep = Dependency(
-        Module("com.example", "a_2.11"),
+        Module(org"com.example", name"a_2.11"),
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()
@@ -75,7 +76,7 @@ object IvyTests extends TestSuite {
       val testJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11-tests.jar"
 
       "no conf or classifier" - CentralTests.withArtifacts(
-        dep = dep.copy(attributes = Attributes("jar")),
+        dep = dep.copy(attributes = Attributes(Type.jar)),
         extraRepos = Seq(repo),
         classifierOpt = None
       ) {
@@ -97,7 +98,7 @@ object IvyTests extends TestSuite {
         }
 
         "attributes" - CentralTests.withArtifacts(
-          dep = dep.copy(configuration = "test", attributes = Attributes("jar")),
+          dep = dep.copy(configuration = "test", attributes = Attributes(Type.jar)),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>
@@ -108,7 +109,7 @@ object IvyTests extends TestSuite {
       }
 
       "tests classifier" - {
-        val testsDep = dep.copy(attributes = Attributes("jar", "tests"))
+        val testsDep = dep.copy(attributes = Attributes(Type.jar, Classifier.tests))
 
         * - CentralTests.withArtifacts(
           deps = Set(dep, testsDep),

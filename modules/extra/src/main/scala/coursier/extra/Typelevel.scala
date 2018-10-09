@@ -1,18 +1,18 @@
 package coursier.extra
 
-import coursier.{Dependency, Module}
+import coursier.{Dependency, Module, moduleNameString, organizationString}
 
 object Typelevel {
 
-  val mainLineOrg = "org.scala-lang"
-  val typelevelOrg = "org.typelevel"
+  val mainLineOrg = org"org.scala-lang"
+  val typelevelOrg = org"org.typelevel"
 
   val modules = Set(
-    "scala-compiler",
-    "scala-library",
-    "scala-library-all",
-    "scala-reflect",
-    "scalap"
+    name"scala-compiler",
+    name"scala-library",
+    name"scala-library-all",
+    name"scala-reflect",
+    name"scalap"
     // any other?
   )
 

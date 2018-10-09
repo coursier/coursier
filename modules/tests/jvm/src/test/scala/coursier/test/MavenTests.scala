@@ -2,7 +2,8 @@ package coursier.test
 
 import java.io.File
 
-import coursier.{Attributes, Dependency, Module}
+import coursier.core.{Classifier, Type}
+import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.maven.MavenRepository
 import utest._
 
@@ -14,7 +15,7 @@ object MavenTests extends TestSuite {
     'testSnapshotNoVersioning - {
 
       val dep = Dependency(
-        Module("com.abc", "test-snapshot-special"),
+        Module(org"com.abc", name"test-snapshot-special"),
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()
@@ -30,7 +31,7 @@ object MavenTests extends TestSuite {
       val sourcesJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82-sources.jar"
 
       * - CentralTests.withArtifacts(
-        dep = dep.copy(attributes = Attributes("jar")),
+        dep = dep.copy(attributes = Attributes(Type.jar)),
         extraRepos = Seq(repo),
         classifierOpt = None
       ) {
@@ -41,9 +42,9 @@ object MavenTests extends TestSuite {
       }
 
       * - CentralTests.withArtifacts(
-        dep = dep.copy(attributes = Attributes("src")),
+        dep = dep.copy(attributes = Attributes(Type.source)),
         extraRepos = Seq(repo),
-        classifierOpt = Some("sources")
+        classifierOpt = Some(Classifier.sources)
       ) {
         case Seq(artifact) =>
           assert(artifact.url == sourcesJarUrl)

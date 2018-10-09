@@ -36,14 +36,14 @@ object MavenRepository {
 
   def mavenVersioning(
     snapshotVersioning: SnapshotVersioning,
-    classifier: String,
-    extension: String
+    classifier: Classifier,
+    extension: Extension
   ): Option[String] =
     snapshotVersioning
       .snapshotVersions
       .find(v =>
-        (v.classifier == classifier || v.classifier == "*") &&
-        (v.extension == extension || v.extension == "*")
+        (v.classifier == classifier || v.classifier == Classifier("*")) &&
+        (v.extension == extension || v.extension == Extension("*"))
        )
       .map(_.value)
       .filter(_.nonEmpty)
@@ -56,16 +56,16 @@ object MavenRepository {
     "test" -> Seq("runtime")
   )
 
-  def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
+  private def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
     if (sbtAttrStub) {
-      var name = module.name
+      var name = module.name.value
       for (scalaVersion <- module.attributes.get("scalaVersion"))
         name = name + "_" + scalaVersion
       for (sbtVersion <- module.attributes.get("sbtVersion"))
         name = name + "_" + sbtVersion
       name
     } else
-      module.name
+      module.name.value
 
 }
 
@@ -80,11 +80,13 @@ final case class MavenRepository(
   import Repository._
   import MavenRepository._
 
-  val root0 = if (root.endsWith("/")) root else root + "/"
-  val source = MavenSource(root0, changing, sbtAttrStub, authentication)
+  // FIXME Ideally, we should silently drop a '/' suffix from `root`
+  // so that
+  //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
+  private val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
-    module.organization.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
+    module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
 
   private def moduleVersionPath(module: Module, version: String): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
@@ -99,13 +101,12 @@ final case class MavenRepository(
   ): Artifact = {
 
     val path = moduleVersionPath(module, version) :+
-      s"${module.name}-${versioningValue getOrElse version}.pom"
+      s"${module.name.value}-${versioningValue getOrElse version}.pom"
 
     Artifact(
       urlFor(path),
       Map.empty,
       Map.empty,
-      Attributes("pom", ""),
       changing = changing.getOrElse(isSnapshot(version)),
       optional = false,
       authentication = authentication
@@ -116,7 +117,7 @@ final case class MavenRepository(
 
   def versionsArtifact(module: Module): Option[Artifact] = {
 
-    val path = module.organization.split('.').toSeq ++ Seq(
+    val path = module.organization.value.split('.').toSeq ++ Seq(
       dirModuleName(module, sbtAttrStub),
       "maven-metadata.xml"
     )
@@ -126,7 +127,6 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", ""),
         changing = true,
         optional = false,
         authentication = authentication
@@ -149,7 +149,6 @@ final case class MavenRepository(
         urlFor(path),
         Map.empty,
         Map.empty,
-        Attributes("pom", ""),
         changing = true,
         optional = false,
         authentication = authentication
@@ -262,9 +261,9 @@ final case class MavenRepository(
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
-            mavenVersioning(snapshotVersioning, "", "jar")
-              .orElse(mavenVersioning(snapshotVersioning, "", "pom"))
-              .orElse(mavenVersioning(snapshotVersioning, "", ""))
+            mavenVersioning(snapshotVersioning, Classifier.empty, Extension.jar)
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.pom))
+              .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.empty))
 
           versioningOption match {
             case None =>
@@ -298,7 +297,6 @@ final case class MavenRepository(
       url,
       Map.empty,
       Map.empty,
-      Attributes("", ""),
       changing = changing,
       optional = false,
       authentication
@@ -350,7 +348,7 @@ final case class MavenRepository(
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
         case None =>
-          findNoInterval(module, version, fetch).map((source, _))
+          findNoInterval(module, version, fetch).map((this, _))
         case Some(itv) =>
           def v = versions(module, fetch)
           val v0 =
@@ -379,10 +377,143 @@ final case class MavenRepository(
               case Right(version0) =>
                 findNoInterval(module, version0, fetch)
                   .map(_.copy(versions = Some(versions0)))
-                  .map((source, _))
+                  .map((this, _))
             }
           }
     }
   }
+
+
+  private def artifacts0(
+    dependency: Dependency,
+    project: Project,
+    overrideClassifiers: Option[Seq[Classifier]]
+  ): Seq[(Attributes, Artifact)] = {
+
+    val packagingTpeMap = project
+      .packagingOpt
+      .map { packaging =>
+        (MavenAttributes.typeDefaultClassifier(packaging), MavenAttributes.typeExtension(packaging)) -> packaging
+      }
+      .toMap
+
+    def artifactOf(publication: Publication) = {
+
+      val versioning = project
+        .snapshotVersioning
+        .flatMap(versioning =>
+          mavenVersioning(
+            versioning,
+            publication.classifier,
+            MavenAttributes.typeExtension(publication.`type`)
+          )
+        )
+
+      val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
+        MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
+        toBaseVersion(project.actualVersion),
+        s"${dependency.module.name.value}-${versioning getOrElse project.actualVersion}${Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext.value}"
+      )
+
+      val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
+
+      val artifact = Artifact(
+        root0 + path.mkString("/"),
+        Map.empty,
+        Map.empty,
+        changing = changing0,
+        optional = true,
+        authentication = authentication
+      )
+        .withDefaultChecksums
+        .withDefaultSignature
+
+      (publication.attributes, artifact)
+    }
+
+    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, Extension.pom, Classifier.empty))
+
+    def artifactWithExtra(publication: Publication) = {
+      val (attr, artifact) = artifactOf(publication)
+      (attr, artifact.copy(
+        extra = artifact.extra + ("metadata" -> metadataArtifact)
+      ))
+    }
+
+    lazy val defaultPublications = {
+
+      val packagingPublicationOpt = project
+        .packagingOpt
+        .filter(_ => dependency.attributes.isEmpty)
+        .map { packaging =>
+          Publication(
+            dependency.module.name.value,
+            packaging,
+            MavenAttributes.typeExtension(packaging),
+            MavenAttributes.typeDefaultClassifier(packaging)
+          )
+        }
+
+      val type0 = if (dependency.attributes.`type`.isEmpty) Type.jar else dependency.attributes.`type`
+
+      val ext = MavenAttributes.typeExtension(type0)
+
+      val classifier =
+        if (dependency.attributes.classifier.isEmpty)
+          MavenAttributes.typeDefaultClassifier(type0)
+        else
+          dependency.attributes.classifier
+
+      val tpe = packagingTpeMap.getOrElse(
+        (classifier, ext),
+        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+      )
+
+      val pubs = packagingPublicationOpt.toSeq :+
+        Publication(
+          dependency.module.name.value,
+          tpe,
+          ext,
+          classifier
+        )
+
+      pubs.distinct
+    }
+
+    overrideClassifiers
+      .fold(defaultPublications) { classifiers =>
+        classifiers.flatMap { classifier =>
+          if (classifier == dependency.attributes.classifier)
+            defaultPublications
+          else {
+            val ext = Extension.jar
+            val tpe = packagingTpeMap.getOrElse(
+              (classifier, ext),
+              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+            )
+
+            Seq(
+              Publication(
+                dependency.module.name.value,
+                tpe,
+                ext,
+                classifier
+              )
+            )
+          }
+        }
+      }
+      .map(artifactWithExtra)
+  }
+
+  def artifacts(
+    dependency: Dependency,
+    project: Project,
+    overrideClassifiers: Option[Seq[Classifier]]
+  ): Seq[(Attributes, Artifact)] =
+    if (project.relocated)
+      Nil
+    else
+      artifacts0(dependency, project, overrideClassifiers)
 
 }

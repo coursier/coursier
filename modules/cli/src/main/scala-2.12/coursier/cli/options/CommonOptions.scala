@@ -1,8 +1,7 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
-
-import coursier.core.ResolutionProcess
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.core.{Classifier, ResolutionProcess}
 
 final case class CommonOptions(
   @Help("Keep optional dependencies (Maven)")
@@ -109,7 +108,7 @@ final case class CommonOptions(
 
 ) {
   val verbosityLevel = Tag.unwrap(verbose) - (if (quiet) 1 else 0)
-  lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).toSet
+  lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
 }
 
 object CommonOptions {

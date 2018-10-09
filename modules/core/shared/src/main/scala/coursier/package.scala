@@ -1,4 +1,7 @@
-import coursier.core.{Activation, Parse, Version}
+import coursier.core._
+import coursier.util.StringInterpolators.{SafeModuleName, SafeOrganization}
+
+import scala.language.implicitConversions
 
 /**
  * Mainly pulls definitions from coursier.core, sometimes with default arguments.
@@ -6,6 +9,12 @@ import coursier.core.{Activation, Parse, Version}
 package object coursier {
 
   // `extends Serializable` added here-or-there for bin compat while switching from 2.12.1 to 2.12.4
+
+  type Organization = core.Organization
+  val Organization = core.Organization
+
+  type ModuleName = core.ModuleName
+  val ModuleName = core.ModuleName
 
   type Dependency = core.Dependency
   object Dependency extends Serializable {
@@ -15,7 +24,7 @@ package object coursier {
       // Substituted by Resolver with its own default configuration (compile)
       configuration: String = "",
       attributes: Attributes = Attributes(),
-      exclusions: Set[(String, String)] = Set.empty,
+      exclusions: Set[(Organization, ModuleName)] = Set.empty,
       optional: Boolean = false,
       transitive: Boolean = true
     ): Dependency =
@@ -33,8 +42,8 @@ package object coursier {
   type Attributes = core.Attributes
   object Attributes extends Serializable {
     def apply(
-      `type`: String = "",
-      classifier: String = ""
+      `type`: Type = Type.empty,
+      classifier: Classifier = Classifier.empty
     ): Attributes =
       core.Attributes(`type`, classifier)
   }
@@ -50,7 +59,7 @@ package object coursier {
 
   type Module = core.Module
   object Module extends Serializable {
-    def apply(organization: String, name: String, attributes: Map[String, String] = Map.empty): Module =
+    def apply(organization: Organization, name: ModuleName, attributes: Map[String, String] = Map.empty): Module =
       core.Module(organization, name, attributes)
   }
 
@@ -109,5 +118,10 @@ package object coursier {
 
     def process: ResolutionProcess = ResolutionProcess(underlying)
   }
+
+  implicit def organizationString(sc: StringContext): SafeOrganization =
+    SafeOrganization(sc)
+  implicit def moduleNameString(sc: StringContext): SafeModuleName =
+    SafeModuleName(sc)
 
 }

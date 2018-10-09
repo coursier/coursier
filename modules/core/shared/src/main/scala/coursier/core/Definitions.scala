@@ -1,5 +1,25 @@
 package coursier.core
 
+final case class Organization(value: String) extends AnyVal {
+  def map(f: String => String): Organization =
+    Organization(f(value))
+}
+
+object Organization {
+  implicit val ordering: Ordering[Organization] =
+    Ordering[String].on(_.value)
+}
+
+final case class ModuleName(value: String) extends AnyVal {
+  def map(f: String => String): ModuleName =
+    ModuleName(f(value))
+}
+
+object ModuleName {
+  implicit val ordering: Ordering[ModuleName] =
+    Ordering[String].on(_.value)
+}
+
 /**
  * Identifies a "module".
  *
@@ -10,14 +30,14 @@ package coursier.core
  * Using the same terminology as Ivy.
  */
 final case class Module(
-  organization: String,
-  name: String,
+  organization: Organization,
+  name: ModuleName,
   attributes: Map[String, String]
 ) {
 
   def trim: Module = copy(
-    organization = organization.trim,
-    name = name.trim
+    organization = organization.map(_.trim),
+    name = name.map(_.trim)
   )
 
   private def attributesStr = attributes.toSeq
@@ -26,13 +46,13 @@ final case class Module(
     .mkString(";")
 
   def nameWithAttributes: String =
-    name + (if (attributes.nonEmpty) s";$attributesStr" else "")
+    name.value + (if (attributes.nonEmpty) s";$attributesStr" else "")
 
   override def toString: String =
-    s"$organization:$nameWithAttributes"
+    s"${organization.value}:$nameWithAttributes"
 
   def orgName: String =
-    s"$organization:$name"
+    s"${organization.value}:${name.value}"
 
   override final lazy val hashCode = Module.unapply(this).get.hashCode()
 }
@@ -47,7 +67,7 @@ final case class Dependency(
   module: Module,
   version: String,
   configuration: String,
-  exclusions: Set[(String, String)],
+  exclusions: Set[(Organization, ModuleName)],
 
   // Maven-specific
   attributes: Attributes,
@@ -68,14 +88,84 @@ final case class Dependency(
   }
 }
 
+final case class Type(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
+  def nonEmpty: Boolean =
+    value.nonEmpty
+  def map(f: String => String): Type =
+    Type(f(value))
+
+  def asExtension: Extension =
+    Extension(value)
+}
+
+object Type {
+  implicit val ordering: Ordering[Type] =
+    Ordering[String].on(_.value)
+
+  val jar = Type("jar")
+  val testJar = Type("test-jar")
+  val bundle = Type("bundle")
+  val doc = Type("doc")
+  val source = Type("src")
+
+  // Typo for doc and src ???
+  val javadoc = Type("javadoc")
+  val javaSource = Type("java-source")
+
+  val ivy = Type("ivy")
+  val pom = Type("pom")
+
+  val empty = Type("")
+}
+
+final case class Classifier(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
+  def nonEmpty: Boolean =
+    value.nonEmpty
+  def map(f: String => String): Classifier =
+    Classifier(f(value))
+}
+
+object Classifier {
+  implicit val ordering: Ordering[Classifier] =
+    Ordering[String].on(_.value)
+
+  val empty = Classifier("")
+
+  val tests = Classifier("tests")
+  val javadoc = Classifier("javadoc")
+  val sources = Classifier("sources")
+}
+
+final case class Extension(value: String) extends AnyVal {
+  def map(f: String => String): Extension =
+    Extension(f(value))
+
+  def asType: Type =
+    Type(value)
+}
+
+object Extension {
+  implicit val ordering: Ordering[Extension] =
+    Ordering[String].on(_.value)
+
+  val jar = Extension("jar")
+  val pom = Extension("pom")
+
+  val empty = Extension("")
+}
+
 // Maven-specific
 final case class Attributes(
-  `type`: String,
-  classifier: String
+  `type`: Type,
+  classifier: Classifier
 ) {
-  def packaging: String =
+  def packaging: Type =
     if (`type`.isEmpty)
-      "jar"
+      Type.jar
     else
       `type`
 
@@ -83,15 +173,19 @@ final case class Attributes(
     if (isEmpty)
       ""
     else if (classifier.isEmpty)
-      packaging
+      packaging.value
     else
-      s"$packaging:$classifier"
+      s"${packaging.value}:${classifier.value}"
 
-  def publication(name: String, ext: String): Publication =
+  def publication(name: String, ext: Extension): Publication =
     Publication(name, `type`, ext, classifier)
 
   def isEmpty: Boolean =
     `type`.isEmpty && classifier.isEmpty
+}
+
+object Attributes {
+  val empty = Attributes(Type.empty, Classifier.empty)
 }
 
 final case class Project(
@@ -109,7 +203,8 @@ final case class Project(
   profiles: Seq[Profile],
   versions: Option[Versions],
   snapshotVersioning: Option[SnapshotVersioning],
-  packagingOpt: Option[String],
+  packagingOpt: Option[Type],
+  relocated: Boolean,
 
   /**
     * Optional exact version used to get this project metadata.
@@ -187,8 +282,8 @@ object Versions {
 
 // Maven-specific
 final case class SnapshotVersion(
-  classifier: String,
-  extension: String,
+  classifier: Classifier,
+  extension: Extension,
   value: String,
   updated: Option[Versions.DateTime]
 )
@@ -209,9 +304,9 @@ final case class SnapshotVersioning(
 // Ivy-specific
 final case class Publication(
   name: String,
-  `type`: String,
-  ext: String,
-  classifier: String
+  `type`: Type,
+  ext: Extension,
+  classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
 }
@@ -220,13 +315,13 @@ final case class Artifact(
   url: String,
   checksumUrls: Map[String, String],
   extra: Map[String, Artifact],
-  attributes: Attributes,
   changing: Boolean,
   optional: Boolean,
   authentication: Option[Authentication]
 ) {
-  def `type`: String = attributes.`type`
-  def classifier: String = attributes.classifier
+
+  // attributes, `type`, and classifier don't live here anymore.
+  // Get them via the dependencyArtifacts method on Resolution.
 
   @deprecated("Use optional instead", "1.1.0-M8")
   def isOptional: Boolean = optional
@@ -238,19 +333,10 @@ object Artifact {
     def artifacts(
       dependency: Dependency,
       project: Project,
-      overrideClassifiers: Option[Seq[String]]
-    ): Seq[Artifact]
+      overrideClassifiers: Option[Seq[Classifier]]
+    ): Seq[(Attributes, Artifact)]
   }
 
-  object Source {
-    val empty: Source = new Source {
-      def artifacts(
-        dependency: Dependency,
-        project: Project,
-        overrideClassifiers: Option[Seq[String]]
-      ): Seq[Artifact] = Nil
-    }
-  }
 }
 
 final case class Authentication(

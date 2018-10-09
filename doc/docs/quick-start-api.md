@@ -53,10 +53,10 @@ To resolve dependencies, first create a `Resolution` case class with your depend
 val start = Resolution(
   Set(
     Dependency(
-      Module("org.scalaz", "scalaz-core_2.11"), "7.2.3"
+      Module(org"org.scalaz", name"scalaz-core_2.11"), "7.2.3"
     ),
     Dependency(
-      Module("org.typelevel", "cats-core_2.11"), "0.6.0"
+      Module(org"org.typelevel", name"cats-core_2.11"), "0.6.0"
     )
   )
 )

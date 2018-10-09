@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class JsonReportTest extends FlatSpec with CliTestLib {
   "empty JsonReport" should "be empty" in {
-    val report: String = JsonReport[String](IndexedSeq(), Map(), Set())(
+    val report: String = JsonReport[String](IndexedSeq(), Map())(
       children = _ => Seq(),
       reconciledVersionStr = _ => "",
       requestedVersionStr = _ => "",
@@ -23,8 +23,7 @@ class JsonReportTest extends FlatSpec with CliTestLib {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
     val report: String = JsonReport[String](
       roots = IndexedSeq("a", "b"),
-      conflictResolutionForRoots = Map(),
-      overrideClassifiers = Set()
+      conflictResolutionForRoots = Map()
     )(
       children = children(_),
       reconciledVersionStr = s => s"$s:reconciled",
@@ -42,8 +41,7 @@ class JsonReportTest extends FlatSpec with CliTestLib {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
     val report: String = JsonReport[String](
       roots = IndexedSeq( "b", "a"),
-      conflictResolutionForRoots = Map(),
-      overrideClassifiers = Set()
+      conflictResolutionForRoots = Map()
     )(
       children = children(_),
       reconciledVersionStr = s => s"$s:reconciled",

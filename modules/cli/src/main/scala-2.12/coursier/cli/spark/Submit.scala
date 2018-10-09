@@ -4,6 +4,7 @@ import java.io.File
 
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
+import coursier.core.Type
 
 object Submit {
 
@@ -12,7 +13,7 @@ object Submit {
     sparkVersion: String,
     noDefault: Boolean,
     extraDependencies: Seq[String],
-    artifactTypes: Set[String],
+    artifactTypes: Set[Type],
     common: CommonOptions
   ): Seq[File] = {
 

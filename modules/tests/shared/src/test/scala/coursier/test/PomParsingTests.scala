@@ -1,6 +1,7 @@
 package coursier
 package test
 
+import coursier.core.Classifier
 import coursier.core.compatibility._
 import coursier.util.Traverse.TraverseOps
 import coursier.maven.Pom
@@ -21,9 +22,9 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(
         "" -> Dependency(
-          Module("comp", "lib"),
+          Module(org"comp", name"lib"),
           "2.1",
-          attributes = Attributes(classifier = "extra")
+          attributes = Attributes(classifier = Classifier("extra"))
         )
       )
 
@@ -129,7 +130,7 @@ object PomParsingTests extends TestSuite {
         None,
         Profile.Activation(Nil),
         Seq(
-          "" -> Dependency(Module("comp", "lib"), "0.2")),
+          "" -> Dependency(Module(org"comp", name"lib"), "0.2")),
         Nil,
         Map.empty
       ))
@@ -161,7 +162,7 @@ object PomParsingTests extends TestSuite {
         Profile.Activation(Nil),
         Nil,
         Seq(
-          "test" -> Dependency(Module("comp", "lib"), "0.2")),
+          "test" -> Dependency(Module(org"comp", name"lib"), "0.2")),
         Map.empty
       ))
 
