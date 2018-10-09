@@ -5,6 +5,7 @@ import java.io.File
 import coursier.core.{Classifier, Configuration, Type}
 import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
+import coursier.test.compatibility.executionContext
 import utest._
 
 object IvyTests extends TestSuite {

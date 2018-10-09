@@ -2,6 +2,7 @@ package coursier.test
 
 import coursier._
 import coursier.core.{Authentication, Type}
+import coursier.test.compatibility.executionContext
 import utest._
 
 object DirectoryListingTests extends TestSuite {

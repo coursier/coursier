@@ -5,47 +5,52 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.{Artifact, Attributes, Dependency, Fetch, MavenRepository, Module, Repository, Resolution}
 import coursier.core.{Classifier, Configuration, Extension}
-import coursier.test.compatibility._
-import coursier.util.Task
+import coursier.test.compatibility.{textResource, tryCreate}
+import coursier.test.util.ToFuture
+import coursier.util.Gather
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class TestRunner(
+class TestRunner[F[_]: Gather : ToFuture](
+  artifact: Fetch.Content[F] = compatibility.artifact,
   repositories: Seq[Repository] = Seq(MavenRepository("https://repo1.maven.org/maven2"))
-) {
+)(implicit ec: ExecutionContext) {
 
-  private def fetch(repositories: Seq[Repository]): Fetch.Metadata[Task] =
-    Fetch.from(repositories, compatibility.artifact)
+  private def fetch(repositories: Seq[Repository]): Fetch.Metadata[F] =
+    Fetch.from(repositories, artifact)
 
   def resolve(
     deps: Set[Dependency],
     filter: Option[Dependency => Boolean] = None,
     extraRepos: Seq[Repository] = Nil,
     profiles: Option[Set[String]] = None
-  ) = {
+  ): Future[Resolution] = {
+
     val repositories0 = extraRepos ++ repositories
 
     val fetch0 = fetch(repositories0)
 
-    Resolution(
+    val r = Resolution(
       deps,
       filter = filter,
       userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
     )
       .process
       .run(fetch0)
-      .map { res =>
 
-        val metadataErrors = res.errors
-        val conflicts = res.conflicts
-        val isDone = res.isDone
-        assert(metadataErrors.isEmpty)
-        assert(conflicts.isEmpty)
-        assert(isDone)
+    val t = Gather[F].map(r) { res =>
 
-        res
-      }
-      .future()
+      val metadataErrors = res.errors
+      val conflicts = res.conflicts
+      val isDone = res.isDone
+      assert(metadataErrors.isEmpty)
+      assert(conflicts.isEmpty)
+      assert(isDone)
+
+      res
+    }
+
+    ToFuture[F].toFuture(ec, t)
   }
 
   def resolutionCheck(

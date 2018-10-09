@@ -5,6 +5,7 @@ import java.io.File
 import coursier.core.{Classifier, Type}
 import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
 import coursier.maven.MavenRepository
+import coursier.test.compatibility.executionContext
 import utest._
 
 object MavenTests extends TestSuite {
