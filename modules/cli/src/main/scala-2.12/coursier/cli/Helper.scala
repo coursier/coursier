@@ -3,7 +3,6 @@ package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
-import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
@@ -11,14 +10,13 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.{Classifier, Type}
 import coursier.extra.Typelevel
-import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
 import coursier.util.Parse.ModuleRequirements
-import coursier.util.{Gather, Parse, Print}
+import coursier.util._
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
-import scalaz.concurrent.{Strategy, Task}
 
 
 object Helper {
@@ -92,7 +90,8 @@ class Helper(
 
   val cache = new File(common.cacheOptions.cache)
 
-  val pool = Executors.newFixedThreadPool(common.cacheOptions.parallel, Strategy.DefaultDaemonThreadFactory)
+  val pool = Schedulable.fixedThreadPool(common.cacheOptions.parallel)
+  val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(
     Cache.ivy2Local,
@@ -179,7 +178,7 @@ class Helper(
           } else
             modVers
         }.run
-      }).unsafePerformSync
+      }).unsafeRun()(ec)
 
       logger.foreach(_.stop())
 
@@ -354,7 +353,7 @@ class Helper(
       None
 
   val fetchs = cachePolicies.map(p =>
-    Cache.fetch(cache, p, checksums = checksums, logger = logger, pool = pool, ttl = ttl0)
+    Cache.fetch[Task](cache, p, checksums = checksums, logger = logger, pool = pool, ttl = ttl0)
   )
   val fetchQuiet = coursier.Fetch.from(
     repositories,
@@ -364,7 +363,7 @@ class Helper(
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
-        val print = Task {
+        val print = Task.delay {
           errPrintln(s"Getting ${modVers.length} project definition(s)")
         }
 
@@ -400,7 +399,7 @@ class Helper(
       }
 
       def timed[T](name: String, counter: Counter, f: Task[T]): Task[T] =
-        Task(System.currentTimeMillis()).flatMap { start =>
+        Task.delay(System.currentTimeMillis()).flatMap { start =>
           f.map { t =>
             val end = System.currentTimeMillis()
             Console.err.println(s"$name: ${end - start} ms")
@@ -411,11 +410,11 @@ class Helper(
 
       def helper(proc: ResolutionProcess, counter: Counter, iteration: Int): Task[Resolution] =
         if (iteration >= common.resolutionOptions.maxIterations)
-          Task.now(proc.current)
+          Task.point(proc.current)
         else
           proc match {
             case _: core.Done =>
-              Task.now(proc.current)
+              Task.point(proc.current)
             case _ =>
               val iterationType = proc match {
                 case _: core.Missing  => "IO"
@@ -442,7 +441,7 @@ class Helper(
             iterationCounter,
             0
           )
-        ).unsafePerformSync
+        ).unsafeRun()(ec)
 
         Console.err.println(s"Overhead: ${resolutionCounter.value - iterationCounter.value} ms")
 
@@ -468,7 +467,7 @@ class Helper(
         val res0 = startRes
           .process
           .run(fetch0, common.resolutionOptions.maxIterations)
-          .unsafePerformSync
+          .unsafeRun()(ec)
         val end = System.currentTimeMillis()
 
         Console.err.println(s"Resolution ${index + 1} / ${-benchmark}: ${end - start} ms")
@@ -492,7 +491,7 @@ class Helper(
       startRes
         .process
         .run(fetch0, common.resolutionOptions.maxIterations)
-        .unsafePerformSync
+        .unsafeRun()(ec)
 
   logger.foreach(_.stop())
 
@@ -653,7 +652,7 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy) = Cache.file(
+      def file(policy: CachePolicy) = Cache.file[Task](
         artifact,
         cache,
         policy,
@@ -672,9 +671,9 @@ class Helper(
 
     logger.foreach(_.init())
 
-    val task = Task.gatherUnordered(tasks)
+    val task = Task.gather.gather(tasks)
 
-    val results = task.unsafePerformSync
+    val results = task.unsafeRun()(ec)
 
     val (ignoredErrors, errors) = results
       .collect {

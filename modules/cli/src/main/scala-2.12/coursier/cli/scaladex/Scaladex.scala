@@ -7,10 +7,8 @@ import java.util.concurrent.ExecutorService
 import argonaut._
 import argonaut.Argonaut._
 import coursier.core.{Artifact, ModuleName, Organization}
-import coursier.interop.scalaz._
-import coursier.util.{EitherT, Gather}
+import coursier.util.{EitherT, Gather, Task}
 import coursier.{Fetch, Module}
-import scalaz.concurrent.Task
 
 object Scaladex {
 
@@ -49,7 +47,7 @@ object Scaladex {
 
   def apply(pool: ExecutorService): Scaladex[Task] =
     Scaladex({ url =>
-      EitherT(Task[Either[String, String]]({
+      EitherT(Task.schedule[Either[String, String]](pool) {
         var conn: HttpURLConnection = null
 
         val b = try {
@@ -61,7 +59,7 @@ object Scaladex {
         }
 
         Right(new String(b, StandardCharsets.UTF_8))
-      })(pool))
+      })
     }, Gather[Task])
 
   def cached(fetch: Fetch.Content[Task]*): Scaladex[Task] =
