@@ -45,38 +45,38 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "scalafmt-cli fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq()))
-    Helper.mainClasses(fetch.helper.loader) should contain theSameElementsAs Map (
+    assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
       ("com.geirsson", "cli") -> "org.scalafmt.cli.Cli"
-    )
+    ))
   }
 
   "scalafix-cli fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"), Seq()))
-    Helper.mainClasses(fetch.helper.loader) should contain theSameElementsAs Map(
+    assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
       ("ch.epfl.scala", "cli") -> "scalafix.cli.Cli"
-    )
+    ))
   }
 
   "ammonite fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"), Seq()))
-    Helper.mainClasses(fetch.helper.loader) should contain theSameElementsAs Map(
+    assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "Javassist") -> "javassist.CtClass",
       ("" ,"Java Native Access (JNA)") -> "com.sun.jna.Native",
       ("com.lihaoyi", "ammonite") -> "ammonite.Main"
-    )
+    ))
   }
 
   "sssio fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("lt.dvim.sssio:sssio_2.12:0.0.1"), Seq()))
-    Helper.mainClasses(fetch.helper.loader) should contain theSameElementsAs Map(
+    assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.kenai.jffi.Main",
       ("lt.dvim.sssio", "sssio") -> "lt.dvim.sssio.Sssio"
-    )
+    ))
   }
 
   "Module level" should "exclude correctly" in withFile(

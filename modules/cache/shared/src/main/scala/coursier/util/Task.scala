@@ -1,8 +1,9 @@
 package coursier.util
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success}
 
-final case class Task[T](value: ExecutionContext => Future[T]) extends AnyVal {
+final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
 
   def map[U](f: T => U): Task[U] =
     Task(implicit ec => value(ec).map(f))
@@ -14,6 +15,12 @@ final case class Task[T](value: ExecutionContext => Future[T]) extends AnyVal {
 
   def future()(implicit ec: ExecutionContext): Future[T] =
     value(ec)
+
+  def attempt: Task[Either[Throwable, T]] =
+    map(Right(_))
+    .handle {
+      case t: Throwable => Left(t)
+    }
 }
 
 object Task extends PlatformTask {
@@ -28,6 +35,12 @@ object Task extends PlatformTask {
 
   def never[A]: Task[A] =
     Task(_ => Promise[A].future)
+
+  def fromEither[T](e: Either[Throwable, T]): Task[T] =
+    Task(_ => Future.fromTry(e.fold(Failure(_), Success(_))))
+
+  def fail(e: Throwable): Task[Nothing] =
+    Task(_ => Future.fromTry(Failure(e)))
 
   def tailRecM[A, B](a: A)(fn: A => Task[Either[A, B]]): Task[B] =
     Task[B] { implicit ec =>

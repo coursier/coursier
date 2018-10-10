@@ -34,6 +34,17 @@ jar_library(
 )
 
 jar_library(
+    name = "cats-core",
+    jars = [
+        scala_jar(
+            org = "org.typelevel",
+            name = "cats-core",
+            rev = "1.4.0",
+        ),
+    ],
+)
+
+jar_library(
     name = "scalaz-concurrent",
     jars = [
         scala_jar(

@@ -182,10 +182,12 @@ lazy val cli = project("cli")
     dontPublishIn("2.10", "2.11"),
     coursierPrefix,
     unmanagedResources.in(Test) += packageBin.in(bootstrap).in(Compile).value,
+    scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
           Deps.caseApp,
+          Deps.catsCore,
           Deps.argonautShapeless,
           Deps.junit % Test, // to be able to run tests with pants
           Deps.scalatest % Test

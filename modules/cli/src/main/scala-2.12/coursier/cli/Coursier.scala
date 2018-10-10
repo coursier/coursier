@@ -2,6 +2,7 @@ package coursier
 package cli
 
 import caseapp.core.app.CommandAppA
+import coursier.cli.resolve.Resolve
 import shapeless._
 
 object Coursier extends CommandAppA(CoursierCommand.parser, CoursierCommand.help) {

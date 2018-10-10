@@ -150,7 +150,7 @@ class Helper(
 
       logger.foreach(_.init())
 
-      val scaladex = Scaladex.cached(fetchs: _*)
+      val scaladex = Scaladex.withCache(fetchs: _*)
 
       val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
