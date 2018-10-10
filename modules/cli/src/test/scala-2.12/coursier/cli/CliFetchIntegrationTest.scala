@@ -6,6 +6,7 @@ import java.net.URLEncoder.encode
 import argonaut.Argonaut._
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
+import coursier.cli.options.shared._
 import coursier.cli.util.{DepNode, ReportNode}
 import java.io._
 import java.net.URLEncoder.encode
@@ -81,7 +82,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Module level" should "exclude correctly" in withFile(
     "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
     withFile() { (jsonFile, _) =>
-      val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
@@ -112,7 +114,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "avro exclude xz" should "not fetch xz" in withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
     withFile() { (jsonFile, _) =>
-      val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq()))
@@ -160,7 +163,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(localExcludeFile = file.getAbsolutePath, jsonOutputFile = jsonFile.getPath)
+          val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq()))
@@ -302,7 +306,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (_, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5"))
+          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Nil, Nil))
@@ -326,7 +331,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
+          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
@@ -351,7 +357,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+          val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch(
@@ -383,9 +390,14 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath,
+          val resolutionOpt = ResolutionOptions(
             intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"),
-            forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+            forceVersion = List("org.apache.commons:commons-compress:1.4.1")
+          )
+          val commonOpt = CommonOptions(
+            jsonOutputFile = jsonFile.getPath,
+            resolutionOptions = resolutionOpt
+          )
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
@@ -406,9 +418,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
   "profiles" should "be manually (de)activated" in withFile() {
     (jsonFile, _) =>
+      val resolutionOpt = ResolutionOptions(profile = List("scala-2.10", "!scala-2.11"))
       val commonOpt = CommonOptions(
         jsonOutputFile = jsonFile.getPath,
-        profile = List("scala-2.10", "!scala-2.11")
+        resolutionOptions = resolutionOpt
       )
       val fetchOpt = FetchOptions(common = commonOpt)
 
@@ -458,7 +471,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           val encodedUrl = encode("file://" + path, "UTF-8")
 
 
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, cacheFileArtifacts = true)
+          val cacheOpt = CacheOptions(cacheFileArtifacts = true)
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, cacheOptions = cacheOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           // fetch with encoded url set to temp jar
@@ -757,9 +771,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with forced version" should "throw an error" in withFile() {
     (jsonFile, _) => {
+      val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
       val commonOpt = CommonOptions(
         jsonOutputFile = jsonFile.getPath,
-        forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+        resolutionOptions = resolutionOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -784,9 +799,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with the same forced version" should "fetch junit-4.12.jar" in withFile() {
     (jsonFile, _) => {
+      val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.5"))
       val commonOpt = CommonOptions(
         jsonOutputFile = jsonFile.getPath,
-        forceVersion = List("org.apache.commons:commons-compress:1.5"))
+        resolutionOptions = resolutionOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -932,7 +948,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Wrong range partial artifact resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val fetchOpt = FetchOptions(common = CommonOptions(mode = "force", cacheOptions = CacheOptions(cache = dir.getAbsolutePath)))
+        val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(mode = "force", cache = dir.getAbsolutePath)))
         val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.6"), Seq()))
         assert(fetch.files0.map(_.getName).toSet
           .equals(Set("junit-4.6.jar")))
