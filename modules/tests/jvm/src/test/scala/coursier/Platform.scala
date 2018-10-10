@@ -3,7 +3,7 @@ package coursier
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
 
-import coursier.util.{EitherT, Task}
+import coursier.util.{EitherT, Schedulable, Task}
 
 import scala.util.{Failure, Success, Try}
 
@@ -23,8 +23,8 @@ object Platform {
     buffer.toByteArray
   }
 
-  def readFully(is: => InputStream): Task[Either[String, String]] =
-    Task.delay {
+  def readFully[F[_]: Schedulable](is: => InputStream): F[Either[String, String]] =
+    Schedulable[F].delay {
       val t = Try {
         val is0 = is
         val b =
@@ -46,7 +46,7 @@ object Platform {
   val artifact: Fetch.Content[Task] = { artifact =>
     EitherT {
       val conn = Cache.urlConnection(artifact.url, artifact.authentication)
-      readFully(conn.getInputStream)
+      readFully[Task](conn.getInputStream)
     }
   }
 

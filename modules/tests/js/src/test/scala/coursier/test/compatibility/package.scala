@@ -31,7 +31,7 @@ package object compatibility {
 
   private val baseRepo = "modules/tests/metadata"
 
-  val artifact: Fetch.Content[Task] = { artifact =>
+  val taskArtifact: Fetch.Content[Task] = { artifact =>
     EitherT {
       assert(artifact.authentication.isEmpty)
 

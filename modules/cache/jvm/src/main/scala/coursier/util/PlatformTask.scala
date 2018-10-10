@@ -19,6 +19,9 @@ abstract class PlatformTask { self =>
 
   implicit val schedulable: Schedulable[Task] =
     new TaskGather with Schedulable[Task] {
+      def delay[A](a: => A) = Task.delay(a)
+      def handle[A](a: Task[A])(f: PartialFunction[Throwable, A]) =
+        a.handle(f)
       def schedule[A](pool: ExecutorService)(f: => A) = self.schedule(pool)(f)
     }
 

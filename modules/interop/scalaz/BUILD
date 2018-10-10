@@ -5,5 +5,5 @@ scala_library(
         "cache:cache",
         "3rdparty/jvm:scalaz-concurrent",
     ],
-    sources = rglobs("jvm/*.scala", "shared/*.scala"),
+    sources = rglobs("jvm/src/main/*.scala", "shared/*.scala"),
 )

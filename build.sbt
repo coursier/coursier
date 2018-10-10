@@ -37,7 +37,7 @@ lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
 lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
-  .dependsOn(core, cache % Test, scalaz)
+  .dependsOn(core, cache % Test)
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage,
     testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
@@ -98,8 +98,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
 lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
-lazy val scalaz = crossProject("scalaz")(JSPlatform, JVMPlatform)
-  .dependsOn(cache)
+lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
+  .dependsOn(cache, tests % "test->test")
   .jvmSettings(
     libs += Deps.scalazConcurrent
   )
@@ -109,12 +109,27 @@ lazy val scalaz = crossProject("scalaz")(JSPlatform, JVMPlatform)
   .settings(
     name := "scalaz-interop",
     shared,
+    utest,
     Mima.previousArtifacts,
     coursierPrefix
   )
 
 lazy val scalazJvm = scalaz.jvm
 lazy val scalazJs = scalaz.js
+
+lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
+  .dependsOn(cache, tests % "test->test")
+  .settings(
+    name := "cats-interop",
+    shared,
+    utest,
+    Mima.previousArtifacts,
+    coursierPrefix,
+    libs += CrossDeps.catsEffect.value
+  )
+
+lazy val catsJvm = cats.jvm
+lazy val catsJs = cats.js
 
 lazy val bootstrap = project("bootstrap")
   .settings(
@@ -257,6 +272,7 @@ lazy val jvm = project("jvm")
     paths,
     cacheJvm,
     scalazJvm,
+    catsJvm,
     bootstrap,
     extra,
     cli,
@@ -287,6 +303,8 @@ lazy val js = project("js")
 lazy val coursier = project("coursier")
   .in(root)
   .aggregate(
+    catsJvm,
+    catsJs,
     coreJvm,
     coreJs,
     testsJvm,

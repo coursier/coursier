@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier.core.{Classifier, Type}
+import coursier.core.{Classifier, Configuration, Type}
 import coursier.{Attributes, MavenRepository, Repository, moduleNameString, organizationString}
 import coursier.ivy.IvyRepository
 import coursier.util.Parse
@@ -60,7 +60,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == "default(compile)")
+          assert(dep.configuration == Configuration.defaultCompile)
           assert(dep.attributes == Attributes())
       }
     }
@@ -72,7 +72,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == "runtime")
+          assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes())
       }
     }
@@ -84,7 +84,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == "runtime")
+          assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -96,7 +96,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == "runtime")
+          assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes())
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
@@ -110,7 +110,7 @@ object ParseTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == "runtime")
+          assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)

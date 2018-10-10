@@ -1,7 +1,7 @@
 package coursier.util
 
-import coursier.core.{Attributes, Classifier, Type}
-import coursier.test.CentralTests
+import coursier.core.{Attributes, Classifier, Configuration, Type}
+import coursier.test.{CentralTests, TestRunner}
 import coursier.{Dependency, Module, moduleNameString, organizationString}
 import utest._
 
@@ -19,13 +19,15 @@ object PrintTests extends TestSuite {
 
   case class AppliedTree[A](root: A, children: Seq[AppliedTree[A]])
 
+  private val runner = new TestRunner
+
 
   val tests = Tests {
     'ignoreAttributes - {
       val dep = Dependency(
         Module(org"org", name"name"),
         "0.1",
-        configuration = "foo"
+        configuration = Configuration("foo")
       )
       val deps = Seq(
         dep,
@@ -42,7 +44,7 @@ object PrintTests extends TestSuite {
       val junit = Module(org"junit", name"junit")
       val junitVersion = "4.10"
 
-      CentralTests.resolve(Set(Dependency(junit, junitVersion))).map(result => {
+      runner.resolve(Set(Dependency(junit, junitVersion))).map(result => {
         val hamcrest = Module(org"org.hamcrest", name"hamcrest-core")
         val hamcrestVersion = "1.1"
         val reverseTree = Print.reverseTree(Seq(Dependency(hamcrest, hamcrestVersion)),

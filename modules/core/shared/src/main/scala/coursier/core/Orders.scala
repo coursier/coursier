@@ -9,9 +9,9 @@ object Orders {
   }
 
   /** All configurations that each configuration extends, including the ones it extends transitively */
-  def allConfigurations(configurations: Map[String, Seq[String]]): Map[String, Set[String]] = {
-    def allParents(config: String): Set[String] = {
-      def helper(configs: Set[String], acc: Set[String]): Set[String] =
+  def allConfigurations(configurations: Map[Configuration, Seq[Configuration]]): Map[Configuration, Set[Configuration]] = {
+    def allParents(config: Configuration): Set[Configuration] = {
+      def helper(configs: Set[Configuration], acc: Set[Configuration]): Set[Configuration] =
         if (configs.isEmpty)
           acc
         else if (configs.exists(acc))
@@ -39,11 +39,11 @@ object Orders {
     *
     * @param configurations: for each configuration, the configurations it directly extends.
     */
-  def configurationPartialOrder(configurations: Map[String, Seq[String]]): PartialOrdering[String] =
-    new PartialOrdering[String] {
+  def configurationPartialOrder(configurations: Map[Configuration, Seq[Configuration]]): PartialOrdering[Configuration] =
+    new PartialOrdering[Configuration] {
       val allParentsMap = allConfigurations(configurations)
 
-      def tryCompare(x: String, y: String) =
+      def tryCompare(x: Configuration, y: Configuration) =
         if (x == y)
           Some(0)
         else if (allParentsMap.get(x).exists(_(y)))
@@ -121,7 +121,7 @@ object Orders {
       }
     }
 
-  private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[String]): Dependency =
+  private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     Parse.withFallbackConfig(dep.configuration) match {
       case Some((main, fallback)) =>
         val config0 =
@@ -143,7 +143,7 @@ object Orders {
    */
   def minDependenciesUnsafe(
     dependencies: Set[Dependency],
-    configs: Map[String, Seq[String]]
+    configs: Map[Configuration, Seq[Configuration]]
   ): Set[Dependency] = {
     val availableConfigs = configs.keySet
     val groupedDependencies = dependencies
@@ -176,10 +176,10 @@ object Orders {
    */
   def minDependencies(
     dependencies: Set[Dependency],
-    configs: ((Module, String)) => Map[String, Seq[String]]
+    configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
   ): Set[Dependency] = {
     dependencies
-      .groupBy(_.copy(configuration = "", exclusions = Set.empty, optional = false))
+      .groupBy(_.copy(configuration = Configuration.empty, exclusions = Set.empty, optional = false))
       .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
       .valuesIterator
       .fold(Set.empty)(_ ++ _)

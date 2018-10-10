@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.core.Configuration
 import coursier.{Attributes, Dependency}
 import coursier.util.Parse
 
@@ -67,7 +68,7 @@ final case class IsolatedLoaderOptions(
             Dependency(
               mod,
               ver,
-              configuration = "runtime",
+              configuration = Configuration.runtime,
               attributes = Attributes()
             )
         }

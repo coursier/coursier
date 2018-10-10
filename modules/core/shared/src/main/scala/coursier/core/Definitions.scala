@@ -66,7 +66,7 @@ final case class Module(
 final case class Dependency(
   module: Module,
   version: String,
-  configuration: String,
+  configuration: Configuration,
   exclusions: Set[(Organization, ModuleName)],
 
   // Maven-specific
@@ -158,6 +158,40 @@ object Extension {
   val empty = Extension("")
 }
 
+final case class Configuration(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
+  def nonEmpty: Boolean =
+    value.nonEmpty
+  def -->(target: Configuration): Configuration =
+    Configuration(s"$value->${target.value}")
+  def map(f: String => String): Configuration =
+    Configuration(f(value))
+}
+
+object Configuration {
+  implicit val ordering: Ordering[Configuration] =
+    Ordering[String].on(_.value)
+
+  val empty = Configuration("")
+
+  val compile = Configuration("compile")
+  val runtime = Configuration("runtime")
+  val test = Configuration("test")
+
+  val default = Configuration("default")
+  val defaultCompile = Configuration("default(compile)")
+
+  val provided = Configuration("provided")
+  val `import` = Configuration("import")
+  val optional = Configuration("optional")
+
+  val all = Configuration("*")
+
+  def join(confs: Configuration*): Configuration =
+    Configuration(confs.map(_.value).mkString(";"))
+}
+
 // Maven-specific
 final case class Attributes(
   `type`: Type,
@@ -192,13 +226,13 @@ final case class Project(
   module: Module,
   version: String,
   // First String is configuration (scope for Maven)
-  dependencies: Seq[(String, Dependency)],
+  dependencies: Seq[(Configuration, Dependency)],
   // For Maven, this is the standard scopes as an Ivy configuration
-  configurations: Map[String, Seq[String]],
+  configurations: Map[Configuration, Seq[Configuration]],
 
   // Maven-specific
   parent: Option[(Module, String)],
-  dependencyManagement: Seq[(String, Dependency)],
+  dependencyManagement: Seq[(Configuration, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
   versions: Option[Versions],
@@ -212,8 +246,7 @@ final case class Project(
     */
   actualVersionOpt: Option[String],
 
-  // First String is configuration
-  publications: Seq[(String, Publication)],
+  publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
   info: Info
@@ -221,7 +254,7 @@ final case class Project(
   lazy val moduleVersion = (module, version)
 
   /** All configurations that each configuration extends, including the ones it extends transitively */
-  lazy val allConfigurations: Map[String, Set[String]] =
+  lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
     Orders.allConfigurations(configurations)
 
   /**
@@ -256,8 +289,8 @@ final case class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
-  dependencies: Seq[(String, Dependency)],
-  dependencyManagement: Seq[(String, Dependency)],
+  dependencies: Seq[(Configuration, Dependency)],
+  dependencyManagement: Seq[(Configuration, Dependency)],
   properties: Map[String, String]
 )
 

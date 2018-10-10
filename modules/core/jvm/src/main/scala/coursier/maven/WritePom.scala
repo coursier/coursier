@@ -1,12 +1,12 @@
 package coursier.maven
 
-import coursier.core.{ Dependency, Project }
+import coursier.core.{Configuration, Dependency, Project}
 
 object WritePom {
 
   def project(proj: Project, packaging: Option[String]) = {
 
-    def dependencyNode(config: String, dep: Dependency) = {
+    def dependencyNode(config: Configuration, dep: Dependency) = {
       <dependency>
         <groupId>{dep.module.organization}</groupId>
         <artifactId>{dep.module.name}</artifactId>
@@ -20,7 +20,7 @@ object WritePom {
         if (config.isEmpty)
           Nil
         else
-          Seq(<scope>{config}</scope>)
+          Seq(<scope>{config.value}</scope>)
         }
       </dependency>
     }

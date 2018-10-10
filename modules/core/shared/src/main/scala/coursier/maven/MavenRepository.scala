@@ -50,10 +50,10 @@ object MavenRepository {
 
 
   val defaultConfigurations = Map(
-    "compile" -> Seq.empty,
-    "runtime" -> Seq("compile"),
-    "default" -> Seq("runtime"),
-    "test" -> Seq("runtime")
+    Configuration.compile -> Seq.empty,
+    Configuration.runtime -> Seq(Configuration.compile),
+    Configuration.default -> Seq(Configuration.runtime),
+    Configuration.test -> Seq(Configuration.runtime)
   )
 
   private def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
@@ -330,8 +330,8 @@ final case class MavenRepository(
           actualVersionOpt = Some(version),
           configurations = defaultConfigurations
         ),
-        Set("", "default"),
-        "optional"
+        Set(Configuration.empty, Configuration.default),
+        Configuration.optional
       )
   }
 

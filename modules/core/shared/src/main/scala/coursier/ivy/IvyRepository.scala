@@ -78,19 +78,19 @@ final case class IvyRepository(
             else if (dependency.attributes.`type`.nonEmpty)
               project.publications.collect {
                 case (conf, p)
-                  if (conf == "*" ||
+                  if (conf == Configuration.all ||
                     conf == dependency.configuration ||
                     project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
                     (
                       p.`type` == dependency.attributes.`type` ||
-                      (p.ext == dependency.attributes.`type`.value && project.packagingOpt.toSeq.contains(p.`type`)) // wow
+                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(p.`type`)) // wow
                     ) =>
                   p
               }
             else
               project.publications.collect {
                 case (conf, p)
-                  if conf == "*" ||
+                  if conf == Configuration.all ||
                      conf == dependency.configuration ||
                      project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
                   p
