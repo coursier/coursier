@@ -261,13 +261,23 @@ object Resolve extends CaseApp[ResolveOptions] {
         params.resolution.perModuleExclude
       )
 
-      _ = {
-        for {
-          ((mod, version), _) <- extraRepoOpt.map(_.fallbacks.toSeq).getOrElse(Nil)
-          if params.resolution.forceVersion.get(mod).exists(_ != version)
-        }
-          throw new Exception(s"Cannot force a version that is different from the one specified " +
-            s"for the module $mod:$version with url")
+      _ <- {
+        val invalidForced = extraRepoOpt
+          .map(_.fallbacks.toSeq)
+          .getOrElse(Nil)
+          .collect {
+            case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+              (mod, version)
+          }
+        if (invalidForced.isEmpty)
+          Task.point(())
+        else
+          Task.fail(
+            new ResolveException(
+              s"Cannot force a version that is different from the one specified " +
+                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+            )
+          )
       }
 
       // Prepend FallbackDependenciesRepository to the repository list
