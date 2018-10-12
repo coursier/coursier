@@ -70,7 +70,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent))
 
-      val lines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8).lines.toVector
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8)).lines.toVector
 
       val extensions = lines
         .map { l =>
