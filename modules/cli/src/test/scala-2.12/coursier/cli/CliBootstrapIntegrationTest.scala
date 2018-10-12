@@ -75,8 +75,8 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val fooLines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8).lines.toVector
-      val lines = new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8).lines.toVector
+      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8)).lines.toVector
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8)).lines.toVector
 
       assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
       assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
