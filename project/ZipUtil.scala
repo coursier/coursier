@@ -49,6 +49,11 @@ object ZipUtil {
       }
 
     for ((ent, data) <- zipEntries(bootstrapZip)) {
+
+      // Same workaround as https://github.com/spring-projects/spring-boot/issues/13720
+      // (https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2ff64cd06c0b25857e3e0dfdb6733174R144)
+      ent.setCompressedSize(-1L)
+
       outputZip.putNextEntry(ent)
       outputZip.write(data)
       outputZip.closeEntry()

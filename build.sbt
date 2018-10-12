@@ -395,7 +395,8 @@ lazy val proguardedCli = Seq(
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
-    """-keep class scala.Symbol { *; }"""
+    // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
+    """-keep class scala.** { *; }"""
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",
