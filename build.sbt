@@ -392,13 +392,19 @@ lazy val proguardedCli = Seq(
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
     "-dontoptimize", // required since the switch to scala 2.12
-    "-dontnote",
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
     // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
     """-keep class scala.** { *; }"""
   ),
+  proguardOptions.in(Proguard) ++= {
+    if (sys.env.exists(_._1.startsWith("TRAVIS_")))
+      // still printing plenty of stuff in Travis, so that the build isn't assumed to be stalled
+      Nil
+    else
+      Seq("-dontnote")
+  },
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",
   artifacts ++= {
