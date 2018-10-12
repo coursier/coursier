@@ -1,6 +1,8 @@
 language: java
 os: linux
-jdk: oraclejdk8
+jdk:
+  - oraclejdk8
+  - openjdk11
 script: scripts/travis.sh
 addons:
   apt:
