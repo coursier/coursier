@@ -222,7 +222,7 @@ object Cache {
 
         val handlerFactoryOpt = clsOpt0.flatMap {
           cls =>
-            try Some(cls.newInstance().asInstanceOf[URLStreamHandlerFactory])
+            try Some(cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory])
             catch {
               case e: InstantiationException =>
                 printError(e)
@@ -837,7 +837,7 @@ object Cache {
   }
 
   def parseChecksum(content: String): Option[BigInteger] = {
-    val lines = content
+    val lines = Predef.augmentString(content)
       .lines
       .toVector
 
@@ -849,7 +849,7 @@ object Cache {
       Some(new BigInteger(content))
     else {
       val s = new String(content, UTF_8)
-      val lines = s
+      val lines = Predef.augmentString(s)
         .lines
         .toVector
 

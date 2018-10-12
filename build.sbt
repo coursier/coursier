@@ -390,6 +390,7 @@ lazy val proguardedCli = Seq(
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
     "-dontoptimize", // required since the switch to scala 2.12
+    "-dontnote",
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
