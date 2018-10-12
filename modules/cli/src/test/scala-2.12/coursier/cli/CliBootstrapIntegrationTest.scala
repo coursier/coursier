@@ -6,6 +6,7 @@ import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
+import coursier.cli.options.shared.RepositoryOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -29,9 +30,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     }
 
     (bootstrapFile, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
       val artifactOptions = ArtifactOptions()
       val common = CommonOptions(
-        repository = List("bintray:scalameta/maven")
+        repositoryOptions = repositoryOpt
       )
       val isolatedLoaderOptions = IsolatedLoaderOptions(
         isolateTarget = List("foo"),

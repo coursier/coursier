@@ -13,8 +13,13 @@ scala_library(
     ],
     sources = globs(
         "coursier/cli/options/*.scala",
+	"coursier/cli/options/shared/*.scala",
+	"coursier/cli/params/*.scala",
+	"coursier/cli/params/shared/*.scala",
+	"coursier/cli/resolve/*.scala",
         "coursier/cli/scaladex/*.scala",
         "coursier/cli/spark/*.scala",
+	"coursier/cli/util/*.scala",
         "coursier/cli/*.scala",
     ),
 )
@@ -23,6 +28,7 @@ scala_library(
     name = "util",
     dependencies = [
         "3rdparty/jvm:argonaut-shapeless",
+        "3rdparty/jvm:cats-core",
         "cache:cache",
         "core:core",
     ],

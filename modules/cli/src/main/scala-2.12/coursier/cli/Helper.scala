@@ -3,7 +3,6 @@ package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
-import java.util.concurrent.Executors
 import java.util.jar.{Manifest => JManifest}
 
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
@@ -11,14 +10,13 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.{Classifier, Type}
 import coursier.extra.Typelevel
-import coursier.interop.scalaz._
 import coursier.ivy.IvyRepository
 import coursier.util.Parse.ModuleRequirements
-import coursier.util.{Gather, Parse, Print}
+import coursier.util._
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
-import scalaz.concurrent.{Strategy, Task}
 
 
 object Helper {
@@ -69,20 +67,20 @@ class Helper(
   import common._
 
   val ttl0 =
-    if (ttl.isEmpty)
+    if (common.cacheOptions.ttl.isEmpty)
       Cache.defaultTtl
     else
-      try Some(Duration(ttl))
+      try Some(Duration(common.cacheOptions.ttl))
       catch {
         case e: Exception =>
-          prematureExit(s"Unrecognized TTL duration: $ttl")
+          prematureExit(s"Unrecognized TTL duration: ${common.cacheOptions.ttl}")
       }
 
   val cachePolicies =
-    if (common.mode.isEmpty)
+    if (common.cacheOptions.mode.isEmpty)
       CachePolicy.default
     else
-      CacheParse.cachePolicies(common.mode).either match {
+      CacheParse.cachePolicies(common.cacheOptions.mode).either match {
         case Right(cp) => cp
         case Left(errors) =>
           prematureExit(
@@ -90,25 +88,26 @@ class Helper(
           )
       }
 
-  val cache = new File(cacheOptions.cache)
+  val cache = new File(common.cacheOptions.cache)
 
-  val pool = Executors.newFixedThreadPool(parallel, Strategy.DefaultDaemonThreadFactory)
+  val pool = Schedulable.fixedThreadPool(common.cacheOptions.parallel)
+  val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(
     Cache.ivy2Local,
     MavenRepository("https://repo1.maven.org/maven2")
   )
 
-  val repositoriesValidation = CacheParse.repositories(common.repository).map { repos0 =>
+  val repositoriesValidation = CacheParse.repositories(common.repositoryOptions.repository).map { repos0 =>
 
-    var repos = (if (common.noDefault) Nil else defaultRepositories) ++ repos0
+    var repos = (if (common.repositoryOptions.noDefault) Nil else defaultRepositories) ++ repos0
 
     repos = repos.map {
-      case m: MavenRepository => m.copy(sbtAttrStub = common.sbtPluginHack)
+      case m: MavenRepository => m.copy(sbtAttrStub = common.repositoryOptions.sbtPluginHack)
       case other => other
     }
 
-    if (common.dropInfoAttr)
+    if (common.repositoryOptions.dropInfoAttr)
       repos = repos.map {
         case m: IvyRepository => m.copy(dropInfoAttributes = true)
         case other => other
@@ -127,7 +126,7 @@ class Helper(
   }
 
   val loggerFallbackMode =
-    !progress && TermDisplay.defaultFallbackMode
+    !common.outputOptions.progress && TermDisplay.defaultFallbackMode
 
   val (scaladexRawDependencies, otherRawDependencies) =
     rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
@@ -137,7 +136,7 @@ class Helper(
       Nil
     else {
       val logger =
-        if (verbosityLevel >= 0)
+        if (common.verbosityLevel >= 0)
           Some(new TermDisplay(
             new OutputStreamWriter(System.err),
             fallbackMode = loggerFallbackMode
@@ -151,13 +150,13 @@ class Helper(
 
       logger.foreach(_.init())
 
-      val scaladex = Scaladex.cached(fetchs: _*)
+      val scaladex = Scaladex.withCache(fetchs: _*)
 
       val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
           s,
-          scalaVersion,
-          if (verbosityLevel >= 2) Console.err.println(_) else _ => ()
+          common.resolutionOptions.scalaVersion,
+          if (common.verbosityLevel >= 2) Console.err.println(_) else _ => ()
         )
 
         deps.map { modVers =>
@@ -172,14 +171,14 @@ class Helper(
             }
             .maxBy(_._1)
 
-            if (verbosityLevel >= 1)
+            if (common.verbosityLevel >= 1)
               Console.err.println(s"Keeping version ${keptVer.repr}")
 
             modVers0
           } else
             modVers
         }.run
-      }).unsafePerformSync
+      }).unsafeRun()(ec)
 
       logger.foreach(_.stop())
 
@@ -196,7 +195,7 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(forceVersion, scalaVersion)
+  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.resolutionOptions.scalaVersion)
 
   prematureExitIf(forceVersionErrors.nonEmpty) {
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
@@ -213,7 +212,7 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(exclude, scalaVersion)
+  val (excludeErrors, excludes0) = Parse.modules(common.resolutionOptions.exclude, common.resolutionOptions.scalaVersion)
 
   prematureExitIf(excludeErrors.nonEmpty) {
     s"Cannot parse excluded modules:\n" +
@@ -237,10 +236,10 @@ class Helper(
       .toSet
 
   val localExcludeMap: Map[String, Set[(Organization, ModuleName)]] =
-    if (localExcludeFile.isEmpty) {
+    if (common.resolutionOptions.localExcludeFile.isEmpty) {
       Map()
     } else {
-      val source = scala.io.Source.fromFile(localExcludeFile)
+      val source = scala.io.Source.fromFile(common.resolutionOptions.localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
       lines
@@ -261,13 +260,13 @@ class Helper(
         .toMap
     }
 
-  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, defaultConfiguration0)
+  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.resolutionOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, scalaVersion)
+    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.resolutionOptions.scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(intransitive, moduleReq, transitive=false, scalaVersion)
+    Parse.moduleVersionConfigs(common.resolutionOptions.intransitive, moduleReq, transitive=false, common.resolutionOptions.scalaVersion)
 
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
@@ -300,7 +299,7 @@ class Helper(
         }
     }.toMap
 
-  val depsWithUrlRepo: FallbackDependenciesRepository = FallbackDependenciesRepository(depsWithUrls, cacheFileArtifacts)
+  val depsWithUrlRepo = FallbackDependenciesRepository(depsWithUrls, common.cacheOptions.cacheFileArtifacts)
 
   // Prepend FallbackDependenciesRepository to the repository list
   // so that dependencies with URIs are resolved against this repo
@@ -311,7 +310,7 @@ class Helper(
       s"for the module $mod:$version with url")
 
   val checksums = {
-    val splitChecksumArgs = checksum.flatMap(_.split(',')).filter(_.nonEmpty)
+    val splitChecksumArgs = common.cacheOptions.checksum.flatMap(_.split(',')).filter(_.nonEmpty)
     if (splitChecksumArgs.isEmpty)
       Cache.defaultChecksums
     else
@@ -321,9 +320,9 @@ class Helper(
       }
   }
 
-  val userEnabledProfiles = profile.toSet
+  val userEnabledProfiles = common.resolutionOptions.profile.toSet
 
-  val forcedProperties = forceProperty
+  val forcedProperties = common.resolutionOptions.forceProperty
     .map { s =>
       s.split("=", 2) match {
         case Array(k, v) => k -> v
@@ -336,16 +335,16 @@ class Helper(
   val startRes = Resolution(
     allDependencies.toSet,
     forceVersions = forceVersions,
-    filter = Some(dep => keepOptional || !dep.optional),
+    filter = Some(dep => common.resolutionOptions.keepOptional || !dep.optional),
     userActivations =
       if (userEnabledProfiles.isEmpty) None
       else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-    mapDependencies = if (typelevel) Some(Typelevel.swap(_)) else None,
+    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap(_)) else None,
     forceProperties = forcedProperties
   )
 
   val logger =
-    if (verbosityLevel >= 0)
+    if (common.verbosityLevel >= 0)
       Some(new TermDisplay(
         new OutputStreamWriter(System.err),
         fallbackMode = loggerFallbackMode
@@ -354,7 +353,7 @@ class Helper(
       None
 
   val fetchs = cachePolicies.map(p =>
-    Cache.fetch(cache, p, checksums = checksums, logger = logger, pool = pool, ttl = ttl0)
+    Cache.fetch[Task](cache, p, checksums = checksums, logger = logger, pool = pool, ttl = ttl0)
   )
   val fetchQuiet = coursier.Fetch.from(
     repositories,
@@ -362,9 +361,9 @@ class Helper(
     fetchs.tail: _*
   )
   val fetch0 =
-    if (verbosityLevel >= 2) {
+    if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
-        val print = Task {
+        val print = Task.delay {
           errPrintln(s"Getting ${modVers.length} project definition(s)")
         }
 
@@ -372,13 +371,13 @@ class Helper(
     } else
       fetchQuiet
 
-  if (verbosityLevel >= 1) {
+  if (common.verbosityLevel >= 1) {
     errPrintln(
       s"  Dependencies:\n" +
         Print.dependenciesUnknownConfigs(
           allDependencies,
           Map.empty,
-          printExclusions = verbosityLevel >= 2
+          printExclusions = common.verbosityLevel >= 2
         )
     )
 
@@ -400,7 +399,7 @@ class Helper(
       }
 
       def timed[T](name: String, counter: Counter, f: Task[T]): Task[T] =
-        Task(System.currentTimeMillis()).flatMap { start =>
+        Task.delay(System.currentTimeMillis()).flatMap { start =>
           f.map { t =>
             val end = System.currentTimeMillis()
             Console.err.println(s"$name: ${end - start} ms")
@@ -410,12 +409,12 @@ class Helper(
         }
 
       def helper(proc: ResolutionProcess, counter: Counter, iteration: Int): Task[Resolution] =
-        if (iteration >= maxIterations)
-          Task.now(proc.current)
+        if (iteration >= common.resolutionOptions.maxIterations)
+          Task.point(proc.current)
         else
           proc match {
             case _: core.Done =>
-              Task.now(proc.current)
+              Task.point(proc.current)
             case _ =>
               val iterationType = proc match {
                 case _: core.Missing  => "IO"
@@ -442,7 +441,7 @@ class Helper(
             iterationCounter,
             0
           )
-        ).unsafePerformSync
+        ).unsafeRun()(ec)
 
         Console.err.println(s"Overhead: ${resolutionCounter.value - iterationCounter.value} ms")
 
@@ -467,8 +466,8 @@ class Helper(
         val start = System.currentTimeMillis()
         val res0 = startRes
           .process
-          .run(fetch0, maxIterations)
-          .unsafePerformSync
+          .run(fetch0, common.resolutionOptions.maxIterations)
+          .unsafeRun()(ec)
         val end = System.currentTimeMillis()
 
         Console.err.println(s"Resolution ${index + 1} / ${-benchmark}: ${end - start} ms")
@@ -491,8 +490,8 @@ class Helper(
     } else
       startRes
         .process
-        .run(fetch0, maxIterations)
-        .unsafePerformSync
+        .run(fetch0, common.resolutionOptions.maxIterations)
+        .unsafeRun()(ec)
 
   logger.foreach(_.stop())
 
@@ -500,8 +499,8 @@ class Helper(
 
   lazy val projCache = res.projectCache.mapValues { case (_, p) => p }
 
-  if (printResultStdout || verbosityLevel >= 1 || tree || reverseTree) {
-    if ((printResultStdout && verbosityLevel >= 1) || verbosityLevel >= 2 || tree || reverseTree)
+  if (printResultStdout || common.verbosityLevel >= 1 || tree || reverseTree) {
+    if ((printResultStdout && common.verbosityLevel >= 1) || common.verbosityLevel >= 2 || tree || reverseTree)
       errPrintln(s"  Result:")
 
     val depsStr =
@@ -509,14 +508,14 @@ class Helper(
         Print.dependencyTree(
           allDependencies,
           res,
-          printExclusions = verbosityLevel >= 1,
+          printExclusions = common.verbosityLevel >= 1,
           reverse = reverseTree
         )
       else
         Print.dependenciesUnknownConfigs(
           trDeps,
           projCache,
-          printExclusions = verbosityLevel >= 1
+          printExclusions = common.verbosityLevel >= 1
         )
 
     if (printResultStdout)
@@ -550,7 +549,7 @@ class Helper(
       Print.dependenciesUnknownConfigs(
         res.conflicts.toVector,
         projCache,
-        printExclusions = verbosityLevel >= 1
+        printExclusions = common.verbosityLevel >= 1
       )
     )
   }
@@ -569,7 +568,7 @@ class Helper(
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
 
-    if (subset == null && verbosityLevel >= 1) {
+    if (subset == null && common.verbosityLevel >= 1) {
       def isLocal(p: CachePolicy) = p match {
         case CachePolicy.LocalOnly => true
         case CachePolicy.LocalUpdate => true
@@ -641,7 +640,7 @@ class Helper(
     val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).distinct
 
     val logger =
-      if (verbosityLevel >= 0)
+      if (common.verbosityLevel >= 0)
         Some(new TermDisplay(
           new OutputStreamWriter(System.err),
           fallbackMode = loggerFallbackMode
@@ -649,11 +648,11 @@ class Helper(
       else
         None
 
-    if (verbosityLevel >= 1 && artifacts0.nonEmpty)
+    if (common.verbosityLevel >= 1 && artifacts0.nonEmpty)
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy) = Cache.file(
+      def file(policy: CachePolicy) = Cache.file[Task](
         artifact,
         cache,
         policy,
@@ -661,8 +660,8 @@ class Helper(
         logger = logger,
         pool = pool,
         ttl = ttl0,
-        retry = common.retryCount,
-        cacheFileArtifacts
+        retry = common.cacheOptions.retryCount,
+        common.cacheOptions.cacheFileArtifacts
       )
 
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
@@ -672,9 +671,9 @@ class Helper(
 
     logger.foreach(_.init())
 
-    val task = Task.gatherUnordered(tasks)
+    val task = Task.gather.gather(tasks)
 
-    val results = task.unsafePerformSync
+    val results = task.unsafeRun()(ec)
 
     val (ignoredErrors, errors) = results
       .collect {
@@ -697,7 +696,7 @@ class Helper(
 
     logger.foreach(_.stop())
 
-    if (verbosityLevel >= 2)
+    if (common.verbosityLevel >= 2)
       errPrintln(
         "  Ignoring error(s):\n" +
         ignoredErrors
@@ -744,7 +743,7 @@ class Helper(
       }
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
+      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = common.verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
       val jsonStr = JsonReport(
         roots,
         conflictResolutionForRoots
@@ -800,7 +799,7 @@ class Helper(
       (baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDeps(common.scalaVersion)
+      val isolatedDeps = isolated.isolatedDeps(common.resolutionOptions.scalaVersion)
 
       val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((baseLoader, files0)) {
         case ((parent, files0), target) =>
