@@ -149,7 +149,7 @@ jar_library(
         jar(
             org = "io.github.soc",
             name = "directories",
-            rev = "10",
+            rev = "11",
         ),
     ],
 )
