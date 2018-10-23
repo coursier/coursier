@@ -173,41 +173,6 @@ object Release {
     state.put(previousReleaseVersion, ver)
   }
 
-  val updateTutReadme = ReleaseStep { state =>
-
-    val log = toProcessLogger(state)
-
-    val previousVer = state.get(previousReleaseVersion).getOrElse {
-      sys.error(s"${previousReleaseVersion.label} key not set")
-    }
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    val readmeFile = Project.extract(state).get(baseDirectory.in(ThisBuild)) / "doc" / "readme" / "README.md"
-    val pattern = Pattern.quote(previousVer).r
-
-    val content = Source.fromFile(readmeFile)(Codec.UTF8).mkString
-    val newContent = pattern.replaceAllIn(content, releaseVer)
-    Files.write(readmeFile.toPath, newContent.getBytes(StandardCharsets.UTF_8))
-
-    state.vcs.add(readmeFile.getAbsolutePath).!!(log)
-
-    state
-  }
-
-  val stageReadme = ReleaseStep { state =>
-
-    val log = toProcessLogger(state)
-
-    val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
-    val processedReadmeFile = baseDir / "README.md"
-
-    state.vcs.add(processedReadmeFile.getAbsolutePath).!!(log)
-
-    state
-  }
-
 
   val coursierVersionPattern = s"(?m)^${Pattern.quote("def coursierVersion0 = \"")}[^${'"'}]*${Pattern.quote("\"")}$$".r
 
@@ -398,10 +363,6 @@ object Release {
       releaseStepCommand("sonatypeRelease"),
       updateScripts,
       updateLaunchers,
-      updateTutReadme,
-      releaseStepCommand(s"++${ScalaVersion.scala211}"),
-      releaseStepCommand("tut"),
-      stageReadme,
       updatePluginsSbt,
       updateMimaVersions,
       updateTestFixture,
