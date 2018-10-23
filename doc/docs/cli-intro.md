@@ -36,6 +36,13 @@ Install it from [AUR](https://aur.archlinux.org/packages/coursier/),
 $ pacaur -S coursier
 ```
 
+### FreeBSD
+
+Install it via `pkg` from the [Ports Collection](https://www.freshports.org/devel/coursier/),
+```
+$ pkg install coursier
+```
+
 ### zsh completions
 
 If you use ZSH, simple tab-completions are available by copying the
