@@ -18,7 +18,9 @@ final case class ArtifactOptions(
   @Help("Fetch artifacts even if the resolution is errored")
     force: Boolean = false
 ) {
-  def artifactTypes(sources: Boolean, javadoc: Boolean): Set[Type] = {
+  def artifactTypes(): Set[Type] =
+    artifactTypes(sources = false, javadoc = false, default = true)
+  def artifactTypes(sources: Boolean, javadoc: Boolean, default: Boolean): Set[Type] = {
 
     val types0 = artifactType
       .flatMap(_.split(','))
@@ -27,10 +29,10 @@ final case class ArtifactOptions(
       .toSet
 
     if (types0.isEmpty) {
-      if (sources || javadoc)
-        Some(Type.source).filter(_ => sources).toSet ++ Some(Type.doc).filter(_ => javadoc)
-      else
-        ArtifactOptions.defaultArtifactTypes
+      val sourceTypes = Some(Type.source).filter(_ => sources).toSet
+      val javadocTypes = Some(Type.doc).filter(_ => javadoc).toSet
+      val defaultTypes = if (default) ArtifactOptions.defaultArtifactTypes else Set()
+      sourceTypes ++ javadocTypes ++ defaultTypes
     } else if (types0(Type("*")))
       Set(Type("*"))
     else

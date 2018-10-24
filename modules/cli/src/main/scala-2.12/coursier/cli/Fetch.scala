@@ -16,7 +16,8 @@ final class Fetch(options: FetchOptions, args: RemainingArgs) {
     javadoc = options.javadoc,
     artifactTypes = options.artifactOptions.artifactTypes(
       options.sources || options.common.classifier0(Classifier.sources),
-      options.javadoc || options.common.classifier0(Classifier.javadoc)
+      options.javadoc || options.common.classifier0(Classifier.javadoc),
+      (!options.sources && !options.javadoc) || options.common.classifier0(Classifier("_"))
     )
   )
 
