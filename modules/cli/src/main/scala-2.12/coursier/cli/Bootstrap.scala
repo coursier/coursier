@@ -25,10 +25,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   ): Unit = {
 
     val files = helper.fetch(
-      sources = false,
-      javadoc = false,
-      default = true,
-      artifactTypes = options.artifactOptions.artifactTypes()
+      sources = options.artifactOptions.sources,
+      javadoc = options.artifactOptions.javadoc,
+      default = options.artifactOptions.default0(options.options.common.classifier0),
+      artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
     )
 
     val log: String => Unit =
@@ -353,10 +353,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
       val (urls, files) =
         helper.fetchMap(
-          sources = false,
-          javadoc = false,
-          default = true,
-          artifactTypes = options.artifactOptions.artifactTypes()
+          sources = options.artifactOptions.sources,
+          javadoc = options.artifactOptions.javadoc,
+          default = options.artifactOptions.default0(options.options.common.classifier0),
+          artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
         ).toList.foldLeft((List.empty[String], List.empty[File])){
           case ((urls, files), (url, file)) =>
             if (options.options.assembly || options.options.standalone) (urls, file :: files)
