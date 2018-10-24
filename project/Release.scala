@@ -174,41 +174,6 @@ object Release {
   }
 
 
-  val coursierVersionPattern = s"(?m)^${Pattern.quote("def coursierVersion0 = \"")}[^${'"'}]*${Pattern.quote("\"")}$$".r
-
-  val updatePluginsSbt = ReleaseStep { state =>
-
-    val vcs = state.vcs
-    val log = toProcessLogger(state)
-
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
-    val projectProjectPluginsSbtFile = baseDir / "project" / "project" / "project" / "plugins.sbt"
-
-    val files = Seq(
-      projectProjectPluginsSbtFile
-    )
-
-    for (f <- files) {
-      val content = Source.fromFile(f)(Codec.UTF8).mkString
-
-      coursierVersionPattern.findAllIn(content).toVector match {
-        case Seq() => sys.error(s"Found no matches in $f")
-        case Seq(_) =>
-        case _ => sys.error(s"Found too many matches in $f")
-      }
-
-      val newContent = coursierVersionPattern.replaceAllIn(content, "def coursierVersion0 = \"" + releaseVer + "\"")
-      Files.write(f.toPath, newContent.getBytes(StandardCharsets.UTF_8))
-      vcs.add(f.getAbsolutePath).!!(log)
-    }
-
-    state
-  }
-
   val mimaVersionsPattern = s"(?m)^(\\s+)${Pattern.quote("\"\" // binary compatibility versions")}$$".r
 
   val milestonePattern = ("[^-]+" + Pattern.quote("-M") + "[0-9]+(-[0-9]+)*").r
@@ -363,7 +328,6 @@ object Release {
       releaseStepCommand("sonatypeRelease"),
       updateScripts,
       updateLaunchers,
-      updatePluginsSbt,
       updateMimaVersions,
       updateTestFixture,
       commitUpdates,
