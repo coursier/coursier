@@ -12,7 +12,7 @@ object Deps {
   def jsoup = "org.jsoup" % "jsoup" % "1.10.3"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % SharedVersions.scalaz
-  def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M3"
+  def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M5"
   def okhttpUrlConnection = "com.squareup.okhttp" % "okhttp-urlconnection" % "2.7.5"
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % "1.2.0-M8"
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.5"
