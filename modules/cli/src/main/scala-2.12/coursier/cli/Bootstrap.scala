@@ -167,10 +167,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
 
           val m = helper.fetchMap(
-            sources = false,
-            javadoc = false,
-            default = true,
-            artifactTypes = options.artifactOptions.artifactTypes(),
+            sources = options.artifactOptions.sources,
+            javadoc = options.artifactOptions.javadoc,
+            default = options.artifactOptions.default0(options.options.common.classifier0),
+            artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0),
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )
 
