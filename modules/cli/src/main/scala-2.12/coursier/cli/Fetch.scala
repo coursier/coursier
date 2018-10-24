@@ -11,20 +11,13 @@ final class Fetch(options: FetchOptions, args: RemainingArgs) {
 
   val helper = new Helper(options.common, args.all, ignoreErrors = options.artifactOptions.force)
 
-  val default = options.artifactOptions.default.getOrElse {
-    (!options.artifactOptions.sources && !options.artifactOptions.javadoc && options.common.classifier0.isEmpty) ||
-      options.common.classifier0(Classifier("_"))
-  }
+  val default = options.artifactOptions.default0(options.common.classifier0)
 
   val files0 = helper.fetch(
     sources = options.artifactOptions.sources,
     javadoc = options.artifactOptions.javadoc,
     default = default,
-    artifactTypes = options.artifactOptions.artifactTypes(
-      options.artifactOptions.sources || options.common.classifier0(Classifier.sources),
-      options.artifactOptions.javadoc || options.common.classifier0(Classifier.javadoc),
-      default
-    )
+    artifactTypes = options.artifactOptions.artifactTypes(options.common.classifier0)
   )
 
 }

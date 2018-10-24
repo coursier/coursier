@@ -1,7 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.{Resolution, Type}
+import coursier.core.{Classifier, Resolution, Type}
 
 object ArtifactOptions {
   def defaultArtifactTypes = Resolution.defaultTypes
@@ -26,9 +26,16 @@ final case class ArtifactOptions(
   @Help("Fetch artifacts even if the resolution is errored")
     force: Boolean = false
 ) {
+
+  def default0(classifiers: Set[Classifier]): Boolean =
+    default.getOrElse {
+      (!sources && !javadoc && classifiers.isEmpty) ||
+        classifiers(Classifier("_"))
+    }
+
   def artifactTypes(): Set[Type] =
-    artifactTypes(sources = false, javadoc = false, default = true)
-  def artifactTypes(sources: Boolean, javadoc: Boolean, default: Boolean): Set[Type] = {
+    artifactTypes(Set())
+  def artifactTypes(classifiers: Set[Classifier]): Set[Type] = {
 
     val types0 = artifactType
       .flatMap(_.split(','))
@@ -37,9 +44,9 @@ final case class ArtifactOptions(
       .toSet
 
     if (types0.isEmpty) {
-      val sourceTypes = Some(Type.source).filter(_ => sources).toSet
-      val javadocTypes = Some(Type.doc).filter(_ => javadoc).toSet
-      val defaultTypes = if (default) ArtifactOptions.defaultArtifactTypes else Set()
+      val sourceTypes = Some(Type.source).filter(_ => sources || classifiers(Classifier.sources)).toSet
+      val javadocTypes = Some(Type.doc).filter(_ => javadoc || classifiers(Classifier.javadoc)).toSet
+      val defaultTypes = if (default0(classifiers)) ArtifactOptions.defaultArtifactTypes else Set()
       sourceTypes ++ javadocTypes ++ defaultTypes
     } else if (types0(Type("*")))
       Set(Type("*"))
