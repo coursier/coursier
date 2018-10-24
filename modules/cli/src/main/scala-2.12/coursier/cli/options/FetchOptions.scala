@@ -3,14 +3,6 @@ package coursier.cli.options
 import caseapp.{ HelpMessage => Help, ExtraName => Short, _ }
 
 final case class FetchOptions(
-  @Help("Fetch source artifacts")
-  @Short("S")
-    sources: Boolean = false,
-  @Help("Fetch javadoc artifacts")
-  @Short("D")
-    javadoc: Boolean = false,
-  @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
-    default: Option[Boolean] = None,
   @Help("Print java -cp compatible output")
   @Short("p")
     classpath: Boolean = false,

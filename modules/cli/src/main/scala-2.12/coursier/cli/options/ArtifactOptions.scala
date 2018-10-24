@@ -11,6 +11,14 @@ object ArtifactOptions {
 }
 
 final case class ArtifactOptions(
+  @Help("Fetch source artifacts")
+  @Short("S")
+    sources: Boolean = false,
+  @Help("Fetch javadoc artifacts")
+  @Short("D")
+    javadoc: Boolean = false,
+  @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
+    default: Option[Boolean] = None,
   @Help("Artifact types that should be retained (e.g. jar, src, doc, etc.) - defaults to jar,bundle")
   @Value("type1,type2,...")
   @Short("A")

@@ -55,9 +55,12 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val commonOpt = CommonOptions(
       classifier = List("_")
     )
+    val artifactOpt = ArtifactOptions(
+      sources = true
+    )
     val fetchOpt = FetchOptions(
       common = commonOpt,
-      sources = true
+      artifactOptions = artifactOpt
     )
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set(
@@ -69,10 +72,13 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "Default and source options" should "fetch default and source files" in {
-    val fetchOpt = FetchOptions(
-      common = CommonOptions(),
+    val artifactOpt = ArtifactOptions(
       default = Some(true),
       sources = true
+    )
+    val fetchOpt = FetchOptions(
+      common = CommonOptions(),
+      artifactOptions = artifactOpt
     )
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set(
@@ -722,7 +728,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "classifier sources" should "fetch sources jar" in withFile() {
     (jsonFile, _) => {
       val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt, sources=true)
+      val artifactOpt = ArtifactOptions(sources = true)
+      val fetchOpt = FetchOptions(common = commonOpt, artifactOptions = artifactOpt)
 
       // encode path to different jar than requested
 
