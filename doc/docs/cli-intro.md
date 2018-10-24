@@ -26,6 +26,7 @@ tag of a specific version, to download the launcher of that exact version, like
 
 Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
 ```
+$ brew tap coursier/formulas
 $ brew install --HEAD coursier/formulas/coursier
 ```
 
