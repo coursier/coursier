@@ -9,6 +9,8 @@ final case class FetchOptions(
   @Help("Fetch javadoc artifacts")
   @Short("D")
     javadoc: Boolean = false,
+  @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
+    default: Option[Boolean] = None,
   @Help("Print java -cp compatible output")
   @Short("p")
     classpath: Boolean = false,

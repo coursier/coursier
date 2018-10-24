@@ -51,6 +51,7 @@ object Submit {
     helper.fetch(
       sources = false,
       javadoc = false,
+      default = true,
       artifactTypes = artifactTypes
     ) ++ extraCp
   }

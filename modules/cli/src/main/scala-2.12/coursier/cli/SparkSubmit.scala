@@ -65,6 +65,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
       helper.fetch(
         sources = false,
         javadoc = false,
+        default = true,
         artifactTypes = options.artifactOptions.artifactTypes()
       ) ++ options.extraJars.map(new File(_))
 

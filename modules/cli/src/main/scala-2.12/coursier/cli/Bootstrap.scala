@@ -27,6 +27,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val files = helper.fetch(
       sources = false,
       javadoc = false,
+      default = true,
       artifactTypes = options.artifactOptions.artifactTypes()
     )
 
@@ -168,6 +169,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           val m = helper.fetchMap(
             sources = false,
             javadoc = false,
+            default = true,
             artifactTypes = options.artifactOptions.artifactTypes(),
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )
@@ -353,6 +355,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         helper.fetchMap(
           sources = false,
           javadoc = false,
+          default = true,
           artifactTypes = options.artifactOptions.artifactTypes()
         ).toList.foldLeft((List.empty[String], List.empty[File])){
           case ((urls, files), (url, file)) =>

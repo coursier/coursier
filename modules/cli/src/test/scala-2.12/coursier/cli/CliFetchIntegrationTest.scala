@@ -68,6 +68,21 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     )))
   }
 
+  "Default and source options" should "fetch default and source files" in {
+    val fetchOpt = FetchOptions(
+      common = CommonOptions(),
+      default = Some(true),
+      sources = true
+    )
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
+    assert(fetch.files0.map(_.getName).toSet.equals(Set(
+      "junit-4.12.jar",
+      "junit-4.12-sources.jar",
+      "hamcrest-core-1.3.jar",
+      "hamcrest-core-1.3-sources.jar"
+    )))
+  }
+
   "scalafmt-cli fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq()))
