@@ -12,10 +12,8 @@ object ArtifactOptions {
 
 final case class ArtifactOptions(
   @Help("Fetch source artifacts")
-  @Short("S")
     sources: Boolean = false,
   @Help("Fetch javadoc artifacts")
-  @Short("D")
     javadoc: Boolean = false,
   @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
     default: Option[Boolean] = None,
