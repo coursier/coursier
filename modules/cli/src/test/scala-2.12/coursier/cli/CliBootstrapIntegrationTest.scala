@@ -71,11 +71,18 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
 
-      val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+      def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val lines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8).lines.toVector
+      val fooLines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8).lines.toVector
+      val lines = new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8).lines.toVector
 
-      val extensions = lines
+      assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+
+      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+      assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+
+      val extensions = fooLines
         .map { l =>
           val idx = l.lastIndexOf('.')
           if (idx < 0)
