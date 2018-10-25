@@ -16,6 +16,7 @@ fi
 "$SBTPACK_LAUNCHER" bootstrap \
   --intransitive "io.get-coursier::coursier-cli:$ACTUAL_VERSION" \
   --classifier standalone \
+  -A jar \
   -J "-noverify" \
   --no-default \
   -r central \

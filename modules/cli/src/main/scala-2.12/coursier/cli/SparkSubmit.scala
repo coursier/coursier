@@ -65,7 +65,8 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
       helper.fetch(
         sources = false,
         javadoc = false,
-        artifactTypes = options.artifactOptions.artifactTypes(sources = false, javadoc = false)
+        default = true,
+        artifactTypes = options.artifactOptions.artifactTypes()
       ) ++ options.extraJars.map(new File(_))
 
     val (scalaVersion, sparkVersion) =
@@ -93,7 +94,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
           options.assemblyDependencies.flatMap(_.split(",")).filter(_.nonEmpty) ++
             options.sparkAssemblyDependencies.flatMap(_.split(",")).filter(_.nonEmpty).map(_ + s":$sparkVersion"),
           options.common,
-          options.artifactOptions.artifactTypes(sources = false, javadoc = false)
+          options.artifactOptions.artifactTypes()
         )
 
         val extraConf =
@@ -115,7 +116,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
           options.assemblyDependencies.flatMap(_.split(",")).filter(_.nonEmpty) ++
             options.sparkAssemblyDependencies.flatMap(_.split(",")).filter(_.nonEmpty).map(_ + s":$sparkVersion"),
           options.common,
-          options.artifactOptions.artifactTypes(sources = false, javadoc = false)
+          options.artifactOptions.artifactTypes()
         )
 
         val (assembly, assemblyJars) = assemblyAndJarsOrError match {
@@ -191,7 +192,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
       sparkVersion,
       options.noDefaultSubmitDependencies,
       options.submitDependencies.flatMap(_.split(",")).filter(_.nonEmpty),
-      options.artifactOptions.artifactTypes(sources = false, javadoc = false),
+      options.artifactOptions.artifactTypes(),
       options.common
     )
 

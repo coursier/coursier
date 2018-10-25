@@ -564,6 +564,7 @@ class Helper(
   def artifacts(
     sources: Boolean,
     javadoc: Boolean,
+    default: Boolean,
     artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
@@ -587,7 +588,7 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, res0).map(t => (t._2, t._3))
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, res0).map(t => (t._2, t._3))
 
     if (artifactTypes(Type("*")))
       artifacts0.map(_._2)
@@ -598,12 +599,28 @@ class Helper(
       }
   }
 
-  private def getDepArtifactsForClassifier(sources: Boolean, javadoc: Boolean, res0: Resolution): Seq[(Dependency, Attributes, Artifact)] = {
+  private def getDepArtifactsForClassifier(
+    sources: Boolean,
+    javadoc: Boolean,
+    default: Boolean,
+    res0: Resolution
+  ): Seq[(Dependency, Attributes, Artifact)] = {
+
     val raw =
-      if (hasOverrideClassifiers(sources, javadoc))
-        //TODO: this function somehow gives duplicated things
-        res0.dependencyArtifacts(Some(overrideClassifiers(sources, javadoc).toVector.sorted))
-      else
+      if (hasOverrideClassifiers(sources, javadoc)) {
+        val classifiers = overrideClassifiers(sources, javadoc, default)
+
+        val baseArtifacts =
+          if (classifiers(Classifier("_")))
+            res0.dependencyArtifacts(None)
+          else
+            Nil
+
+        val classifierArtifacts =
+          res0.dependencyArtifacts(Some(classifiers.filter(_ != Classifier("_")).toVector.sorted))
+
+        baseArtifacts ++ classifierArtifacts
+      } else
         res0.dependencyArtifacts(None)
 
     raw.map {
@@ -617,12 +634,18 @@ class Helper(
     }
   }
 
-  private def overrideClassifiers(sources: Boolean, javadoc:Boolean): Set[Classifier] = {
+  private def overrideClassifiers(
+    sources: Boolean,
+    javadoc: Boolean,
+    default: Boolean
+  ): Set[Classifier] = {
     var classifiers = classifier0
     if (sources)
       classifiers = classifiers + Classifier.sources
     if (javadoc)
       classifiers = classifiers + Classifier.javadoc
+    if (default)
+      classifiers = classifiers + Classifier("_")
     classifiers
   }
 
@@ -633,11 +656,12 @@ class Helper(
   def fetchMap(
     sources: Boolean,
     javadoc: Boolean,
+    default: Boolean,
     artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, artifactTypes, subset).distinct
+    val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, subset).distinct
 
     val logger =
       if (common.verbosityLevel >= 0)
@@ -718,13 +742,13 @@ class Helper(
     }
 
     val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
-      getDepArtifactsForClassifier(sources, javadoc, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
+      getDepArtifactsForClassifier(sources, javadoc, default, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
-      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, res).map(_._1): _*).toSeq
+      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, res).map(_._1): _*).toSeq
 
       // A map from requested org:name:version to reconciled org:name:version
       val conflictResolutionForRoots: Map[String, String] = allDependencies.map({ dep =>
@@ -743,7 +767,18 @@ class Helper(
       }
 
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(JsonElem(_, artifacts, Option(jsonReq), res, printExclusions = common.verbosityLevel >= 1, excluded = false, colors = false, overrideClassifiers = overrideClassifiers(sources, javadoc)))
+      val roots = deps.toVector.map(d =>
+        JsonElem(
+          d,
+          artifacts,
+          Option(jsonReq),
+          res,
+          printExclusions = common.verbosityLevel >= 1,
+          excluded = false,
+          colors = false,
+          overrideClassifiers = overrideClassifiers(sources, javadoc, default)
+        )
+      )
       val jsonStr = JsonReport(
         roots,
         conflictResolutionForRoots
@@ -763,11 +798,11 @@ class Helper(
   def fetch(
     sources: Boolean,
     javadoc: Boolean,
+    default: Boolean,
     artifactTypes: Set[Type],
     subset: Set[Dependency] = null
-  ): Seq[File] = {
-    fetchMap(sources, javadoc, artifactTypes, subset).values.toSeq
-  }
+  ): Seq[File] =
+    fetchMap(sources, javadoc, default, artifactTypes, subset).values.toSeq
 
   def contextLoader = Thread.currentThread().getContextClassLoader
 
@@ -792,6 +827,7 @@ class Helper(
     val files0 = fetch(
       sources = false,
       javadoc = false,
+      default = true,
       artifactTypes = artifactTypes
     )
 
@@ -808,6 +844,7 @@ class Helper(
           val isolatedFiles = fetch(
             sources = false,
             javadoc = false,
+            default = true,
             artifactTypes = artifactTypes,
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )

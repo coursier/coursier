@@ -42,6 +42,53 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
+  "Underscore classifier" should "fetch default files" in {
+    val commonOpt = CommonOptions(
+      classifier = List("_")
+    )
+    val fetchOpt = FetchOptions(common = commonOpt)
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
+    assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+  }
+
+  "Underscore and source classifier" should "fetch default and source files" in {
+    val commonOpt = CommonOptions(
+      classifier = List("_")
+    )
+    val artifactOpt = ArtifactOptions(
+      sources = true
+    )
+    val fetchOpt = FetchOptions(
+      common = commonOpt,
+      artifactOptions = artifactOpt
+    )
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
+    assert(fetch.files0.map(_.getName).toSet.equals(Set(
+      "junit-4.12.jar",
+      "junit-4.12-sources.jar",
+      "hamcrest-core-1.3.jar",
+      "hamcrest-core-1.3-sources.jar"
+    )))
+  }
+
+  "Default and source options" should "fetch default and source files" in {
+    val artifactOpt = ArtifactOptions(
+      default = Some(true),
+      sources = true
+    )
+    val fetchOpt = FetchOptions(
+      common = CommonOptions(),
+      artifactOptions = artifactOpt
+    )
+    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
+    assert(fetch.files0.map(_.getName).toSet.equals(Set(
+      "junit-4.12.jar",
+      "junit-4.12-sources.jar",
+      "hamcrest-core-1.3.jar",
+      "hamcrest-core-1.3-sources.jar"
+    )))
+  }
+
   "scalafmt-cli fetch" should "discover all main classes" in {
     val fetchOpt = FetchOptions(common = CommonOptions())
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq()))
@@ -681,7 +728,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "classifier sources" should "fetch sources jar" in withFile() {
     (jsonFile, _) => {
       val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt, sources=true)
+      val artifactOpt = ArtifactOptions(sources = true)
+      val fetchOpt = FetchOptions(common = commonOpt, artifactOptions = artifactOpt)
 
       // encode path to different jar than requested
 

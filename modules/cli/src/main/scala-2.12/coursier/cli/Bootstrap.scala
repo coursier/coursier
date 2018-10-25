@@ -25,9 +25,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   ): Unit = {
 
     val files = helper.fetch(
-      sources = false,
-      javadoc = false,
-      artifactTypes = options.artifactOptions.artifactTypes(sources = false, javadoc = false)
+      sources = options.artifactOptions.sources,
+      javadoc = options.artifactOptions.javadoc,
+      default = options.artifactOptions.default0(options.options.common.classifier0),
+      artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
     )
 
     val log: String => Unit =
@@ -159,27 +160,28 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
 
-    val (_, isolatedArtifactFiles) =
-      options.options.isolated.targets.foldLeft((Vector.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
+    val (done, isolatedArtifactFiles) =
+      options.options.isolated.targets.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
         case ((done, acc), target) =>
 
           // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
 
           val m = helper.fetchMap(
-            sources = false,
-            javadoc = false,
-            artifactTypes = options.artifactOptions.artifactTypes(sources = false, javadoc = false),
+            sources = options.artifactOptions.sources,
+            javadoc = options.artifactOptions.javadoc,
+            default = options.artifactOptions.default0(options.options.common.classifier0),
+            artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0),
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )
 
-          val (done0, subUrls, subFiles) =
-            if (options.options.standalone) {
-              val subFiles0 = m.values.toSeq
-              (done, Nil, subFiles0)
-            } else {
-              val filteredSubArtifacts = m.keys.toSeq.diff(done)
-              (done ++ filteredSubArtifacts, filteredSubArtifacts, Nil)
-            }
+          val m0 = m.filterKeys(url => !done(url))
+          val done0 = done ++ m0.keys
+
+          val (subUrls, subFiles) =
+            if (options.options.standalone)
+              (Nil, m0.values.toSeq)
+            else
+              (m0.keys.toSeq, Nil)
 
           val updatedAcc = acc + (target -> (subUrls, subFiles))
 
@@ -221,7 +223,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       outputZip.closeEntry()
     }
 
-    putStringEntry("bootstrap-jar-urls", urls.mkString("\n"))
+    putStringEntry("bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
 
     if (options.options.isolated.anyIsolatedDep) {
       putStringEntry("bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
@@ -351,9 +353,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
       val (urls, files) =
         helper.fetchMap(
-          sources = false,
-          javadoc = false,
-          artifactTypes = options.artifactOptions.artifactTypes(sources = false, javadoc = false)
+          sources = options.artifactOptions.sources,
+          javadoc = options.artifactOptions.javadoc,
+          default = options.artifactOptions.default0(options.options.common.classifier0),
+          artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
         ).toList.foldLeft((List.empty[String], List.empty[File])){
           case ((urls, files), (url, file)) =>
             if (options.options.assembly || options.options.standalone) (urls, file :: files)
