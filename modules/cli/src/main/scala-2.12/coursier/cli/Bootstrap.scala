@@ -2,6 +2,7 @@ package coursier
 package cli
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException}
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -11,7 +12,7 @@ import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
 
 import caseapp._
 import coursier.cli.options.BootstrapOptions
-import coursier.cli.util.{Assembly, Zip}
+import coursier.cli.util.{Assembly, LauncherBat, Zip}
 import coursier.internal.FileUtil
 
 import scala.collection.JavaConverters._
@@ -364,6 +365,16 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             else (url :: urls, files)
         }
 
+      val generateBat = options.options.bat
+        .getOrElse(LauncherBat.isWindows)
+
+      val bat = new File(output0.getParentFile, s"${output0.getName}.bat")
+
+      if (generateBat && !options.options.force && bat.exists()) {
+        Console.err.println(s"Error: $bat already exists, use -f option to force erasing it.")
+        sys.exit(1)
+      }
+
       if (options.options.assembly)
         createAssemblyJar(options, files, javaOpts, mainClass, output0)
       else
@@ -376,6 +387,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           files,
           output0
         )
+
+      if (generateBat) {
+        // no escaping for javaOpts :|
+        val content = LauncherBat(javaOpts.mkString(" "))
+        Files.write(bat.toPath, content.getBytes(Charset.defaultCharset()))
+      }
     }
   }
 

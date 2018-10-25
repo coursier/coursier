@@ -35,6 +35,8 @@ final case class BootstrapSpecificOptions(
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Boolean = false,
+  @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false else)")
+    bat: Option[Boolean] = None,
   @Help("Add assembly rule")
   @Value("append:$path|append-pattern:$pattern|exclude:$path|exclude-pattern:$pattern")
   @Short("R")

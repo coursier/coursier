@@ -21,6 +21,9 @@ environment:
   TEST_REPOSITORY_PASSWORD: pass
   TEST_REPOSITORY: http://localhost:8080
 build_script:
+  - sbt cli/pack
+  - cmd: .\modules\cli\target\pack\bin\coursier bootstrap io.get-coursier:echo:1.0.1 -o cs-echo
+  - cmd: .\cs-echo foo
   - sbt testsJVM/test:compile # this checks out some git submodules
   - ps: Start-Job -filepath .\modules\tests\handmade-metadata\scripts\start-it-auth-server.ps1 -ArgumentList $pwd\modules\tests\handmade-metadata, $env:TEST_REPOSITORY_HOST, $env:TEST_REPOSITORY_PORT, $env:TEST_REPOSITORY_USER, $env:TEST_REPOSITORY_PASSWORD
   - sbt scala212 coreJVM/publishLocal cacheJVM/publishLocal extra/publishLocal scalazJVM/publishLocal cli/publishLocal
