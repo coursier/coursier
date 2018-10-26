@@ -18,7 +18,7 @@ final case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
 
   def check(res: Resolution): Option[SameVersionConflict] = {
 
-    val deps = res.dependenciesWithSelectedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
+    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
     val modules = deps.map(_.module)
     val versions = deps.map(_.version)
 
@@ -33,7 +33,7 @@ final case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
     conflict: SameVersionConflict
   ): Either[UnsatisfiableRule, Resolution] = {
 
-    val deps = res.dependenciesWithSelectedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
+    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
     val versions = deps.map(_.version)
     assert(deps.nonEmpty)
     assert(versions.size > 1)

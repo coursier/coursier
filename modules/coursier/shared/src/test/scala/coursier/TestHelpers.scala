@@ -100,25 +100,30 @@ object TestHelpers extends PlatformTestHelpers {
   }
 
   def dependenciesWithRetainedVersion(res: Resolution): Seq[Dependency] =
-    res
-      .minDependencies
-      .toVector
-      .map { dep =>
-        val version = res.projectCache
-          .get(dep.moduleVersion)
-          .map(_._2.actualVersion)
-          .getOrElse(dep.version)
-        dep.copy(version = version)
-      }
+    res.orderedDependencies.map { dep =>
+      val version = res.projectCache
+        .get(dep.moduleVersion)
+        .map(_._2.actualVersion)
+        .orElse {
+          res.reconciledVersions.get(dep.module)
+        }
+        .getOrElse {
+          System.err.println(s"Project not found for ${dep.module.repr}:${dep.version}")
+          for ((mod, v) <- res.projectCache.keys.toVector.sortBy(_.toString()))
+            System.err.println(s"  ${mod.repr}:$v")
+          dep.version
+        }
+      dep.withVersion(version)
+    }
 
   def validateDependencies(res: Resolution, params: ResolutionParams = ResolutionParams()): Future[Unit] =
     validate("resolutions", res, params) {
-      dependenciesWithRetainedVersion(res)
+      val elems = dependenciesWithRetainedVersion(res)
         .map { dep =>
           (dep.module.organization.value, dep.module.nameWithAttributes, dep.version, dep.configuration.value)
         }
-        .sorted
-        .distinct
+
+      elems
         .map {
           case (org, name, ver, cfg) =>
             Seq(org, name, ver, cfg).mkString(":")
@@ -165,9 +170,7 @@ object TestHelpers extends PlatformTestHelpers {
         "_types_" + sha1(artifactTypes.toVector.sorted.mkString("|"))
 
     validate("artifacts", res, params, mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart) {
-      artifacts
-        .map(_.url)
-        .sorted
+      artifacts.map(_.url)
     }
   }
 

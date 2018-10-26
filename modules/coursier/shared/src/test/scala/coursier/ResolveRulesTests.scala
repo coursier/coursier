@@ -355,7 +355,7 @@ object ResolveRulesTests extends TestSuite {
             .future()
         }
 
-        val deps = res.dependenciesWithSelectedVersions
+        val deps = res.dependenciesWithRetainedVersions
 
         val shapelessVersions = deps.collect {
           case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
@@ -387,7 +387,7 @@ object ResolveRulesTests extends TestSuite {
             .future()
         }
 
-        val deps = res.dependenciesWithSelectedVersions
+        val deps = res.dependenciesWithRetainedVersions
 
         val shapelessVersions = deps.collect {
           case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>

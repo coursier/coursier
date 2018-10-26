@@ -66,6 +66,15 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // renamed
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependenciesWithSelectedVersions"),
+        // tweaked default values / overloads
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependencyArtifacts$default$1"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.artifacts$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependenciesOf$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.artifacts$default$1"),
+        // extra param…
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.Print.dependenciesUnknownConfigs"),
         // things that are private now
         ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.ResolutionProcess.fetchOne"),
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.compatibility.package.listWebPageRawElements"),
