@@ -137,6 +137,81 @@ object Orders {
         dep
     }
 
+  private def core(dep: Dependency): Dependency =
+    dep.copy(configuration = Configuration.empty, exclusions = Set.empty, optional = false)
+
+  private def compareUnsafe(
+    xDep: Dependency,
+    yDep: Dependency,
+    configs: Map[Configuration, Seq[Configuration]]
+  ): Option[Int] = {
+
+    val xOpt = xDep.optional
+    val yOpt = yDep.optional
+
+    val availableConfigs = configs.keySet
+    val xScope = fallbackConfigIfNecessary(xDep, availableConfigs).configuration
+    val yScope = fallbackConfigIfNecessary(yDep, availableConfigs).configuration
+
+    for {
+      optCmp <- optionalPartialOrder.tryCompare(xOpt, yOpt)
+      scopeCmp <- configurationPartialOrder(configs).tryCompare(xScope, yScope)
+      if optCmp*scopeCmp >= 0
+      exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions)
+      if optCmp*exclCmp >= 0
+      if scopeCmp*exclCmp >= 0
+      xIsMin = optCmp < 0 || scopeCmp < 0 || exclCmp < 0
+      yIsMin = optCmp > 0 || scopeCmp > 0 || exclCmp > 0
+    } yield if (xIsMin) -1 else if (yIsMin) 1 else 0
+  }
+
+  def compare(
+    a: Dependency,
+    b: Dependency,
+    configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
+  ): Option[Int] = {
+    val a0 = core(a)
+    val b0 = core(b)
+    if (a0 == b0)
+      compareUnsafe(a, b, configs(a0.moduleVersion))
+    else
+      None
+  }
+
+  def removeRedundancies(
+    deps: Seq[Dependency],
+    configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
+  ): Seq[Dependency] =
+    deps
+      .map(dep => fallbackConfigIfNecessary(dep, configs(dep.moduleVersion).keySet))
+      .scanLeft((Map.empty[Dependency, List[Dependency]], Option.empty[Dependency])) {
+        case ((map, _), dep) =>
+
+          val c = core(dep)
+
+          val (l, keep) = map
+            .get(c)
+            .fold((List.empty[Dependency], true)) { l0 =>
+              val comparisons = l0.toStream.map(d0 => (d0, compare(d0, dep, configs)))
+              if (comparisons.exists(_._2.exists(_ <= 0)))
+                (l0, false)
+              else {
+                val l1 = comparisons
+                  .collect {
+                    case (elem, None) => elem
+                  }
+                  .toList
+                (l1, true)
+              }
+            }
+
+          if (keep)
+            (map + (c -> (dep :: l)), Some(dep))
+          else
+            (map, None)
+      }
+      .flatMap(_._2)
+
   /**
    * Assume all dependencies have same `module`, `version`, and `artifact`; see `minDependencies`
    * if they don't.
@@ -154,17 +229,13 @@ object Orders {
 
     val remove =
       for {
-        List(((xOpt, xScope), xDep), ((yOpt, yScope), yDep)) <- groupedDependencies.combinations(2)
-        optCmp <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
-        scopeCmp <- configurationPartialOrder(configs).tryCompare(xScope, yScope).iterator
-        if optCmp*scopeCmp >= 0
-        exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions).iterator
-        if optCmp*exclCmp >= 0
-        if scopeCmp*exclCmp >= 0
-        xIsMin = optCmp < 0 || scopeCmp < 0 || exclCmp < 0
-        yIsMin = optCmp > 0 || scopeCmp > 0 || exclCmp > 0
-        if xIsMin || yIsMin // should be always true, unless xDep == yDep, which shouldn't happen
-      } yield if (xIsMin) yDep else xDep
+        List((_, xDep), (_, yDep)) <- groupedDependencies.combinations(2)
+        rmDep <- compareUnsafe(xDep, yDep, configs).flatMap {
+          case n if n < 0 => Some(yDep)
+          case 0          => None
+          case n if n > 0 => Some(xDep)
+        }
+      } yield rmDep
 
     groupedDependencies.map(_._2).toSet -- remove
   }
@@ -179,7 +250,7 @@ object Orders {
     configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
   ): Set[Dependency] = {
     dependencies
-      .groupBy(_.copy(configuration = Configuration.empty, exclusions = Set.empty, optional = false))
+      .groupBy(core)
       .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
       .valuesIterator
       .fold(Set.empty)(_ ++ _)

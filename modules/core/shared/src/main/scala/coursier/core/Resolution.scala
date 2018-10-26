@@ -1102,6 +1102,33 @@ final case class Resolution(
           .getOrElse(Map.empty)
     )
 
+  def orderedDependencies: Seq[Dependency] = {
+
+    def helper(deps: List[Dependency], done: Set[Dependency]): Stream[Dependency] =
+      deps match {
+        case Nil => Stream()
+        case h :: t =>
+          if (done(h))
+            helper(t, done)
+          else {
+            val todo = dependenciesOf(h).filter(!done(_))
+            if (todo.isEmpty)
+              h #:: helper(t, done + h)
+            else
+              helper(todo.toList ::: deps, done)
+          }
+      }
+
+    Orders.removeRedundancies(
+      helper(rootDependencies.toList, Set.empty),
+      dep =>
+        projectCache
+          .get(dep)
+          .map(_._2.configurations)
+          .getOrElse(Map.empty)
+    ).toVector
+  }
+
   def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {

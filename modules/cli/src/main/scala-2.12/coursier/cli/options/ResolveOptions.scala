@@ -21,6 +21,9 @@ final case class ResolveOptions(
   @Value("org:name")
     whatDependsOn: List[String] = Nil,
 
+  @Help("Re-order dependencies, by organization / module name / attributes / version")
+    reorder: Boolean = true,
+
   @Recurse
     cacheOptions: shared.CacheOptions = shared.CacheOptions(),
 

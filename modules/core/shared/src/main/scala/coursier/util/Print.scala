@@ -57,7 +57,8 @@ object Print {
   def dependenciesUnknownConfigs(
     deps: Seq[Dependency],
     projects: Map[(Module, String), Project],
-    printExclusions: Boolean
+    printExclusions: Boolean,
+    reorder: Boolean = true
   ): String = {
 
     val deps0 = deps.map { dep =>
@@ -68,20 +69,21 @@ object Print {
       )
     }
 
-    val minDeps = Orders.minDependencies(
-      deps0.toSet,
-      _ => Map.empty
-    )
-
-    val deps1 = minDeps
-      .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
-      .toVector
-      .map { case (k, l) =>
-        k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
-      }
-      .sortBy { dep =>
-        (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
-      }
+    val deps1 =
+      if (reorder)
+        deps0
+          .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
+          .toVector
+          .map { case (k, l) =>
+            k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
+          }
+          .sortBy { dep =>
+            // FIXME dep.module.toString is to sort with attributes too
+            // There ought to be better ways to sort by Map[String, String].
+            (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
+          }
+      else
+        deps0
 
     deps1.map(dependency(_, printExclusions)).mkString("\n")
   }

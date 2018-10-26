@@ -65,9 +65,10 @@ object Output {
           )
         else
           Print.dependenciesUnknownConfigs(
-            res.minDependencies.toVector,
+            res.orderedDependencies.toVector,
             res.projectCache.mapValues { case (_, p) => p },
-            printExclusions = params.output.verbosity >= 1
+            printExclusions = params.output.verbosity >= 1,
+            reorder = params.reorder
           )
 
       if (printResultStdout)

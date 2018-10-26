@@ -18,7 +18,8 @@ final case class ResolveParams(
   benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
-  whatDependsOn: Set[Module]
+  whatDependsOn: Set[Module],
+  reorder: Boolean
 ) {
   def anyTree: Boolean =
     tree ||
@@ -68,6 +69,8 @@ object ResolveParams {
       else
         Validated.validNel(options.benchmarkCache)
 
+    val reorder = options.reorder
+
     (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck, benchmarkCacheV).mapN {
       (cache, output, repositories, dependency, resolution, whatDependsOn, _, _, benchmarkCache) =>
         ResolveParams(
@@ -80,7 +83,8 @@ object ResolveParams {
           benchmarkCache,
           tree,
           reverseTree,
-          whatDependsOn.toSet
+          whatDependsOn.toSet,
+          reorder
         )
     }
   }
