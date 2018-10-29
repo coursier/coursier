@@ -121,7 +121,7 @@ final case class IvyRepository(
             url,
             Map.empty,
             Map.empty,
-            changing = changing.getOrElse(project.version.contains("-SNAPSHOT")), // could be more reliable
+            changing = changing.getOrElse(IvyRepository.isSnapshot(project.version)),
             optional = false,
             authentication = authentication
           )
@@ -186,7 +186,7 @@ final case class IvyRepository(
                 url,
                 Map.empty,
                 Map.empty,
-                changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+                changing = changing.getOrElse(IvyRepository.isSnapshot(version)),
                 optional = false,
                 authentication
               )
@@ -218,7 +218,7 @@ final case class IvyRepository(
           url,
           Map.empty,
           Map.empty,
-          changing = changing.getOrElse(version.contains("-SNAPSHOT")),
+          changing = changing.getOrElse(IvyRepository.isSnapshot(version)),
           optional = false,
           authentication = authentication
         )
@@ -277,6 +277,10 @@ final case class IvyRepository(
 }
 
 object IvyRepository {
+
+  def isSnapshot(version: String): Boolean =
+    version.endsWith("SNAPSHOT")
+
   def parse(
     pattern: String,
     metadataPatternOpt: Option[String] = None,
