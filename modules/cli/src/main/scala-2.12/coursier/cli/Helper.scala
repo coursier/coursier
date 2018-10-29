@@ -804,8 +804,6 @@ class Helper(
   ): Seq[File] =
     fetchMap(sources, javadoc, default, artifactTypes, subset).values.toSeq
 
-  def contextLoader = Thread.currentThread().getContextClassLoader
-
   def baseLoader = {
 
     @tailrec
