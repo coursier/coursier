@@ -56,6 +56,60 @@ object IvyTests extends TestSuite {
       }
     }
 
+    val repoBase = new File(HandmadeMetadata.repoBase, "http/ivy.abc.com")
+      .toURI
+      .toASCIIString
+      .stripSuffix("/") + "/"
+
+    val repo = IvyRepository.fromPattern(
+      repoBase +: coursier.ivy.Pattern.default,
+      dropInfoAttributes = true
+    )
+
+    'changing - {
+      "-SNAPSHOT suffix" - {
+
+        val dep = Dependency(
+          Module(org"com.example", name"a_2.11"),
+          "0.1.0-SNAPSHOT",
+          transitive = false,
+          attributes = Attributes(Type.jar)
+        )
+
+        runner.withArtifacts(
+          dep,
+          extraRepos = Seq(repo),
+          classifierOpt = None
+        ) {
+          case Seq(artifact) =>
+            assert(artifact.changing)
+          case other =>
+            throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+        }
+      }
+
+      "-SNAPSHOT suffix" - {
+
+        val dep = Dependency(
+          Module(org"com.example", name"a_2.11"),
+          "0.2.0.SNAPSHOT",
+          transitive = false,
+          attributes = Attributes(Type.jar)
+        )
+
+        runner.withArtifacts(
+          dep,
+          extraRepos = Seq(repo),
+          classifierOpt = None
+        ) {
+          case Seq(artifact) =>
+            assert(artifact.changing)
+          case other =>
+            throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+        }
+      }
+    }
+
     'testArtifacts - {
 
       val dep = Dependency(
@@ -63,16 +117,6 @@ object IvyTests extends TestSuite {
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()
-      )
-
-      val repoBase = new File(HandmadeMetadata.repoBase, "http/ivy.abc.com")
-        .toURI
-        .toASCIIString
-        .stripSuffix("/") + "/"
-
-      val repo = IvyRepository.fromPattern(
-        repoBase +: coursier.ivy.Pattern.default,
-        dropInfoAttributes = true
       )
 
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
