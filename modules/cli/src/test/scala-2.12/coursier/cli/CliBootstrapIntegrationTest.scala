@@ -2,6 +2,7 @@ package coursier.cli
 
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
+import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
@@ -10,6 +11,7 @@ import coursier.cli.options.shared.RepositoryOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
+import scala.collection.JavaConverters._
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
@@ -177,4 +179,60 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
       assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
   }
+
+  "bootstrap" should "be deterministic when deterministic option is specified" in
+    withFile() {(bootstrapFile, _) =>
+      withFile() {(bootstrapFile2, _) =>
+        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+        val artifactOptions = ArtifactOptions(
+          sources = true,
+          default = Some(true)
+        )
+        val common = CommonOptions(
+          repositoryOptions = repositoryOpt
+        )
+        val isolatedLoaderOptions = IsolatedLoaderOptions(
+          isolateTarget = List("foo"),
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+        )
+        val bootstrapSpecificOptions = BootstrapSpecificOptions(
+          output = bootstrapFile.getPath,
+          isolated = isolatedLoaderOptions,
+          force = true,
+          common = common,
+          deterministic = true
+        )
+        val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+        Bootstrap.run(
+          bootstrapOptions,
+          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+        )
+
+        //We need to wait between two runs to ensure we don't accidentally get the same hash
+        Thread.sleep(2000)
+
+        val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
+          output = bootstrapFile2.getPath
+        )
+        val bootstrapOptions2 = BootstrapOptions(artifactOptions, bootstrapSpecificOptions2)
+        Bootstrap.run(
+          bootstrapOptions2,
+          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+        )
+
+        val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
+          .digest(actualContent(bootstrapFile))
+          .toSeq
+          .map(b => "%02x".format(b))
+          .mkString
+
+        val bootstrap2SHA256 = MessageDigest.getInstance("SHA-256")
+          .digest(actualContent(bootstrapFile2))
+          .toSeq
+          .map(b => "%02x".format(b))
+          .mkString
+
+        assert(bootstrap1SHA256 == bootstrap2SHA256)
+      }
+    }
 }
