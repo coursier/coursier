@@ -2,6 +2,7 @@ package coursier.cli
 
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
+import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
@@ -176,5 +177,43 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
       assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
       assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+  }
+
+  "bootstrap" should "be deterministic when deterministic option is specified" in withFile() {
+
+    (bootstrapFile, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+      val artifactOptions = ArtifactOptions(
+        sources = true,
+        default = Some(true)
+      )
+      val common = CommonOptions(
+        repositoryOptions = repositoryOpt
+      )
+      val isolatedLoaderOptions = IsolatedLoaderOptions(
+        isolateTarget = List("foo"),
+        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        isolated = isolatedLoaderOptions,
+        force = true,
+        common = common,
+        deterministic = true
+      )
+      val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+
+      Bootstrap.run(
+        bootstrapOptions,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
+
+      val md = MessageDigest.getInstance("SHA-256");
+      val sha256 = md.digest(actualContent(bootstrapFile));
+
+      val sb = new StringBuilder();
+      sha256.foreach(b => sb.append("%02x".format(b)))
+
+      assert(sb.toString() == "43a45cc28c51695d3f781b8492e499314a4ec255745ab3ff8bef28eb3400ec74")
   }
 }

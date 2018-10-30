@@ -6,7 +6,6 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
-import java.util.Properties
 import java.util.jar.{JarFile, Attributes => JarAttributes}
 import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
 
@@ -204,7 +203,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     }
 
 
-    val time = System.currentTimeMillis()
+    val time = if(options.options.deterministic){
+      0
+    } else {
+      System.currentTimeMillis()
+    }
+
 
     def putStringEntry(name: String, content: String): Unit = {
       val entry = new ZipEntry(name)
@@ -243,15 +247,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       putEntryFromFile(pathFor(f), f)
 
     putStringEntry("bootstrap-jar-resources", files.map(pathFor).mkString("\n"))
+    putStringEntry("bootstrap.properties", s"bootstrap.mainClass=$mainClass")
 
-    val propsEntry = new ZipEntry("bootstrap.properties")
-    propsEntry.setTime(time)
-
-    val properties = new Properties
-    properties.setProperty("bootstrap.mainClass", mainClass)
-
-    outputZip.putNextEntry(propsEntry)
-    properties.store(outputZip, "")
     outputZip.closeEntry()
 
     outputZip.close()
