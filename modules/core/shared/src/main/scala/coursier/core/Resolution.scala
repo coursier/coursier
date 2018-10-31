@@ -179,8 +179,12 @@ object Resolution {
       .toVector
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
+        val anyOrgModule = module.copy(organization = Organization("*"))
+        val forcedVersionOpt = forceVersions.get(module)
+          .orElse(forceVersions.get(anyOrgModule))
+
         module -> {
-          val (versionOpt, updatedDeps) = forceVersions.get(module) match {
+          val (versionOpt, updatedDeps) = forcedVersionOpt match {
             case None =>
               if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
               else {

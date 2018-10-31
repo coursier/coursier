@@ -620,30 +620,52 @@ object ResolutionTests extends TestSuite {
         }
       }
 
-      * - {
-        async {
-          val deps = Set(
-            Dependency(Module(org"an-org", name"an-app"), "1.1"))
-          val depOverrides = Map(
-            Module(org"an-org", name"a-lib") -> "1.0")
+      * - async {
+        val deps = Set(
+          Dependency(Module(org"an-org", name"an-app"), "1.1"))
+        val depOverrides = Map(
+          Module(org"an-org", name"a-lib") -> "1.0")
 
-          val res = await(resolve0(
-            deps,
-            forceVersions = depOverrides
-          )).clearCaches
+        val res = await(resolve0(
+          deps,
+          forceVersions = depOverrides
+        )).clearCaches
 
-          val expected = Resolution(
-            rootDependencies = deps,
-            dependencies = Set(
-              Dependency(Module(org"an-org", name"an-app"), "1.1"),
-              Dependency(Module(org"an-org", name"a-lib"), "1.0"),
-              Dependency(Module(org"an-org", name"a-name"), "1.0")
-            ).map(_.withCompileScope),
-            forceVersions = depOverrides
-          )
+        val expected = Resolution(
+          rootDependencies = deps,
+          dependencies = Set(
+            Dependency(Module(org"an-org", name"an-app"), "1.1"),
+            Dependency(Module(org"an-org", name"a-lib"), "1.0"),
+            Dependency(Module(org"an-org", name"a-name"), "1.0")
+          ).map(_.withCompileScope),
+          forceVersions = depOverrides
+        )
 
-          assert(res == expected)
-        }
+        assert(res == expected)
+      }
+
+      * - async {
+        val deps = Set(
+          Dependency(Module(org"an-org", name"an-app"), "1.1"))
+        val depOverrides = Map(
+          Module(org"*", name"a-lib") -> "1.0")
+
+        val res = await(resolve0(
+          deps,
+          forceVersions = depOverrides
+        )).clearCaches
+
+        val expected = Resolution(
+          rootDependencies = deps,
+          dependencies = Set(
+            Dependency(Module(org"an-org", name"an-app"), "1.1"),
+            Dependency(Module(org"an-org", name"a-lib"), "1.0"),
+            Dependency(Module(org"an-org", name"a-name"), "1.0")
+          ).map(_.withCompileScope),
+          forceVersions = depOverrides
+        )
+
+        assert(res == expected)
       }
 
       * - {
