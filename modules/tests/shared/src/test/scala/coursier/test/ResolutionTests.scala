@@ -206,6 +206,9 @@ object ResolutionTests extends TestSuite {
     Project(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018",
       Seq()),
 
+    Project(Module(org"an-org", name"my-lib-1"), "1.2.0",
+      Seq()),
+
     Project(Module(org"an-org", name"my-lib-2"), "1.0",
       Seq(
         Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027"))),
@@ -214,10 +217,19 @@ object ResolutionTests extends TestSuite {
       Seq(
         Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"))),
 
+    Project(Module(org"an-org", name"my-lib-3"), "1.1",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"))),
+
     Project(Module(org"an-org", name"my-app"), "1.0",
       Seq(
         Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.0")))
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.0"))),
+
+    Project(Module(org"an-org", name"my-app"), "1.1",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.1")))
 
   )
 
@@ -698,13 +710,32 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'mergingTransitiveDeps{
-      async {
+    'mergingTransitiveDeps - {
+      * - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.0")
         val trDeps = Seq(
           Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"),
           Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
           Dependency(Module(org"an-org", name"my-lib-3"), "1.0")
+        )
+        val res = await(resolve0(
+          Set(dep)
+        )).clearCaches
+
+        val expected = Resolution(
+          rootDependencies = Set(dep),
+          dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
+        )
+
+        assert(res == expected)
+      }
+
+      * - async {
+        val dep = Dependency(Module(org"an-org", name"my-app"), "1.1")
+        val trDeps = Seq(
+          Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"),
+          Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+          Dependency(Module(org"an-org", name"my-lib-3"), "1.1")
         )
         val res = await(resolve0(
           Set(dep)
