@@ -157,21 +157,7 @@ object Resolution {
    */
   def mergeVersions(versions: Seq[String]): Option[String] = {
 
-    val parseResults = versions.map(v => v -> Parse.versionConstraint(v))
-
-    val nonParsedConstraints = parseResults.collect {
-      case (repr, None) => repr
-    }
-
-    // FIXME Report this in return type, not this way
-    if (nonParsedConstraints.nonEmpty)
-      Console.err.println(
-        s"Ignoring unparsed versions: $nonParsedConstraints"
-      )
-
-    val parsedConstraints = parseResults.collect {
-      case (_, Some(c)) => c
-    }
+    val parsedConstraints = versions.map(Parse.versionConstraint)
 
     VersionConstraint
       .merge(parsedConstraints: _*)

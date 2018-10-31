@@ -4,8 +4,9 @@ package test
 import coursier.core.{Configuration, Repository}
 import coursier.maven.MavenRepository
 import utest._
-
 import scala.async.Async.{async, await}
+
+import coursier.core
 import coursier.test.compatibility._
 
 object ResolutionTests extends TestSuite {
@@ -197,7 +198,39 @@ object ResolutionTests extends TestSuite {
 
     Project(Module(org"an-org", name"an-app"), "1.2",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.2")))
+        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.2"))),
+
+    Project(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027",
+      Seq()),
+
+    Project(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018",
+      Seq()),
+
+    Project(Module(org"an-org", name"my-lib-1"), "1.2.0",
+      Seq()),
+
+    Project(Module(org"an-org", name"my-lib-2"), "1.0",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027"))),
+
+    Project(Module(org"an-org", name"my-lib-3"), "1.0",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"))),
+
+    Project(Module(org"an-org", name"my-lib-3"), "1.1",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"))),
+
+    Project(Module(org"an-org", name"my-app"), "1.0",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.0"))),
+
+    Project(Module(org"an-org", name"my-app"), "1.1",
+      Seq(
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.1")))
+
   )
 
   val projectsMap = projects.map(p => p.moduleVersion -> p.copy(configurations = MavenRepository.defaultConfigurations)).toMap
@@ -671,6 +704,46 @@ object ResolutionTests extends TestSuite {
             Dependency(Module(org"com.github.dummy", name"libb"), "0.5.4")
           ).map(_.withCompileScope),
           forceProperties = forceProperties
+        )
+
+        assert(res == expected)
+      }
+    }
+
+    'mergingTransitiveDeps - {
+      * - async {
+        val dep = Dependency(Module(org"an-org", name"my-app"), "1.0")
+        val trDeps = Seq(
+          Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"),
+          Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+          Dependency(Module(org"an-org", name"my-lib-3"), "1.0")
+        )
+        val res = await(resolve0(
+          Set(dep)
+        )).clearCaches
+
+        val expected = Resolution(
+          rootDependencies = Set(dep),
+          dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
+        )
+
+        assert(res == expected)
+      }
+
+      * - async {
+        val dep = Dependency(Module(org"an-org", name"my-app"), "1.1")
+        val trDeps = Seq(
+          Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"),
+          Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
+          Dependency(Module(org"an-org", name"my-lib-3"), "1.1")
+        )
+        val res = await(resolve0(
+          Set(dep)
+        )).clearCaches
+
+        val expected = Resolution(
+          rootDependencies = Set(dep),
+          dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
         assert(res == expected)

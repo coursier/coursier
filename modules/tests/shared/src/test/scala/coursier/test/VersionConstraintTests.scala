@@ -10,19 +10,19 @@ object VersionConstraintTests extends TestSuite {
     'parse{
       'empty{
         val c0 = Parse.versionConstraint("")
-        assert(c0 == Some(VersionConstraint.all))
+        assert(c0 == VersionConstraint.all)
       }
       'basicVersion{
         val c0 = Parse.versionConstraint("1.2")
-        assert(c0 == Some(VersionConstraint.preferred(Version("1.2"))))
+        assert(c0 == VersionConstraint.preferred(Version("1.2")))
       }
       'basicVersionInterval{
         val c0 = Parse.versionConstraint("(,1.2]")
-        assert(c0 == Some(VersionConstraint.interval(VersionInterval(None, Some(Version("1.2")), false, true))))
+        assert(c0 == VersionConstraint.interval(VersionInterval(None, Some(Version("1.2")), false, true)))
       }
       'latestSubRevision{
         val c0 = Parse.versionConstraint("1.2.3-+")
-        assert(c0 == Some(VersionConstraint.interval(VersionInterval(Some(Version("1.2.3")), Some(Version("1.2.4-a1")), true, false))))
+        assert(c0 == VersionConstraint.interval(VersionInterval(Some(Version("1.2.3")), Some(Version("1.2.4-a1")), true, false)))
       }
     }
 
