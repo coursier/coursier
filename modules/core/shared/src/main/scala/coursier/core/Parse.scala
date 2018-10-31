@@ -79,13 +79,13 @@ object Parse {
       None
   }
 
-  def versionConstraint(s: String): Option[VersionConstraint] = {
+  def versionConstraint(s: String): VersionConstraint = {
     def noConstraint = if (s.isEmpty) Some(VersionConstraint.all) else None
 
     noConstraint
       .orElse(ivyLatestSubRevisionInterval(s).map(VersionConstraint.interval))
-      .orElse(version(s).map(VersionConstraint.preferred))
       .orElse(versionInterval(s).orElse(multiVersionInterval(s)).map(VersionConstraint.interval))
+      .getOrElse(VersionConstraint.preferred(Version(s)))
   }
 
   val fallbackConfigRegex = {
