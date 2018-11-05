@@ -3,8 +3,9 @@ import java.nio.file.Files
 
 import sbt._
 import sbt.Keys._
-import sbt.ScriptedPlugin.autoImport.{sbtLauncher, scriptedBufferLog, ScriptedLaunchConf, scriptedLaunchOpts}
+import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
 
+import com.lightbend.sbt.SbtProguard
 import com.lightbend.sbt.SbtProguard.autoImport._
 import com.typesafe.sbt.pgp._
 import coursier.ShadingPlugin.autoImport._
@@ -237,9 +238,60 @@ object Settings {
     )
   }
 
+  // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
+  lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {
+    SbtProguard.writeConfiguration(proguardConfiguration.in(Proguard).value, proguardOptions.in(Proguard).value)
+    val proguardConfigurationValue = proguardConfiguration.in(Proguard).value
+    val javaOptionsInProguardValue = (javaOptions in proguard).value
+    val managedClasspathValue = managedClasspath.in(Proguard).value
+    val streamsValue = streams.value
+    val outputsValue = proguardOutputs.in(Proguard).value
+    val cachedProguard = FileFunction.cached(streams.value.cacheDirectory / "proguard", FilesInfo.hash) { _ =>
+      outputsValue foreach IO.delete
+      streamsValue.log.debug("Proguard configuration:")
+      proguardOptions.in(Proguard).value foreach (streamsValue.log.debug(_))
+      runProguard(proguardConfigurationValue, javaOptionsInProguardValue, managedClasspathValue.files, streamsValue.log)
+      outputsValue.toSet
+    }
+    val inputs = (proguardConfiguration.in(Proguard).value +: SbtProguard.inputFiles(proguardFilteredInputs.in(Proguard).value)).toSet
+    cachedProguard(inputs)
+    proguardOutputs.in(Proguard).value
+  }
+
+  def runProguard(config: File, javaOptions: Seq[String], classpath: Seq[File], log: Logger): Unit = {
+    require(classpath.nonEmpty, "Proguard classpath cannot be empty!")
+    val options = javaOptions ++ Seq("-cp", Path.makeString(classpath), "proguard.ProGuard", "-include", config.getAbsolutePath)
+    log.debug("Proguard command:")
+    log.debug("java " + options.mkString(" "))
+
+    val t = new Thread("proguard-sentinel") {
+      setDaemon(true)
+      override def run() =
+        try {
+          while (true) {
+            Thread.sleep(10000L)
+            scala.Console.err.println("Proguard still running")
+          }
+        } catch {
+          case _: InterruptedException =>
+            scala.Console.err.println("Proguard not running anymore")
+            // normal exit
+        }
+    }
+
+    try {
+      t.start()
+      val exitCode = sys.process.Process("java", options) ! log
+      if (exitCode != 0) sys.error("Proguard failed with exit code [%s]" format exitCode)
+    } finally {
+      if (t.isAlive)
+        t.interrupt()
+    }
+  }
+
   lazy val proguardedJar = Def.task {
 
-    val results = proguard.in(Proguard).value
+    val results = proguardTask.value
 
     results match {
       case Seq(f) => f
@@ -248,18 +300,6 @@ object Settings {
       case _ =>
         throw new Exception("Found several proguarded files. Don't know how to publish all of them.")
     }
-  }
-
-  lazy val addProguardedJar = {
-
-    val extra = Def.taskDyn[Map[Artifact, File]] {
-      if (scalaBinaryVersion.value == "2.12")
-        Def.task(Map(proguardedArtifact.value -> proguardedJar.value))
-      else
-        Def.task(Map())
-    }
-
-    packagedArtifacts ++= extra.value
   }
 
   lazy val Integration = config("it").extend(Test)
