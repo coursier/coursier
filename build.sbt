@@ -350,41 +350,39 @@ lazy val addBootstrapJarAsResource = {
   }
 }
 
-lazy val addBootstrapInProguardedJar = {
+lazy val proguardedJarWithBootstrap = Def.task {
 
   import java.nio.charset.StandardCharsets
   import java.nio.file.Files
 
-  proguard.in(Proguard) := {
-    val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
-    val source = proguardedJar.value
+  val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
+  val source = proguardedJar.value
 
-    val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
-    val dest0 = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap-and-prelude.jar")
+  val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
+  val dest0 = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap-and-prelude.jar")
 
-    // TODO Get from cli original JAR
-    val manifest =
-      s"""Manifest-Version: 1.0
-         |Implementation-Title: ${name.value}
-         |Implementation-Version: ${version.value}
-         |Specification-Vendor: ${organization.value}
-         |Specification-Title: ${name.value}
-         |Implementation-Vendor-Id: ${organization.value}
-         |Specification-Version: ${version.value}
-         |Implementation-URL: ${homepage.value.getOrElse("")}
-         |Implementation-Vendor: ${organization.value}
-         |Main-Class: ${mainClass.in(Compile).value.getOrElse(sys.error("Main class not found"))}
-         |""".stripMargin
+  // TODO Get from cli original JAR
+  val manifest =
+    s"""Manifest-Version: 1.0
+       |Implementation-Title: ${name.value}
+       |Implementation-Version: ${version.value}
+       |Specification-Vendor: ${organization.value}
+       |Specification-Title: ${name.value}
+       |Implementation-Vendor-Id: ${organization.value}
+       |Specification-Version: ${version.value}
+       |Implementation-URL: ${homepage.value.getOrElse("")}
+       |Implementation-Vendor: ${organization.value}
+       |Main-Class: ${mainClass.in(Compile).value.getOrElse(sys.error("Main class not found"))}
+       |""".stripMargin
 
-    ZipUtil.addToZip(source, dest, Seq(
-      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-      "META-INF/MANIFEST.MF" -> manifest.getBytes(StandardCharsets.UTF_8)
-    ))
+  ZipUtil.addToZip(source, dest, Seq(
+    "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
+    "META-INF/MANIFEST.MF" -> manifest.getBytes(StandardCharsets.UTF_8)
+  ))
 
-    ZipUtil.addPrelude(dest, dest0)
+  ZipUtil.addPrelude(dest, dest0)
 
-    Seq(dest0)
-  }
+  dest0
 }
 
 lazy val proguardedCli = Seq(
@@ -395,7 +393,8 @@ lazy val proguardedCli = Seq(
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
-    """-keep class scala.Symbol { *; }"""
+    // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
+    """-keep class scala.** { *; }"""
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",
@@ -405,9 +404,20 @@ lazy val proguardedCli = Seq(
     else
       Nil
   },
-  addBootstrapInProguardedJar,
   addProguardedJar
 )
+
+lazy val addProguardedJar = {
+
+  val extra = Def.taskDyn[Map[Artifact, File]] {
+    if (scalaBinaryVersion.value == "2.12")
+      Def.task(Map(proguardedArtifact.value -> proguardedJarWithBootstrap.value))
+    else
+      Def.task(Map())
+  }
+
+  packagedArtifacts ++= extra.value
+}
 
 lazy val sharedTestResources = {
   unmanagedResourceDirectories.in(Test) ++= {
