@@ -175,7 +175,7 @@ lazy val extra = project("extra")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(coreJvm, cacheJvm, extra)
+  .dependsOn(coreJvm, cacheJvm, extra, okhttp)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -189,12 +189,16 @@ lazy val cli = project("cli")
           Deps.caseApp,
           Deps.catsCore,
           Deps.argonautShapeless,
+          "org.scala-sbt.ipcsocket" % "ipcsocket" % "1.0.0",
+          "com.github.briandilley.jsonrpc4j" % "jsonrpc4j" % "1.5.3",
+          "com.lightbend" %% "emoji" % "1.2.1",
           Deps.junit % Test, // to be able to run tests with pants
           Deps.scalatest % Test
         )
       else
         Seq()
     },
+    resolvers += Resolver.typesafeIvyRepo("releases"), // for "com.lightbend" %% "emoji"
     mainClass.in(Compile) := {
       if (scalaBinaryVersion.value == "2.12")
         Some("coursier.cli.Coursier")

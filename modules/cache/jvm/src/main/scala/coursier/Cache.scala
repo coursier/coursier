@@ -256,15 +256,15 @@ object Cache {
     }
   }
 
-  private val BasicRealm = (
-    "^" +
-      Pattern.quote("Basic realm=\"") +
+  private[coursier] val BasicRealm = (
+    "^[Bb][Aa][Ss][Ii][Cc]" +
+      Pattern.quote(" realm=\"") +
       "([^" + Pattern.quote("\"") + "]*)" +
       Pattern.quote("\"") +
     "$"
   ).r
 
-  private def basicAuthenticationEncode(user: String, password: String): String =
+  def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(UTF_8)
     )

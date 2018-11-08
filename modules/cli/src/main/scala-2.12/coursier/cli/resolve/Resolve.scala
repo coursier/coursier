@@ -236,7 +236,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     args: Seq[String]
   ): Task[(Resolution, Boolean)] =
     for {
-      // parser dependencies, possibly doing some Scala Index lookups
+      // parse dependencies, possibly doing some Scala Index lookups
       depsExtraRepoOpt <- withLogger(params.output) { logger =>
 
         // TODO Manage not to initialize logger if it's not used

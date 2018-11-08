@@ -2,6 +2,8 @@ package coursier
 package cli
 
 import caseapp.core.app.CommandAppA
+import coursier.cli.publish.Publish
+import coursier.cli.publish.sonatype.{CreateStagingRepository, ListProfiles}
 import coursier.cli.resolve.Resolve
 import shapeless._
 
@@ -19,11 +21,17 @@ object Coursier extends CommandAppA(CoursierCommand.parser, CoursierCommand.help
         Fetch.run(fetchOptions, args)
       case Inr(Inr(Inl(launchOptions))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inl(resolveOptions)))) =>
+      case Inr(Inr(Inr(Inl(publishOptions)))) =>
+        Publish.run(publishOptions, args)
+      case Inr(Inr(Inr(Inr(Inl(resolveOptions))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inl(sonatypeListProfilesOptions)))))) =>
+        ListProfiles.run(sonatypeListProfilesOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(createStagingRepositoryOptions))))))) =>
+        CreateStagingRepository.run(createStagingRepositoryOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(cnil))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))) =>
         cnil.impossible
     }
 

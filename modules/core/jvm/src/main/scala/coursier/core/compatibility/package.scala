@@ -1,12 +1,10 @@
 package coursier.core
 
 import coursier.util.Xml
-
 import java.util.regex.Pattern.quote
 
 import scala.collection.JavaConverters._
-import scala.xml.{ Attribute, MetaData, Null }
-
+import scala.xml.{Attribute, Elem, MetaData, Null}
 import org.jsoup.Jsoup
 
 package object compatibility {
@@ -20,20 +18,7 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
-  def xmlParse(s: String): Either[String, Xml.Node] = {
-
-    val content =
-      if (entityPattern.findFirstIn(s).isEmpty)
-        s
-      else
-        Entities.entities.foldLeft(s) {
-          case (s0, (target, replacement)) =>
-            s0.replace(target, replacement)
-        }
-
-    def parse =
-      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+  def xmlFromElem(elem: Elem): Xml.Node = {
 
     def fromNode(node: scala.xml.Node): Xml.Node =
       new Xml.Node {
@@ -65,8 +50,26 @@ package object compatibility {
         override def toString = node.toString
       }
 
+    fromNode(elem)
+  }
+
+  def xmlParse(s: String): Either[String, Xml.Node] = {
+
+    val content =
+      if (entityPattern.findFirstIn(s).isEmpty)
+        s
+      else
+        Entities.entities.foldLeft(s) {
+          case (s0, (target, replacement)) =>
+            s0.replace(target, replacement)
+        }
+
+    val parse =
+      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
+      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+
     parse.right
-      .map(fromNode)
+      .map(xmlFromElem)
   }
 
   def encodeURIComponent(s: String): String =

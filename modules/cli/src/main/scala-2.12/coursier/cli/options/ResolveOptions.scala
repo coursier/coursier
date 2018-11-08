@@ -29,3 +29,8 @@ final case class ResolveOptions(
     outputOptions: shared.OutputOptions = shared.OutputOptions()
 
 )
+
+object ResolveOptions {
+  implicit val parser = Parser[ResolveOptions]
+  implicit val help = caseapp.core.help.Help[ResolveOptions]
+}

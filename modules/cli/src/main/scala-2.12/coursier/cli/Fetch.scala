@@ -20,6 +20,9 @@ final class Fetch(options: FetchOptions, args: RemainingArgs) {
     artifactTypes = options.artifactOptions.artifactTypes(options.common.classifier0)
   )
 
+  // Some progress lines seem to be scraped without this.
+  Console.out.flush()
+
 }
 
 object Fetch extends CaseApp[FetchOptions] {
@@ -30,9 +33,6 @@ object Fetch extends CaseApp[FetchOptions] {
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
 
     val fetch = Fetch(options, args)
-
-    // Some progress lines seem to be scraped without this.
-    Console.out.flush()
 
     val out =
       if (options.classpath)
