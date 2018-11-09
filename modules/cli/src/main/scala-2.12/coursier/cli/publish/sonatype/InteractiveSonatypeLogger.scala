@@ -4,7 +4,7 @@ import java.io.{OutputStream, OutputStreamWriter}
 
 import coursier.Terminal.Ansi
 
-final class SimpleSonatypeLogger(out: OutputStreamWriter, verbosity: Int) extends SonatypeLogger {
+final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int) extends SonatypeLogger {
   override def listingProfiles(attempt: Int, total: Int): Unit =
     if (verbosity >= 0) {
       val extra =
@@ -37,7 +37,7 @@ final class SimpleSonatypeLogger(out: OutputStreamWriter, verbosity: Int) extend
   }
 }
 
-object SimpleSonatypeLogger {
+object InteractiveSonatypeLogger {
   def create(out: OutputStream, verbosity: Int): SonatypeLogger =
-    new SimpleSonatypeLogger(new OutputStreamWriter(out), verbosity)
+    new InteractiveSonatypeLogger(new OutputStreamWriter(out), verbosity)
 }

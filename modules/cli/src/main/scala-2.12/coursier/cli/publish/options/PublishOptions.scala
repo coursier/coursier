@@ -32,7 +32,7 @@ final case class PublishOptions(
     dummy: Boolean = false,
 
   @HelpMessage("Disable interactive output")
-    batch: Boolean = false,
+    batch: Option[Boolean] = None,
 
   sbtOutputFrame: Int = 10
 

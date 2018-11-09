@@ -14,14 +14,14 @@ import com.squareup.okhttp.OkHttpClient
 import coursier.cli.Fetch
 import coursier.cli.options.shared.RepositoryOptions
 import coursier.cli.options.{CommonOptions, FetchOptions}
-import coursier.cli.publish.checksum.{ChecksumType, Checksums, SimpleChecksumLogger}
-import coursier.cli.publish.dir.{Dir, SimpleDirLogger}
+import coursier.cli.publish.checksum.{BatchChecksumLogger, ChecksumType, Checksums, InteractiveChecksumLogger}
+import coursier.cli.publish.dir.{BatchDirLogger, Dir, InteractiveDirLogger}
 import coursier.cli.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
 import coursier.cli.publish.params.PublishParams
 import coursier.cli.publish.sbt.Sbt
-import coursier.cli.publish.signing.{GpgSigner, Signer, SimpleSignerLogger}
-import coursier.cli.publish.sonatype.{SimpleSonatypeLogger, SonatypeApi, SonatypeLogger}
+import coursier.cli.publish.signing.{BatchSignerLogger, GpgSigner, InteractiveSignerLogger, Signer}
+import coursier.cli.publish.sonatype.{BatchSonatypeLogger, InteractiveSonatypeLogger, SonatypeApi, SonatypeLogger}
 import coursier.cli.publish.upload._
 import coursier.cli.publish.util.DeleteOnExit
 import coursier.maven.MavenRepository
@@ -171,7 +171,10 @@ object Publish extends CaseApp[PublishOptions] {
           params.metadata,
           now,
           params.verbosity,
-          SimpleDirLogger.create(out, dirName(d), params.verbosity),
+          if (params.batch)
+            new BatchDirLogger(out, dirName(d), params.verbosity)
+          else
+            InteractiveDirLogger.create(out, dirName(d), params.verbosity),
           d
         )
       }
@@ -188,7 +191,14 @@ object Publish extends CaseApp[PublishOptions] {
       .sbtDirectories
       .map { sbtDir =>
         Task.delay {
-          val sbt = new Sbt(sbtDir.toFile, sbtStructureJar, ExecutionContext.global, params.sbtOutputFrame, params.verbosity)
+          val sbt = new Sbt(
+            sbtDir.toFile,
+            sbtStructureJar,
+            ExecutionContext.global,
+            params.sbtOutputFrame,
+            params.verbosity,
+            interactive = !params.batch
+          )
           val tmpDir = Files.createTempDirectory("coursier-publish-sbt-")
           deleteOnExit(tmpDir)
           val f = sbt.publishTo(tmpDir.toFile)
@@ -198,7 +208,10 @@ object Publish extends CaseApp[PublishOptions] {
             params.metadata,
             now,
             params.verbosity,
-            SimpleDirLogger.create(out, dirName(tmpDir, Some("temporary directory")), params.verbosity),
+            if (params.batch)
+              new BatchDirLogger(out, dirName(tmpDir, Some("temporary directory")), params.verbosity)
+            else
+              InteractiveDirLogger.create(out, dirName(tmpDir, Some("temporary directory")), params.verbosity),
             tmpDir
           )
         }.flatMap(identity)
@@ -255,10 +268,22 @@ object Publish extends CaseApp[PublishOptions] {
         None
     }
 
-    val signerLogger = SimpleSignerLogger.create(out, params.verbosity)
-    val checksumLogger = SimpleChecksumLogger.create(out, params.verbosity)
+    val signerLogger =
+      if (params.batch)
+        new BatchSignerLogger(out, params.verbosity)
+      else
+        InteractiveSignerLogger.create(out, params.verbosity)
+    val checksumLogger =
+      if (params.batch)
+        new BatchChecksumLogger(out, params.verbosity)
+      else
+        InteractiveChecksumLogger.create(out, params.verbosity)
     val downloadLogger = new SimpleDownloadLogger(out, params.verbosity)
-    val sonatypeLogger = SimpleSonatypeLogger.create(out, params.verbosity)
+    val sonatypeLogger =
+      if (params.batch)
+        new BatchSonatypeLogger(out, params.verbosity)
+      else
+        InteractiveSonatypeLogger.create(out, params.verbosity)
 
     for {
       _ <- initSigner
@@ -380,7 +405,12 @@ object Publish extends CaseApp[PublishOptions] {
             upload0
         (actualUpload, repo0, isLocal0)
       }
-      uploadLogger = SimpleUploadLogger.create(out, params.dummy, isLocal)
+      uploadLogger = {
+        if (params.batch)
+          new BatchUploadLogger(out, params.dummy, isLocal)
+        else
+          InteractiveUploadLogger.create(out, params.dummy, isLocal)
+      }
       res <- upload.uploadFileSet(repo, finalFileSet, uploadLogger)
       _ <- {
         if (res.isEmpty)

@@ -5,7 +5,7 @@ import java.io.{OutputStream, OutputStreamWriter, Writer}
 import coursier.cli.publish.fileset.FileSet
 import coursier.cli.publish.logging.ProgressLogger
 
-final class SimpleSignerLogger(out: Writer, verbosity: Int) extends SignerLogger {
+final class InteractiveSignerLogger(out: Writer, verbosity: Int) extends SignerLogger {
 
   private val underlying = new ProgressLogger[Object](
     "Signed",
@@ -38,7 +38,7 @@ final class SimpleSignerLogger(out: Writer, verbosity: Int) extends SignerLogger
     underlying.stop(keep)
 }
 
-object SimpleSignerLogger {
+object InteractiveSignerLogger {
   def create(out: OutputStream, verbosity: Int): SignerLogger =
-    new SimpleSignerLogger(new OutputStreamWriter(out), verbosity)
+    new InteractiveSignerLogger(new OutputStreamWriter(out), verbosity)
 }

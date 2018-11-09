@@ -16,12 +16,13 @@ final class Sbt(
   plugin: File,
   ec: ExecutionContext,
   outputFrameSizeOpt: Option[Int],
-  verbosity: Int
+  verbosity: Int,
+  interactive: Boolean = true
 ) {
 
   private implicit val ec0 = ec
 
-  private val keepSbtOutput = verbosity >= 2
+  private val keepSbtOutput = (!interactive && verbosity >= 0) || verbosity >= 2
 
   def run(sbtCommands: String): Try[Int] = {
 
@@ -44,7 +45,7 @@ final class Sbt(
       val p = b.start()
       p.getOutputStream.close()
       val outputFrameOpt =
-        if (keepSbtOutput)
+        if (keepSbtOutput || !interactive)
           None
         else
           outputFrameSizeOpt.map { n =>

@@ -5,7 +5,7 @@ import java.io.{OutputStream, OutputStreamWriter, Writer}
 import coursier.cli.publish.fileset.FileSet
 import coursier.cli.publish.logging.ProgressLogger
 
-final class SimpleChecksumLogger(out: Writer, verbosity: Int) extends ChecksumLogger {
+final class InteractiveChecksumLogger(out: Writer, verbosity: Int) extends ChecksumLogger {
 
   private val underlying = new ProgressLogger[Object](
     "Computed",
@@ -34,7 +34,7 @@ final class SimpleChecksumLogger(out: Writer, verbosity: Int) extends ChecksumLo
     underlying.stop(keep)
 }
 
-object SimpleChecksumLogger {
-  def create(out: OutputStream, verbosity: Int): SimpleChecksumLogger =
-    new SimpleChecksumLogger(new OutputStreamWriter(out), verbosity)
+object InteractiveChecksumLogger {
+  def create(out: OutputStream, verbosity: Int): InteractiveChecksumLogger =
+    new InteractiveChecksumLogger(new OutputStreamWriter(out), verbosity)
 }

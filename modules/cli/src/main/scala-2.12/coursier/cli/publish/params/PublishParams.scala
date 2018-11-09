@@ -46,7 +46,11 @@ object PublishParams {
       Some(options.sbtOutputFrame).filter(_ > 0)
 
     val dummy = options.dummy
-    val batch = options.batch
+    val batch = options.batch.getOrElse {
+      coursier.TermDisplay.defaultFallbackMode
+    }
+
+    println(s"batch: $batch")
 
     (repositoryV, metadataV, singlePackageV, directoryV, checksumV, signatureV, verbosityV).mapN {
       (repository, metadata, singlePackage, directory, checksum, signature, verbosity) =>

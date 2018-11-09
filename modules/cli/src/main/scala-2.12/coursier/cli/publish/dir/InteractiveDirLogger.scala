@@ -6,7 +6,7 @@ import java.nio.file.Path
 import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.cli.publish.logging.ProgressLogger
 
-final class SimpleDirLogger(out: OutputStreamWriter, dirName: String, verbosity: Int) extends DirLogger {
+final class InteractiveDirLogger(out: OutputStreamWriter, dirName: String, verbosity: Int) extends DirLogger {
 
   private val underlying = new ProgressLogger[String](
     "Read",
@@ -30,7 +30,7 @@ final class SimpleDirLogger(out: OutputStreamWriter, dirName: String, verbosity:
     underlying.stop(keep)
 }
 
-object SimpleDirLogger {
+object InteractiveDirLogger {
   def create(out: OutputStream, dirName: String, verbosity: Int): DirLogger =
-    new SimpleDirLogger(new OutputStreamWriter(out), dirName, verbosity)
+    new InteractiveDirLogger(new OutputStreamWriter(out), dirName, verbosity)
 }
