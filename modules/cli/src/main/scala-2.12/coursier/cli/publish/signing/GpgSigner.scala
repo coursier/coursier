@@ -10,10 +10,18 @@ import coursier.util.Task
 import scala.collection.JavaConverters._
 
 final case class GpgSigner(
-  key: String,
+  key: GpgSigner.Key,
   command: String = "gpg",
   extraOptions: Seq[String] = Nil
 ) extends Signer {
+
+  private def keyArgs: Seq[String] =
+    key match {
+      case GpgSigner.Key.Default =>
+        Nil
+      case GpgSigner.Key.Id(id) =>
+        Seq("--local-user", id)
+    }
 
   def sign(content: Content): Task[Either[String, String]] = {
 
@@ -61,8 +69,8 @@ final case class GpgSigner(
           .command(
             Seq(command) ++
               extraOptions ++
+              keyArgs ++
               Seq(
-                "--local-user", key,
                 "--armor",
                 "--yes",
                 "--output", dest.toAbsolutePath.toString,
@@ -87,4 +95,15 @@ final case class GpgSigner(
           Files.deleteIfExists(path)
       }
     }
+}
+
+object GpgSigner {
+
+  sealed abstract class Key extends Product with Serializable
+
+  object Key {
+    final case class Id(id: String) extends Key
+    case object Default extends Key
+  }
+
 }

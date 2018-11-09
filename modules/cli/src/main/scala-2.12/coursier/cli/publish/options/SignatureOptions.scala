@@ -1,5 +1,6 @@
 package coursier.cli.publish.options
 
 final case class SignatureOptions(
-  gpg: Option[String] = None
+  gpg: Option[Boolean] = None,
+  gpgKey: Option[String] = None
 )

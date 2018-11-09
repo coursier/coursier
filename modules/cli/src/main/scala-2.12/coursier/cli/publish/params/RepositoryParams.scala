@@ -10,69 +10,61 @@ import coursier.util.Parse
 
 final case class RepositoryParams(
   repository: PublishRepository,
-  sonatypeOpt: Option[SonatypeParams]
+  snapshotVersioning: Boolean
 )
 
 object RepositoryParams {
 
-  val sonatypeBase = "https://oss.sonatype.org/"
-  val sonatypeReleasesStaging = s"${sonatypeBase}service/local/staging/deploy/maven2"
-
-  val sonatypePublishRepo = PublishRepository(
-    MavenRepository("https://oss.sonatype.org/content/repositories/snapshots"),
-    None,
-    Some(MavenRepository("https://oss.sonatype.org/service/local/staging/deploy/maven2")),
-    // is it always releases here? couldn't this depend on the Sonatype profile?
-    Some(MavenRepository("https://oss.sonatype.org/content/repositories/releases"))
-  )
+  val sonatypeBase = "https://oss.sonatype.org"
 
   def apply(options: RepositoryOptions): ValidatedNel[String, RepositoryParams] = {
 
     val repositoryV =
-      options.repository match {
-        case None =>
-          if (options.sonatype.contains(true))
-            Validated.validNel(sonatypePublishRepo)
-          else
-            Validated.invalidNel("No repository specified, and --sonatype option not specified")
-        case Some(repoUrl) =>
-          Parse.repository(repoUrl) match {
-            case Left(err) =>
-              Validated.invalidNel(err)
-            case Right(m: MavenRepository) =>
-              Validated.validNel(PublishRepository(m))
-            case Right(_) =>
-              Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+      if (options.sonatype.getOrElse(true)) {
+        if (options.repository.nonEmpty || options.readFrom.nonEmpty)
+          Validated.invalidNel("Cannot specify --repository or --read-fron along with --sonatype")
+        else
+          Validated.validNel(
+            PublishRepository.Sonatype(MavenRepository(sonatypeBase))
+          )
+      } else {
+
+        val repositoryV =
+          options.repository match {
+            case None =>
+              Validated.invalidNel("No repository specified, and --sonatype option not specified")
+            case Some(repoUrl) =>
+              Parse.repository(repoUrl) match {
+                case Left(err) =>
+                  Validated.invalidNel(err)
+                case Right(m: MavenRepository) =>
+                  Validated.validNel(m)
+                case Right(_) =>
+                  Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+              }
           }
-      }
 
-    val readRepositoryOptV =
-      options.readFrom match {
-        case None =>
-          Validated.validNel(None)
-        case Some(repoUrl) =>
-          Parse.repository(repoUrl) match {
-            case Left(err) =>
-              Validated.invalidNel(err)
-            case Right(m: MavenRepository) =>
-              Validated.validNel(Some(m))
-            case Right(_) =>
-              Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+        val readRepositoryOptV =
+          options.readFrom match {
+            case None =>
+              Validated.validNel(None)
+            case Some(repoUrl) =>
+              Parse.repository(repoUrl) match {
+                case Left(err) =>
+                  Validated.invalidNel(err)
+                case Right(m: MavenRepository) =>
+                  Validated.validNel(Some(m))
+                case Right(_) =>
+                  Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+              }
           }
+
+        (repositoryV, readRepositoryOptV).mapN {
+          (repo, readRepoOpt) =>
+            PublishRepository.Simple(repo, readRepoOpt)
+        }
       }
 
-    val sonatypeRestActions =
-      options.sonatype.getOrElse {
-        repositoryV.toOption.exists(_.repo.root.startsWith(sonatypeBase))
-      }
-
-    val sonatypeParamsOpt =
-      if (sonatypeRestActions)
-        Some(SonatypeParams(
-          restBase = "https://oss.sonatype.org/service/local" // TODO get from options
-        ))
-      else
-        None
 
     def authFromEnv(userVar: String, passVar: String) = {
       val userV = sys.env.get(userVar) match {
@@ -91,10 +83,10 @@ object RepositoryParams {
 
     val credentialsV = options.auth match {
       case None =>
-        if (sonatypeParamsOpt.isEmpty)
-          Validated.validNel(None)
-        else
+        if (options.sonatype.getOrElse(true))
           authFromEnv("SONATYPE_USERNAME", "SONATYPE_PASSWORD")
+        else
+          Validated.validNel(None)
       case Some(s) =>
 
         def handleAuth(auth: String) =
@@ -130,13 +122,14 @@ object RepositoryParams {
           handleAuth(s)
     }
 
-    (repositoryV, readRepositoryOptV, credentialsV).mapN {
-      (repository, readRepositoryOpt, credentials) =>
-        val repo0 = credentials.fold(repository)(repository.withAuthentication)
-        val repo = readRepositoryOpt.fold(repo0)(repo0.withReadRepository)
+    val snapshotVersioning = options.snapshotVersioning
+
+    (repositoryV, credentialsV).mapN {
+      (repository, credentials) =>
+        val repo = credentials.fold(repository)(repository.withAuthentication)
         RepositoryParams(
           repo,
-          sonatypeParamsOpt
+          snapshotVersioning
         )
     }
   }

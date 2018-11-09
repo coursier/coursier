@@ -3,7 +3,7 @@ package coursier.cli
 import caseapp.CommandParser
 import caseapp.core.help.CommandsHelp
 import coursier.cli.publish.Publish
-import coursier.cli.publish.sonatype.{CreateStagingRepository, ListProfiles}
+import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 
 object CoursierCommand {
@@ -15,8 +15,7 @@ object CoursierCommand {
       .add(Launch)
       .add(Publish)
       .add(Resolve)
-      .add(ListProfiles, "sonatype-list-profiles")
-      .add(CreateStagingRepository, "sonatype-create-staging-repository")
+      .add(Sonatype, "sonatype")
       .add(SparkSubmit)
       .reverse
 
@@ -27,8 +26,7 @@ object CoursierCommand {
       .add(Launch)
       .add(Publish)
       .add(Resolve)
-      .add(ListProfiles, "sonatype-list-profiles")
-      .add(CreateStagingRepository, "sonatype-create-staging-repository")
+      .add(Sonatype, "sonatype")
       .add(SparkSubmit)
       .reverse
 

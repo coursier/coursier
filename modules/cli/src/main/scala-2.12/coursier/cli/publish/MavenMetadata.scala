@@ -6,6 +6,7 @@ import java.util.Locale
 
 import coursier.core.{ModuleName, Organization}
 
+import scala.util.Try
 import scala.xml.{Elem, Node}
 
 object MavenMetadata {
@@ -18,7 +19,7 @@ object MavenMetadata {
   )
 
   private val lastUpdatedPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-  private val timestampPattern = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss")
+  val timestampPattern = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss")
 
   def create(
     org: Organization,
@@ -108,6 +109,52 @@ object MavenMetadata {
       }
     )
 
+  def createSnapshotVersioning(
+    org: Organization,
+    name: ModuleName,
+    version: String,
+    snapshotVersioning: (LocalDateTime, Int),
+    now: Instant,
+    artifacts: Seq[(Option[String], String, String, LocalDateTime)]
+  ) =
+    <metadata modelVersion="1.1.0">
+      <groupId>{org.value}</groupId>
+      <artifactId>{name.value}</artifactId>
+      <version>{version}</version>
+      <versioning>
+        <snapshot>
+          <timestamp>{snapshotVersioning._1.format(timestampPattern)}</timestamp>
+          <buildNumber>{snapshotVersioning._2}</buildNumber>
+        </snapshot>
+        <lastUpdated>{now.atOffset(ZoneOffset.UTC).toLocalDateTime.format(lastUpdatedPattern)}</lastUpdated>
+        <snapshotVersions>
+          {
+            artifacts.map {
+              case (classifierOpt, ext, value, updated) =>
+                <snapshotVersion>
+                  { classifierOpt.fold[Seq[Node]](Nil)(c => Seq(<classifier>{c}</classifier>)) }
+                  <extension>{ext}</extension>
+                  <value>{value}</value>
+                  <updated>{updated.format(lastUpdatedPattern)}</updated>
+                </snapshotVersion>
+            }
+          }
+        </snapshotVersions>
+      </versioning>
+    </metadata>
+
+  def snapshotVersioningBuildNumber(elem: Elem) =
+    elem.child.collectFirst {
+      case n: Elem if n.label == "versioning" =>
+        n.child.collectFirst {
+          case n if n.label == "snapshot" =>
+            n.child.collectFirst {
+              case n if n.label == "buildNumber" =>
+                Try(n.text.toInt).toOption
+            }.flatten
+        }.flatten
+    }.flatten
+
   def updateSnapshotVersioning(
     content: Elem,
     setOrg: Option[Organization],
@@ -133,7 +180,7 @@ object MavenMetadata {
                 setSnapshotVersioning.fold(n) {
                   case (dt, num) =>
                     <snapshot>
-                      <timestamp>{timestampPattern.format(dt)}</timestamp>
+                      <timestamp>{dt.format(timestampPattern)}</timestamp>
                       <buildNumber>{num}</buildNumber>
                     </snapshot>
                 }

@@ -179,6 +179,65 @@ object Pom {
       }
     )
 
+  def transformDependency(
+    content: Elem,
+    from: (Organization, ModuleName),
+    to: (Organization, ModuleName)
+  ): Elem = {
+
+    def adjustGroupArtifactIds(n: Elem): Elem = {
+
+      val orgOpt = n.child.collectFirst {
+        case n if n.label == "groupId" => Organization(n.text)
+      }
+      val nameOpt = n.child.collectFirst {
+        case n if n.label == "artifactId" => ModuleName(n.text)
+      }
+
+      if (orgOpt.contains(from._1) && nameOpt.contains(from._2))
+        n.copy(
+          child = n.child.map {
+            case n if n.label == "groupId" =>
+              <groupId>{to._1.value}</groupId>
+            case n if n.label == "artifactId" =>
+              <artifactId>{to._2.value}</artifactId>
+            case n => n
+          }
+        )
+      else
+        n
+    }
+
+    // TODO Adjust dependencyManagement section too?
+
+    content.copy(
+      child = content.child.map {
+        case n: Elem if n.label == "dependencies" =>
+          n.copy(
+            child = n.child.map {
+              case n: Elem if n.label == "dependency" =>
+                val n0 = adjustGroupArtifactIds(n)
+                n0.copy(
+                  child = n0.child.map {
+                    case n: Elem if n.label == "exclusions" =>
+                      n.copy(
+                        child = n.child.map {
+                          case n: Elem if n.label == "exclusion" =>
+                            adjustGroupArtifactIds(n)
+                          case n => n
+                        }
+                      )
+                    case n => n
+                  }
+                )
+              case n => n
+            }
+          )
+        case n => n
+      }
+    )
+  }
+
   def print(elem: Elem): String = {
     val printer = new scala.xml.PrettyPrinter(Int.MaxValue, 2)
     """<?xml version="1.0" encoding="UTF-8"?>""" + '\n' + printer.format(elem)

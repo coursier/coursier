@@ -42,21 +42,44 @@ final case class FileSet(elements: Seq[(FileSet.Path, Content)]) {
     name: Option[ModuleName],
     version: Option[String],
     now: Instant
-  ): Task[FileSet] =
-    Task.gather.gather {
-      Group.split(this)
-        .map {
+  ): Task[FileSet] = {
+
+    val split = Group.split(this)
+
+    val adjustOrgName =
+      if (org.isEmpty && name.isEmpty)
+        Task.point(split)
+      else {
+        val map = split.map {
+          case m: Group.Module =>
+            (m.organization, m.name) -> (org.getOrElse(m.organization), name.getOrElse(m.name))
+          case m: Group.MavenMetadata =>
+            (m.organization, m.name) -> (org.getOrElse(m.organization), name.getOrElse(m.name))
+        }.toMap
+
+        Task.gather.gather {
+          split.map { m =>
+            m.transform(map, now)
+          }
+        }
+      }
+
+    adjustOrgName.flatMap { l =>
+      Task.gather.gather {
+        l.map {
           case m: Group.Module =>
             m.updateMetadata(org, name, version, now)
           case m: Group.MavenMetadata =>
             m.updateMetadata(org, name, version, version.filter(!_.endsWith("SNAPSHOT")), version.toSeq, now)
         }
+      }
     }.flatMap { groups =>
       Group.merge(groups) match {
         case Left(e) => Task.fail(new Exception(e))
         case Right(fs) => Task.point(fs)
       }
     }
+  }
 }
 
 object FileSet {

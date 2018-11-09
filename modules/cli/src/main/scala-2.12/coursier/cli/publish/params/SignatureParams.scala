@@ -4,6 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import coursier.cli.publish.options.SignatureOptions
 
 final case class SignatureParams(
+  gpg: Boolean,
   gpgKeyOpt: Option[String]
 )
 
@@ -12,7 +13,9 @@ object SignatureParams {
     // check here that the passed gpg key exists?
     Validated.validNel(
       SignatureParams(
-        options.gpg
+        // TODO Adjust default value if --sonatype is passed
+        options.gpg.getOrElse(options.gpgKey.nonEmpty),
+        options.gpgKey
       )
     )
   }

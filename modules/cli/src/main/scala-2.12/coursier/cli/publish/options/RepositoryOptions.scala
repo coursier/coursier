@@ -14,7 +14,9 @@ final case class RepositoryOptions(
 
   auth: Option[String] = None,
 
-  sonatype: Option[Boolean] = None
+  sonatype: Option[Boolean] = None,
+
+  snapshotVersioning: Boolean = true
 
 ) {
   override def toString: String =

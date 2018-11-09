@@ -37,7 +37,8 @@ object Publish extends CaseApp[PublishOptions] {
     now: Instant,
     upload: Upload,
     repository: MavenRepository,
-    logger: Upload.Logger
+    logger: Upload.Logger,
+    addMavenSnapshotVersioning: Boolean
   ): Task[FileSet] = {
 
     val groups = Group.split(fs)
@@ -50,8 +51,28 @@ object Publish extends CaseApp[PublishOptions] {
         case _: Group.MavenMetadata => Nil
         case m => Seq(m)
       } ++ metadata
-      res <- Task.fromEither(Group.merge(groups1).left.map(msg => new Exception(msg)))
+      groups2 <- {
+        if (addMavenSnapshotVersioning)
+          Task.gather.gather {
+            groups1.map {
+              case m: Group.Module if m.version.endsWith("SNAPSHOT") => // actually just "-SNAPSHOT" or ".SNAPSHOT" …
+                assert(!m.files.elements.exists(_._1 == "maven-metadata.xml")) // meh
+                Group.downloadSnapshotVersioningMetadata(m, upload, repository, logger).flatMap { m0 =>
+                  m0.addSnapshotVersioning(now, Set("md5", "sha1", "asc")) // meh second arg
+                }
+              case other =>
+                Task.point(other)
+            }
+          }
+        else
+          Task.point(groups1)
+      }
+      res <- Task.fromEither(Group.merge(groups2).left.map(msg => new Exception(msg)))
     } yield res
+  }
+
+  def updateSnapshotVersioning(fs: FileSet) = {
+    ???
   }
 
   def sonatypeProfile(fs: FileSet, api: SonatypeApi, logger: SonatypeLogger): Task[SonatypeApi.Profile] = {
@@ -110,11 +131,6 @@ object Publish extends CaseApp[PublishOptions] {
     val deleteOnExit = new DeleteOnExit(params.verbosity)
 
     val now = Instant.now()
-
-    val snapshotRepoParams0 = repoParams(params.repository.repository.repo)
-    val releaseRepoParams0 = repoParams(params.repository.repository.releaseRepo)
-    val snapshotReadRepoParams0 = repoParams(params.repository.repository.readRepo)
-    val releaseReadRepoParams0 = repoParams(params.repository.repository.readReleaseRepo)
 
     val manualPackageFileSetOpt =
       if (params.singlePackage.`package`)
@@ -196,13 +212,19 @@ object Publish extends CaseApp[PublishOptions] {
       }
 
     val signerOpt: Option[Signer] =
-      params.signature.gpgKeyOpt match {
-        case None =>
-          if (params.repository.sonatypeOpt.nonEmpty)
-            out.println("Warning: --sonatype passed, but no signing key specified, trying to proceed anyway")
-          None
-        case Some(key) =>
-          Some(GpgSigner(key))
+      if (params.signature.gpg) {
+        val key = params.signature.gpgKeyOpt match {
+          case None => GpgSigner.Key.Default
+          case Some(id) => GpgSigner.Key.Id(id)
+        }
+        Some(GpgSigner(key))
+      } else {
+        params.repository.repository match {
+          case _: PublishRepository.Sonatype =>
+            out.println("Warning: --sonatype passed, but signing not enabled, trying to proceed anyway")
+          case _ =>
+        }
+        None
       }
 
     val initSigner = signerOpt.fold(Task.point(())) { signer =>
@@ -219,14 +241,18 @@ object Publish extends CaseApp[PublishOptions] {
     }
 
 
-    val sonatypeApiOpt = params.repository.sonatypeOpt.map { sonatypeParams =>
-      // this can't be shutdown anyway…
-      val client = new OkHttpClient
-      client.setReadTimeout(30L, TimeUnit.SECONDS)
-      val authentication = params.repository.repository.repo.authentication
-      if (authentication.isEmpty && params.verbosity >= 0)
-        out.println("Warning: no Sonatype credentials passed, trying to proceed anyway")
-      SonatypeApi(client, sonatypeParams.restBase, params.repository.repository.repo.authentication, params.verbosity)
+    val sonatypeApiOpt = params.repository.repository match {
+      case s: PublishRepository.Sonatype =>
+        // this can't be shutdown anyway
+        val client = new OkHttpClient
+        // Sonatype can be quite slow
+        client.setReadTimeout(60L, TimeUnit.SECONDS)
+        val authentication = params.repository.repository.snapshotRepo.authentication
+        if (authentication.isEmpty && params.verbosity >= 0)
+          out.println("Warning: no Sonatype credentials passed, trying to proceed anyway")
+        Some((s, SonatypeApi(client, s.restBase, params.repository.repository.snapshotRepo.authentication, params.verbosity)))
+      case _ =>
+        None
     }
 
     val signerLogger = SimpleSignerLogger.create(out, params.verbosity)
@@ -245,17 +271,17 @@ object Publish extends CaseApp[PublishOptions] {
         else
           Task.point(())
       }
-      sonatypeProfileOpt <- {
+      sonatypeApiProfileOpt <- {
         sonatypeApiOpt match {
           case None =>
             Task.point(None)
-          case Some(api) =>
+          case Some((repo, api)) =>
             sonatypeProfile(fileSet0, api, sonatypeLogger)
-              .map(Some(_))
+              .map(p => Some((repo, api, p)))
         }
       }
       _ = {
-        for (p <- sonatypeProfileOpt)
+        for ((_, _, p) <- sonatypeApiProfileOpt)
           if (params.verbosity >= 2)
             out.println(s"Selected Sonatype profile ${p.name} (id: ${p.id}, uri: ${p.uri})")
           else if (params.verbosity >= 1)
@@ -275,34 +301,14 @@ object Publish extends CaseApp[PublishOptions] {
           else
             Task.point(true)
       }
-      _ <- sonatypeProfileOpt match {
-        case None => Task.point(())
-        case Some(p) =>
-          if (isSnapshot)
-            Task.point(())
-          else
-            Task.fail(new Exception(s"Actual Sonatype REST actions not supported yet (would have pushed to profile ${p.name})"))
-      }
-      (upload, repo, isLocal) = {
-        val (upload0, repo0, isLocal0) =
-          if (isSnapshot)
-            snapshotRepoParams0
-          else
-            releaseRepoParams0
-        val actualUpload =
-          if (params.dummy)
-           DummyUpload(upload0)
-          else
-            upload0
-        (actualUpload, repo0, isLocal0)
-      }
-      // readUpload…
+      // "readUpload"
       (readUpload, readRepo) = {
-        val (upload0, repo0, _) =
+        val (upload0, repo0, _) = repoParams(
           if (isSnapshot)
-            snapshotReadRepoParams0
+            params.repository.repository.readSnapshotRepo
           else
-            releaseReadRepoParams0
+            params.repository.repository.readReleaseRepo
+        )
         val actualUpload =
           if (params.dummy)
             // just in case…
@@ -311,7 +317,14 @@ object Publish extends CaseApp[PublishOptions] {
             upload0
         (actualUpload, repo0)
       }
-      fileSet1 <- updateMavenMetadata(fileSet0, now, readUpload, readRepo, downloadLogger)
+      fileSet1 <- updateMavenMetadata(
+        fileSet0,
+        now,
+        readUpload,
+        readRepo,
+        downloadLogger,
+        params.repository.snapshotVersioning
+      )
       _ <- initSigner // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
       withSignatures <- signerOpt.fold(Task.point(fileSet1)) { signer =>
         signer
@@ -340,6 +353,33 @@ object Publish extends CaseApp[PublishOptions] {
             checksumLogger
           ).map(withSignatures ++ _)
       }
+      sonatypeApiProfileRepoIdOpt <- sonatypeApiProfileOpt match {
+        case Some((repo, api, p)) if !isSnapshot =>
+          api
+            .createStagingRepository(p, "create staging repository")
+            .map(id => Some((repo, api, p, id)))
+        case _ =>
+          Task.point(None)
+      }
+      (upload, repo, isLocal) = {
+        val (upload0, repo0, isLocal0) = repoParams(
+          if (isSnapshot)
+            params.repository.repository.snapshotRepo
+          else
+            sonatypeApiProfileRepoIdOpt match {
+              case None =>
+                params.repository.repository.releaseRepo
+              case Some((sonatypeRepo, _, _, repoId)) =>
+                sonatypeRepo.releaseRepoOf(repoId)
+            }
+        )
+        val actualUpload =
+          if (params.dummy)
+            DummyUpload(upload0)
+          else
+            upload0
+        (actualUpload, repo0, isLocal0)
+      }
       uploadLogger = SimpleUploadLogger.create(out, params.dummy, isLocal)
       res <- upload.uploadFileSet(repo, finalFileSet, uploadLogger)
       _ <- {
@@ -348,14 +388,30 @@ object Publish extends CaseApp[PublishOptions] {
         else
           Task.fail(new PublishError.UploadingError(repo, res))
       }
+      _ <- sonatypeApiProfileRepoIdOpt match {
+        case None => Task.point(())
+        case Some((_, api, profile, repoId)) =>
+          // TODO Print sensible error messages if anything goes wrong here (commands to finish promoting, etc.)
+          for {
+            _ <- api.sendCloseStagingRepositoryRequest(profile, repoId, "closing repository")
+            _ <- api.sendPromoteStagingRepositoryRequest(profile, repoId, "promoting repository")
+          } yield ()
+      }
     } yield {
       if (params.verbosity >= 0) {
+        val actualReadRepo =
+          if (isSnapshot)
+            params.repository.repository.readSnapshotRepo
+          else
+            params.repository.repository.readReleaseRepo
         val modules = Group.split(finalFileSet).collect { case m: Group.Module => m }
         out.println(s"\n ${emoji("eyes").mkString} Check results at")
         for (m <- modules) {
-          val base = readRepo.root.stripSuffix("/") + m.baseDir.map("/" + _).mkString
+          val base = actualReadRepo.root.stripSuffix("/") + m.baseDir.map("/" + _).mkString
           out.println(s"  $base")
         }
+        // TODO If publishing releases to Sonatype and not promoting, print message about how to promote things.
+        // TODO If publishing releases to Sonatype, print message about Maven Central sync.
       }
     }
   }
