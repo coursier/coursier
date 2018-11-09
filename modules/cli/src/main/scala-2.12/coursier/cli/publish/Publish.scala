@@ -163,6 +163,18 @@ object Publish extends CaseApp[PublishOptions] {
       else
         short.getOrElse(dir.getFileName.toString)
 
+    val actualSbtDirectoriesTask =
+      if (manualPackageFileSetOpt.isEmpty && params.directory.directories.isEmpty && params.directory.sbtDirectories.isEmpty) {
+        val pwd = Paths.get(".")
+        Task.delay(Sbt.isSbtProject(Paths.get("."))).map {
+          case true =>
+            Seq(pwd)
+          case false =>
+            Nil
+        }
+      } else
+        Task.point(params.directory.sbtDirectories)
+
     val dirFileSet = params
       .directory
       .directories
@@ -186,43 +198,43 @@ object Publish extends CaseApp[PublishOptions] {
         } yield a ++ extra
       }
 
-    val sbtFileSet = params
-      .directory
-      .sbtDirectories
-      .map { sbtDir =>
-        Task.delay {
-          val sbt = new Sbt(
-            sbtDir.toFile,
-            sbtStructureJar,
-            ExecutionContext.global,
-            params.sbtOutputFrame,
-            params.verbosity,
-            interactive = !params.batch
-          )
-          val tmpDir = Files.createTempDirectory("coursier-publish-sbt-")
-          deleteOnExit(tmpDir)
-          val f = sbt.publishTo(tmpDir.toFile)
-          // meh, blocking from a task…
-          Await.result(f, Duration.Inf)
-          Dir.readAndUpdate(
-            params.metadata,
-            now,
-            params.verbosity,
-            if (params.batch)
-              new BatchDirLogger(out, dirName(tmpDir, Some("temporary directory")), params.verbosity)
-            else
-              InteractiveDirLogger.create(out, dirName(tmpDir, Some("temporary directory")), params.verbosity),
-            tmpDir
-          )
-        }.flatMap(identity)
-      }
-      // DirLogger will have to be shared to parallelize this
-      .foldLeft(Task.point(FileSet.empty)) { (acc, t) =>
+    val sbtFileSet = actualSbtDirectoriesTask.flatMap { actualSbtDirectories =>
+      actualSbtDirectories
+        .map { sbtDir =>
+          Task.delay {
+            val sbt = new Sbt(
+              sbtDir.toFile,
+              sbtStructureJar,
+              ExecutionContext.global,
+              params.sbtOutputFrame,
+              params.verbosity,
+              interactive = !params.batch
+            )
+            val tmpDir = Files.createTempDirectory("coursier-publish-sbt-")
+            deleteOnExit(tmpDir)
+            val f = sbt.publishTo(tmpDir.toFile)
+            // meh, blocking from a task…
+            Await.result(f, Duration.Inf)
+            Dir.readAndUpdate(
+              params.metadata,
+              now,
+              params.verbosity,
+              if (params.batch)
+                new BatchDirLogger(out, dirName(tmpDir, Some("temporary directory")), params.verbosity)
+              else
+                InteractiveDirLogger.create(out, dirName(tmpDir, Some("temporary directory")), params.verbosity),
+              tmpDir
+            )
+          }.flatMap(identity)
+        }
+        // DirLogger will have to be shared to parallelize this
+        .foldLeft(Task.point(FileSet.empty)) { (acc, t) =>
         for {
           a <- acc
           extra <- t
         } yield a ++ extra
       }
+    }
 
     val signerOpt: Option[Signer] =
       if (params.signature.gpg) {
