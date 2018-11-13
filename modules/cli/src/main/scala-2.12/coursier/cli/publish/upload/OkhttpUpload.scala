@@ -48,7 +48,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
             val realmOpt = Option(response.header("WWW-Authenticate")).collect {
               case Cache.BasicRealm(r) => r
             }
-            Left(new Upload.Error.Unauthorized(realmOpt))
+            Left(new Upload.Error.Unauthorized(url, realmOpt))
           } else {
             val content = Try(response.body().string()).getOrElse("")
             Left(new Upload.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
@@ -101,7 +101,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
             val realmOpt = Option(response.header("WWW-Authenticate")).collect {
               case Cache.BasicRealm(r) => r
             }
-            Left(new Upload.Error.Unauthorized(realmOpt))
+            Left(new Upload.Error.Unauthorized(url, realmOpt))
           } else {
             val content = Try(response.body().string()).getOrElse("")
             Left(new Upload.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
@@ -149,7 +149,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
             val realmOpt = Option(response.header("WWW-Authenticate")).collect {
               case Cache.BasicRealm(r) => r
             }
-            Some(new Upload.Error.Unauthorized(realmOpt))
+            Some(new Upload.Error.Unauthorized(url, realmOpt))
           } else {
             val content = Try(response.body().string()).getOrElse("")
             Some(new Upload.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))

@@ -34,6 +34,8 @@ final case class PublishOptions(
   @HelpMessage("Disable interactive output")
     batch: Option[Boolean] = None,
 
+  conf: Option[String] = None,
+
   sbtOutputFrame: Int = 10
 
 )

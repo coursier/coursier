@@ -19,8 +19,11 @@ object RepositoryParams {
 
   def apply(options: RepositoryOptions): ValidatedNel[String, RepositoryParams] = {
 
+    // FIXME Take repo from conf file into account here
+    val sonatype = options.sonatype.getOrElse(options.repository.isEmpty)
+
     val repositoryV =
-      if (options.sonatype.getOrElse(true)) {
+      if (sonatype) {
         if (options.repository.nonEmpty || options.readFrom.nonEmpty)
           Validated.invalidNel("Cannot specify --repository or --read-fron along with --sonatype")
         else
@@ -83,7 +86,7 @@ object RepositoryParams {
 
     val credentialsV = options.auth match {
       case None =>
-        if (options.sonatype.getOrElse(true))
+        if (sonatype)
           authFromEnv("SONATYPE_USERNAME", "SONATYPE_PASSWORD")
         else
           Validated.validNel(None)

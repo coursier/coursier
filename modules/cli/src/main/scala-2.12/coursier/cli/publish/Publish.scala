@@ -20,7 +20,7 @@ import coursier.cli.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
 import coursier.cli.publish.params.PublishParams
 import coursier.cli.publish.sbt.Sbt
-import coursier.cli.publish.signing.{BatchSignerLogger, GpgSigner, InteractiveSignerLogger, Signer}
+import coursier.cli.publish.signing._
 import coursier.cli.publish.sonatype.{BatchSonatypeLogger, InteractiveSonatypeLogger, SonatypeApi, SonatypeLogger}
 import coursier.cli.publish.upload._
 import coursier.cli.publish.util.DeleteOnExit
@@ -38,8 +38,10 @@ object Publish extends CaseApp[PublishOptions] {
     upload: Upload,
     repository: MavenRepository,
     logger: Upload.Logger,
-    addMavenSnapshotVersioning: Boolean
+    withMavenSnapshotVersioning: Boolean
   ): Task[FileSet] = {
+
+    println(s"withMavenSnapshotVersioning=$withMavenSnapshotVersioning")
 
     val groups = Group.split(fs)
 
@@ -52,20 +54,19 @@ object Publish extends CaseApp[PublishOptions] {
         case m => Seq(m)
       } ++ metadata
       groups2 <- {
-        if (addMavenSnapshotVersioning)
-          Task.gather.gather {
-            groups1.map {
-              case m: Group.Module if m.version.endsWith("SNAPSHOT") => // actually just "-SNAPSHOT" or ".SNAPSHOT" …
-                assert(!m.files.elements.exists(_._1 == "maven-metadata.xml")) // meh
+        Task.gather.gather {
+          groups1.map {
+            case m: Group.Module if m.version.endsWith("SNAPSHOT") => // actually just "-SNAPSHOT" or ".SNAPSHOT" …
+              if (withMavenSnapshotVersioning)
                 Group.downloadSnapshotVersioningMetadata(m, upload, repository, logger).flatMap { m0 =>
                   m0.addSnapshotVersioning(now, Set("md5", "sha1", "asc")) // meh second arg
                 }
-              case other =>
-                Task.point(other)
-            }
+              else
+                Task.point(m.clearSnapshotVersioning)
+            case other =>
+              Task.point(other)
           }
-        else
-          Task.point(groups1)
+        }
       }
       res <- Task.fromEither(Group.merge(groups2).left.map(msg => new Exception(msg)))
     } yield res
@@ -236,25 +237,25 @@ object Publish extends CaseApp[PublishOptions] {
       }
     }
 
-    val signerOpt: Option[Signer] =
+    val signer =
       if (params.signature.gpg) {
         val key = params.signature.gpgKeyOpt match {
           case None => GpgSigner.Key.Default
           case Some(id) => GpgSigner.Key.Id(id)
         }
-        Some(GpgSigner(key))
+        GpgSigner(key)
       } else {
         params.repository.repository match {
           case _: PublishRepository.Sonatype =>
             out.println("Warning: --sonatype passed, but signing not enabled, trying to proceed anyway")
           case _ =>
         }
-        None
+        NopSigner
       }
 
-    val initSigner = signerOpt.fold(Task.point(())) { signer =>
-      // Signing dummy stuff to trigger any gpg dialog, before our signer logger is set up.
-      // The gpg dialog and our logger seem to conflict else, leaving the terminal in a bad state.
+    // Signing dummy stuff to trigger any gpg dialog, before our signer logger is set up.
+    // The gpg dialog and our logger seem to conflict else, leaving the terminal in a bad state.
+    val initSigner =
       signer
         .sign(Content.InMemory(now, "hello".getBytes(StandardCharsets.UTF_8)))
         .flatMap {
@@ -263,7 +264,6 @@ object Publish extends CaseApp[PublishOptions] {
           ))
           case Right(_) => Task.point(())
         }
-    }
 
 
     val sonatypeApiOpt = params.repository.repository match {
@@ -363,7 +363,7 @@ object Publish extends CaseApp[PublishOptions] {
         params.repository.snapshotVersioning
       )
       _ <- initSigner // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
-      withSignatures <- signerOpt.fold(Task.point(fileSet1)) { signer =>
+      withSignatures <- {
         signer
           .signatures(
             fileSet1,
@@ -473,10 +473,14 @@ object Publish extends CaseApp[PublishOptions] {
         val res = Await.result(f, Duration.Inf)
 
         res match {
-          case Left(err: PublishError) =>
+          case Left(err: PublishError) if params.verbosity <= 1 =>
             System.err.println(err.message)
-            if (params.verbosity >= 2)
-              err.printStackTrace(System.err)
+            sys.exit(1)
+
+          // Kind of meh to catch those here.
+          // These errors should be returned via Either-s or other and handled explicitly.
+          case Left(err: Upload.Error) if params.verbosity <= 1 =>
+            System.err.println(err.getMessage)
             sys.exit(1)
 
           case Left(e) =>

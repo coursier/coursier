@@ -155,6 +155,28 @@ object MavenMetadata {
         }.flatten
     }.flatten
 
+  def currentSnapshotVersioning(elem: Elem) =
+    elem.child.collectFirst {
+      case n: Elem if n.label == "versioning" =>
+        n.child.collectFirst {
+          case n if n.label == "snapshot" =>
+            val buildNumOpt = n.child.collectFirst {
+              case n if n.label == "buildNumber" =>
+                Try(n.text.toInt).toOption
+            }.flatten
+            val timestampOpt = n.child.collectFirst {
+              case n if n.label == "timestamp" =>
+                Try(LocalDateTime.parse(n.text, timestampPattern)).toOption
+            }.flatten
+
+            (buildNumOpt, timestampOpt) match {
+              case (Some(n), Some(ts)) => Some((n, ts))
+              case (None, None) => None
+              case _ => ??? // Report via return type
+            }
+        }.flatten
+    }.flatten
+
   def updateSnapshotVersioning(
     content: Elem,
     setOrg: Option[Organization],

@@ -102,7 +102,7 @@ object Upload {
 
   object Error {
     final class HttpError(code: Int, headers: Map[String, Seq[String]], response: String) extends Error(transient = code / 100 == 5, s"HTTP $code\n$response")
-    final class Unauthorized(realm: Option[String]) extends Error(transient = false, "Unauthorized")
+    final class Unauthorized(url: String, realm: Option[String]) extends Error(transient = false, s"Unauthorized ($url, ${realm.getOrElse("[no realm]")})")
     final class DownloadError(exception: Throwable) extends Error(transient = false, "Download error", exception)
     final class FileException(exception: Throwable) extends Error(transient = false, "I/O error", exception) // can some exceptions be transient?
   }

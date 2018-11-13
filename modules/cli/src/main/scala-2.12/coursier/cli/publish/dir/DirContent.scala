@@ -14,6 +14,12 @@ final case class DirContent(elements: Seq[(String, Content)]) {
   }
   def isEmpty: Boolean =
     elements.isEmpty
+  def remove(name: String): DirContent =
+    copy(
+      elements = elements.filter {
+        case (n, _) => n != name && !n.startsWith(name + ".")
+      }
+    )
 
   /** Removes anything looking like a checksum or signature related to `path` */
   def removeAll(name: String): DirContent = {

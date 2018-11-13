@@ -1,8 +1,11 @@
 package coursier.cli.publish.params
 
+import java.nio.file.{Files, Paths}
+
 import caseapp.Tag
-import cats.data.{Validated, ValidatedNel}
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.publish.conf.Conf
 import coursier.cli.publish.options.PublishOptions
 
 final case class PublishParams(
@@ -16,7 +19,26 @@ final case class PublishParams(
   dummy: Boolean,
   batch: Boolean,
   sbtOutputFrame: Option[Int]
-)
+) {
+  def withConf(conf: Conf): PublishParams = {
+
+    var p = this
+
+    for (o <- conf.organization.organization if p.metadata.organization.isEmpty)
+      p = p.copy(
+        metadata = p.metadata.copy(organization = Some(o))
+      )
+
+    // TODO Take conf.organization.url into account
+
+    for (v <- conf.version if p.metadata.version.isEmpty)
+      p = p.copy(
+        metadata = p.metadata.copy(version = Some(v))
+      )
+
+    p
+  }
+}
 
 object PublishParams {
   def apply(options: PublishOptions, args: Seq[String]): ValidatedNel[String, PublishParams] = {
@@ -50,7 +72,7 @@ object PublishParams {
       coursier.TermDisplay.defaultFallbackMode
     }
 
-    (repositoryV, metadataV, singlePackageV, directoryV, checksumV, signatureV, verbosityV).mapN {
+    val res = (repositoryV, metadataV, singlePackageV, directoryV, checksumV, signatureV, verbosityV).mapN {
       (repository, metadata, singlePackage, directory, checksum, signature, verbosity) =>
         PublishParams(
           repository,
@@ -64,6 +86,50 @@ object PublishParams {
           batch,
           sbtOutputFrame
         )
+    }
+
+    // TODO Actually take conf file into account beforehand
+    // So that e.g. its repository is taken into account and we do not default to sonatype here
+    res.withEither { e =>
+      for {
+        p <- e
+        // TODO Warn about ignored fields in conf file?
+        confOpt <- options.conf match {
+          case None =>
+            val loadDefaultIfExists = !p.singlePackage.`package` &&
+              p.directory.directories.isEmpty &&
+              p.directory.sbtDirectories.forall(_ == Paths.get("."))
+            if (loadDefaultIfExists) {
+              val default = Paths.get("publish.json")
+              val projectDefault = Paths.get("project/publish.json")
+              if (Files.isRegularFile(default))
+                Conf.load(default)
+                  .left.map(NonEmptyList.of(_))
+                  .right
+                  .map(Some(_))
+              else if (Files.isRegularFile(projectDefault))
+                Conf.load(projectDefault)
+                  .left.map(NonEmptyList.of(_))
+                  .right
+                  .map(Some(_))
+              else
+                Right(None)
+            } else
+              Right(None)
+          case Some(c) =>
+            val p = Paths.get(c)
+            if (Files.exists(p)) {
+              if (Files.isRegularFile(p))
+                Conf.load(p)
+                  .left.map(NonEmptyList.of(_))
+                  .right
+                  .map(Some(_))
+              else
+                Left(NonEmptyList.of(s"Conf file $c is not a file"))
+            } else
+              Left(NonEmptyList.of(s"Conf file $c not found"))
+        }
+      } yield confOpt.fold(p)(p.withConf)
     }
   }
 }

@@ -69,13 +69,15 @@ object Group {
       val prefix = s"${name.value}-${snapshotVersioning.getOrElse(version)}"
 
       val updatedContent = DirContent(
-        files.elements.collect {
+        files.elements.map {
           case (n, c) =>
             val newName =
               if (n == "maven-metadata.xml" || n.startsWith("maven-metadata.xml."))
                 n
-              else
-                n.stripPrefix(prefix) // FIXME Hard-check?
+              else {
+                assert(n.startsWith(prefix), s"nope for $n.startsWith($prefix)")
+                n.stripPrefix(prefix)
+              }
             (newName, c)
         }
       )
@@ -106,14 +108,25 @@ object Group {
       org: Option[Organization],
       name: Option[ModuleName],
       version: Option[String],
-    ): Module =
-      stripPrefixes
+    ): Module = {
+
+      val base =
+        version match {
+          case Some(v) if !v.endsWith("SNAPSHOT") =>
+            clearSnapshotVersioning
+          case _ =>
+            this
+        }
+
+      base
+        .stripPrefixes
         .copy(
-          organization = org.getOrElse(this.organization),
-          name = name.getOrElse(this.name),
-          version = version.getOrElse(this.version)
+          organization = org.getOrElse(base.organization),
+          name = name.getOrElse(base.name),
+          version = version.getOrElse(base.version)
         )
         .updateFileNames
+    }
 
     /**
       * Adjust the organization / name / version.
@@ -132,6 +145,20 @@ object Group {
         updateOrgNameVer(org, name, version)
           .updatePom(now)
           .flatMap(_.updateMavenMetadata(now))
+
+    def removeMavenMetadata: Module =
+      copy(
+        files = files.remove("maven-metadata.xml")
+      )
+
+    def clearSnapshotVersioning: Module =
+      if (snapshotVersioning.isEmpty)
+        this
+      else
+        stripPrefixes
+          .removeMavenMetadata
+          .copy(snapshotVersioning = None)
+          .updateFileNames
 
     def transform(
       map: Map[(Organization, ModuleName), (Organization, ModuleName)],
@@ -270,13 +297,11 @@ object Group {
 
     def addSnapshotVersioning(now: Instant, ignoreExtensions: Set[String]): Task[Module] = {
 
-      // kind of meh
-      assert(snapshotVersioning.isEmpty)
       assert(version.endsWith("-SNAPSHOT") || version.endsWith(".SNAPSHOT"))
 
       val versionPrefix = version.stripSuffix("SNAPSHOT").dropRight(1)
 
-      val initialFilePrefix = s"${name.value}-$version"
+      val initialFilePrefix = s"${name.value}-${snapshotVersioning.getOrElse(version)}"
 
       def updatedVersion(buildNumber: Int) =
         s"$versionPrefix-${now.atOffset(ZoneOffset.UTC).toLocalDateTime.format(publish.MavenMetadata.timestampPattern)}-$buildNumber"
@@ -340,19 +365,25 @@ object Group {
         case Some(c) =>
           c.contentTask.map { b =>
             val elem = XML.loadString(new String(b, StandardCharsets.UTF_8))
-            val currentBuildNumber = publish.MavenMetadata.snapshotVersioningBuildNumber(elem).getOrElse {
+            val latestSnapshotParams = publish.MavenMetadata.currentSnapshotVersioning(elem).getOrElse {
               ???
             }
-            val buildNumber = currentBuildNumber + 1
-            buildNumber -> publish.MavenMetadata.updateSnapshotVersioning(
-              elem,
-              None,
-              None,
-              Some(version),
-              Some((now.atOffset(ZoneOffset.UTC).toLocalDateTime, buildNumber)),
-              Some(now.atZone(ZoneOffset.UTC).toLocalDateTime),
-              artifacts(buildNumber)
-            )
+            val latestSnapshotVer = s"$versionPrefix-${latestSnapshotParams._2.atOffset(ZoneOffset.UTC).toLocalDateTime.format(publish.MavenMetadata.timestampPattern)}-${latestSnapshotParams._1}"
+            if (snapshotVersioning.contains(latestSnapshotVer))
+              latestSnapshotParams._1 -> elem // kind of meh, this is in case the source already has snapshot ver, and the dest hasn't, so the current maven metadata only comes from the source
+            else {
+              println(s"!$snapshotVersioning.contains($latestSnapshotVer)")
+              val buildNumber = latestSnapshotParams._1 + 1
+              buildNumber -> publish.MavenMetadata.updateSnapshotVersioning(
+                elem,
+                None,
+                None,
+                Some(version),
+                Some((now.atOffset(ZoneOffset.UTC).toLocalDateTime, buildNumber)),
+                Some(now.atZone(ZoneOffset.UTC).toLocalDateTime),
+                artifacts(buildNumber)
+              )
+            }
           }
       }
 
@@ -499,8 +530,11 @@ object Group {
                   p.elements.last -> c
               }
               Module(org, name, ver, snapshotVersioningOpt, DirContent(strippedDir))
-            } else
-              ???
+            } else {
+              for (e <- elements.map(_._1.elements.last).sorted)
+                println(s"  $e")
+              sys.error(s"nope (snapshotVersioningOpt=$snapshotVersioningOpt, ver=$ver, fileNamePrefixes=$fileNamePrefixes): ${elements.filter(t => !recognized(t._1)).map(_._1)}")
+            }
 
           case Seq(strName, reverseOrg @ _*) if reverseOrg.nonEmpty && canBeMavenMetadata =>
             val org = Organization(reverseOrg.reverse.mkString("."))
@@ -644,7 +678,7 @@ object Group {
     logger: Upload.Logger
   ): Task[Module] = {
 
-    assert(m.snapshotVersioning.isEmpty)
+    // assert(m.snapshotVersioning.isEmpty)
 
     val root = repository.root.stripSuffix("/") + "/"
     val url = root + s"${m.baseDir.mkString("/")}/maven-metadata.xml"
