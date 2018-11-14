@@ -179,7 +179,7 @@ lazy val cli = project("cli")
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
-    dontPublishIn("2.10", "2.11"),
+    dontPublishIn("2.11"),
     coursierPrefix,
     unmanagedResources.in(Test) += packageBin.in(bootstrap).in(Compile).value,
     scalacOptions += "-Ypartial-unification",

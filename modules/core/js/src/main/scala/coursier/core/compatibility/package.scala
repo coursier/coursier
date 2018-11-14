@@ -55,16 +55,15 @@ package object compatibility {
 
       def attributes = ???
 
-      // `exists` instead of `contains`, for scala 2.10
       def isText =
         option[Int](node0.nodeType)
-          .exists(_ == TEXT_NODE)
+          .contains(TEXT_NODE)
       def textContent =
         option(node0.textContent)
           .getOrElse("")
       def isElement =
         option[Int](node0.nodeType)
-          .exists(_ == ELEMENT_NODE)
+          .contains(ELEMENT_NODE)
 
       override def toString =
         XMLSerializer.serializeToString(node).asInstanceOf[String]
