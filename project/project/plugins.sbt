@@ -1,5 +1,4 @@
-addSbtCoursier
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.3.4")
 
-// required for just released things
-resolvers += Resolver.sonatypeRepo("releases")
+addSbtPlugin("io.get-coursier" % "sbt-lm-coursier" % "1.1.0-M7+85-05f8f321-SNAPSHOT")
+resolvers += Resolver.sonatypeRepo("snapshots")
