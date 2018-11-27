@@ -31,7 +31,7 @@ object Settings {
     organization := "io.get-coursier",
     scalazBintrayRepository,
     sonatypeRepository("releases"),
-    crossScalaVersions := Seq(scala212, scala211), // defined for all projects to trump sbt-doge
+    crossScalaVersions := ScalaVersion.versions, // defined for all projects to trump sbt-doge
     scalacOptions ++= Seq(
       "-target:jvm-1.8",
       "-feature",
