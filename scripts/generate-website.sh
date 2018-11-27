@@ -21,7 +21,7 @@ echo "Processing Markdown files"
 # with
 #   sbt coreJVM/publishLocal cacheJVM/publishLocal
 ../coursier launch \
-  "com.geirsson:mdoc_$SCALA_VERSION:0.4.5" \
+  "com.geirsson:mdoc_$SCALA_VERSION:0.6.0" \
   "io.get-coursier:coursier-cache_2.12:$VERSION" \
   -- \
     --in ../doc/docs \

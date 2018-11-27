@@ -1,7 +1,7 @@
 
 object ScalaVersion {
 
-  def scala212 = "2.12.6"
+  def scala212 = "2.12.7"
   def scala211 = "2.11.12"
 
   val versions = Seq(scala212, scala211)
