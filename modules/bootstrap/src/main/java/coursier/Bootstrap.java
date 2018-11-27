@@ -287,7 +287,9 @@ public class Bootstrap {
             exit("Interrupted");
         }
 
-        System.err.print(clearLine);
+        if (!missingURLs.isEmpty()) {
+            System.err.print(clearLine);
+        }
 
         return localURLs;
     }
