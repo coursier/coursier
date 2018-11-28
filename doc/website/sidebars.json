@@ -4,7 +4,7 @@
     "sbt plugins": ["sbt-coursier", "sbt-shading", "sbt-pgp-coursier"],
     "Command-line": ["cli-intro", "cli-resolve", "cli-fetch", "cli-launch", "cli-bootstrap"],
     "API": ["api", "scala-js"],
-    "Other": ["cache", "ttl", "json-report", "extra", "limitations", "faq"],
+    "Other": ["cache", "ttl", "other-proxy", "json-report", "extra", "limitations", "faq"],
     "About": ["motivations", "contributing", "users"]
   }
 }
