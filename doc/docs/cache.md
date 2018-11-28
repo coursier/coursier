@@ -15,7 +15,7 @@ The content of a URL like `https://repo1.maven.org/maven2/org/scala-lang/scala-l
 On a system where only recent versions of coursier were ever run (>= `1.0.0-RC12-1`, released on the 2017/10/31), the default cache location is platform-dependent:
 - on Linux, `~/.cache/coursier/v1`. This also applies to Linux-based CI environments, and FreeBSD too.
 - on OS X, `~/Library/Caches/Coursier/v1`.
-- (Windows?)
+- on Windows, `%LOCALAPPDATA%\Coursier\Cache\v1`, which, for user `Alex`, typically corresponds to `C:\Users\Alex\AppData\Local\Coursier\Cache\v1`.
 
 ### Manual override
 
