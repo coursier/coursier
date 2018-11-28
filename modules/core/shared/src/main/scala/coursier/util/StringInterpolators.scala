@@ -1,6 +1,8 @@
 package coursier.util
 
 import coursier.core._
+import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepository
 import coursier.util.Parse.ModuleRequirements
 
 import scala.language.experimental.macros
@@ -24,6 +26,14 @@ object StringInterpolators {
 
   implicit class SafeDependency(val sc: StringContext) extends AnyVal {
     def dep(args: Any*): Dependency = macro safeDependency
+  }
+
+  implicit class SafeMavenRepository(val sc: StringContext) extends AnyVal {
+    def mvn(args: Any*): MavenRepository = macro safeMavenRepository
+  }
+
+  implicit class SafeIvyRepository(val sc: StringContext) extends AnyVal {
+    def ivy(args: Any*): IvyRepository = macro safeIvyRepository
   }
 
   def safeOrganization(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Organization] = {
@@ -112,6 +122,36 @@ object StringInterpolators {
               )
             """)
         }
+      case _ =>
+        c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
+    }
+  }
+
+  def safeMavenRepository(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[MavenRepository] = {
+    import c.universe._
+    c.prefix.tree match {
+      case Apply(_, List(Apply(_, Literal(Constant(root: String)) :: Nil))) =>
+        // FIXME Check that there's no query string, fragment, … in uri?
+        val uri = new java.net.URI(root)
+        c.Expr(q"""_root_.coursier.maven.MavenRepository($root)""")
+      case _ =>
+        c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
+    }
+  }
+
+  def safeIvyRepository(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[IvyRepository] = {
+    import c.universe._
+    c.prefix.tree match {
+      case Apply(_, List(Apply(_, Literal(Constant(str: String)) :: Nil))) =>
+        // FIXME Check that there's no query string, fragment, … in uri?
+        val r = IvyRepository.parse(str) match {
+          case Left(e) =>
+            c.abort(c.enclosingPosition, s"Malformed Ivy repository '$str': $e")
+          case Right(r0) => r0
+        }
+        // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
+        // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
+        c.Expr(q"""_root_.coursier.ivy.IvyRepository.parse($str).right.toOption.getOrElse(sys.error("Validated at compile-time"))""")
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }

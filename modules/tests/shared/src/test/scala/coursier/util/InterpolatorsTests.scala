@@ -1,7 +1,9 @@
 package coursier.util
 
 import coursier.core.Configuration
-import coursier.{Dependency, Module, dependencyString, moduleNameString, moduleString, organizationString}
+import coursier.ivy.{IvyRepository, Pattern}
+import coursier.maven.MavenRepository
+import coursier.{Dependency, Module, dependencyString, ivyRepositoryString, mavenRepositoryString, moduleNameString, moduleString, organizationString}
 import utest._
 
 object InterpolatorsTests extends TestSuite {
@@ -35,6 +37,23 @@ object InterpolatorsTests extends TestSuite {
           configuration = Configuration.test
         )
         assert(dep == expected)
+      }
+    }
+
+    "maven repository" - {
+      * - {
+        val repo = mvn"https://foo.com/a/b/c"
+        val expectedRepo = MavenRepository("https://foo.com/a/b/c")
+        assert(repo == expectedRepo)
+      }
+    }
+
+    "ivy repository" - {
+      * - {
+        val repo = ivy"https://foo.com/a/b/c/[defaultPattern]"
+        val expectedRepo = IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").right.toOption.get
+        assert(repo == expectedRepo)
+        assert(repo.pattern.chunks.endsWith(Pattern.default.chunks))
       }
     }
 

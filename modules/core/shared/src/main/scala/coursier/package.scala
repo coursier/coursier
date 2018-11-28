@@ -1,5 +1,5 @@
 import coursier.core._
-import coursier.util.StringInterpolators.{SafeDependency, SafeModule, SafeModuleName, SafeOrganization}
+import coursier.util.StringInterpolators._
 
 import scala.language.implicitConversions
 
@@ -126,5 +126,9 @@ package object coursier {
     SafeModule(sc)
   implicit def dependencyString(sc: StringContext): SafeDependency =
     SafeDependency(sc)
+  implicit def mavenRepositoryString(sc: StringContext): SafeMavenRepository =
+    SafeMavenRepository(sc)
+  implicit def ivyRepositoryString(sc: StringContext): SafeIvyRepository =
+    SafeIvyRepository(sc)
 
 }
