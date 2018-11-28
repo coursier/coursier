@@ -15,7 +15,7 @@ object DirectoryListingTests extends TestSuite {
     authentication = Some(Authentication(user, password))
   )
 
-  val module = Module(org"com.abc", name"test")
+  val module = mod"com.abc:test"
   val version = "0.1"
 
   private val runner = new TestRunner

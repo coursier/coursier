@@ -2,7 +2,7 @@ package coursier.test
 
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
-import coursier.{Fetch, Module, moduleNameString, organizationString}
+import coursier.{Fetch, Module, moduleString}
 import coursier.core.ResolutionProcess
 import coursier.util.Task
 import utest._
@@ -28,7 +28,7 @@ object ResolutionProcessTests extends TestSuite {
       // rather than all at once
       def check(extra: Int): Unit = {
 
-        val mod = Module(org"org", name"name")
+        val mod = mod"org:name"
         val modVers = (1 to (9 + extra))
           .map(_.toString)
           .map((mod, _))

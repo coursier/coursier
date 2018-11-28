@@ -9,8 +9,6 @@ import scala.collection.mutable.ArrayBuffer
 
 object Parse {
 
-  private def defaultScalaVersion = scala.util.Properties.versionNumberString
-
   /**
     * Parses a module like
     *   org:name
@@ -120,6 +118,9 @@ object Parse {
                           req: ModuleRequirements,
                           transitive: Boolean,
                           defaultScalaVersion: String): Either[String, (Dependency, Map[String, String])] = {
+
+    // FIXME Fails to parse dependencies with version intervals, because of the comma in the interval
+    // e.g. "joda-time:joda-time:[2.2,2.8]"
 
     // Assume org:name:version,attr1=val1,attr2=val2
     // That is ',' has to go after ':'.

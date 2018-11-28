@@ -1,5 +1,5 @@
 import coursier.core._
-import coursier.util.StringInterpolators.{SafeModuleName, SafeOrganization}
+import coursier.util.StringInterpolators.{SafeDependency, SafeModule, SafeModuleName, SafeOrganization}
 
 import scala.language.implicitConversions
 
@@ -21,7 +21,6 @@ package object coursier {
     def apply(
       module: Module,
       version: String,
-      // Substituted by Resolver with its own default configuration (compile)
       configuration: Configuration = Configuration.empty,
       attributes: Attributes = Attributes(),
       exclusions: Set[(Organization, ModuleName)] = Set.empty,
@@ -123,5 +122,9 @@ package object coursier {
     SafeOrganization(sc)
   implicit def moduleNameString(sc: StringContext): SafeModuleName =
     SafeModuleName(sc)
+  implicit def moduleString(sc: StringContext): SafeModule =
+    SafeModule(sc)
+  implicit def dependencyString(sc: StringContext): SafeDependency =
+    SafeDependency(sc)
 
 }

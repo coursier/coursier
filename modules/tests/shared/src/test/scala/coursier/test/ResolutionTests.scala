@@ -27,10 +27,10 @@ object ResolutionTests extends TestSuite {
   }
 
   val projects = Seq(
-    Project(Module(org"acme", name"config"), "1.3.0"),
+    Project(mod"acme:config", "1.3.0"),
 
-    Project(Module(org"acme", name"play"), "2.4.0", Seq(
-      Configuration.empty -> Dependency(Module(org"acme", name"play-json"), "2.4.0"))),
+    Project(mod"acme:play", "2.4.0", Seq(
+      Configuration.empty -> dep"acme:play-json:2.4.0")),
 
     Project(Module(org"acme", name"play-json"), "2.4.0"),
 
