@@ -23,15 +23,15 @@ abstract class CentralTests extends TestSuite {
 
     'logback - {
       async {
-        val dep = Dependency(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")
+        val dep = dep"ch.qos.logback:logback-classic:1.1.3"
         val res = await(runner.resolve(Set(dep))).clearCaches
 
         val expected = Resolution(
           rootDependencies = Set(dep),
           dependencies = Set(
             dep.withCompileScope,
-            Dependency(Module(org"ch.qos.logback", name"logback-core"), "1.1.3").withCompileScope,
-            Dependency(Module(org"org.slf4j", name"slf4j-api"), "1.7.7").withCompileScope))
+            dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
+            dep"org.slf4j:slf4j-api:1.7.7".withCompileScope))
 
         assert(res == expected)
       }
@@ -39,15 +39,15 @@ abstract class CentralTests extends TestSuite {
 
     'asm - {
       async {
-        val dep = Dependency(Module(org"org.ow2.asm", name"asm-commons"), "5.0.2")
+        val dep = dep"org.ow2.asm:asm-commons:5.0.2"
         val res = await(runner.resolve(Set(dep))).clearCaches
 
         val expected = Resolution(
           rootDependencies = Set(dep),
           dependencies = Set(
             dep.withCompileScope,
-            Dependency(Module(org"org.ow2.asm", name"asm-tree"), "5.0.2").withCompileScope,
-            Dependency(Module(org"org.ow2.asm", name"asm"), "5.0.2").withCompileScope))
+            dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
+            dep"org.ow2.asm:asm:5.0.2".withCompileScope))
 
         assert(res == expected)
       }

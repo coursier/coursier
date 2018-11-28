@@ -3,7 +3,7 @@ package coursier.test
 import java.io.File
 
 import coursier.core.{Classifier, Type}
-import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
+import coursier.{Attributes, Dependency, Module, moduleNameString, moduleString, organizationString}
 import coursier.maven.MavenRepository
 import coursier.test.compatibility.executionContext
 import utest._
@@ -18,7 +18,7 @@ object MavenTests extends TestSuite {
     'testSnapshotNoVersioning - {
 
       val dep = Dependency(
-        Module(org"com.abc", name"test-snapshot-special"),
+        mod"com.abc:test-snapshot-special",
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()

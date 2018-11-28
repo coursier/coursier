@@ -3,7 +3,7 @@ package coursier.test
 import java.io.File
 
 import coursier.core.{Classifier, Configuration, Type}
-import coursier.{Attributes, Dependency, Module, moduleNameString, organizationString}
+import coursier.{Attributes, Dependency, Module, ivyRepositoryString, moduleNameString, moduleString, organizationString}
 import coursier.ivy.IvyRepository
 import coursier.test.compatibility.executionContext
 import utest._
@@ -12,13 +12,8 @@ object IvyTests extends TestSuite {
 
   // only tested on the JVM for lack of support of XML attributes in the platform-dependent XML stubs
 
-  val sbtRepo = IvyRepository.parse(
-    "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/" +
-      "[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)" +
-      "[revision]/[type]s/[artifact](-[classifier]).[ext]",
+  val sbtRepo = ivy"https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/[defaultPattern]".copy(
     dropInfoAttributes = true
-  ).right.getOrElse(
-    throw new Exception("Cannot happen")
   )
 
   private val runner = new TestRunner
@@ -70,7 +65,7 @@ object IvyTests extends TestSuite {
       "-SNAPSHOT suffix" - {
 
         val dep = Dependency(
-          Module(org"com.example", name"a_2.11"),
+          mod"com.example:a_2.11",
           "0.1.0-SNAPSHOT",
           transitive = false,
           attributes = Attributes(Type.jar)
@@ -91,7 +86,7 @@ object IvyTests extends TestSuite {
       "-SNAPSHOT suffix" - {
 
         val dep = Dependency(
-          Module(org"com.example", name"a_2.11"),
+          mod"com.example:a_2.11",
           "0.2.0.SNAPSHOT",
           transitive = false,
           attributes = Attributes(Type.jar)
@@ -113,7 +108,7 @@ object IvyTests extends TestSuite {
     'testArtifacts - {
 
       val dep = Dependency(
-        Module(org"com.example", name"a_2.11"),
+        mod"com.example:a_2.11",
         "0.1.0-SNAPSHOT",
         transitive = false,
         attributes = Attributes()

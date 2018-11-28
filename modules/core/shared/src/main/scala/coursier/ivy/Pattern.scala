@@ -94,6 +94,19 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
         Right(b.result())
     }
   }
+
+
+  def substitute(varName: String, replacement: Seq[Chunk]): Pattern =
+    Pattern(
+      chunks.flatMap {
+        case Chunk.Var(`varName`) => replacement
+        case Chunk.Opt(chunks0 @ _*) => Seq(Chunk.Opt(Pattern(chunks0).substitute(varName, replacement).chunks: _*))
+        case c => Seq(c)
+      }
+    )
+
+  def substituteDefault: Pattern =
+    substitute("defaultPattern", Pattern.default.chunks)
 }
 
 object PropertiesPattern {

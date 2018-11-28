@@ -1,6 +1,6 @@
 package coursier.interop
 
-import coursier.{Module, moduleNameString, organizationString}
+import coursier.{Module, moduleNameString, moduleString, organizationString}
 import coursier.interop.scalaz._
 import coursier.test.compatibility.executionContext
 import coursier.test.{TestRunner, compatibility}
@@ -35,13 +35,13 @@ object ScalazTests extends TestSuite {
 
     'spark - {
       * - runner.resolutionCheck(
-        Module(org"org.apache.spark", name"spark-core_2.11"),
+        mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))
       )
 
       'scala210 - runner.resolutionCheck(
-        Module(org"org.apache.spark", name"spark-core_2.10"),
+        mod"org.apache.spark:spark-core_2.10",
         "2.1.1",
         profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
       )
@@ -49,7 +49,7 @@ object ScalazTests extends TestSuite {
 
     'argonautShapeless - {
       runner.resolutionCheck(
-        Module(org"com.github.alexarchambault", name"argonaut-shapeless_6.1_2.11"),
+        mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
         "0.2.0"
       )
     }

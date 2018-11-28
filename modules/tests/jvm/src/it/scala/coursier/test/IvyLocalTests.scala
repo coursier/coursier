@@ -1,7 +1,7 @@
 package coursier.test
 
 import coursier.core.{Classifier, Type}
-import coursier.{Cache, Dependency, Module, moduleNameString, organizationString}
+import coursier.{Cache, Dependency, Module, moduleNameString, moduleString, organizationString}
 import coursier.test.compatibility._
 
 import scala.async.Async.{async, await}
@@ -13,7 +13,7 @@ object IvyLocalTests extends TestSuite {
 
   val tests = TestSuite{
     'coursier {
-      val module = Module(org"io.get-coursier", name"coursier-core_2.11")
+      val module = mod"io.get-coursier:coursier-core_2.11"
       val version = coursier.util.Properties.version
 
       val extraRepos = Seq(Cache.ivy2Local)
@@ -27,7 +27,7 @@ object IvyLocalTests extends TestSuite {
       'uniqueArtifacts - async {
 
         val res = await(runner.resolve(
-          Set(Dependency(Module(org"io.get-coursier", name"coursier-cli_2.12"), version, transitive = false)),
+          Set(Dependency(mod"io.get-coursier:coursier-cli_2.12", version, transitive = false)),
           extraRepos = extraRepos
         ))
 

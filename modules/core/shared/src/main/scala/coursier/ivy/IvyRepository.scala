@@ -291,7 +291,8 @@ object IvyRepository {
     withArtifacts: Boolean = true,
     // hack for SBT putting infos in properties
     dropInfoAttributes: Boolean = false,
-    authentication: Option[Authentication] = None
+    authentication: Option[Authentication] = None,
+    substituteDefault: Boolean = true
   ): Either[String, IvyRepository] =
 
     for {
@@ -307,8 +308,8 @@ object IvyRepository {
 
     } yield
       IvyRepository(
-        pattern,
-        metadataPatternOpt,
+        if (substituteDefault) pattern.substituteDefault else pattern,
+        metadataPatternOpt.map(p => if (substituteDefault) p.substituteDefault else p),
         changing,
         withChecksums,
         withSignatures,

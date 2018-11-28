@@ -1,7 +1,7 @@
 package coursier.web
 
 import coursier.core.{Configuration, ModuleName, Organization, Type}
-import coursier.{Dependency, MavenRepository, Module, Resolution, moduleNameString, organizationString}
+import coursier.{Dependency, MavenRepository, Module, Resolution, moduleNameString, moduleString, organizationString}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -375,7 +375,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(Module(org"io.get-coursier", name"coursier-cache_2.12"), "1.1.0-M7") // DEBUG
+      Dependency(mod"io.get-coursier:coursier-cache_2.12", "1.1.0-M7") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),
