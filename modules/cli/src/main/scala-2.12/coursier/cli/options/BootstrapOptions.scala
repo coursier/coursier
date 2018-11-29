@@ -4,9 +4,9 @@ import caseapp.{Parser, Recurse}
 
 final case class BootstrapOptions(
   @Recurse
-    artifactOptions: ArtifactOptions,
+    artifactOptions: ArtifactOptions = ArtifactOptions(),
   @Recurse
-    options: BootstrapSpecificOptions
+    options: BootstrapSpecificOptions = BootstrapSpecificOptions()
 )
 
 object BootstrapOptions {

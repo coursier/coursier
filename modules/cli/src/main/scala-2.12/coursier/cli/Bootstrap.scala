@@ -62,9 +62,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   private def createSimpleJarBootstrap(output: File, content: Array[Byte]): Unit =
     try Files.write(output.toPath, content)
-    catch { case e: IOException =>
-      Console.err.println(s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}")
-      sys.exit(1)
+    catch {
+      case e: IOException =>
+        throw new BootstrapException(
+          s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}",
+          e
+        )
     }
 
   private def createJarBootstrapWithPreamble(javaOpts: Seq[String], output: File, content: Array[Byte]): Unit = {
@@ -107,9 +110,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     ).mkString("", "\n", "\n")
 
     try Files.write(output.toPath, shellPreamble.getBytes(UTF_8) ++ content)
-    catch { case e: IOException =>
-      Console.err.println(s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}")
-      sys.exit(1)
+    catch {
+      case e: IOException =>
+        throw new BootstrapException(
+          s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}",
+          e
+        )
     }
 
     try {
@@ -129,14 +135,14 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           newPerms.asJava
         )
     } catch {
-      case e: UnsupportedOperationException =>
+      case _: UnsupportedOperationException =>
       // Ignored
       case e: IOException =>
-        Console.err.println(
+        throw new BootstrapException(
           s"Error while making $output executable" +
-            Option(e.getMessage).fold("")(" (" + _ + ")")
+            Option(e.getMessage).fold("")(" (" + _ + ")"),
+          e
         )
-        sys.exit(1)
     }
   }
 
@@ -154,8 +160,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       Option(Thread.currentThread().getContextClassLoader.getResourceAsStream("bootstrap.jar")) match {
         case Some(is) => FileUtil.readFully(is)
         case None =>
-          Console.err.println(s"Error: bootstrap JAR not found")
-          sys.exit(1)
+          throw new BootstrapException(s"Error: bootstrap JAR not found")
       }
 
     val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
@@ -309,6 +314,15 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   }
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
+    try bootstrap(options, args)
+    catch {
+      case e: BootstrapException =>
+        Console.err.println(e.message)
+        sys.exit(1)
+    }
+  }
+
+  def bootstrap(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
     val helper = new Helper(
       options.options.common,
@@ -318,10 +332,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     )
 
     val output0 = new File(options.options.output)
-    if (!options.options.force && output0.exists()) {
-      Console.err.println(s"Error: ${options.options.output} already exists, use -f option to force erasing it.")
-      sys.exit(1)
-    }
+    if (!options.options.force && output0.exists())
+      throw new BootstrapException(
+        s"Error: ${options.options.output} already exists, use -f option to force erasing it."
+      )
 
     val mainClass =
       if (options.options.mainClass.isEmpty)
@@ -334,10 +348,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     else {
 
       val (validProperties, wrongProperties) = options.options.property.partition(_.contains("="))
-      if (wrongProperties.nonEmpty) {
-        Console.err.println(s"Wrong -P / --property option(s):\n${wrongProperties.mkString("\n")}")
-        sys.exit(255)
-      }
+      if (wrongProperties.nonEmpty)
+        throw new BootstrapException(s"Wrong -P / --property option(s):\n${wrongProperties.mkString("\n")}")
 
       val properties0 = validProperties.map { s =>
         s.split("=", 2) match {
@@ -367,10 +379,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
       val bat = new File(output0.getParentFile, s"${output0.getName}.bat")
 
-      if (generateBat && !options.options.force && bat.exists()) {
-        Console.err.println(s"Error: $bat already exists, use -f option to force erasing it.")
-        sys.exit(1)
-      }
+      if (generateBat && !options.options.force && bat.exists())
+        throw new BootstrapException(s"Error: $bat already exists, use -f option to force erasing it.")
 
       if (options.options.assembly)
         createAssemblyJar(options, files, javaOpts, mainClass, output0)
@@ -392,5 +402,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       }
     }
   }
+
+  final class BootstrapException(val message: String, cause: Throwable = null) extends Exception(message, cause)
 
 }
