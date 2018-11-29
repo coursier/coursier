@@ -11,34 +11,45 @@ object HttpHttpsRedirectionTests extends TestSuite {
     val testRepo = sys.env.getOrElse("TEST_REDIRECT_REPOSITORY", sys.error("TEST_REDIRECT_REPOSITORY not set"))
     val deps = Set(Dependency(mod"com.chuusai:shapeless_2.12", "2.3.2"))
 
+    // typer error in 2.11.12 if we make that a lazy val
+    def enabled: Boolean = {
+      val enabled0 = testRepo != "disabled"
+      if (!enabled0)
+        System.err.println("HttpHttpsRedirectionTests disabled (TEST_REDIRECT_REPOSITORY=disabled)")
+      enabled0
+    }
+
     * - {
       // no redirections -> should fail
 
-      val failed = try {
-        CacheFetchTests.check(
-          MavenRepository(testRepo),
-          addCentral = false,
-          deps = deps
-        )
+      if (enabled) {
+        val failed = try {
+          CacheFetchTests.check(
+            MavenRepository(testRepo),
+            addCentral = false,
+            deps = deps
+          )
 
-        false
-      } catch {
-        case _: Throwable =>
-          true
+          false
+        } catch {
+          case _: Throwable =>
+            true
+        }
+
+        assert(failed)
       }
-
-      assert(failed)
     }
 
     * - {
       // with redirection -> should work
 
-      CacheFetchTests.check(
-        MavenRepository(testRepo),
-        addCentral = false,
-        deps = deps,
-        followHttpToHttpsRedirections = true
-      )
+      if (enabled)
+        CacheFetchTests.check(
+          MavenRepository(testRepo),
+          addCentral = false,
+          deps = deps,
+          followHttpToHttpsRedirections = true
+        )
     }
   }
 
