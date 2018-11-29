@@ -16,7 +16,8 @@ final case class CacheParams(
   parallel: Int, // positive
   checksum: Seq[Option[String]],
   retryCount: Int,
-  cacheLocalArtifacts: Boolean
+  cacheLocalArtifacts: Boolean,
+  followHttpToHttpsRedirections: Boolean
 )
 
 object CacheParams {
@@ -78,6 +79,7 @@ object CacheParams {
         Validated.invalidNel(s"Retry count must be > 0 (got ${options.retryCount})")
 
     val cacheLocalArtifacts = options.cacheFileArtifacts
+    val followHttpToHttpsRedirections = options.followHttpToHttpsRedirect
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV).mapN {
       (cachePolicy, ttl, parallel, checksum, retryCount) =>
@@ -88,7 +90,8 @@ object CacheParams {
           parallel,
           checksum,
           retryCount,
-          cacheLocalArtifacts
+          cacheLocalArtifacts,
+          followHttpToHttpsRedirections
         )
     }
   }

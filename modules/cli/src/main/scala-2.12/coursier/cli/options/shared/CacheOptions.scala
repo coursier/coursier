@@ -31,7 +31,10 @@ final case class CacheOptions(
 
   @Help("Flag that specifies if a local artifact should be cached.")
   @Short("cfa")
-    cacheFileArtifacts: Boolean = false
+    cacheFileArtifacts: Boolean = false,
+
+  @Help("Whether to follow http to https redirections")
+    followHttpToHttpsRedirect: Boolean = true
 
 )
 
