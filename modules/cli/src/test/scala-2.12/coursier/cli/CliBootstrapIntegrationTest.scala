@@ -235,4 +235,39 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         assert(bootstrap1SHA256 == bootstrap2SHA256)
       }
     }
+
+  "bootstrap" should "rename JAR with the same file name" in withFile() {
+
+    (bootstrapFile, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalacenter/releases"))
+      val common = CommonOptions(
+        repositoryOptions = repositoryOpt
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        force = true,
+        standalone = true,
+        common = common
+      )
+      val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
+
+      Bootstrap.bootstrap(
+        bootstrapOptions,
+        RemainingArgs(Seq("org.scalameta:metals_2.12:0.2.0"), Seq())
+      )
+
+      val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+
+      val lines = new String(zipEntryContent(zis, "bootstrap-jar-resources"), UTF_8)
+        .lines
+        .toVector
+
+      val fastparseLines = lines.filter(_.contains("/fastparse_2.12-1.0.0"))
+      val fastparseUtilsLines = lines.filter(_.contains("/fastparse-utils_2.12-1.0.0"))
+
+      assert(fastparseLines.length == 2)
+      assert(fastparseLines.distinct.length == 2)
+      assert(fastparseUtilsLines.length == 2)
+      assert(fastparseUtilsLines.distinct.length == 2)
+  }
 }
