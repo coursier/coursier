@@ -68,7 +68,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       )
       val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
 
-      Bootstrap.run(
+      Bootstrap.bootstrap(
         bootstrapOptions,
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
@@ -121,7 +121,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       )
       val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
 
-      Bootstrap.run(
+      Bootstrap.bootstrap(
         bootstrapOptions,
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
@@ -159,7 +159,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       )
       val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
 
-      Bootstrap.run(
+      Bootstrap.bootstrap(
         bootstrapOptions,
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
@@ -203,7 +203,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           deterministic = true
         )
         val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
-        Bootstrap.run(
+        Bootstrap.bootstrap(
           bootstrapOptions,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
         )
@@ -215,7 +215,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           output = bootstrapFile2.getPath
         )
         val bootstrapOptions2 = BootstrapOptions(artifactOptions, bootstrapSpecificOptions2)
-        Bootstrap.run(
+        Bootstrap.bootstrap(
           bootstrapOptions2,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
         )
