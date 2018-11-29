@@ -239,6 +239,23 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       }
     }
 
+  private def startWithRetry(b: => ProcessBuilder) = {
+
+    // circumventing https://bugs.openjdk.java.net/browse/JDK-8068370, like
+    // https://github.com/os72/protoc-jar/commit/b0d2881d0168b496569ac02b4461592fd08e8da9
+
+    def helper(numRetry: Int): Process =
+      try b.start()
+      catch {
+        case e: IOException if numRetry > 0 =>
+          System.err.println(s"Caught $e, retrying")
+          Thread.sleep(1000L)
+          helper(numRetry - 1)
+      }
+
+    helper(4)
+  }
+
   def echoTest(standalone: Boolean = false): Unit =
     withFile() { (bootstrapFile, _) =>
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
@@ -252,11 +269,12 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         RemainingArgs(Seq("io.get-coursier:echo:1.0.1"), Seq())
       )
 
-      val p = new ProcessBuilder(bootstrapFile.getAbsolutePath, "-n", "foo")
-        .redirectInput(Redirect.PIPE)
-        .redirectOutput(Redirect.PIPE)
-        .redirectError(Redirect.INHERIT)
-        .start()
+      val p = startWithRetry {
+        new ProcessBuilder(bootstrapFile.getAbsolutePath, "-n", "foo")
+          .redirectInput(Redirect.PIPE)
+          .redirectOutput(Redirect.PIPE)
+          .redirectError(Redirect.INHERIT)
+      }
       p.getOutputStream.close()
       var is: InputStream = null
       val b = try {
