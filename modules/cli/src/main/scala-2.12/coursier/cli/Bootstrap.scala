@@ -15,6 +15,7 @@ import coursier.cli.util.{Assembly, LauncherBat, Zip}
 import coursier.internal.FileUtil
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
@@ -235,6 +236,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     putStringEntry("bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
 
+    val fileNames = uniqueNames(files)
+
     if (options.options.isolated.anyIsolatedDep) {
       putStringEntry("bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
 
@@ -242,16 +245,14 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         val urls = isolatedUrls.getOrElse(target, Nil)
         val files = isolatedFiles.getOrElse(target, Nil)
         putStringEntry(s"bootstrap-isolation-$target-jar-urls", urls.mkString("\n"))
-        putStringEntry(s"bootstrap-isolation-$target-jar-resources", files.map(pathFor).mkString("\n"))
+        putStringEntry(s"bootstrap-isolation-$target-jar-resources", fileNames.mkString("\n"))
       }
     }
 
-    def pathFor(f: File) = s"jars/${f.getName}"
+    for ((file, name) <- files.zip(fileNames))
+      putEntryFromFile(name, file)
 
-    for (f <- files)
-      putEntryFromFile(pathFor(f), f)
-
-    putStringEntry("bootstrap-jar-resources", files.map(pathFor).mkString("\n"))
+    putStringEntry("bootstrap-jar-resources", fileNames.mkString("\n"))
     putStringEntry("bootstrap.properties", s"bootstrap.mainClass=$mainClass")
 
     outputZip.closeEntry()
@@ -264,6 +265,35 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       buffer.toByteArray,
       options.options.preamble
     )
+  }
+
+  private def uniqueNames(files: Seq[File]): Seq[String] = {
+
+    val files0 = files.map(_.getName).toSet
+    val finalNames = new mutable.HashSet[String]
+
+    def pathFor(f: File) = {
+
+      val name = f.getName
+      val uniqueName =
+        if (finalNames(name)) {
+          val extIdx = name.lastIndexOf('.')
+          def nameFor(idx: Int): String =
+            if (extIdx < 0)
+              s"$name-$idx"
+            else
+              s"${name.take(extIdx)}-$idx.${name.drop(extIdx + 1)}"
+          Stream.from(1)
+            .map(nameFor)
+            .filter(n => !finalNames(n) && !files0(n))
+            .head
+        } else
+          name
+
+      finalNames += uniqueName
+      s"jars/$uniqueName"
+    }
+    files.map(pathFor)
   }
 
   private def defaultRules = Seq(
