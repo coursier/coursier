@@ -1,6 +1,7 @@
 package coursier.cli
 
 import java.io._
+import java.lang.ProcessBuilder.Redirect
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
@@ -8,9 +9,11 @@ import java.util.zip.ZipInputStream
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
 import coursier.cli.options.shared.RepositoryOptions
+import coursier.internal.FileUtil
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
+
 import scala.collection.JavaConverters._
 
 /**
@@ -235,4 +238,35 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         assert(bootstrap1SHA256 == bootstrap2SHA256)
       }
     }
+
+  it should "generate an echo command" in {
+    withFile() { (bootstrapFile, _) =>
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        force = true
+      )
+      val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
+      Bootstrap.bootstrap(
+        bootstrapOptions,
+        RemainingArgs(Seq("io.get-coursier:echo:1.0.1"), Seq())
+      )
+
+      val p = new ProcessBuilder(bootstrapFile.getAbsolutePath, "-n", "foo")
+        .redirectInput(Redirect.PIPE)
+        .redirectOutput(Redirect.PIPE)
+        .redirectError(Redirect.INHERIT)
+        .start()
+      p.getOutputStream.close()
+      var is: InputStream = null
+      val b = try {
+        is = p.getInputStream
+        FileUtil.readFully(is)
+      } finally {
+        if (is != null)
+          is.close()
+      }
+      val output = new String(b)
+      assert(output == "foo")
+    }
+  }
 }

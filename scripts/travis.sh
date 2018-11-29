@@ -48,14 +48,6 @@ testBootstrap() {
   if [ "$SCALA_VERSION" = 2.12 ]; then
     sbt scalaFromEnv "project cli" pack
 
-    modules/cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.1
-    local OUT="$(./cs-echo foo)"
-    if [ "$OUT" != foo ]; then
-      echo "Error: unexpected output from bootstrapped echo command." 1>&2
-      exit 1
-    fi
-
-
     if echo "$OSTYPE" | grep -q darwin; then
       GREP="ggrep"
     else
