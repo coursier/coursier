@@ -270,10 +270,14 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   private def uniqueNames(files: Seq[File]): Seq[String] = {
     val fileIndex = mutable.Map.empty[String, Int]
     def pathFor(f: File) = {
-      val ambiguousName = f.getName
-      val index = fileIndex.getOrElseUpdate(ambiguousName, 0)
-      fileIndex(ambiguousName) = index + 1
-      val uniqueName = ambiguousName.stripSuffix(".jar") + s"-$index.jar"
+      val name = f.getName
+      val index = fileIndex.getOrElse(name, 0)
+      fileIndex(name) = index + 1
+      val uniqueName =
+        if (index == 0)
+          name
+        else
+          name.stripSuffix(".jar") + s"-$index.jar"
       s"jars/$uniqueName"
     }
     files.map(pathFor)
