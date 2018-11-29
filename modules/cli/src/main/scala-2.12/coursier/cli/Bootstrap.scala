@@ -268,16 +268,29 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
   }
 
   private def uniqueNames(files: Seq[File]): Seq[String] = {
-    val fileIndex = mutable.Map.empty[String, Int]
+
+    val files0 = files.map(_.getName).toSet
+    val finalNames = new mutable.HashSet[String]
+
     def pathFor(f: File) = {
+
       val name = f.getName
-      val index = fileIndex.getOrElse(name, 0)
-      fileIndex(name) = index + 1
       val uniqueName =
-        if (index == 0)
+        if (finalNames(name)) {
+          val extIdx = name.lastIndexOf('.')
+          def nameFor(idx: Int): String =
+            if (extIdx < 0)
+              s"$name-$idx"
+            else
+              s"${name.take(extIdx)}-$idx.${name.drop(extIdx + 1)}"
+          Stream.from(1)
+            .map(nameFor)
+            .filter(n => !finalNames(n) && !files0(n))
+            .head
+        } else
           name
-        else
-          name.stripSuffix(".jar") + s"-$index.jar"
+
+      finalNames += uniqueName
       s"jars/$uniqueName"
     }
     files.map(pathFor)
