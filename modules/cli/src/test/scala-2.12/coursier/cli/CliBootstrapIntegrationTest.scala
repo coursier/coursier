@@ -239,11 +239,12 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       }
     }
 
-  it should "generate an echo command" in {
+  def echoTest(standalone: Boolean = false): Unit =
     withFile() { (bootstrapFile, _) =>
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
-        force = true
+        force = true,
+        standalone = standalone
       )
       val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
       Bootstrap.bootstrap(
@@ -268,5 +269,12 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       val output = new String(b)
       assert(output == "foo")
     }
+
+  it should "generate an echo command" in {
+    echoTest()
+  }
+
+  it should "generate a standalone echo command" in {
+    echoTest(standalone = true)
   }
 }
