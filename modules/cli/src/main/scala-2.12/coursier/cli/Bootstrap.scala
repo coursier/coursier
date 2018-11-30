@@ -1,7 +1,7 @@
 package coursier
 package cli
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException, InputStream}
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
@@ -154,15 +154,23 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     javaOpts: Seq[String],
     urls: Seq[String],
     files: Seq[File],
-    output: File
+    output: File,
+    bootstrapResourcePath: String
   ): Unit = {
 
-    val bootstrapJar =
-      Option(Thread.currentThread().getContextClassLoader.getResourceAsStream("bootstrap.jar")) match {
-        case Some(is) => FileUtil.readFully(is)
-        case None =>
+    val bootstrapJar = {
+      var is: InputStream = null
+      try {
+        is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
+        if (is == null)
           throw new BootstrapException(s"Error: bootstrap JAR not found")
+        else
+          FileUtil.readFully(is)
+      } finally {
+        if (is != null)
+          is.close()
       }
+    }
 
     val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
 
@@ -422,7 +430,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           javaOpts,
           urls,
           files,
-          output0
+          output0,
+          if (options.options.proguarded) "bootstrap.jar" else "bootstrap-orig.jar"
         )
 
       if (generateBat) {

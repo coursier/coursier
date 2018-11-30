@@ -1,4 +1,4 @@
-package coursier;
+package coursier.paths;
 
 import java.io.File;
 import java.io.FileOutputStream;

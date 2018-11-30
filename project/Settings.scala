@@ -1,15 +1,14 @@
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 import sbt._
 import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
-
 import com.lightbend.sbt.SbtProguard
 import com.lightbend.sbt.SbtProguard.autoImport._
 import com.typesafe.sbt.pgp._
 import coursier.ShadingPlugin.autoImport._
-
 import Aliases._
 import ScalaVersion._
 
@@ -117,17 +116,6 @@ object Settings {
 
   lazy val webjarBintrayRepository = {
     resolvers += "Webjars Bintray" at "https://dl.bintray.com/webjars/maven/"
-  }
-
-  def renameMainJar(name: String) = {
-    artifactName := {
-      val artifactName0 = artifactName.value
-      (sv, m, artifact) =>
-        if (artifact.`type` == "jar" && artifact.extension == "jar")
-          name
-        else
-          artifactName0(sv, m, artifact)
-    }
   }
 
   lazy val divertThingsPlugin = {
@@ -289,17 +277,45 @@ object Settings {
     }
   }
 
-  lazy val proguardedJar = Def.task {
+  lazy val proguardedJar = taskKey[File]("")
+
+  lazy val proguardedJarTask = Def.task {
 
     val results = proguardTask.value
 
-    results match {
-      case Seq(f) => f
+    val orig = results match {
+      case Seq(f0) => f0
       case Seq() =>
         throw new Exception("Found no proguarded files. Expected one.")
       case _ =>
         throw new Exception("Found several proguarded files. Don't know how to publish all of them.")
     }
+
+    val destDir = new File(orig.getParentFile, "with-meta-inf")
+    destDir.mkdirs()
+
+    val dest = new File(destDir, orig.getName)
+    Files.deleteIfExists(dest.toPath)
+
+    // TODO Get from original JAR
+    val manifest =
+      s"""Manifest-Version: 1.0
+         |Implementation-Title: ${name.value}
+         |Implementation-Version: ${version.value}
+         |Specification-Vendor: ${organization.value}
+         |Specification-Title: ${name.value}
+         |Implementation-Vendor-Id: ${organization.value}
+         |Specification-Version: ${version.value}
+         |Implementation-URL: ${homepage.value.getOrElse("")}
+         |Implementation-Vendor: ${organization.value}
+         |Main-Class: ${mainClass.in(Compile).value.getOrElse(sys.error("Main class not found"))}
+         |""".stripMargin
+
+    ZipUtil.addToZip(orig, dest, Seq(
+      "META-INF/MANIFEST.MF" -> manifest.getBytes(StandardCharsets.UTF_8)
+    ))
+
+    dest
   }
 
   lazy val Integration = config("it").extend(Test)

@@ -47,6 +47,8 @@ final case class BootstrapSpecificOptions(
     preamble: Boolean = true,
   @Help("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")
     deterministic: Boolean = false,
+  @Help("Use proguarded bootstrap")
+    proguarded: Boolean = true,
   @Recurse
     isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
   @Recurse
