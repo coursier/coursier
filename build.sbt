@@ -132,13 +132,14 @@ lazy val catsJvm = cats.jvm
 lazy val catsJs = cats.js
 
 lazy val bootstrap = project("bootstrap")
+  .enablePlugins(SbtProguard)
   .settings(
     pureJava,
     dontPublish,
     addPathsSources,
     // seems not to be automatically found with sbt 0.13.16-M1 :-/
     mainClass := Some("coursier.Bootstrap"),
-    renameMainJar("bootstrap.jar")
+    proguardedBootstrap
   )
 
 lazy val extra = project("extra")
@@ -181,7 +182,7 @@ lazy val cli = project("cli")
     shared,
     dontPublishIn("2.11"),
     coursierPrefix,
-    unmanagedResources.in(Test) += packageBin.in(bootstrap).in(Compile).value,
+    unmanagedResources.in(Test) += proguardedJar.in(bootstrap).in(Compile).value,
     scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
@@ -337,13 +338,15 @@ lazy val addBootstrapJarAsResource = {
   import java.nio.file.Files
 
   packageBin.in(Compile) := {
-    val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
+    val originalBootstrapJar = packageBin.in(bootstrap).in(Compile).value
+    val bootstrapJar = proguardedJar.in(bootstrap).in(Compile).value
     val source = packageBin.in(Compile).value
 
     val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
 
     ZipUtil.addToZip(source, dest, Seq(
-      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath)
+      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
+      "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath)
     ))
 
     dest
@@ -352,32 +355,18 @@ lazy val addBootstrapJarAsResource = {
 
 lazy val proguardedJarWithBootstrap = Def.task {
 
-  import java.nio.charset.StandardCharsets
   import java.nio.file.Files
 
-  val bootstrapJar = packageBin.in(bootstrap).in(Compile).value
+  val bootstrapJar = proguardedJar.in(bootstrap).in(Compile).value
+  val origBootstrapJar = packageBin.in(bootstrap).in(Compile).value
   val source = proguardedJar.value
 
   val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
   val dest0 = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap-and-prelude.jar")
 
-  // TODO Get from cli original JAR
-  val manifest =
-    s"""Manifest-Version: 1.0
-       |Implementation-Title: ${name.value}
-       |Implementation-Version: ${version.value}
-       |Specification-Vendor: ${organization.value}
-       |Specification-Title: ${name.value}
-       |Implementation-Vendor-Id: ${organization.value}
-       |Specification-Version: ${version.value}
-       |Implementation-URL: ${homepage.value.getOrElse("")}
-       |Implementation-Vendor: ${organization.value}
-       |Main-Class: ${mainClass.in(Compile).value.getOrElse(sys.error("Main class not found"))}
-       |""".stripMargin
-
   ZipUtil.addToZip(source, dest, Seq(
     "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-    "META-INF/MANIFEST.MF" -> manifest.getBytes(StandardCharsets.UTF_8)
+    "bootstrap-orig.jar" -> Files.readAllBytes(origBootstrapJar.toPath)
   ))
 
   ZipUtil.addPrelude(dest, dest0)
@@ -385,7 +374,20 @@ lazy val proguardedJarWithBootstrap = Def.task {
   dest0
 }
 
+lazy val proguardedBootstrap = Seq(
+  proguardedJar := proguardedJarTask.value,
+  proguardVersion.in(Proguard) := SharedVersions.proguard,
+  proguardOptions.in(Proguard) ++= Seq(
+    "-dontwarn",
+    "-keep class coursier.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
+    "-keep class coursier.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+  ),
+  javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
+  artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "bootstrap.jar"
+)
+
 lazy val proguardedCli = Seq(
+  proguardedJar := proguardedJarTask.value,
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
