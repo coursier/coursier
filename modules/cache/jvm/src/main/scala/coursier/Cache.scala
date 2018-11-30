@@ -9,6 +9,7 @@ import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.ivy.IvyRepository
+import coursier.paths.CachePath
 
 import scala.annotation.tailrec
 import java.io.{Serializable => _, _}

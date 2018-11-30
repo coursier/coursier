@@ -379,8 +379,8 @@ lazy val proguardedBootstrap = Seq(
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
-    "-keep class coursier.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
-    "-keep class coursier.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+    "-keep class coursier.bootstrap.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
+    "-keep class coursier.bootstrap.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "bootstrap.jar"

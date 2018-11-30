@@ -1,4 +1,4 @@
-package coursier;
+package coursier.bootstrap;
 
 import java.net.URL;
 import java.net.URLClassLoader;

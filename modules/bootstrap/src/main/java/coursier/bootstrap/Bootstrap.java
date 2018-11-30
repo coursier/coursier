@@ -1,4 +1,4 @@
-package coursier;
+package coursier.bootstrap;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import coursier.paths.CachePath;
 
 public class Bootstrap {
 
