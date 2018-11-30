@@ -37,7 +37,9 @@ runJvmTests() {
     IT="jvm/it:test"
   fi
 
-  ./modules/tests/handmade-metadata/scripts/with-test-repo.sh sbt scalaFromEnv jvm/test $IT
+  ./scripts/with-redirect-server.sh \
+    ./modules/tests/handmade-metadata/scripts/with-test-repo.sh \
+    sbt scalaFromEnv jvm/test $IT
 }
 
 checkBinaryCompatibility() {

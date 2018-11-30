@@ -145,7 +145,15 @@ class Helper(
           None
 
       val fetchs = cachePolicies.map(p =>
-        Cache.fetch[Task](cache, p, checksums = Nil, logger = logger, pool = pool, ttl = ttl0)
+        Cache.fetch[Task](
+          cache,
+          p,
+          checksums = Nil,
+          logger = logger,
+          pool = pool,
+          ttl = ttl0,
+          followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
+        )
       )
 
       logger.foreach(_.init())
@@ -353,7 +361,15 @@ class Helper(
       None
 
   val fetchs = cachePolicies.map(p =>
-    Cache.fetch[Task](cache, p, checksums = checksums, logger = logger, pool = pool, ttl = ttl0)
+    Cache.fetch[Task](
+      cache,
+      p,
+      checksums = checksums,
+      logger = logger,
+      pool = pool,
+      ttl = ttl0,
+      followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
+    )
   )
   val fetchQuiet = coursier.Fetch.from(
     repositories,
@@ -685,7 +701,8 @@ class Helper(
         pool = pool,
         ttl = ttl0,
         retry = common.cacheOptions.retryCount,
-        common.cacheOptions.cacheFileArtifacts
+        localArtifactsShouldBeCached = common.cacheOptions.cacheFileArtifacts,
+        followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       )
 
       (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))

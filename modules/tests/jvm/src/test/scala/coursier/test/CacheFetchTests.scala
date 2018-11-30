@@ -14,7 +14,12 @@ import scala.util.Try
 
 object CacheFetchTests extends TestSuite {
 
-  def check(extraRepo: Repository): Unit = {
+  def check(
+    extraRepo: Repository,
+    followHttpToHttpsRedirections: Boolean = false,
+    deps: Set[Dependency] = Set(Dependency(mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test")),
+    addCentral: Boolean = true
+  ): Unit = {
 
     val tmpDir = Files.createTempDirectory("coursier-cache-fetch-tests").toFile
 
@@ -34,21 +39,20 @@ object CacheFetchTests extends TestSuite {
 
     val fetch = Fetch.from(
       Seq(
-        extraRepo,
-        MavenRepository("https://repo1.maven.org/maven2")
-      ),
+        extraRepo
+      ) ++ {
+        if (addCentral)
+          Seq(MavenRepository("https://repo1.maven.org/maven2"))
+        else
+          Nil
+      },
       Cache.fetch[Task](
-        tmpDir
+        tmpDir,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections
       )
     )
 
-    val startRes = Resolution(
-      Set(
-        Dependency(
-          mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test"
-        )
-      )
-    )
+    val startRes = Resolution(deps)
 
     val f = startRes
       .process

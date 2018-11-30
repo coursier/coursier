@@ -336,8 +336,6 @@ object Cache {
             val len = Some(c.getContentLengthLong)
               .filter(_ >= 0L)
 
-            // TODO 404 Not found could be checked here
-
             success = true
             logger.foreach(_.gettingLengthResult(url, len))
 
@@ -364,7 +362,8 @@ object Cache {
     pool: ExecutorService,
     logger: Option[Logger],
     ttl: Option[Duration],
-    localArtifactsShouldBeCached: Boolean
+    localArtifactsShouldBeCached: Boolean,
+    followHttpToHttpsRedirections: Boolean
   )(implicit S: Schedulable[F]): F[Seq[((File, String), Either[FileError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
@@ -409,8 +408,6 @@ object Cache {
                 try {
                   c.setRequestMethod("HEAD")
                   val remoteLastModified = c.getLastModified
-
-                  // TODO 404 Not found could be checked here
 
                   val res =
                     if (remoteLastModified > 0L)
@@ -575,9 +572,25 @@ object Cache {
                   case _ => false
                 }
 
-                if (responseCode(conn) == Some(404))
+                val respCodeOpt = responseCode(conn)
+
+                if (followHttpToHttpsRedirections && url.startsWith("http://") && respCodeOpt.exists(c => c == 301 || c == 307 || c == 308))
+                  conn match {
+                    case conn0: HttpURLConnection =>
+                      Option(conn0.getHeaderField("Location")) match {
+                        case Some(loc) if loc.startsWith("https://") =>
+                          closeConn(conn)
+                          conn = urlConnection(loc, None) // not keeping authentication here… should we?
+                        case _ =>
+                          // ignored
+                      }
+                    case _ =>
+                      // ignored
+                  }
+
+                if (respCodeOpt.contains(404))
                   Left(FileError.NotFound(url, permanent = Some(true)))
-                else if (responseCode(conn) == Some(401))
+                else if (respCodeOpt.contains(401))
                   Left(FileError.Unauthorized(url, realm = realm(conn)))
                 else {
                   for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
@@ -944,7 +957,8 @@ object Cache {
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl,
     retry: Int = 1,
-    localArtifactsShouldBeCached: Boolean = false
+    localArtifactsShouldBeCached: Boolean = false,
+    followHttpToHttpsRedirections: Boolean = false
   )(implicit S: Schedulable[F]): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
@@ -958,7 +972,8 @@ object Cache {
         pool,
         logger = logger,
         ttl = ttl,
-        localArtifactsShouldBeCached
+        localArtifactsShouldBeCached,
+        followHttpToHttpsRedirections
       )) { results =>
         val checksum = checksums0.find {
           case None => true
@@ -1010,7 +1025,8 @@ object Cache {
                 logger,
                 pool,
                 ttl,
-                retry - 1
+                retry - 1,
+                followHttpToHttpsRedirections = followHttpToHttpsRedirections
               )
           }
         }
@@ -1025,7 +1041,8 @@ object Cache {
     checksums: Seq[Option[String]] = defaultChecksums,
     logger: Option[Logger] = None,
     pool: ExecutorService = defaultPool,
-    ttl: Option[Duration] = defaultTtl
+    ttl: Option[Duration] = defaultTtl,
+    followHttpToHttpsRedirections: Boolean = false
   )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     artifact =>
       file(
@@ -1035,7 +1052,8 @@ object Cache {
         checksums = checksums,
         logger = logger,
         pool = pool,
-        ttl = ttl
+        ttl = ttl,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections
       ).leftMap(_.describe).flatMap { f =>
 
         def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")

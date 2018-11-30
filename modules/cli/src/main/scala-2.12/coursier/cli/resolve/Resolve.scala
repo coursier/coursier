@@ -56,7 +56,15 @@ object Resolve extends CaseApp[ResolveOptions] {
     params
       .cachePolicies
       .map { p =>
-        Cache.fetch[Task](params.cache, p, checksums = Nil, logger = logger, pool = pool, ttl = params.ttl)
+        Cache.fetch[Task](
+          params.cache,
+          p,
+          checksums = Nil,
+          logger = logger,
+          pool = pool,
+          ttl = params.ttl,
+          followHttpToHttpsRedirections = params.followHttpToHttpsRedirections
+        )
       }
 
   private def runResolution(
