@@ -379,6 +379,7 @@ lazy val proguardedBootstrap = Seq(
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
+    "-repackageclasses coursier.bootstrap",
     "-keep class coursier.bootstrap.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
     "-keep class coursier.bootstrap.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
   ),
