@@ -9,7 +9,7 @@ import coursier.core.Classifier
 
 final class Fetch(options: FetchOptions, args: RemainingArgs) {
 
-  val helper = new Helper(options.common, args.all, ignoreErrors = options.artifactOptions.force)
+  val helper = new Helper(options.common, args.all, ignoreErrors = options.artifactOptions.forceFetch)
 
   val default = options.artifactOptions.default0(options.common.classifier0)
 

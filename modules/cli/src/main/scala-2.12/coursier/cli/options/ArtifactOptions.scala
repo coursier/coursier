@@ -22,7 +22,7 @@ final case class ArtifactOptions(
   @Short("A")
     artifactType: List[String] = Nil,
   @Help("Fetch artifacts even if the resolution is errored")
-    force: Boolean = false
+    forceFetch: Boolean = false
 ) {
 
   def default0(classifiers: Set[Classifier]): Boolean =
