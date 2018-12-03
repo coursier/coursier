@@ -46,7 +46,7 @@ object Native {
   }
 
   private def linkingOptions(): Seq[String] = sn.Discover.linkingOptions() ++
-    Properties.envOrNone("LDFLAGS").map(Seq.apply(_)).getOrElse(Seq.empty)
+    sys.env.get("LDFLAGS").toSeq
 
   def deleteRecursive(f: File): Unit = {
     if (f.isDirectory) {
