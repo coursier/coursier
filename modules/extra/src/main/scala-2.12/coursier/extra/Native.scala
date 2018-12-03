@@ -21,7 +21,7 @@ object Native {
     val logger    = sn.Logger(log, log, log, log)
     val clang     = sn.Discover.clang()
     val clangpp   = sn.Discover.clangpp()
-    val linkopts  = sn.Discover.linkingOptions()
+    val linkopts  = linkingOptions()
     val compopts  = sn.Discover.compileOptions()
     val triple    = sn.Discover.targetTriple(clang, workdir)
     val nativelib = sn.Discover.nativelib(classpath).get
@@ -43,6 +43,9 @@ object Native {
 
     sn.Build.build(config, outpath)
   }
+
+  private def linkingOptions(): Seq[String] = sn.Discover.linkingOptions() ++
+    sys.env.get("LDFLAGS").toSeq
 
   def deleteRecursive(f: File): Unit = {
     if (f.isDirectory) {
