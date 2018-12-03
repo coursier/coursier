@@ -3,7 +3,6 @@ package coursier.extra
 import java.io.File
 import java.nio.file.Path
 import scala.scalanative.{build => sn}
-import scala.util.Properties
 
 object Native {
   def create(
