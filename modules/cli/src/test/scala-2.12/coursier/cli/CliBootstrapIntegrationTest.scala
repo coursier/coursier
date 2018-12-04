@@ -136,48 +136,59 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
   }
 
-  "bootstrap" should "add standard and source JARs to the classpath with classloader isolation" in withFile() {
+  def isolationTest(standalone: Boolean = false): Unit =
+    withFile() {
 
-    (bootstrapFile, _) =>
-      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
-      val artifactOptions = ArtifactOptions(
-        sources = true,
-        default = Some(true)
-      )
-      val common = CommonOptions(
-        repositoryOptions = repositoryOpt
-      )
-      val isolatedLoaderOptions = IsolatedLoaderOptions(
-        isolateTarget = List("foo"),
-        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
-      )
-      val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
-        isolated = isolatedLoaderOptions,
-        force = true,
-        common = common
-      )
-      val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+      (bootstrapFile, _) =>
+        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+        val artifactOptions = ArtifactOptions(
+          sources = true,
+          default = Some(true)
+        )
+        val common = CommonOptions(
+          repositoryOptions = repositoryOpt
+        )
+        val isolatedLoaderOptions = IsolatedLoaderOptions(
+          isolateTarget = List("foo"),
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+        )
+        val bootstrapSpecificOptions = BootstrapSpecificOptions(
+          output = bootstrapFile.getPath,
+          isolated = isolatedLoaderOptions,
+          force = true,
+          common = common,
+          standalone = standalone
+        )
+        val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
 
-      Bootstrap.bootstrap(
-        bootstrapOptions,
-        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
-      )
+        Bootstrap.bootstrap(
+          bootstrapOptions,
+          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+        )
 
-      def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+        def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val fooLines = new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8).lines.toVector
-      val lines = new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8).lines.toVector
+        val suffix = if (standalone) "resources" else "urls"
+        val fooLines = new String(zipEntryContent(zis, s"bootstrap-isolation-foo-jar-$suffix"), UTF_8).lines.toVector
+        val lines = new String(zipEntryContent(zis, s"bootstrap-jar-$suffix"), UTF_8).lines.toVector
 
-      assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-      assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
 
-      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
-      assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-      assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+    }
+
+  "bootstrap" should "add standard and source JARs to the classpath with classloader isolation" in {
+    isolationTest()
+  }
+
+  "bootstrap" should "add standard and source JARs to the classpath with classloader isolation in standalone bootstrap" in {
+    isolationTest(standalone = true)
   }
 
   "bootstrap" should "be deterministic when deterministic option is specified" in

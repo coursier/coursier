@@ -242,25 +242,27 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       outputZip.closeEntry()
     }
 
-    putStringEntry("bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
-
     val fileNames = uniqueNames(files)
+
+    val filesInIsolatedLoaders = isolatedFiles.values.flatten.toSet
+
+    putStringEntry("bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
+    putStringEntry("bootstrap-jar-resources", fileNames.filterKeys(!filesInIsolatedLoaders(_)).values.toVector.sorted.mkString("\n"))
 
     if (options.options.isolated.anyIsolatedDep) {
       putStringEntry("bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
 
       for (target <- options.options.isolated.targets) {
         val urls = isolatedUrls.getOrElse(target, Nil)
-        val files = isolatedFiles.getOrElse(target, Nil)
+        val files = isolatedFiles.getOrElse(target, Nil).map(fileNames)
         putStringEntry(s"bootstrap-isolation-$target-jar-urls", urls.mkString("\n"))
-        putStringEntry(s"bootstrap-isolation-$target-jar-resources", fileNames.mkString("\n"))
+        putStringEntry(s"bootstrap-isolation-$target-jar-resources", files.mkString("\n"))
       }
     }
 
-    for ((file, name) <- files.zip(fileNames))
-      putEntryFromFile(name, file)
+    for (file <- files)
+      putEntryFromFile(fileNames(file), file)
 
-    putStringEntry("bootstrap-jar-resources", fileNames.mkString("\n"))
     putStringEntry("bootstrap.properties", s"bootstrap.mainClass=$mainClass")
 
     outputZip.closeEntry()
@@ -275,7 +277,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     )
   }
 
-  private def uniqueNames(files: Seq[File]): Seq[String] = {
+  private def uniqueNames(files: Seq[File]): Map[File, String] = {
 
     val files0 = files.map(_.getName).toSet
     val finalNames = new mutable.HashSet[String]
@@ -299,9 +301,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           name
 
       finalNames += uniqueName
-      s"jars/$uniqueName"
+      f -> s"jars/$uniqueName"
     }
-    files.map(pathFor)
+    files.map(pathFor).toMap
   }
 
   private def defaultRules = Seq(
