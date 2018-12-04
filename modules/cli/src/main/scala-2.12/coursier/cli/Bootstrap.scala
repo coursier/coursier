@@ -1,7 +1,7 @@
 package coursier
 package cli
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException}
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
@@ -160,19 +160,13 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     bootstrapResourcePath: String
   ): Unit = {
 
-    val bootstrapJar = {
-      var is: InputStream = null
-      try {
-        is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
+    val bootstrapJar =
+      FileUtil.readFully {
+        val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
         if (is == null)
           throw new BootstrapException(s"Error: bootstrap JAR not found")
-        else
-          FileUtil.readFully(is)
-      } finally {
-        if (is != null)
-          is.close()
+        is
       }
-    }
 
     val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
 
