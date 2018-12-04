@@ -76,21 +76,17 @@ object Cache {
 
       val resOpt =
         try {
-          val o = new Object
-          val prev = urlLocks.putIfAbsent(url, o)
+          val res0 = CacheLocks.withUrlLock(url) {
+            try f
+            catch {
+              case nfe: FileNotFoundException if nfe.getMessage != null =>
+                Left(FileError.NotFound(nfe.getMessage))
+            }
+          }
 
-          val res =
-            if (prev == null)
-              try f
-              catch {
-                case nfe: FileNotFoundException if nfe.getMessage != null =>
-                  Left(FileError.NotFound(nfe.getMessage))
-              }
-              finally {
-                urlLocks.remove(url)
-              }
-            else
-              Left(FileError.ConcurrentDownload(url))
+          val res = res0.getOrElse {
+            Left(FileError.ConcurrentDownload(url))
+          }
 
           Some(res)
         }
@@ -1039,8 +1035,6 @@ object Cache {
         EitherT(S.point[Either[String, String]](res))
       }
   }
-
-  private val urlLocks = new ConcurrentHashMap[String, Object]
 
   var bufferSize = 1024*1024
 

@@ -2,7 +2,7 @@ package coursier.cache
 
 import java.io.{File, FileOutputStream}
 import java.nio.channels.{FileLock, OverlappingFileLockException}
-import java.util.concurrent.Callable
+import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.FileError
 import coursier.paths.CachePath
@@ -76,5 +76,21 @@ object CacheLocks {
 
   def withLockFor[T](cache: File, file: File)(f: => Either[FileError, T]): Either[FileError, T] =
     withLockOr(cache, file)(f, Some(Left(FileError.Locked(file))))
+
+  private val urlLocks = new ConcurrentHashMap[String, Object]
+  private val urlLockDummyObject = new Object
+
+  def withUrlLock[T](url: String)(f: => T): Option[T] = {
+
+    val prev = urlLocks.putIfAbsent(url, urlLockDummyObject)
+
+    if (prev == null)
+      try Some(f)
+      finally {
+        urlLocks.remove(url)
+      }
+    else
+      None
+  }
 
 }
