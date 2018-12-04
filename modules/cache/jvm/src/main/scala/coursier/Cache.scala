@@ -2,9 +2,8 @@ package coursier
 
 import java.math.BigInteger
 import java.net.{HttpURLConnection, URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
-import java.nio.channels.{FileLock, OverlappingFileLockException}
 import java.security.MessageDigest
-import java.util.concurrent.{Callable, ConcurrentHashMap, ExecutorService}
+import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
@@ -17,7 +16,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Base64
 
-import coursier.cache.{CacheDefaults, CacheLogger}
+import coursier.cache.{CacheDefaults, CacheLocks, CacheLogger}
 import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.Duration
@@ -62,72 +61,6 @@ object Cache {
 
     helper(alreadyDownloaded)
   }
-
-  /**
-    * Should be acquired when doing operations changing the file structure of the cache (creating
-    * new directories, creating / acquiring locks, ...), so that these don't hinder each other.
-    *
-    * Should hopefully address some transient errors seen on the CI of ensime-server.
-    */
-  private def withStructureLock[T](cache: File)(f: => T): T =
-    CachePath.withStructureLock(cache, new Callable[T] { def call() = f })
-
-  private def withLockOr[T](
-    cache: File,
-    file: File
-  )(
-    f: => Either[FileError, T],
-    ifLocked: => Option[Either[FileError, T]]
-  ): Either[FileError, T] = {
-
-    val lockFile = CachePath.lockFile(file)
-
-    var out: FileOutputStream = null
-
-    withStructureLock(cache) {
-      lockFile.getParentFile.mkdirs()
-      out = new FileOutputStream(lockFile)
-    }
-
-    @tailrec
-    def loop(): Either[FileError, T] = {
-
-      val resOpt = {
-        var lock: FileLock = null
-        try {
-          lock = out.getChannel.tryLock()
-          if (lock == null)
-            ifLocked
-          else
-            try Some(f)
-            finally {
-              lock.release()
-              lock = null
-              out.close()
-              out = null
-              lockFile.delete()
-            }
-        }
-        catch {
-          case _: OverlappingFileLockException =>
-            ifLocked
-        }
-        finally if (lock != null) lock.release()
-      }
-
-      resOpt match {
-        case Some(res) => res
-        case None =>
-          loop()
-      }
-    }
-
-    try loop()
-    finally if (out != null) out.close()
-  }
-
-  def withLockFor[T](cache: File, file: File)(f: => Either[FileError, T]): Either[FileError, T] =
-    withLockOr(cache, file)(f, Some(Left(FileError.Locked(file))))
 
 
   private def defaultRetryCount = 3
@@ -601,7 +534,7 @@ object Cache {
 
                   val result =
                     try {
-                      val out = withStructureLock(cache) {
+                      val out = CacheLocks.withStructureLock(cache) {
                         tmp.getParentFile.mkdirs()
                         new FileOutputStream(tmp, partialDownload)
                       }
@@ -609,7 +542,7 @@ object Cache {
                       finally out.close()
                     } finally in.close()
 
-                  withStructureLock(cache) {
+                  CacheLocks.withStructureLock(cache) {
                     file.getParentFile.mkdirs()
                     Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
@@ -671,7 +604,7 @@ object Cache {
           var res: Either[FileError, Unit] = null
 
           try {
-            res = withLockOr(cache, file)(
+            res = CacheLocks.withLockOr(cache, file)(
               doDownload(),
               checkDownload()
             )

@@ -8,6 +8,7 @@ import java.security.MessageDigest
 import java.util.jar.JarFile
 
 import coursier.Cache
+import coursier.cache.CacheLocks
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
 import coursier.cli.util.Assembly
@@ -153,7 +154,7 @@ object SparkAssembly {
     if (dest.exists())
       success
     else
-      Cache.withLockFor(helper.cache, dest) {
+      CacheLocks.withLockFor(helper.cache, dest) {
         dest.getParentFile.mkdirs()
         val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
         // FIXME Acquire lock on tmpDest
