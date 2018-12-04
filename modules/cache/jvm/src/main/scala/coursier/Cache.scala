@@ -4,7 +4,6 @@ import java.math.BigInteger
 import java.net.{HttpURLConnection, URLConnection}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
-import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.paths.CachePath
@@ -14,7 +13,7 @@ import java.io.{Serializable => _, _}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 
-import coursier.cache.{CacheDefaults, CacheLocks, CacheLogger, CacheUrl}
+import coursier.cache._
 import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.Duration
@@ -620,46 +619,6 @@ object Cache {
     S.gather(tasks)
   }
 
-  def parseChecksum(content: String): Option[BigInteger] = {
-    val lines = Predef.augmentString(content)
-      .lines
-      .toVector
-
-    parseChecksumLine(lines) orElse parseChecksumAlternative(lines)
-  }
-
-  def parseRawChecksum(content: Array[Byte]): Option[BigInteger] =
-    if (content.length == 16 || content.length == 20)
-      Some(new BigInteger(content))
-    else {
-      val s = new String(content, UTF_8)
-      val lines = Predef.augmentString(s)
-        .lines
-        .toVector
-
-      parseChecksumLine(lines) orElse parseChecksumAlternative(lines)
-    }
-
-  // matches md5 or sha1 or sha-256
-  private val checksumPattern = Pattern.compile("^[0-9a-f]{32}([0-9a-f]{8})?([0-9a-f]{24})?")
-
-  private def findChecksum(elems: Seq[String]): Option[BigInteger] =
-    elems.collectFirst {
-      case rawSum if checksumPattern.matcher(rawSum).matches() =>
-        new BigInteger(rawSum, 16)
-    }
-
-  private def parseChecksumLine(lines: Seq[String]): Option[BigInteger] =
-    findChecksum(lines.map(_.toLowerCase.replaceAll("\\s", "")))
-
-  private def parseChecksumAlternative(lines: Seq[String]): Option[BigInteger] =
-    findChecksum(lines.flatMap(_.toLowerCase.split("\\s+"))) orElse {
-      findChecksum(lines.map(_.toLowerCase
-        .split("\\s+")
-        .filter(_.matches("[0-9a-f]+"))
-        .mkString))
-    }
-
   def validateChecksum[F[_]](
     artifact: Artifact,
     sumType: String,
@@ -676,7 +635,7 @@ object Cache {
           val sumFile = localFile(sumUrl, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
 
           S.schedule(pool) {
-            val sumOpt = parseRawChecksum(Files.readAllBytes(sumFile.toPath))
+            val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
 
             sumOpt match {
               case None =>
