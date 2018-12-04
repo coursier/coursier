@@ -2,7 +2,7 @@ package coursier
 
 import java.net.MalformedURLException
 
-import coursier.cache.LocalRepositories
+import coursier.cache.{CacheUrl, LocalRepositories}
 import coursier.core.Authentication
 import coursier.ivy.IvyRepository
 import coursier.util.{Parse, ValidationNel}
@@ -32,7 +32,7 @@ object CacheParse {
       }
 
       val validatedUrl = try {
-        url.right.map(Cache.url)
+        url.right.map(CacheUrl.url)
       } catch {
         case e: MalformedURLException =>
           Left("Error parsing URL " + url + Option(e.getMessage).fold("")(" (" + _ + ")"))

@@ -1,9 +1,9 @@
 package coursier
 
 import java.math.BigInteger
-import java.net.{HttpURLConnection, URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
+import java.net.{HttpURLConnection, URLConnection}
 import java.security.MessageDigest
-import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
+import java.util.concurrent.ExecutorService
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
@@ -13,26 +13,14 @@ import scala.annotation.tailrec
 import java.io.{Serializable => _, _}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
-import java.util.Base64
 
-import coursier.cache.{CacheDefaults, CacheLocks, CacheLogger}
+import coursier.cache.{CacheDefaults, CacheLocks, CacheLogger, CacheUrl}
 import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.Duration
-import scala.util.Try
 import scala.util.control.NonFatal
 
 object Cache {
-
-  private[coursier] def closeConn(conn: URLConnection): Unit = {
-    Try(conn.getInputStream).toOption.filter(_ != null).foreach(_.close())
-    conn match {
-      case conn0: HttpURLConnection =>
-        Try(conn0.getErrorStream).toOption.filter(_ != null).foreach(_.close())
-        conn0.disconnect()
-      case _ =>
-    }
-  }
 
   def localFile(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
@@ -115,124 +103,6 @@ object Cache {
   private val partialContentResponseCode = 206
   private val invalidPartialContentResponseCode = 416
 
-  private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
-
-  private def handlerFor(url: String): Option[URLStreamHandler] = {
-    val protocol = url.takeWhile(_ != ':')
-
-    Option(handlerClsCache.get(protocol)) match {
-      case None =>
-        val clsName = s"coursier.cache.protocol.${protocol.capitalize}Handler"
-        def clsOpt(loader: ClassLoader): Option[Class[_]] =
-          try Some(Class.forName(clsName, false, loader))
-          catch {
-            case _: ClassNotFoundException =>
-              None
-          }
-
-        val clsOpt0: Option[Class[_]] = clsOpt(Thread.currentThread().getContextClassLoader)
-          .orElse(clsOpt(getClass.getClassLoader))
-
-        def printError(e: Exception): Unit =
-          scala.Console.err.println(
-            s"Cannot instantiate $clsName: $e${Option(e.getMessage).fold("")(" ("+_+")")}"
-          )
-
-        val handlerFactoryOpt = clsOpt0.flatMap {
-          cls =>
-            try Some(cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory])
-            catch {
-              case e: InstantiationException =>
-                printError(e)
-                None
-              case e: IllegalAccessException =>
-                printError(e)
-                None
-              case e: ClassCastException =>
-                printError(e)
-                None
-            }
-        }
-
-        val handlerOpt = handlerFactoryOpt.flatMap {
-          factory =>
-            try Some(factory.createURLStreamHandler(protocol))
-            catch {
-              case NonFatal(e) =>
-                scala.Console.err.println(
-                  s"Cannot get handler for $protocol from $clsName: $e${Option(e.getMessage).fold("")(" ("+_+")")}"
-                )
-                None
-            }
-        }
-
-        val prevOpt = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
-        prevOpt.getOrElse(handlerOpt)
-
-      case Some(handlerOpt) =>
-        handlerOpt
-    }
-  }
-
-  private val BasicRealm = (
-    "^" +
-      Pattern.quote("Basic realm=\"") +
-      "([^" + Pattern.quote("\"") + "]*)" +
-      Pattern.quote("\"") +
-    "$"
-  ).r
-
-  private def basicAuthenticationEncode(user: String, password: String): String =
-    Base64.getEncoder.encodeToString(
-      s"$user:$password".getBytes(UTF_8)
-    )
-
-  /**
-    * Returns a `java.net.URL` for `s`, possibly using the custom protocol handlers found under the
-    * `coursier.cache.protocol` namespace.
-    *
-    * E.g. URL `"test://abc.com/foo"`, having protocol `"test"`, can be handled by a
-    * `URLStreamHandler` named `coursier.cache.protocol.TestHandler` (protocol name gets
-    * capitalized, and suffixed with `Handler` to get the class name).
-    *
-    * @param s
-    * @return
-    */
-  def url(s: String): URL =
-    new URL(null, s, handlerFor(s).orNull)
-
-  def urlConnection(url0: String, authentication: Option[Authentication]) = {
-    var conn: URLConnection = null
-
-    try {
-      conn = url(url0).openConnection() // FIXME Should this be closed?
-      // Dummy user-agent instead of the default "Java/...",
-      // so that we are not returned incomplete/erroneous metadata
-      // (Maven 2 compatibility? - happens for snapshot versioning metadata)
-      conn.setRequestProperty("User-Agent", "")
-
-      for (auth <- authentication)
-        conn match {
-          case authenticated: AuthenticatedURLConnection =>
-            authenticated.authenticate(auth)
-          case conn0: HttpURLConnection =>
-            conn0.setRequestProperty(
-              "Authorization",
-              "Basic " + basicAuthenticationEncode(auth.user, auth.password)
-            )
-          case _ =>
-          // FIXME Authentication is ignored
-        }
-
-      conn
-    } catch {
-      case NonFatal(e) =>
-        if (conn != null)
-          closeConn(conn)
-        throw e
-    }
-  }
-
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
@@ -242,7 +112,7 @@ object Cache {
     var conn: URLConnection = null
 
     try {
-      conn = urlConnection(url, authentication)
+      conn = CacheUrl.urlConnection(url, authentication)
 
       conn match {
         case c: HttpURLConnection =>
@@ -268,7 +138,7 @@ object Cache {
       }
     } finally {
       if (conn != null)
-        closeConn(conn)
+        CacheUrl.closeConn(conn)
     }
   }
 
@@ -317,7 +187,7 @@ object Cache {
           var conn: URLConnection = null
 
           try {
-            conn = urlConnection(url, artifact.authentication)
+            conn = CacheUrl.urlConnection(url, artifact.authentication)
 
             conn match {
               case c: HttpURLConnection =>
@@ -348,7 +218,7 @@ object Cache {
             }
           } finally {
             if (conn != null)
-              closeConn(conn)
+              CacheUrl.closeConn(conn)
           }
         }
       }
@@ -434,24 +304,6 @@ object Cache {
       }
     }
 
-    def responseCode(conn: URLConnection): Option[Int] =
-      conn match {
-        case conn0: HttpURLConnection =>
-          Some(conn0.getResponseCode)
-        case _ =>
-          None
-      }
-
-    def realm(conn: URLConnection): Option[String] =
-      conn match {
-        case conn0: HttpURLConnection =>
-          Option(conn0.getHeaderField("WWW-Authenticate")).collect {
-            case BasicRealm(realm) => realm
-          }
-        case _ =>
-          None
-      }
-
     def remote(
       file: File,
       url: String
@@ -471,7 +323,7 @@ object Cache {
               var conn: URLConnection = null
 
               try {
-                conn = urlConnection(url, artifact.authentication)
+                conn = CacheUrl.urlConnection(url, artifact.authentication)
 
                 val partialDownload = conn match {
                   case conn0: HttpURLConnection if alreadyDownloaded > 0L =>
@@ -483,23 +335,23 @@ object Cache {
 
                       ackRange.startsWith(s"bytes $alreadyDownloaded-") || {
                         // unrecognized Content-Range header -> start a new connection with no resume
-                        closeConn(conn)
-                        conn = urlConnection(url, artifact.authentication)
+                        CacheUrl.closeConn(conn)
+                        conn = CacheUrl.urlConnection(url, artifact.authentication)
                         false
                       }
                     }
                   case _ => false
                 }
 
-                val respCodeOpt = responseCode(conn)
+                val respCodeOpt = CacheUrl.responseCode(conn)
 
                 if (followHttpToHttpsRedirections && url.startsWith("http://") && respCodeOpt.exists(c => c == 301 || c == 307 || c == 308))
                   conn match {
                     case conn0: HttpURLConnection =>
                       Option(conn0.getHeaderField("Location")) match {
                         case Some(loc) if loc.startsWith("https://") =>
-                          closeConn(conn)
-                          conn = urlConnection(loc, None) // not keeping authentication here… should we?
+                          CacheUrl.closeConn(conn)
+                          conn = CacheUrl.urlConnection(loc, None) // not keeping authentication here… should we?
                         case _ =>
                           // ignored
                       }
@@ -510,7 +362,7 @@ object Cache {
                 if (respCodeOpt.contains(404))
                   Left(FileError.NotFound(url, permanent = Some(true)))
                 else if (respCodeOpt.contains(401))
-                  Left(FileError.Unauthorized(url, realm = realm(conn)))
+                  Left(FileError.Unauthorized(url, realm = CacheUrl.realm(conn)))
                 else {
                   for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
                     val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -543,7 +395,7 @@ object Cache {
                 }
               } finally {
                 if (conn != null)
-                  closeConn(conn)
+                  CacheUrl.closeConn(conn)
               }
             }
 

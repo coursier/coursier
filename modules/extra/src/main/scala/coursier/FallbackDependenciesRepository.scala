@@ -3,6 +3,7 @@ package coursier
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
+import coursier.cache.CacheUrl
 import coursier.core.{Classifier, Type}
 import coursier.util.{EitherT, Monad}
 
@@ -44,7 +45,7 @@ object FallbackDependenciesRepository {
         }
         finally {
           if (conn != null)
-            coursier.Cache.closeConn(conn)
+            CacheUrl.closeConn(conn)
         }
       }
 
@@ -68,7 +69,7 @@ object FallbackDependenciesRepository {
       }
       finally {
         if (conn != null)
-          coursier.Cache.closeConn(conn)
+          CacheUrl.closeConn(conn)
       }
     }
 

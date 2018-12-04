@@ -4,6 +4,7 @@ import java.net.HttpURLConnection
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
+import coursier.cache.CacheUrl
 import coursier.core.Artifact
 import coursier.util.{EitherT, Gather, Task}
 import coursier.{Fetch, Module}
@@ -29,7 +30,7 @@ object Scaladex {
           coursier.internal.FileUtil.readFullyUnsafe(conn.getInputStream)
         } finally {
           if (conn != null)
-            coursier.Cache.closeConn(conn)
+            CacheUrl.closeConn(conn)
         }
 
         Right(new String(b, StandardCharsets.UTF_8))
