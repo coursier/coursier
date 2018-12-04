@@ -63,20 +63,11 @@ object Cache {
   }
 
 
-  private def defaultRetryCount = 3
-
-  private lazy val retryCount =
-    sys.props
-      .get("coursier.sslexception-retry")
-      .flatMap(s => scala.util.Try(s.toInt).toOption)
-      .filter(_ >= 0)
-      .getOrElse(defaultRetryCount)
-
   private def downloading[T](
     url: String,
     file: File,
     logger: Option[CacheLogger],
-    retry: Int = retryCount
+    sslRetry: Int
   )(
     f: => Either[FileError, T]
   ): Either[FileError, T] = {
@@ -123,7 +114,7 @@ object Cache {
       }
     }
 
-    helper(retry)
+    helper(sslRetry)
   }
 
   private val partialContentResponseCode = 206
@@ -295,7 +286,8 @@ object Cache {
     logger: Option[CacheLogger],
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
-    followHttpToHttpsRedirections: Boolean
+    followHttpToHttpsRedirections: Boolean,
+    sslRetryCount: Int
   )(implicit S: Schedulable[F]): F[Seq[((File, String), Either[FileError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
@@ -477,7 +469,7 @@ object Cache {
           var lenOpt = Option.empty[Option[Long]]
 
           def doDownload(): Either[FileError, Unit] =
-            downloading(url, file, logger) {
+            downloading(url, file, logger, sslRetryCount) {
 
               val alreadyDownloaded = tmp.length()
 
@@ -890,7 +882,8 @@ object Cache {
     ttl: Option[Duration] = CacheDefaults.ttl,
     retry: Int = 1,
     localArtifactsShouldBeCached: Boolean = false,
-    followHttpToHttpsRedirections: Boolean = false
+    followHttpToHttpsRedirections: Boolean = false,
+    sslRetry: Int = CacheDefaults.sslRetryCount
   )(implicit S: Schedulable[F]): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
@@ -905,7 +898,8 @@ object Cache {
         logger = logger,
         ttl = ttl,
         localArtifactsShouldBeCached,
-        followHttpToHttpsRedirections
+        followHttpToHttpsRedirections,
+        sslRetry
       )) { results =>
         val checksum = checksums0.find {
           case None => true
@@ -958,7 +952,8 @@ object Cache {
                 pool,
                 ttl,
                 retry - 1,
-                followHttpToHttpsRedirections = followHttpToHttpsRedirections
+                followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+                sslRetry = sslRetry
               )
           }
         }
@@ -974,7 +969,8 @@ object Cache {
     logger: Option[CacheLogger] = None,
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
-    followHttpToHttpsRedirections: Boolean = false
+    followHttpToHttpsRedirections: Boolean = false,
+    sslRetry: Int = CacheDefaults.sslRetryCount
   )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     artifact =>
       file(
@@ -985,7 +981,8 @@ object Cache {
         logger = logger,
         pool = pool,
         ttl = ttl,
-        followHttpToHttpsRedirections = followHttpToHttpsRedirections
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        sslRetry = sslRetry
       ).leftMap(_.describe).flatMap { f =>
 
         def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")

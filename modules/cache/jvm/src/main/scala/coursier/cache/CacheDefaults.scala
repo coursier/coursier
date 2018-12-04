@@ -32,4 +32,13 @@ object CacheDefaults {
   // Check SHA-1 if available, else be fine with no checksum
   val checksums = Seq(Some("SHA-1"), None)
 
+  private def defaultSslRetryCount = 3
+
+  lazy val sslRetryCount =
+    sys.props
+      .get("coursier.sslexception-retry")
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ >= 0)
+      .getOrElse(defaultSslRetryCount)
+
 }
