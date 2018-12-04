@@ -4,7 +4,7 @@ import java.math.BigInteger
 import java.net.{HttpURLConnection, URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
 import java.nio.channels.{FileLock, OverlappingFileLockException}
 import java.security.MessageDigest
-import java.util.concurrent.{Callable, ConcurrentHashMap, ExecutorService, Executors}
+import java.util.concurrent.{Callable, ConcurrentHashMap, ExecutorService}
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
@@ -1202,7 +1202,7 @@ object Cache {
 
   var bufferSize = 1024*1024
 
-  def withContent(is: InputStream, f: (Array[Byte], Int) => Unit): Unit = {
+  private def withContent(is: InputStream, f: (Array[Byte], Int) => Unit): Unit = {
     val data = Array.ofDim[Byte](16384)
 
     var nRead = is.read(data, 0, data.length)
