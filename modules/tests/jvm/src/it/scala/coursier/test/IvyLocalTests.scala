@@ -1,7 +1,8 @@
 package coursier.test
 
+import coursier.cache.LocalRepositories
 import coursier.core.{Classifier, Type}
-import coursier.{Cache, Dependency, Module, moduleNameString, moduleString, organizationString}
+import coursier.{Dependency, moduleString}
 import coursier.test.compatibility._
 
 import scala.async.Async.{async, await}
@@ -16,7 +17,7 @@ object IvyLocalTests extends TestSuite {
       val module = mod"io.get-coursier:coursier-core_2.11"
       val version = coursier.util.Properties.version
 
-      val extraRepos = Seq(Cache.ivy2Local)
+      val extraRepos = Seq(LocalRepositories.ivy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
       'resolution - runner.resolutionCheck(

@@ -21,7 +21,7 @@ import coursier.{ Cache => _, _ }
 
 ```scala mdoc:passthrough
 object Cache {
-  val ivy2LocalIsIvy = coursier.Cache.ivy2Local match {
+  val ivy2LocalIsIvy = coursier.cache.LocalRepositories.ivy2Local match {
     case _: coursier.ivy.IvyRepository => true
     case _ => false
   }

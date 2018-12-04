@@ -5,7 +5,7 @@ import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 import java.util.jar.{Manifest => JManifest}
 
-import coursier.cache.CacheDefaults
+import coursier.cache.{CacheDefaults, LocalRepositories}
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
@@ -95,7 +95,7 @@ class Helper(
   val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(
-    Cache.ivy2Local,
+    LocalRepositories.ivy2Local,
     MavenRepository("https://repo1.maven.org/maven2")
   )
 
