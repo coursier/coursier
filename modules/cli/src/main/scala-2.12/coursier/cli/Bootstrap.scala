@@ -19,6 +19,8 @@ import scala.collection.mutable
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
+  def resourceDir: String = "coursier/bootstrap/"
+
   private def createNativeBootstrap(
     options: BootstrapOptions,
     helper: Helper,
@@ -246,24 +248,24 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val filesInIsolatedLoaders = isolatedFiles.values.flatten.toSet
 
-    putStringEntry("bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
-    putStringEntry("bootstrap-jar-resources", fileNames.filterKeys(!filesInIsolatedLoaders(_)).values.toVector.sorted.mkString("\n"))
+    putStringEntry(resourceDir + "bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
+    putStringEntry(resourceDir + "bootstrap-jar-resources", fileNames.filterKeys(!filesInIsolatedLoaders(_)).values.toVector.sorted.mkString("\n"))
 
     if (options.options.isolated.anyIsolatedDep) {
-      putStringEntry("bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
+      putStringEntry(resourceDir + "bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
 
       for (target <- options.options.isolated.targets) {
         val urls = isolatedUrls.getOrElse(target, Nil)
         val files = isolatedFiles.getOrElse(target, Nil).map(fileNames)
-        putStringEntry(s"bootstrap-isolation-$target-jar-urls", urls.mkString("\n"))
-        putStringEntry(s"bootstrap-isolation-$target-jar-resources", files.mkString("\n"))
+        putStringEntry(resourceDir + s"bootstrap-isolation-$target-jar-urls", urls.mkString("\n"))
+        putStringEntry(resourceDir + s"bootstrap-isolation-$target-jar-resources", files.mkString("\n"))
       }
     }
 
     for (file <- files)
       putEntryFromFile(fileNames(file), file)
 
-    putStringEntry("bootstrap.properties", s"bootstrap.mainClass=$mainClass")
+    putStringEntry(resourceDir + "bootstrap.properties", s"bootstrap.mainClass=$mainClass")
 
     outputZip.closeEntry()
 
@@ -301,7 +303,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           name
 
       finalNames += uniqueName
-      f -> s"jars/$uniqueName"
+      f -> s"${resourceDir}jars/$uniqueName"
     }
     files.map(pathFor).toMap
   }
