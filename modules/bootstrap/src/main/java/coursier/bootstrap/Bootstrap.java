@@ -37,9 +37,11 @@ public class Bootstrap {
         return buffer.toByteArray();
     }
 
-    final static String defaultURLResource = "bootstrap-jar-urls";
-    final static String defaultJarResource = "bootstrap-jar-resources";
-    final static String isolationIDsResource = "bootstrap-isolation-ids";
+    final static String resourceDir = "coursier/bootstrap/";
+
+    final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
+    final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";
+    final static String isolationIDsResource = resourceDir + "bootstrap-isolation-ids";
 
     static String[] readStringSequence(String resource) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -66,8 +68,8 @@ public class Bootstrap {
         final Map<String, URL[]> perContextURLs = new LinkedHashMap<String, URL[]>();
 
         for (String isolationID: isolationIDs) {
-            String[] strUrls = readStringSequence("bootstrap-isolation-" + isolationID + "-jar-urls");
-            String[] resources = readStringSequence("bootstrap-isolation-" + isolationID + "-jar-resources");
+            String[] strUrls = readStringSequence(resourceDir + "bootstrap-isolation-" + isolationID + "-jar-urls");
+            String[] resources = readStringSequence(resourceDir + "bootstrap-isolation-" + isolationID + "-jar-resources");
             List<URL> urls = getURLs(strUrls, resources, bootstrapProtocol, loader);
             List<URL> localURLs = getLocalURLs(urls, cacheDir, bootstrapProtocol);
 
@@ -374,7 +376,7 @@ public class Bootstrap {
     public static void main(String[] args) throws Throwable {
 
         setMainProperties(mainJarPath(), args);
-        setExtraProperties("bootstrap.properties");
+        setExtraProperties(resourceDir + "bootstrap.properties");
 
         String mainClass0 = System.getProperty("bootstrap.mainClass");
 

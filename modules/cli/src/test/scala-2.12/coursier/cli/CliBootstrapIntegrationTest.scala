@@ -6,6 +6,7 @@ import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
+import coursier.cli.Bootstrap.resourceDir
 import coursier.cli.options._
 import coursier.cli.options.shared.RepositoryOptions
 import org.junit.runner.RunWith
@@ -28,6 +29,17 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     else
       zipEntryContent(zis, path)
   }
+
+  private def zipEntryNames(zis: ZipInputStream): Iterator[String] =
+    new Iterator[String] {
+      var e = zis.getNextEntry
+      def hasNext: Boolean = e != null
+      def next(): String = {
+        val e0 = e
+        e = zis.getNextEntry
+        e0.getName
+      }
+    }
 
   private def actualContent(file: File) = {
 
@@ -75,8 +87,8 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, "bootstrap-isolation-foo-jar-urls"), UTF_8)).lines.toVector
-      val lines = Predef.augmentString(new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8)).lines.toVector
+      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-isolation-foo-jar-urls"), UTF_8)).lines.toVector
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
 
       assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
       assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
@@ -128,7 +140,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val lines = new String(zipEntryContent(zis, "bootstrap-jar-urls"), UTF_8)
+      val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)
         .lines
         .toVector
 
@@ -169,8 +181,8 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
         val suffix = if (standalone) "resources" else "urls"
-        val fooLines = new String(zipEntryContent(zis, s"bootstrap-isolation-foo-jar-$suffix"), UTF_8).lines.toVector
-        val lines = new String(zipEntryContent(zis, s"bootstrap-jar-$suffix"), UTF_8).lines.toVector
+        val fooLines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-isolation-foo-jar-$suffix"), UTF_8).lines.toVector
+        val lines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8).lines.toVector
 
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
@@ -269,7 +281,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val lines = new String(zipEntryContent(zis, "bootstrap-jar-resources"), UTF_8)
+      val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8)
         .lines
         .toVector
 
@@ -280,5 +292,39 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       assert(fastparseLines.distinct.length == 2)
       assert(fastparseUtilsLines.length == 2)
       assert(fastparseUtilsLines.distinct.length == 2)
+  }
+
+  it should "put everything under the coursier/bootstrap directory in bootstrap" in withFile() {
+    (bootstrapFile, _) =>
+
+      val isolationOptions = IsolatedLoaderOptions(
+        isolateTarget = List("launcher"),
+        isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        force = true,
+        standalone = true,
+        property = List("jline.shutdownhook=false"),
+        isolated = isolationOptions
+      )
+      val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
+
+      Bootstrap.bootstrap(
+        bootstrapOptions,
+        RemainingArgs(
+          Seq(
+            "io.get-coursier:sbt-launcher_2.12:1.1.0-M3",
+            "io.get-coursier:coursier-okhttp_2.12:1.1.0-M9"
+          ),
+          Seq()
+        )
+      )
+
+      val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+      val names = zipEntryNames(zis).toVector
+      assert(names.exists(_.startsWith("META-INF/")))
+      assert(names.exists(_.startsWith("coursier/bootstrap/")))
+      assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/")))
   }
 }
