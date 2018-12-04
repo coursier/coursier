@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Base64
 
+import coursier.cache.CacheLogger
 import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -44,7 +45,7 @@ object Cache {
   private def readFullyTo(
     in: InputStream,
     out: OutputStream,
-    logger: Option[Logger],
+    logger: Option[CacheLogger],
     url: String,
     alreadyDownloaded: Long
   ): Unit = {
@@ -144,7 +145,7 @@ object Cache {
   private def downloading[T](
     url: String,
     file: File,
-    logger: Option[Logger],
+    logger: Option[CacheLogger],
     retry: Int = retryCount
   )(
     f: => Either[FileError, T]
@@ -319,7 +320,7 @@ object Cache {
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
-    logger: Option[Logger]
+    logger: Option[CacheLogger]
   ): Either[FileError, Option[Long]] = {
 
     var conn: URLConnection = null
@@ -361,7 +362,7 @@ object Cache {
     checksums: Set[String],
     cachePolicy: CachePolicy,
     pool: ExecutorService,
-    logger: Option[Logger],
+    logger: Option[CacheLogger],
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean
@@ -392,7 +393,7 @@ object Cache {
     def urlLastModified(
       url: String,
       currentLastModifiedOpt: Option[Long], // for the logger
-      logger: Option[Logger]
+      logger: Option[CacheLogger]
     ): EitherT[F, FileError, Option[Long]] =
       EitherT {
         S.schedule(pool) {
@@ -954,7 +955,7 @@ object Cache {
     cache: File = default,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
     checksums: Seq[Option[String]] = defaultChecksums,
-    logger: Option[Logger] = None,
+    logger: Option[CacheLogger] = None,
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl,
     retry: Int = 1,
@@ -1040,7 +1041,7 @@ object Cache {
     cache: File = default,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
     checksums: Seq[Option[String]] = defaultChecksums,
-    logger: Option[Logger] = None,
+    logger: Option[CacheLogger] = None,
     pool: ExecutorService = defaultPool,
     ttl: Option[Duration] = defaultTtl,
     followHttpToHttpsRedirections: Boolean = false
@@ -1167,38 +1168,6 @@ object Cache {
   }
 
   private val urlLocks = new ConcurrentHashMap[String, Object]
-
-  trait Logger {
-    def foundLocally(url: String, f: File): Unit = {}
-
-    def downloadingArtifact(url: String, file: File): Unit = {}
-
-    def downloadProgress(url: String, downloaded: Long): Unit = {}
-
-    def downloadedArtifact(url: String, success: Boolean): Unit = {}
-    def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit = {}
-    def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit = {}
-
-    def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {}
-
-    def gettingLength(url: String): Unit = {}
-    def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
-
-    def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
-
-    /***
-     *
-     * @param beforeOutput: called before any output is printed, iff something else is outputted.
-     *                      (That is, if that `Logger` doesn't print any progress,
-     *                      `initialMessage` won't be printed either.)
-     */
-    def init(beforeOutput: => Unit): Unit = {}
-    /**
-      *
-      * @return whether any message was printed by `Logger`
-      */
-    def stopDidPrintSomething(): Boolean = false
-  }
 
   var bufferSize = 1024*1024
 
