@@ -17,10 +17,10 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Base64
 
-import coursier.cache.CacheLogger
+import coursier.cache.{CacheDefaults, CacheLogger}
 import coursier.util.{EitherT, Schedulable}
 
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -35,9 +35,6 @@ object Cache {
       case _ =>
     }
   }
-
-  // Check SHA-1 if available, else be fine with no checksum
-  val defaultChecksums = Seq(Some("SHA-1"), None)
 
   def localFile(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
@@ -952,12 +949,12 @@ object Cache {
     */
   def file[F[_]](
     artifact: Artifact,
-    cache: File = default,
+    cache: File = CacheDefaults.location,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
-    checksums: Seq[Option[String]] = defaultChecksums,
+    checksums: Seq[Option[String]] = CacheDefaults.checksums,
     logger: Option[CacheLogger] = None,
-    pool: ExecutorService = defaultPool,
-    ttl: Option[Duration] = defaultTtl,
+    pool: ExecutorService = CacheDefaults.pool,
+    ttl: Option[Duration] = CacheDefaults.ttl,
     retry: Int = 1,
     localArtifactsShouldBeCached: Boolean = false,
     followHttpToHttpsRedirections: Boolean = false
@@ -1038,12 +1035,12 @@ object Cache {
   }
 
   def fetch[F[_]](
-    cache: File = default,
+    cache: File = CacheDefaults.location,
     cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
-    checksums: Seq[Option[String]] = defaultChecksums,
+    checksums: Seq[Option[String]] = CacheDefaults.checksums,
     logger: Option[CacheLogger] = None,
-    pool: ExecutorService = defaultPool,
-    ttl: Option[Duration] = defaultTtl,
+    pool: ExecutorService = CacheDefaults.pool,
+    ttl: Option[Duration] = CacheDefaults.ttl,
     followHttpToHttpsRedirections: Boolean = false
   )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     artifact =>
@@ -1147,25 +1144,6 @@ object Cache {
   ).right.getOrElse(
     throw new Exception("Cannot happen")
   )
-
-  lazy val default: File = CachePath.defaultCacheDirectory()
-
-  val defaultConcurrentDownloadCount = 6
-
-  lazy val defaultPool = Schedulable.fixedThreadPool(defaultConcurrentDownloadCount)
-
-  lazy val defaultTtl: Option[Duration] = {
-    def fromString(s: String) =
-      Try(Duration(s)).toOption
-
-    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(fromString)
-    def fromProps = sys.props.get("coursier.ttl").flatMap(fromString)
-    def default = 24.hours
-
-    fromEnv
-      .orElse(fromProps)
-      .orElse(Some(default))
-  }
 
   private val urlLocks = new ConcurrentHashMap[String, Object]
 

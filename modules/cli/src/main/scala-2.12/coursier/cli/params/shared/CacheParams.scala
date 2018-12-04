@@ -4,7 +4,8 @@ import java.io.File
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.{Cache, CacheParse, CachePolicy}
+import coursier.cache.CacheDefaults
+import coursier.{CacheParse, CachePolicy}
 import coursier.cli.options.shared.CacheOptions
 
 import scala.concurrent.duration.Duration
@@ -40,7 +41,7 @@ object CacheParams {
 
     val ttlV =
       if (options.ttl.isEmpty)
-        Validated.validNel(Cache.defaultTtl)
+        Validated.validNel(CacheDefaults.ttl)
       else
         try Validated.validNel(Some(Duration(options.ttl)))
         catch {
@@ -62,7 +63,7 @@ object CacheParams {
 
       val res =
         if (splitChecksumArgs.isEmpty)
-          Cache.defaultChecksums
+          CacheDefaults.checksums
         else
           splitChecksumArgs.map {
             case none if none.toLowerCase == "none" => None

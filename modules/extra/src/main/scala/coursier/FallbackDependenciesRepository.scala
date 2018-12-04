@@ -18,8 +18,9 @@ object FallbackDependenciesRepository {
 
       def ifFile: Option[Boolean] = {
         if (localArtifactsShouldBeCached && !new File(url.getPath).exists()) {
-          val cachePath = coursier.Cache.default + "/file"  // Use '/file' here because the protocol becomes part of the cache path
-          Some(new File(cachePath, url.getPath).exists())
+          val cachePath = coursier.cache.CacheDefaults.location
+          // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
+          Some(new File(cachePath, s"file/${url.getPath}").exists())
         } else {
           Some(new File(url.getPath).exists()) // FIXME Escaping / de-escaping needed here?
         }
