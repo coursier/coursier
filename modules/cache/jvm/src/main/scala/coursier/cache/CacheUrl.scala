@@ -97,10 +97,15 @@ object CacheUrl {
 
     try {
       conn = url(url0).openConnection() // FIXME Should this be closed?
-      // Dummy user-agent instead of the default "Java/...",
-      // so that we are not returned incomplete/erroneous metadata
-      // (Maven 2 compatibility? - happens for snapshot versioning metadata)
-      conn.setRequestProperty("User-Agent", "")
+
+      conn match {
+        case conn0: HttpURLConnection =>
+          // Dummy user-agent instead of the default "Java/...",
+          // so that we are not returned incomplete/erroneous metadata
+          // (Maven 2 compatibility? - happens for snapshot versioning metadata)
+          conn0.setRequestProperty("User-Agent", "")
+        case _ =>
+      }
 
       for (auth <- authentication)
         conn match {
