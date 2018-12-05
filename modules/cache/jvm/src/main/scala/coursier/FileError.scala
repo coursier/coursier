@@ -16,9 +16,9 @@ sealed abstract class FileError(
 
 object FileError {
 
-  final case class DownloadError(reason: String) extends FileError(
+  final case class DownloadError(reason: String, e: Option[Throwable]) extends FileError(
     "download error",
-    reason
+    reason + e.map("\n" + _.getStackTrace.map("  " + _).mkString("\n")).mkString
   )
 
   final case class NotFound(

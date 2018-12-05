@@ -6,6 +6,7 @@ import java.net.{HttpURLConnection, URLConnection}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 
 import coursier.cache._
@@ -34,7 +35,7 @@ final case class Cache[F[_]](
 
   private implicit val S0 = S
 
-  import Cache.{localFile, readFullyTo, downloading, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import Cache._
 
   private def download(
     artifact: Artifact,
@@ -100,7 +101,7 @@ final case class Cache[F[_]](
                 }
 
               case other =>
-                Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
+                Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
             }
           } finally {
             if (conn != null)
@@ -192,7 +193,8 @@ final case class Cache[F[_]](
 
     def remote(
       file: File,
-      url: String
+      url: String,
+      keepHeaderChecksums: Boolean
     ): EitherT[F, FileError, Unit] =
       EitherT {
         S.schedule(pool) {
@@ -255,6 +257,27 @@ final case class Cache[F[_]](
                     logger.foreach(_.downloadLength(url, len, alreadyDownloaded, watching = false))
                   }
 
+                  val auxiliaryData: Map[String, Array[Byte]] =
+                    if (keepHeaderChecksums)
+                      conn match {
+                        case conn0: HttpURLConnection =>
+                          Cache.checksumHeader.flatMap { c =>
+                            Option(conn0.getHeaderField(s"X-Checksum-$c")) match {
+                              case Some(str) =>
+                                System.err.println(s"Found $c checksum for $url: '$str'")
+                                Some(c.toLowerCase(Locale.ROOT) -> str.getBytes(UTF_8))
+                              case None =>
+                                None
+                            }
+                          }.toMap
+                        case _ =>
+                          Map()
+                      }
+                    else
+                      Map()
+
+                  val lastModifiedOpt = Option(conn.getLastModified).filter(_ > 0L)
+
                   val in = new BufferedInputStream(conn.getInputStream, bufferSize)
 
                   val result =
@@ -267,12 +290,26 @@ final case class Cache[F[_]](
                       finally out.close()
                     } finally in.close()
 
+                  clearAuxiliaryFiles(file)
+
+                  for ((key, data) <- auxiliaryData) {
+                    val dest = auxiliaryFile(file, key)
+                    val tmpDest = CachePath.temporaryFile(dest)
+                    tmpDest.getParentFile.mkdirs()
+                    Files.write(tmpDest.toPath, data)
+                    for (lastModified <- lastModifiedOpt)
+                      tmpDest.setLastModified(lastModified)
+                    dest.getParentFile.mkdirs()
+                    Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
+                  }
+
                   CacheLocks.withStructureLock(cache) {
                     file.getParentFile.mkdirs()
+                    // seems this erases the destination even without StandardCopyOption.REPLACE_EXISTING
                     Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
 
-                  for (lastModified <- Option(conn.getLastModified) if lastModified > 0L)
+                  for (lastModified <- lastModifiedOpt)
                     file.setLastModified(lastModified)
 
                   doTouchCheckFile(file)
@@ -343,7 +380,7 @@ final case class Cache[F[_]](
 
     def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
-    def remoteKeepErrors(file: File, url: String): EitherT[F, FileError, Unit] = {
+    def remoteKeepErrors(file: File, url: String, keepHeaderChecksums: Boolean): EitherT[F, FileError, Unit] = {
 
       val errFile0 = errFile(file)
 
@@ -378,7 +415,7 @@ final case class Cache[F[_]](
 
       def retainError =
         EitherT {
-          S.bind(remote(file, url).run) {
+          S.bind(remote(file, url, keepHeaderChecksums).run) {
             case err @ Left(FileError.NotFound(_, Some(true))) =>
               S.map(createErrFile.run)(_ => err: Either[FileError, Unit])
             case other =>
@@ -429,10 +466,11 @@ final case class Cache[F[_]](
       }
 
     val urls =
-      artifact.url +: {
+      (artifact.url, true) +: {
         checksums
           .toSeq
           .flatMap(artifact.checksumUrls.get)
+          .map((_, false))
       }
 
     val cachePolicy0 = cachePolicy match {
@@ -462,48 +500,78 @@ final case class Cache[F[_]](
         }
     }
 
-    val tasks =
-      for (url <- urls) yield {
-        val file = localFile(url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+    def res(url: String, file: File, keepHeaderChecksums: Boolean) =
+      if (url.startsWith("file:/") && !localArtifactsShouldBeCached) {
+        // for debug purposes, flaky with URL-encoded chars anyway
+        // def filtered(s: String) =
+        //   s.stripPrefix("file:/").stripPrefix("//").stripSuffix("/")
+        // assert(
+        //   filtered(url) == filtered(file.toURI.toString),
+        //   s"URL: ${filtered(url)}, file: ${filtered(file.toURI.toString)}"
+        // )
+        checkFileExists(file, url)
+      } else {
+        def update = shouldDownload(file, url).flatMap {
+          case true =>
+            remoteKeepErrors(file, url, keepHeaderChecksums)
+          case false =>
+            EitherT(S.point[Either[FileError, Unit]](Right(())))
+        }
 
-        def res =
-          if (url.startsWith("file:/") && !localArtifactsShouldBeCached) {
-            // for debug purposes, flaky with URL-encoded chars anyway
-            // def filtered(s: String) =
-            //   s.stripPrefix("file:/").stripPrefix("//").stripSuffix("/")
-            // assert(
-            //   filtered(url) == filtered(file.toURI.toString),
-            //   s"URL: ${filtered(url)}, file: ${filtered(file.toURI.toString)}"
-            // )
+        cachePolicy0 match {
+          case CachePolicy.LocalOnly =>
             checkFileExists(file, url)
-          } else {
-            def update = shouldDownload(file, url).flatMap {
-              case true =>
-                remoteKeepErrors(file, url)
-              case false =>
-                EitherT(S.point[Either[FileError, Unit]](Right(())))
+          case CachePolicy.LocalUpdateChanging | CachePolicy.LocalUpdate =>
+            checkFileExists(file, url, log = false).flatMap { _ =>
+              update
             }
-
-            cachePolicy0 match {
-              case CachePolicy.LocalOnly =>
-                checkFileExists(file, url)
-              case CachePolicy.LocalUpdateChanging | CachePolicy.LocalUpdate =>
-                checkFileExists(file, url, log = false).flatMap { _ =>
-                  update
-                }
-              case CachePolicy.UpdateChanging | CachePolicy.Update =>
-                update
-              case CachePolicy.FetchMissing =>
-                checkFileExists(file, url) orElse remoteKeepErrors(file, url)
-              case CachePolicy.ForceDownload =>
-                remoteKeepErrors(file, url)
-            }
-          }
-
-        S.map(requiredArtifactCheck.flatMap(_ => res).run)((file, url) -> _)
+          case CachePolicy.UpdateChanging | CachePolicy.Update =>
+            update
+          case CachePolicy.FetchMissing =>
+            checkFileExists(file, url) orElse remoteKeepErrors(file, url, keepHeaderChecksums)
+          case CachePolicy.ForceDownload =>
+            remoteKeepErrors(file, url, keepHeaderChecksums)
+        }
       }
 
-    S.gather(tasks)
+    val mainTask = {
+      val file = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+      S.map(requiredArtifactCheck.flatMap(_ => res(artifact.url, file, keepHeaderChecksums = true)).run)((file, artifact.url) -> _)
+    }
+
+    def checksumRes(c: String) =
+      artifact.checksumUrls.get(c).map { url =>
+        val file = localFile(url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+        S.map(requiredArtifactCheck.flatMap(_ => res(url, file, keepHeaderChecksums = false)).run)((file, url) -> _)
+      }
+
+    val l0 = S.bind(mainTask) { r =>
+      val l0 = r match {
+        case ((f, _), Right(())) =>
+          val l = checksums
+            .toSeq
+            .map { c =>
+              val candidate = auxiliaryFile(f, c)
+              S.map(S.delay(candidate.exists())) {
+                case false =>
+                  Nil
+                case true =>
+                  checksumRes(c).toSeq
+              }
+            }
+          S.bind(S.gather(l))(l => S.gather(l.flatten))
+        case _ =>
+          val l = checksums
+            .toSeq
+            .flatMap { c =>
+              checksumRes(c)
+            }
+          S.gather(l)
+      }
+
+      S.map(l0)(r +: _)
+    }
+    l0
   }
 
   def validateChecksum(
@@ -690,6 +758,22 @@ object Cache {
   def localFile(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
 
+  def auxiliaryFilePrefix(file: File): String =
+    s".${file.getName}__"
+
+  def clearAuxiliaryFiles(file: File): Unit = {
+    val prefix = auxiliaryFilePrefix(file)
+    val filter: FilenameFilter = new FilenameFilter {
+      def accept(dir: File, name: String): Boolean =
+        name.startsWith(prefix)
+    }
+    for (f <- file.getParentFile.listFiles(filter))
+      f.delete() // check return type?
+  }
+
+  def auxiliaryFile(file: File, key: String): File =
+    new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key")
+
   private def readFullyTo(
     in: InputStream,
     out: OutputStream,
@@ -751,7 +835,8 @@ object Cache {
           case NonFatal(e) =>
             Some(Left(
               FileError.DownloadError(
-                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url"
+                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+                Some(e)
               )
             ))
         }
@@ -800,7 +885,7 @@ object Cache {
           }
 
         case other =>
-          Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
+          Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
       }
     } finally {
       if (conn != null)
@@ -876,5 +961,8 @@ object Cache {
       localArtifactsShouldBeCached = localArtifactsShouldBeCached,
       S = S
     ).validateChecksum(artifact, sumType)
+
+
+  private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
 }
