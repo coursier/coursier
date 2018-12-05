@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 
 import coursier.cache._
+import coursier.internal.FileUtil
 import coursier.util.{EitherT, Schedulable}
 
 import scala.concurrent.duration.Duration
@@ -29,7 +30,8 @@ object Cache {
     out: OutputStream,
     logger: Option[CacheLogger],
     url: String,
-    alreadyDownloaded: Long
+    alreadyDownloaded: Long,
+    bufferSize: Int
   ): Unit = {
 
     val b = Array.fill[Byte](bufferSize)(0)
@@ -151,7 +153,8 @@ object Cache {
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean,
-    sslRetryCount: Int
+    sslRetryCount: Int,
+    bufferSize: Int
   )(implicit S: Schedulable[F]): F[Seq[((File, String), Either[FileError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
@@ -376,7 +379,7 @@ object Cache {
                         tmp.getParentFile.mkdirs()
                         new FileOutputStream(tmp, partialDownload)
                       }
-                      try readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L)
+                      try readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L, bufferSize)
                       finally out.close()
                     } finally in.close()
 
@@ -645,7 +648,7 @@ object Cache {
                 val md = MessageDigest.getInstance(sumType)
 
                 val is = new FileInputStream(localFile0)
-                try withContent(is, md.update(_, 0, _))
+                try FileUtil.withContent(is, md.update(_, 0, _))
                 finally is.close()
 
                 val digest = md.digest()
@@ -689,7 +692,8 @@ object Cache {
     retry: Int = 1,
     localArtifactsShouldBeCached: Boolean = false,
     followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount
+    sslRetry: Int = CacheDefaults.sslRetryCount,
+    bufferSize: Int = CacheDefaults.bufferSize
   )(implicit S: Schedulable[F]): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
@@ -705,7 +709,8 @@ object Cache {
         ttl = ttl,
         localArtifactsShouldBeCached,
         followHttpToHttpsRedirections,
-        sslRetry
+        sslRetry,
+        bufferSize
       )) { results =>
         val checksum = checksums0.find {
           case None => true
@@ -759,7 +764,8 @@ object Cache {
                 ttl,
                 retry - 1,
                 followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-                sslRetry = sslRetry
+                sslRetry = sslRetry,
+                bufferSize = bufferSize
               )
           }
         }
@@ -776,7 +782,8 @@ object Cache {
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
     followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount
+    sslRetry: Int = CacheDefaults.sslRetryCount,
+    bufferSize: Int = CacheDefaults.bufferSize
   )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     artifact =>
       file(
@@ -788,7 +795,8 @@ object Cache {
         pool = pool,
         ttl = ttl,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-        sslRetry = sslRetry
+        sslRetry = sslRetry,
+        bufferSize = bufferSize
       ).leftMap(_.describe).flatMap { f =>
 
         def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
@@ -845,18 +853,6 @@ object Cache {
 
         EitherT(S.point[Either[String, String]](res))
       }
-  }
-
-  var bufferSize = 1024*1024
-
-  private def withContent(is: InputStream, f: (Array[Byte], Int) => Unit): Unit = {
-    val data = Array.ofDim[Byte](16384)
-
-    var nRead = is.read(data, 0, data.length)
-    while (nRead != -1) {
-      f(data, nRead)
-      nRead = is.read(data, 0, data.length)
-    }
   }
 
 }

@@ -33,4 +33,14 @@ object FileUtil {
     }
   }
 
+  def withContent(is: InputStream, f: (Array[Byte], Int) => Unit, bufferSize: Int = 16384): Unit = {
+    val data = Array.ofDim[Byte](bufferSize)
+
+    var nRead = is.read(data, 0, data.length)
+    while (nRead != -1) {
+      f(data, nRead)
+      nRead = is.read(data, 0, data.length)
+    }
+  }
+
 }

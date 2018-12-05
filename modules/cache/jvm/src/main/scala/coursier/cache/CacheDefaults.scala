@@ -41,4 +41,6 @@ object CacheDefaults {
       .filter(_ >= 0)
       .getOrElse(defaultSslRetryCount)
 
+  val bufferSize = 1024 * 1024
+
 }
