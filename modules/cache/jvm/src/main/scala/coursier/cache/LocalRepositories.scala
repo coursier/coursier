@@ -29,27 +29,14 @@ object LocalRepositories {
     dropInfoAttributes = true
   )
 
-  lazy val ivy2Cache = IvyRepository.parse(
-    ivy2HomeUri + "cache/" +
-      "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]",
-    metadataPatternOpt = Some(
-      ivy2HomeUri + "cache/" +
-        "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]-[revision](-[classifier]).[ext]"
-    ),
-    withChecksums = false,
-    withSignatures = false,
-    dropInfoAttributes = true
-  ).right.getOrElse(
-    throw new Exception("Cannot happen")
-  )
-
+  /**
+    * These repositories aren't guaranteed to always work fine with coursier (they sometimes have only the
+    * metadata of some dependencies, and coursier isn't fine with that - coursier requires
+    * both the metadata and the JARs to be in the same repo)
+    * see https://github.com/coursier/coursier/pull/868#issuecomment-398779799
+    */
   object Dangerous {
-    /**
-      * m2 local isn't guaranteed to always work fine with coursier (it sometimes has only the
-      * metadata of some dependencies, and coursier isn't fine with that - coursier requires
-      * both the metadata and the JARs to be in the same repo)
-      * see https://github.com/coursier/coursier/pull/868#issuecomment-398779799
-      */
+
     lazy val maven2Local = {
 
       // TODO Add a small unit test for that repo…
@@ -64,6 +51,20 @@ object LocalRepositories {
 
       MavenRepository(homeUri + ".m2/repository")
     }
+
+    lazy val ivy2Cache = IvyRepository.parse(
+      ivy2HomeUri + "cache/" +
+        "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]",
+      metadataPatternOpt = Some(
+        ivy2HomeUri + "cache/" +
+          "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]-[revision](-[classifier]).[ext]"
+      ),
+      withChecksums = false,
+      withSignatures = false,
+      dropInfoAttributes = true
+    ).right.getOrElse(
+      throw new Exception("Cannot happen")
+    )
   }
 
 }

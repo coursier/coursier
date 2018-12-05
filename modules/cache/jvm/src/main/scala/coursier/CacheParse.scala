@@ -14,7 +14,7 @@ object CacheParse {
     if (s == "ivy2local" || s == "ivy2Local")
       Right(LocalRepositories.ivy2Local)
     else if (s == "ivy2cache" || s == "ivy2Cache")
-      Right(LocalRepositories.ivy2Cache)
+      Right(LocalRepositories.Dangerous.ivy2Cache)
     else {
       val repo = Parse.repository(s)
 
