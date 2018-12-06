@@ -140,7 +140,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8))
         .lines
         .toVector
 
@@ -181,8 +181,12 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
         val suffix = if (standalone) "resources" else "urls"
-        val fooLines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-isolation-foo-jar-$suffix"), UTF_8).lines.toVector
-        val lines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8).lines.toVector
+        val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-isolation-foo-jar-$suffix"), UTF_8))
+          .lines
+          .toVector
+        val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8))
+          .lines
+          .toVector
 
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
@@ -281,7 +285,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8)
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8))
         .lines
         .toVector
 
