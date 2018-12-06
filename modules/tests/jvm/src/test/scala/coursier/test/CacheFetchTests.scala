@@ -4,6 +4,7 @@ package test
 import java.io.File
 import java.nio.file.Files
 
+import coursier.cache.CacheUrl
 import coursier.cache.protocol.TestprotocolHandler
 import coursier.util.Task
 import utest._
@@ -83,10 +84,10 @@ object CacheFetchTests extends TestSuite {
     'customProtocol - {
       * - {
         // test the Cache.url method
-        val shouldFail = Try(Cache.url("notfoundzzzz://foo/bar"))
+        val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)
 
-        Cache.url("testprotocol://foo/bar")
+        CacheUrl.url("testprotocol://foo/bar")
       }
 
       * - {

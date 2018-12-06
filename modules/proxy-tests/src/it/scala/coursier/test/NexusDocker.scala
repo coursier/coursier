@@ -1,7 +1,5 @@
 package coursier.test
 
-import java.io.InputStream
-
 import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
 import coursier.internal.FileUtil
@@ -69,14 +67,11 @@ object NexusDocker {
       def loop(retry: Int): Unit =
         if (retry > 0) {
           val url = new java.net.URL(base)
-          var is: InputStream = null
           try {
-            is = url.openStream()
-            FileUtil.readFully(is)
+            FileUtil.readFully(url.openStream())
             log("nexus up")
           } catch {
             case e: java.io.IOException =>
-              if (is != null) is.close()
               log(s"Caught $e, retrying in $retryDuration")
               Thread.sleep(retryDuration.toMillis)
               loop(retry - 1)

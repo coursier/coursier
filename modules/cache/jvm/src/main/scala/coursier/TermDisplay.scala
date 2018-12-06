@@ -1,9 +1,11 @@
 package coursier
 
-import java.io.{ File, Writer }
+import java.io.{File, Writer}
 import java.sql.Timestamp
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
+
+import coursier.cache.CacheLogger
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -374,7 +376,7 @@ object TermDisplay {
 class TermDisplay(
   out: Writer,
   val fallbackMode: Boolean = TermDisplay.defaultFallbackMode
-) extends Cache.Logger {
+) extends CacheLogger {
 
   import TermDisplay._
 

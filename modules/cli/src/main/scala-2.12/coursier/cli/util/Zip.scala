@@ -15,7 +15,7 @@ object Zip {
       def hasNext = nextEntry.nonEmpty
       def next() = {
         val ent = nextEntry.get
-        val data = coursier.internal.FileUtil.readFully(zipStream)
+        val data = coursier.internal.FileUtil.readFullyUnsafe(zipStream)
 
         update()
 

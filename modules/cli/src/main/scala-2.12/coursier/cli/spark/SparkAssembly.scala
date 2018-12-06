@@ -8,6 +8,7 @@ import java.security.MessageDigest
 import java.util.jar.JarFile
 
 import coursier.Cache
+import coursier.cache.{CacheChecksum, CacheLocks}
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
 import coursier.cli.util.Assembly
@@ -110,7 +111,7 @@ object SparkAssembly {
           throw new Exception(s"SHA-1 file not found for ${a.url}")
       }
 
-      val sumOpt = Cache.parseRawChecksum(Files.readAllBytes(f.toPath))
+      val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(f.toPath))
 
       sumOpt match {
         case Some(sum) =>
@@ -153,7 +154,7 @@ object SparkAssembly {
     if (dest.exists())
       success
     else
-      Cache.withLockFor(helper.cache, dest) {
+      CacheLocks.withLockFor(helper.cache, dest) {
         dest.getParentFile.mkdirs()
         val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
         // FIXME Acquire lock on tmpDest

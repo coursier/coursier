@@ -1,9 +1,9 @@
 package coursier
 package test
 
-import java.io.File
 import java.math.BigInteger
 
+import coursier.cache.CacheChecksum
 import coursier.util.{Gather, Schedulable, Task}
 import utest._
 
@@ -18,9 +18,9 @@ object ChecksumTests extends TestSuite {
       def sha1ParseTest(clean: String, others: String*): Unit = {
         val expected = Some(new BigInteger(clean, 16))
 
-        assert(Cache.parseChecksum(clean) == expected)
+        assert(CacheChecksum.parseChecksum(clean) == expected)
         for (other <- others)
-          assert(Cache.parseChecksum(other) == expected)
+          assert(CacheChecksum.parseChecksum(other) == expected)
       }
 
       'junk - {
@@ -60,19 +60,19 @@ object ChecksumTests extends TestSuite {
 
       'binarySha1 - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
-        val res = Cache.parseRawChecksum(content)
+        val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
       'binarySha256 - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha256").openStream())
-        val res = Cache.parseRawChecksum(content)
+        val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
       'binaryMd5 - {
         val content = Platform.readFullySync(getClass.getResource("/empty.md5").openStream())
-        val res = Cache.parseRawChecksum(content)
+        val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
     }

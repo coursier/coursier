@@ -3,6 +3,7 @@ package coursier
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
 
+import coursier.cache.CacheUrl
 import coursier.util.{EitherT, Schedulable, Task}
 
 import scala.util.{Failure, Success, Try}
@@ -45,7 +46,7 @@ object Platform {
 
   val artifact: Fetch.Content[Task] = { artifact =>
     EitherT {
-      val conn = Cache.urlConnection(artifact.url, artifact.authentication)
+      val conn = CacheUrl.urlConnection(artifact.url, artifact.authentication)
       readFully[Task](conn.getInputStream)
     }
   }

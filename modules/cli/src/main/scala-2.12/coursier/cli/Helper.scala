@@ -5,6 +5,7 @@ import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 import java.util.jar.{Manifest => JManifest}
 
+import coursier.cache.{CacheDefaults, LocalRepositories}
 import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
@@ -68,7 +69,7 @@ class Helper(
 
   val ttl0 =
     if (common.cacheOptions.ttl.isEmpty)
-      Cache.defaultTtl
+      CacheDefaults.ttl
     else
       try Some(Duration(common.cacheOptions.ttl))
       catch {
@@ -94,7 +95,7 @@ class Helper(
   val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(
-    Cache.ivy2Local,
+    LocalRepositories.ivy2Local,
     MavenRepository("https://repo1.maven.org/maven2")
   )
 
@@ -320,7 +321,7 @@ class Helper(
   val checksums = {
     val splitChecksumArgs = common.cacheOptions.checksum.flatMap(_.split(',')).filter(_.nonEmpty)
     if (splitChecksumArgs.isEmpty)
-      Cache.defaultChecksums
+      CacheDefaults.checksums
     else
       splitChecksumArgs.map {
         case none if none.toLowerCase == "none" => None

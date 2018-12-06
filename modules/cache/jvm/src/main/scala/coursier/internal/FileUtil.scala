@@ -7,7 +7,7 @@ object FileUtil {
   // Won't be necessary anymore with Java 9
   // (https://docs.oracle.com/javase/9/docs/api/java/io/InputStream.html#readAllBytes--,
   // via https://stackoverflow.com/questions/1264709/convert-inputstream-to-byte-array-in-java/37681322#37681322)
-  def readFully(is: InputStream): Array[Byte] = {
+  def readFullyUnsafe(is: InputStream): Array[Byte] = {
     val buffer = new ByteArrayOutputStream
     val data = Array.ofDim[Byte](16384)
 
@@ -20,6 +20,27 @@ object FileUtil {
 
     buffer.flush()
     buffer.toByteArray
+  }
+
+  def readFully(is: => InputStream): Array[Byte] = {
+    var is0: InputStream = null
+    try {
+      is0 = is
+      readFullyUnsafe(is0)
+    } finally {
+      if (is0 != null)
+        is0.close()
+    }
+  }
+
+  def withContent(is: InputStream, f: (Array[Byte], Int) => Unit, bufferSize: Int = 16384): Unit = {
+    val data = Array.ofDim[Byte](bufferSize)
+
+    var nRead = is.read(data, 0, data.length)
+    while (nRead != -1) {
+      f(data, nRead)
+      nRead = is.read(data, 0, data.length)
+    }
   }
 
 }

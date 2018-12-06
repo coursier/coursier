@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cache.CacheLogger
 import coursier.{Cache, Resolution, TermDisplay}
-import coursier.Cache.Logger
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.params.shared.{CacheParams, OutputParams}
@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
 
 object Resolve extends CaseApp[ResolveOptions] {
 
-  private def withLogger[T](params: OutputParams)(f: Option[Logger] => Task[T]): Task[T] = {
+  private def withLogger[T](params: OutputParams)(f: Option[CacheLogger] => Task[T]): Task[T] = {
 
     val loggerFallbackMode =
       !params.progressBars && TermDisplay.defaultFallbackMode
@@ -52,7 +52,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     } yield t
   }
 
-  private def fetchs(params: CacheParams, pool: ExecutorService, logger: Option[Cache.Logger]): Seq[coursier.Fetch.Content[Task]] =
+  private def fetchs(params: CacheParams, pool: ExecutorService, logger: Option[CacheLogger]): Seq[coursier.Fetch.Content[Task]] =
     params
       .cachePolicies
       .map { p =>
@@ -72,7 +72,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     repositories: Seq[Repository],
     startRes: Resolution,
     pool: ExecutorService,
-    logger: Option[Logger]
+    logger: Option[CacheLogger]
   ): Task[Resolution] = {
 
     val fetch0 = {

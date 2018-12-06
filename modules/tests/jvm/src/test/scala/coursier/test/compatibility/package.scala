@@ -4,8 +4,9 @@ import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
+import coursier.cache.CacheUrl
 import coursier.util.{EitherT, Schedulable, Task, TestEscape}
-import coursier.{Cache, Fetch, Platform}
+import coursier.{Fetch, Platform}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,7 +38,7 @@ package object compatibility {
 
     if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
       EitherT(Platform.readFully(
-        Cache.urlConnection(artifact.url, artifact.authentication).getInputStream
+        CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
       ))
     else {
 
@@ -51,7 +52,7 @@ package object compatibility {
         else if (fillChunks) {
           val f = Schedulable[F].delay[Either[String, Unit]] {
             Files.createDirectories(path.getParent)
-            def is() = Cache.urlConnection(artifact.url, artifact.authentication).getInputStream
+            def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
             val b = Platform.readFullySync(is())
             Files.write(path, b)
             Right(())
