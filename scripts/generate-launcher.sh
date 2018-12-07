@@ -10,7 +10,7 @@ OUTPUT="${OUTPUT:-"coursier"}"
 SBTPACK_LAUNCHER="$(dirname "$0")/../modules/cli/target/pack/bin/coursier"
 
 if [ ! -f "$SBTPACK_LAUNCHER" ]; then
-  sbt ++2.12.4 "project cli" pack
+  sbt scala212 "project cli" pack
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
