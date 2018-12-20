@@ -323,7 +323,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
       val names = zipEntryNames(zis).toVector
       assert(names.exists(_.startsWith("META-INF/")))
-      assert(names.exists(_.startsWith("coursier/bootstrap/")))
-      assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/")))
+      assert(names.exists(_.startsWith("coursier/bootstrap/launcher/")))
+      assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/launcher/")))
   }
 }

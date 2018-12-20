@@ -131,7 +131,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
 lazy val catsJvm = cats.jvm
 lazy val catsJs = cats.js
 
-lazy val bootstrap = project("bootstrap")
+lazy val `bootstrap-launcher` = project("bootstrap-launcher")
   .enablePlugins(SbtProguard)
   .settings(
     pureJava,
@@ -182,7 +182,7 @@ lazy val cli = project("cli")
     shared,
     dontPublishIn("2.11"),
     coursierPrefix,
-    unmanagedResources.in(Test) += proguardedJar.in(bootstrap).in(Compile).value,
+    unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
     scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
@@ -276,7 +276,7 @@ lazy val jvm = project("jvm")
     cacheJvm,
     scalazJvm,
     catsJvm,
-    bootstrap,
+    `bootstrap-launcher`,
     extra,
     cli,
     okhttp,
@@ -316,7 +316,7 @@ lazy val coursier = project("coursier")
     paths,
     cacheJvm,
     cacheJs,
-    bootstrap,
+    `bootstrap-launcher`,
     extra,
     cli,
     scalazJvm,
@@ -338,8 +338,8 @@ lazy val addBootstrapJarAsResource = {
   import java.nio.file.Files
 
   packageBin.in(Compile) := {
-    val originalBootstrapJar = packageBin.in(bootstrap).in(Compile).value
-    val bootstrapJar = proguardedJar.in(bootstrap).in(Compile).value
+    val originalBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
+    val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
     val source = packageBin.in(Compile).value
 
     val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
@@ -357,8 +357,8 @@ lazy val proguardedJarWithBootstrap = Def.task {
 
   import java.nio.file.Files
 
-  val bootstrapJar = proguardedJar.in(bootstrap).in(Compile).value
-  val origBootstrapJar = packageBin.in(bootstrap).in(Compile).value
+  val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
+  val origBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
   val source = proguardedJar.value
 
   val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
@@ -379,9 +379,9 @@ lazy val proguardedBootstrap = Seq(
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
-    "-repackageclasses coursier.bootstrap",
-    "-keep class coursier.bootstrap.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
-    "-keep class coursier.bootstrap.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+    "-repackageclasses coursier.bootstrap.launcher",
+    "-keep class coursier.bootstrap.launcher.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
+    "-keep class coursier.bootstrap.launcher.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
   ),
   javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
   artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "bootstrap.jar"

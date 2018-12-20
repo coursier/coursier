@@ -1,4 +1,4 @@
-package coursier.bootstrap;
+package coursier.bootstrap.launcher;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -37,7 +37,7 @@ public class Bootstrap {
         return buffer.toByteArray();
     }
 
-    final static String resourceDir = "coursier/bootstrap/";
+    final static String resourceDir = "coursier/bootstrap/launcher/";
 
     final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
     final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";

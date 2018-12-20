@@ -19,7 +19,7 @@ import scala.collection.mutable
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
-  def resourceDir: String = "coursier/bootstrap/"
+  def resourceDir: String = "coursier/bootstrap/launcher/"
 
   private def createNativeBootstrap(
     options: BootstrapOptions,
