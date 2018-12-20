@@ -151,7 +151,7 @@ object StringInterpolators {
         }
         // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
         // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
-        c.Expr(q"""_root_.coursier.ivy.IvyRepository.parse($str).right.toOption.getOrElse(sys.error("Validated at compile-time"))""")
+        c.Expr(q"""_root_.coursier.ivy.IvyRepository.parse($str).left.map(e => sys.error("Error parsing Ivy repository: " + e)).merge""")
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }
