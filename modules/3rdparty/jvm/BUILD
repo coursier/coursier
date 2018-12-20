@@ -28,7 +28,7 @@ jar_library(
         scala_jar(
             org = "com.lihaoyi",
             name = "fastparse",
-            rev = "1.0.0",
+            rev = "2.1.0",
         ),
     ],
 )

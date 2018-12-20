@@ -2,7 +2,7 @@ package coursier.ivy
 
 import coursier.util.Traverse.TraverseOps
 import coursier.util.ValidationNel
-import fastparse.all._
+import fastparse._, NoWhitespace._
 
 final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
@@ -133,32 +133,38 @@ object PropertiesPattern {
     implicit def fromString(s: String): ChunkOrProperty = Const(s)
   }
 
-  private def parser: Parser[Seq[ChunkOrProperty]] = {
+  private def parser[_: P]: P[Seq[ChunkOrProperty]] = {
 
     val notIn = s"[]{}()$$".toSet
-    val chars = P(CharsWhile(c => !notIn(c)).!)
-    val noHyphenChars = P(CharsWhile(c => !notIn(c) && c != '-').!)
+    def chars = P(CharsWhile(c => !notIn(c)).!)
+    def noHyphenChars = P(CharsWhile(c => !notIn(c) && c != '-').!)
 
-    val constant = P(chars).map(ChunkOrProperty.Const)
+    def constant: P[ChunkOrProperty.Const] =
+      P(chars.!)
+        .map(ChunkOrProperty.Const)
 
-    lazy val property: Parser[ChunkOrProperty.Prop] =
-      P(s"$${" ~ noHyphenChars ~ ("-" ~ chunks).? ~ "}")
+    def property: P[ChunkOrProperty.Prop] =
+      P(s"$${" ~ noHyphenChars.! ~ ("-" ~ chunks).? ~ "}")
         .map { case (name, altOpt) => ChunkOrProperty.Prop(name, altOpt) }
 
-    lazy val variable: Parser[ChunkOrProperty.Var] = P("[" ~ chars ~ "]").map(ChunkOrProperty.Var)
+    def variable: P[ChunkOrProperty.Var] =
+      P("[" ~ chars.! ~ "]")
+        .map(ChunkOrProperty.Var)
 
-    lazy val optional: Parser[ChunkOrProperty.Opt] = P("(" ~ chunks ~ ")")
-      .map(l => ChunkOrProperty.Opt(l: _*))
+    def optional: P[ChunkOrProperty.Opt] =
+      P("(" ~ chunks ~ ")")
+        .map(l => ChunkOrProperty.Opt(l: _*))
 
-    lazy val chunks: Parser[Seq[ChunkOrProperty]] = P((constant | property | variable | optional).rep)
-      .map(_.toVector) // "Vector" is more readable than "ArrayBuffer"
+    def chunks: P[Seq[ChunkOrProperty]] =
+      P((constant | property | variable | optional).rep)
+        .map(_.toVector) // "Vector" is more readable than "ArrayBuffer"
 
     chunks
   }
 
 
   def parse(pattern: String): Either[String, PropertiesPattern] =
-    parser.parse(pattern) match {
+    fastparse.parse(pattern, parser(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
       case Parsed.Success(v, _) =>
