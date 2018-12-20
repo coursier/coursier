@@ -22,8 +22,8 @@ sealed abstract class ResolutionProcess {
         case Done(res) =>
           F.point(res)
         case missing0 @ Missing(missing, _, _) =>
-          F.bind(ResolutionProcess.fetchAll(missing, fetch))(result =>
-            missing0.next(result).run(fetch, maxIterations0)
+          F.bind(ResolutionProcess.fetchAll[F](missing, fetch))(result =>
+            missing0.next0(result).run[F](fetch, maxIterations0)
           )
         case cont @ Continue(_, _) =>
           cont
@@ -43,7 +43,7 @@ sealed abstract class ResolutionProcess {
       case Done(_) =>
         F.point(this)
       case missing0 @ Missing(missing, _, _) =>
-        F.map(ResolutionProcess.fetchAll(missing, fetch))(result => missing0.next(result))
+        F.map(ResolutionProcess.fetchAll(missing, fetch))(result => missing0.next0(result))
       case cont @ Continue(_, _) =>
         if (fastForward)
           cont.nextNoCont.next(fetch, fastForward = fastForward)
@@ -60,7 +60,7 @@ final case class Missing(
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
 
-  def next(results: Fetch.MD): ResolutionProcess = {
+  def next0(results: Fetch.MD): ResolutionProcess = {
 
     val errors = results.collect {
       case (modVer, Left(errs)) =>

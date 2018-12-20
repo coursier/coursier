@@ -60,7 +60,7 @@ object Parse {
         case Right(modVer) => values += modVer
       }
 
-    (errors, values)
+    (errors.toSeq, values.toSeq)
   }
 
   /**

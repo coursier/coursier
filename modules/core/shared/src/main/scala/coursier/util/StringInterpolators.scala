@@ -62,7 +62,7 @@ object StringInterpolators {
     import c.universe._
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-        Parse.module(modString, scala.util.Properties.versionNumberString) match {
+        coursier.util.Parse.module(modString, scala.util.Properties.versionNumberString) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
           case Right(mod) =>
@@ -90,7 +90,7 @@ object StringInterpolators {
     import c.universe._
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-        Parse.moduleVersionConfig(modString, safeDefModuleRequirements, transitive = true, scala.util.Properties.versionNumberString) match {
+        coursier.util.Parse.moduleVersionConfig(modString, safeDefModuleRequirements, transitive = true, scala.util.Properties.versionNumberString) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
           case Right((dep, config)) =>

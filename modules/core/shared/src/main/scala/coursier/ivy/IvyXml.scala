@@ -40,15 +40,15 @@ object IvyXml {
 
   // FIXME "default(compile)" likely not to be always the default
   def mappings(mapping: String): Seq[(Configuration, Configuration)] =
-    mapping.split(';').flatMap { m =>
+    mapping.split(';').toSeq.flatMap { m =>
       val (froms, tos) = m.split("->", 2) match {
         case Array(from) => (from, Configuration.defaultCompile.value)
         case Array(from, to) => (from, to)
       }
 
       for {
-        from <- froms.split(',')
-        to <- tos.split(',')
+        from <- froms.split(',').toSeq
+        to <- tos.split(',').toSeq
       } yield (Configuration(from.trim), Configuration(to.trim))
     }
 

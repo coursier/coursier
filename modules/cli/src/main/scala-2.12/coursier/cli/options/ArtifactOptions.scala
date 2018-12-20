@@ -36,7 +36,7 @@ final case class ArtifactOptions(
   def artifactTypes(classifiers: Set[Classifier]): Set[Type] = {
 
     val types0 = artifactType
-      .flatMap(_.split(','))
+      .flatMap(_.split(',').toSeq)
       .filter(_.nonEmpty)
       .map(Type(_))
       .toSet
