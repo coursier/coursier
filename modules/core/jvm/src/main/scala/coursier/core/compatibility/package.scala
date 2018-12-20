@@ -57,7 +57,7 @@ package object compatibility {
           helper(node.attributes).toVector
         }
         def label = node.label
-        def children = node.child.map(fromNode)
+        def children = node.child.map(fromNode).toSeq
         def isText = node match { case _: scala.xml.Text => true; case _ => false }
         def textContent = node.text
         def isElement = node match { case _: scala.xml.Elem => true; case _ => false }

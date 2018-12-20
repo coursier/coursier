@@ -59,7 +59,7 @@ object CacheParams {
 
       // TODO Validate those more thoroughly
 
-      val splitChecksumArgs = options.checksum.flatMap(_.split(',')).filter(_.nonEmpty)
+      val splitChecksumArgs = options.checksum.flatMap(_.split(',').toSeq).filter(_.nonEmpty)
 
       val res =
         if (splitChecksumArgs.isEmpty)

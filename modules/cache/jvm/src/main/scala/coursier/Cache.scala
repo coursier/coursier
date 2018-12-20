@@ -145,7 +145,7 @@ final case class Cache[F[_]](
     def shouldDownload(file: File, url: String): EitherT[F, FileError, Boolean] = {
 
       def checkNeeded = ttl.fold(S.point(true)) { ttl =>
-        if (ttl.isFinite())
+        if (ttl.isFinite)
           S.bind(lastCheck(file)) {
             case None => S.point(true)
             case Some(ts) =>

@@ -56,7 +56,7 @@ object TreeTests extends TestSuite {
 
   val tests = Tests {
     'basic {
-      val str = Tree[Node](roots)(_.children, _.label)
+      val str = Tree[Node](roots)(_.children.toSeq, _.label)
       assert(str ==
         """├─ p1
           #│  ├─ c1
@@ -67,7 +67,7 @@ object TreeTests extends TestSuite {
     }
 
     'moreNested {
-      val str = Tree[Node](moreNestedRoots)(_.children, _.label)
+      val str = Tree[Node](moreNestedRoots)(_.children.toSeq, _.label)
       assert(str ==
         """├─ p1
           #│  └─ c1
@@ -77,7 +77,7 @@ object TreeTests extends TestSuite {
     }
 
     'cyclic1 {
-      val str: String = Tree[Node](Array(a, e))(_.children, _.label)
+      val str: String = Tree[Node](Array(a, e))(_.children.toSeq, _.label)
       assert(str ==
         """├─ a
           #│  └─ b
@@ -89,7 +89,7 @@ object TreeTests extends TestSuite {
     }
 
     'cyclic2 {
-      val str: String = Tree[Node](Array(a, c))(_.children, _.label)
+      val str: String = Tree[Node](Array(a, c))(_.children.toSeq, _.label)
       assert(str ==
         """├─ a
           #│  └─ b
