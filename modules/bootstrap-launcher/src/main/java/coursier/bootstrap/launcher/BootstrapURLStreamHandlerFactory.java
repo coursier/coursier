@@ -18,12 +18,6 @@ public class BootstrapURLStreamHandlerFactory implements URLStreamHandlerFactory
     private final ClassLoader loader;
     private boolean registered = false;
 
-    public BootstrapURLStreamHandlerFactory(String bootstrapProtocol, String basePath, ClassLoader loader) {
-        this.bootstrapProtocol = bootstrapProtocol;
-        this.basePath = basePath;
-        this.loader = loader;
-    }
-
     public BootstrapURLStreamHandlerFactory(String basePath, ClassLoader loader) {
         Random rng = new Random();
         this.bootstrapProtocol = "bootstrap" + rng.nextLong();

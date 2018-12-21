@@ -12,7 +12,15 @@ object CacheDefaults {
 
   lazy val location: File = CachePath.defaultCacheDirectory()
 
-  val concurrentDownloadCount = 6
+  private def defaultConcurrentDownloadCount = 6
+
+  lazy val concurrentDownloadCount: Int =
+    sys.props
+      .get("coursier.parallel-download-count")
+      .flatMap(s => Try(s.toInt).toOption)
+      .getOrElse(
+        defaultConcurrentDownloadCount
+      )
 
   lazy val pool = Schedulable.fixedThreadPool(concurrentDownloadCount)
 

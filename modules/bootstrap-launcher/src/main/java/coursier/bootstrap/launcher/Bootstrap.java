@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.CodeSource;
@@ -14,16 +15,17 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import coursier.paths.CachePath;
 
 public class Bootstrap {
 
-    static void exit(String message) {
+    private static void exit(String message) {
         System.err.println(message);
         System.exit(255);
     }
 
-    static byte[] readFullySync(InputStream is) throws IOException {
+    private static byte[] readFullySync(InputStream is) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[16384];
 
@@ -37,35 +39,34 @@ public class Bootstrap {
         return buffer.toByteArray();
     }
 
-    final static String resourceDir = "coursier/bootstrap/launcher/";
-    final static String jarDir = resourceDir + "jars/";
+    private final static String resourceDir = "coursier/bootstrap/launcher/";
+    private final static String jarDir = resourceDir + "jars/";
 
-    final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
-    final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";
-    final static String isolationIDsResource = resourceDir + "bootstrap-isolation-ids";
+    private final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
+    private final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";
 
-    static String[] readStringSequence(String resource) throws IOException {
+    private static String[] readStringSequence(String resource) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         InputStream is = loader.getResourceAsStream(resource);
         if (is == null)
             return new String[] {};
         byte[] rawContent = readFullySync(is);
-        String content = new String(rawContent, "UTF-8");
+        String content = new String(rawContent, StandardCharsets.UTF_8);
         if (content.length() == 0)
             return new String[] {};
         return content.split("\n");
     }
 
-    static String readString(String resource) throws IOException {
+    private static String readString(String resource) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         InputStream is = loader.getResourceAsStream(resource);
         if (is == null)
             return null;
         byte[] rawContent = readFullySync(is);
-        return new String(rawContent, "UTF-8");
+        return new String(rawContent, StandardCharsets.UTF_8);
     }
 
-    static ClassLoader readBaseLoaders(File cacheDir, ClassLoader baseLoader, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws IOException {
+    private static ClassLoader readBaseLoaders(File cacheDir, ClassLoader baseLoader, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws IOException {
 
         ClassLoader parentLoader = baseLoader;
         int i = 1;
@@ -85,7 +86,7 @@ public class Bootstrap {
             List<URL> urls = getURLs(strUrls, resources, factory, loader);
             List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
 
-            parentLoader = new IsolatedClassLoader(localURLs.toArray(new URL[localURLs.size()]), parentLoader, names);
+            parentLoader = new IsolatedClassLoader(localURLs.toArray(new URL[0]), parentLoader, names);
 
             i = i + 1;
         }
@@ -93,11 +94,19 @@ public class Bootstrap {
         return parentLoader;
     }
 
-    final static int concurrentDownloadCount = 6;
+    private final static int concurrentDownloadCount;
+
+    static {
+        String prop = System.getProperty("coursier.parallel-download-count");
+        if (prop == null)
+            concurrentDownloadCount = 6;
+        else
+            concurrentDownloadCount = Integer.parseUnsignedInt(prop);
+    }
 
     // http://stackoverflow.com/questions/872272/how-to-reference-another-property-in-java-util-properties/27724276#27724276
-    public static Map<String,String> loadPropertiesMap(InputStream s) throws IOException {
-        final Map<String, String> ordered = new LinkedHashMap<String, String>();
+    private static Map<String,String> loadPropertiesMap(InputStream s) throws IOException {
+        final Map<String, String> ordered = new LinkedHashMap<>();
         //Hack to use properties class to parse but our map for preserved order
         Properties bp = new Properties() {
             @Override
@@ -108,10 +117,9 @@ public class Bootstrap {
         };
         bp.load(s);
 
-
         final Pattern propertyRegex = Pattern.compile(Pattern.quote("${") + "[^" + Pattern.quote("{[()]}") + "]*" + Pattern.quote("}"));
 
-        final Map<String, String> resolved = new LinkedHashMap<String, String>(ordered.size());
+        final Map<String, String> resolved = new LinkedHashMap<>(ordered.size());
 
         for (String k : ordered.keySet()) {
             String value = ordered.get(k);
@@ -134,7 +142,7 @@ public class Bootstrap {
         return resolved;
     }
 
-    static String mainJarPath() {
+    private static String mainJarPath() {
         ProtectionDomain protectionDomain = Bootstrap.class.getProtectionDomain();
         if (protectionDomain != null) {
             CodeSource source = protectionDomain.getCodeSource();
@@ -150,7 +158,7 @@ public class Bootstrap {
     }
 
     // from http://www.java2s.com/Code/Java/File-Input-Output/Readfiletobytearrayandsavebytearraytofile.htm
-    static void writeBytesToFile(File file, byte[] bytes) throws IOException {
+    private static void writeBytesToFile(File file, byte[] bytes) throws IOException {
         BufferedOutputStream bos = null;
 
         try {
@@ -168,14 +176,7 @@ public class Bootstrap {
         }
     }
 
-    /**
-     *
-     * @param urls
-     * @param cacheDir
-     * @return
-     * @throws MalformedURLException
-     */
-    static List<URL> getLocalURLs(List<URL> urls, final File cacheDir, BootstrapURLStreamHandlerFactory factory) throws MalformedURLException {
+    private static List<URL> getLocalURLs(List<URL> urls, final File cacheDir, BootstrapURLStreamHandlerFactory factory) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
             // from scalaz Strategy.DefaultDaemonThreadFactory
@@ -190,10 +191,10 @@ public class Bootstrap {
         ExecutorService pool = Executors.newFixedThreadPool(concurrentDownloadCount, threadFactory);
 
         CompletionService<URL> completionService =
-                new ExecutorCompletionService<URL>(pool);
+                new ExecutorCompletionService<>(pool);
 
-        List<URL> localURLs = new ArrayList<URL>();
-        List<URL> missingURLs = new ArrayList<URL>();
+        List<URL> localURLs = new ArrayList<>();
+        List<URL> missingURLs = new ArrayList<>();
 
         for (URL url : urls) {
 
@@ -214,72 +215,66 @@ public class Bootstrap {
         }
 
         for (final URL url : missingURLs) {
-            completionService.submit(new Callable<URL>() {
-                @Override
-                public URL call() throws Exception {
-                    // fourth argument is false because we don't want to store local files when bootstrapping
-                    final File dest = CachePath.localFile(url.toString(), cacheDir, null, false);
+            completionService.submit(() -> {
+                // fourth argument is false because we don't want to store local files when bootstrapping
+                final File dest = CachePath.localFile(url.toString(), cacheDir, null, false);
 
-                    if (!dest.exists()) {
-                        FileOutputStream out = null;
-                        FileLock lock = null;
+                if (!dest.exists()) {
+                    FileOutputStream out = null;
+                    FileLock lock = null;
 
-                        final File tmpDest = CachePath.temporaryFile(dest);
-                        final File lockFile = CachePath.lockFile(tmpDest);
+                    final File tmpDest = CachePath.temporaryFile(dest);
+                    final File lockFile = CachePath.lockFile(tmpDest);
+
+                    try {
+
+                        out = CachePath.withStructureLock(cacheDir, () -> {
+                            tmpDest.getParentFile().mkdirs();
+                            lockFile.getParentFile().mkdirs();
+                            dest.getParentFile().mkdirs();
+
+                            return new FileOutputStream(lockFile);
+                        });
 
                         try {
-
-                            out = CachePath.withStructureLock(cacheDir, new Callable<FileOutputStream>() {
-                                @Override
-                                public FileOutputStream call() throws FileNotFoundException {
-                                    tmpDest.getParentFile().mkdirs();
-                                    lockFile.getParentFile().mkdirs();
-                                    dest.getParentFile().mkdirs();
-
-                                    return new FileOutputStream(lockFile);
-                                }
-                            });
-
-                            try {
-                                lock = out.getChannel().tryLock();
-                                if (lock == null)
-                                    throw new RuntimeException("Ongoing concurrent download for " + url);
-                                else
-                                    try {
-                                        URLConnection conn = url.openConnection();
-                                        long lastModified = conn.getLastModified();
-                                        InputStream s = conn.getInputStream();
-                                        byte[] b = readFullySync(s);
-                                        tmpDest.deleteOnExit();
-                                        writeBytesToFile(tmpDest, b);
-                                        tmpDest.setLastModified(lastModified);
-                                        Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-                                    }
-                                    finally {
-                                        lock.release();
-                                        lock = null;
-                                        out.close();
-                                        out = null;
-                                        lockFile.delete();
-                                    }
-                            }
-                            catch (OverlappingFileLockException e) {
+                            lock = out.getChannel().tryLock();
+                            if (lock == null)
                                 throw new RuntimeException("Ongoing concurrent download for " + url);
-                            }
-                            finally {
-                                if (lock != null) lock.release();
-                            }
-                        } catch (Exception e) {
-                            System.err.println("Error while downloading " + url + ": " + e.getMessage() + ", ignoring it");
-                            throw e;
+                            else
+                                try {
+                                    URLConnection conn = url.openConnection();
+                                    long lastModified = conn.getLastModified();
+                                    InputStream s = conn.getInputStream();
+                                    byte[] b = readFullySync(s);
+                                    tmpDest.deleteOnExit();
+                                    writeBytesToFile(tmpDest, b);
+                                    tmpDest.setLastModified(lastModified);
+                                    Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                                }
+                                finally {
+                                    lock.release();
+                                    lock = null;
+                                    out.close();
+                                    out = null;
+                                    lockFile.delete();
+                                }
+                        }
+                        catch (OverlappingFileLockException e) {
+                            throw new RuntimeException("Ongoing concurrent download for " + url);
                         }
                         finally {
-                            if (out != null) out.close();
+                            if (lock != null) lock.release();
                         }
+                    } catch (Exception e) {
+                        System.err.println("Error while downloading " + url + ": " + e.getMessage() + ", ignoring it");
+                        throw e;
                     }
-
-                    return dest.toURI().toURL();
+                    finally {
+                        if (out != null) out.close();
+                    }
                 }
+
+                return dest.toURI().toURL();
             });
         }
 
@@ -310,7 +305,7 @@ public class Bootstrap {
         return localURLs;
     }
 
-    static void setMainProperties(String mainJarPath, String[] args) {
+    private static void setMainProperties(String mainJarPath, String[] args) {
         System.setProperty("coursier.mainJar", mainJarPath);
 
         for (int i = 0; i < args.length; i++) {
@@ -318,19 +313,20 @@ public class Bootstrap {
         }
     }
 
-    static void setExtraProperties(String resource) throws IOException {
+    private static void setExtraProperties() throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
+        String resource = resourceDir + "bootstrap.properties";
         Map<String,String> properties = loadPropertiesMap(loader.getResourceAsStream(resource));
         for (Map.Entry<String, String> ent : properties.entrySet()) {
             System.setProperty(ent.getKey(), ent.getValue());
         }
     }
 
-    static List<URL> getURLs(String[] rawURLs, String[] resources, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws MalformedURLException {
+    private static List<URL> getURLs(String[] rawURLs, String[] resources, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws MalformedURLException {
 
-        List<String> errors = new ArrayList<String>();
-        List<URL> urls = new ArrayList<URL>();
+        List<String> errors = new ArrayList<>();
+        List<URL> urls = new ArrayList<>();
 
         for (String urlStr : rawURLs) {
             try {
@@ -368,7 +364,7 @@ public class Bootstrap {
     public static void main(String[] args) throws Throwable {
 
         setMainProperties(mainJarPath(), args);
-        setExtraProperties(resourceDir + "bootstrap.properties");
+        setExtraProperties();
 
         String mainClass0 = System.getProperty("bootstrap.mainClass");
 
@@ -383,13 +379,11 @@ public class Bootstrap {
         List<URL> urls = getURLs(strUrls, resources, factory, contextLoader);
         List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
 
-        String[] isolationIDs = readStringSequence(isolationIDsResource);
-
         Thread thread = Thread.currentThread();
         ClassLoader parentClassLoader = thread.getContextClassLoader();
         parentClassLoader = readBaseLoaders(cacheDir, parentClassLoader, factory, contextLoader);
 
-        ClassLoader classLoader = new URLClassLoader(localURLs.toArray(new URL[localURLs.size()]), parentClassLoader);
+        ClassLoader classLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
 
         Class<?> mainClass = null;
         Method mainMethod = null;
@@ -401,21 +395,16 @@ public class Bootstrap {
         }
 
         try {
-            Class params[] = { String[].class };
+            Class[] params = { String[].class };
             mainMethod = mainClass.getMethod("main", params);
         }
         catch (NoSuchMethodException ex) {
             exit("Error: main method not found in class " + mainClass0);
         }
 
-        List<String> userArgs0 = new ArrayList<String>();
-
-        for (int i = 0; i < args.length; i++)
-            userArgs0.add(args[i]);
-
         thread.setContextClassLoader(classLoader);
         try {
-            Object mainArgs[] = { userArgs0.toArray(new String[userArgs0.size()]) };
+            Object[] mainArgs = { args };
             mainMethod.invoke(null, mainArgs);
         }
         catch (IllegalAccessException ex) {
