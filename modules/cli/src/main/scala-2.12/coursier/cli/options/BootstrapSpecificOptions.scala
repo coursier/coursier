@@ -1,6 +1,7 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.bootstrap.{Assembly, LauncherBat}
 
 final case class BootstrapSpecificOptions(
   @Short("M")
@@ -53,7 +54,28 @@ final case class BootstrapSpecificOptions(
     isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
   @Recurse
     common: CommonOptions = CommonOptions()
-)
+) {
+
+  val rules = {
+
+    val parsedRules = rule.map { s =>
+      s.split(":", 2) match {
+        case Array("append", v) => Assembly.Rule.Append(v)
+        case Array("append-pattern", v) => Assembly.Rule.AppendPattern(v)
+        case Array("exclude", v) => Assembly.Rule.Exclude(v)
+        case Array("exclude-pattern", v) => Assembly.Rule.ExcludePattern(v)
+        case _ =>
+          sys.error(s"Malformed assembly rule: $s")
+      }
+    }
+
+    (if (defaultRules) Assembly.defaultRules else Nil) ++ parsedRules
+  }
+
+  def generateBat: Boolean =
+    bat.getOrElse(LauncherBat.isWindows)
+
+}
 
 object BootstrapSpecificOptions {
   implicit val parser = Parser[BootstrapSpecificOptions]

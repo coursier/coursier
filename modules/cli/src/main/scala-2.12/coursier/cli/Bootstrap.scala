@@ -1,25 +1,14 @@
 package coursier
 package cli
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream, FileOutputStream, IOException}
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets.UTF_8
+import java.io.File
 import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermission
-import java.util.jar.{JarFile, Attributes => JarAttributes}
-import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
 
 import caseapp._
+import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.cli.options.BootstrapOptions
-import coursier.cli.util.{Assembly, LauncherBat, Zip}
-import coursier.internal.FileUtil
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
-
-  def resourceDir: String = "coursier/bootstrap/launcher/"
 
   private def createNativeBootstrap(
     options: BootstrapOptions,
@@ -55,298 +44,6 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       if (!options.options.keepTarget)
         coursier.extra.Native.deleteRecursive(tmpDir)
     }
-  }
-
-  private def createJarBootstrap(javaOpts: Seq[String], output: File, content: Array[Byte], withPreamble: Boolean): Unit =
-    if (withPreamble)
-      createJarBootstrapWithPreamble(javaOpts, output, content)
-    else
-      createSimpleJarBootstrap(output, content)
-
-  private def createSimpleJarBootstrap(output: File, content: Array[Byte]): Unit =
-    try Files.write(output.toPath, content)
-    catch {
-      case e: IOException =>
-        throw new BootstrapException(
-          s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}",
-          e
-        )
-    }
-
-  private def createJarBootstrapWithPreamble(javaOpts: Seq[String], output: File, content: Array[Byte]): Unit = {
-
-    val argsPartitioner =
-      """|nargs=$#
-         |
-         |i=1; while [ "$i" -le $nargs ]; do
-         |         eval arg=\${$i}
-         |         case $arg in
-         |             -J-*) set -- "$@" "${arg#-J}" ;;
-         |         esac
-         |         i=$((i + 1))
-         |     done
-         |
-         |set -- "$@" -jar "$0"
-         |
-         |i=1; while [ "$i" -le $nargs ]; do
-         |         eval arg=\${$i}
-         |         case $arg in
-         |             -J-*) ;;
-         |             *) set -- "$@" "$arg" ;;
-         |         esac
-         |         i=$((i + 1))
-         |     done
-         |
-         |shift "$nargs"
-         |""".stripMargin
-
-    val javaCmd = Seq("java") ++
-      javaOpts
-        // escaping possibly a bit loose :-|
-        .map(s => "'" + s.replace("'", "\\'") + "'") ++
-      Seq("\"$@\"")
-
-    val shellPreamble = Seq(
-      "#!/usr/bin/env sh",
-      argsPartitioner,
-      "exec " + javaCmd.mkString(" ")
-    ).mkString("", "\n", "\n")
-
-    try Files.write(output.toPath, shellPreamble.getBytes(UTF_8) ++ content)
-    catch {
-      case e: IOException =>
-        throw new BootstrapException(
-          s"Error while writing $output${Option(e.getMessage).fold("")(" (" + _ + ")")}",
-          e
-        )
-    }
-
-    try {
-      val perms = Files.getPosixFilePermissions(output.toPath).asScala.toSet
-
-      var newPerms = perms
-      if (perms(PosixFilePermission.OWNER_READ))
-        newPerms += PosixFilePermission.OWNER_EXECUTE
-      if (perms(PosixFilePermission.GROUP_READ))
-        newPerms += PosixFilePermission.GROUP_EXECUTE
-      if (perms(PosixFilePermission.OTHERS_READ))
-        newPerms += PosixFilePermission.OTHERS_EXECUTE
-
-      if (newPerms != perms)
-        Files.setPosixFilePermissions(
-          output.toPath,
-          newPerms.asJava
-        )
-    } catch {
-      case _: UnsupportedOperationException =>
-      // Ignored
-      case e: IOException =>
-        throw new BootstrapException(
-          s"Error while making $output executable" +
-            Option(e.getMessage).fold("")(" (" + _ + ")"),
-          e
-        )
-    }
-  }
-
-  private def createOneJarLikeJarBootstrap(
-    options: BootstrapOptions,
-    helper: Helper,
-    mainClass: String,
-    javaOpts: Seq[String],
-    urls: Seq[String],
-    files: Seq[File],
-    output: File,
-    bootstrapResourcePath: String
-  ): Unit = {
-
-    val bootstrapJar =
-      FileUtil.readFully {
-        val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
-        if (is == null)
-          throw new BootstrapException(s"Error: bootstrap JAR not found")
-        is
-      }
-
-    val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
-
-    val (done, isolatedArtifactFiles) =
-      options.options.isolated.targets.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
-        case ((done, acc), target) =>
-
-          // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
-
-          val m = helper.fetchMap(
-            sources = options.artifactOptions.sources,
-            javadoc = options.artifactOptions.javadoc,
-            default = options.artifactOptions.default0(options.options.common.classifier0),
-            artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0),
-            subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
-          )
-
-          val m0 = m.filterKeys(url => !done(url))
-          val done0 = done ++ m0.keys
-
-          val (subUrls, subFiles) =
-            if (options.options.standalone)
-              (Nil, m0.values.toSeq)
-            else
-              (m0.keys.toSeq, Nil)
-
-          val updatedAcc = acc + (target -> (subUrls, subFiles))
-
-          (done0, updatedAcc)
-      }
-
-    val isolatedUrls = isolatedArtifactFiles.map { case (k, (v, _)) => k -> v }
-    val isolatedFiles = isolatedArtifactFiles.map { case (k, (_, v)) => k -> v }
-
-    val buffer = new ByteArrayOutputStream
-
-    val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
-    val outputZip = new ZipOutputStream(buffer)
-
-    for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
-      outputZip.putNextEntry(ent)
-      outputZip.write(data)
-      outputZip.closeEntry()
-    }
-
-
-    val time = if(options.options.deterministic){
-      0
-    } else {
-      System.currentTimeMillis()
-    }
-
-
-    def putStringEntry(name: String, content: String): Unit = {
-      val entry = new ZipEntry(name)
-      entry.setTime(time)
-
-      outputZip.putNextEntry(entry)
-      outputZip.write(content.getBytes(UTF_8))
-      outputZip.closeEntry()
-    }
-
-    def putEntryFromFile(name: String, f: File): Unit = {
-      val entry = new ZipEntry(name)
-      entry.setTime(f.lastModified())
-
-      outputZip.putNextEntry(entry)
-      outputZip.write(FileUtil.readFully(new FileInputStream(f)))
-      outputZip.closeEntry()
-    }
-
-    val fileNames = uniqueNames(files)
-
-    val filesInIsolatedLoaders = isolatedFiles.values.flatten.toSet
-
-    putStringEntry(resourceDir + "bootstrap-jar-urls", urls.filterNot(done).mkString("\n"))
-    putStringEntry(resourceDir + "bootstrap-jar-resources", fileNames.filterKeys(!filesInIsolatedLoaders(_)).values.toVector.sorted.mkString("\n"))
-
-    if (options.options.isolated.anyIsolatedDep) {
-      putStringEntry(resourceDir + "bootstrap-isolation-ids", options.options.isolated.targets.mkString("\n"))
-
-      for (target <- options.options.isolated.targets) {
-        val urls = isolatedUrls.getOrElse(target, Nil)
-        val files = isolatedFiles.getOrElse(target, Nil).map(fileNames)
-        putStringEntry(resourceDir + s"bootstrap-isolation-$target-jar-urls", urls.mkString("\n"))
-        putStringEntry(resourceDir + s"bootstrap-isolation-$target-jar-resources", files.mkString("\n"))
-      }
-    }
-
-    for (file <- files)
-      putEntryFromFile(fileNames(file), file)
-
-    putStringEntry(resourceDir + "bootstrap.properties", s"bootstrap.mainClass=$mainClass")
-
-    outputZip.closeEntry()
-
-    outputZip.close()
-
-    createJarBootstrap(
-      javaOpts,
-      output,
-      buffer.toByteArray,
-      options.options.preamble
-    )
-  }
-
-  private def uniqueNames(files: Seq[File]): Map[File, String] = {
-
-    val files0 = files.map(_.getName).toSet
-    val finalNames = new mutable.HashSet[String]
-
-    def pathFor(f: File) = {
-
-      val name = f.getName
-      val uniqueName =
-        if (finalNames(name)) {
-          val extIdx = name.lastIndexOf('.')
-          def nameFor(idx: Int): String =
-            if (extIdx < 0)
-              s"$name-$idx"
-            else
-              s"${name.take(extIdx)}-$idx.${name.drop(extIdx + 1)}"
-          Stream.from(1)
-            .map(nameFor)
-            .filter(n => !finalNames(n) && !files0(n))
-            .head
-        } else
-          name
-
-      finalNames += uniqueName
-      f -> s"${resourceDir}jars/$uniqueName"
-    }
-    files.map(pathFor).toMap
-  }
-
-  private def defaultRules = Seq(
-    Assembly.Rule.Append("reference.conf"),
-    Assembly.Rule.AppendPattern("META-INF/services/.*"),
-    Assembly.Rule.Exclude("log4j.properties"),
-    Assembly.Rule.Exclude(JarFile.MANIFEST_NAME),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[sS][fF]"),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[dD][sS][aA]"),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[rR][sS][aA]")
-  )
-
-  private def createAssemblyJar(
-    options: BootstrapOptions,
-    files: Seq[File],
-    javaOpts: Seq[String],
-    mainClass: String,
-    output: File
-  ): Unit = {
-
-    val parsedRules = options.options.rule.map { s =>
-      s.split(":", 2) match {
-        case Array("append", v) => Assembly.Rule.Append(v)
-        case Array("append-pattern", v) => Assembly.Rule.AppendPattern(v)
-        case Array("exclude", v) => Assembly.Rule.Exclude(v)
-        case Array("exclude-pattern", v) => Assembly.Rule.ExcludePattern(v)
-        case _ =>
-          sys.error(s"Malformed assembly rule: $s")
-      }
-    }
-
-    val rules =
-      (if (options.options.defaultRules) defaultRules else Nil) ++ parsedRules
-
-    val attrs = Seq(
-      JarAttributes.Name.MAIN_CLASS -> mainClass
-    )
-
-    val baos = new ByteArrayOutputStream
-    Assembly.make(files, baos, attrs, rules)
-
-    createJarBootstrap(
-      javaOpts,
-      output,
-      baos.toByteArray,
-      options.options.preamble
-    )
   }
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
@@ -410,33 +107,104 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             else (url :: urls, files)
         }
 
-      val generateBat = options.options.bat
-        .getOrElse(LauncherBat.isWindows)
-
       val bat = new File(output0.getParentFile, s"${output0.getName}.bat")
 
-      if (generateBat && !options.options.force && bat.exists())
+      if (options.options.generateBat && !options.options.force && bat.exists())
         throw new BootstrapException(s"Error: $bat already exists, use -f option to force erasing it.")
 
       if (options.options.assembly)
-        createAssemblyJar(options, files, javaOpts, mainClass, output0)
-      else
-        createOneJarLikeJarBootstrap(
-          options,
-          helper,
-          mainClass,
-          javaOpts,
-          urls,
+        Assembly.create(
           files,
-          output0,
-          if (options.options.proguarded) "bootstrap.jar" else "bootstrap-orig.jar"
+          javaOpts,
+          mainClass,
+          output0.toPath,
+          rules = options.options.rules,
+          withPreamble = options.options.preamble
         )
+      else {
 
-      if (generateBat) {
-        // no escaping for javaOpts :|
-        val content = LauncherBat(javaOpts.mkString(" "))
-        Files.write(bat.toPath, content.getBytes(Charset.defaultCharset()))
+        val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
+
+        val (done, isolatedArtifactFiles) =
+          options.options.isolated.targets.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
+            case ((done, acc), target) =>
+
+              // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
+
+              val m = helper.fetchMap(
+                sources = options.artifactOptions.sources,
+                javadoc = options.artifactOptions.javadoc,
+                default = options.artifactOptions.default0(options.options.common.classifier0),
+                artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0),
+                subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
+              )
+
+              val m0 = m.filterKeys(url => !done(url))
+              val done0 = done ++ m0.keys
+
+              val (subUrls, subFiles) =
+                if (options.options.standalone)
+                  (Nil, m0.values.toSeq)
+                else
+                  (m0.keys.toSeq, Nil)
+
+              val updatedAcc = acc + (target -> (subUrls, subFiles))
+
+              (done0, updatedAcc)
+          }
+
+        val parents = options.options.isolated.targets.toSeq.map { t =>
+          val e = isolatedArtifactFiles.get(t)
+          val urls = e.map(_._1).getOrElse(Nil).map { url =>
+            ClasspathEntry.Url(url)
+          }
+          val files = e.map(_._2).getOrElse(Nil).map { f =>
+            ClasspathEntry.Resource(
+              f.getName,
+              f.lastModified(),
+              Files.readAllBytes(f.toPath)
+            )
+          }
+          ClassLoaderContent(
+            urls ++ files,
+            t
+          )
+        }
+
+        val main = {
+          val doneFiles = isolatedArtifactFiles.toSeq.flatMap(_._2._2).toSet
+          val urls0 = urls.filterNot(done).map { url =>
+            ClasspathEntry.Url(url)
+          }
+          val files0 = files.filterNot(doneFiles).map { f =>
+            ClasspathEntry.Resource(
+              f.getName,
+              f.lastModified(),
+              Files.readAllBytes(f.toPath)
+            )
+          }
+          ClassLoaderContent(urls0 ++ files0)
+        }
+
+        coursier.bootstrap.Bootstrap.create(
+          parents :+ main,
+          mainClass,
+          output0.toPath,
+          javaOpts,
+          if (options.options.proguarded)
+            coursier.bootstrap.Bootstrap.proguardedBootstrapResourcePath
+          else
+            coursier.bootstrap.Bootstrap.bootstrapResourcePath,
+          deterministic = options.options.deterministic,
+          withPreamble = options.options.preamble
+        )
       }
+
+      if (options.options.generateBat)
+        LauncherBat.create(
+          bat.toPath,
+          javaOpts
+        )
     }
   }
 

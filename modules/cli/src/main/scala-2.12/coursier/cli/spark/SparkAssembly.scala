@@ -8,10 +8,10 @@ import java.security.MessageDigest
 import java.util.jar.JarFile
 
 import coursier.Cache
+import coursier.bootstrap.Assembly
 import coursier.cache.{CacheChecksum, CacheLocks}
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
-import coursier.cli.util.Assembly
 import coursier.core.Type
 
 object SparkAssembly {

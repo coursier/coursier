@@ -142,6 +142,12 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     proguardedBootstrap
   )
 
+lazy val bootstrap = project("bootstrap")
+  .settings(
+    shared,
+    coursierPrefix
+  )
+
 lazy val extra = project("extra")
   .enablePlugins(ShadingPlugin)
   .dependsOn(coreJvm, cacheJvm)
@@ -176,7 +182,7 @@ lazy val extra = project("extra")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(coreJvm, cacheJvm, extra)
+  .dependsOn(bootstrap, coreJvm, cacheJvm, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -277,6 +283,7 @@ lazy val jvm = project("jvm")
     scalazJvm,
     catsJvm,
     `bootstrap-launcher`,
+    bootstrap,
     extra,
     cli,
     okhttp,
@@ -317,6 +324,7 @@ lazy val coursier = project("coursier")
     cacheJvm,
     cacheJs,
     `bootstrap-launcher`,
+    bootstrap,
     extra,
     cli,
     scalazJvm,

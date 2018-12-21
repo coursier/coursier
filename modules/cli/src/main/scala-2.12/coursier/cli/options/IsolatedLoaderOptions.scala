@@ -26,7 +26,7 @@ final case class IsolatedLoaderOptions(
         Console.err.println(s"  $t")
       sys.exit(255)
     }
-    if (valid.isEmpty)
+    if (valid.isEmpty && isolated.nonEmpty)
       Array("default")
     else
       valid.toArray

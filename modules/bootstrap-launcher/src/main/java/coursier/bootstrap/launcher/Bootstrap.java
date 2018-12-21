@@ -38,6 +38,7 @@ public class Bootstrap {
     }
 
     final static String resourceDir = "coursier/bootstrap/launcher/";
+    final static String jarDir = resourceDir + "jars/";
 
     final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
     final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";
@@ -55,28 +56,41 @@ public class Bootstrap {
         return content.split("\n");
     }
 
-    /**
-     *
-     * @param cacheDir can be null if nothing should be downloaded!
-     * @param isolationIDs
-     * @param bootstrapProtocol
-     * @param loader
-     * @return
-     * @throws IOException
-     */
-    static Map<String, URL[]> readIsolationContexts(File cacheDir, String[] isolationIDs, String bootstrapProtocol, ClassLoader loader) throws IOException {
-        final Map<String, URL[]> perContextURLs = new LinkedHashMap<String, URL[]>();
+    static String readString(String resource) throws IOException {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        InputStream is = loader.getResourceAsStream(resource);
+        if (is == null)
+            return null;
+        byte[] rawContent = readFullySync(is);
+        return new String(rawContent, "UTF-8");
+    }
 
-        for (String isolationID: isolationIDs) {
-            String[] strUrls = readStringSequence(resourceDir + "bootstrap-isolation-" + isolationID + "-jar-urls");
-            String[] resources = readStringSequence(resourceDir + "bootstrap-isolation-" + isolationID + "-jar-resources");
-            List<URL> urls = getURLs(strUrls, resources, bootstrapProtocol, loader);
-            List<URL> localURLs = getLocalURLs(urls, cacheDir, bootstrapProtocol);
+    static ClassLoader readBaseLoaders(File cacheDir, ClassLoader baseLoader, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws IOException {
 
-            perContextURLs.put(isolationID, localURLs.toArray(new URL[localURLs.size()]));
+        ClassLoader parentLoader = baseLoader;
+        int i = 1;
+        while (true) {
+            String[] strUrls = readStringSequence(resourceDir + "bootstrap-jar-urls-" + i);
+            String[] resources = readStringSequence(resourceDir + "bootstrap-jar-resources-" + i);
+            String nameOrNull = readString(resourceDir + "bootstrap-loader-name-" + i);
+            String[] names;
+            if (nameOrNull == null)
+                names = new String[]{};
+            else
+                names = new String[]{ nameOrNull };
+
+            if (strUrls.length == 0 && resources.length == 0 && nameOrNull == null)
+                break;
+
+            List<URL> urls = getURLs(strUrls, resources, factory, loader);
+            List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
+
+            parentLoader = new IsolatedClassLoader(localURLs.toArray(new URL[localURLs.size()]), parentLoader, names);
+
+            i = i + 1;
         }
 
-        return perContextURLs;
+        return parentLoader;
     }
 
     final static int concurrentDownloadCount = 6;
@@ -158,11 +172,10 @@ public class Bootstrap {
      *
      * @param urls
      * @param cacheDir
-     * @param bootstrapProtocol
      * @return
      * @throws MalformedURLException
      */
-    static List<URL> getLocalURLs(List<URL> urls, final File cacheDir, String bootstrapProtocol) throws MalformedURLException {
+    static List<URL> getLocalURLs(List<URL> urls, final File cacheDir, BootstrapURLStreamHandlerFactory factory) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
             // from scalaz Strategy.DefaultDaemonThreadFactory
@@ -186,7 +199,7 @@ public class Bootstrap {
 
             String protocol = url.getProtocol();
 
-            if (protocol.equals("file") || protocol.equals(bootstrapProtocol)) {
+            if (protocol.equals("file") || protocol.equals(factory.getProtocol())) {
                 localURLs.add(url);
             } else {
                 // fourth argument is false because we don't want to store local files when bootstrapping
@@ -314,7 +327,7 @@ public class Bootstrap {
         }
     }
 
-    static List<URL> getURLs(String[] rawURLs, String[] resources, String bootstrapProtocol, ClassLoader loader) throws MalformedURLException {
+    static List<URL> getURLs(String[] rawURLs, String[] resources, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws MalformedURLException {
 
         List<String> errors = new ArrayList<String>();
         List<URL> urls = new ArrayList<URL>();
@@ -330,12 +343,12 @@ public class Bootstrap {
         }
 
         for (String resource : resources) {
-            URL url = loader.getResource(resource);
+            URL url = loader.getResource(jarDir + resource);
             if (url == null) {
                 String message = "Resource " + resource + " not found";
                 errors.add(message);
             } else {
-                URL url0 = new URL(bootstrapProtocol, null, resource);
+                URL url0 = new URL(factory.getProtocol(), null, resource);
                 urls.add(url0);
             }
         }
@@ -352,27 +365,6 @@ public class Bootstrap {
         return urls;
     }
 
-    // JARs from JARs can't be used directly, see:
-    // http://stackoverflow.com/questions/183292/classpath-including-jar-within-a-jar/2326775#2326775
-    // Loading them via a custom protocol, inspired by:
-    // http://stackoverflow.com/questions/26363573/registering-and-using-a-custom-java-net-url-protocol/26409796#26409796
-    static void registerBootstrapUnder(final String bootstrapProtocol, final ClassLoader loader) {
-        URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-            public URLStreamHandler createURLStreamHandler(String protocol) {
-                return bootstrapProtocol.equals(protocol) ? new URLStreamHandler() {
-                    protected URLConnection openConnection(URL url) throws IOException {
-                        String path = url.getPath();
-                        URL resURL = loader.getResource(path);
-                        if (resURL == null)
-                            throw new FileNotFoundException("Resource " + path);
-                        return resURL.openConnection();
-                    }
-                } : null;
-            }
-        });
-    }
-
-
     public static void main(String[] args) throws Throwable {
 
         setMainProperties(mainJarPath(), args);
@@ -382,28 +374,20 @@ public class Bootstrap {
 
         File cacheDir = CachePath.defaultCacheDirectory();
 
-        Random rng = new Random();
-        String protocol = "bootstrap" + rng.nextLong();
-
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
 
-        registerBootstrapUnder(protocol, contextLoader);
+        BootstrapURLStreamHandlerFactory factory = new BootstrapURLStreamHandlerFactory(jarDir, contextLoader);
 
         String[] strUrls = readStringSequence(defaultURLResource);
         String[] resources = readStringSequence(defaultJarResource);
-        List<URL> urls = getURLs(strUrls, resources, protocol, contextLoader);
-        List<URL> localURLs = getLocalURLs(urls, cacheDir, protocol);
+        List<URL> urls = getURLs(strUrls, resources, factory, contextLoader);
+        List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
 
         String[] isolationIDs = readStringSequence(isolationIDsResource);
-        Map<String, URL[]> perIsolationContextURLs = readIsolationContexts(cacheDir, isolationIDs, protocol, contextLoader);
 
         Thread thread = Thread.currentThread();
         ClassLoader parentClassLoader = thread.getContextClassLoader();
-
-        for (String isolationID: isolationIDs) {
-            URL[] contextURLs = perIsolationContextURLs.get(isolationID);
-            parentClassLoader = new IsolatedClassLoader(contextURLs, parentClassLoader, new String[]{ isolationID });
-        }
+        parentClassLoader = readBaseLoaders(cacheDir, parentClassLoader, factory, contextLoader);
 
         ClassLoader classLoader = new URLClassLoader(localURLs.toArray(new URL[localURLs.size()]), parentClassLoader);
 
