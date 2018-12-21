@@ -1,4 +1,4 @@
-package coursier.cli.util
+package coursier.bootstrap.util
 
 import java.util.zip.{ZipEntry, ZipInputStream}
 
@@ -15,7 +15,7 @@ object Zip {
       def hasNext = nextEntry.nonEmpty
       def next() = {
         val ent = nextEntry.get
-        val data = coursier.internal.FileUtil.readFullyUnsafe(zipStream)
+        val data = FileUtil.readFullyUnsafe(zipStream)
 
         update()
 

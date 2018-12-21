@@ -6,7 +6,7 @@ import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
-import coursier.cli.Bootstrap.resourceDir
+import coursier.bootstrap.Bootstrap.resourceDir
 import coursier.cli.options._
 import coursier.cli.options.shared.RepositoryOptions
 import org.junit.runner.RunWith
@@ -82,7 +82,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-isolation-foo-jar-urls"), UTF_8)).lines.toVector
+      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8)).lines.toVector
       val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
 
       assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
@@ -176,22 +176,24 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
         val suffix = if (standalone) "resources" else "urls"
-        val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-isolation-foo-jar-$suffix"), UTF_8))
+        val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix-1"), UTF_8))
           .lines
           .toVector
+          .map(_.replaceAll(".*/", ""))
         val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8))
           .lines
           .toVector
+          .map(_.replaceAll(".*/", ""))
 
-        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+        assert(fooLines.contains("scalaparse_2.12-0.4.2.jar"))
+        assert(fooLines.contains("scalaparse_2.12-0.4.2-sources.jar"))
+        assert(!lines.contains("scalaparse_2.12-0.4.2.jar"))
+        assert(!lines.contains("scalaparse_2.12-0.4.2-sources.jar"))
 
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
-        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+        assert(!fooLines.contains("scalameta_2.12-1.7.0.jar"))
+        assert(!fooLines.contains("scalameta_2.12-1.7.0-sources.jar"))
+        assert(lines.contains("scalameta_2.12-1.7.0.jar"))
+        assert(lines.contains("scalameta_2.12-1.7.0-sources.jar"))
     }
 
   "bootstrap" should "add standard and source JARs to the classpath with classloader isolation" in {
@@ -284,8 +286,8 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         .lines
         .toVector
 
-      val fastparseLines = lines.filter(_.contains("/fastparse_2.12-1.0.0"))
-      val fastparseUtilsLines = lines.filter(_.contains("/fastparse-utils_2.12-1.0.0"))
+      val fastparseLines = lines.filter(_.startsWith("fastparse_2.12-1.0.0"))
+      val fastparseUtilsLines = lines.filter(_.startsWith("fastparse-utils_2.12-1.0.0"))
 
       assert(fastparseLines.length == 2)
       assert(fastparseLines.distinct.length == 2)
@@ -323,7 +325,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
       val names = zipEntryNames(zis).toVector
       assert(names.exists(_.startsWith("META-INF/")))
-      assert(names.exists(_.startsWith("coursier/bootstrap/")))
-      assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/")))
+      assert(names.exists(_.startsWith("coursier/bootstrap/launcher/")))
+      assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/launcher/")))
   }
 }

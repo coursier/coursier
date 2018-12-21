@@ -3,6 +3,7 @@ scala_library(
     dependencies = [
         "3rdparty/jvm:argonaut-shapeless",
         "3rdparty/jvm:caseapp",
+        "bootstrap:bootstrap",
         "cache:cache",
         "core:core",
         "extra/src/main/scala/coursier:fallback-deps-repo",

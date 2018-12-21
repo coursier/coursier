@@ -1,9 +1,13 @@
-package coursier.cli.util
+package coursier.bootstrap
 
-import java.io.{File, FileInputStream, OutputStream}
-import java.util.jar.{Attributes, JarOutputStream, Manifest}
+import java.io.{ByteArrayOutputStream, File, FileInputStream, OutputStream}
+import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.{Files, Path}
+import java.util.jar.{Attributes => JarAttributes, JarFile, JarOutputStream, Manifest}
 import java.util.regex.Pattern
 import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+
+import coursier.bootstrap.util.{FileUtil, Zip}
 
 import scala.collection.mutable
 
@@ -35,14 +39,29 @@ object Assembly {
     }
   }
 
-  def make(jars: Seq[File], output: OutputStream, attributes: Seq[(Attributes.Name, String)], rules: Seq[Rule]): Unit = {
+  val defaultRules = Seq(
+    Assembly.Rule.Append("reference.conf"),
+    Assembly.Rule.AppendPattern("META-INF/services/.*"),
+    Assembly.Rule.Exclude("log4j.properties"),
+    Assembly.Rule.Exclude(JarFile.MANIFEST_NAME),
+    Assembly.Rule.ExcludePattern("META-INF/.*\\.[sS][fF]"),
+    Assembly.Rule.ExcludePattern("META-INF/.*\\.[dD][sS][aA]"),
+    Assembly.Rule.ExcludePattern("META-INF/.*\\.[rR][sS][aA]")
+  )
+
+  def make(
+    jars: Seq[File],
+    output: OutputStream,
+    attributes: Seq[(JarAttributes.Name, String)],
+    rules: Seq[Rule]
+  ): Unit = {
 
     val rulesMap = rules.collect { case r: Rule.PathRule => r.path -> r }.toMap
     val excludePatterns = rules.collect { case Rule.ExcludePattern(p) => p }
     val appendPatterns = rules.collect { case Rule.AppendPattern(p) => p }
 
     val manifest = new Manifest
-    manifest.getMainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0")
+    manifest.getMainAttributes.put(JarAttributes.Name.MANIFEST_VERSION, "1.0")
     for ((k, v) <- attributes)
       manifest.getMainAttributes.put(k, v)
 
@@ -118,5 +137,32 @@ object Assembly {
         zos.close()
     }
   }
+
+  def create(
+    files: Seq[File],
+    javaOpts: Seq[String],
+    mainClass: String,
+    output: Path,
+    rules: Seq[Rule] = defaultRules,
+    withPreamble: Boolean = true
+  ): Unit = {
+
+    val attrs = Seq(
+      JarAttributes.Name.MAIN_CLASS -> mainClass
+    )
+
+    val buffer = new ByteArrayOutputStream
+
+    if (withPreamble)
+      buffer.write(
+        Preamble.shellPreamble(javaOpts).getBytes(UTF_8)
+      )
+
+    Assembly.make(files, buffer, attrs, rules)
+
+    Files.write(output, buffer.toByteArray)
+    FileUtil.tryMakeExecutable(output)
+  }
+
 
 }
