@@ -51,7 +51,7 @@ object doc extends Module {
       sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
   }
 
-  def mdocVersion = T("0.7.0")
+  def mdocVersion = T("1.2.7")
   def mdocFullClasspath = T.sources {
     val sv = scalaVersion()
     val mv = mdocVersion()
@@ -60,7 +60,7 @@ object doc extends Module {
       Seq(coursier.Cache.ivy2Local, coursier.maven.MavenRepository("https://repo1.maven.org/maven2")),
       mill.scalalib.Lib.depToDependency(_, sv),
       Seq(
-        mill.scalalib.Dep.parse(s"com.geirsson:::mdoc:$mv"),
+        mill.scalalib.Dep.parse(s"org.scalameta::mdoc:$mv"),
         mill.scalalib.Dep.parse(s"io.get-coursier:coursier-cache_2.12:$v")
       )
     ).map(_.toSeq)
