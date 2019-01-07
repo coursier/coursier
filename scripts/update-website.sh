@@ -4,12 +4,10 @@ set -e
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 if [ "$TRAVIS_BRANCH" != "" ]; then
-  source scripts/setup-sbt-extra.sh
+  source scripts/setup-build-tools.sh
 fi
 
-sbt scala212 coreJVM/publishLocal cacheJVM/publishLocal
-
-./scripts/generate-website.sh
+mill -i all doc.publishLocal doc.relativize
 
 if [ "${PUSH_WEBSITE:-""}" = 1 ]; then
   ./scripts/push-website.sh

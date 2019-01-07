@@ -136,7 +136,7 @@ testNativeBootstrap() {
   fi
 }
 
-source scripts/setup-sbt-extra.sh
+source scripts/setup-build-tools.sh
 setupCoursierBinDir
 
 if isScalaJs; then
