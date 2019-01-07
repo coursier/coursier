@@ -97,7 +97,7 @@ import coursier.util.Gather
 val localArtifacts: Seq[Either[FileError, File]] =
   Gather[Task].gather(
     resolution
-      .artifacts
+      .artifacts()
       .map(Cache.file[Task](_).run)
   ).unsafeRun()
 ```
