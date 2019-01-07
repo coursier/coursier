@@ -15,6 +15,9 @@ final case class ResolveOptions(
   @Help("Print dependencies as an inversed tree (dependees as children)")
   @Short("T")
     reverseTree: Boolean = false,
+  @Help("Print what depends on the passed modules")
+  @Value("org:name")
+    whatDependsOn: List[String] = Nil,
 
   @Recurse
     cacheOptions: shared.CacheOptions = shared.CacheOptions(),
