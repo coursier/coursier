@@ -6,7 +6,14 @@ title: Cache
 
 The cache is supposed to cache static resources, that don't change often (snapshot artifacts being the exception - these then follow TTL).
 
-The content of a URL like `https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar` is kept under `CACHE_PATH/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar`.
+The content of a URL like
+```bash
+https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar
+```
+is kept under
+```
+CACHE_PATH/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar
+```
 
 ## Location
 
