@@ -138,7 +138,7 @@ you can supply your own thread pool to `Cache.fetch`.
 
 Now that the resolution is done, we can check for errors in
 ```scala mdoc:silent
-val errors: Seq[((Module, String), Seq[String])] = resolution.metadataErrors
+val errors: Seq[((Module, String), Seq[String])] = resolution.errors
 ```
 These would mean that the resolution wasn't able to get metadata about some dependencies.
 
@@ -155,7 +155,7 @@ import coursier.util.Gather
 
 val localArtifacts: Seq[Either[FileError, File]] =
   Gather[Task].gather(
-    resolution.artifacts.map(Cache.file[Task](_).run)
+    resolution.artifacts().map(Cache.file[Task](_).run)
   ).unsafeRun()
 ```
 
