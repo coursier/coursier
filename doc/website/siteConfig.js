@@ -26,7 +26,7 @@ const siteConfig = {
     secondaryColor: '#3498DB',
   },
 
-  copyright: `Copyright © ${new Date().getFullYear()} Alexandre Archambault and coursier contributors`,
+  copyright: `Copyright © ${new Date().getFullYear()} coursier contributors`,
 
   highlight: {
     theme: 'default',

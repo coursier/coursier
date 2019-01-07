@@ -5,3 +5,7 @@
 .hljs-string {
   color: rgb(0, 0, 175);
 }
+
+.fixedHeaderContainer {
+  background-color: rgb(0, 0, 0);
+}

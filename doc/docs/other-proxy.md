@@ -14,9 +14,9 @@ $ java -jar $(which coursier) \
     -Dhttps.proxyHost=… -Dhttps.proxyPort=… [args]
 ```
 instead of `coursier [args]`. Alternatively, recent versions of coursier
-should accept those options directly, like
+should accept those options prefixed with `-J`, like
 ```
-$ coursier -Dhttps.proxyHost=… -Dhttps.proxyPort=… [args]
+$ coursier -J-Dhttps.proxyHost=… -J-Dhttps.proxyPort=… [args]
 ```
 
 ## sbt

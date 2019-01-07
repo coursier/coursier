@@ -2,7 +2,11 @@
 title: sbt-coursier
 ---
 
-Currently requires sbt 1.x. See
+`sbt-coursier` ensures one's dependencies are fetched via coursier rather
+than by sbt itself, that relies on its own custom version of Ivy. When
+properly set up (see below), coursier can also be used to fetch most sbt plugins. Note that sbt-coursier itself is still fetched by sbt. Also note that the JARs of sbt, when one launches sbt for the first time, are also still fetched by sbt itself.
+
+It currently requires sbt 1.x. See
 [coursier versions 1.0.x](https://github.com/coursier/coursier/tree/series/1.0.x)
 for sbt 0.13.x.
 
