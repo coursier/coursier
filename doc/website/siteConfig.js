@@ -22,7 +22,7 @@ const siteConfig = {
   users: [],
 
   colors: {
-    primaryColor: '#33475B',
+    primaryColor: '#58B8C1',
     secondaryColor: '#3498DB',
   },
 

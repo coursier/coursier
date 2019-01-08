@@ -3,7 +3,7 @@ title: fetch
 ---
 
 The `fetch` command, like the [`resolve` command](cli-resolve.md), resolves
-the transitive dependencies of one or more dependencies. It then goes one step
+the transitive dependencies of one or more dependencies. It also goes one step
 further, by downloading their artifacts, and printing their paths.
 
 Use like
