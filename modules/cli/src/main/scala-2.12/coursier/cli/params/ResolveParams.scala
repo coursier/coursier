@@ -1,12 +1,11 @@
 package coursier.cli.params
 
-import java.io.File
-
-import cats.data.ValidatedNel
+import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.shared.{CacheParams, OutputParams, RepositoryParams, ResolutionParams}
-import coursier.core.Repository
+import coursier.core.{Module, Repository}
+import coursier.util.Parse
 
 final case class ResolveParams(
   cache: CacheParams,
@@ -15,8 +14,14 @@ final case class ResolveParams(
   resolution: ResolutionParams,
   benchmark: Int,
   tree: Boolean,
-  reverseTree: Boolean
-)
+  reverseTree: Boolean,
+  whatDependsOn: Set[Module]
+) {
+  def anyTree: Boolean =
+    tree ||
+      reverseTree ||
+      whatDependsOn.nonEmpty
+}
 
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
@@ -29,9 +34,30 @@ object ResolveParams {
     val benchmark = options.benchmark
     val tree = options.tree
     val reverseTree = options.reverseTree
+    val whatDependsOnV =
+      resolutionV.toOption.map(_.scalaVersion) match {
+        case None =>
+          Validated.validNel(Nil)
+        case Some(sv) =>
+          options.whatDependsOn.traverse(
+            Parse.module(_, sv).toValidatedNel
+          )
+      }
 
-    (cacheV, outputV, repositoriesV, resolutionV).mapN {
-      (cache, output, repositories, resolution) =>
+    val treeCheck =
+      if (tree && reverseTree)
+        Validated.invalidNel("Cannot specify both --tree and --reverse-tree")
+      else
+        Validated.validNel(())
+
+    val treeWhatDependsOnCheck =
+      if ((tree || reverseTree) && options.whatDependsOn.nonEmpty)
+        Validated.invalidNel("Cannot specify --what-depends-on along with --tree or --reverse-tree")
+      else
+        Validated.validNel(())
+
+    (cacheV, outputV, repositoriesV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck).mapN {
+      (cache, output, repositories, resolution, whatDependsOn, _, _) =>
         ResolveParams(
           cache,
           output,
@@ -39,7 +65,8 @@ object ResolveParams {
           resolution,
           benchmark,
           tree,
-          reverseTree
+          reverseTree,
+          whatDependsOn.toSet
         )
     }
   }

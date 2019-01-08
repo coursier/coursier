@@ -1,9 +1,12 @@
 package coursier.cli.resolve
 
+import java.io.PrintStream
+
 import coursier.cli.params.ResolveParams
 import coursier.cli.params.shared.{OutputParams, ResolutionParams}
 import coursier.core.{Dependency, Resolution}
 import coursier.util.Print
+import coursier.util.Print.Colors
 
 object Output {
 
@@ -12,10 +15,12 @@ object Output {
   def printDependencies(
     outputParams: OutputParams,
     resolutionParams: ResolutionParams,
-    deps: Seq[Dependency]
-  ) =
+    deps: Seq[Dependency],
+    stdout: PrintStream,
+    stderr: PrintStream
+  ): Unit =
     if (outputParams.verbosity >= 1) {
-      errPrintln(
+      stderr.println(
         s"  Dependencies:\n" +
           Print.dependenciesUnknownConfigs(
             deps,
@@ -25,9 +30,9 @@ object Output {
       )
 
       if (resolutionParams.forceVersion.nonEmpty) {
-        errPrintln("  Force versions:")
+        stderr.println("  Force versions:")
         for ((mod, ver) <- resolutionParams.forceVersion.toVector.sortBy { case (mod, _) => mod.toString })
-          errPrintln(s"$mod:$ver")
+          stderr.println(s"$mod:$ver")
       }
     }
 
@@ -35,14 +40,22 @@ object Output {
     printResultStdout: Boolean,
     params: ResolveParams,
     dependencies: Seq[Dependency],
-    res: Resolution
+    res: Resolution,
+    stdout: PrintStream,
+    stderr: PrintStream
   ): Unit =
-    if (printResultStdout || params.output.verbosity >= 1 || params.tree || params.reverseTree) {
-      if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2 || params.tree || params.reverseTree)
-        errPrintln(s"  Result:")
+    if (printResultStdout || params.output.verbosity >= 1 || params.anyTree) {
+      if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2 || params.anyTree)
+        stderr.println(s"  Result:")
 
       val depsStr =
-        if (params.reverseTree || params.tree)
+        if (params.whatDependsOn.nonEmpty)
+          Print.reverseTree(
+            res.minDependencies.filter(f => params.whatDependsOn(f.module)).toSeq,
+            res,
+            withExclusions = params.output.verbosity >= 1
+          ).render(_.repr(Colors.get(true)))
+        else if (params.reverseTree || params.tree)
           Print.dependencyTree(
             dependencies,
             res,
@@ -57,9 +70,9 @@ object Output {
           )
 
       if (printResultStdout)
-        println(depsStr)
+        stdout.println(depsStr)
       else
-        errPrintln(depsStr)
+        stderr.println(depsStr)
     }
 
 }

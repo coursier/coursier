@@ -1,6 +1,6 @@
 package coursier.cli.resolve
 
-import java.io.OutputStreamWriter
+import java.io.{OutputStreamWriter, PrintStream}
 import java.util.concurrent.ExecutorService
 
 import caseapp._
@@ -241,6 +241,9 @@ object Resolve extends CaseApp[ResolveOptions] {
   def task(
     params: ResolveParams,
     pool: ExecutorService,
+    // stdout / stderr not used everywhere (added mostly for testing)
+    stdout: PrintStream,
+    stderr: PrintStream,
     args: Seq[String]
   ): Task[(Resolution, Boolean)] =
     for {
@@ -292,7 +295,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       // so that dependencies with URIs are resolved against this repo
       repositories = extraRepoOpt.toSeq ++ params.repositories
 
-      _ = Output.printDependencies(params.output, params.resolution, deps)
+      _ = Output.printDependencies(params.output, params.resolution, deps, stdout, stderr)
 
       startRes = Resolution(
         deps.toSet,
@@ -319,7 +322,9 @@ object Resolve extends CaseApp[ResolveOptions] {
         printResultStdout = true,
         params,
         deps,
-        res
+        res,
+        stdout,
+        stderr
       )
 
       valid = validateResolution(res, params.output.verbosity) match {
@@ -341,7 +346,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         val pool = Schedulable.fixedThreadPool(params.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
-        val t = task(params, pool, args.all)
+        val t = task(params, pool, System.out, System.err, args.all)
 
         t.attempt.unsafeRun()(ec) match {
           case Left(e: ResolveException) =>
