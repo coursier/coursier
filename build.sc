@@ -200,8 +200,14 @@ object doc extends Module { self =>
     def mdocProps = T {
       val v = self.version()
       val sv = scalaVersion()
+      val extraSbt =
+        if (v.endsWith("SNAPSHOT"))
+          """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
+        else
+          ""
       Map(
         "VERSION" -> v,
+        "EXTRA_SBT" -> extraSbt,
         "PLUGIN_VERSION" -> v,
         "SCALA_VERSION" -> sv,
         "MILL_VERSION" -> sys.props("MILL_VERSION")

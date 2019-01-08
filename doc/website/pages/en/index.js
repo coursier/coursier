@@ -23,6 +23,11 @@ function assetUrl(img) {
   return siteConfig.baseUrl + 'docs/assets/' + img;
 }
 
+
+function imgUrl(img) {
+  return siteConfig.baseUrl + "img/" + img;
+}
+
 function docUrl(doc, language) {
   return siteConfig.baseUrl + 'docs/' + (language ? language + '/' : '') + doc;
 }
@@ -68,6 +73,7 @@ class HomeSplash extends React.Component {
         <Logo img_src={assetUrl('DigbyShadows.svg')} />
         <div className="inner">
           <ProjectTitle />
+          <img id="screencast" src={imgUrl("coursier-launch.gif")} />
           <PromoSection>
             <Button href={docUrl('intro', language)}>Docs</Button>
             <Button href='https://github.com/coursier/coursier'>Code</Button>

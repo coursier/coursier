@@ -6,3 +6,6 @@
   color: rgb(88, 184, 187);
 }
 
+#screencast {
+  max-width: 45em;
+}
