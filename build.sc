@@ -8,7 +8,141 @@ import java.nio.file._
 
 import mill.scalalib.Lib.resolveDependencies
 
-object doc extends Module {
+trait Mdoc extends Module {
+  def module: T[mill.scalalib.Dep]
+  def scalaVersion: T[String]
+  def inputDir: T[PathRef]
+  // running into issues making that a task (watch triggered in loop…)
+  def outputDir: PathRef
+
+  def mdocVersion = T("1.2.7")
+  def mdocFullClasspath = T.sources {
+    val sv = scalaVersion()
+    val mv = mdocVersion()
+    resolveDependencies(
+      Seq(coursier.Cache.ivy2Local, coursier.maven.MavenRepository("https://repo1.maven.org/maven2")),
+      mill.scalalib.Lib.depToDependency(_, sv),
+      Seq(
+        mill.scalalib.Dep.parse(s"org.scalameta::mdoc:$mv"),
+        module()
+      )
+    ).map(_.toSeq)
+  }
+
+  def mdocInput = T.sources {
+    Seq(
+      inputDir()
+    )
+  }
+
+  def mdocProps = T {
+    Map.empty[String, String]
+  }
+
+  def mdocCommand = T {
+    val sv = scalaVersion()
+    val v = version()
+    val args = Seq(
+      "--in", mdocInput().head.path.toNIO.toString,
+      "--out", outputDir.path.toNIO.toString
+    ) ++ mdocProps().toSeq.flatMap {
+      case (k, v) =>
+        Seq(s"--site.$k", v)
+    }
+    Seq("java", "-cp", mdocFullClasspath().map(_.path.toNIO.toString).mkString(java.io.File.pathSeparator), "mdoc.Main") ++ args
+  }
+
+  def mdoc = T.sources {
+    mdocInput()
+    val cmd = mdocCommand()
+    val p = new ProcessBuilder(cmd: _*)
+    p.inheritIO()
+    val b = p.start()
+    val retCode = b.waitFor()
+    if (retCode != 0)
+      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
+    Seq(outputDir)
+  }
+
+  def mdocWatch() = T.command {
+    val cmd = mdocCommand() ++ Seq("--watch")
+    val p = new ProcessBuilder(cmd: _*)
+    p.inheritIO()
+    val b = p.start()
+    val retCode = b.waitFor()
+    if (retCode != 0)
+      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
+  }
+
+}
+
+trait Docusaurus extends Module {
+  def beforeRun: T[_] = T(())
+  def relativizeInput = T.sources {
+    Seq(
+      PathRef(os.Path(Paths.get("doc/website/build").toAbsolutePath))
+    )
+  }
+  def postProcess = T {
+    yarnRunBuild()
+    Relativize.htmlSite(relativizeInput().head.path.toNIO)
+  }
+
+  def websiteDir = T {
+    PathRef(os.Path(Paths.get("doc/website").toAbsolutePath))
+  }
+  def packageJson = T.sources {
+    Seq(
+      PathRef(os.Path(websiteDir().path.toNIO.resolve("package.json").toAbsolutePath))
+    )
+  }
+  def npmInstall = T {
+    packageJson() // unused here, just to re-trigger this task if package.json changes
+
+    val cmd = Seq("npm", "install")
+    val p = new ProcessBuilder(cmd: _*)
+    p.directory(websiteDir().path.toIO)
+    p.inheritIO()
+    val b = p.start()
+    val retCode = b.waitFor()
+    if (retCode != 0)
+      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
+  }
+
+  def httpServerBg() = T.command {
+    npmInstall()
+    val cmd = Seq("npx", "http-server", websiteDir().path.toNIO.resolve("build/coursier").toString)
+    val p = new ProcessBuilder(cmd: _*)
+    p.directory(websiteDir().path.toIO)
+    p.inheritIO()
+    val b = p.start()
+  }
+
+  def yarnRunBuild = T {
+    npmInstall()
+    beforeRun()
+    val cmd = Seq("yarn", "run", "build")
+    val p = new ProcessBuilder(cmd: _*)
+    p.directory(websiteDir().path.toIO)
+    p.inheritIO()
+    val b = p.start()
+    val retCode = b.waitFor()
+    if (retCode != 0)
+      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
+  }
+
+  def yarnStartBg() = T.command {
+    npmInstall()
+    beforeRun()
+    val cmd = Seq("yarn", "run", "start")
+    val p = new ProcessBuilder(cmd: _*)
+    p.directory(websiteDir().path.toIO)
+    p.inheritIO()
+    val b = p.start()
+  }
+}
+
+object doc extends Module { self =>
   def versionFile = T.sources {
     Seq(PathRef(os.Path(Paths.get("version.sbt").toAbsolutePath)))
   }
@@ -51,126 +185,40 @@ object doc extends Module {
       sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
   }
 
-  def mdocVersion = T("1.2.7")
-  def mdocFullClasspath = T.sources {
-    val sv = scalaVersion()
-    val mv = mdocVersion()
-    val v = version()
-    resolveDependencies(
-      Seq(coursier.Cache.ivy2Local, coursier.maven.MavenRepository("https://repo1.maven.org/maven2")),
-      mill.scalalib.Lib.depToDependency(_, sv),
-      Seq(
-        mill.scalalib.Dep.parse(s"org.scalameta::mdoc:$mv"),
-        mill.scalalib.Dep.parse(s"io.get-coursier:coursier-cache_2.12:$v")
-      )
-    ).map(_.toSeq)
-  }
-
-  def mdocInput = T.sources {
-    Seq(
+  object mdoc extends Mdoc {
+    def module = T {
+      val v = self.version()
+      mill.scalalib.Dep.parse(s"io.get-coursier:coursier-cache_2.12:$v")
+    }
+    def scalaVersion = T(self.scalaVersion())
+    def inputDir = T {
       PathRef(os.Path(Paths.get("doc/docs").toAbsolutePath))
-    )
+    }
+    def outputDir = {
+      PathRef(os.Path(Paths.get("doc/processed-docs").toAbsolutePath))
+    }
+    def mdocProps = T {
+      val v = self.version()
+      val sv = scalaVersion()
+      val extraSbt =
+        if (v.endsWith("SNAPSHOT"))
+          """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
+        else
+          ""
+      Map(
+        "VERSION" -> v,
+        "EXTRA_SBT" -> extraSbt,
+        "PLUGIN_VERSION" -> v,
+        "SCALA_VERSION" -> sv,
+        "MILL_VERSION" -> sys.props("MILL_VERSION")
+      )
+    }
   }
 
-  val mdocOut = Paths.get("doc/processed-docs").toAbsolutePath
-
-  def mdocCommand = T {
-    val sv = scalaVersion()
-    val v = version()
-    val args = Seq(
-      "--in", mdocInput().head.path.toNIO.toString,
-      "--out", mdocOut.toString,
-      "--site.VERSION", v,
-      "--site.PLUGIN_VERSION", v,
-      "--site.SCALA_VERSION", sv,
-      "--site.MILL_VERSION", sys.props("MILL_VERSION")
-    )
-    Seq("java", "-cp", mdocFullClasspath().map(_.path.toNIO.toString).mkString(java.io.File.pathSeparator), "mdoc.Main") ++ args
+  object docusaurus extends Docusaurus {
+    def beforeRun: T[_] = T(mdoc.mdoc())
   }
 
-  def mdoc = T.sources {
-    mdocInput()
-    val cmd = mdocCommand()
-    val p = new ProcessBuilder(cmd: _*)
-    p.inheritIO()
-    val b = p.start()
-    val retCode = b.waitFor()
-    if (retCode != 0)
-      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
-    Seq(PathRef(os.Path(mdocOut)))
-  }
-
-  def mdocWatch() = T.command {
-    val cmd = mdocCommand() ++ Seq("--watch")
-    val p = new ProcessBuilder(cmd: _*)
-    p.inheritIO()
-    val b = p.start()
-    val retCode = b.waitFor()
-    if (retCode != 0)
-      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
-  }
-
-  def relativizeInput = T.sources {
-    Seq(
-      PathRef(os.Path(Paths.get("doc/website/build").toAbsolutePath))
-    )
-  }
-  def relativize = T {
-    yarnRunBuild()
-    Relativize.htmlSite(relativizeInput().head.path.toNIO)
-  }
-
-  def websiteDir = T {
-    PathRef(os.Path(Paths.get("doc/website").toAbsolutePath))
-  }
-  def packageJson = T.sources {
-    Seq(
-      PathRef(os.Path(websiteDir().path.toNIO.resolve("package.json").toAbsolutePath))
-    )
-  }
-  def npmInstall = T {
-    packageJson() // unused here, just to re-trigger this task if package.json changes
-
-    val cmd = Seq("npm", "install")
-    val p = new ProcessBuilder(cmd: _*)
-    p.directory(websiteDir().path.toIO)
-    p.inheritIO()
-    val b = p.start()
-    val retCode = b.waitFor()
-    if (retCode != 0)
-      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
-  }
-
-  def httpServerBg() = T.command {
-    npmInstall()
-    val cmd = Seq("npx", "http-server", websiteDir().path.toNIO.resolve("build/coursier").toString)
-    val p = new ProcessBuilder(cmd: _*)
-    p.directory(websiteDir().path.toIO)
-    p.inheritIO()
-    val b = p.start()
-  }
-
-  def yarnRunBuild = T {
-    npmInstall()
-    mdoc()
-    val cmd = Seq("yarn", "run", "build")
-    val p = new ProcessBuilder(cmd: _*)
-    p.directory(websiteDir().path.toIO)
-    p.inheritIO()
-    val b = p.start()
-    val retCode = b.waitFor()
-    if (retCode != 0)
-      sys.error(s"Error running ${cmd.mkString(" ")} (return code: $retCode)")
-  }
-
-  def yarnStartBg() = T.command {
-    npmInstall()
-    val cmd = Seq("yarn", "run", "start")
-    val p = new ProcessBuilder(cmd: _*)
-    p.directory(websiteDir().path.toIO)
-    p.inheritIO()
-    val b = p.start()
-  }
 }
 
 object Relativize {

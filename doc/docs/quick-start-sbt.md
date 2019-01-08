@@ -4,7 +4,7 @@ title: sbt plugin
 
 Enable the sbt plugin by adding
 ```scala
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
+@EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
 ```
 either
 - to the `project/plugins.sbt` file of an sbt project, or

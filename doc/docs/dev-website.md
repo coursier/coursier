@@ -35,18 +35,18 @@ PATH.
 
 To generate the website once, run
 ```bash
-$ mill -i all doc.publishLocal doc.relativize doc.httpServerBg
+$ mill -i all doc.publishLocal doc.docusaurus.postProcess doc.docusaurus.httpServerBg
 ```
 
 - `publishLocal` publishes locally the core and cache modules, so that they can be later picked by mdoc,
-- `relativize` runs mdoc, then docusaurus via `yarn run build` from `doc/website`, then relativizes the output of docusaurus (under `doc/website/build`),
+- `postProcess` runs mdoc, then docusaurus via `yarn run build` from `doc/website`, then post-processes the output of docusaurus (under `doc/website/build` - this mostly relativizes links),
 - `httpServerBg` runs `npx http-server doc/website/build/coursier`, which starts a website to browse the generated documentation (its address should be printed in the console).
 
 ## Watch mode
 
 To run the website while watching its sources (under `doc/docs`), run
 ```bash
-$ mill -i all doc.publishLocal doc.mdoc doc.yarnStartBg doc.mdocWatch
+$ mill -i all doc.publishLocal doc.docusaurus.yarnStartBg doc.mdoc.mdocWatch
 ```
 
 - `publishLocal` publishes locally the core and cache modules, so that they can be later picked by mdoc,
