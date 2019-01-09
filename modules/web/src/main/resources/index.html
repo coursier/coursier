@@ -40,17 +40,13 @@
 
 <nav class="navbar navbar-default">
   <div class="container-fluid">
-    <div class="navbar-header">
-        <a class="navbar-brand active" href="#mainTab" data-toggle="tab" onclick="$('#mainNavBar li').removeClass('active')">Coursier</a>
-    </div>
-
     <div class="collapse navbar-collapse" id="mainNavBar">
         <ul class="nav navbar-nav">
             <li><a href="#demo" data-toggle="tab">Demo</a></li>
-            <li><a href="https://github.com/coursier/coursier/blob/master/USAGE.md">Usage</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
+            <li><a href="../">Home</a></li>
             <li><a href="https://github.com/coursier/coursier">Github</a></li>
         </ul>
     </div>
@@ -60,15 +56,15 @@
 
 <div class="tab-content" id="mainTabContent">
 
-    <div class="tab-pane fade in active" id="mainTab">
-        <div class="jumbotron">
-            <h1>Coursier</h1>
-            <p>Pure Scala Artifact Fetching</p>
-            <p><a href="https://github.com/coursier/coursier">Project Page</a></p>
-        </div>
-    </div>
-
-    <div class="tab-pane fade" id="demo">
+    <div class="tab-pane fade in active" id="demo">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+	    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Warning</strong> The repositories we query have different domains
+	    than this page.
+	    The requests to them are proxied through a public CORS proxy. Usage of this
+	    proxy is throttled, which can make medium to large resolutions
+	    fail.
+	</div>
         <div id="demoContent"></div>
     </div>
 
@@ -83,23 +79,6 @@
 </div>
 
 </div>
-
-<script>
-
-    // From scalajs-react examples
-
-    function jsonp(url, callback) {
-        var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-        window[callbackName] = function(data) {
-            delete window[callbackName];
-            callback(data);
-        };
-
-        var script = document.createElement('script');
-        script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-        document.body.appendChild(script);
-    }
-</script>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 

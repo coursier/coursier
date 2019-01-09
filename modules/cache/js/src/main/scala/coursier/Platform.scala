@@ -13,16 +13,14 @@ object Platform {
   def encodeURIComponent(s: String): String =
     g.encodeURIComponent(s).asInstanceOf[String]
 
-  lazy val jsonpAvailable = !js.isUndefined(g.jsonp)
-
-  val timeout = 
-    if (jsonpAvailable)
-      10000 // Browser - better to have it > 5000 for complex resolutions
-    else
-      4000  // Node - tests crash if not < 5000
+  val timeout = 4000
 
   /** Available if we're running on node, and package xhr2 is installed */
-  lazy val xhr = g.require("xhr2")
+  lazy val xhr =
+    if (js.isUndefined(g.XMLHttpRequest))
+      g.require("xhr2")
+    else
+      g.XMLHttpRequest
   def xhrReq() =
     js.Dynamic.newInstance(xhr)().asInstanceOf[XMLHttpRequest]
 
@@ -33,44 +31,20 @@ object Platform {
       }
     }
 
-  // FIXME Take into account HTTP error codes from YQL response
-  def proxiedJsonp(url: String)(implicit executionContext: ExecutionContext): Future[String] = {
-    val url0 =
-      "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%22" +
-        encodeURIComponent(url) +
-        "%22&format=jsonp&diagnostics=true"
-
+  def get(url: String)(implicit executionContext: ExecutionContext): Future[String] = {
     val p = Promise[String]()
+    val xhrReq0 = xhrReq()
+    val f = { _: Event =>
+      p.success(xhrReq0.responseText)
+    }
+    xhrReq0.onload = f
 
-    g.jsonp(url0, (res: js.Dynamic) => if (!p.isCompleted) {
-      val success = !js.isUndefined(res) && !js.isUndefined(res.results)
-      if (success)
-        p.success(res.results.asInstanceOf[js.Array[String]].mkString("\n"))
-      else
-        p.failure(new Exception(s"Fetching $url ($url0)"))
-    })
+    xhrReq0.open("GET", "https://jsonp.afeld.me/?url=" + url) // escaping…
+    xhrReq0.send()
 
-    fetchTimeout(s"$url ($url0)", p)
+    fetchTimeout(url, p)
     p.future
   }
-
-  def get(url: String)(implicit executionContext: ExecutionContext): Future[String] =
-    if (jsonpAvailable)
-      proxiedJsonp(url)
-    else {
-      val p = Promise[String]()
-      val xhrReq0 = xhrReq()
-      val f = { _: Event =>
-        p.success(xhrReq0.responseText)
-      }
-      xhrReq0.onload = f
-
-      xhrReq0.open("GET", url)
-      xhrReq0.send()
-
-      fetchTimeout(url, p)
-      p.future
-    }
 
   val artifact: Fetch.Content[Task] = { artifact =>
     EitherT(

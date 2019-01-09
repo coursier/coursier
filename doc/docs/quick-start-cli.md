@@ -11,7 +11,7 @@ $ curl -L -o coursier https://git.io/coursier &&
     ./coursier --help
 ```
 
-See [the dedicated page](cli-intro.md) for other installation methods.
+See [the dedicated page](cli-overview.md) for other installation methods.
 
 ## Running an application
 
@@ -19,6 +19,8 @@ Run an application distributed via artifacts with e.g.
 ```bash
 $ ./coursier launch com.lihaoyi:ammonite_2.11.8:1.0.3
 ```
+
+More details [details](cli-launch.md).
 
 ## List artifacts
 
@@ -34,4 +36,4 @@ $ ./coursier fetch \
 ...
 ```
 
-See [the dedicated page](cli-intro.md) for more features and examples.
+More details [details](cli-fetch.md).

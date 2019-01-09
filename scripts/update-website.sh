@@ -7,7 +7,7 @@ if [ "$TRAVIS_BRANCH" != "" ]; then
   source scripts/setup-build-tools.sh
 fi
 
-mill -i all doc.publishLocal doc.docusaurus.postProcess
+mill -i all doc.publishLocal doc.docusaurus.yarnRunBuild doc.docusaurus.postProcess
 
 if [ "${PUSH_WEBSITE:-""}" = 1 ]; then
   ./scripts/push-website.sh

@@ -3,19 +3,11 @@ set -eu
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-if [ ! -e doc/website/build/coursier/index.html ]; then
-  echo "Generated website not found under doc/website/build/coursier"
-  exit 1
-fi
+cd doc/website
+yarn run build
+cd -
 
-if echo "$OSTYPE" | grep -q darwin; then
-  GREP="ggrep"
-else
-  GREP="grep"
-fi
-
-VERSION="$("$GREP" -oP '(?<=")[^"]*(?<!")' version.sbt)"
-echo "Current version is $VERSION"
+sbt web/fastOptJS::webpack
 
 mkdir -p target
 cd target
@@ -32,40 +24,28 @@ cd gh-pages
 git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"
 
-UPDATE="0"
+echo "Cleaning-up gh-pages"
+git rm -r *
 
-if [ -d "$VERSION" ]; then
-  echo "Cleaning-up $VERSION directory"
-  git rm -r "$VERSION"
-  UPDATE="1"
-fi
-
-mkdir -p "$VERSION"
 echo "Copying new website"
-cp -pR ../../doc/website/build/coursier/* "$VERSION/"
-git add "$VERSION"
+cp -pR ../../doc/website/build/coursier/* .
+mkdir demo
+cp ../../modules/web/target/scala-2.12/scalajs-bundler/main/web-fastopt-bundle.js demo/
+sed 's@\.\./scalajs-bundler/main/@@g' < ../../modules/web/target/scala-2.12/classes/index.html > demo/index.html
+cat > demo.html << EOF
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="0; url=demo/" />
+</head>
+<body>
+Redirecting to <a href="demo/">demo/</a>
+</body>
+</html>
+EOF
+git add .
 
-DIRS=()
-
-if [[ ${VERSION} = *-SNAPSHOT || ${VERSION} = *+* ]]; then
-  DIRS=("snapshot")
-elif [[ ${VERSION} = *-M* || ${VERSION} = *-RC* ]]; then
-  DIRS=("snapshot" "latest")
-else
-  DIRS=("snapshot" "latest" "stable")
-fi
-
-for dir in "${DIRS[@]}"; do
-  rm -f "$dir"
-  ln -s "$VERSION" "$dir"
-  git add "$dir"
-done
-
-if [ "$UPDATE" = 1 ]; then
-  MSG="Update doc for version $VERSION"
-else
-  MSG="Add doc for version $VERSION"
-fi
+MSG="Update website"
 
 # probably not fine with i18n
 if git status | grep "nothing to commit" >/dev/null 2>&1; then
