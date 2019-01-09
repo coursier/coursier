@@ -55,9 +55,9 @@ object App {
                  val version0 = finalVersionOpt getOrElse dep.version
                  val relPath =
                    dep.module.organization.value.split('.').toSeq ++ Seq(
-                     dep.module.name,
+                     dep.module.name.value,
                      version0,
-                     s"${dep.module.name}-$version0"
+                     s"${dep.module.name.value}-$version0"
                    )
 
                  val root = source.root.stripSuffix("/") + "/"

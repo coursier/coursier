@@ -1,14 +1,9 @@
 ---
-title: Intro
+title: Overview
 hide_title: true
 ---
 
 # coursier
-
-*Pure Scala Artifact Fetching*
-
-**A Scala library to fetch dependencies from Maven / Ivy repositories**
-
 
 *coursier* is a dependency resolver / fetcher *à la* Maven / Ivy, entirely
 rewritten from scratch in Scala. It aims at being fast and easy to embed
@@ -24,7 +19,7 @@ It can be used
   - [easily list the transitive dependencies of applications or libraries](cli-resolve.md),
   - [download and list their artifacts](cli-fetch.md),
   - [run applications published via Maven / Ivy repositories](cli-launch.md),
-  - [and many other things](cli-intro.md).
+  - [and many other things](cli-overview.md).
 - [as a **library** via its API](quick-start-api.md), on the JVM or [from Scala JS](scala-js.md).
 
 *This is the documentation for version @VERSION@*.

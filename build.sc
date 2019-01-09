@@ -9,6 +9,8 @@ import java.nio.file._
 import mill.scalalib.Lib.resolveDependencies
 
 trait Mdoc extends Module {
+  def enableJS: T[Boolean] =
+    T(false)
   def module: T[mill.scalalib.Dep]
   def scalaVersion: T[String]
   def inputDir: T[PathRef]
@@ -19,13 +21,18 @@ trait Mdoc extends Module {
   def mdocFullClasspath = T.sources {
     val sv = scalaVersion()
     val mv = mdocVersion()
+    val extra =
+      if (enableJS())
+        Seq(mill.scalalib.Dep.parse(s"org.scalameta::mdoc-js:$mv"))
+      else
+        Nil
     resolveDependencies(
       Seq(coursier.Cache.ivy2Local, coursier.maven.MavenRepository("https://repo1.maven.org/maven2")),
       mill.scalalib.Lib.depToDependency(_, sv),
       Seq(
         mill.scalalib.Dep.parse(s"org.scalameta::mdoc:$mv"),
         module()
-      )
+      ) ++ extra
     ).map(_.toSeq)
   }
 
@@ -118,7 +125,7 @@ trait Docusaurus extends Module {
     val b = p.start()
   }
 
-  def yarnRunBuild = T {
+  def yarnRunBuild() = T.command {
     npmInstall()
     beforeRun()
     val cmd = Seq("yarn", "run", "build")
@@ -205,7 +212,7 @@ object doc extends Module { self =>
           """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
         else
           ""
-      Map(
+      super.mdocProps() ++ Map(
         "VERSION" -> v,
         "EXTRA_SBT" -> extraSbt,
         "PLUGIN_VERSION" -> v,

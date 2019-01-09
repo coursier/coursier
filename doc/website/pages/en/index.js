@@ -75,7 +75,7 @@ class HomeSplash extends React.Component {
           <ProjectTitle />
           <img id="screencast" src={imgUrl("coursier-launch.gif")} />
           <PromoSection>
-            <Button href={docUrl('intro', language)}>Docs</Button>
+            <Button href={docUrl('overview', language)}>Docs</Button>
             <Button href='https://github.com/coursier/coursier'>Code</Button>
           </PromoSection>
           <PromoSection>

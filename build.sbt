@@ -217,7 +217,6 @@ lazy val web = project("web")
   .dependsOn(coreJs, cacheJs)
   .settings(
     shared,
-    dontPublish,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(

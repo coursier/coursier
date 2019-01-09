@@ -15,7 +15,8 @@ const siteConfig = {
   customDocsPath: 'processed-docs',
 
   headerLinks: [
-    {doc: 'intro', label: 'Docs'},
+    {doc: 'overview', label: 'Docs'},
+    {blog: true, label: 'Blog'},
     {href: 'https://github.com/coursier/coursier', label: 'GitHub'},
   ],
 
@@ -40,6 +41,8 @@ const siteConfig = {
   enableUpdateTime: true, // doesn't seem to work
 
   editUrl: 'https://github.com/coursier/coursier/edit/master/doc/docs/',
+
+  twitter: true,
 };
 
 module.exports = siteConfig;
