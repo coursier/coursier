@@ -107,29 +107,6 @@ object Release {
   }
 
 
-  val updateScripts = ReleaseStep { state =>
-
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    val scriptsDir = Project.extract(state).get(baseDirectory.in(ThisBuild)) / "scripts"
-    val scriptFiles = Seq(
-      scriptsDir / "generate-launcher.sh"
-    )
-
-    val vcs = state.vcs
-
-    val log = toProcessLogger(state)
-
-    for (f <- scriptFiles) {
-      updateVersionInScript(f, releaseVer)
-      vcs.add(f.getAbsolutePath).!!(log)
-    }
-
-    state
-  }
-
   val updateLaunchers = ReleaseStep { state =>
 
     val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
@@ -326,7 +303,6 @@ object Release {
       addReleaseToManifest,
       publishArtifacts,
       releaseStepCommand("sonatypeRelease"),
-      updateScripts,
       updateLaunchers,
       updateMimaVersions,
       updateTestFixture,
