@@ -91,7 +91,6 @@ trait Docusaurus extends Module {
     )
   }
   def postProcess = T {
-    yarnRunBuild()
     Relativize.htmlSite(relativizeInput().head.path.toNIO)
   }
 
