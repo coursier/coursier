@@ -6,7 +6,7 @@ set -eu
 # config
 REPO="coursier/coursier"
 NAME="coursier"
-CMD="./scripts/generate-launcher.sh -f" # will work once sync-ed to Maven Central
+CMD="./scripts/generate-launcher.sh -f --bat=true" # will work once sync-ed to Maven Central
 
 # initial check with Sonatype releases
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -41,4 +41,11 @@ curl \
   --data-binary "@$OUTPUT" \
   -H "Content-Type: application/zip" \
   "https://uploads.github.com/repos/$REPO/releases/$RELEASE_ID/assets?name=$NAME&access_token=$GH_TOKEN"
+
+echo "Uploading bat file"
+
+curl \
+  --data-binary "@$OUTPUT.bat" \
+  -H "Content-Type: text/plain" \
+  "https://uploads.github.com/repos/$REPO/releases/$RELEASE_ID/assets?name=$NAME.bat&access_token=$GH_TOKEN"
 
