@@ -155,46 +155,6 @@ object Release {
 
   val milestonePattern = ("[^-]+" + Pattern.quote("-M") + "[0-9]+(-[0-9]+)*").r
 
-  val updateMimaVersions = ReleaseStep { state =>
-
-    val vcs = state.vcs
-    val log = toProcessLogger(state)
-
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    if (milestonePattern.unapplySeq(releaseVer).isEmpty) {
-
-      val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
-      val mimaScalaFile = baseDir / "project" / "Mima.scala"
-
-      val content = Source.fromFile(mimaScalaFile)(Codec.UTF8).mkString
-
-      mimaVersionsPattern.findAllIn(content).toVector match {
-        case Seq() => sys.error(s"Found no matches in $mimaScalaFile")
-        case Seq(_) =>
-        case _ => sys.error(s"Found too many matches in $mimaScalaFile")
-      }
-
-      val newContent = mimaVersionsPattern.replaceAllIn(
-        content,
-        m => {
-          val indent = m.group(1)
-          indent + "\"" + releaseVer + "\",\n" +
-            indent + "\"\" // binary compatibility versions"
-        }
-      )
-
-      Files.write(mimaScalaFile.toPath, newContent.getBytes(StandardCharsets.UTF_8))
-      vcs.add(mimaScalaFile.getAbsolutePath).!!(log)
-    } else
-      state.log.info(s"$releaseVer is a milestone release, not adding it to the MIMA checks")
-
-
-    state
-  }
-
   val updateTestFixture = ReleaseStep(
     action = { state =>
 
@@ -304,7 +264,6 @@ object Release {
       publishArtifacts,
       releaseStepCommand("sonatypeRelease"),
       updateLaunchers,
-      updateMimaVersions,
       updateTestFixture,
       commitUpdates,
       reallyTagRelease,
