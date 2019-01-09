@@ -7,7 +7,9 @@ addons:
     update: true
 stages:
   - name: test
-  - name: release
+  - name: upload-launcher
+    if: tag IS present
+  - name: update-website
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
   include:
@@ -36,7 +38,10 @@ jobs:
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - env: WEBSITE=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/update-website.sh
-    - stage: release
+    - stage: upload-launcher
+      env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
+      script: scripts/upload-launcher.sh
+    - stage: update-website
       env: PUSH_WEBSITE=1
       script: scripts/update-website.sh
 branches:
