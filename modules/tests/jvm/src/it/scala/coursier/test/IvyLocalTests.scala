@@ -12,23 +12,24 @@ object IvyLocalTests extends TestSuite {
 
   private val runner = new TestRunner
 
+  def localVersion = "0.1.2-publish-local"
+
   val tests = TestSuite{
     'coursier {
       val module = mod"io.get-coursier:coursier-core_2.11"
-      val version = coursier.util.Properties.version
 
       val extraRepos = Seq(LocalRepositories.ivy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
       'resolution - runner.resolutionCheck(
-        module, version,
+        module, localVersion,
         extraRepos
       )
 
       'uniqueArtifacts - async {
 
         val res = await(runner.resolve(
-          Set(Dependency(mod"io.get-coursier:coursier-cli_2.12", version, transitive = false)),
+          Set(Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion, transitive = false)),
           extraRepos = extraRepos
         ))
 
@@ -45,7 +46,7 @@ object IvyLocalTests extends TestSuite {
 
       'javadocSources - async {
         val res = await(runner.resolve(
-          Set(Dependency(module, version)),
+          Set(Dependency(module, localVersion)),
           extraRepos = extraRepos
         ))
 
