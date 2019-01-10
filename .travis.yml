@@ -28,10 +28,6 @@ jobs:
       sudo: required
       services: docker
     - env: SCALA_VERSION=2.12 SCALA_JS=1
-    - env: SCALA_VERSION=2.12 SCALA_JS=1
-      jdk: openjdk11
-      before_install: ./scripts/setup-build-tools.sh
-      script: bin/sbt scala212 testsJS/test
     - env: SCALA_VERSION=2.11 SCALA_JS=1
     - env: PANTS=1 # unused in the script, just to tag the job on the Travis CI UI
       # Sanity check for Pants build path.
