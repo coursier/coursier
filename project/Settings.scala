@@ -26,8 +26,7 @@ object Settings {
     resolvers += Resolver.mavenLocal
   }
 
-  lazy val javaScalaPluginShared = Publish.released ++ Seq(
-    organization := "io.get-coursier",
+  lazy val javaScalaPluginShared = Seq(
     scalazBintrayRepository,
     sonatypeRepository("releases"),
     crossScalaVersions := ScalaVersion.versions, // defined for all projects to trump sbt-doge
