@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -eu
 
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 if [[ ${TRAVIS_TAG} != v* ]]; then
   echo "Not on a git tag"
   exit 1
 fi
 
 export VERSION="$(echo "$TRAVIS_TAG" | sed 's@^v@@')"
+
+source scripts/setup-build-tools.sh
 
 # adapted fro https://github.com/almond-sh/almond/blob/d9f838f74dbc95965032e8b51568f7c1c7f2e71b/scripts/upload-launcher.sh
 
@@ -16,14 +20,18 @@ NAME="coursier"
 CMD="./scripts/generate-launcher.sh -f --bat=true" # will work once sync-ed to Maven Central
 
 # initial check with Sonatype releases
-cd "$(dirname "${BASH_SOURCE[0]}")"
 mkdir -p target/launcher
 export OUTPUT="target/launcher/$NAME"
 $CMD -r sonatype:releases
 
 
 # actual script
-RELEASE_ID="$(http "https://api.github.com/repos/$REPO/releases?access_token=$GH_TOKEN" | jq -r '.[] | select(.name == "v'"$VERSION"'") | .id')"
+RELEASE_ID="$(curl "https://api.github.com/repos/$REPO/releases?access_token=$GH_TOKEN" | jq -r '.[] | select(.tag_name == "v'"$VERSION"'") | .id')"
+
+if [ "$RELEASE_ID" = "" ]; then
+  echo "Error: no release id found" 1>&2
+  exit 1
+fi
 
 echo "Release ID is $RELEASE_ID"
 
