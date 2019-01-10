@@ -395,7 +395,20 @@ lazy val proguardedBootstrap = Seq(
 )
 
 lazy val proguardedCli = Seq(
-  proguardedJar := proguardedJarTask.value,
+  proguardedJar := Def.taskDyn {
+    val dummy = sys.env.get("DUMMY_PROGUARD").filter(_ != "0") match {
+      case Some("1") => true
+      case Some(s) => sys.error(s"Invalid DUMMY_PROGUARD value: '$s'")
+      case None => false
+    }
+    if (dummy)
+      Def.task {
+        java.nio.file.Files.createTempFile("dummy-proguard-cli", ".jar")
+          .toFile
+      }
+    else
+      proguardedJarTask
+  }.value,
   proguardVersion.in(Proguard) := SharedVersions.proguard,
   proguardOptions.in(Proguard) ++= Seq(
     "-dontwarn",
