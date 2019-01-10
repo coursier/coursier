@@ -7,7 +7,7 @@ plugins_(
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
   "org.scala-js"       % "sbt-scalajs"              % "0.6.25",
   "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.13.1",
-  "org.portable-scala" % "sbt-scalajs-crossproject" % "0.4.0",
+  "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0",
   "io.get-coursier"    % "sbt-shading"              % coursierVersion,
   "com.timushev.sbt"   % "sbt-updates"              % "0.3.4"
 )
