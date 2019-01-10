@@ -24,8 +24,10 @@ git config user.email "invalid@travis-ci.com"
 
 VERSION="$(echo "$TRAVIS_TAG" | sed 's@^v@@')"
 
-mill -i all doc.publishLocal doc.mdoc.mdoc doc.docusaurus.postProcess
+mill -i all doc.publishLocal doc.mdoc.mdoc
 cd doc/website
+npm install
+yarn run build
 yarn run version "$VERSION"
 cd -
 
