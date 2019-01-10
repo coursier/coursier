@@ -32,6 +32,7 @@ jobs:
     - env: SCALA_VERSION=2.11
       sudo: required
       services: docker
+    - env: SCALA_VERSION=2.12 BOOTSTRAP=1
     - env: SCALA_VERSION=2.12 NATIVE=1
       before_install: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
