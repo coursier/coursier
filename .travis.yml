@@ -34,7 +34,6 @@ jobs:
       sudo: required
       services: docker
     - env: SCALA_VERSION=2.12 SCALA_JS=1
-    - env: SCALA_VERSION=2.11 SCALA_JS=1
     - env: PANTS=1 # unused in the script, just to tag the job on the Travis CI UI
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
