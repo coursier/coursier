@@ -16,7 +16,7 @@ object IvyLocalTests extends TestSuite {
 
   val tests = TestSuite{
     'coursier {
-      val module = mod"io.get-coursier:coursier-core_2.11"
+      val module = mod"io.get-coursier:coursier-core_2.12"
 
       val extraRepos = Seq(LocalRepositories.ivy2Local)
 

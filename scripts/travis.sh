@@ -11,7 +11,7 @@ setupCoursierBinDir() {
 
 integrationTestsRequirements() {
   # Required for ~/.ivy2/local repo tests
-  DUMMY_PROGUARD=1 sbt 'set version in ThisBuild := "0.1.2-publish-local"' scala211 coreJVM/publishLocal scala212 cli/publishLocal
+  DUMMY_PROGUARD=1 sbt 'set version in ThisBuild := "0.1.2-publish-local"' scala212 coreJVM/publishLocal cli/publishLocal
 }
 
 isScalaJs() {
