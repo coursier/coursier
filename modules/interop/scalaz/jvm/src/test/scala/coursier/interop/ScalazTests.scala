@@ -1,7 +1,7 @@
 package coursier.interop
 
-import coursier.{Module, moduleNameString, moduleString, organizationString}
-import coursier.interop.scalaz._
+import coursier.moduleString
+import coursier.interop.scalaz.{coursierGatherFromScalaz => _, _}
 import coursier.test.compatibility.executionContext
 import coursier.test.{TestRunner, compatibility}
 import _root_.scalaz.concurrent.{Task => ScalazTask}
