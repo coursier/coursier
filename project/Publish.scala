@@ -1,4 +1,5 @@
 
+import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt._
 import sbt.Keys._
 
@@ -28,6 +29,13 @@ object Publish {
     // },
     publishArtifact := {
       !sbv.contains(scalaBinaryVersion.value) && publishArtifact.value
+    }
+  )
+
+  def dontPublishScalaJsIn(sbv: String*) = Seq(
+    publishArtifact := {
+      (!ScalaJSPlugin.autoImport.isScalaJSProject.value || !sbv.contains(scalaBinaryVersion.value)) &&
+        publishArtifact.value
     }
   )
 
