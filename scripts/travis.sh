@@ -18,6 +18,10 @@ isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
 
+isScalaNative() {
+  [ "$NATIVE" = 1 ]
+}
+
 jsCompile() {
   sbt scalaFromEnv js/compile js/test:compile coreJS/fastOptJS cacheJS/fastOptJS testsJS/test:fastOptJS js/test:fastOptJS
 }
@@ -126,13 +130,11 @@ testBootstrap() {
 }
 
 testNativeBootstrap() {
-  if [ "$SCALA_VERSION" = "2.12" -a "$NATIVE" = "1" ]; then
-    sbt scalaFromEnv "project cli" pack
-    modules/cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
-    if [ "$(./native-echo -n foo a)" != "foo a" ]; then
-      echo "Error: unexpected output from native test bootstrap." 1>&2
-      exit 1
-    fi
+  sbt scalaFromEnv cli/pack
+  modules/cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
+  if [ "$(./native-echo -n foo a)" != "foo a" ]; then
+    echo "Error: unexpected output from native test bootstrap." 1>&2
+    exit 1
   fi
 }
 
@@ -142,9 +144,9 @@ setupCoursierBinDir
 if isScalaJs; then
   jsCompile
   runJsTests
-else
+elif isScalaNative; then
   testNativeBootstrap
-
+else
   integrationTestsRequirements
   jvmCompile
 
