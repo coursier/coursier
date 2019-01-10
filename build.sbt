@@ -28,6 +28,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
+    dontPublishScalaJsIn("2.11"),
     libs += Deps.scalaReflect.value % Provided,
     Mima.previousArtifacts,
     Mima.coreFilters
@@ -90,6 +91,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
     coursierPrefix,
     Mima.cacheFilters
@@ -109,6 +111,7 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .settings(
     name := "scalaz-interop",
     shared,
+    dontPublishScalaJsIn("2.11"),
     utest,
     Mima.previousArtifacts,
     coursierPrefix
@@ -122,6 +125,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .settings(
     name := "cats-interop",
     shared,
+    dontPublishScalaJsIn("2.11"),
     utest,
     Mima.previousArtifacts,
     coursierPrefix,
@@ -186,7 +190,7 @@ lazy val cli = project("cli")
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
-    dontPublishIn("2.11"),
+    onlyPublishIn("2.12"),
     coursierPrefix,
     unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
     scalacOptions += "-Ypartial-unification",
@@ -217,6 +221,7 @@ lazy val web = project("web")
   .dependsOn(coreJs, cacheJs)
   .settings(
     shared,
+    onlyPublishIn("2.12"),
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -261,6 +266,7 @@ lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
   .dependsOn(core, cache)
   .settings(
     shared,
+    dontPublishScalaJsIn("2.11"),
     moduleName := "coursier",
     // POM only
     publishArtifact.in(Compile, packageDoc) := false,
