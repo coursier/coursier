@@ -1,12 +1,16 @@
 language: java
 os: linux
 jdk: oraclejdk8
+before_install:
+  - git fetch --tags
 script: scripts/travis.sh
 addons:
   apt:
     update: true
 stages:
   - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
   - name: upload-launcher
     if: tag IS present
   - name: update-versioned-docs
@@ -18,9 +22,8 @@ jobs:
     - env: SCALA_VERSION=2.13
       sudo: required
       services: docker
-    - env: SCALA_VERSION=2.12 NATIVE=1
+    - env: SCALA_VERSION=2.12
       sudo: required
-      before_install: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
       services: docker
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
@@ -29,13 +32,17 @@ jobs:
     - env: SCALA_VERSION=2.11
       sudo: required
       services: docker
+    - env: SCALA_VERSION=2.12 BOOTSTRAP=1
+    - env: SCALA_VERSION=2.12 NATIVE=1
+      before_install: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
-    - env: SCALA_VERSION=2.11 SCALA_JS=1
     - env: PANTS=1 # unused in the script, just to tag the job on the Travis CI UI
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - env: WEBSITE=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/update-website.sh
+    - stage: release
+      script: sbt ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh

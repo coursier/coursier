@@ -3,6 +3,20 @@ import Aliases._
 import Settings.{crossProject, project, _}
 import Publish._
 
+inThisBuild(List(
+  organization := "io.get-coursier",
+  homepage := Some(url("https://github.com/coursier/coursier")),
+  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  developers := List(
+    Developer(
+      "alexarchambault",
+      "Alexandre Archambault",
+      "alexandre.archambault@gmail.com",
+      url("https://github.com/alexarchambault")
+    )
+  )
+))
+
 lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
