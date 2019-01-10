@@ -8,6 +8,12 @@ if [ "$TRAVIS_BRANCH" != "" ]; then
   npm install
   npm install bower
   export PATH="$PATH:$(pwd)/node_modules/bower/bin"
+
+  mkdir -p target
+  cd target
+  git clone https://github.com/coursier/versioned-docs.git
+  cd ..
+  cp target/versioned-docs/* doc/website/
 fi
 
 mill -i all doc.publishLocal doc.docusaurus.yarnRunBuild doc.docusaurus.postProcess

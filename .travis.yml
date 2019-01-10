@@ -9,6 +9,8 @@ stages:
   - name: test
   - name: upload-launcher
     if: tag IS present
+  - name: update-versioned-docs
+    if: tag IS present
   - name: update-website
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
@@ -37,6 +39,8 @@ jobs:
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh
+    - stage: update-versioned-docs
+      script: scripts/update-versioned-docs.sh
     - stage: update-website
       env: PUSH_WEBSITE=1
       script: scripts/update-website.sh
