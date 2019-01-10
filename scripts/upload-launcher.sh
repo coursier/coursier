@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -eu
 
+if [[ ${TRAVIS_TAG} != v* ]]; then
+  echo "Not on a git tag"
+  exit 1
+fi
+
+export VERSION="$(echo "$TRAVIS_TAG" | sed 's@^v@@')"
+
 # adapted fro https://github.com/almond-sh/almond/blob/d9f838f74dbc95965032e8b51568f7c1c7f2e71b/scripts/upload-launcher.sh
 
 # config
@@ -16,8 +23,6 @@ $CMD -r sonatype:releases
 
 
 # actual script
-VERSION="$(git describe --tags --abbrev=0 --always --match 'v*' | sed 's@^v@@')"
-
 RELEASE_ID="$(http "https://api.github.com/repos/$REPO/releases?access_token=$GH_TOKEN" | jq -r '.[] | select(.name == "v'"$VERSION"'") | .id')"
 
 echo "Release ID is $RELEASE_ID"
