@@ -5,7 +5,7 @@ plugins_(
   "com.typesafe"       % "sbt-mima-plugin"          % "0.3.0",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.11",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
-  "org.scala-js"       % "sbt-scalajs"              % "0.6.25",
+  "org.scala-js"       % "sbt-scalajs"              % "0.6.26",
   "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.13.1",
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.4.0",
   "io.get-coursier"    % "sbt-shading"              % coursierVersion,
