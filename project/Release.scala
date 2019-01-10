@@ -1,5 +1,5 @@
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
 import java.util.regex.Pattern
 
 import com.typesafe.sbt.pgp.PgpKeys
@@ -107,29 +107,6 @@ object Release {
   }
 
 
-  val updateScripts = ReleaseStep { state =>
-
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    val scriptsDir = Project.extract(state).get(baseDirectory.in(ThisBuild)) / "scripts"
-    val scriptFiles = Seq(
-      scriptsDir / "generate-launcher.sh"
-    )
-
-    val vcs = state.vcs
-
-    val log = toProcessLogger(state)
-
-    for (f <- scriptFiles) {
-      updateVersionInScript(f, releaseVer)
-      vcs.add(f.getAbsolutePath).!!(log)
-    }
-
-    state
-  }
-
   val updateLaunchers = ReleaseStep { state =>
 
     val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
@@ -177,75 +154,6 @@ object Release {
   val mimaVersionsPattern = s"(?m)^(\\s+)${Pattern.quote("\"\" // binary compatibility versions")}$$".r
 
   val milestonePattern = ("[^-]+" + Pattern.quote("-M") + "[0-9]+(-[0-9]+)*").r
-
-  val updateMimaVersions = ReleaseStep { state =>
-
-    val vcs = state.vcs
-    val log = toProcessLogger(state)
-
-    val (releaseVer, _) = state.get(ReleaseKeys.versions).getOrElse {
-      sys.error(s"${ReleaseKeys.versions.label} key not set")
-    }
-
-    if (milestonePattern.unapplySeq(releaseVer).isEmpty) {
-
-      val baseDir = Project.extract(state).get(baseDirectory.in(ThisBuild))
-      val mimaScalaFile = baseDir / "project" / "Mima.scala"
-
-      val content = Source.fromFile(mimaScalaFile)(Codec.UTF8).mkString
-
-      mimaVersionsPattern.findAllIn(content).toVector match {
-        case Seq() => sys.error(s"Found no matches in $mimaScalaFile")
-        case Seq(_) =>
-        case _ => sys.error(s"Found too many matches in $mimaScalaFile")
-      }
-
-      val newContent = mimaVersionsPattern.replaceAllIn(
-        content,
-        m => {
-          val indent = m.group(1)
-          indent + "\"" + releaseVer + "\",\n" +
-            indent + "\"\" // binary compatibility versions"
-        }
-      )
-
-      Files.write(mimaScalaFile.toPath, newContent.getBytes(StandardCharsets.UTF_8))
-      vcs.add(mimaScalaFile.getAbsolutePath).!!(log)
-    } else
-      state.log.info(s"$releaseVer is a milestone release, not adding it to the MIMA checks")
-
-
-    state
-  }
-
-  val updateTestFixture = ReleaseStep(
-    action = { state =>
-
-      val initialVer = state.get(initialVersion).getOrElse {
-        sys.error(s"${initialVersion.label} key not set")
-      }
-      val (_, nextVer) = state.get(ReleaseKeys.versions).getOrElse {
-        sys.error(s"${ReleaseKeys.versions.label} key not set")
-      }
-
-      if (initialVer == nextVer)
-        state
-      else {
-        val vcs = state.vcs
-        val log = toProcessLogger(state)
-
-        val originalFile = Paths.get(s"modules/tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$initialVer")
-        val originalContent = new String(Files.readAllBytes(originalFile), StandardCharsets.UTF_8)
-        val destFile = Paths.get(s"modules/tests/shared/src/test/resources/resolutions/io.get-coursier/coursier_2.11/$nextVer")
-        val destContent = originalContent.replace(initialVer, nextVer)
-        log.out(s"Writing $destFile")
-        Files.write(destFile, destContent.getBytes(StandardCharsets.UTF_8))
-        vcs.add(destFile.toAbsolutePath.toString).!!(log)
-        vcs.cmd("rm", originalFile.toAbsolutePath.toString).!!(log)
-        state
-      }
-    }
-  )
 
   val commitUpdates = ReleaseStep(
     action = { state =>
@@ -326,10 +234,7 @@ object Release {
       addReleaseToManifest,
       publishArtifacts,
       releaseStepCommand("sonatypeRelease"),
-      updateScripts,
       updateLaunchers,
-      updateMimaVersions,
-      updateTestFixture,
       commitUpdates,
       reallyTagRelease,
       setNextVersion,

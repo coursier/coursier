@@ -1,24 +1,49 @@
 
-import sbt._
 import sbt.Keys._
 
 import com.typesafe.tools.mima.plugin.MimaKeys._
-
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+
+import scala.sys.process._
 
 object Mima {
 
-  // Important: the line with the "binary compatibility versions" comment below is matched during releases
-  def binaryCompatibilityVersions = Set(
-    "" // binary compatibility versions
-  )
+  def stable(ver: String): Boolean =
+    ver
+      .replace("-RC", "-")
+      .forall(c => c == '.' || c == '-' || c.isDigit)
+
+  def binaryCompatibilityVersions: Set[String] = {
+
+    val latest = Seq("git", "describe", "--abbrev=0", "--match", "v*")
+      .!!
+      .trim
+      .stripPrefix("v")
+
+    assert(latest.nonEmpty, "Could not find latest version")
+
+    if (stable(latest)) {
+      val prefix = latest.split('.').take(2).map(_ + ".").mkString
+
+      val previous = Seq("git", "tag", "--list", "v" + prefix + "*")
+        .!!
+        .linesIterator
+        .map(_.trim.stripPrefix("v"))
+        .filter(stable)
+        .toSet
+
+      assert(previous.contains(latest), "Something went wrong")
+
+      previous
+    } else
+      Set()
+  }
 
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      binaryCompatibilityVersions.collect {
-        case ver if ver.nonEmpty =>
-          organization.value %%% moduleName.value % ver
+      binaryCompatibilityVersions.map { ver =>
+        organization.value %%% moduleName.value % ver
       }
     }
   )
