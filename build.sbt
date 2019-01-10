@@ -190,7 +190,7 @@ lazy val cli = project("cli")
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
-    dontPublishIn("2.11"),
+    onlyPublishIn("2.12"),
     coursierPrefix,
     unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
     scalacOptions += "-Ypartial-unification",
@@ -221,6 +221,7 @@ lazy val web = project("web")
   .dependsOn(coreJs, cacheJs)
   .settings(
     shared,
+    onlyPublishIn("2.12"),
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(

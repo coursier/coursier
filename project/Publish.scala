@@ -11,24 +11,12 @@ object Publish {
     publishArtifact := false
   )
 
-  def dontPublishIn(sbv: String*) = Seq(
-    // Doesn't work, the second publish or publishLocal seem not to reference the previous implementation of the key.
-    // This only seems to prevent ivy.xml files to be published locally anyway…
-    // See also similar case in Settings.scala.
-    // publish := Def.taskDyn {
-    //   if (sbv.contains(scalaBinaryVersion.value))
-    //     Def.task(())
-    //   else
-    //     publish
-    // },
-    // publishLocal := Def.taskDyn {
-    //   if (sbv.contains(scalaBinaryVersion.value))
-    //     Def.task(())
-    //   else
-    //     publishLocal
-    // },
+  def onlyPublishIn(sbv: String) = Seq(
     publishArtifact := {
-      !sbv.contains(scalaBinaryVersion.value) && publishArtifact.value
+      val sbv0 = CrossVersion.partialVersion(scalaBinaryVersion.value).fold("") {
+        case (maj, min) => s"$maj.$min"
+      }
+      sbv == sbv0 && publishArtifact.value
     }
   )
 
