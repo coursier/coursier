@@ -6,7 +6,7 @@ title: Command-line
 
 Download and run its launcher with
 ```bash
-$ curl -L -o coursier https://git.io/coursier &&
+$ curl -L -o coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
     ./coursier --help
 ```
