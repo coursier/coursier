@@ -6,7 +6,7 @@ import sbt.Keys._
 
 object Deps {
 
-  def catsCore = "org.typelevel" %% "cats-core" % "1.4.0"
+  def catsCore = "org.typelevel" %% "cats-core" % "1.5.0"
   def quasiQuotes = "org.scalamacros" %% "quasiquotes" % "2.1.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % SharedVersions.fastParse
   def jsoup = "org.jsoup" % "jsoup" % "1.11.3"
