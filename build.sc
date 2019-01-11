@@ -152,18 +152,7 @@ object doc extends Module { self =>
   def versionFile = T.sources {
     Seq(PathRef(os.Path(Paths.get("version.sbt").toAbsolutePath)))
   }
-  def version = T {
-    val b = Files.readAllBytes(versionFile().head.path.toNIO)
-    val s = new String(b, "UTF-8").linesIterator.toList.map(_.trim).filter(_.nonEmpty) match {
-      case h :: Nil => h
-      case _ => ???
-    }
-    val prefix = """version in ThisBuild := """"
-    val suffix = "\""
-    assert(s.startsWith(prefix))
-    assert(s.endsWith(suffix))
-    s.stripPrefix(prefix).stripSuffix(suffix)
-  }
+  def version = T("0.1.0-mdoc-SNAPSHOT")
 
   def scalaVersionFile = T.sources {
     Seq(PathRef(os.Path(Paths.get("project/ScalaVersion.scala").toAbsolutePath)))
@@ -182,7 +171,7 @@ object doc extends Module { self =>
   }
 
   def publishLocal() = T.command {
-    val cmd = Seq("sbt", "coreJVM/publishLocal", "cacheJVM/publishLocal")
+    val cmd = Seq("sbt", "set version in ThisBuild := \"" + version() + "\"", "coreJVM/publishLocal", "cacheJVM/publishLocal")
     val p = new ProcessBuilder(cmd: _*)
     p.inheritIO()
     val b = p.start()
