@@ -21,9 +21,15 @@ git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"
 
 echo "Cleaning-up gh-pages"
-git mv CNAME .CNAME
+mkdir .tmp
+while read i; do
+  git mv "$i" .tmp/
+done < <(cat .keep)
 git rm -r *
-git mv .CNAME CNAME
+while read i; do
+  git mv ".tmp/$i" .
+done < <(cat .keep)
+rmdir .tmp
 
 echo "Copying new website"
 cp -pR ../../doc/website/build/coursier/* .
