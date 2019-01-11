@@ -149,10 +149,10 @@ trait Docusaurus extends Module {
 }
 
 object doc extends Module { self =>
-  def versionFile = T.sources {
-    Seq(PathRef(os.Path(Paths.get("version.sbt").toAbsolutePath)))
-  }
   def version = T("0.1.0-mdoc-SNAPSHOT")
+  def actualVersion = T {
+    sys.env.get("TRAVIS_TAG").fold(version())(_.stripPrefix("v"))
+  }
 
   def scalaVersionFile = T.sources {
     Seq(PathRef(os.Path(Paths.get("project/ScalaVersion.scala").toAbsolutePath)))
@@ -193,7 +193,7 @@ object doc extends Module { self =>
       PathRef(os.Path(Paths.get("doc/processed-docs").toAbsolutePath))
     }
     def mdocProps = T {
-      val v = self.version()
+      val v = self.actualVersion()
       val sv = scalaVersion()
       val extraSbt =
         if (v.endsWith("SNAPSHOT"))
