@@ -54,6 +54,7 @@ jobs:
 branches:
   only:
   - master
+  - /^v\d+\.\d+.*$/ # tagged versions
 cache:
   directories:
   - $HOME/.m2

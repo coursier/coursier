@@ -3,10 +3,6 @@ set -eu
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-cd doc/website
-yarn run build
-cd -
-
 sbt web/fastOptJS::webpack
 
 mkdir -p target
