@@ -79,9 +79,9 @@ class HomeSplash extends React.Component {
             <Button href='https://github.com/coursier/coursier'>Code</Button>
           </PromoSection>
           <PromoSection>
-            <Button href={docUrl('quick-start-cli', language)}>CLI</Button>
-            <Button href={docUrl('quick-start-sbt', language)}>sbt</Button>
-            <Button href={docUrl('quick-start-api', language)}>API</Button>
+            <Button href={docUrl('quick-start-cli', language)}>Install CLI</Button>
+            <Button href={docUrl('quick-start-sbt', language)}>Setup sbt</Button>
+            <Button href={docUrl('quick-start-api', language)}>Use the API</Button>
           </PromoSection>
         </div>
       </SplashContainer>
