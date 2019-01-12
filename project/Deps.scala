@@ -10,7 +10,7 @@ object Deps {
   def quasiQuotes = "org.scalamacros" %% "quasiquotes" % "2.1.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % SharedVersions.fastParse
   def jsoup = "org.jsoup" % "jsoup" % "1.11.3"
-  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
+  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % SharedVersions.scalaz
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M5"
   def okhttpUrlConnection = "com.squareup.okhttp" % "okhttp-urlconnection" % "2.7.5"
