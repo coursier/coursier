@@ -4,6 +4,7 @@ jdk: oraclejdk8
 before_install:
   - git fetch --unshallow # https://stackoverflow.com/a/51727114/3714539
   - git fetch --tags
+  - source scripts/setup-build-tools.sh
 script: scripts/travis.sh
 addons:
   apt:
@@ -33,7 +34,6 @@ jobs:
       services: docker
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
-      before_install: ./scripts/setup-build-tools.sh
       script: bin/sbt scala212 test:compile testsJVM/test
     - env: SCALA_VERSION=2.11
       sudo: required
@@ -48,10 +48,8 @@ jobs:
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
-      before_install: scripts/setup-build-tools.sh
       script: bin/sbt ci-release
     - stage: release
-      before_install: scripts/setup-build-tools.sh
       script: bin/sbt ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
