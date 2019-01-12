@@ -47,9 +47,11 @@ jobs:
       script: scripts/update-website.sh
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
-      script: sbt ci-release
+      before_install: scripts/setup-build-tools.sh
+      script: bin/sbt ci-release
     - stage: release
-      script: sbt ci-release
+      before_install: scripts/setup-build-tools.sh
+      script: bin/sbt ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh
