@@ -149,7 +149,16 @@ trait Docusaurus extends Module {
 }
 
 object doc extends Module { self =>
-  def version = T("0.1.0-mdoc-SNAPSHOT")
+  def version = T {
+    import sys.process._
+    Seq("sbt", "export coreJVM/version")
+      .!!
+      .linesIterator
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .toSeq
+      .last
+  }
   def actualVersion = T {
     sys.env
       .get("TRAVIS_TAG")
