@@ -151,7 +151,10 @@ trait Docusaurus extends Module {
 object doc extends Module { self =>
   def version = T("0.1.0-mdoc-SNAPSHOT")
   def actualVersion = T {
-    sys.env.get("TRAVIS_TAG").fold(version())(_.stripPrefix("v"))
+    sys.env
+      .get("TRAVIS_TAG")
+      .filter(_.startsWith("v"))
+      .fold(version())(_.stripPrefix("v"))
   }
 
   def scalaVersionFile = T.sources {
