@@ -42,9 +42,9 @@ jobs:
     - env: SCALA_VERSION=2.12 NATIVE=1
       before_script: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
-    - env: WEBSITE=1 # unused from the script, just to know what the job does from the Travis UI
+    - name: "Website"
       script: scripts/update-website.sh
-    - env: PANTS=1 # unused in the script, just to tag the job on the Travis CI UI
+    - name: "Pants"
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - stage: release-snapshot
