@@ -2,6 +2,7 @@ language: java
 os: linux
 jdk: oraclejdk8
 before_install:
+  - git fetch --unshallow # https://stackoverflow.com/a/51727114/3714539
   - git fetch --tags
 script: scripts/travis.sh
 addons:
