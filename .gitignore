@@ -4,6 +4,8 @@ out/
 .idea/
 node_modules/
 
+package-lock.json
+
 # tut backups?
 .*.swp
 
@@ -15,3 +17,5 @@ node_modules/
 # generated site
 generated/
 processed-docs/
+
+bin/

@@ -3,3 +3,8 @@ build/
 yarn.lock
 node_modules
 i18n/*
+
+# these are handled in a separate repo
+versioned_docs/
+versioned_sidebars/
+versions.json
