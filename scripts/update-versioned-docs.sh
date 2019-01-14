@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -ev
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
-
 if [[ ${TRAVIS_TAG} != v* ]]; then
   echo "Not on a git tag"
   exit 1

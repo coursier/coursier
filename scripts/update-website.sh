@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 set -ev
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
+npm install
+npm install bower
+git checkout -- package.json
+export PATH="$PATH:$(pwd)/node_modules/bower/bin"
 
-if [ "$TRAVIS_BRANCH" != "" ]; then
-  npm install
-  npm install bower
-  git checkout -- package.json
-  export PATH="$PATH:$(pwd)/node_modules/bower/bin"
-
-  mkdir -p target
-  git clone https://github.com/coursier/versioned-docs.git target/versioned-docs
-  cd target/versioned-docs
-  cp -R versioned_docs versioned_sidebars versions.json ../../doc/website/
-  cd -
-fi
+mkdir -p target
+git clone https://github.com/coursier/versioned-docs.git target/versioned-docs
+cd target/versioned-docs
+cp -R versioned_docs versioned_sidebars versions.json ../../doc/website/
+cd -
 
 git status
 

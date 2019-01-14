@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euv
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
-
 sbt web/fastOptJS::webpack
 
 mkdir -p target
