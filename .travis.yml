@@ -36,7 +36,7 @@ jobs:
       services: docker
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
-      script: bin/sbt scala212 test:compile testsJVM/test
+      script: sbt scala212 test:compile testsJVM/test
     - env: SCALA_VERSION=2.11
       sudo: required
       services: docker
@@ -55,10 +55,10 @@ jobs:
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
-      script: bin/sbt ci-release
+      script: sbt ci-release
     - stage: release
       # publishLocal so that proguard and all compilation run before any publishing
-      script: bin/sbt +publishLocal ci-release
+      script: sbt +publishLocal ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh
