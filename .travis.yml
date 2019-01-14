@@ -44,6 +44,11 @@ jobs:
       before_script: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
+      before_script:
+        - npm install
+        - npm install bower
+        - git checkout -- package.json # FIXME Just add bower to package.json?
+        - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
       script: scripts/update-website.sh
     - name: "Pants"
       # Sanity check for Pants build path.
@@ -62,8 +67,10 @@ jobs:
     - stage: update-versioned-docs
       script: scripts/update-versioned-docs.sh
     - stage: update-website
-      env: PUSH_WEBSITE=1
-      script: scripts/update-website.sh
+      name: "Push website"
+      script:
+        - scripts/update-website.sh
+        - scripts/push-website.sh
 branches:
   only:
   - master
