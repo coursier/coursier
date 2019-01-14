@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -ev
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -15,6 +15,8 @@ if [ "$TRAVIS_BRANCH" != "" ]; then
   cd ..
   cp -R target/versioned-docs/* doc/website/
 fi
+
+git status
 
 mill -i all doc.publishLocal doc.docusaurus.yarnRunBuild doc.docusaurus.postProcess
 
