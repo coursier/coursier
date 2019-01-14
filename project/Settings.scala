@@ -241,8 +241,12 @@ object Settings {
       outputsValue.toSet
     }
     val inputs = (proguardConfiguration.in(Proguard).value +: SbtProguard.inputFiles(proguardFilteredInputs.in(Proguard).value)).toSet
-    cachedProguard(inputs)
-    proguardOutputs.in(Proguard).value
+
+    // coursier-specific: more agressive existing file re-use (ran into suspicious multiple runs of proguard on Travis CI)
+    if (outputsValue.exists(!_.exists()))
+      cachedProguard(inputs)
+
+    outputsValue
   }
 
   def runProguard(config: File, javaOptions: Seq[String], classpath: Seq[File], log: Logger): Unit = {
