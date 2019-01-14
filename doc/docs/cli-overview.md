@@ -22,7 +22,7 @@ its commands.
 
 Download and run its launcher with
 ```bash
-$ curl -L -o coursier https://git.io/coursier-cli &&
+$ curl -Lo coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
     ./coursier --help
 ```
