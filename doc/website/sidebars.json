@@ -5,7 +5,7 @@
     "Command-line": ["cli-overview", "cli-resolve", "cli-fetch", "cli-launch", "cli-bootstrap", "cli-native-bootstrap"],
     "API": ["api", "scala-js"],
     "Other": ["cache", "ttl", "other-proxy", "json-report", "extra", "limitations", "faq"],
-    "Development": ["dev-cli", "dev-website"],
-    "About": ["motivations", "contributing", "users"]
+    "Development": ["dev-contributing", "dev-cli", "dev-website"],
+    "About": ["motivations", "users"]
   }
 }
