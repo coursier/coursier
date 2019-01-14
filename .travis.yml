@@ -4,7 +4,6 @@ jdk: oraclejdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
 before_install:
-  - git fetch --tags
   - source scripts/setup-build-tools.sh
 script: scripts/travis.sh
 addons:
@@ -36,7 +35,7 @@ jobs:
       services: docker
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
-      script: bin/sbt scala212 test:compile testsJVM/test
+      script: sbt scala212 test:compile testsJVM/test
     - env: SCALA_VERSION=2.11
       sudo: required
       services: docker
@@ -44,26 +43,38 @@ jobs:
       before_script: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
+      before_script:
+        - npm install
+        - npm install bower
+        - git checkout -- package.json # FIXME Just add bower to package.json?
+        - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
       script: scripts/update-website.sh
     - name: "Pants"
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
-      script: bin/sbt ci-release
+      script: sbt ci-release
     - stage: release
       # publishLocal so that proguard and all compilation run before any publishing
-      script: bin/sbt +publishLocal ci-release
+      script: sbt +publishLocal ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh
     - stage: upload-launcher-gh-pages
       script: scripts/upload-launcher-gh-pages.sh
     - stage: update-versioned-docs
+      before_script:
+        - npm install
+        - npm install bower
+        - git checkout -- package.json # FIXME Just add bower to package.json?
+        - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
       script: scripts/update-versioned-docs.sh
     - stage: update-website
-      env: PUSH_WEBSITE=1
-      script: scripts/update-website.sh
+      name: "Push website"
+      script:
+        - scripts/update-website.sh
+        - scripts/push-website.sh
 branches:
   only:
   - master

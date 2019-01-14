@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euv
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
-
 sbt web/fastOptJS::webpack
+cp -pR ../../doc/website/build/coursier/* .
+mkdir doc/website/build/coursier/demo
+cp modules/web/target/scala-2.12/scalajs-bundler/main/web-fastopt-bundle.js doc/website/build/coursier/demo/
+sed 's@\.\./scalajs-bundler/main/@@g' < modules/web/target/scala-2.12/classes/index.html > doc/website/build/coursier/demo/index.html
+
 
 mkdir -p target
 cd target
@@ -33,20 +36,6 @@ rmdir .tmp
 
 echo "Copying new website"
 cp -pR ../../doc/website/build/coursier/* .
-mkdir demo
-cp ../../modules/web/target/scala-2.12/scalajs-bundler/main/web-fastopt-bundle.js demo/
-sed 's@\.\./scalajs-bundler/main/@@g' < ../../modules/web/target/scala-2.12/classes/index.html > demo/index.html
-cat > demo.html << EOF
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="refresh" content="0; url=demo/" />
-</head>
-<body>
-Redirecting to <a href="demo/">demo/</a>
-</body>
-</html>
-EOF
 git add .
 
 MSG="Update website"

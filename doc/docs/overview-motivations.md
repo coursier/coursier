@@ -1,5 +1,5 @@
 ---
-title: Why?
+title: Motivations
 ---
 
 *Direct former README import (possibly not up-to-date)*

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -evx
 
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
-
 setupCoursierBinDir() {
   mkdir -p bin
   cp coursier bin/
@@ -140,7 +138,6 @@ testNativeBootstrap() {
   fi
 }
 
-source scripts/setup-build-tools.sh
 setupCoursierBinDir
 
 if isScalaJs; then
