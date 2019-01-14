@@ -72,6 +72,11 @@ jobs:
       script: scripts/update-versioned-docs.sh
     - stage: update-website
       name: "Push website"
+      before_script:
+        - npm install
+        - npm install bower
+        - git checkout -- package.json # FIXME Just add bower to package.json?
+        - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
       script:
         - scripts/update-website.sh
         - scripts/push-website.sh
