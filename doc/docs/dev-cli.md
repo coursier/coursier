@@ -4,7 +4,9 @@ title: CLI
 
 coursier relies on [sbt-pack](https://github.com/xerial/sbt-pack) to build
 its CLI from sources. [sbt-pack](https://github.com/xerial/sbt-pack) conveniently allows to build a launcher for
-the CLI, either once, or continuously, while watching sources.
+the CLI, either once, or continuously, while watching sources. It has the
+advantage of not incurring the cost of merging multiple JARs together,
+like [generating an assembly](https://github.com/sbt/sbt-assembly) would.
 
 Note that this only applies during development, the
 final `coursier` launcher generated upon each release relies on the
