@@ -51,8 +51,8 @@ jobs:
       env: DUMMY_PROGUARD=1
       script: bin/sbt ci-release
     - stage: release
-      # cli/publishLocal so that proguard runs before any publishing
-      script: bin/sbt cli/publishLocal ci-release
+      # publishLocal so that proguard and all compilation run before any publishing
+      script: bin/sbt +publishLocal ci-release
     - stage: upload-launcher
       env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
       script: scripts/upload-launcher.sh
