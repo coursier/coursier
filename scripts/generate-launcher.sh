@@ -20,6 +20,5 @@ fi
   -J "-noverify" \
   --no-default \
   -r central \
-  -r sonatype:releases \
   -f -o "$OUTPUT" \
   "$@"
