@@ -152,6 +152,3 @@ $ ./coursier launch \
   -u jdbc:postgresql://HOST:PORT/DATABASE
 ```
 
-
-
-If you wish to pass additional argument to the artifact being launched, separate them from the coursier's parameters list with the "--", just like in the Wiremock example above.
