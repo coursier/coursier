@@ -6,11 +6,6 @@ if [[ ${TRAVIS_TAG} != v* ]]; then
   exit 1
 fi
 
-npm install
-npm install bower
-git checkout -- package.json
-export PATH="$PATH:$(pwd)/node_modules/bower/bin"
-
 mkdir -p target
 cd target
 git clone "https://${GH_TOKEN}@github.com/coursier/versioned-docs.git" -b master

@@ -65,6 +65,11 @@ jobs:
     - stage: upload-launcher-gh-pages
       script: scripts/upload-launcher-gh-pages.sh
     - stage: update-versioned-docs
+      before_script:
+        - npm install
+        - npm install bower
+        - git checkout -- package.json # FIXME Just add bower to package.json?
+        - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
       script: scripts/update-versioned-docs.sh
     - stage: update-website
       name: "Push website"
