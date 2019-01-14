@@ -17,7 +17,7 @@ mkdir -p target
 cd target
 git clone "https://${GH_TOKEN}@github.com/coursier/versioned-docs.git" -b master
 cd -
-cp target/versioned-docs/* doc/website/
+cp -R target/versioned-docs/* doc/website/
 
 git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"

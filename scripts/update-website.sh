@@ -13,7 +13,7 @@ if [ "$TRAVIS_BRANCH" != "" ]; then
   cd target
   git clone https://github.com/coursier/versioned-docs.git
   cd ..
-  cp target/versioned-docs/* doc/website/
+  cp -R target/versioned-docs/* doc/website/
 fi
 
 mill -i all doc.publishLocal doc.docusaurus.yarnRunBuild doc.docusaurus.postProcess
