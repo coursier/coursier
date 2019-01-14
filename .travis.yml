@@ -4,7 +4,6 @@ jdk: oraclejdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
 before_install:
-  - git fetch --tags
   - source scripts/setup-build-tools.sh
 script: scripts/travis.sh
 addons:
