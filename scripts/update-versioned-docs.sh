@@ -8,7 +8,6 @@ if [[ ${TRAVIS_TAG} != v* ]]; then
   exit 1
 fi
 
-source scripts/setup-build-tools.sh
 npm install
 npm install bower
 git checkout -- package.json

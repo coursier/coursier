@@ -140,7 +140,6 @@ testNativeBootstrap() {
   fi
 }
 
-source scripts/setup-build-tools.sh
 setupCoursierBinDir
 
 if isScalaJs; then
