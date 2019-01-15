@@ -7,9 +7,13 @@ title: Usage
 Add to your `build.sbt`
 ```scala
 @EXTRA_SBT@libraryDependencies ++= Seq(
-  "io.get-coursier" %% "coursier" % "@VERSION@",
+  "io.get-coursier" %% "coursier-core" % "@VERSION@",
   "io.get-coursier" %% "coursier-cache" % "@VERSION@"
 )
+```
+or simply
+```scala
+@EXTRA_SBT@libraryDependencies += "io.get-coursier" %% "coursier" % "@VERSION@"
 ```
 
 The first module, `"io.get-coursier" %% "coursier" % "@VERSION@"`, contains among others,
