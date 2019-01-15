@@ -30,13 +30,13 @@ $ curl -Lo coursier https://git.io/coursier-cli &&
 The launcher itself weights only 17 kB and can be easily embedded as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
-The short URL [`https://git.io.coursier-cli`](https://git.io.coursier-cli) redirects to
-[`https://github.com/coursier/coursier/raw/gh-pages/coursier`](https://github.com/coursier/coursier/raw/gh-pages/coursier).
+The short URL <https://git.io/coursier-cli> redirects to
+<https://github.com/coursier/coursier/raw/gh-pages/coursier>.
 From version `1.0.0-RC1` to `1.1.0-M9`, `gh-pages` in the latter URL can be replaced by the
 tag of a specific version, to download the launcher of that exact version, like
-[`https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier`](https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier). For versions `1.1.0-M9` and later,
+<https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier>. For versions `1.1.0-M9` and later,
 the launcher is available as an asset on the GitHub release page, e.g.
-[`https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier`](https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier).
+<https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier>.
 
 ### brew
 
