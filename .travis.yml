@@ -53,10 +53,11 @@ jobs:
       # publishLocal so that proguard and all compilation run before any publishing
       script: sbt +publishLocal ci-release
     - stage: upload-launcher
-      env: UPLOAD_LAUNCHER=1 # unused from the script, just to know what the job does from the Travis UI
-      script: scripts/upload-launcher.sh
+      env: REPO="coursier/coursier" NAME="coursier" CMD="./scripts/generate-launcher.sh -f --bat=true"
+      script: scripts/upload-launcher/upload-gh-release.sh
     - stage: upload-launcher-gh-pages
-      script: scripts/upload-launcher-gh-pages.sh
+      env: REPO="coursier/coursier" NAME="coursier"
+      script: scripts/upload-launcher/upload-gh-pages.sh
     - stage: update-versioned-docs
       env: WEBSITE_DIR=doc/website VERSIONED_DOCS_REPO=coursier/versioned-docs
       script:

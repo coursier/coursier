@@ -8,13 +8,6 @@ fi
 
 export VERSION="$(echo "$TRAVIS_TAG" | sed 's@^v@@')"
 
-# adapted fro https://github.com/almond-sh/almond/blob/d9f838f74dbc95965032e8b51568f7c1c7f2e71b/scripts/upload-launcher.sh
-
-# config
-REPO="coursier/coursier"
-NAME="coursier"
-CMD="./scripts/generate-launcher.sh -f --bat=true" # will work once sync-ed to Maven Central
-
 # initial check with Sonatype releases
 mkdir -p target/launcher
 export OUTPUT="target/launcher/$NAME"

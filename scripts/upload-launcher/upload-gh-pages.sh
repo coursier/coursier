@@ -17,16 +17,16 @@ if [ -d gh-pages ]; then
 fi
 
 echo "Cloning"
-git clone "https://${GH_TOKEN}@github.com/coursier/coursier.git" -q -b gh-pages gh-pages
+git clone "https://${GH_TOKEN}@github.com/$REPO.git" -q -b gh-pages gh-pages
 cd gh-pages
 
 git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"
 
-curl -Lo coursier "https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/coursier"
-curl -Lo coursier.bat "https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/coursier.bat"
+curl -Lo "$NAME" "https://github.com/$REPO/releases/download/$TRAVIS_TAG/$NAME"
+curl -Lo "$NAME.bat" "https://github.com/$REPO/releases/download/$TRAVIS_TAG/$NAME.bat"
 
-git add -- coursier coursier.bat
+git add -- "$NAME" "$NAME.bat"
 
 MSG="Add $VERSION launcher"
 
