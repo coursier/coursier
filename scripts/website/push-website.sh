@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
 set -euv
 
-sbt web/fastOptJS::webpack
-cp -pR ../../doc/website/build/coursier/* .
-mkdir doc/website/build/coursier/demo
-cp modules/web/target/scala-2.12/scalajs-bundler/main/web-fastopt-bundle.js doc/website/build/coursier/demo/
-sed 's@\.\./scalajs-bundler/main/@@g' < modules/web/target/scala-2.12/classes/index.html > doc/website/build/coursier/demo/index.html
-
-
 mkdir -p target
-cd target
 
-if [ -d gh-pages ]; then
+if [ -d target/gh-pages ]; then
   echo "Removing former gh-pages clone"
-  rm -rf gh-pages
+  rm -rf target/gh-pages
 fi
 
 echo "Cloning"
-git clone "https://${GH_TOKEN}@github.com/coursier/coursier.git" -q -b gh-pages gh-pages
-cd gh-pages
+git clone "https://${GH_TOKEN}@github.com/$REPO.git" -q -b gh-pages target/gh-pages
+cd target/gh-pages
 
 git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"
@@ -35,7 +27,9 @@ done < <(cat .keep)
 rmdir .tmp
 
 echo "Copying new website"
-cp -pR ../../doc/website/build/coursier/* .
+cd -
+cp -pR "$WEBSITE_DIR/build/"*/* target/gh-pages/
+cd target/gh-pages
 git add .
 
 MSG="Update website"

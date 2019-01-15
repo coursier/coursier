@@ -5,5 +5,8 @@
     "cheerio": "0.22.0",
     "xmldom": "0.1.27",
     "xhr2": "0.1.4"
+  },
+  "dependencies": {
+    "bower": "^1.8.4"
   }
 }
