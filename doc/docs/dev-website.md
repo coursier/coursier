@@ -9,21 +9,19 @@ under [`doc/docs`](https://github.com/coursier/coursier/tree/master/doc/docs)
 [`doc/website`](https://github.com/coursier/coursier/tree/master/doc/website)
 (docusaurus configuration mostly).
 
-Some of its logic is handled via the
-[mill](https://www.lihaoyi.com/mill) build tool, even though coursier
-itself is still built via [sbt](https://www.scala-sbt.org).
+Some of its logic is handled via [Ammonite](https://ammonite.io).
 
 ## Setup
 
-### mill
+### Ammonite
 
-Ensure [mill](https://www.lihaoyi.com/mill) `0.3.5` is installed. Alternatively,
+Ensure [Ammonite](https://ammonite.io) `1.6.x` is installed. Alternatively,
 fetch it via
 ```bash
-$ curl -Lo mill https://github.com/lihaoyi/mill/releases/download/0.3.5/0.3.5
-$ chmod +x mill
+$ (echo "#!/usr/bin/env sh" && curl -L https://github.com/lihaoyi/Ammonite/releases/download/1.6.2/2.12-1.6.2) > amm
+$ chmod +x amm
 ```
-Then run `./mill` rather than just `mill` below.
+Then run `./amm` rather than just `amm` below.
 
 ### yarn / npm / npx
 
@@ -35,23 +33,45 @@ PATH.
 
 To generate the website once, run
 ```bash
-$ mill -i all doc.publishLocal doc.docusaurus.postProcess doc.docusaurus.httpServerBg
+$ amm scripts/site.sc --publishLocal true --npmInstall true
+$ amm scripts/site.sc --yarnRunBuild true --relativize true
 ```
 
-- `publishLocal` publishes locally the core and cache modules, so that they can be later picked by mdoc,
-- `postProcess` runs mdoc, then docusaurus via `yarn run build` from `doc/website`, then post-processes the output of docusaurus (under `doc/website/build` - this mostly relativizes links),
-- `httpServerBg` runs `npx http-server doc/website/build/coursier`, which starts a website to browse the generated documentation (its address should be printed in the console).
+- `--publishLocal true` publishes locally the core and cache modules, so that they can be later picked by mdoc,
+- `--npmInstall true` runs `npm install` from the `doc/website` directory, to install docusaurus in particular,
+- `--yarnRunBuild true` runs docusaurus via `yarn run build` from `doc/website`, to have docusaurus generate the website,
+- `--relativize true` relativizes links in the output of docusaurus, so that the
+site doesn't require being accessed from a particular path.
+
+Note that the first command,
+`amm scripts/site.sc --publishLocal true --npmInstall true`, only needs to be
+run once, unless you made or pulled changes in the sources of coursier, that
+are used from the documentation.
+
+You can then run
+```bash
+$ npx http-server doc/website/build/coursier
+```
+to browse the website. This command starts a website to browse the generated
+documentation (its address should be printed in the console).
 
 ## Watch mode
 
 To run the website while watching its sources (under `doc/docs`), run
 ```bash
-$ mill -i all doc.publishLocal doc.docusaurus.yarnStartBg doc.mdoc.mdocWatch
+$ amm scripts/site.sc --publishLocal true --npmInstall true
+$ amm scripts/site.sc --yarnRunBuild true --watch true
 ```
 
-- `publishLocal` publishes locally the core and cache modules, so that they can be later picked by mdoc,
-- `mdoc` runs mdoc once,
-- `yarnStartBg` runs `yarn run start` from the `doc/website` directory in the background, which starts docusaurus in watch mode,
-- `mdocWatch` runs mdoc in watch mode.
+- `--publishLocal true` publishes locally the core and cache modules, so that they can be later picked by mdoc,
+- `--npmInstall true` runs `npm install` from the `doc/website` directory, to install docusaurus in particular,
+- `--yarnRunBuild true` runs docusaurus via `yarn run start` from `doc/website`, to have docusaurus generate the website and watch for changes,
+- `--watch true` runs mdoc in watch mode.
 
-`yarnStartBg` should open a browser window at the website address, that automatically refreshes when the sources change.
+This runs both docusaurus and mdoc in watch mode. The former should open
+a browser window, that automatically refreshes upon changes.
+
+Like above, note that the first command  only needs to be run once, unless you
+made or pulled changes in the sources of coursier, that are used from the
+documentation.
+
