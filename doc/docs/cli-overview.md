@@ -9,7 +9,7 @@ The CLI of coursier allows to
 - [list the transitive dependencies](cli-resolve.md) and
 - [fetch the artifacts](cli-fetch.md) of one or more dependencies,
 - [run applications from dependencies](cli-launch.md), and
-- [generate convenient launcher to run them](cli-bootstrap.md)
+- [generate convenient launchers to run them](cli-bootstrap.md)
 among others.
 
 See below for its [installation](#installation), [its basic usage](#usage),
