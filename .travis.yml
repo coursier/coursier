@@ -11,7 +11,6 @@ addons:
     update: true
 stages:
   - name: test
-    if: tag IS NOT present
   - name: release-snapshot
     if: (branch = master AND type = push) AND (tag IS NOT present)
   - name: release
