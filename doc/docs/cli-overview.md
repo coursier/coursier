@@ -27,7 +27,7 @@ $ curl -Lo coursier https://git.io/coursier-cli &&
     ./coursier --help
 ```
 
-The launcher itself weighs only 17 kB and can be easily embedded as is in other projects.
+The launcher itself weights only 17 kB and can be easily embedded as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
 The short URL [`https://git.io.coursier-cli`](https://git.io.coursier-cli) redirects to
