@@ -70,7 +70,6 @@ class HomeSplash extends React.Component {
     let language = this.props.language || '';
     return (
       <SplashContainer>
-        <Logo img_src={assetUrl('DigbyShadows.svg')} />
         <div className="inner">
           <ProjectTitle />
           <img id="screencast" src={imgUrl("coursier-launch.gif")} />
