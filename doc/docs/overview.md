@@ -20,7 +20,7 @@ It can be used
   - [download and list their artifacts](cli-fetch.md),
   - [run applications published via Maven / Ivy repositories](cli-launch.md),
   - [and many other things](cli-overview.md).
-- [as a **library** via its API](quick-start-api.md), on the JVM or [from Scala JS](scala-js.md).
+- [as a **library** via its API](quick-start-api.md), on the JVM or [from Scala.js](scala-js.md).
 
 *This is the documentation for version @VERSION@*.
 
