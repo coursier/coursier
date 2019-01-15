@@ -7,5 +7,6 @@
 }
 
 #screencast {
+  width: 100%;
   max-width: 45em;
 }
