@@ -28,7 +28,7 @@ object ResolveParams {
 
     val cacheV = CacheParams(options.cacheOptions)
     val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions)
+    val repositoriesV = RepositoryParams(options.repositoryOptions, options.resolutionOptions.sbtPlugin.nonEmpty)
     val resolutionV = ResolutionParams(options.resolutionOptions)
 
     val benchmark = options.benchmark

@@ -261,7 +261,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           params.resolution.defaultConfiguration,
           params.output.verbosity,
           params.cache.cacheLocalArtifacts,
-          params.resolution.intransitiveDependencies
+          params.resolution.intransitiveDependencies ++ params.resolution.sbtPluginDependencies
         )
       }
       (deps0, extraRepoOpt) = depsExtraRepoOpt

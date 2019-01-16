@@ -126,7 +126,7 @@ object Dependencies {
     defaultConfiguration: Configuration,
     verbosity: Int,
     cacheLocalArtifacts: Boolean,
-    intransitiveDependencies: Seq[(Dependency, Map[String, String])]
+    extraDependencies: Seq[(Dependency, Map[String, String])]
   ): Task[(List[Dependency], Option[FallbackDependenciesRepository])] = {
     handleDependencies(
       rawDependencies,
@@ -137,7 +137,7 @@ object Dependencies {
     ).flatMap {
       case Validated.Valid(l) =>
 
-        val l0 = l ++ intransitiveDependencies
+        val l0 = l ++ extraDependencies
 
         val deps = l0.map(_._1)
 

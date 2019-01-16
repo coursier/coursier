@@ -18,6 +18,7 @@ final case class ResolutionParams(
   perModuleExclude: Map[String, Set[(Organization, ModuleName)]], // FIXME key should be Module
   scalaVersion: String,
   intransitiveDependencies: Seq[(Dependency, Map[String, String])],
+  sbtPluginDependencies: Seq[(Dependency, Map[String, String])],
   defaultConfiguration: Configuration,
   profiles: Set[String],
   typelevel: Boolean
@@ -149,14 +150,57 @@ object ResolutionParams {
       }
       .toValidated
 
+    val sbtPluginDependenciesV = moduleReqV
+      .toEither
+      .flatMap { moduleReq =>
+
+        val (sbtPluginModVerCfgErrors, sbtPluginDepsWithExtraParams) =
+          Parse.moduleVersionConfigs(options.sbtPlugin, moduleReq, transitive = true, options.scalaVersion)
+
+        if (sbtPluginModVerCfgErrors.nonEmpty)
+          Left(
+            NonEmptyList.one(
+              s"Cannot parse sbt plugin dependencies:\n" +
+                sbtPluginModVerCfgErrors.map("  "+_).mkString("\n")
+            )
+          )
+        else if (sbtPluginDepsWithExtraParams.isEmpty)
+          Right(Nil)
+        else {
+          val defaults = {
+            val sbtVer = options.sbtVersion.split('.') match {
+              case Array("1", _, _) =>
+                // all sbt 1.x versions use 1.0 as short version
+                "1.0"
+              case arr => arr.take(2).mkString(".")
+            }
+            Map(
+              "scalaVersion" -> options.scalaVersion.split('.').take(2).mkString("."),
+              "sbtVersion" -> sbtVer
+            )
+          }
+          val l = sbtPluginDepsWithExtraParams.map {
+            case (dep, params) =>
+              val dep0 = dep.copy(
+                module = dep.module.copy(
+                  attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+                )
+              )
+              (dep0, params)
+          }
+          Right(l)
+        }
+      }
+      .toValidated
+
     val defaultConfiguration = Configuration(options.defaultConfiguration)
 
     val profiles = options.profile.toSet
 
     val typelevel = options.typelevel
 
-    (maxIterationsV, forceVersionV, forcedPropertiesV, excludeV, perModuleExcludeV, intransitiveDependenciesV).mapN {
-      (maxIterations, forceVersion, forcedProperties, exclude, perModuleExclude, intransitiveDependencies) =>
+    (maxIterationsV, forceVersionV, forcedPropertiesV, excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV).mapN {
+      (maxIterations, forceVersion, forcedProperties, exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies) =>
         ResolutionParams(
           options.keepOptional,
           maxIterations,
@@ -166,6 +210,7 @@ object ResolutionParams {
           perModuleExclude,
           scalaVersion,
           intransitiveDependencies,
+          sbtPluginDependencies,
           defaultConfiguration,
           profiles,
           typelevel
