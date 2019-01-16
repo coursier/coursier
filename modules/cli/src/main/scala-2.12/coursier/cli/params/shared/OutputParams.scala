@@ -6,7 +6,8 @@ import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(
   verbosity: Int,
-  progressBars: Boolean
+  progressBars: Boolean,
+  forcePrint: Boolean
 )
 
 object OutputParams {
@@ -21,11 +22,13 @@ object OutputParams {
         Validated.validNel(Tag.unwrap(options.verbose))
 
     val progressBars = options.progress
+    val forcePrint = options.force
 
     verbosityV.map { verbosity =>
       OutputParams(
         verbosity,
-        progressBars
+        progressBars,
+        forcePrint
       )
     }
   }

@@ -318,20 +318,29 @@ object Resolve extends CaseApp[ResolveOptions] {
         )
       }
 
-      _ = Output.printResolutionResult(
-        printResultStdout = true,
-        params,
-        deps,
-        res,
-        stdout,
-        stderr
-      )
+      validated = validateResolution(res, params.output.verbosity) match {
+        case Validated.Valid(()) => Right(())
+        case Validated.Invalid(errors) => Left(errors)
+      }
 
-      valid = validateResolution(res, params.output.verbosity) match {
-        case Validated.Valid(()) => true
-        case Validated.Invalid(errors) =>
-          errors.toList.foreach(Output.errPrintln)
-          false
+      valid = validated.isRight
+
+      _ = if (valid || params.output.forcePrint) {
+        Output.printResolutionResult(
+          printResultStdout = true,
+          params,
+          deps,
+          res,
+          stdout,
+          stderr
+        )
+      }
+
+      _ = validated match {
+        case Right(()) =>
+        case Left(errors) =>
+          stderr.println("Error:")
+          errors.toList.foreach(stderr.println)
       }
     } yield (res, valid)
 
