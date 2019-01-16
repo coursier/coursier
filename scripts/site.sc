@@ -27,16 +27,26 @@ lazy val scalaVersion = {
   s.stripPrefix(prefix).stripSuffix(suffix)
 }
 
+lazy val pluginVersion = Util.cached("plugin-version") {
+  Util.outputOf(Seq("sbt", "export getSbtCoursierVersion"))
+    .linesIterator
+    .map(_.trim)
+    .filter(_.nonEmpty)
+    .toSeq
+    .last
+}
+
 lazy val mdocProps = {
-  val extraSbt =
-    if (version.endsWith("SNAPSHOT"))
+  def extraSbt(v: String) =
+    if (v.endsWith("SNAPSHOT"))
       """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
     else
       ""
   Map(
     "VERSION" -> version,
-    "EXTRA_SBT" -> extraSbt,
-    "PLUGIN_VERSION" -> version, // actually not ok for snapshots
+    "EXTRA_SBT" -> extraSbt(version),
+    "PLUGIN_VERSION" -> pluginVersion,
+    "PLUGIN_EXTRA_SBT" -> extraSbt(pluginVersion),
     "SCALA_VERSION" -> scalaVersion
   )
 }
