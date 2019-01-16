@@ -96,8 +96,15 @@ class Helper(
 
   val defaultRepositories = Seq(
     LocalRepositories.ivy2Local,
-    MavenRepository("https://repo1.maven.org/maven2")
-  )
+    Repositories.central
+  ) ++ {
+    if (common.resolutionOptions.sbtPlugin.isEmpty)
+      Nil
+    else
+      Seq(
+        Repositories.sbtPlugin("releases")
+      )
+  }
 
   val repositoriesValidation = CacheParse.repositories(common.repositoryOptions.repository).map { repos0 =>
 
@@ -277,6 +284,33 @@ class Helper(
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(common.resolutionOptions.intransitive, moduleReq, transitive=false, common.resolutionOptions.scalaVersion)
 
+  val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
+
+    lazy val defaults = {
+      val sbtVer = common.resolutionOptions.sbtVersion.split('.') match {
+        case Array("1", _, _) =>
+          // all sbt 1.x versions use 1.0 as short version
+          "1.0"
+        case arr => arr.take(2).mkString(".")
+      }
+      Map(
+        "scalaVersion" -> common.resolutionOptions.scalaVersion.split('.').take(2).mkString("."),
+        "sbtVersion" -> sbtVer
+      )
+    }
+    val (errors, ok) = Parse.moduleVersionConfigs(common.resolutionOptions.sbtPlugin, moduleReq, transitive = true, common.resolutionOptions.scalaVersion)
+    val ok0 = ok.map {
+      case (dep, params) =>
+        val dep0 = dep.copy(
+          module = dep.module.copy(
+            attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+          )
+        )
+        (dep0, params)
+    }
+    (errors, ok0)
+  }
+
   prematureExitIf(modVerCfgErrors.nonEmpty) {
     s"Cannot parse dependencies:\n" + modVerCfgErrors.map("  "+_).mkString("\n")
   }
@@ -286,6 +320,11 @@ class Helper(
       intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
   }
 
+  prematureExitIf(sbtPluginModVerCfgErrors.nonEmpty) {
+    s"Cannot parse sbt plugin dependencies:\n" +
+      sbtPluginModVerCfgErrors.map("  "+_).mkString("\n")
+  }
+
   val transitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])] =
   // FIXME Order of the dependencies is not respected here (scaladex ones go first)
     scaladexDepsWithExtraParams ++ normalDepsWithExtraParams
@@ -293,7 +332,7 @@ class Helper(
   val transitiveDeps: Seq[Dependency] = transitiveDepsWithExtraParams.map(dep => dep._1)
 
   val allDependenciesWithExtraParams: Seq[(Dependency, Map[String, String])] =
-    transitiveDepsWithExtraParams ++ intransitiveDepsWithExtraParams
+    transitiveDepsWithExtraParams ++ intransitiveDepsWithExtraParams ++ sbtPluginDepsWithExtraParams
 
   val allDependencies: Seq[Dependency] = allDependenciesWithExtraParams.map(dep => dep._1)
 

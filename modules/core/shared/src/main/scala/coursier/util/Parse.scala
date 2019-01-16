@@ -297,32 +297,25 @@ object Parse {
 
   def repository(s: String): Either[String, Repository] =
     if (s == "central")
-      Right(MavenRepository("https://repo1.maven.org/maven2"))
+      Right(Repositories.central)
     else if (s.startsWith("sonatype:"))
-      Right(MavenRepository(s"https://oss.sonatype.org/content/repositories/${s.stripPrefix("sonatype:")}"))
+      Right(Repositories.sonatype(s.stripPrefix("sonatype:")))
     else if (s.startsWith("bintray:"))
-      Right(MavenRepository(s"https://dl.bintray.com/${s.stripPrefix("bintray:")}"))
+      Right(Repositories.bintray(s.stripPrefix("bintray:")))
     else if (s.startsWith("bintray-ivy:"))
-      Right(IvyRepository.fromPattern(
-        s"https://dl.bintray.com/${s.stripPrefix("bintray-ivy:").stripSuffix("/")}/" +:
-          coursier.ivy.Pattern.default
-      ))
+      Right(Repositories.bintrayIvy(s.stripPrefix("bintray-ivy:")))
     else if (s.startsWith("typesafe:ivy-"))
-      Right(IvyRepository.fromPattern(
-        s"https://repo.typesafe.com/typesafe/ivy-${s.stripPrefix("typesafe:ivy-")}/" +:
-          coursier.ivy.Pattern.default
-      ))
+      Right(Repositories.typesafeIvy(s.stripPrefix("typesafe:ivy-")))
     else if (s.startsWith("typesafe:"))
-      Right(MavenRepository(s"https://repo.typesafe.com/typesafe/${s.stripPrefix("typesafe:")}"))
+      Right(Repositories.typesafe(s.stripPrefix("typesafe:")))
+    else if (s.startsWith("sbt-maven:"))
+      Right(Repositories.sbtMaven(s.stripPrefix("sbt-maven:")))
     else if (s.startsWith("sbt-plugin:"))
-      Right(IvyRepository.fromPattern(
-        s"https://repo.scala-sbt.org/scalasbt/sbt-plugin-${s.stripPrefix("sbt-plugin:")}/" +:
-          coursier.ivy.Pattern.default
-      ))
+      Right(Repositories.sbtPlugin(s.stripPrefix("sbt-plugin:")))
     else if (s.startsWith("ivy:"))
       IvyRepository.parse(s.stripPrefix("ivy:"))
     else if (s == "jitpack")
-      Right(MavenRepository("https://jitpack.io"))
+      Right(Repositories.jitpack)
     else
       Right(MavenRepository(s))
 

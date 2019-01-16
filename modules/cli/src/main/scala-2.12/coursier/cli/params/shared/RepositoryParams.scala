@@ -7,16 +7,17 @@ import coursier.cli.options.shared.RepositoryOptions
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
+import coursier.util.Repositories
 
 
 object RepositoryParams {
 
   private val defaultRepositories = Seq(
     LocalRepositories.ivy2Local,
-    MavenRepository("https://repo1.maven.org/maven2")
+    Repositories.central
   )
 
-  def apply(options: RepositoryOptions): ValidatedNel[String, Seq[Repository]] = {
+  def apply(options: RepositoryOptions, hasSbtPlugins: Boolean): ValidatedNel[String, Seq[Repository]] = {
 
     val repositoriesV = Validated.fromEither(
       CacheParse.repositories(options.repository)
@@ -30,7 +31,15 @@ object RepositoryParams {
     repositoriesV.map { repos0 =>
 
       // preprend defaults
-      var repos = (if (options.noDefault) Nil else defaultRepositories) ++ repos0
+      val defaults =
+        if (options.noDefault) Nil
+        else {
+          val extra =
+            if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
+            else Nil
+          defaultRepositories ++ extra
+        }
+      var repos = defaults ++ repos0
 
       // take sbtPluginHack into account
       repos = repos.map {
