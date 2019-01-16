@@ -4,18 +4,36 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cache.CacheDefaults
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.resolve.Resolve
 import coursier.util.Schedulable
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
+import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import org.scalatest.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 
 @RunWith(classOf[JUnitRunner])
-class ResolveTests extends FlatSpec {
+class ResolveTests extends FlatSpec with BeforeAndAfterAll {
+
+  val pool = Schedulable.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  val ec = ExecutionContext.fromExecutorService(pool)
+
+  override protected def afterAll(): Unit = {
+    pool.shutdown()
+  }
+
+  def paramsOrThrow(options: ResolveOptions): ResolveParams =
+    ResolveParams(options) match {
+      case Validated.Invalid(errors) =>
+        sys.error("Got errors:\n" + errors.toList.map(e => s"  $e\n").mkString)
+      case Validated.Valid(params0) =>
+        params0
+    }
+
+
   it should "print what depends on" in {
     val options = ResolveOptions(
       whatDependsOn = List("org.htrace:htrace-core")
@@ -24,17 +42,7 @@ class ResolveTests extends FlatSpec {
 
     val stdout = new ByteArrayOutputStream
 
-    val params = ResolveParams(options) match {
-      case Validated.Invalid(errors) =>
-        for (err <- errors.toList)
-          System.err.println(err)
-        sys.exit(1)
-      case Validated.Valid(params0) =>
-        params0
-    }
-
-    val pool = Schedulable.fixedThreadPool(params.cache.parallel)
-    val ec = ExecutionContext.fromExecutorService(pool)
+    val params = paramsOrThrow(options)
 
     Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
