@@ -11,7 +11,7 @@ PGP signatures in particular.
 
 Add sbt-pgp-coursier to `project/plugins.sbt`, with
 ```scala
-@EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-pgp-coursier" % "@PLUGIN_VERSION@")
+@PLUGIN_EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-pgp-coursier" % "@PLUGIN_VERSION@")
 ```
 
 ## Usage

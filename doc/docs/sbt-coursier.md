@@ -23,20 +23,20 @@ not handle publishing for now.
 
 Directly add sbt-coursier to `project/plugins.sbt`, with
 ```scala
-@EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
+@PLUGIN_EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
 ```
 
 #### Along other plugins
 
 Add sbt-coursier in the meta-build, by adding the following to `project/project/plugins.sbt`,
 ```scala
-@EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
+@PLUGIN_EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
 ```
 
 This will use sbt-coursier to fetch sbt plugins from `project/*.sbt`. Then add sbt-coursier along the other
 plugins by adding the following to `project/plugins.sbt`,
 ```scala
-@EXTRA_SBT@addSbtCoursier
+@PLUGIN_EXTRA_SBT@addSbtCoursier
 ```
 
 ### Globally
@@ -47,5 +47,5 @@ method is more straightforward than the above, as it applies to all projects at 
 
 Add the following to `~/.sbt/1.0/plugins/build.sbt`,
 ```scala
-@EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
+@PLUGIN_EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
 ```
