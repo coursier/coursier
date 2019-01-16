@@ -96,7 +96,7 @@ class Helper(
 
   val defaultRepositories = Seq(
     LocalRepositories.ivy2Local,
-    MavenRepository("https://repo1.maven.org/maven2")
+    Repositories.central
   )
 
   val repositoriesValidation = CacheParse.repositories(common.repositoryOptions.repository).map { repos0 =>
