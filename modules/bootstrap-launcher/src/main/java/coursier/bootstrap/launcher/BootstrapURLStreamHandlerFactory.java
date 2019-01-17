@@ -16,7 +16,6 @@ public class BootstrapURLStreamHandlerFactory implements URLStreamHandlerFactory
     private final String bootstrapProtocol;
     private final String basePath;
     private final ClassLoader loader;
-    private boolean registered = false;
 
     public BootstrapURLStreamHandlerFactory(String basePath, ClassLoader loader) {
         Random rng = new Random();
@@ -38,16 +37,6 @@ public class BootstrapURLStreamHandlerFactory implements URLStreamHandlerFactory
     }
 
     public String getProtocol() {
-        registerIfNeeded();
         return bootstrapProtocol;
-    }
-
-    public void register() {
-        URL.setURLStreamHandlerFactory(this);
-        registered = true;
-    }
-    public void registerIfNeeded() {
-        if (!registered)
-          register();
     }
 }

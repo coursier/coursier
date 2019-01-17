@@ -344,7 +344,12 @@ public class Bootstrap {
                 String message = "Resource " + resource + " not found";
                 errors.add(message);
             } else {
-                URL url0 = new URL(factory.getProtocol(), null, resource);
+                URL url0 = new URL(
+                        factory.getProtocol(),
+                        null,
+                        -1,
+                        resource,
+                        factory.createURLStreamHandler(factory.getProtocol()));
                 urls.add(url0);
             }
         }
