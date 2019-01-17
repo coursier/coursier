@@ -66,7 +66,11 @@ public class Bootstrap {
         return new String(rawContent, StandardCharsets.UTF_8);
     }
 
-    private static ClassLoader readBaseLoaders(File cacheDir, ClassLoader baseLoader, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws IOException {
+    private static ClassLoader readBaseLoaders(
+            File cacheDir,
+            ClassLoader baseLoader,
+            BootstrapURLStreamHandlerFactory factory,
+            ClassLoader loader) throws IOException {
 
         ClassLoader parentLoader = baseLoader;
         int i = 1;
@@ -84,7 +88,7 @@ public class Bootstrap {
                 break;
 
             List<URL> urls = getURLs(strUrls, resources, factory, loader);
-            List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
+            List<URL> localURLs = getLocalURLs(urls, cacheDir, factory.getProtocol());
 
             parentLoader = new IsolatedClassLoader(localURLs.toArray(new URL[0]), parentLoader, names);
 
@@ -176,7 +180,10 @@ public class Bootstrap {
         }
     }
 
-    private static List<URL> getLocalURLs(List<URL> urls, final File cacheDir, BootstrapURLStreamHandlerFactory factory) throws MalformedURLException {
+    private static List<URL> getLocalURLs(
+            List<URL> urls,
+            final File cacheDir,
+            String bootstrapProtocol) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
             // from scalaz Strategy.DefaultDaemonThreadFactory
@@ -200,7 +207,7 @@ public class Bootstrap {
 
             String protocol = url.getProtocol();
 
-            if (protocol.equals("file") || protocol.equals(factory.getProtocol())) {
+            if (protocol.equals("file") || protocol.equals(bootstrapProtocol)) {
                 localURLs.add(url);
             } else {
                 // fourth argument is false because we don't want to store local files when bootstrapping
@@ -323,7 +330,11 @@ public class Bootstrap {
         }
     }
 
-    private static List<URL> getURLs(String[] rawURLs, String[] resources, BootstrapURLStreamHandlerFactory factory, ClassLoader loader) throws MalformedURLException {
+    private static List<URL> getURLs(
+            String[] rawURLs,
+            String[] resources,
+            BootstrapURLStreamHandlerFactory factory,
+            ClassLoader loader) throws MalformedURLException {
 
         List<String> errors = new ArrayList<>();
         List<URL> urls = new ArrayList<>();
@@ -344,13 +355,7 @@ public class Bootstrap {
                 String message = "Resource " + resource + " not found";
                 errors.add(message);
             } else {
-                URL url0 = new URL(
-                        factory.getProtocol(),
-                        null,
-                        -1,
-                        resource,
-                        factory.createURLStreamHandler(factory.getProtocol()));
-                urls.add(url0);
+                urls.add(factory.createURL(resource));
             }
         }
 
@@ -382,7 +387,7 @@ public class Bootstrap {
         String[] strUrls = readStringSequence(defaultURLResource);
         String[] resources = readStringSequence(defaultJarResource);
         List<URL> urls = getURLs(strUrls, resources, factory, contextLoader);
-        List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
+        List<URL> localURLs = getLocalURLs(urls, cacheDir, factory.getProtocol());
 
         Thread thread = Thread.currentThread();
         ClassLoader parentClassLoader = thread.getContextClassLoader();

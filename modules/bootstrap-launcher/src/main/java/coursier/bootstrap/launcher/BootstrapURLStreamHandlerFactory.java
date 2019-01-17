@@ -2,30 +2,23 @@ package coursier.bootstrap.launcher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
 import java.util.Random;
 
 // JARs from JARs can't be used directly, see:
 // http://stackoverflow.com/questions/183292/classpath-including-jar-within-a-jar/2326775#2326775
-// Loading them via a custom protocol, inspired by:
-// http://stackoverflow.com/questions/26363573/registering-and-using-a-custom-java-net-url-protocol/26409796#26409796
-public class BootstrapURLStreamHandlerFactory implements URLStreamHandlerFactory {
+// so we resort to passing an explicit URLStreamHandler to URLs
+class BootstrapURLStreamHandlerFactory {
+    private final URLStreamHandler handler;
     private final String bootstrapProtocol;
-    private final String basePath;
-    private final ClassLoader loader;
 
-    public BootstrapURLStreamHandlerFactory(String basePath, ClassLoader loader) {
+    BootstrapURLStreamHandlerFactory(String basePath, ClassLoader loader) {
         Random rng = new Random();
         this.bootstrapProtocol = "bootstrap" + rng.nextLong();
-        this.basePath = basePath;
-        this.loader = loader;
-    }
-
-    public URLStreamHandler createURLStreamHandler(String protocol) {
-        return bootstrapProtocol.equals(protocol) ? new URLStreamHandler() {
+        handler = new URLStreamHandler() {
             protected URLConnection openConnection(URL url) throws IOException {
                 String path = url.getPath();
                 URL resURL = loader.getResource(basePath + path);
@@ -33,10 +26,19 @@ public class BootstrapURLStreamHandlerFactory implements URLStreamHandlerFactory
                     throw new FileNotFoundException("Resource " + basePath + path);
                 return resURL.openConnection();
             }
-        } : null;
+        };
     }
 
-    public String getProtocol() {
+    String getProtocol() {
         return bootstrapProtocol;
+    }
+
+    URL createURL(String resource) throws MalformedURLException {
+        return new URL(
+                bootstrapProtocol,
+                null,
+                -1,
+                resource,
+                handler);
     }
 }
