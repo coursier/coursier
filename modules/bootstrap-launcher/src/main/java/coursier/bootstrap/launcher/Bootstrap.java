@@ -45,8 +45,7 @@ public class Bootstrap {
     private final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
     private final static String defaultJarResource = resourceDir + "bootstrap-jar-resources";
 
-    private static String[] readStringSequence(String resource) throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    private static String[] readStringSequence(String resource, ClassLoader loader) throws IOException {
         InputStream is = loader.getResourceAsStream(resource);
         if (is == null)
             return new String[] {};
@@ -57,8 +56,7 @@ public class Bootstrap {
         return content.split("\n");
     }
 
-    private static String readString(String resource) throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    private static String readString(String resource, ClassLoader loader) throws IOException {
         InputStream is = loader.getResourceAsStream(resource);
         if (is == null)
             return null;
@@ -75,9 +73,9 @@ public class Bootstrap {
         ClassLoader parentLoader = baseLoader;
         int i = 1;
         while (true) {
-            String[] strUrls = readStringSequence(resourceDir + "bootstrap-jar-urls-" + i);
-            String[] resources = readStringSequence(resourceDir + "bootstrap-jar-resources-" + i);
-            String nameOrNull = readString(resourceDir + "bootstrap-loader-name-" + i);
+            String[] strUrls = readStringSequence(resourceDir + "bootstrap-jar-urls-" + i, baseLoader);
+            String[] resources = readStringSequence(resourceDir + "bootstrap-jar-resources-" + i, baseLoader);
+            String nameOrNull = readString(resourceDir + "bootstrap-loader-name-" + i, baseLoader);
             String[] names;
             if (nameOrNull == null)
                 names = new String[]{};
@@ -320,9 +318,7 @@ public class Bootstrap {
         }
     }
 
-    private static void setExtraProperties() throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
+    private static void setExtraProperties(ClassLoader loader) throws IOException {
         String resource = resourceDir + "bootstrap.properties";
         Map<String,String> properties = loadPropertiesMap(loader.getResourceAsStream(resource));
         for (Map.Entry<String, String> ent : properties.entrySet()) {
@@ -373,25 +369,24 @@ public class Bootstrap {
 
     public static void main(String[] args) throws Throwable {
 
+        Thread thread = Thread.currentThread();
+        ClassLoader contextLoader = thread.getContextClassLoader();
+
         setMainProperties(mainJarPath(), args);
-        setExtraProperties();
+        setExtraProperties(contextLoader);
 
         String mainClass0 = System.getProperty("bootstrap.mainClass");
 
         File cacheDir = CachePath.defaultCacheDirectory();
 
-        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-
         BootstrapURLStreamHandlerFactory factory = new BootstrapURLStreamHandlerFactory(jarDir, contextLoader);
 
-        String[] strUrls = readStringSequence(defaultURLResource);
-        String[] resources = readStringSequence(defaultJarResource);
+        String[] strUrls = readStringSequence(defaultURLResource, contextLoader);
+        String[] resources = readStringSequence(defaultJarResource, contextLoader);
         List<URL> urls = getURLs(strUrls, resources, factory, contextLoader);
         List<URL> localURLs = getLocalURLs(urls, cacheDir, factory.getProtocol());
 
-        Thread thread = Thread.currentThread();
-        ClassLoader parentClassLoader = thread.getContextClassLoader();
-        parentClassLoader = readBaseLoaders(cacheDir, parentClassLoader, factory, contextLoader);
+        ClassLoader parentClassLoader = readBaseLoaders(cacheDir, contextLoader, factory, contextLoader);
 
         ClassLoader classLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
 
@@ -424,7 +419,7 @@ public class Bootstrap {
             throw ex.getCause();
         }
         finally {
-            thread.setContextClassLoader(parentClassLoader);
+            thread.setContextClassLoader(contextLoader);
         }
     }
 

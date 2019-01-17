@@ -7,7 +7,7 @@ public class IsolatedClassLoader extends URLClassLoader {
 
     private String[] isolationTargets;
 
-    public IsolatedClassLoader(
+    IsolatedClassLoader(
             URL[] urls,
             ClassLoader parent,
             String[] isolationTargets
