@@ -910,11 +910,7 @@ class Helper(
               Console.err.println(s"  $f")
           }
 
-          val isolatedLoader = new IsolatedClassLoader(
-            isolatedFiles.map(_.toURI.toURL).toArray,
-            parent,
-            Array(target)
-          )
+          val isolatedLoader = new URLClassLoader(isolatedFiles.map(_.toURI.toURL).toArray, parent)
 
           val filteredFiles0 = files0.filterNot(isolatedFiles.toSet)
 

@@ -73,20 +73,14 @@ public class Bootstrap {
         while (true) {
             String[] strUrls = readStringSequence(resourceDir + "bootstrap-jar-urls-" + i);
             String[] resources = readStringSequence(resourceDir + "bootstrap-jar-resources-" + i);
-            String nameOrNull = readString(resourceDir + "bootstrap-loader-name-" + i);
-            String[] names;
-            if (nameOrNull == null)
-                names = new String[]{};
-            else
-                names = new String[]{ nameOrNull };
 
-            if (strUrls.length == 0 && resources.length == 0 && nameOrNull == null)
+            if (strUrls.length == 0 && resources.length == 0)
                 break;
 
             List<URL> urls = getURLs(strUrls, resources, factory, loader);
             List<URL> localURLs = getLocalURLs(urls, cacheDir, factory);
 
-            parentLoader = new IsolatedClassLoader(localURLs.toArray(new URL[0]), parentLoader, names);
+            parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
 
             i = i + 1;
         }
