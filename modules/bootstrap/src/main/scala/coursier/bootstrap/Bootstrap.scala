@@ -99,16 +99,40 @@ object Bootstrap {
 
   def proguardedBootstrapResourcePath: String = "bootstrap.jar"
   def bootstrapResourcePath: String = "bootstrap-orig.jar"
+  def proguardedResourcesBootstrapResourcePath: String = "bootstrap-resources.jar"
+  def resourcesBootstrapResourcePath: String = "bootstrap-resources-orig.jar"
 
   def create(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     output: Path,
     javaOpts: Seq[String] = Nil,
-    bootstrapResourcePath: String = proguardedBootstrapResourcePath,
+    bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = false,
-    withPreamble: Boolean = true
+    withPreamble: Boolean = true,
+    proguarded: Boolean = true
   ): Unit = {
+
+    val bootstrapResourcePath = bootstrapResourcePathOpt.getOrElse {
+
+      val hasResources = content.exists { c =>
+        c.entries.exists {
+          case _: ClasspathEntry.Resource => true
+          case _ => false
+        }
+      }
+
+      (hasResources, proguarded) match {
+        case (true, true) =>
+          proguardedResourcesBootstrapResourcePath
+        case (true, false) =>
+          resourcesBootstrapResourcePath
+        case (false, true) =>
+          proguardedBootstrapResourcePath
+        case (false, false) =>
+          Bootstrap.bootstrapResourcePath
+      }
+    }
 
     val buffer = new ByteArrayOutputStream
 
