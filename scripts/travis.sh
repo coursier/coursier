@@ -62,7 +62,7 @@ testBootstrap() {
     exit 1
   fi
 
-  modules/cli/target/pack/bin/coursier bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1
+  modules/cli/target/pack/bin/coursier bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
   local OUT="$(./cs-echo-standalone foo)"
   if [ "$OUT" != foo ]; then
     echo "Error: unexpected output from bootstrapped standalone echo command." 1>&2
