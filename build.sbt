@@ -169,7 +169,8 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
 lazy val bootstrap = project("bootstrap")
   .settings(
     shared,
-    coursierPrefix
+    coursierPrefix,
+    addBootstrapJarAsResource
   )
 
 lazy val extra = project("extra")
@@ -232,7 +233,6 @@ lazy val cli = project("cli")
       else
         None
     },
-    addBootstrapJarAsResource,
     proguardedCli
   )
 
