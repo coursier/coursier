@@ -3,7 +3,7 @@ package coursier.bootstrap
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
-import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipInputStream, ZipOutputStream}
 
 import coursier.bootstrap.util.{FileUtil, Zip}
 
@@ -56,9 +56,17 @@ object Bootstrap {
       outputZip.closeEntry()
     }
 
-    def putBinaryEntry(name: String, lastModified: Long, b: Array[Byte]): Unit = {
+    def putBinaryEntry(name: String, lastModified: Long, b: Array[Byte], compressed: Boolean = true): Unit = {
       val entry = new ZipEntry(name)
       entry.setTime(lastModified)
+      entry.setSize(b.length)
+      if (!compressed) {
+        // entry.setCompressedSize(b.length)
+        val crc32 = new CRC32
+        crc32.update(b)
+        entry.setCrc(crc32.getValue)
+        entry.setMethod(ZipEntry.STORED)
+      }
 
       outputZip.putNextEntry(entry)
       outputZip.write(b)
@@ -88,7 +96,7 @@ object Bootstrap {
     }
 
     for (e <- content0.flatMap(_.entries).collect { case e: ClasspathEntry.Resource => e })
-      putBinaryEntry(resourcePath(e.fileName), e.lastModified, e.content)
+      putBinaryEntry(resourcePath(e.fileName), e.lastModified, e.content, compressed = false)
 
     putStringEntry(resourceDir + "bootstrap.properties", s"bootstrap.mainClass=$mainClass")
 
@@ -99,16 +107,40 @@ object Bootstrap {
 
   def proguardedBootstrapResourcePath: String = "bootstrap.jar"
   def bootstrapResourcePath: String = "bootstrap-orig.jar"
+  def proguardedResourcesBootstrapResourcePath: String = "bootstrap-resources.jar"
+  def resourcesBootstrapResourcePath: String = "bootstrap-resources-orig.jar"
 
   def create(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     output: Path,
     javaOpts: Seq[String] = Nil,
-    bootstrapResourcePath: String = proguardedBootstrapResourcePath,
+    bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = false,
-    withPreamble: Boolean = true
+    withPreamble: Boolean = true,
+    proguarded: Boolean = true
   ): Unit = {
+
+    val bootstrapResourcePath = bootstrapResourcePathOpt.getOrElse {
+
+      val hasResources = content.exists { c =>
+        c.entries.exists {
+          case _: ClasspathEntry.Resource => true
+          case _ => false
+        }
+      }
+
+      (hasResources, proguarded) match {
+        case (true, true) =>
+          proguardedResourcesBootstrapResourcePath
+        case (true, false) =>
+          resourcesBootstrapResourcePath
+        case (false, true) =>
+          proguardedBootstrapResourcePath
+        case (false, false) =>
+          Bootstrap.bootstrapResourcePath
+      }
+    }
 
     val buffer = new ByteArrayOutputStream
 

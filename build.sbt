@@ -161,15 +161,25 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     pureJava,
     dontPublish,
     addPathsSources,
-    // seems not to be automatically found with sbt 0.13.16-M1 :-/
-    mainClass := Some("coursier.Bootstrap"),
-    proguardedBootstrap
+    mainClass.in(Compile) := Some("coursier.bootstrap.launcher.Launcher"),
+    proguardedBootstrap("coursier.bootstrap.launcher.Launcher", resourceBased = false)
+  )
+
+lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher")
+  .enablePlugins(SbtProguard)
+  .settings(
+    pureJava,
+    dontPublish,
+    unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(`bootstrap-launcher`, Compile).value,
+    mainClass.in(Compile) := Some("coursier.bootstrap.launcher.ResourcesLauncher"),
+    proguardedBootstrap("coursier.bootstrap.launcher.ResourcesLauncher", resourceBased = true)
   )
 
 lazy val bootstrap = project("bootstrap")
   .settings(
     shared,
-    coursierPrefix
+    coursierPrefix,
+    addBootstrapJarAsResource
   )
 
 lazy val extra = project("extra")
@@ -212,7 +222,10 @@ lazy val cli = project("cli")
     shared,
     onlyPublishIn("2.12"),
     coursierPrefix,
-    unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
+    unmanagedResources.in(Test) ++= Seq(
+      proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
+      proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
+    ),
     scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
@@ -232,7 +245,6 @@ lazy val cli = project("cli")
       else
         None
     },
-    addBootstrapJarAsResource,
     proguardedCli
   )
 
@@ -308,6 +320,7 @@ lazy val jvm = project("jvm")
     scalazJvm,
     catsJvm,
     `bootstrap-launcher`,
+    `resources-bootstrap-launcher`,
     bootstrap,
     extra,
     cli,
@@ -349,6 +362,7 @@ lazy val coursier = project("coursier")
     cacheJvm,
     cacheJs,
     `bootstrap-launcher`,
+    `resources-bootstrap-launcher`,
     bootstrap,
     extra,
     cli,
@@ -373,13 +387,17 @@ lazy val addBootstrapJarAsResource = {
   packageBin.in(Compile) := {
     val originalBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
     val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
+    val originalResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
+    val resourcesBootstrapJar = proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
     val source = packageBin.in(Compile).value
 
     val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
 
     ZipUtil.addToZip(source, dest, Seq(
       "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-      "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath)
+      "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath),
+      "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath),
+      "bootstrap-resources-orig.jar" -> Files.readAllBytes(originalResourcesBootstrapJar.toPath)
     ))
 
     dest
@@ -392,6 +410,8 @@ lazy val proguardedJarWithBootstrap = Def.task {
 
   val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
   val origBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
+  val resourcesBootstrapJar = proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
+  val origResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
   val source = proguardedJar.value
 
   val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
@@ -399,7 +419,9 @@ lazy val proguardedJarWithBootstrap = Def.task {
 
   ZipUtil.addToZip(source, dest, Seq(
     "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-    "bootstrap-orig.jar" -> Files.readAllBytes(origBootstrapJar.toPath)
+    "bootstrap-orig.jar" -> Files.readAllBytes(origBootstrapJar.toPath),
+    "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath),
+    "bootstrap-resources-orig.jar" -> Files.readAllBytes(origResourcesBootstrapJar.toPath)
   ))
 
   ZipUtil.addPrelude(dest, dest0)
@@ -407,18 +429,32 @@ lazy val proguardedJarWithBootstrap = Def.task {
   dest0
 }
 
-lazy val proguardedBootstrap = Seq(
-  proguardedJar := proguardedJarTask.value,
-  proguardVersion.in(Proguard) := SharedVersions.proguard,
-  proguardOptions.in(Proguard) ++= Seq(
-    "-dontwarn",
-    "-repackageclasses coursier.bootstrap.launcher",
-    "-keep class coursier.bootstrap.launcher.Bootstrap {\n  public static void main(java.lang.String[]);\n}",
-    "-keep class coursier.bootstrap.launcher.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
-  ),
-  javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
-  artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "bootstrap.jar"
-)
+def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
+
+  val extra =
+    if (resourceBased)
+      Seq("-keep class coursier.bootstrap.launcher.jar.Handler {\n}")
+    else
+      Nil
+
+  val fileName =
+    if (resourceBased)
+      "bootstrap-resources.jar"
+    else
+      "bootstrap.jar"
+
+  Seq(
+    proguardedJar := proguardedJarTask.value,
+    proguardVersion.in(Proguard) := SharedVersions.proguard,
+    proguardOptions.in(Proguard) ++= Seq(
+      "-dontwarn",
+      "-repackageclasses coursier.bootstrap.launcher",
+      s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}"
+    ) ++ extra,
+    javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
+    artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
+  )
+}
 
 lazy val proguardedCli = Seq(
   proguardedJar := Def.taskDyn {
@@ -441,7 +477,6 @@ lazy val proguardedCli = Seq(
     "-dontnote",
     "-dontoptimize", // required since the switch to scala 2.12
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
-    "-keep class coursier.cli.IsolatedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
     // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
     """-keep class scala.** { *; }"""

@@ -191,12 +191,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           mainClass,
           output0.toPath,
           javaOpts,
-          if (options.options.proguarded)
-            coursier.bootstrap.Bootstrap.proguardedBootstrapResourcePath
-          else
-            coursier.bootstrap.Bootstrap.bootstrapResourcePath,
           deterministic = options.options.deterministic,
-          withPreamble = options.options.preamble
+          withPreamble = options.options.preamble,
+          proguarded = options.options.proguarded
         )
       }
 
