@@ -18,6 +18,8 @@ abstract class PlatformCatsImplicits {
         IO.pure(a)
       def delay[A](a: => A) =
         IO(a)
+      override def fromAttempt[A](a: Either[Throwable, A]): IO[A] =
+        IO.fromEither(a)
       def handle[A](a: IO[A])(f: PartialFunction[Throwable, A]) =
         a.handleErrorWith { e =>
           f.lift(e).fold[IO[A]](IO.raiseError(e))(IO.pure)

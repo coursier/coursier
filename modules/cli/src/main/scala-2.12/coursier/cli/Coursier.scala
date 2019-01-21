@@ -1,7 +1,7 @@
-package coursier
-package cli
+package coursier.cli
 
 import caseapp.core.app.CommandAppA
+import coursier.cli.fetch.Fetch
 import coursier.cli.resolve.Resolve
 import shapeless._
 

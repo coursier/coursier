@@ -1,90 +1,184 @@
 package coursier.cli.resolve
 
-import java.io.{OutputStreamWriter, PrintStream}
+import java.io.PrintStream
 import java.util.concurrent.ExecutorService
 
 import caseapp._
-import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import cats.implicits._
+import cats.data.Validated
 import coursier.cache.CacheLogger
-import coursier.{Cache, Resolution, TermDisplay}
+import coursier.{FallbackDependenciesRepository, Fetch, Resolution}
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
-import coursier.cli.params.shared.{CacheParams, OutputParams}
 import coursier.cli.scaladex.Scaladex
-import coursier.core.{Module, Repository, ResolutionProcess}
+import coursier.core.{Dependency, Module, Repository, ResolutionProcess}
 import coursier.extra.Typelevel
+import coursier.internal.InMemoryCachingFetcher
 import coursier.util._
 
 import scala.concurrent.ExecutionContext
 
 object Resolve extends CaseApp[ResolveOptions] {
 
-  private def withLogger[T](params: OutputParams)(f: Option[CacheLogger] => Task[T]): Task[T] = {
+  private def parseDependencies(
+    params: ResolveParams,
+    pool: ExecutorService,
+    args: Seq[String]
+  ): Task[(Seq[Dependency], Option[FallbackDependenciesRepository])] = {
 
-    val loggerFallbackMode =
-      !params.progressBars && TermDisplay.defaultFallbackMode
+    // TODO Manage not to initialize logger if it's not used
 
-    val logger =
-      if (params.verbosity >= 0)
-        Some(
-          new TermDisplay(
-            new OutputStreamWriter(System.err),
-            fallbackMode = loggerFallbackMode
-          )
-        )
-      else
-        None
+    val logger = params.output.logger()
 
-    val init = Task.delay {
-      logger.foreach(_.init())
-    }
+    val scaladex0 = Scaladex.withCache(coursier.Resolve.fetcher[Task](params.cache, pool, logger))
 
-    val stop = Task.delay {
-      logger.foreach(_.stop())
-    }
+    val task = Dependencies.withExtraRepo(
+      args,
+      scaladex0,
+      params.dependency.scalaVersion,
+      params.dependency.defaultConfiguration,
+      params.output.verbosity,
+      params.cache.cacheLocalArtifacts,
+      params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
+    )
 
     for {
-      _ <- init
-      e <- f(logger).attempt
-      _ <- stop
+      _ <- Task.delay(logger.init(()))
+      e <- task.attempt
+      _ <- Task.delay(logger.stopDidPrintSomething())
       t <- Task.fromEither(e)
     } yield t
   }
 
-  private def fetchs(params: CacheParams, pool: ExecutorService, logger: Option[CacheLogger]): Seq[coursier.Fetch.Content[Task]] =
-    params
-      .cachePolicies
-      .map { p =>
-        Cache.fetch[Task](
-          params.cache,
-          p,
-          checksums = Nil,
-          logger = logger,
-          pool = pool,
-          ttl = params.ttl,
-          followHttpToHttpsRedirections = params.followHttpToHttpsRedirections
-        )
+  private def runDetailedBenchmark(
+    params: ResolveParams,
+    startRes: Resolution,
+    fetch0: Fetch.Metadata[Task],
+    iterations: Int
+  ): Task[Resolution] = {
+
+    final class Counter(var value: Int = 0) {
+      def add(value: Int): Unit = {
+        this.value += value
       }
+    }
+
+    def timed[T](name: String, counter: Counter, f: Task[T]): Task[T] =
+      Task.delay(System.nanoTime()).flatMap { start =>
+        f.map { t =>
+          val end = System.nanoTime()
+          Console.err.println(s"$name: ${(end - start).toDouble / 1000000L} ms")
+          counter.add(((end - start) / 1000000L).toInt)
+          t
+        }
+      }
+
+    def helper(proc: ResolutionProcess, counter: Counter, iteration: Int): Task[Resolution] =
+      if (iteration >= params.resolution.maxIterations)
+        Task.point(proc.current)
+      else
+        proc match {
+          case _: coursier.core.Done =>
+            Task.point(proc.current)
+          case _ =>
+            val iterationType = proc match {
+              case _: coursier.core.Missing => "IO"
+              case _: coursier.core.Continue => "calculations"
+              case _ => ???
+            }
+
+            timed(
+              s"Iteration ${iteration + 1} ($iterationType)",
+              counter,
+              proc.next(fetch0, fastForward = false)).flatMap(helper(_, counter, iteration + 1)
+            )
+        }
+
+    val res =
+      for {
+        iterationCounter <- Task.delay(new Counter)
+        resolutionCounter <- Task.delay(new Counter)
+        res0 <- timed(
+          "Resolution",
+          resolutionCounter,
+          helper(
+            startRes.process,
+            iterationCounter,
+            0
+          )
+        )
+        _ <- Task.delay {
+          Console.err.println(s"Overhead: ${resolutionCounter.value - iterationCounter.value} ms")
+        }
+      } yield res0
+
+    def result(warmUp: Int): Task[Resolution] =
+      if (warmUp >= iterations)
+        for {
+          _ <- Task.delay(Console.err.println("Benchmark resolution"))
+          r <- res
+        } yield r
+      else
+        for {
+          _ <- Task.delay(Console.err.println(s"Warm-up ${warmUp + 1} / $iterations"))
+          _ <- res
+          r <- result(warmUp + 1)
+        } yield r
+
+    result(0)
+  }
+
+  private def runSimpleBenchmark(
+    params: ResolveParams,
+    startRes: Resolution,
+    logger: CacheLogger,
+    fetch0: Fetch.Metadata[Task],
+    iterations: Int
+  ): Task[Resolution] = {
+
+    val res =
+      for {
+        start <- Task.delay(System.currentTimeMillis())
+        res0 <- coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, logger)
+        end <- Task.delay(System.currentTimeMillis())
+        _ <- Task.delay {
+          Console.err.println(s"${end - start} ms")
+        }
+      } yield res0
+
+    def result(warmUp: Int): Task[Resolution] =
+      if (warmUp >= iterations)
+        for {
+          _ <- Task.delay(Console.err.println("Benchmark resolution"))
+          r <- res
+        } yield r
+      else
+        for {
+          _ <- Task.delay(Console.err.println(s"Warm-up ${warmUp + 1} / $iterations"))
+          _ <- res
+          r <- result(warmUp + 1)
+        } yield r
+
+    result(0)
+  }
 
   private def runResolution(
     params: ResolveParams,
     repositories: Seq[Repository],
     startRes: Resolution,
-    pool: ExecutorService,
-    logger: Option[CacheLogger]
+    pool: ExecutorService
   ): Task[Resolution] = {
+
+    val logger = params.output.logger()
 
     val fetch0 = {
 
-      val fetchQuiet = {
-        val fetchs0 = fetchs(params.cache, pool, logger)
-        coursier.Fetch.from(
-          repositories,
-          fetchs0.head,
-          fetchs0.tail: _*
-        )
-      }
+      val f = coursier.Resolve.fetcher[Task](params.cache, pool, logger)
+      val f0 =
+        if (params.benchmark != 0 && params.benchmarkCache)
+          new InMemoryCachingFetcher(f).fetcher
+        else
+          f
+      val fetchQuiet = coursier.Fetch.from(repositories, f0)
 
       if (params.output.verbosity >= 2) {
         modVers: Seq[(Module, String)] =>
@@ -97,144 +191,13 @@ object Resolve extends CaseApp[ResolveOptions] {
         fetchQuiet
     }
 
-    if (params.benchmark > 0) {
-      final class Counter(var value: Int = 0) {
-        def add(value: Int): Unit = {
-          this.value += value
-        }
-      }
-
-      def timed[T](name: String, counter: Counter, f: Task[T]): Task[T] =
-        Task.delay(System.currentTimeMillis()).flatMap { start =>
-          f.map { t =>
-            val end = System.currentTimeMillis()
-            Console.err.println(s"$name: ${end - start} ms")
-            counter.add((end - start).toInt)
-            t
-          }
-        }
-
-      def helper(proc: ResolutionProcess, counter: Counter, iteration: Int): Task[Resolution] =
-        if (iteration >= params.resolution.maxIterations)
-          Task.point(proc.current)
-        else
-          proc match {
-            case _: coursier.core.Done =>
-              Task.point(proc.current)
-            case _ =>
-              val iterationType = proc match {
-                case _: coursier.core.Missing => "IO"
-                case _: coursier.core.Continue => "calculations"
-                case _ => ???
-              }
-
-              timed(
-                s"Iteration ${iteration + 1} ($iterationType)",
-                counter,
-                proc.next(fetch0, fastForward = false)).flatMap(helper(_, counter, iteration + 1)
-              )
-          }
-
-      val res =
-        for {
-          iterationCounter <- Task.delay(new Counter)
-          resolutionCounter <- Task.delay(new Counter)
-          res0 <- timed(
-            "Resolution",
-            resolutionCounter,
-            helper(
-              startRes.process,
-              iterationCounter,
-              0
-            )
-          )
-          _ <- Task.delay {
-            Console.err.println(s"Overhead: ${resolutionCounter.value - iterationCounter.value} ms")
-          }
-        } yield res0
-
-      def result(warmUp: Int): Task[Resolution] =
-        if (warmUp >= params.benchmark)
-          for {
-            _ <- Task.delay(Console.err.println("Benchmark resolution"))
-            r <- res
-          } yield r
-        else
-          for {
-            _ <- Task.delay(Console.err.println(s"Warm-up ${warmUp + 1} / ${params.benchmark}"))
-            _ <- res
-            r <- result(warmUp + 1)
-          } yield r
-
-      result(0)
-    } else if (params.benchmark < 0) {
-
-      val res =
-        for {
-          start <- Task.delay(System.currentTimeMillis())
-          res0 <- startRes
-            .process
-            .run(fetch0, params.resolution.maxIterations)
-          end <- Task.delay(System.currentTimeMillis())
-          _ <- Task.delay {
-            Console.err.println(s"${end - start} ms")
-          }
-        } yield res0
-
-      def result(warmUp: Int): Task[Resolution] =
-        if (warmUp >= -params.benchmark)
-          for {
-            _ <- Task.delay(Console.err.println("Benchmark resolution"))
-            r <- res
-          } yield r
-        else
-          for {
-            _ <- Task.delay(Console.err.println(s"Warm-up ${warmUp + 1} / ${-params.benchmark}"))
-            _ <- res
-            r <- result(warmUp + 1)
-          } yield r
-
-      result(0)
-    } else
-      startRes.process.run(fetch0, params.resolution.maxIterations)
-  }
-
-  private def validateResolution(res: Resolution, verbosity: Int): ValidatedNel[String, Unit] = {
-
-    val checkDone =
-      if (res.isDone)
-        Validated.validNel(())
-      else
-        Validated.invalidNel("Maximum number of iterations reached!")
-
-    val checkErrors = res
-      .errors
-      .map {
-        case ((module, version), errors) =>
-          s"$module:$version\n${errors.map("  " + _.replace("\n", "  \n")).mkString("\n")}"
-      } match {
-        case Seq() =>
-          Validated.validNel(())
-        case Seq(h, t @ _*) =>
-          Validated.invalid(NonEmptyList(h, t.toList))
-      }
-
-    val checkConflicts =
-      if (res.conflicts.isEmpty)
-        Validated.validNel(())
-      else
-        Validated.invalidNel(
-          s"\nConflict:\n" +
-            Print.dependenciesUnknownConfigs(
-              res.conflicts.toVector,
-              res.projectCache.mapValues { case (_, p) => p },
-              printExclusions = verbosity >= 1
-            )
-        )
-
-    (checkDone, checkErrors, checkConflicts).mapN {
-      (_, _, _) => ()
-    }
+    if (params.benchmark > 0)
+      // init / stop logger?
+      runDetailedBenchmark(params, startRes, fetch0, params.benchmark)
+    else if (params.benchmark < 0)
+      runSimpleBenchmark(params, startRes, logger, fetch0, -params.benchmark)
+    else
+      coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, logger)
   }
 
   // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
@@ -247,31 +210,20 @@ object Resolve extends CaseApp[ResolveOptions] {
     args: Seq[String]
   ): Task[(Resolution, Boolean)] =
     for {
-      // parser dependencies, possibly doing some Scala Index lookups
-      depsExtraRepoOpt <- withLogger(params.output) { logger =>
-
-        // TODO Manage not to initialize logger if it's not used
-
-        val scaladex0 = Scaladex.withCache(fetchs(params.cache, pool, logger): _*)
-
-        Dependencies.withExtraRepo(
-          args,
-          scaladex0,
-          params.resolution.scalaVersion,
-          params.resolution.defaultConfiguration,
-          params.output.verbosity,
-          params.cache.cacheLocalArtifacts,
-          params.resolution.intransitiveDependencies ++ params.resolution.sbtPluginDependencies
-        )
-      }
-      (deps0, extraRepoOpt) = depsExtraRepoOpt
-
-      deps = Dependencies.addExclusions(
-        deps0,
-        params.resolution.exclude,
-        params.resolution.perModuleExclude
+      // parse dependencies, possibly doing some Scala Index lookups
+      depsExtraRepoOpt <- parseDependencies(params, pool, args)
+      (deps, extraRepoOpt) = depsExtraRepoOpt
+      deps0 = Dependencies.addExclusions(
+        deps,
+        params.dependency.exclude,
+        params.dependency.perModuleExclude
       )
-
+      // Prepend FallbackDependenciesRepository to the repository list
+      // so that dependencies with URIs are resolved against this repo
+      repositories = extraRepoOpt.toSeq ++ params.repositories
+      startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
+        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None
+      )
       _ <- {
         val invalidForced = extraRepoOpt
           .map(_.fallbacks.toSeq)
@@ -291,37 +243,16 @@ object Resolve extends CaseApp[ResolveOptions] {
           )
       }
 
-      // Prepend FallbackDependenciesRepository to the repository list
-      // so that dependencies with URIs are resolved against this repo
-      repositories = extraRepoOpt.toSeq ++ params.repositories
+      _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
-      _ = Output.printDependencies(params.output, params.resolution, deps, stdout, stderr)
-
-      startRes = Resolution(
-        deps.toSet,
-        forceVersions = params.resolution.forceVersion,
-        filter = Some(dep => params.resolution.keepOptionalDependencies || !dep.optional),
-        userActivations =
-          if (params.resolution.profiles.isEmpty) None
-          else Some(params.resolution.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None,
-        forceProperties = params.resolution.forcedProperties
+      res <- runResolution(
+        params,
+        repositories,
+        startRes,
+        pool
       )
 
-      res <- withLogger(params.output) { logger =>
-        runResolution(
-          params,
-          repositories,
-          startRes,
-          pool,
-          logger
-        )
-      }
-
-      validated = validateResolution(res, params.output.verbosity) match {
-        case Validated.Valid(()) => Right(())
-        case Validated.Invalid(errors) => Left(errors)
-      }
+      validated = coursier.Resolve.validate(res, params.output.verbosity).either
 
       valid = validated.isRight
 
@@ -329,7 +260,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         Output.printResolutionResult(
           printResultStdout = true,
           params,
-          deps,
+          deps0,
           res,
           stdout,
           stderr
@@ -340,9 +271,10 @@ object Resolve extends CaseApp[ResolveOptions] {
         case Right(()) =>
         case Left(errors) =>
           stderr.println("Error:")
-          errors.toList.foreach(stderr.println)
+          errors.foreach(stderr.println)
       }
     } yield (res, valid)
+
 
   def run(options: ResolveOptions, args: RemainingArgs): Unit =
     ResolveParams(options) match {

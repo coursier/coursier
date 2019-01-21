@@ -38,8 +38,7 @@ object Submit {
 
     val helper = new Helper(
       common.copy(
-        classifier = Nil,
-        resolutionOptions = common.resolutionOptions.copy(
+        dependencyOptions = common.dependencyOptions.copy(
           intransitive = Nil,
           scalaVersion = scalaVersion
         )
@@ -52,7 +51,8 @@ object Submit {
       sources = false,
       javadoc = false,
       default = true,
-      artifactTypes = artifactTypes
+      artifactTypes = artifactTypes,
+      classifier0 = Set.empty
     ) ++ extraCp
   }
 

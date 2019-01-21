@@ -5,6 +5,7 @@ import java.util.regex.Pattern.quote
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object Resolution {
 
@@ -78,6 +79,22 @@ object Resolution {
       deps: Seq[(Configuration, Dependency)]
     ): Map[Key, (Configuration, Dependency)] =
       (dict /: deps)(add)
+
+    def apply(deps: Seq[(Configuration, Dependency)]*): Map[Key, (Configuration, Dependency)] = {
+
+      val b = new mutable.HashMap[Key, (Configuration, Dependency)]
+
+      for {
+        l <- deps
+        item <- l
+      } {
+        val key0 = key(item._2)
+        if (!b.contains(key0))
+          b += key0 -> item
+      }
+
+      b.toMap
+    }
   }
 
   def addDependencies(deps: Seq[Seq[(Configuration, Dependency)]]): Seq[(Configuration, Dependency)] = {
@@ -97,23 +114,86 @@ object Resolution {
     quote("${") + "([^" + quote("{}") + "]*)" + quote("}")
   ).r
 
-  def substituteProps(s: String, properties: Map[String, String]) = {
-    val matches = propRegex
-      .findAllMatchIn(s)
-      .toVector
-      .reverse
+  def hasProps(s: String): Boolean = {
 
-    if (matches.isEmpty) s
-    else {
-      val output =
-        (new StringBuilder(s) /: matches) { (b, m) =>
-          properties
-            .get(m.group(1))
-            .fold(b)(b.replace(m.start, m.end, _))
+    var ok = false
+    var idx = 0
+
+    while (idx < s.length && !ok) {
+      var dolIdx = idx
+      while (dolIdx < s.length && s.charAt(dolIdx) != '$')
+        dolIdx += 1
+      idx = dolIdx
+
+      if (dolIdx < s.length - 2 && s.charAt(dolIdx + 1) == '{') {
+        var endIdx = dolIdx + 2
+        while (endIdx < s.length && s.charAt(endIdx) != '}')
+          endIdx += 1
+        if (endIdx < s.length) {
+          assert(s.charAt(endIdx) == '}')
+          ok = true
         }
+      }
 
-      output.result()
+      if (!ok && idx < s.length) {
+        assert(s.charAt(idx) == '$')
+        idx += 1
+      }
     }
+
+    ok
+  }
+
+  def substituteProps(s: String, properties: Map[String, String]): String = {
+
+    // this method is called _very_ often, hence the micro-optimization
+
+    var b: java.lang.StringBuilder = null
+    var idx = 0
+
+    while (idx < s.length) {
+      var dolIdx = idx
+      while (dolIdx < s.length && s.charAt(dolIdx) != '$')
+        dolIdx += 1
+      if (idx != 0 || dolIdx < s.length) {
+        if (b == null)
+          b = new java.lang.StringBuilder(s.length + 32)
+        b.append(s, idx, dolIdx)
+      }
+      idx = dolIdx
+
+      var name: String = null
+      if (dolIdx < s.length - 2 && s.charAt(dolIdx + 1) == '{') {
+        var endIdx = dolIdx + 2
+        while (endIdx < s.length && s.charAt(endIdx) != '}')
+          endIdx += 1
+        if (endIdx < s.length) {
+          assert(s.charAt(endIdx) == '}')
+          name = s.substring(dolIdx + 2, endIdx)
+        }
+      }
+
+      if (name == null) {
+        if (idx < s.length) {
+          assert(s.charAt(idx) == '$')
+          b.append('$')
+          idx += 1
+        }
+      } else {
+        idx = idx + 2 + name.length + 1 // == endIdx + 1
+        properties.get(name) match {
+          case None =>
+            b.append(s, dolIdx, idx)
+          case Some(v) =>
+            b.append(v)
+        }
+      }
+    }
+
+    if (b == null)
+      s
+    else
+      b.toString
   }
 
   /**
@@ -238,7 +318,7 @@ object Resolution {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = DepMgmt.addSeq(Map.empty, dependencyManagement)
+    lazy val dict = DepMgmt(dependencyManagement)
 
     dependencies.map {
       case (config0, dep0) =>
@@ -391,7 +471,7 @@ object Resolution {
 
     val done = properties0
       .collect {
-        case kv @ (_, value) if propRegex.findFirstIn(value).isEmpty =>
+        case kv @ (_, value) if !hasProps(value) =>
           kv
       }
       .toMap
@@ -597,7 +677,10 @@ final case class Resolution(
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
       projectCache = projectCache ++ projects.map {
         case (modVer, (s, p)) =>
+          // val start = System.nanoTime()
           val p0 = withDependencyManagement(p.copy(properties = p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+          // val end = System.nanoTime()
+          // System.err.println(s"Spent ${(end - start).toDouble / 1000000L} ms processing project")
           (modVer, (s, p0))
       }
     )
@@ -935,6 +1018,8 @@ final case class Resolution(
 
     // A bit fragile, but seems to work
 
+    // val start = System.nanoTime()
+
     val parentProperties0 = project
       .parent
       .flatMap(projectCache.get)
@@ -954,12 +1039,16 @@ final case class Resolution(
 
     // 1.2 made from Pom.scala (TODO look at the very details?)
 
+    // val time1 = System.nanoTime()
+
     // 1.3 & 1.4 (if only vaguely so)
     val project0 = withFinalProperties(
       project.copy(
         properties = parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
       )
     )
+
+    // val time2 = System.nanoTime()
 
     val propertiesMap0 = project0.properties.toMap
 
@@ -969,6 +1058,8 @@ final case class Resolution(
     val dependenciesMgmt0 = addDependencies(
       (project0.dependencyManagement +: profiles0.map(_.dependencyManagement)).map(withProperties(_, propertiesMap0))
     )
+
+    // val time3 = System.nanoTime()
 
     val deps0 =
       dependencies0.collect {
@@ -986,18 +1077,24 @@ final case class Resolution(
     val projs = deps
       .map(projectCache(_)._2)
 
-    val depMgmt = (
-      project0.dependencyManagement +: (
-        profiles0.map(_.dependencyManagement) ++
-        projs.map(_.dependencyManagement)
-      )
-    )
-      .map(withProperties(_, propertiesMap0))
-      .foldLeft(Map.empty[DepMgmt.Key, (Configuration, Dependency)])(DepMgmt.addSeq)
+    val depMgmt = {
+      val l = (
+        project0.dependencyManagement +: (
+          profiles0.map(_.dependencyManagement) ++
+            projs.map(_.dependencyManagement)
+          )
+        )
+        .map(withProperties(_, propertiesMap0))
+        // .foldLeft(Map.empty[DepMgmt.Key, (Configuration, Dependency)])(DepMgmt.addSeq)
+
+      DepMgmt(l: _*)
+    }
+
+    // val time4 = System.nanoTime()
 
     val depsSet = deps.toSet
 
-    project0.copy(
+    val res = project0.copy(
       version = substituteProps(project0.version, propertiesMap0),
       dependencies =
         dependencies0
@@ -1013,6 +1110,12 @@ final case class Resolution(
           config == Configuration.`import` && depsSet(dep.moduleVersion)
         }
     )
+
+    // val end = System.nanoTime()
+    // val times = List(time1 - start, time2 - time1, time3 - time2, time4 - time3, end - time4).map(_.toDouble / 1000000L)
+    // System.err.println(s"withDependencyManagement ${(end - start).toDouble / 1000000L} ms ($times) (${project.module}:${project.version}})")
+
+    res
   }
 
   /**

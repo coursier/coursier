@@ -215,8 +215,20 @@ lazy val extra = project("extra")
         .map("scala.scalanative." + _)
   )
 
+lazy val benchmark = project("benchmark")
+  .dependsOn(metaJvm)
+  .enablePlugins(JmhPlugin)
+  .settings(
+    shared,
+    dontPublish,
+    libraryDependencies ++= Seq(
+      Deps.argonautShapeless,
+      "org.apache.maven" % "maven-model" % "3.6.0"
+    )
+  )
+
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coreJvm, cacheJvm, extra)
+  .dependsOn(bootstrap, metaJvm, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -323,6 +335,7 @@ lazy val jvm = project("jvm")
     `resources-bootstrap-launcher`,
     bootstrap,
     extra,
+    benchmark,
     cli,
     okhttp,
     metaJvm
@@ -365,6 +378,7 @@ lazy val coursier = project("coursier")
     `resources-bootstrap-launcher`,
     bootstrap,
     extra,
+    benchmark,
     cli,
     scalazJvm,
     scalazJs,

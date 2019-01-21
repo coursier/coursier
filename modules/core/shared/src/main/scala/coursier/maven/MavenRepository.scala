@@ -1,9 +1,17 @@
 package coursier.maven
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import coursier.Fetch
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{EitherT, Monad, WebPage}
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.stream.XMLInputFactory
+import org.xml.sax
+import org.xml.sax.{InputSource, XMLReader}
+import org.xml.sax.helpers.DefaultHandler
 
 object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
@@ -66,6 +74,61 @@ object MavenRepository {
       name
     } else
       module.name.value
+
+  private[coursier] def parseRawPom(str: String): Either[String, Project] =
+    for {
+      xml <- compatibility.xmlParse(str).right
+      _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
+      proj <- Pom.project(xml, relocationAsDependency = true).right
+    } yield proj
+
+  private lazy val spf = {
+    val spf0 = SAXParserFactory.newInstance()
+    spf0.setNamespaceAware(true) // ???
+    spf0
+  }
+
+  private lazy val inputFactory = XMLInputFactory.newInstance()
+  def parseRawPomStax(str: String): Either[String, Project] = {
+    val streamReader = inputFactory.createXMLStreamReader(new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)))
+    while (streamReader.hasNext) {
+      streamReader.next()
+    }
+    Left("TODO")
+  }
+
+  def parseRawPomSax(str: String): Either[String, Project] = {
+
+    // var allPaths = List.empty[String]
+
+    val handler = new DefaultHandler {
+
+      private[this] var path = List.empty[String]
+
+      override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit = {
+        val p = path.headOption.fold(localName)(_ + ":" + localName)
+        path = p :: path
+        // allPaths = p :: allPaths
+        // System.err.println(p)
+      }
+      override def characters(ch: Array[Char], start: Int, length: Int): Unit = {
+        // System.err.println(s"characters(${new String(ch)})")
+      }
+      override def endElement(uri: String, localName: String, qName: String): Unit = {
+        // assert(path.head == localName || path.head.endsWith(":" + localName), s"Paths: $path, endElement($localName)")
+        path = path.tail
+      }
+    }
+
+    val saxParser = spf.newSAXParser()
+    val xmlReader = saxParser.getXMLReader
+    xmlReader.setContentHandler(handler)
+    xmlReader.parse(new InputSource(new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8))))
+
+    // java.nio.file.Files.write(java.nio.file.Paths.get("/Users/alexandre/projects/coursier/paths.txt"), allPaths.reverse.mkString("\n").getBytes("UTF-8"))
+
+    Left("TODO")
+  }
 
 }
 
@@ -310,13 +373,6 @@ final case class MavenRepository(
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] = {
-
-    def parseRawPom(str: String) =
-      for {
-        xml <- compatibility.xmlParse(str).right
-        _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
-        proj <- Pom.project(xml, relocationAsDependency = true).right
-      } yield proj
 
 
     val projectArtifact0 = projectArtifact(module, version, versioningValue)

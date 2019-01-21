@@ -13,6 +13,7 @@ import java.net.URLEncoder.encode
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
+import coursier.cli.fetch.Fetch
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.junit.JUnitRunner
@@ -37,29 +38,25 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   private val fileNameLength: DepNode => Int = _.file.getOrElse("").length
 
   "Normal fetch" should "get all files" in {
-    val fetchOpt = FetchOptions(common = CommonOptions())
-    val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
+    val fetch = Fetch(FetchOptions(), RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
   "Underscore classifier" should "fetch default files" in {
-    val commonOpt = CommonOptions(
+    val artifactOpt = ArtifactOptions(
       classifier = List("_")
     )
-    val fetchOpt = FetchOptions(common = commonOpt)
+    val fetchOpt = FetchOptions(artifactOptions = artifactOpt)
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
   "Underscore and source classifier" should "fetch default and source files" in {
-    val commonOpt = CommonOptions(
-      classifier = List("_")
-    )
     val artifactOpt = ArtifactOptions(
+      classifier = List("_"),
       sources = true
     )
     val fetchOpt = FetchOptions(
-      common = commonOpt,
       artifactOptions = artifactOpt
     )
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
@@ -77,7 +74,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       sources = true
     )
     val fetchOpt = FetchOptions(
-      common = CommonOptions(),
       artifactOptions = artifactOpt
     )
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
@@ -90,7 +86,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "scalafmt-cli fetch" should "discover all main classes" in {
-    val fetchOpt = FetchOptions(common = CommonOptions())
+    val fetchOpt = FetchOptions()
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq()))
     assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
@@ -99,7 +95,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "scalafix-cli fetch" should "discover all main classes" in {
-    val fetchOpt = FetchOptions(common = CommonOptions())
+    val fetchOpt = FetchOptions()
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"), Seq()))
     assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
@@ -108,7 +104,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "ammonite fetch" should "discover all main classes" in {
-    val fetchOpt = FetchOptions(common = CommonOptions())
+    val fetchOpt = FetchOptions()
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"), Seq()))
     assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "Javassist") -> "javassist.CtClass",
@@ -118,7 +114,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "sssio fetch" should "discover all main classes" in {
-    val fetchOpt = FetchOptions(common = CommonOptions())
+    val fetchOpt = FetchOptions()
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("lt.dvim.sssio:sssio_2.12:0.0.1"), Seq()))
     assert(Helper.mainClasses(fetch.helper.loader) == Map(
       ("", "") -> "com.kenai.jffi.Main",
@@ -129,9 +125,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Module level" should "exclude correctly" in withFile(
     "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
     withFile() { (jsonFile, _) =>
-      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+      val resolveOpt = ResolveOptions(dependencyOptions = dependencyOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
       val filesFetched = fetch.files0.map(_.getName).toSet
@@ -161,9 +157,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "avro exclude xz" should "not fetch xz" in withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
     withFile() { (jsonFile, _) =>
-      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+      val resolveOpt = ResolveOptions(dependencyOptions = dependencyOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq()))
 
@@ -210,9 +206,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+          val resolveOpt = ResolveOptions(dependencyOptions = dependencyOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq()))
           val filesFetched = fetch.files0.map(_.getName).toSet
@@ -243,8 +239,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, writer) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1"), Seq()))
 
@@ -264,8 +259,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1"), Seq()))
 
@@ -284,8 +278,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
           Fetch.run(
             fetchOpt,
@@ -314,8 +307,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
           Fetch.run(
             fetchOpt,
@@ -353,9 +345,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (_, _) =>
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val dependencyOpt = DependencyOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
+          val resolveOpt = ResolveOptions(dependencyOptions = dependencyOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Nil, Nil))
 
@@ -378,9 +370,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val dependencyOpt = DependencyOptions(intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
+          val resolveOpt = ResolveOptions(dependencyOptions = dependencyOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
@@ -405,8 +397,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       withFile() {
         (jsonFile, _) => {
           val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val resolveOpt = ResolveOptions(resolutionOptions = resolutionOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           Fetch(
             fetchOpt,
@@ -438,14 +430,16 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       withFile() {
         (jsonFile, _) => {
           val resolutionOpt = ResolutionOptions(
-            intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"),
             forceVersion = List("org.apache.commons:commons-compress:1.4.1")
           )
-          val commonOpt = CommonOptions(
-            jsonOutputFile = jsonFile.getPath,
-            resolutionOptions = resolutionOpt
+          val dependencyOpt = DependencyOptions(
+            intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests")
           )
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val resolveOpt = ResolveOptions(
+            resolutionOptions = resolutionOpt,
+            dependencyOptions = dependencyOpt
+          )
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
 
@@ -466,11 +460,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "profiles" should "be manually (de)activated" in withFile() {
     (jsonFile, _) =>
       val resolutionOpt = ResolutionOptions(profile = List("scala-2.10", "!scala-2.11"))
-      val commonOpt = CommonOptions(
-        jsonOutputFile = jsonFile.getPath,
+      val resolveOpt = ResolveOptions(
         resolutionOptions = resolutionOpt
       )
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
       Fetch(
         fetchOpt,
@@ -487,8 +480,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
           val heliosCoord = "com.spotify:helios-testing:0.9.193"
 
@@ -519,8 +511,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
 
           val cacheOpt = CacheOptions(cacheFileArtifacts = true)
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, cacheOptions = cacheOpt)
-          val fetchOpt = FetchOptions(common = commonOpt)
+          val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+          val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
           // fetch with encoded url set to temp jar
           Fetch.run(
@@ -583,8 +575,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url" should "fetch junit-4.12.jar" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -616,8 +607,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with arbitrary coords" should "fetch junit-4.12.jar" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -649,8 +639,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with classifier" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -690,8 +679,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with classifier that is a transitive dep" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -727,9 +715,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "classifier sources" should "fetch sources jar" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
       val artifactOpt = ArtifactOptions(sources = true)
-      val fetchOpt = FetchOptions(common = commonOpt, artifactOptions = artifactOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, artifactOptions = artifactOpt)
 
       // encode path to different jar than requested
 
@@ -770,8 +757,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url with another dep" should "fetch junit-4.12.jar and jars for jackson-mapper" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
@@ -820,10 +806,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "external dep url with forced version" should "throw an error" in withFile() {
     (jsonFile, _) => {
       val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
-      val commonOpt = CommonOptions(
-        jsonOutputFile = jsonFile.getPath,
-        resolutionOptions = resolutionOpt)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val resolveOpt = ResolveOptions(
+        resolutionOptions = resolutionOpt
+      )
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
@@ -848,10 +834,10 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "external dep url with the same forced version" should "fetch junit-4.12.jar" in withFile() {
     (jsonFile, _) => {
       val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.5"))
-      val commonOpt = CommonOptions(
-        jsonOutputFile = jsonFile.getPath,
-        resolutionOptions = resolutionOpt)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val resolveOpt = ResolveOptions(
+        resolutionOptions = resolutionOpt
+      )
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
 
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
@@ -879,8 +865,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url on higher version" should "fetch junit-4.12.jar" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -913,8 +898,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
    */
   "external dep url on lower version" should "fetch higher version" in withFile() {
     (jsonFile, _) => {
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath)
-      val fetchOpt = FetchOptions(common = commonOpt)
+      val fetchOpt = FetchOptions(jsonOutputFile = jsonFile.getPath)
 
       // encode path to different jar than requested
       val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
@@ -944,7 +928,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad pom resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(cache = dir.getAbsolutePath)))
+        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+        val fetchOpt = FetchOptions(resolveOptions = resolveOpt)
         val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
         assert(fetch.files0.map(_.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -972,7 +958,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad jar resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(cache = dir.getAbsolutePath)))
+        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+        val fetchOpt = FetchOptions(resolveOptions = resolveOpt)
         val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
         assert(fetch.files0.map(_.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -996,7 +984,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Wrong range partial artifact resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val fetchOpt = FetchOptions(common = CommonOptions(cacheOptions = CacheOptions(mode = "force", cache = dir.getAbsolutePath)))
+        val cacheOpt = CacheOptions(mode = "force", cache = dir.getAbsolutePath)
+        val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+        val fetchOpt = FetchOptions(resolveOptions = resolveOpt)
         val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.6"), Seq()))
         assert(fetch.files0.map(_.getName).toSet
           .equals(Set("junit-4.6.jar")))

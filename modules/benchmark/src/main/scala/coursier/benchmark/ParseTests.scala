@@ -1,0 +1,82 @@
+package coursier.benchmark
+
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.TimeUnit
+
+import coursier.maven.MavenRepository
+import coursier.moduleString
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader
+import org.openjdk.jmh.annotations._
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+@BenchmarkMode(Array(Mode.AverageTime))
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+class ParseTests {
+
+  // @Benchmark
+  def parseSparkParent(state: TestState): Unit = {
+    val t = state.repositories.head.find(
+      mod"org.apache.spark:spark-parent_2.12",
+      "2.4.0",
+      state.fetcher
+    ).run
+    val e = Await.result(t.future()(state.ec), Duration.Inf)
+    assert(e.isRight)
+  }
+
+  @Benchmark
+  def parseSparkParentXml(state: TestState): Unit = {
+    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val res = MavenRepository.parseRawPom(content)
+    assert(res.isRight)
+  }
+
+  @Benchmark
+  def parseSparkParentXmlSaxWip(state: TestState): Unit = {
+    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val res = MavenRepository.parseRawPomSax(content)
+    // assert(res.isRight)
+  }
+
+  @Benchmark
+  def parseSparkParentXmlStaxWip(state: TestState): Unit = {
+    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val res = MavenRepository.parseRawPomStax(content)
+    // assert(res.isRight)
+  }
+
+  // @Benchmark
+  def parseSparkParentJsonParse(state: TestState): Unit = {
+    JsonProj.readJson(state.sparkParentJson)
+  }
+
+  @Benchmark
+  def parseSparkParentJson(state: TestState): Unit = {
+    JsonProj.read(state.sparkParentJson)
+  }
+
+  // @Benchmark
+  def parseApacheParent(state: TestState): Unit = {
+    val t = state.repositories.head.find(
+      mod"org.apache:apache",
+      "18",
+      state.fetcher
+    ).run
+    val e = Await.result(t.future()(state.ec), Duration.Inf)
+    assert(e.isRight)
+  }
+
+  @Benchmark
+  def parseSparkParentMavenModel(state: TestState): Unit = {
+    val b = state
+      .inMemoryCache
+      .fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+      .getBytes(StandardCharsets.UTF_8)
+    val reader = new MavenXpp3Reader
+    val model = reader.read(new ByteArrayInputStream(b))
+  }
+
+}

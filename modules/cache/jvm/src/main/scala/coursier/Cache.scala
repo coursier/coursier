@@ -20,7 +20,7 @@ import scala.util.control.NonFatal
 
 final case class Cache[F[_]](
   cache: File = CacheDefaults.location,
-  cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
+  cachePolicies: Seq[CachePolicy] = CachePolicy.default,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
   logger: Option[CacheLogger] = None,
   pool: ExecutorService = CacheDefaults.pool,
@@ -38,7 +38,8 @@ final case class Cache[F[_]](
 
   private def download(
     artifact: Artifact,
-    checksums: Set[String]
+    checksums: Set[String],
+    cachePolicy: CachePolicy
   ): F[Seq[((File, String), Either[FileError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
@@ -554,7 +555,6 @@ final case class Cache[F[_]](
     }
   }
 
-
   /**
     * This method computes the task needed to get a file.
     *
@@ -569,58 +569,61 @@ final case class Cache[F[_]](
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
 
-    val res = EitherT {
-      S.map(download(
-        artifact,
-        checksums = checksums0.collect { case Some(c) => c }.toSet
-      )) { results =>
-        val checksum = checksums0.find {
-          case None => true
-          case Some(c) =>
-            artifact.checksumUrls.get(c).exists { cUrl =>
-              results.exists { case ((_, u), b) =>
-                u == cUrl && b.isRight
+    def res(policy: CachePolicy): EitherT[F, FileError, File] = {
+      EitherT {
+        S.map(download(
+          artifact,
+          checksums = checksums0.collect { case Some(c) => c }.toSet,
+          cachePolicy = policy
+        )) { results =>
+          val checksum = checksums0.find {
+            case None => true
+            case Some(c) =>
+              artifact.checksumUrls.get(c).exists { cUrl =>
+                results.exists { case ((_, u), b) =>
+                  u == cUrl && b.isRight
+                }
               }
-            }
-        }
+          }
 
-        val ((f, _), res) = results.head
-        res.right.flatMap { _ =>
-          checksum match {
-            case None =>
-              // FIXME All the checksums should be in the error, possibly with their URLs
-              //       from artifact.checksumUrls
-              Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
-            case Some(c) => Right((f, c))
+          val ((f, _), res) = results.head
+          res.right.flatMap { _ =>
+            checksum match {
+              case None =>
+                // FIXME All the checksums should be in the error, possibly with their URLs
+                //       from artifact.checksumUrls
+                Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
+              case Some(c) => Right((f, c))
+            }
           }
         }
+      }.flatMap {
+        case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
+        case (f, Some(c)) =>
+          validateChecksum(artifact, c).map(_ => f)
+      }.leftFlatMap {
+        case err: FileError.WrongChecksum =>
+          if (retry <= 0) {
+            EitherT(S.point(Left(err)))
+          }
+          else {
+            EitherT {
+              S.schedule[Either[FileError, Unit]](pool) {
+                val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+                badFile.delete()
+                logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
+                Right(())
+              }
+            }.flatMap { _ =>
+              file(artifact, retry - 1)
+            }
+          }
+        case err =>
+          EitherT(S.point(Left(err)))
       }
     }
 
-    res.flatMap {
-      case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
-      case (f, Some(c)) =>
-        validateChecksum(artifact, c).map(_ => f)
-    }.leftFlatMap {
-      case err: FileError.WrongChecksum =>
-        if (retry <= 0) {
-          EitherT(S.point(Left(err)))
-        }
-        else {
-          EitherT {
-            S.schedule[Either[FileError, Unit]](pool) {
-              val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
-              badFile.delete()
-              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
-              Right(())
-            }
-          }.flatMap { _ =>
-            file(artifact, retry - 1)
-          }
-        }
-      case err =>
-        EitherT(S.point(Left(err)))
-    }
+    (res(cachePolicies.head) /: cachePolicies.tail.map(res))(_ orElse _)
   }
 
   lazy val fetch: Fetch.Content[F] = {
@@ -813,7 +816,7 @@ object Cache {
 
   def fetch[F[_]](
     cache: File = CacheDefaults.location,
-    cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
+    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
     checksums: Seq[Option[String]] = CacheDefaults.checksums,
     logger: Option[CacheLogger] = None,
     pool: ExecutorService = CacheDefaults.pool,
@@ -821,10 +824,10 @@ object Cache {
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Fetch.Content[F] =
+  )(implicit S: Schedulable[F]): Fetch.Content[F] = {
     Cache(
       cache,
-      cachePolicy,
+      cachePolicies,
       checksums,
       logger,
       pool,
@@ -834,11 +837,12 @@ object Cache {
       bufferSize = bufferSize,
       S = S
     ).fetch
+  }
 
   def file[F[_]](
     artifact: Artifact,
     cache: File = CacheDefaults.location,
-    cachePolicy: CachePolicy = CachePolicy.UpdateChanging,
+    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
     checksums: Seq[Option[String]] = CacheDefaults.checksums,
     logger: Option[CacheLogger] = None,
     pool: ExecutorService = CacheDefaults.pool,
@@ -851,7 +855,7 @@ object Cache {
   )(implicit S: Schedulable[F]): EitherT[F, FileError, File] =
     Cache(
       cache,
-      cachePolicy,
+      cachePolicies,
       checksums,
       logger,
       pool,

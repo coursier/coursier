@@ -1,12 +1,12 @@
 package coursier.core
 
-import coursier.util.Xml
+import java.util.concurrent.ConcurrentHashMap
 
+import coursier.util.Xml
 import java.util.regex.Pattern.quote
 
 import scala.collection.JavaConverters._
-import scala.xml.{ Attribute, MetaData, Null }
-
+import scala.xml.{Attribute, MetaData, Null}
 import org.jsoup.Jsoup
 
 package object compatibility {
@@ -20,7 +20,26 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
+  private val xmlCache = new ConcurrentHashMap[String, Either[String, Xml.Node]]
+
   def xmlParse(s: String): Either[String, Xml.Node] = {
+    // val start0 = System.nanoTime()
+    Option(xmlCache.get(s)) match {
+      case None =>
+        // val start = System.nanoTime()
+        val res = xmlParse0(s)
+        // val end = System.nanoTime()
+        // System.err.println(s"Spent ${(end - start).toDouble / 1000000L} ms parsing ${s.length} bytes of XML") // not exactly bytes, but w/e…
+        Option(xmlCache.putIfAbsent(s, res))
+          .getOrElse(res)
+      case Some(e) =>
+        // val end = System.nanoTime()
+        // System.err.println(s"Spent ${(end - start0).toDouble / 1000000L} ms looking up ${s.length} bytes of XML") // not exactly bytes, but w/e…
+        e
+    }
+  }
+
+  def xmlParse0(s: String): Either[String, Xml.Node] = {
 
     val content =
       if (entityPattern.findFirstIn(s).isEmpty)

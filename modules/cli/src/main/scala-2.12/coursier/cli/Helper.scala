@@ -98,7 +98,7 @@ class Helper(
     LocalRepositories.ivy2Local,
     Repositories.central
   ) ++ {
-    if (common.resolutionOptions.sbtPlugin.isEmpty)
+    if (common.dependencyOptions.sbtPlugin.isEmpty)
       Nil
     else
       Seq(
@@ -152,26 +152,24 @@ class Helper(
         else
           None
 
-      val fetchs = cachePolicies.map(p =>
-        Cache.fetch[Task](
-          cache,
-          p,
-          checksums = Nil,
-          logger = logger,
-          pool = pool,
-          ttl = ttl0,
-          followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-        )
+      val fetch = Cache.fetch[Task](
+        cache,
+        cachePolicies,
+        checksums = Nil,
+        logger = logger,
+        pool = pool,
+        ttl = ttl0,
+        followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       )
 
       logger.foreach(_.init())
 
-      val scaladex = Scaladex.withCache(fetchs: _*)
+      val scaladex = Scaladex.withCache(fetch)
 
       val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
           s,
-          common.resolutionOptions.scalaVersion,
+          common.dependencyOptions.scalaVersion,
           if (common.verbosityLevel >= 2) Console.err.println(_) else _ => ()
         )
 
@@ -211,7 +209,7 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.resolutionOptions.scalaVersion)
+  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.dependencyOptions.scalaVersion)
 
   prematureExitIf(forceVersionErrors.nonEmpty) {
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
@@ -228,7 +226,7 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(common.resolutionOptions.exclude, common.resolutionOptions.scalaVersion)
+  val (excludeErrors, excludes0) = Parse.modules(common.dependencyOptions.exclude, common.dependencyOptions.scalaVersion)
 
   prematureExitIf(excludeErrors.nonEmpty) {
     s"Cannot parse excluded modules:\n" +
@@ -252,10 +250,10 @@ class Helper(
       .toSet
 
   val localExcludeMap: Map[String, Set[(Organization, ModuleName)]] =
-    if (common.resolutionOptions.localExcludeFile.isEmpty) {
+    if (common.dependencyOptions.localExcludeFile.isEmpty) {
       Map()
     } else {
-      val source = scala.io.Source.fromFile(common.resolutionOptions.localExcludeFile)
+      val source = scala.io.Source.fromFile(common.dependencyOptions.localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
       lines
@@ -276,29 +274,29 @@ class Helper(
         .toMap
     }
 
-  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.resolutionOptions.defaultConfiguration0)
+  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.resolutionOptions.scalaVersion)
+    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(common.resolutionOptions.intransitive, moduleReq, transitive=false, common.resolutionOptions.scalaVersion)
+    Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.dependencyOptions.scalaVersion)
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
 
     lazy val defaults = {
-      val sbtVer = common.resolutionOptions.sbtVersion.split('.') match {
+      val sbtVer = common.dependencyOptions.sbtVersion.split('.') match {
         case Array("1", _, _) =>
           // all sbt 1.x versions use 1.0 as short version
           "1.0"
         case arr => arr.take(2).mkString(".")
       }
       Map(
-        "scalaVersion" -> common.resolutionOptions.scalaVersion.split('.').take(2).mkString("."),
+        "scalaVersion" -> common.dependencyOptions.scalaVersion.split('.').take(2).mkString("."),
         "sbtVersion" -> sbtVer
       )
     }
-    val (errors, ok) = Parse.moduleVersionConfigs(common.resolutionOptions.sbtPlugin, moduleReq, transitive = true, common.resolutionOptions.scalaVersion)
+    val (errors, ok) = Parse.moduleVersionConfigs(common.dependencyOptions.sbtPlugin, moduleReq, transitive = true, common.dependencyOptions.scalaVersion)
     val ok0 = ok.map {
       case (dep, params) =>
         val dep0 = dep.copy(
@@ -400,22 +398,16 @@ class Helper(
     else
       None
 
-  val fetchs = cachePolicies.map(p =>
-    Cache.fetch[Task](
-      cache,
-      p,
-      checksums = checksums,
-      logger = logger,
-      pool = pool,
-      ttl = ttl0,
-      followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-    )
+  val fetch = Cache.fetch[Task](
+    cache,
+    cachePolicies,
+    checksums = checksums,
+    logger = logger,
+    pool = pool,
+    ttl = ttl0,
+    followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
   )
-  val fetchQuiet = coursier.Fetch.from(
-    repositories,
-    fetchs.head,
-    fetchs.tail: _*
-  )
+  val fetchQuiet = coursier.Fetch.from(repositories, fetch)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
@@ -622,6 +614,7 @@ class Helper(
     javadoc: Boolean,
     default: Boolean,
     artifactTypes: Set[Type],
+    classifier0: Set[Classifier],
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
 
@@ -644,7 +637,7 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, res0).map(t => (t._2, t._3))
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0).map(t => (t._2, t._3))
 
     if (artifactTypes(Type("*")))
       artifacts0.map(_._2)
@@ -659,12 +652,13 @@ class Helper(
     sources: Boolean,
     javadoc: Boolean,
     default: Boolean,
+    classifier0: Set[Classifier],
     res0: Resolution
   ): Seq[(Dependency, Attributes, Artifact)] = {
 
     val raw =
-      if (hasOverrideClassifiers(sources, javadoc)) {
-        val classifiers = overrideClassifiers(sources, javadoc, default)
+      if (hasOverrideClassifiers(sources, javadoc, classifier0)) {
+        val classifiers = overrideClassifiers(sources, javadoc, default, classifier0)
 
         val baseArtifacts =
           if (classifiers(Classifier("_")))
@@ -693,7 +687,8 @@ class Helper(
   private def overrideClassifiers(
     sources: Boolean,
     javadoc: Boolean,
-    default: Boolean
+    default: Boolean,
+    classifier0: Set[Classifier]
   ): Set[Classifier] = {
     var classifiers = classifier0
     if (sources)
@@ -705,7 +700,7 @@ class Helper(
     classifiers
   }
 
-  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean): Boolean = {
+  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean, classifier0: Set[Classifier]): Boolean = {
     classifier0.nonEmpty || sources || javadoc
   }
 
@@ -713,11 +708,12 @@ class Helper(
     sources: Boolean,
     javadoc: Boolean,
     default: Boolean,
+    classifier0: Set[Classifier],
     artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, subset).distinct
+    val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, classifier0, subset).distinct
 
     val logger =
       if (common.verbosityLevel >= 0)
@@ -732,10 +728,10 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy) = Cache.file[Task](
+      val file0 = Cache.file[Task](
         artifact,
         cache,
-        policy,
+        cachePolicies,
         checksums = checksums,
         logger = logger,
         pool = pool,
@@ -745,7 +741,7 @@ class Helper(
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       )
 
-      (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
+      file0
         .run
         .map(artifact.->)
     }
@@ -799,13 +795,13 @@ class Helper(
     }
 
     val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
-      getDepArtifactsForClassifier(sources, javadoc, default, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
+      getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
-      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, res).map(_._1): _*).toSeq
+      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).map(_._1): _*).toSeq
 
       // A map from requested org:name:version to reconciled org:name:version
       val conflictResolutionForRoots: Map[String, String] = allDependencies.map({ dep =>
@@ -833,7 +829,7 @@ class Helper(
           printExclusions = common.verbosityLevel >= 1,
           excluded = false,
           colors = false,
-          overrideClassifiers = overrideClassifiers(sources, javadoc, default)
+          overrideClassifiers = overrideClassifiers(sources, javadoc, default, classifier0)
         )
       )
       val jsonStr = JsonReport(
@@ -857,9 +853,10 @@ class Helper(
     javadoc: Boolean,
     default: Boolean,
     artifactTypes: Set[Type],
+    classifier0: Set[Classifier],
     subset: Set[Dependency] = null
   ): Seq[File] =
-    fetchMap(sources, javadoc, default, artifactTypes, subset).values.toSeq
+    fetchMap(sources, javadoc, default, classifier0, artifactTypes, subset).values.toSeq
 
   def baseLoader = {
 
@@ -883,14 +880,15 @@ class Helper(
       sources = false,
       javadoc = false,
       default = true,
-      artifactTypes = artifactTypes
+      artifactTypes = artifactTypes,
+      classifier0 = Set.empty
     )
 
     if (isolated.isolated.isEmpty)
       (baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDeps(common.resolutionOptions.scalaVersion)
+      val isolatedDeps = isolated.isolatedDeps(common.dependencyOptions.scalaVersion)
 
       val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((baseLoader, files0)) {
         case ((parent, files0), target) =>
@@ -901,6 +899,7 @@ class Helper(
             javadoc = false,
             default = true,
             artifactTypes = artifactTypes,
+            classifier0 = Set.empty,
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )
 

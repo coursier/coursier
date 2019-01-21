@@ -51,24 +51,16 @@ object Fetch {
     EitherT(task)
   }
 
-  def from[F[_]](
-    repositories: Seq[core.Repository],
-    fetch: Content[F],
-    extra: Content[F]*
-  )(implicit
-    F: Gather[F]
-  ): Metadata[F] = {
-
+  def from[F[_]](repositories: Seq[core.Repository], fetch: Content[F])(implicit F: Gather[F]): Metadata[F] =
     modVers =>
       F.map(
         F.gather {
           modVers.map {
             case (module, version) =>
               def get(fetch: Content[F]) = find(repositories, module, version, fetch)
-              F.map((get(fetch) /: extra)(_ orElse get(_)).run)(d => (module, version) -> d)
+              F.map(get(fetch).run)(d => (module, version) -> d)
           }
         }
       )(_.toSeq)
-  }
 
 }
