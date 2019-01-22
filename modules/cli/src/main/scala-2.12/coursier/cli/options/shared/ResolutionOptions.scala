@@ -1,7 +1,11 @@
 package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.ResolutionProcess
+import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
+import coursier.cli.params.shared.ResolutionParams
+import coursier.core._
+import coursier.util.Parse
 
 final case class ResolutionOptions(
 
@@ -29,7 +33,61 @@ final case class ResolutionOptions(
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false
 
-)
+) {
+
+  def params(scalaVersion: String): ValidatedNel[String, ResolutionParams] = {
+
+    val maxIterationsV =
+      if (maxIterations > 0)
+        Validated.validNel(maxIterations)
+      else
+        Validated.invalidNel(s"Max iteration must be > 0 (got $maxIterations")
+
+    val forceVersionV = {
+
+      val (forceVersionErrors, forceVersions0) =
+        Parse.moduleVersions(forceVersion, scalaVersion)
+
+      if (forceVersionErrors.nonEmpty)
+        Validated.invalidNel(
+          s"Cannot parse forced versions:\n" + forceVersionErrors.map("  " + _).mkString("\n")
+        )
+      else
+        // TODO Warn if some versions are forced multiple times?
+        Validated.validNel(
+          forceVersions0
+            .groupBy(_._1)
+            .mapValues(_.map(_._2).last)
+        )
+    }
+
+    val forcedPropertiesV = forceProperty
+      .traverse { s =>
+        s.split("=", 2) match {
+          case Array(k, v) =>
+            Validated.validNel(k -> v)
+          case _ =>
+            Validated.invalidNel(s"Malformed forced property argument: $s")
+        }
+      }
+      // TODO Warn if some properties are forced multiple times?
+      .map(_.toMap)
+
+    val profiles = profile.toSet
+
+    (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
+      (maxIterations, forceVersion, forcedProperties) =>
+        ResolutionParams(
+          keepOptional,
+          maxIterations,
+          forceVersion,
+          forcedProperties,
+          profiles,
+          typelevel
+        )
+    }
+  }
+}
 
 object ResolutionOptions {
   implicit val parser = Parser[ResolutionOptions]

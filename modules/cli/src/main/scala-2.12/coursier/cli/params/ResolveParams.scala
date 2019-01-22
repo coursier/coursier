@@ -28,12 +28,11 @@ final case class ResolveParams(
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
 
-    val cacheV = CacheParams(options.cacheOptions)
+    val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val dependencyV = DependencyParams(options.dependencyOptions)
-    val resolutionV = ResolutionParams(
-      options.resolutionOptions,
+    val resolutionV = options.resolutionOptions.params(
       dependencyV.toOption.fold(options.dependencyOptions.scalaVersion)(_.scalaVersion)
     )
 
