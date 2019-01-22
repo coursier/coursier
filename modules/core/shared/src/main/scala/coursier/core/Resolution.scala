@@ -93,27 +93,86 @@ object Resolution {
     res._2
   }
 
-  val propRegex = (
-    quote("${") + "([^" + quote("{}") + "]*)" + quote("}")
-  ).r
+  def hasProps(s: String): Boolean = {
 
-  def substituteProps(s: String, properties: Map[String, String]) = {
-    val matches = propRegex
-      .findAllMatchIn(s)
-      .toVector
-      .reverse
+    var ok = false
+    var idx = 0
 
-    if (matches.isEmpty) s
-    else {
-      val output =
-        (new StringBuilder(s) /: matches) { (b, m) =>
-          properties
-            .get(m.group(1))
-            .fold(b)(b.replace(m.start, m.end, _))
+    while (idx < s.length && !ok) {
+      var dolIdx = idx
+      while (dolIdx < s.length && s.charAt(dolIdx) != '$')
+        dolIdx += 1
+      idx = dolIdx
+
+      if (dolIdx < s.length - 2 && s.charAt(dolIdx + 1) == '{') {
+        var endIdx = dolIdx + 2
+        while (endIdx < s.length && s.charAt(endIdx) != '}')
+          endIdx += 1
+        if (endIdx < s.length) {
+          assert(s.charAt(endIdx) == '}')
+          ok = true
         }
+      }
 
-      output.result()
+      if (!ok && idx < s.length) {
+        assert(s.charAt(idx) == '$')
+        idx += 1
+      }
     }
+
+    ok
+  }
+
+  def substituteProps(s: String, properties: Map[String, String]): String = {
+
+    // this method is called _very_ often, hence the micro-optimization
+
+    var b: java.lang.StringBuilder = null
+    var idx = 0
+
+    while (idx < s.length) {
+      var dolIdx = idx
+      while (dolIdx < s.length && s.charAt(dolIdx) != '$')
+        dolIdx += 1
+      if (idx != 0 || dolIdx < s.length) {
+        if (b == null)
+          b = new java.lang.StringBuilder(s.length + 32)
+        b.append(s, idx, dolIdx)
+      }
+      idx = dolIdx
+
+      var name: String = null
+      if (dolIdx < s.length - 2 && s.charAt(dolIdx + 1) == '{') {
+        var endIdx = dolIdx + 2
+        while (endIdx < s.length && s.charAt(endIdx) != '}')
+          endIdx += 1
+        if (endIdx < s.length) {
+          assert(s.charAt(endIdx) == '}')
+          name = s.substring(dolIdx + 2, endIdx)
+        }
+      }
+
+      if (name == null) {
+        if (idx < s.length) {
+          assert(s.charAt(idx) == '$')
+          b.append('$')
+          idx += 1
+        }
+      } else {
+        idx = idx + 2 + name.length + 1 // == endIdx + 1
+        properties.get(name) match {
+          case None =>
+            b.append(s, dolIdx, idx)
+          case Some(v) =>
+            b.append(v)
+        }
+      }
+    }
+
+    if (b == null)
+      s
+    else
+      b.toString
   }
 
   /**
@@ -391,7 +450,7 @@ object Resolution {
 
     val done = properties0
       .collect {
-        case kv @ (_, value) if propRegex.findFirstIn(value).isEmpty =>
+        case kv @ (_, value) if !hasProps(value) =>
           kv
       }
       .toMap
