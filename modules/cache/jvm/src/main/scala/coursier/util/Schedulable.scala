@@ -2,10 +2,13 @@ package coursier.util
 
 import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
 
+import scala.util.control.NonFatal
+
 trait Schedulable[F[_]] extends Gather[F] {
   def delay[A](a: => A): F[A]
   def handle[A](a: F[A])(f: PartialFunction[Throwable, A]): F[A]
   def schedule[A](pool: ExecutorService)(f: => A): F[A]
+  def fromAttempt[A](a: Either[Throwable, A]): F[A]
 }
 
 object Schedulable {

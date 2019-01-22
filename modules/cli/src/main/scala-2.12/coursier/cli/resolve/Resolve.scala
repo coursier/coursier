@@ -74,8 +74,13 @@ object Resolve extends CaseApp[ResolveOptions] {
     val fetch0 = {
 
       val fetchQuiet = {
-        val fetch0 = fetch(params.cache, pool, logger)
-        coursier.Fetch.from(repositories, fetch0)
+        val f = fetch(params.cache, pool, logger)
+        val f0 =
+          if (params.benchmark != 0 && params.benchmarkCache)
+            new InMemoryCachingFetcher(f).fetcher
+          else
+            f
+        coursier.Fetch.from(repositories, f0)
       }
 
       if (params.output.verbosity >= 2) {

@@ -14,6 +14,7 @@ final case class ResolveParams(
   dependency: DependencyParams,
   resolution: ResolutionParams,
   benchmark: Int,
+  benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
   whatDependsOn: Set[Module]
@@ -61,8 +62,14 @@ object ResolveParams {
       else
         Validated.validNel(())
 
-    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck).mapN {
-      (cache, output, repositories, dependency, resolution, whatDependsOn, _, _) =>
+    val benchmarkCacheV =
+      if (options.benchmark == 0 && options.benchmarkCache)
+        Validated.invalidNel("Cannot specify --benchmark-cache without --benchmark")
+      else
+        Validated.validNel(options.benchmarkCache)
+
+    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck, benchmarkCacheV).mapN {
+      (cache, output, repositories, dependency, resolution, whatDependsOn, _, _, benchmarkCache) =>
         ResolveParams(
           cache,
           output,
@@ -70,6 +77,7 @@ object ResolveParams {
           dependency,
           resolution,
           benchmark,
+          benchmarkCache,
           tree,
           reverseTree,
           whatDependsOn.toSet
