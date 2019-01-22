@@ -152,21 +152,19 @@ class Helper(
         else
           None
 
-      val fetchs = cachePolicies.map(p =>
-        Cache.fetch[Task](
-          cache,
-          p,
-          checksums = Nil,
-          logger = logger,
-          pool = pool,
-          ttl = ttl0,
-          followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-        )
+      val fetch = Cache.fetch[Task](
+        cache,
+        cachePolicies,
+        checksums = Nil,
+        logger = logger,
+        pool = pool,
+        ttl = ttl0,
+        followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       )
 
       logger.foreach(_.init())
 
-      val scaladex = Scaladex.withCache(fetchs: _*)
+      val scaladex = Scaladex.withCache(fetch)
 
       val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
@@ -400,22 +398,16 @@ class Helper(
     else
       None
 
-  val fetchs = cachePolicies.map(p =>
-    Cache.fetch[Task](
-      cache,
-      p,
-      checksums = checksums,
-      logger = logger,
-      pool = pool,
-      ttl = ttl0,
-      followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-    )
+  val fetch = Cache.fetch[Task](
+    cache,
+    cachePolicies,
+    checksums = checksums,
+    logger = logger,
+    pool = pool,
+    ttl = ttl0,
+    followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
   )
-  val fetchQuiet = coursier.Fetch.from(
-    repositories,
-    fetchs.head,
-    fetchs.tail: _*
-  )
+  val fetchQuiet = coursier.Fetch.from(repositories, fetch)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
@@ -732,10 +724,10 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      def file(policy: CachePolicy) = Cache.file[Task](
+      val file0 = Cache.file[Task](
         artifact,
         cache,
-        policy,
+        cachePolicies,
         checksums = checksums,
         logger = logger,
         pool = pool,
@@ -745,7 +737,7 @@ class Helper(
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       )
 
-      (file(cachePolicies.head) /: cachePolicies.tail)(_ orElse file(_))
+      file0
         .run
         .map(artifact.->)
     }

@@ -52,20 +52,16 @@ object Resolve extends CaseApp[ResolveOptions] {
     } yield t
   }
 
-  private def fetchs(params: CacheParams, pool: ExecutorService, logger: Option[CacheLogger]): Seq[coursier.Fetch.Content[Task]] =
-    params
-      .cachePolicies
-      .map { p =>
-        Cache.fetch[Task](
-          params.cache,
-          p,
-          checksums = Nil,
-          logger = logger,
-          pool = pool,
-          ttl = params.ttl,
-          followHttpToHttpsRedirections = params.followHttpToHttpsRedirections
-        )
-      }
+  private def fetch(params: CacheParams, pool: ExecutorService, logger: Option[CacheLogger]): coursier.Fetch.Content[Task] =
+    Cache.fetch[Task](
+      params.cache,
+      params.cachePolicies,
+      checksums = Nil,
+      logger = logger,
+      pool = pool,
+      ttl = params.ttl,
+      followHttpToHttpsRedirections = params.followHttpToHttpsRedirections
+    )
 
   private def runResolution(
     params: ResolveParams,
@@ -78,12 +74,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     val fetch0 = {
 
       val fetchQuiet = {
-        val fetchs0 = fetchs(params.cache, pool, logger)
-        coursier.Fetch.from(
-          repositories,
-          fetchs0.head,
-          fetchs0.tail: _*
-        )
+        val fetch0 = fetch(params.cache, pool, logger)
+        coursier.Fetch.from(repositories, fetch0)
       }
 
       if (params.output.verbosity >= 2) {
@@ -252,7 +244,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
         // TODO Manage not to initialize logger if it's not used
 
-        val scaladex0 = Scaladex.withCache(fetchs(params.cache, pool, logger): _*)
+        val scaladex0 = Scaladex.withCache(fetch(params.cache, pool, logger))
 
         Dependencies.withExtraRepo(
           args,
