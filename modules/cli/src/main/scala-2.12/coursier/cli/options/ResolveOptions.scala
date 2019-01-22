@@ -29,6 +29,9 @@ final case class ResolveOptions(
     resolutionOptions: shared.ResolutionOptions = shared.ResolutionOptions(),
 
   @Recurse
+    dependencyOptions: shared.DependencyOptions = shared.DependencyOptions(),
+
+  @Recurse
     outputOptions: shared.OutputOptions = shared.OutputOptions()
 
 )

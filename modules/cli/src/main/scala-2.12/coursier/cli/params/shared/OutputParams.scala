@@ -1,14 +1,32 @@
 package coursier.cli.params.shared
 
+import java.io.OutputStreamWriter
+
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
+import coursier.TermDisplay
+import coursier.cache.CacheLogger
 import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(
   verbosity: Int,
   progressBars: Boolean,
   forcePrint: Boolean
-)
+) {
+  def logger(): CacheLogger = {
+
+    val loggerFallbackMode =
+      !progressBars && TermDisplay.defaultFallbackMode
+
+    if (verbosity >= 0)
+      new TermDisplay(
+        new OutputStreamWriter(System.err),
+        fallbackMode = loggerFallbackMode
+      )
+    else
+      CacheLogger.nop
+  }
+}
 
 object OutputParams {
   def apply(options: OutputOptions): ValidatedNel[String, OutputParams] = {

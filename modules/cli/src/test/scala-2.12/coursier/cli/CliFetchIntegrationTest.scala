@@ -124,8 +124,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Module level" should "exclude correctly" in withFile(
     "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
     withFile() { (jsonFile, _) =>
-      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
+      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, dependencyOptions = dependencyOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
@@ -156,8 +156,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "avro exclude xz" should "not fetch xz" in withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
     withFile() { (jsonFile, _) =>
-      val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
+      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+      val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, dependencyOptions = dependencyOpt)
       val fetchOpt = FetchOptions(common = commonOpt)
 
       val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4"), Seq()))
@@ -205,8 +205,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(localExcludeFile = file.getAbsolutePath)
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
+          val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, dependencyOptions = dependencyOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           val fetch = Fetch(fetchOpt, RemainingArgs(Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"), Seq()))
@@ -348,8 +348,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (_, _) =>
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
+          val dependencyOpt = DependencyOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, dependencyOptions = dependencyOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Nil, Nil))
@@ -373,8 +373,8 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
-          val resolutionOpt = ResolutionOptions(intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
-          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, resolutionOptions = resolutionOpt)
+          val dependencyOpt = DependencyOptions(intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"))
+          val commonOpt = CommonOptions(jsonOutputFile = jsonFile.getPath, dependencyOptions = dependencyOpt)
           val fetchOpt = FetchOptions(common = commonOpt)
 
           Fetch.run(fetchOpt, RemainingArgs(Seq(), Seq()))
@@ -432,12 +432,15 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
+          val dependencyOpt = DependencyOptions(
+            intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests")
+          )
           val resolutionOpt = ResolutionOptions(
-            intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests"),
             forceVersion = List("org.apache.commons:commons-compress:1.4.1")
           )
           val commonOpt = CommonOptions(
             jsonOutputFile = jsonFile.getPath,
+            dependencyOptions = dependencyOpt,
             resolutionOptions = resolutionOpt
           )
           val fetchOpt = FetchOptions(common = commonOpt)

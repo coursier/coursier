@@ -125,7 +125,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         )
       else {
 
-        val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.resolutionOptions.scalaVersion)
+        val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.dependencyOptions.scalaVersion)
 
         val (done, isolatedArtifactFiles) =
           options.options.isolated.targets.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {

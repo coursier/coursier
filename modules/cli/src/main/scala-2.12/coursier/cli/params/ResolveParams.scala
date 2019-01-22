@@ -3,7 +3,7 @@ package coursier.cli.params
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.ResolveOptions
-import coursier.cli.params.shared.{CacheParams, OutputParams, RepositoryParams, ResolutionParams}
+import coursier.cli.params.shared._
 import coursier.core.{Module, Repository}
 import coursier.util.Parse
 
@@ -11,6 +11,7 @@ final case class ResolveParams(
   cache: CacheParams,
   output: OutputParams,
   repositories: Seq[Repository],
+  dependency: DependencyParams,
   resolution: ResolutionParams,
   benchmark: Int,
   tree: Boolean,
@@ -28,14 +29,18 @@ object ResolveParams {
 
     val cacheV = CacheParams(options.cacheOptions)
     val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions, options.resolutionOptions.sbtPlugin.nonEmpty)
-    val resolutionV = ResolutionParams(options.resolutionOptions)
+    val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
+    val dependencyV = DependencyParams(options.dependencyOptions)
+    val resolutionV = ResolutionParams(
+      options.resolutionOptions,
+      dependencyV.toOption.fold(options.dependencyOptions.scalaVersion)(_.scalaVersion)
+    )
 
     val benchmark = options.benchmark
     val tree = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV =
-      resolutionV.toOption.map(_.scalaVersion) match {
+      dependencyV.toOption.map(_.scalaVersion) match {
         case None =>
           Validated.validNel(Nil)
         case Some(sv) =>
@@ -56,12 +61,13 @@ object ResolveParams {
       else
         Validated.validNel(())
 
-    (cacheV, outputV, repositoriesV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck).mapN {
-      (cache, output, repositories, resolution, whatDependsOn, _, _) =>
+    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck).mapN {
+      (cache, output, repositories, dependency, resolution, whatDependsOn, _, _) =>
         ResolveParams(
           cache,
           output,
           repositories,
+          dependency,
           resolution,
           benchmark,
           tree,

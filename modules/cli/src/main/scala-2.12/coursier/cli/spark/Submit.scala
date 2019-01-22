@@ -38,7 +38,7 @@ object Submit {
 
     val helper = new Helper(
       common.copy(
-        resolutionOptions = common.resolutionOptions.copy(
+        dependencyOptions = common.dependencyOptions.copy(
           intransitive = Nil,
           scalaVersion = scalaVersion
         )

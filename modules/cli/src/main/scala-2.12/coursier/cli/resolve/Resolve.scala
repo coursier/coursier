@@ -249,19 +249,19 @@ object Resolve extends CaseApp[ResolveOptions] {
         Dependencies.withExtraRepo(
           args,
           scaladex0,
-          params.resolution.scalaVersion,
-          params.resolution.defaultConfiguration,
+          params.dependency.scalaVersion,
+          params.dependency.defaultConfiguration,
           params.output.verbosity,
           params.cache.cacheLocalArtifacts,
-          params.resolution.intransitiveDependencies ++ params.resolution.sbtPluginDependencies
+          params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
         )
       }
       (deps0, extraRepoOpt) = depsExtraRepoOpt
 
       deps = Dependencies.addExclusions(
         deps0,
-        params.resolution.exclude,
-        params.resolution.perModuleExclude
+        params.dependency.exclude,
+        params.dependency.perModuleExclude
       )
 
       _ <- {

@@ -6,7 +6,7 @@ import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cache.CacheDefaults
 import coursier.cli.options.ResolveOptions
-import coursier.cli.options.shared.{OutputOptions, ResolutionOptions}
+import coursier.cli.options.shared.{DependencyOptions, OutputOptions}
 import coursier.cli.params.ResolveParams
 import coursier.cli.resolve.Resolve
 import coursier.util.Schedulable
@@ -106,7 +106,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
   it should "resolve sbt plugins" in {
     val options = ResolveOptions(
-      resolutionOptions = ResolutionOptions(
+      dependencyOptions = DependencyOptions(
         sbtPlugin = List(
           "io.get-coursier:sbt-coursier:1.1.0-M9",
           "com.typesafe.sbt:sbt-native-packager:1.3.3"

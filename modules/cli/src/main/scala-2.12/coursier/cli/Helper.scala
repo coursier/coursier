@@ -98,7 +98,7 @@ class Helper(
     LocalRepositories.ivy2Local,
     Repositories.central
   ) ++ {
-    if (common.resolutionOptions.sbtPlugin.isEmpty)
+    if (common.dependencyOptions.sbtPlugin.isEmpty)
       Nil
     else
       Seq(
@@ -169,7 +169,7 @@ class Helper(
       val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
         val deps = scaladex.dependencies(
           s,
-          common.resolutionOptions.scalaVersion,
+          common.dependencyOptions.scalaVersion,
           if (common.verbosityLevel >= 2) Console.err.println(_) else _ => ()
         )
 
@@ -209,7 +209,7 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.resolutionOptions.scalaVersion)
+  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.dependencyOptions.scalaVersion)
 
   prematureExitIf(forceVersionErrors.nonEmpty) {
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
@@ -226,7 +226,7 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(common.resolutionOptions.exclude, common.resolutionOptions.scalaVersion)
+  val (excludeErrors, excludes0) = Parse.modules(common.dependencyOptions.exclude, common.dependencyOptions.scalaVersion)
 
   prematureExitIf(excludeErrors.nonEmpty) {
     s"Cannot parse excluded modules:\n" +
@@ -250,10 +250,10 @@ class Helper(
       .toSet
 
   val localExcludeMap: Map[String, Set[(Organization, ModuleName)]] =
-    if (common.resolutionOptions.localExcludeFile.isEmpty) {
+    if (common.dependencyOptions.localExcludeFile.isEmpty) {
       Map()
     } else {
-      val source = scala.io.Source.fromFile(common.resolutionOptions.localExcludeFile)
+      val source = scala.io.Source.fromFile(common.dependencyOptions.localExcludeFile)
       val lines = try source.mkString.split("\n") finally source.close()
 
       lines
@@ -274,29 +274,29 @@ class Helper(
         .toMap
     }
 
-  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.resolutionOptions.defaultConfiguration0)
+  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.resolutionOptions.scalaVersion)
+    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(common.resolutionOptions.intransitive, moduleReq, transitive=false, common.resolutionOptions.scalaVersion)
+    Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.dependencyOptions.scalaVersion)
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
 
     lazy val defaults = {
-      val sbtVer = common.resolutionOptions.sbtVersion.split('.') match {
+      val sbtVer = common.dependencyOptions.sbtVersion.split('.') match {
         case Array("1", _, _) =>
           // all sbt 1.x versions use 1.0 as short version
           "1.0"
         case arr => arr.take(2).mkString(".")
       }
       Map(
-        "scalaVersion" -> common.resolutionOptions.scalaVersion.split('.').take(2).mkString("."),
+        "scalaVersion" -> common.dependencyOptions.scalaVersion.split('.').take(2).mkString("."),
         "sbtVersion" -> sbtVer
       )
     }
-    val (errors, ok) = Parse.moduleVersionConfigs(common.resolutionOptions.sbtPlugin, moduleReq, transitive = true, common.resolutionOptions.scalaVersion)
+    val (errors, ok) = Parse.moduleVersionConfigs(common.dependencyOptions.sbtPlugin, moduleReq, transitive = true, common.dependencyOptions.scalaVersion)
     val ok0 = ok.map {
       case (dep, params) =>
         val dep0 = dep.copy(
@@ -888,7 +888,7 @@ class Helper(
       (baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDeps(common.resolutionOptions.scalaVersion)
+      val isolatedDeps = isolated.isolatedDeps(common.dependencyOptions.scalaVersion)
 
       val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((baseLoader, files0)) {
         case ((parent, files0), target) =>
