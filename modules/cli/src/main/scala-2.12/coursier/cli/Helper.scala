@@ -614,6 +614,7 @@ class Helper(
     javadoc: Boolean,
     default: Boolean,
     artifactTypes: Set[Type],
+    classifier0: Set[Classifier],
     subset: Set[Dependency] = null
   ): Seq[Artifact] = {
 
@@ -636,7 +637,7 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, res0).map(t => (t._2, t._3))
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0).map(t => (t._2, t._3))
 
     if (artifactTypes(Type("*")))
       artifacts0.map(_._2)
@@ -651,12 +652,13 @@ class Helper(
     sources: Boolean,
     javadoc: Boolean,
     default: Boolean,
+    classifier0: Set[Classifier],
     res0: Resolution
   ): Seq[(Dependency, Attributes, Artifact)] = {
 
     val raw =
-      if (hasOverrideClassifiers(sources, javadoc)) {
-        val classifiers = overrideClassifiers(sources, javadoc, default)
+      if (hasOverrideClassifiers(sources, javadoc, classifier0)) {
+        val classifiers = overrideClassifiers(sources, javadoc, default, classifier0)
 
         val baseArtifacts =
           if (classifiers(Classifier("_")))
@@ -685,7 +687,8 @@ class Helper(
   private def overrideClassifiers(
     sources: Boolean,
     javadoc: Boolean,
-    default: Boolean
+    default: Boolean,
+    classifier0: Set[Classifier]
   ): Set[Classifier] = {
     var classifiers = classifier0
     if (sources)
@@ -697,7 +700,7 @@ class Helper(
     classifiers
   }
 
-  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean): Boolean = {
+  private def hasOverrideClassifiers(sources: Boolean, javadoc: Boolean, classifier0: Set[Classifier]): Boolean = {
     classifier0.nonEmpty || sources || javadoc
   }
 
@@ -705,11 +708,12 @@ class Helper(
     sources: Boolean,
     javadoc: Boolean,
     default: Boolean,
+    classifier0: Set[Classifier],
     artifactTypes: Set[Type],
     subset: Set[Dependency] = null
   ): Map[String, File] = {
 
-    val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, subset).distinct
+    val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, classifier0, subset).distinct
 
     val logger =
       if (common.verbosityLevel >= 0)
@@ -791,13 +795,13 @@ class Helper(
     }
 
     val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
-      getDepArtifactsForClassifier(sources, javadoc, default, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
+      getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 
     if (!jsonOutputFile.isEmpty) {
       // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
       // a strict super set.
-      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, res).map(_._1): _*).toSeq
+      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).map(_._1): _*).toSeq
 
       // A map from requested org:name:version to reconciled org:name:version
       val conflictResolutionForRoots: Map[String, String] = allDependencies.map({ dep =>
@@ -825,7 +829,7 @@ class Helper(
           printExclusions = common.verbosityLevel >= 1,
           excluded = false,
           colors = false,
-          overrideClassifiers = overrideClassifiers(sources, javadoc, default)
+          overrideClassifiers = overrideClassifiers(sources, javadoc, default, classifier0)
         )
       )
       val jsonStr = JsonReport(
@@ -849,9 +853,10 @@ class Helper(
     javadoc: Boolean,
     default: Boolean,
     artifactTypes: Set[Type],
+    classifier0: Set[Classifier],
     subset: Set[Dependency] = null
   ): Seq[File] =
-    fetchMap(sources, javadoc, default, artifactTypes, subset).values.toSeq
+    fetchMap(sources, javadoc, default, classifier0, artifactTypes, subset).values.toSeq
 
   def baseLoader = {
 
@@ -875,7 +880,8 @@ class Helper(
       sources = false,
       javadoc = false,
       default = true,
-      artifactTypes = artifactTypes
+      artifactTypes = artifactTypes,
+      classifier0 = Set.empty
     )
 
     if (isolated.isolated.isEmpty)
@@ -893,6 +899,7 @@ class Helper(
             javadoc = false,
             default = true,
             artifactTypes = artifactTypes,
+            classifier0 = Set.empty,
             subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
           )
 

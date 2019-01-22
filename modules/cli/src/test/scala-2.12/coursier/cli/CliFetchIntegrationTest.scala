@@ -43,25 +43,20 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   }
 
   "Underscore classifier" should "fetch default files" in {
-    val commonOpt = CommonOptions(
+    val artifactOpt = ArtifactOptions(
       classifier = List("_")
     )
-    val fetchOpt = FetchOptions(common = commonOpt)
+    val fetchOpt = FetchOptions(artifactOptions = artifactOpt)
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
   "Underscore and source classifier" should "fetch default and source files" in {
-    val commonOpt = CommonOptions(
-      classifier = List("_")
-    )
     val artifactOpt = ArtifactOptions(
+      classifier = List("_"),
       sources = true
     )
-    val fetchOpt = FetchOptions(
-      common = commonOpt,
-      artifactOptions = artifactOpt
-    )
+    val fetchOpt = FetchOptions(artifactOptions = artifactOpt)
     val fetch = Fetch(fetchOpt, RemainingArgs(Seq("junit:junit:4.12"), Seq()))
     assert(fetch.files0.map(_.getName).toSet.equals(Set(
       "junit-4.12.jar",

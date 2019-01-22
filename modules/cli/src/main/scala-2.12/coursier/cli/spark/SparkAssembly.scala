@@ -83,7 +83,7 @@ object SparkAssembly {
 
     val helper = sparkJarsHelper(scalaVersion, sparkVersion, yarnVersion, default, extraDependencies, options)
 
-    helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes)
+    helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
   }
 
   def spark(
@@ -100,8 +100,8 @@ object SparkAssembly {
 
     val helper = sparkJarsHelper(scalaVersion, sparkVersion, yarnVersion, default, extraDependencies, options)
 
-    val artifacts = helper.artifacts(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes)
-    val jars = helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes)
+    val artifacts = helper.artifacts(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
+    val jars = helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
 
     val checksums = artifacts.map { a =>
       val f = a.checksumUrls.get("SHA-1") match {

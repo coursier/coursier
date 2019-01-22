@@ -19,8 +19,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val files = helper.fetch(
       sources = options.artifactOptions.sources,
       javadoc = options.artifactOptions.javadoc,
-      default = options.artifactOptions.default0(options.options.common.classifier0),
-      artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
+      default = options.artifactOptions.default0,
+      classifier0 = options.artifactOptions.classifier0,
+      artifactTypes = options.artifactOptions.artifactTypes
     )
 
     val log: String => Unit =
@@ -98,8 +99,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         helper.fetchMap(
           sources = options.artifactOptions.sources,
           javadoc = options.artifactOptions.javadoc,
-          default = options.artifactOptions.default0(options.options.common.classifier0),
-          artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0)
+          default = options.artifactOptions.default0,
+          classifier0 = options.artifactOptions.classifier0,
+          artifactTypes = options.artifactOptions.artifactTypes
         ).toList.foldLeft((List.empty[String], List.empty[File])){
           case ((urls, files), (url, file)) =>
             if (options.options.assembly || options.options.standalone) (urls, file :: files)
@@ -134,8 +136,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
               val m = helper.fetchMap(
                 sources = options.artifactOptions.sources,
                 javadoc = options.artifactOptions.javadoc,
-                default = options.artifactOptions.default0(options.options.common.classifier0),
-                artifactTypes = options.artifactOptions.artifactTypes(options.options.common.classifier0),
+                default = options.artifactOptions.default0,
+                classifier0 = options.artifactOptions.classifier0,
+                artifactTypes = options.artifactOptions.artifactTypes,
                 subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
               )
 

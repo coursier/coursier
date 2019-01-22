@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
+import coursier.cli.options.shared.ArtifactOptions
 
 final case class SparkSubmitOptions(
   @Short("M")
