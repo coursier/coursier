@@ -3,8 +3,9 @@ package coursier.cli.params
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.ResolveOptions
-import coursier.cli.params.shared._
+import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryParams}
 import coursier.core.{Module, Repository}
+import coursier.params.{CacheParams, ResolutionParams}
 import coursier.util.Parse
 
 final case class ResolveParams(

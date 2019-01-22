@@ -9,6 +9,11 @@ trait Schedulable[F[_]] extends Gather[F] {
   def handle[A](a: F[A])(f: PartialFunction[Throwable, A]): F[A]
   def schedule[A](pool: ExecutorService)(f: => A): F[A]
   def fromAttempt[A](a: Either[Throwable, A]): F[A]
+
+  def attempt[A](f: F[A]): F[Either[Throwable, A]] =
+    handle(map(f)(Right(_): Either[Throwable, A])) {
+      case NonFatal(t) => Left(t)
+    }
 }
 
 object Schedulable {

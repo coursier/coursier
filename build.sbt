@@ -216,7 +216,7 @@ lazy val extra = project("extra")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coreJvm, cacheJvm, extra)
+  .dependsOn(bootstrap, metaJvm, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,

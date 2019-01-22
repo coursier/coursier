@@ -3,8 +3,8 @@ package coursier.cli.options.shared
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.shared.ResolutionParams
 import coursier.core._
+import coursier.params.ResolutionParams
 import coursier.util.Parse
 
 final case class ResolutionOptions(
