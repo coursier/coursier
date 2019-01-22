@@ -8,10 +8,11 @@ import java.util.zip.ZipInputStream
 import caseapp.core.RemainingArgs
 import coursier.bootstrap.Bootstrap.resourceDir
 import coursier.cli.options._
-import coursier.cli.options.shared.RepositoryOptions
+import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
+
 import scala.collection.JavaConverters._
 
 /**

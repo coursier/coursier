@@ -35,3 +35,8 @@ trait CacheLogger {
     */
   def stopDidPrintSomething(): Boolean = false
 }
+
+object CacheLogger {
+  def nop: CacheLogger =
+    new CacheLogger {}
+}

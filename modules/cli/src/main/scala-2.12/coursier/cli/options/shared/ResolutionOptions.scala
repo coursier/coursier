@@ -1,7 +1,11 @@
 package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.{Configuration, ResolutionProcess}
+import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
+import coursier.core._
+import coursier.params.ResolutionParams
+import coursier.util.Parse
 
 final case class ResolutionOptions(
 
@@ -21,40 +25,6 @@ final case class ResolutionOptions(
   @Value("name=value")
     forceProperty: List[String] = Nil,
 
-  @Help("Exclude module")
-  @Value("organization:name")
-  @Short("E")
-  @Help("Global level exclude")
-    exclude: List[String] = Nil,
-
-  @Short("x")
-  @Help("Path to the local exclusion file. " +
-    "Syntax: <org:name>--<org:name>. `--` means minus. Example file content:\n\t" +
-    "\tcom.twitter.penguin:korean-text--com.twitter:util-tunable-internal_2.11\n\t" +
-    "\torg.apache.commons:commons-math--com.twitter.search:core-query-nodes\n\t" +
-    "Behavior: If root module A excludes module X, but root module B requires X, module X will still be fetched."
-  )
-    localExcludeFile: String = "",
-
-  @Help("Default scala version")
-  @Short("e")
-    scalaVersion: String = scala.util.Properties.versionNumberString,
-
-  @Help("Default sbt version (if --sbt-plugin options are passed)")
-  @Value("sbt version (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
-    sbtVersion: String = "1.0",
-
-  @Help("Add intransitive dependencies")
-    intransitive: List[String] = Nil,
-
-  @Help("Add sbt plugin dependencies")
-    sbtPlugin: List[String] = Nil,
-
-  @Help("Default configuration (default(compile) by default)")
-  @Value("configuration")
-  @Short("c")
-    defaultConfiguration: String = "default(compile)",
-
   @Help("Enable profile")
   @Value("profile")
   @Short("F")
@@ -65,8 +35,58 @@ final case class ResolutionOptions(
 
 ) {
 
-  def defaultConfiguration0 = Configuration(defaultConfiguration)
+  def params(scalaVersion: String): ValidatedNel[String, ResolutionParams] = {
 
+    val maxIterationsV =
+      if (maxIterations > 0)
+        Validated.validNel(maxIterations)
+      else
+        Validated.invalidNel(s"Max iteration must be > 0 (got $maxIterations")
+
+    val forceVersionV = {
+
+      val (forceVersionErrors, forceVersions0) =
+        Parse.moduleVersions(forceVersion, scalaVersion)
+
+      if (forceVersionErrors.nonEmpty)
+        Validated.invalidNel(
+          s"Cannot parse forced versions:\n" + forceVersionErrors.map("  " + _).mkString("\n")
+        )
+      else
+        // TODO Warn if some versions are forced multiple times?
+        Validated.validNel(
+          forceVersions0
+            .groupBy(_._1)
+            .mapValues(_.map(_._2).last)
+        )
+    }
+
+    val forcedPropertiesV = forceProperty
+      .traverse { s =>
+        s.split("=", 2) match {
+          case Array(k, v) =>
+            Validated.validNel(k -> v)
+          case _ =>
+            Validated.invalidNel(s"Malformed forced property argument: $s")
+        }
+      }
+      // TODO Warn if some properties are forced multiple times?
+      .map(_.toMap)
+
+    val profiles = profile.toSet
+
+    (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
+      (maxIterations, forceVersion, forcedProperties) =>
+        ResolutionParams(
+          keepOptional,
+          maxIterations,
+          forceVersion,
+          forcedProperties,
+          profiles,
+          typelevel
+        )
+    }
+  }
 }
 
 object ResolutionOptions {

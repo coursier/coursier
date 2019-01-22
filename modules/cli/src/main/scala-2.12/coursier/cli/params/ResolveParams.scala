@@ -3,16 +3,19 @@ package coursier.cli.params
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.ResolveOptions
-import coursier.cli.params.shared.{CacheParams, OutputParams, RepositoryParams, ResolutionParams}
+import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryParams}
 import coursier.core.{Module, Repository}
+import coursier.params.{CacheParams, ResolutionParams}
 import coursier.util.Parse
 
 final case class ResolveParams(
   cache: CacheParams,
   output: OutputParams,
   repositories: Seq[Repository],
+  dependency: DependencyParams,
   resolution: ResolutionParams,
   benchmark: Int,
+  benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
   whatDependsOn: Set[Module]
@@ -26,16 +29,19 @@ final case class ResolveParams(
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
 
-    val cacheV = CacheParams(options.cacheOptions)
+    val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions, options.resolutionOptions.sbtPlugin.nonEmpty)
-    val resolutionV = ResolutionParams(options.resolutionOptions)
+    val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
+    val dependencyV = DependencyParams(options.dependencyOptions)
+    val resolutionV = options.resolutionOptions.params(
+      dependencyV.toOption.fold(options.dependencyOptions.scalaVersion)(_.scalaVersion)
+    )
 
     val benchmark = options.benchmark
     val tree = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV =
-      resolutionV.toOption.map(_.scalaVersion) match {
+      dependencyV.toOption.map(_.scalaVersion) match {
         case None =>
           Validated.validNel(Nil)
         case Some(sv) =>
@@ -56,14 +62,22 @@ object ResolveParams {
       else
         Validated.validNel(())
 
-    (cacheV, outputV, repositoriesV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck).mapN {
-      (cache, output, repositories, resolution, whatDependsOn, _, _) =>
+    val benchmarkCacheV =
+      if (options.benchmark == 0 && options.benchmarkCache)
+        Validated.invalidNel("Cannot specify --benchmark-cache without --benchmark")
+      else
+        Validated.validNel(options.benchmarkCache)
+
+    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck, benchmarkCacheV).mapN {
+      (cache, output, repositories, dependency, resolution, whatDependsOn, _, _, benchmarkCache) =>
         ResolveParams(
           cache,
           output,
           repositories,
+          dependency,
           resolution,
           benchmark,
+          benchmarkCache,
           tree,
           reverseTree,
           whatDependsOn.toSet

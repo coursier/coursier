@@ -2,6 +2,7 @@
 plugins_(
   "com.geirsson"       % "sbt-ci-release"           % "1.2.1",
   "io.get-coursier"    % "sbt-coursier"             % coursierVersion,
+  "pl.project13.scala" % "sbt-jmh"                  % "0.3.4",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.3.0",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.11",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",

@@ -2,67 +2,24 @@ package coursier.cli.params.shared
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.options.shared.ResolutionOptions
+import coursier.cli.options.shared.DependencyOptions
 import coursier.core._
 import coursier.util.Parse
 import coursier.util.Parse.ModuleRequirements
 
 import scala.io.Source
 
-final case class ResolutionParams(
-  keepOptionalDependencies: Boolean,
-  maxIterations: Int,
-  forceVersion: Map[Module, String],
-  forcedProperties: Map[String, String],
+final case class DependencyParams(
   exclude: Set[(Organization, ModuleName)],
   perModuleExclude: Map[String, Set[(Organization, ModuleName)]], // FIXME key should be Module
   scalaVersion: String,
   intransitiveDependencies: Seq[(Dependency, Map[String, String])],
   sbtPluginDependencies: Seq[(Dependency, Map[String, String])],
-  defaultConfiguration: Configuration,
-  profiles: Set[String],
-  typelevel: Boolean
+  defaultConfiguration: Configuration
 )
 
-object ResolutionParams {
-  def apply(options: ResolutionOptions): ValidatedNel[String, ResolutionParams] = {
-
-    val maxIterationsV =
-      if (options.maxIterations > 0)
-        Validated.validNel(options.maxIterations)
-      else
-        Validated.invalidNel(s"Max iteration must be > 0 (got ${options.maxIterations}")
-
-    val forceVersionV = {
-
-      val (forceVersionErrors, forceVersions0) =
-        Parse.moduleVersions(options.forceVersion, options.scalaVersion)
-
-      if (forceVersionErrors.nonEmpty)
-        Validated.invalidNel(
-          s"Cannot parse forced versions:\n" + forceVersionErrors.map("  " + _).mkString("\n")
-        )
-      else
-        // TODO Warn if some versions are forced multiple times?
-        Validated.validNel(
-          forceVersions0
-            .groupBy(_._1)
-            .mapValues(_.map(_._2).last)
-        )
-    }
-
-    val forcedPropertiesV = options
-      .forceProperty
-      .traverse { s =>
-        s.split("=", 2) match {
-          case Array(k, v) =>
-            Validated.validNel(k -> v)
-          case _ =>
-            Validated.invalidNel(s"Malformed forced property argument: $s")
-        }
-      }
-      // TODO Warn if some properties are forced multiple times?
-      .map(_.toMap)
+object DependencyParams {
+  def apply(options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
 
     val excludeV = {
 
@@ -195,25 +152,15 @@ object ResolutionParams {
 
     val defaultConfiguration = Configuration(options.defaultConfiguration)
 
-    val profiles = options.profile.toSet
-
-    val typelevel = options.typelevel
-
-    (maxIterationsV, forceVersionV, forcedPropertiesV, excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV).mapN {
-      (maxIterations, forceVersion, forcedProperties, exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies) =>
-        ResolutionParams(
-          options.keepOptional,
-          maxIterations,
-          forceVersion,
-          forcedProperties,
+    (excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV).mapN {
+      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies) =>
+        DependencyParams(
           exclude,
           perModuleExclude,
           scalaVersion,
           intransitiveDependencies,
           sbtPluginDependencies,
-          defaultConfiguration,
-          profiles,
-          typelevel
+          defaultConfiguration
         )
     }
   }

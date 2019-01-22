@@ -9,6 +9,8 @@ final case class ResolveOptions(
   @Value("Number of warm-up resolutions - if negative, doesn't print per iteration benchmark (less overhead)")
     benchmark: Int = 0,
 
+  benchmarkCache: Boolean = false,
+
   @Help("Print dependencies as a tree")
   @Short("t")
     tree: Boolean = false,
@@ -27,6 +29,9 @@ final case class ResolveOptions(
 
   @Recurse
     resolutionOptions: shared.ResolutionOptions = shared.ResolutionOptions(),
+
+  @Recurse
+    dependencyOptions: shared.DependencyOptions = shared.DependencyOptions(),
 
   @Recurse
     outputOptions: shared.OutputOptions = shared.OutputOptions()

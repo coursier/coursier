@@ -3,8 +3,9 @@ package coursier.cli.resolve
 import java.io.PrintStream
 
 import coursier.cli.params.ResolveParams
-import coursier.cli.params.shared.{OutputParams, ResolutionParams}
+import coursier.cli.params.shared.OutputParams
 import coursier.core.{Dependency, Resolution}
+import coursier.params.ResolutionParams
 import coursier.util.Print
 import coursier.util.Print.Colors
 

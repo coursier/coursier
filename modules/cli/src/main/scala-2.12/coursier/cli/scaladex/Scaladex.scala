@@ -37,15 +37,10 @@ object Scaladex {
       })
     }, Gather[Task])
 
-  def withCache(fetch: Fetch.Content[Task]*): Scaladex[Task] =
-    ScaladexWebServiceImpl({
-      url =>
-        def get(fetch: Fetch.Content[Task]) =
-          fetch(
-            Artifact(url, Map(), Map(), changing = true, optional = false, None)
-          )
-
-        (get(fetch.head) /: fetch.tail)(_ orElse get(_))
-    }, Gather[Task])
+  def withCache(fetch: Fetch.Content[Task]): Scaladex[Task] =
+    ScaladexWebServiceImpl(
+      url => fetch(Artifact(url, Map(), Map(), changing = true, optional = false, None)),
+      Gather[Task]
+    )
 
 }

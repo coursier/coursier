@@ -5,11 +5,6 @@ import coursier.core.Classifier
 
 final case class CommonOptions(
 
-  @Help("Classifiers that should be fetched")
-  @Value("classifier1,classifier2,...")
-  @Short("C")
-    classifier: List[String] = Nil,
-
   @Help("Print the duration of each iteration of the resolution")
   @Short("B")
   @Value("Number of warm-up resolutions - if negative, doesn't print per iteration benchmark (less overhead)")
@@ -36,11 +31,13 @@ final case class CommonOptions(
     resolutionOptions: shared.ResolutionOptions = shared.ResolutionOptions(),
 
   @Recurse
+    dependencyOptions: shared.DependencyOptions = shared.DependencyOptions(),
+
+  @Recurse
     outputOptions: shared.OutputOptions = shared.OutputOptions()
 
 ) {
   def verbosityLevel = outputOptions.verbosityLevel
-  lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
 }
 
 object CommonOptions {

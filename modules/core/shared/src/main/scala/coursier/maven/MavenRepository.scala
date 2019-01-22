@@ -67,6 +67,13 @@ object MavenRepository {
     } else
       module.name.value
 
+  private[coursier] def parseRawPom(str: String): Either[String, Project] =
+    for {
+      xml <- compatibility.xmlParse(str).right
+      _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
+      proj <- Pom.project(xml, relocationAsDependency = true).right
+    } yield proj
+
 }
 
 final case class MavenRepository(
@@ -310,13 +317,6 @@ final case class MavenRepository(
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] = {
-
-    def parseRawPom(str: String) =
-      for {
-        xml <- compatibility.xmlParse(str).right
-        _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
-        proj <- Pom.project(xml, relocationAsDependency = true).right
-      } yield proj
 
 
     val projectArtifact0 = projectArtifact(module, version, versioningValue)
