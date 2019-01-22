@@ -381,17 +381,8 @@ class TermDisplay(
   import TermDisplay._
 
   private var updateRunnableOpt = Option.empty[UpdateDisplayRunnable]
-  private val scheduler = Executors.newSingleThreadScheduledExecutor(
-    new ThreadFactory {
-      val defaultThreadFactory = Executors.defaultThreadFactory()
-      def newThread(r: Runnable) = {
-        val t = defaultThreadFactory.newThread(r)
-        t.setDaemon(true)
-        t.setName("progress-bar")
-        t
-      }
-    }
-  )
+  @volatile private var scheduler: ScheduledExecutorService = null
+  private val lock = new Object
 
   private def updateRunnable = updateRunnableOpt.getOrElse {
     throw new Exception("Uninitialized TermDisplay")
@@ -412,22 +403,52 @@ class TermDisplay(
     else
       1000L / 60
 
-  override def init(beforeOutput: => Unit): Unit = {
-    updateRunnableOpt = Some(new UpdateDisplayRunnable(beforeOutput, out, width, fallbackMode0))
+  override def init(beforeOutput: => Unit): Unit =
+    if (scheduler == null || updateRunnableOpt.isEmpty)
+      lock.synchronized {
+        if (scheduler == null)
+          scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactory {
+              val defaultThreadFactory = Executors.defaultThreadFactory()
+              def newThread(r: Runnable) = {
+                val t = defaultThreadFactory.newThread(r)
+                t.setDaemon(true)
+                t.setName("progress-bar")
+                t
+              }
+            }
+          )
 
-    updateRunnable.init()
-    scheduler.scheduleAtFixedRate(updateRunnable, 0L, refreshInterval, TimeUnit.MILLISECONDS)
-  }
+        if (updateRunnableOpt.isEmpty) {
+          updateRunnableOpt = Some(new UpdateDisplayRunnable(beforeOutput, out, width, fallbackMode0))
+
+          updateRunnable.init()
+          scheduler.scheduleAtFixedRate(updateRunnable, 0L, refreshInterval, TimeUnit.MILLISECONDS)
+        }
+      }
 
   def init(): Unit =
     init(())
 
-  override def stopDidPrintSomething(): Boolean = {
-    scheduler.shutdown()
-    scheduler.awaitTermination(2 * refreshInterval, TimeUnit.MILLISECONDS)
-    updateRunnable.stop()
-    updateRunnable.printedAnything()
-  }
+  override def stopDidPrintSomething(): Boolean =
+    if (scheduler != null || updateRunnableOpt.nonEmpty)
+      lock.synchronized {
+        if (scheduler != null) {
+          scheduler.shutdown()
+          scheduler.awaitTermination(2 * refreshInterval, TimeUnit.MILLISECONDS)
+          scheduler = null
+        }
+
+        if (updateRunnableOpt.nonEmpty) {
+          updateRunnable.stop()
+          val b = updateRunnable.printedAnything()
+          updateRunnableOpt = None
+          b
+        } else
+          false
+      }
+    else
+      false
 
   def stop(): Unit =
     stopDidPrintSomething()
