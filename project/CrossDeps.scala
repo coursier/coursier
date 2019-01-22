@@ -11,7 +11,7 @@ object CrossDeps {
   // The setting / .value hoop-and-loop is necessary because of the expansion of the %%% macro, which references
   // other settings.
 
-  def catsEffect = setting("org.typelevel" %%% "cats-effect" % "1.1.0")
+  def catsEffect = setting("org.typelevel" %%% "cats-effect" % "1.2.0")
   def fastParse = setting("com.lihaoyi" %%% "fastparse" % SharedVersions.fastParse)
   def scalazCore = setting("org.scalaz" %%% "scalaz-core" % SharedVersions.scalaz)
   def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.6")
