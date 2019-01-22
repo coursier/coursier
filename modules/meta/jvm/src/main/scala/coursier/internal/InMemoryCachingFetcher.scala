@@ -1,4 +1,4 @@
-package coursier.cli.resolve
+package coursier.internal
 
 import java.util.concurrent.ConcurrentHashMap
 
