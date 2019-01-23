@@ -7,7 +7,7 @@ import cats.implicits._
 import coursier.FallbackDependenciesRepository
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, ModuleName, Organization}
-import coursier.util.{Gather, Parse, Task}
+import coursier.util.{Parse, Task}
 import coursier.util.Parse.ModuleRequirements
 
 object Dependencies {
@@ -35,7 +35,7 @@ object Dependencies {
     scalaVersion: String,
     scaladex: Scaladex[Task],
     verbosity: Int
-  ): Task[Either[String, List[(Dependency, Map[String, String])]]] = {
+  ): Task[Either[String, List[Dependency]]] = {
 
     val deps = scaladex.dependencies(
       rawDependency,
@@ -65,76 +65,42 @@ object Dependencies {
     }.run.map(_.right.map { modVers =>
       modVers.toList.map {
         case (mod, ver) =>
-          (coursier.Dependency(mod, ver), Map.empty[String, String])
+          coursier.Dependency(mod, ver)
       }
     })
   }
 
   /**
-    * Tries to parse a dependency as a simple dependency, or via a Scala Index lookup.
-    */
-  def handleDependency(
-    rawDependency: String,
-    scalaVersion: String,
-    defaultConfiguration: Configuration,
-    scaladex: Scaladex[Task],
-    verbosity: Int
-  ): Task[Either[String, List[(Dependency, Map[String, String])]]] =
-    if (rawDependency.contains("/") || !rawDependency.contains(":"))
-      handleScaladexDependency(
-        rawDependency,
-        scalaVersion,
-        scaladex,
-        verbosity
-      )
-    else
-      Task.point(
-         parseSimpleDependency(
-           rawDependency,
-           scalaVersion,
-           defaultConfiguration
-         ).right.map(List(_))
-      )
-
-  /**
-    * Tries to parse dependencies as a simple dependencies, or via a Scala Index lookups.
+    * Tries to parse dependencies as a simple dependencies.
     */
   def handleDependencies(
     rawDependencies: Seq[String],
     scalaVersion: String,
-    defaultConfiguration: Configuration,
-    scaladex: Scaladex[Task],
-    verbosity: Int
-  ): Task[ValidatedNel[String, List[(Dependency, Map[String, String])]]] = {
-
-    val tasks = rawDependencies.map { s =>
-      handleDependency(s, scalaVersion, defaultConfiguration, scaladex, verbosity)
-        .map {
+    defaultConfiguration: Configuration
+  ): ValidatedNel[String, List[(Dependency, Map[String, String])]] =
+    rawDependencies
+      .map { s =>
+        val e = parseSimpleDependency(
+          s,
+          scalaVersion,
+          defaultConfiguration
+        )
+        e match {
           case Left(error) => Validated.invalidNel(error)
-          case Right(l) => Validated.validNel(l)
+          case Right(d) => Validated.validNel(List(d))
         }
-    }
-
-    Gather[Task].gather(tasks)
-      .map(_.toList.flatSequence)
-  }
+      }
+      .toList
+      .flatSequence
 
   def withExtraRepo(
     rawDependencies: Seq[String],
-    scaladex: Scaladex[Task],
     scalaVersion: String,
     defaultConfiguration: Configuration,
-    verbosity: Int,
     cacheLocalArtifacts: Boolean,
     extraDependencies: Seq[(Dependency, Map[String, String])]
-  ): Task[(List[Dependency], Option[FallbackDependenciesRepository])] = {
-    handleDependencies(
-      rawDependencies,
-      scalaVersion,
-      defaultConfiguration,
-      scaladex,
-      verbosity
-    ).flatMap {
+  ): Either[Throwable, (List[Dependency], Option[FallbackDependenciesRepository])] =
+    handleDependencies(rawDependencies, scalaVersion, defaultConfiguration) match {
       case Validated.Valid(l) =>
 
         val l0 = l ++ extraDependencies
@@ -164,15 +130,14 @@ object Dependencies {
             )
         }
 
-        Task.point((deps, extraRepoOpt))
+        Right((deps, extraRepoOpt))
 
       case Validated.Invalid(err) =>
-        Task.fail(new ResolveException(
+        Left(new ResolveException(
           "Error processing dependencies:\n" +
             err.toList.map("  " + _).mkString("\n")
         ))
     }
-  }
 
   def addExclusions(
     dep: Dependency,
