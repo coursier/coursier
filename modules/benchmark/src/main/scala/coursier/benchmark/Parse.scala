@@ -3,9 +3,7 @@ package coursier.benchmark
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
-import coursier.core.Project
 import javax.xml.parsers.SAXParserFactory
-import javax.xml.stream.XMLInputFactory
 import org.xml.sax
 import org.xml.sax.InputSource
 import org.xml.sax.helpers.DefaultHandler
@@ -16,14 +14,6 @@ object Parse {
     val spf0 = SAXParserFactory.newInstance()
     spf0.setNamespaceAware(true) // ???
     spf0
-  }
-
-  private lazy val inputFactory = XMLInputFactory.newInstance()
-  def parseRawPomStax(str: String): Unit = {
-    val streamReader = inputFactory.createXMLStreamReader(new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)))
-    while (streamReader.hasNext) {
-      streamReader.next()
-    }
   }
 
   def parseRawPomSax(str: String): Unit = {

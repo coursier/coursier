@@ -42,13 +42,6 @@ class ParseTests {
   }
 
   @Benchmark
-  def parseSparkParentXmlStaxWip(state: TestState): Unit = {
-    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
-    val res = Parse.parseRawPomStax(content)
-    // assert(res.isRight)
-  }
-
-  @Benchmark
   def parseApacheParent(state: TestState): Unit = {
     val t = state.repositories.head.find(
       mod"org.apache:apache",
