@@ -4,7 +4,7 @@ import scala.scalajs.js
 import js.Dynamic.{ global => g }
 import org.scalajs.dom.raw.NodeList
 
-import coursier.util.Xml
+import coursier.util.{SaxHandler, Xml}
 
 import scala.collection.mutable.ListBuffer
 
@@ -35,6 +35,11 @@ package object compatibility {
 
   lazy val DOMParser = newFromXmlDomOrGlobal("DOMParser")
   lazy val XMLSerializer = newFromXmlDomOrGlobal("XMLSerializer")
+  lazy val sax =
+    if (js.isUndefined(g.sax))
+      g.require("sax")
+    else
+      g.sax
 
   // Can't find these from node
   val ELEMENT_NODE = 1 // org.scalajs.dom.raw.Node.ELEMENT_NODE
@@ -70,6 +75,32 @@ package object compatibility {
     }
   }
 
+
+  def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
+
+    val parser = sax.parser(true)
+
+    parser.onerror = { (e: js.Dynamic) =>
+      ???
+    }: js.Function1[js.Dynamic, Unit]
+    parser.ontext = { (t: String) =>
+      ???
+    }: js.Function1[String, Unit]
+    parser.onopentag = { (node: js.Dynamic) =>
+      handler.startElement(node.name.asInstanceOf[String])
+    }: js.Function1[js.Dynamic, Unit]
+    parser.ontext = { (t: String) =>
+      val a = t.toCharArray
+      handler.characters(a, 0, a.length)
+    }: js.Function1[String, Unit]
+    parser.onclosetag = { (tagName: String) =>
+      handler.endElement(tagName)
+    }: js.Function1[String, Unit]
+
+    parser.write(str).close()
+
+    handler
+  }
 
   def xmlParseDom(s: String): Either[String, Xml.Node] = {
     val doc = {
