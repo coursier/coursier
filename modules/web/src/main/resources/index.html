@@ -63,7 +63,7 @@
 	    than this page.
 	    The requests to them are proxied through a public CORS proxy. Usage of this
 	    proxy is throttled, which can make medium to large resolutions
-	    fail.
+	    timeout and fail.
 	</div>
         <div id="demoContent"></div>
     </div>
@@ -81,6 +81,8 @@
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+<script src="bundle.js"></script>
 
 <!-- Paths changed by push-gh-pages.sh before pushing to gh-pages -->
 <script src="../scalajs-bundler/main/web-fastopt-bundle.js"></script>

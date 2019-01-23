@@ -1,13 +1,19 @@
 package coursier.core
 
-import coursier.util.Xml
+import java.io.{ByteArrayInputStream, CharArrayReader}
+import java.nio.charset.StandardCharsets
 
+import coursier.util.{SaxHandler, Xml}
 import java.util.regex.Pattern.quote
+
+import javax.xml.parsers.SAXParserFactory
 
 import scala.collection.JavaConverters._
 import scala.xml.{ Attribute, MetaData, Null }
-
 import org.jsoup.Jsoup
+import org.xml.sax
+import org.xml.sax.InputSource
+import org.xml.sax.helpers.DefaultHandler
 
 package object compatibility {
 
@@ -20,7 +26,7 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
-  def xmlParse(s: String): Either[String, Xml.Node] = {
+  def xmlPreprocess(s: String): String = {
 
     val content =
       if (entityPattern.findFirstIn(s).isEmpty)
@@ -31,8 +37,41 @@ package object compatibility {
             s0.replace(target, replacement)
         }
 
+    content.stripPrefix(utf8Bom)
+  }
+
+  private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
+    override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit =
+      handler.startElement(localName)
+    override def characters(ch: Array[Char], start: Int, length: Int): Unit =
+      handler.characters(ch, start, length)
+    override def endElement(uri: String, localName: String, qName: String): Unit =
+      handler.endElement(localName)
+  }
+
+  private lazy val spf = {
+    val spf0 = SAXParserFactory.newInstance()
+    spf0.setNamespaceAware(true) // ???
+    spf0
+  }
+
+  def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
+
+    val str0 = xmlPreprocess(str)
+
+    val saxParser = spf.newSAXParser()
+    val xmlReader = saxParser.getXMLReader
+    xmlReader.setContentHandler(new XmlHandler(handler))
+    xmlReader.parse(new InputSource(new CharArrayReader(str0.toCharArray)))
+    handler
+  }
+
+  def xmlParseDom(s: String): Either[String, Xml.Node] = {
+
+    val content = xmlPreprocess(s)
+
     def parse =
-      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
+      try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
     def fromNode(node: scala.xml.Node): Xml.Node =

@@ -28,7 +28,7 @@ object PomParsingTests extends TestSuite {
         )
       )
 
-      val result = Pom.dependency(xmlParse(depNode).right.get)
+      val result = Pom.dependency(xmlParseDom(depNode).right.get)
 
       assert(result == expected)
     }
@@ -41,7 +41,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("profile1", None, Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -56,7 +56,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -72,7 +72,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -88,7 +88,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
       val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> None)), Nil, Nil, Map.empty))
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -106,7 +106,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
       val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> Some("yes"))), Nil, Nil, Map.empty))
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -135,7 +135,7 @@ object PomParsingTests extends TestSuite {
         Map.empty
       ))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -166,7 +166,7 @@ object PomParsingTests extends TestSuite {
         Map.empty
       ))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -189,7 +189,7 @@ object PomParsingTests extends TestSuite {
         Map("first.prop" -> "value1")
       ))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -212,7 +212,7 @@ object PomParsingTests extends TestSuite {
         Map("first.prop" -> "value1")
       ))
 
-      val result = Pom.profile(xmlParse(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).right.get)
 
       assert(result == expected)
     }
@@ -250,7 +250,7 @@ object PomParsingTests extends TestSuite {
           |
         """.stripMargin
 
-      val parsed = core.compatibility.xmlParse(properties)
+      val parsed = core.compatibility.xmlParseDom(properties)
       assert(parsed.isRight)
 
       val node = parsed.right.get

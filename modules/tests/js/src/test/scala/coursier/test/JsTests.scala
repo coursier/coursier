@@ -18,7 +18,7 @@ object JsTests extends TestSuite {
 
     'get{
       Platform.get("http://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.1.3/logback-classic-1.1.3.pom")
-        .map(core.compatibility.xmlParse)
+        .map(core.compatibility.xmlParseDom)
         .map{ xml =>
           assert(xml.right.toOption.exists(_.label == "project"))
         }

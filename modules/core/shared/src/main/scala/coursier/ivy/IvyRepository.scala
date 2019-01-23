@@ -237,7 +237,7 @@ final case class IvyRepository(
       proj0 <- EitherT(
         F.point {
           for {
-            xml <- compatibility.xmlParse(ivy).right
+            xml <- compatibility.xmlParseDom(ivy).right
             _ <- (if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")).right
             proj <- IvyXml.project(xml).right
           } yield proj

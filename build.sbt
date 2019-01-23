@@ -291,8 +291,10 @@ lazy val web = project("web")
       "webpack-raphael" -> "2.1.4",
       "react" -> "15.6.1",
       "react-dom" -> "15.6.1",
-      "requirejs" -> "2.3.6"
-    )
+      "requirejs" -> "2.3.6",
+      "sax" -> "1.2.4"
+    ),
+    browserifyBundle("sax")
   )
 
 lazy val okhttp = project("okhttp")
