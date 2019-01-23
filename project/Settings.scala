@@ -11,6 +11,8 @@ import com.typesafe.sbt.pgp._
 import coursier.ShadingPlugin.autoImport._
 import Aliases._
 import ScalaVersion._
+import sbt.util.FileInfo
+import scalajsbundler.Npm
 
 object Settings {
 
@@ -44,10 +46,8 @@ object Settings {
     javacOptions.in(Keys.doc) := Seq()
   )
 
-  val runNpmInstallIfNeeded = Def.task {
-    val baseDir = baseDirectory.in(ThisBuild).value
+  def doRunNpmInstallIfNeeded(baseDir: File, log: Logger): Unit = {
     val evFile = baseDir / "node_modules" / ".npm_run"
-    val log = streams.value.log
     if (!evFile.exists()) {
       val cmd = Seq("npm", "install")
       val b = new ProcessBuilder(cmd: _*)
@@ -64,6 +64,12 @@ object Settings {
       // Parent dir should have been created by npm install
       Files.write(evFile.toPath, Array.emptyByteArray)
     }
+  }
+
+  val runNpmInstallIfNeeded = Def.task {
+    val baseDir = baseDirectory.in(ThisBuild).value
+    val log = streams.value.log
+    doRunNpmInstallIfNeeded(baseDir, log)
   }
 
   lazy val shared = javaScalaPluginShared ++ Seq(
@@ -345,5 +351,37 @@ object Settings {
 
   def project(id: String) =
     Project(id, file(s"modules/$id"))
+
+  def browserifyBundle(packages: String*) =
+    Seq(
+      managedResources.in(Compile) += {
+
+        val s = streams.value
+        val baseDir = baseDirectory.in(ThisBuild).value
+
+        val packagesFile = target.value / "browserify-packages.txt"
+        Files.write(packagesFile.toPath, packages.mkString("\n").getBytes(StandardCharsets.UTF_8))
+
+        val output = target.value / "browserify" / packages.mkString("-") / "bundle.js"
+
+        val f = FileFunction.cached(
+          s.cacheDirectory / "browserify-bundle",
+          FileInfo.hash
+        ) { _ =>
+
+          doRunNpmInstallIfNeeded(baseDir, s.log)
+
+          output.getParentFile.mkdirs()
+          val args = Seq("run", "browserify", "--", "-o", output.getAbsolutePath) ++
+            packages.flatMap(p => Seq("-r", p))
+          Npm.run(args: _*)(baseDir, s.log)
+          Set.empty
+        }
+
+        f(Set(packagesFile))
+
+        output
+      }
+    )
 
 }
