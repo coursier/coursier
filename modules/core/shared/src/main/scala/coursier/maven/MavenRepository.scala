@@ -71,7 +71,7 @@ object MavenRepository {
     for {
       xml <- compatibility.xmlParseDom(str).right
       _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
-      proj <- Pom.project(xml, relocationAsDependency = true).right
+      proj <- Pom.project(xml).right
     } yield proj
 
 }

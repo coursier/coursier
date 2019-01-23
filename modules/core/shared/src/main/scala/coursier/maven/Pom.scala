@@ -168,13 +168,6 @@ object Pom {
       .right.toOption
 
   def project(pom: Node): Either[String, Project] =
-    project(pom, relocationAsDependency = false)
-
-  def project(
-    pom: Node,
-    relocationAsDependency: Boolean
-  ): Either[String, Project] = {
-
     for {
       projModule <- module(pom, defaultGroupId = Some(Organization(""))).right
 
@@ -290,38 +283,35 @@ object Pom {
 
       val finalProjModule = projModule.copy(organization = groupId)
 
-      val relocationDependencyOpt =
-        if (relocationAsDependency)
-          pom.children
-            .find(_.label == "distributionManagement")
-            .flatMap(_.children.find(_.label == "relocation"))
-            .map { n =>
+      val relocationDependencyOpt = pom
+        .children
+        .find(_.label == "distributionManagement")
+        .flatMap(_.children.find(_.label == "relocation"))
+        .map { n =>
 
-              // see https://maven.apache.org/guides/mini/guide-relocation.html
+          // see https://maven.apache.org/guides/mini/guide-relocation.html
 
-              val relocatedGroupId = text(n, "groupId", "")
-                .right.map(Organization(_))
-                .right.getOrElse(finalProjModule.organization)
-              val relocatedArtifactId = text(n, "artifactId", "")
-                .right.map(ModuleName(_))
-                .right.getOrElse(finalProjModule.name)
-              val relocatedVersion = text(n, "version", "").right.getOrElse(version)
+          val relocatedGroupId = text(n, "groupId", "")
+            .right.map(Organization(_))
+            .right.getOrElse(finalProjModule.organization)
+          val relocatedArtifactId = text(n, "artifactId", "")
+            .right.map(ModuleName(_))
+            .right.getOrElse(finalProjModule.name)
+          val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
-              Configuration.empty -> Dependency(
-                finalProjModule.copy(
-                  organization = relocatedGroupId,
-                  name = relocatedArtifactId
-                ),
-                relocatedVersion,
-                Configuration.empty,
-                Set(),
-                Attributes.empty,
-                optional = false,
-                transitive = true
-              )
-            }
-        else
-          None
+          Configuration.empty -> Dependency(
+            finalProjModule.copy(
+              organization = relocatedGroupId,
+              name = relocatedArtifactId
+            ),
+            relocatedVersion,
+            Configuration.empty,
+            Set(),
+            Attributes.empty,
+            optional = false,
+            transitive = true
+          )
+        }
 
       Project(
         finalProjModule,
@@ -353,7 +343,6 @@ object Pom {
         )
       )
     }
-  }
 
   def versions(node: Node): Either[String, Versions] = {
 
