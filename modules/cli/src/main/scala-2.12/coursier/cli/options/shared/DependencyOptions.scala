@@ -1,7 +1,7 @@
 package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.{Configuration, ResolutionProcess}
+import coursier.core.Configuration
 
 final case class DependencyOptions(
 
@@ -33,6 +33,9 @@ final case class DependencyOptions(
 
   @Help("Add sbt plugin dependencies")
     sbtPlugin: List[String] = Nil,
+
+  @Help("Add dependencies via Scaladex lookups")
+    scaladex: List[String] = Nil,
 
   @Help("Default configuration (default(compile) by default)")
   @Value("configuration")

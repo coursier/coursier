@@ -5,8 +5,9 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
+import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.{FallbackDependenciesRepository, Fetch, Resolution}
+import coursier.{Fetch, Resolution}
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -19,35 +20,49 @@ import scala.concurrent.ExecutionContext
 
 object Resolve extends CaseApp[ResolveOptions] {
 
-  private def parseDependencies(
+  /**
+    * Tries to parse get dependencies via Scala Index lookups.
+    */
+  def handleScaladexDependencies(
     params: ResolveParams,
-    pool: ExecutorService,
-    args: Seq[String]
-  ): Task[(Seq[Dependency], Option[FallbackDependenciesRepository])] = {
+    pool: ExecutorService
+  ): Task[List[Dependency]] =
+    if (params.dependency.scaladexLookups.isEmpty)
+      Task.point(Nil)
+    else {
 
-    // TODO Manage not to initialize logger if it's not used
+      val logger = params.output.logger()
 
-    val logger = params.output.logger()
+      val scaladex = Scaladex.withCache(coursier.Resolve.fetcher[Task](params.cache, pool, logger))
 
-    val scaladex0 = Scaladex.withCache(coursier.Resolve.fetcher[Task](params.cache, pool, logger))
+      val tasks = params.dependency.scaladexLookups.map { s =>
+        Dependencies.handleScaladexDependency(s, params.dependency.scalaVersion, scaladex, params.output.verbosity)
+          .map {
+            case Left(error) => Validated.invalidNel(error)
+            case Right(l) => Validated.validNel(l)
+          }
+      }
 
-    val task = Dependencies.withExtraRepo(
-      args,
-      scaladex0,
-      params.dependency.scalaVersion,
-      params.dependency.defaultConfiguration,
-      params.output.verbosity,
-      params.cache.cacheLocalArtifacts,
-      params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
-    )
+      val task = Gather[Task].gather(tasks)
+        .flatMap(_.toList.flatSequence match {
+          case Validated.Valid(l) =>
+            Task.point(l)
+          case Validated.Invalid(errs) =>
+            Task.fail(
+              new ResolveException(
+                s"Error during Scaladex lookups:\n" +
+                  errs.toList.map("  " + _).mkString("\n")
+              )
+            )
+        })
 
-    for {
-      _ <- Task.delay(logger.init(()))
-      e <- task.attempt
-      _ <- Task.delay(logger.stopDidPrintSomething())
-      t <- Task.fromEither(e)
-    } yield t
-  }
+      for {
+        _ <- Task.delay(logger.init(()))
+        e <- task.attempt
+        _ <- Task.delay(logger.stopDidPrintSomething())
+        t <- Task.fromEither(e)
+      } yield t
+    }
 
   private def runDetailedBenchmark(
     params: ResolveParams,
@@ -208,10 +223,17 @@ object Resolve extends CaseApp[ResolveOptions] {
     stdout: PrintStream,
     stderr: PrintStream,
     args: Seq[String]
-  ): Task[(Resolution, Boolean)] =
-    for {
+  ): Task[(Resolution, Boolean)] = {
+
+    val e = for {
       // parse dependencies, possibly doing some Scala Index lookups
-      depsExtraRepoOpt <- parseDependencies(params, pool, args)
+      depsExtraRepoOpt <- Dependencies.withExtraRepo(
+        args,
+        params.dependency.scalaVersion,
+        params.dependency.defaultConfiguration,
+        params.cache.cacheLocalArtifacts,
+        params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
+      )
       (deps, extraRepoOpt) = depsExtraRepoOpt
       deps0 = Dependencies.addExclusions(
         deps,
@@ -221,9 +243,6 @@ object Resolve extends CaseApp[ResolveOptions] {
       // Prepend FallbackDependenciesRepository to the repository list
       // so that dependencies with URIs are resolved against this repo
       repositories = extraRepoOpt.toSeq ++ params.repositories
-      startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
-        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None
-      )
       _ <- {
         val invalidForced = extraRepoOpt
           .map(_.fallbacks.toSeq)
@@ -233,9 +252,9 @@ object Resolve extends CaseApp[ResolveOptions] {
               (mod, version)
           }
         if (invalidForced.isEmpty)
-          Task.point(())
+          Right(())
         else
-          Task.fail(
+          Left(
             new ResolveException(
               s"Cannot force a version that is different from the one specified " +
                 s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
@@ -243,8 +262,21 @@ object Resolve extends CaseApp[ResolveOptions] {
           )
       }
 
+    } yield (deps0, repositories)
+
+    for {
+      t <- Task.fromEither(e)
+      (deps, repositories) = t
+
+      scaladexDeps <- handleScaladexDependencies(params, pool)
+
+      deps0 = deps ++ scaladexDeps
+
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
+      startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
+        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None
+      )
       res <- runResolution(
         params,
         repositories,
@@ -274,6 +306,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           errors.foreach(stderr.println)
       }
     } yield (res, valid)
+  }
 
 
   def run(options: ResolveOptions, args: RemainingArgs): Unit =

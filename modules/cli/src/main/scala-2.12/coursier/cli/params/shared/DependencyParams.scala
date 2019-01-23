@@ -15,6 +15,7 @@ final case class DependencyParams(
   scalaVersion: String,
   intransitiveDependencies: Seq[(Dependency, Map[String, String])],
   sbtPluginDependencies: Seq[(Dependency, Map[String, String])],
+  scaladexLookups: Seq[String],
   defaultConfiguration: Configuration
 )
 
@@ -152,6 +153,11 @@ object DependencyParams {
 
     val defaultConfiguration = Configuration(options.defaultConfiguration)
 
+    val scaladexLookups = options
+      .scaladex
+      .map(_.trim)
+      .filter(_.nonEmpty)
+
     (excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV).mapN {
       (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies) =>
         DependencyParams(
@@ -160,6 +166,7 @@ object DependencyParams {
           scalaVersion,
           intransitiveDependencies,
           sbtPluginDependencies,
+          scaladexLookups,
           defaultConfiguration
         )
     }

@@ -136,11 +136,8 @@ class Helper(
   val loggerFallbackMode =
     !common.outputOptions.progress && TermDisplay.defaultFallbackMode
 
-  val (scaladexRawDependencies, otherRawDependencies) =
-    rawDependencies.partition(s => s.contains("/") || !s.contains(":"))
-
   val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
-    if (scaladexRawDependencies.isEmpty)
+    if (common.dependencyOptions.scaladex.isEmpty)
       Nil
     else {
       val logger =
@@ -166,7 +163,7 @@ class Helper(
 
       val scaladex = Scaladex.withCache(fetch)
 
-      val res = Gather[Task].gather(scaladexRawDependencies.map { s =>
+      val res = Gather[Task].gather(common.dependencyOptions.scaladex.map { s =>
         val deps = scaladex.dependencies(
           s,
           common.dependencyOptions.scalaVersion,
@@ -277,7 +274,7 @@ class Helper(
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(otherRawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
+    Parse.moduleVersionConfigs(rawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.dependencyOptions.scalaVersion)
