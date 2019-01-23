@@ -67,6 +67,10 @@ object MavenRepository {
     } else
       module.name.value
 
+  private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
+    coursier.core.compatibility.xmlParseSax(str, new PomParser)
+      .project
+
   private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
     for {
       xml <- compatibility.xmlParseDom(str).right
@@ -323,7 +327,7 @@ final case class MavenRepository(
 
     for {
       str <- fetch(projectArtifact0)
-      proj0 <- EitherT(F.point[Either[String, Project]](parseRawPomDom(str)))
+      proj0 <- EitherT(F.point[Either[String, Project]](parseRawPomSax(str)))
     } yield
       Pom.addOptionalDependenciesInConfig(
         proj0.copy(
