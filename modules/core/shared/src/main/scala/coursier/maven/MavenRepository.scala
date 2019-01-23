@@ -67,9 +67,9 @@ object MavenRepository {
     } else
       module.name.value
 
-  private[coursier] def parseRawPom(str: String): Either[String, Project] =
+  private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
     for {
-      xml <- compatibility.xmlParse(str).right
+      xml <- compatibility.xmlParseDom(str).right
       _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
       proj <- Pom.project(xml, relocationAsDependency = true).right
     } yield proj
@@ -225,7 +225,7 @@ final case class MavenRepository(
           F.map(fetch(artifact).run) { eitherStr =>
             for {
               str <- eitherStr.right
-              xml <- compatibility.xmlParse(str).right
+              xml <- compatibility.xmlParseDom(str).right
               _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
               versions <- Pom.versions(xml).right
             } yield versions
@@ -248,7 +248,7 @@ final case class MavenRepository(
           F.map(fetch(artifact).run) { eitherStr =>
             for {
               str <- eitherStr.right
-              xml <- compatibility.xmlParse(str).right
+              xml <- compatibility.xmlParseDom(str).right
               _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
               snapshotVersioning <- Pom.snapshotVersioning(xml).right
             } yield snapshotVersioning
@@ -323,7 +323,7 @@ final case class MavenRepository(
 
     for {
       str <- fetch(projectArtifact0)
-      proj0 <- EitherT(F.point[Either[String, Project]](parseRawPom(str)))
+      proj0 <- EitherT(F.point[Either[String, Project]](parseRawPomDom(str)))
     } yield
       Pom.addOptionalDependenciesInConfig(
         proj0.copy(

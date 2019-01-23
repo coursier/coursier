@@ -71,7 +71,7 @@ package object compatibility {
   }
 
 
-  def xmlParse(s: String): Either[String, Xml.Node] = {
+  def xmlParseDom(s: String): Either[String, Xml.Node] = {
     val doc = {
       if (s.isEmpty) None
       else {

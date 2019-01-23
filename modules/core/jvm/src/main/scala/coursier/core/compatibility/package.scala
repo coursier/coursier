@@ -20,7 +20,7 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
-  def xmlParse(s: String): Either[String, Xml.Node] = {
+  def xmlParseDom(s: String): Either[String, Xml.Node] = {
 
     val content =
       if (entityPattern.findFirstIn(s).isEmpty)
