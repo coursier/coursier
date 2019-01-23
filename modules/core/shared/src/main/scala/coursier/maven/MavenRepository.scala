@@ -91,6 +91,9 @@ final case class MavenRepository(
   import Repository._
   import MavenRepository._
 
+  // only used during benchmarks
+  private[coursier] var useSaxParser = true
+
   // FIXME Ideally, we should silently drop a '/' suffix from `root`
   // so that
   //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
@@ -327,7 +330,7 @@ final case class MavenRepository(
 
     for {
       str <- fetch(projectArtifact0)
-      proj0 <- EitherT(F.point[Either[String, Project]](parseRawPomSax(str)))
+      proj0 <- EitherT(F.point[Either[String, Project]](if (useSaxParser) parseRawPomSax(str) else parseRawPomDom(str)))
     } yield
       Pom.addOptionalDependenciesInConfig(
         proj0.copy(

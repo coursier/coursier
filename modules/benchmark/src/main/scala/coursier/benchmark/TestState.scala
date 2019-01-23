@@ -26,6 +26,15 @@ class TestState {
     Repositories.central
   )
 
+  val repositoriesDom = {
+    val l = Seq(
+      MavenRepository("https://repo1.maven.org/maven2")
+    )
+    for (r <- l)
+      r.useSaxParser = false
+    l
+  }
+
   val ec = ExecutionContext.fromExecutorService(CacheDefaults.pool)
 
   val inMemoryCache = {
@@ -44,6 +53,7 @@ class TestState {
   val fetcher = inMemoryCache.fetcher
 
   val fetch = Fetch.from(repositories, fetcher)
+  val fetchDom = Fetch.from(repositoriesDom, fetcher)
 
   val forProjectCache = {
 
