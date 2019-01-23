@@ -20,7 +20,7 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
-  def xmlParseDom(s: String): Either[String, Xml.Node] = {
+  def xmlPreprocess(s: String): String = {
 
     val content =
       if (entityPattern.findFirstIn(s).isEmpty)
@@ -31,8 +31,15 @@ package object compatibility {
             s0.replace(target, replacement)
         }
 
+    content.stripPrefix(utf8Bom)
+  }
+
+  def xmlParseDom(s: String): Either[String, Xml.Node] = {
+
+    val content = xmlPreprocess(s)
+
     def parse =
-      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
+      try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
     def fromNode(node: scala.xml.Node): Xml.Node =
