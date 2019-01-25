@@ -69,6 +69,9 @@ testBootstrap() {
     exit 1
   fi
 
+  modules/cli/target/pack/bin/coursier bootstrap -o cs-scalafmt-standalone org.scalameta:scalafmt-cli_2.12:2.0.0-RC4 --standalone
+  # return code 0 is enough
+  ./cs-scalafmt-standalone --help
 
   if echo "$OSTYPE" | grep -q darwin; then
     GREP="ggrep"
