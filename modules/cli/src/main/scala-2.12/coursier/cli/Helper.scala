@@ -636,7 +636,7 @@ class Helper(
 
     val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0).map(t => (t._2, t._3))
 
-    if (artifactTypes(Type("*")))
+    if (artifactTypes(Type.all))
       artifacts0.map(_._2)
     else
       artifacts0.collect {
