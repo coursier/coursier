@@ -199,7 +199,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
 
     val submitLoader = new URLClassLoader(
       submitCp.map(_.toURI.toURL).toArray,
-      helper.baseLoader
+      Helper.baseLoader
     )
 
     Launch(

@@ -13,15 +13,7 @@ scala_library(
         "meta:meta",
         ":util",
     ],
-    sources = globs(
-        "coursier/cli/options/*.scala",
-	"coursier/cli/options/shared/*.scala",
-	"coursier/cli/params/*.scala",
-	"coursier/cli/params/shared/*.scala",
-	"coursier/cli/resolve/*.scala",
-        "coursier/cli/scaladex/*.scala",
-        "coursier/cli/spark/*.scala",
-	"coursier/cli/util/*.scala",
+    sources = rglobs(
         "coursier/cli/*.scala",
     ),
 )

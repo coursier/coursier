@@ -27,6 +27,18 @@ object Helper {
 
   private val manifestPath = "META-INF/MANIFEST.MF"
 
+  def baseLoader = {
+
+    @tailrec
+    def rootLoader(cl: ClassLoader): ClassLoader =
+      Option(cl.getParent) match {
+        case Some(par) => rootLoader(par)
+        case None => cl
+      }
+
+    rootLoader(ClassLoader.getSystemClassLoader)
+  }
+
   def mainClasses(cl: ClassLoader): Map[(String, String), String] = {
     import scala.collection.JavaConverters._
 
@@ -855,18 +867,6 @@ class Helper(
   ): Seq[File] =
     fetchMap(sources, javadoc, default, classifier0, artifactTypes, subset).values.toSeq
 
-  def baseLoader = {
-
-    @tailrec
-    def rootLoader(cl: ClassLoader): ClassLoader =
-      Option(cl.getParent) match {
-        case Some(par) => rootLoader(par)
-        case None => cl
-      }
-
-    rootLoader(ClassLoader.getSystemClassLoader)
-  }
-
   lazy val (parentLoader, filteredFiles) = {
 
     // FIXME That shouldn't be hard-coded this way...
@@ -882,12 +882,12 @@ class Helper(
     )
 
     if (isolated.isolated.isEmpty)
-      (baseLoader, files0)
+      (Helper.baseLoader, files0)
     else {
 
       val isolatedDeps = isolated.isolatedDeps(common.dependencyOptions.scalaVersion)
 
-      val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((baseLoader, files0)) {
+      val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((Helper.baseLoader, files0)) {
         case ((parent, files0), target) =>
 
           // FIXME These were already fetched above
