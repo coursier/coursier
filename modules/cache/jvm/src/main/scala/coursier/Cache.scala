@@ -12,7 +12,7 @@ import coursier.cache._
 import coursier.core.Authentication
 import coursier.internal.FileUtil
 import coursier.paths.CachePath
-import coursier.util.{EitherT, Schedulable}
+import coursier.util.{EitherT, Schedulable, Task}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -30,7 +30,7 @@ final case class Cache[F[_]](
   sslRetry: Int = CacheDefaults.sslRetryCount,
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  S: Schedulable[F] = coursier.util.Task.schedulable
+  S: Schedulable[F] = Task.schedulable
 ) {
 
   private implicit val S0 = S
@@ -813,7 +813,7 @@ object Cache {
   }
 
 
-  lazy val default = Cache()
+  lazy val default: Cache[Task] = Cache()
 
   def fetch[F[_]](
     cache: File = CacheDefaults.location,
