@@ -284,7 +284,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         pool
       )
 
-      validated = coursier.Resolve.validate(res, params.output.verbosity).either
+      validated = coursier.Resolve.validate(res, params.output.verbosity >= 1).either
 
       valid = validated.isRight
 
