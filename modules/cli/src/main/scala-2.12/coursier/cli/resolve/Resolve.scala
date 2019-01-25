@@ -222,7 +222,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     // stdout / stderr not used everywhere (added mostly for testing)
     stdout: PrintStream,
     stderr: PrintStream,
-    args: Seq[String]
+    args: Seq[String],
+    printOutput: Boolean = true
   ): Task[(Resolution, Boolean)] = {
 
     val e = for {
@@ -288,15 +289,18 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       valid = validated.isRight
 
-      _ = if (valid || params.output.forcePrint) {
-        Output.printResolutionResult(
-          printResultStdout = true,
-          params,
-          deps0,
-          res,
-          stdout,
-          stderr
-        )
+      _ = {
+        val outputToStdout = printOutput && (valid || params.output.forcePrint)
+        if (outputToStdout || params.output.verbosity >= 2) {
+          Output.printResolutionResult(
+            printResultStdout = outputToStdout,
+            params,
+            deps0,
+            res,
+            stdout,
+            stderr
+          )
+        }
       }
 
       _ = validated match {
