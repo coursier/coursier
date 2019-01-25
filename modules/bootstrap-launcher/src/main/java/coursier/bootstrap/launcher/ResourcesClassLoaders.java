@@ -4,7 +4,6 @@ import coursier.bootstrap.launcher.jar.JarEntry;
 import coursier.bootstrap.launcher.jar.JarFile;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ class ResourcesClassLoaders extends ClassLoaders {
     private final static String jarDir = ClassLoaders.resourceDir + "jars/";
     private final static String defaultJarResource = ClassLoaders.resourceDir + "bootstrap-jar-resources";
 
-    private List<URL> getResourceURLs(String[] resources) throws MalformedURLException {
+    private List<URL> getResourceURLs(String[] resources) throws IOException {
 
         List<String> errors = new ArrayList<>();
         List<URL> urls = new ArrayList<>();
@@ -33,7 +32,9 @@ class ResourcesClassLoaders extends ClassLoaders {
                 String message = "Resource " + resource + " not found";
                 errors.add(message);
             } else {
-                urls.add(entry.getUrl());
+                // Adds '!/' at the end of the URLs compared to entry.getUrl().
+                // It seems to sometimes work without it, but usually fails most of the time…
+                urls.add(sourceJarFile.getNestedJarFile(entry).getUrl());
             }
         }
 
