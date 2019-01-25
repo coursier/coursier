@@ -44,7 +44,7 @@ object Platform {
       }
     }
 
-  val artifact: Fetch.Content[Task] = { artifact =>
+  val artifact: Repository.Fetch[Task] = { artifact =>
     EitherT {
       val conn = CacheUrl.urlConnection(artifact.url, artifact.authentication)
       readFully[Task](conn.getInputStream)
@@ -53,7 +53,7 @@ object Platform {
 
   def fetch(
     repositories: Seq[core.Repository]
-  ): Fetch.Metadata[Task] =
-    Fetch.from(repositories, Platform.artifact)
+  ): ResolutionProcess.Fetch[Task] =
+    ResolutionProcess.fetch(repositories, Platform.artifact)
 
 }

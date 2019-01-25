@@ -404,7 +404,7 @@ class Helper(
     ttl = ttl0,
     followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
   )
-  val fetchQuiet = coursier.Fetch.from(repositories, fetch)
+  val fetchQuiet = ResolutionProcess.fetch(repositories, fetch)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>

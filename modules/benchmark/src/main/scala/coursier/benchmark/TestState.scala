@@ -1,8 +1,8 @@
 package coursier.benchmark
 
 import coursier.cache.CacheDefaults
-import coursier.core.Configuration
-import coursier.{Fetch, Resolve, dependencyString, moduleString}
+import coursier.core.{Configuration, ResolutionProcess}
+import coursier.{Cache, Resolve, dependencyString, moduleString}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
 import coursier.util.{Repositories, Task}
@@ -38,8 +38,8 @@ class TestState {
   val ec = ExecutionContext.fromExecutorService(CacheDefaults.pool)
 
   val inMemoryCache = {
-    val c = new InMemoryCachingFetcher(Resolve.fetcher[Task]())
-    val fetch = Fetch.from(repositories, c.fetcher)
+    val c = new InMemoryCachingFetcher(Cache.default.fetch)
+    val fetch = ResolutionProcess.fetch(repositories, c.fetcher)
 
     for (initialRes <- Seq(initialSparkSqlRes, initialCoursierCliRes)) {
       val t = Resolve.runProcess(initialRes, fetch)
@@ -52,8 +52,8 @@ class TestState {
 
   val fetcher = inMemoryCache.fetcher
 
-  val fetch = Fetch.from(repositories, fetcher)
-  val fetchDom = Fetch.from(repositoriesDom, fetcher)
+  val fetch = ResolutionProcess.fetch(repositories, fetcher)
+  val fetchDom = ResolutionProcess.fetch(repositoriesDom, fetcher)
 
   val forProjectCache = {
 

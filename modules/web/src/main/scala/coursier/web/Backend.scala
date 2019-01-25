@@ -1,6 +1,7 @@
 package coursier.web
 
-import coursier.{Dependency, Fetch, MavenRepository, Module, Platform, Repository, Resolution, moduleNameString, organizationString}
+import coursier.core.ResolutionProcess
+import coursier.{Dependency, MavenRepository, Module, Platform, Repository, Resolution, moduleNameString, organizationString}
 import coursier.util.{EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
@@ -14,10 +15,10 @@ final class Backend($: BackendScope[_, State]) {
 
   def fetch(
     repositories: Seq[Repository],
-    fetch: Fetch.Content[Task]
-  ): Fetch.Metadata[Task] = {
+    fetch: Repository.Fetch[Task]
+  ): ResolutionProcess.Fetch[Task] = {
 
-    val fetch0: Fetch.Content[Task] = { a =>
+    val fetch0: Repository.Fetch[Task] = { a =>
       if (a.url.endsWith("/"))
         // don't fetch directory listings
         EitherT[Task, String, String](Task.point(Left("")))
@@ -27,7 +28,7 @@ final class Backend($: BackendScope[_, State]) {
 
     modVers => Gather[Task].gather(
       modVers.map { case (module, version) =>
-        Fetch.find(repositories, module, version, fetch)
+        ResolutionProcess.fetchOne(repositories, module, version, fetch)
           .run
           .map((module, version) -> _)
       }

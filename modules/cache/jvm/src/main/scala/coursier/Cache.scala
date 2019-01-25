@@ -626,7 +626,7 @@ final case class Cache[F[_]](
     (res(cachePolicies.head) /: cachePolicies.tail.map(res))(_ orElse _)
   }
 
-  lazy val fetch: Fetch.Content[F] = {
+  lazy val fetch: Repository.Fetch[F] = {
     artifact =>
       file(artifact).leftMap(_.describe).flatMap { f =>
 
@@ -824,7 +824,7 @@ object Cache {
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Fetch.Content[F] = {
+  )(implicit S: Schedulable[F]): Repository.Fetch[F] = {
     Cache(
       cache,
       cachePolicies,

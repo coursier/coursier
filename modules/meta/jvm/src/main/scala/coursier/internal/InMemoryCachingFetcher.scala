@@ -1,13 +1,11 @@
 package coursier.internal
 
 import java.util.concurrent.ConcurrentHashMap
-
-import coursier.Fetch
-import coursier.core.Artifact
+import coursier.core.{Artifact, Repository}
 import coursier.util.{EitherT, Schedulable}
 
 /** For benchmarking purposes */
-final class InMemoryCachingFetcher[F[_]](underlying: Fetch.Content[F])(implicit S: Schedulable[F]) {
+final class InMemoryCachingFetcher[F[_]](underlying: Repository.Fetch[F])(implicit S: Schedulable[F]) {
 
   @volatile private var onlyCache0 = false
   private val cache = new ConcurrentHashMap[Artifact, Either[String, String]]
@@ -26,7 +24,7 @@ final class InMemoryCachingFetcher[F[_]](underlying: Fetch.Content[F])(implicit 
       case Some(Right(s)) => s
     }
 
-  def fetcher: Fetch.Content[F] =
+  def fetcher: Repository.Fetch[F] =
     artifact =>
       EitherT {
         Option(cache.get(artifact)) match {

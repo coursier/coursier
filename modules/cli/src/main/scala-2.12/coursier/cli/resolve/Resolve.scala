@@ -7,7 +7,7 @@ import caseapp._
 import cats.data.Validated
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.{Fetch, Resolution}
+import coursier.Resolution
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -67,7 +67,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   private def runDetailedBenchmark(
     params: ResolveParams,
     startRes: Resolution,
-    fetch0: Fetch.Metadata[Task],
+    fetch0: ResolutionProcess.Fetch[Task],
     iterations: Int
   ): Task[Resolution] = {
 
@@ -146,7 +146,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     params: ResolveParams,
     startRes: Resolution,
     logger: CacheLogger,
-    fetch0: Fetch.Metadata[Task],
+    fetch0: ResolutionProcess.Fetch[Task],
     iterations: Int
   ): Task[Resolution] = {
 
@@ -193,7 +193,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           new InMemoryCachingFetcher(f).fetcher
         else
           f
-      val fetchQuiet = coursier.Fetch.from(repositories, f0)
+      val fetchQuiet = ResolutionProcess.fetch(repositories, f0)
 
       if (params.output.verbosity >= 2) {
         modVers: Seq[(Module, String)] =>

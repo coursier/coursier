@@ -1,14 +1,14 @@
 package coursier
 package core
 
-import coursier.util.Monad
+import coursier.util.{EitherT, Gather, Monad}
 
 import scala.annotation.tailrec
 
 
 sealed abstract class ResolutionProcess {
   def run[F[_]](
-    fetch: Fetch.Metadata[F],
+    fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = ResolutionProcess.defaultMaxIterations
   )(implicit
     F: Monad[F]
@@ -34,7 +34,7 @@ sealed abstract class ResolutionProcess {
 
   @tailrec
   final def next[F[_]](
-    fetch: Fetch.Metadata[F],
+    fetch: ResolutionProcess.Fetch[F],
     fastForward: Boolean = true
   )(implicit
     F: Monad[F]
@@ -60,7 +60,7 @@ final case class Missing(
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
 
-  def next0(results: Fetch.MD): ResolutionProcess = {
+  def next0(results: ResolutionProcess.MD): ResolutionProcess = {
 
     val errors = results.collect {
       case (modVer, Left(errs)) =>
@@ -152,6 +152,63 @@ final case class Done(resolution: Resolution) extends ResolutionProcess {
 
 object ResolutionProcess {
 
+  type MD = Seq[(
+    (Module, String),
+    Either[Seq[String], (Artifact.Source, Project)]
+  )]
+
+  type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
+
+  /**
+    * Try to find `module` among `repositories`.
+    *
+    * Look at `repositories` from the left, one-by-one, and stop at first success.
+    * Else, return all errors, in the same order.
+    *
+    * The `version` field of the returned `Project` in case of success may not be
+    * equal to the provided one, in case the latter is not a specific
+    * version (e.g. version interval). Which version get chosen depends on
+    * the repository implementation.
+    */
+  def fetchOne[F[_]](
+    repositories: Seq[Repository],
+    module: Module,
+    version: String,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
+
+    val lookups = repositories
+      .map(repo => repo -> repo.find(module, version, fetch).run)
+
+    val task0 = lookups.foldLeft[F[Either[Seq[String], (Artifact.Source, Project)]]](F.point(Left(Nil))) {
+      case (acc, (_, eitherProjTask)) =>
+        F.bind(acc) {
+          case Left(errors) =>
+            F.map(eitherProjTask)(_.left.map(error => error +: errors))
+          case res @ Right(_) =>
+            F.point(res)
+        }
+    }
+
+    val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (Artifact.Source, Project)])
+    EitherT(task)
+  }
+
+  def fetch[F[_]](repositories: Seq[core.Repository], fetch: Repository.Fetch[F])(implicit F: Gather[F]): Fetch[F] =
+    modVers =>
+      F.map(
+        F.gather {
+          modVers.map {
+            case (module, version) =>
+              F.map(fetchOne(repositories, module, version, fetch).run)(d => (module, version) -> d)
+          }
+        }
+      )(_.toSeq)
+
+
+
   def defaultMaxIterations: Int = 100
 
   def apply(resolution: Resolution): ResolutionProcess = {
@@ -165,7 +222,7 @@ object ResolutionProcess {
 
   private[coursier] def fetchAll[F[_]](
     modVers: Seq[(Module, String)],
-    fetch: Fetch.Metadata[F]
+    fetch: ResolutionProcess.Fetch[F]
   )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (Artifact.Source, Project)])]] = {
 
     def uniqueModules(modVers: Seq[(Module, String)]): Stream[Seq[(Module, String)]] = {

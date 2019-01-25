@@ -30,7 +30,7 @@ object Resolve {
 
   def runProcess[F[_]](
     initialResolution: Resolution,
-    fetch: Fetch.Metadata[F],
+    fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = 200,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): F[Resolution] = {
@@ -111,7 +111,7 @@ object Resolve {
     cacheParams: CacheParams = CacheParams(),
     pool: ExecutorService = CacheDefaults.pool,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F]): Fetch.Content[F] =
+  )(implicit S: Schedulable[F]): Repository.Fetch[F] =
     Cache.fetch[F](
       cacheParams.cache,
       cacheParams.cachePolicies,
@@ -127,9 +127,9 @@ object Resolve {
     cacheParams: CacheParams = CacheParams(),
     pool: ExecutorService = CacheDefaults.pool,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F]): Fetch.Metadata[F] = {
+  )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] = {
     val f = fetcher[F](cacheParams, pool, logger)
-    coursier.Fetch.from(repositories, f)
+    ResolutionProcess.fetch(repositories, f)
   }
 
   def validate(res: Resolution, verbosity: Int): ValidationNel[String, Unit] = {
