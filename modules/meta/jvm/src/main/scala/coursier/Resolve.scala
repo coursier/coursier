@@ -112,15 +112,7 @@ object Resolve {
     pool: ExecutorService = CacheDefaults.pool,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): Repository.Fetch[F] =
-    Cache.fetch[F](
-      cacheParams.cache,
-      cacheParams.cachePolicies,
-      checksums = cacheParams.checksum,
-      logger = Some(logger),
-      pool = pool,
-      ttl = cacheParams.ttl,
-      followHttpToHttpsRedirections = cacheParams.followHttpToHttpsRedirections
-    )
+    cacheParams.fetch(pool, logger)
 
   def fetchVia[F[_]](
     repositories: Seq[Repository],

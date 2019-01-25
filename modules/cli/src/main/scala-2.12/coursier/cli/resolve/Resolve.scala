@@ -33,7 +33,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val logger = params.output.logger()
 
-      val scaladex = Scaladex.withCache(coursier.Resolve.fetcher[Task](params.cache, pool, logger))
+      val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
 
       val tasks = params.dependency.scaladexLookups.map { s =>
         Dependencies.handleScaladexDependency(s, params.dependency.scalaVersion, scaladex, params.output.verbosity)
@@ -187,7 +187,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val fetch0 = {
 
-      val f = coursier.Resolve.fetcher[Task](params.cache, pool, logger)
+      val f = params.cache.cache(pool, logger).fetch
       val f0 =
         if (params.benchmark != 0 && params.benchmarkCache)
           new InMemoryCachingFetcher(f).fetcher

@@ -28,6 +28,7 @@ final case class Cache[F[_]](
   localArtifactsShouldBeCached: Boolean = false,
   followHttpToHttpsRedirections: Boolean = false,
   sslRetry: Int = CacheDefaults.sslRetryCount,
+  retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   S: Schedulable[F] = coursier.util.Task.schedulable
 ) {
@@ -564,7 +565,7 @@ final case class Cache[F[_]](
     */
   def file(
     artifact: Artifact,
-    retry: Int = 1
+    retry: Int = retry
   ): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
@@ -847,7 +848,7 @@ object Cache {
     logger: Option[CacheLogger] = None,
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
-    retry: Int = 1,
+    retry: Int = CacheDefaults.defaultRetryCount,
     localArtifactsShouldBeCached: Boolean = false,
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
