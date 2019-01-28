@@ -388,7 +388,7 @@ class Helper(
     .toMap
 
   val startRes = Resolution(
-    allDependencies.toSet,
+    allDependencies,
     forceVersions = forceVersions,
     filter = Some(dep => common.resolutionOptions.keepOptional || !dep.optional),
     userActivations =
@@ -624,7 +624,7 @@ class Helper(
     default: Boolean,
     artifactTypes: Set[Type],
     classifier0: Set[Classifier],
-    subset: Set[Dependency] = null
+    subset: Seq[Dependency] = null
   ): Seq[Artifact] = {
 
     if (subset == null && common.verbosityLevel >= 1) {
@@ -719,7 +719,7 @@ class Helper(
     default: Boolean,
     classifier0: Set[Classifier],
     artifactTypes: Set[Type],
-    subset: Set[Dependency] = null
+    subset: Seq[Dependency] = null
   ): Map[String, File] = {
 
     val artifacts0 = artifacts(sources, javadoc, default, artifactTypes, classifier0, subset).distinct
@@ -863,7 +863,7 @@ class Helper(
     default: Boolean,
     artifactTypes: Set[Type],
     classifier0: Set[Classifier],
-    subset: Set[Dependency] = null
+    subset: Seq[Dependency] = null
   ): Seq[File] =
     fetchMap(sources, javadoc, default, classifier0, artifactTypes, subset).values.toSeq
 
@@ -897,7 +897,7 @@ class Helper(
             default = true,
             artifactTypes = artifactTypes,
             classifier0 = Set.empty,
-            subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
+            subset = isolatedDeps.getOrElse(target, Seq.empty)
           )
 
           if (common.verbosityLevel >= 2) {

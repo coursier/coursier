@@ -76,7 +76,7 @@ package object coursier {
   object Resolution extends Serializable {
     val empty = apply()
     def apply(
-      rootDependencies: Set[Dependency] = Set.empty,
+      rootDependencies: Seq[Dependency] = Nil,
       dependencies: Set[Dependency] = Set.empty,
       forceVersions: Map[Module, String] = Map.empty,
       conflicts: Set[Dependency] = Set.empty,

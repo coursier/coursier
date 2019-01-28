@@ -20,7 +20,7 @@ class TestRunner[F[_]: Gather : ToFuture](
     ResolutionProcess.fetch(repositories, artifact)
 
   def resolve(
-    deps: Set[Dependency],
+    deps: Seq[Dependency],
     filter: Option[Dependency => Boolean] = None,
     extraRepos: Seq[Repository] = Nil,
     profiles: Option[Set[String]] = None
@@ -85,7 +85,7 @@ class TestRunner[F[_]: Gather : ToFuture](
       def tryRead = textResource(path)
 
       val dep = Dependency(module, version, configuration = configuration)
-      val res = await(resolve(Set(dep), extraRepos = extraRepos, profiles = profiles))
+      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles))
 
       // making that lazy makes scalac crash in 2.10 with scalajs
       val result = res
@@ -143,10 +143,10 @@ class TestRunner[F[_]: Gather : ToFuture](
   )(
     f: Seq[Artifact] => T
   ): Future[T] =
-    withArtifacts(Set(dep), extraRepos, classifierOpt)(f)
+    withArtifacts(Seq(dep), extraRepos, classifierOpt)(f)
 
   def withArtifacts[T](
-    deps: Set[Dependency],
+    deps: Seq[Dependency],
     extraRepos: Seq[Repository],
     classifierOpt: Option[Classifier]
   )(
@@ -155,7 +155,7 @@ class TestRunner[F[_]: Gather : ToFuture](
     withDetailedArtifacts(deps, extraRepos, classifierOpt)(l => f(l.map(_._2)))
 
   def withDetailedArtifacts[T](
-    deps: Set[Dependency],
+    deps: Seq[Dependency],
     extraRepos: Seq[Repository],
     classifierOpt: Option[Classifier]
   )(

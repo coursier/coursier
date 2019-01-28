@@ -139,7 +139,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
                 default = options.artifactOptions.default0,
                 classifier0 = options.artifactOptions.classifier0,
                 artifactTypes = options.artifactOptions.artifactTypes,
-                subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
+                subset = isolatedDeps.getOrElse(target, Seq.empty)
               )
 
               val m0 = m.filterKeys(url => !done(url))

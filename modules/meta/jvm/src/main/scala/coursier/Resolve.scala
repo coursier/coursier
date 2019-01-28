@@ -11,11 +11,11 @@ import scala.language.higherKinds
 object Resolve {
 
   private[coursier] def initialResolution(
-    dependencies: Iterable[Dependency],
+    dependencies: Seq[Dependency],
     params: ResolutionParams = ResolutionParams()
   ): Resolution =
     Resolution(
-      dependencies.toSet,
+      dependencies,
       forceVersions = params.forceVersion,
       filter = Some(dep => params.keepOptionalDependencies || !dep.optional),
       userActivations =
@@ -46,7 +46,7 @@ object Resolve {
   }
 
   def resolve[F[_]](
-    dependencies: Iterable[Dependency],
+    dependencies: Seq[Dependency],
     repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
@@ -58,7 +58,7 @@ object Resolve {
   }
 
   def resolveFuture(
-    dependencies: Iterable[Dependency],
+    dependencies: Seq[Dependency],
     repositories: Seq[Repository],
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
@@ -77,7 +77,7 @@ object Resolve {
   }
 
   def resolveSync(
-    dependencies: Iterable[Dependency],
+    dependencies: Seq[Dependency],
     repositories: Seq[Repository],
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,

@@ -12,7 +12,7 @@ import coursier.test.compatibility._
 object ResolutionTests extends TestSuite {
 
   def resolve0(
-    deps: Set[Dependency],
+    deps: Seq[Dependency],
     filter: Option[Dependency => Boolean] = None,
     forceVersions: Map[Module, String] = Map.empty,
     forceProperties: Map[String, String] = Map.empty
@@ -244,7 +244,7 @@ object ResolutionTests extends TestSuite {
     'empty{
       async{
         val res = await(resolve0(
-          Set.empty
+          Nil
         ))
 
         assert(res == Resolution.empty)
@@ -254,11 +254,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"acme", name"playy"), "2.4.0")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         ))
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope),
           errorCache = Map(dep.moduleVersion -> Seq("Not found"))
         )
@@ -270,7 +270,7 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"acme", name"module-with-missing-pom"), "1.0.0")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         ))
 
         val directDependencyErrors =
@@ -292,11 +292,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"acme", name"config"), "1.3.0")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearFinalDependenciesCache.clearProjectProperties
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope),
           projectCache = Map(dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion)))
         )
@@ -309,11 +309,11 @@ object ResolutionTests extends TestSuite {
         val dep = Dependency(Module(org"acme", name"play"), "2.4.0")
         val trDep = Dependency(Module(org"acme", name"play-json"), "2.4.0")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearFinalDependenciesCache.clearProjectProperties
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope, trDep.withCompileScope),
           projectCache = Map(
             projectsMap(dep.moduleVersion).kv,
@@ -332,11 +332,11 @@ object ResolutionTests extends TestSuite {
           Dependency(Module(org"acme", name"config"), "1.3.0")
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -353,11 +353,11 @@ object ResolutionTests extends TestSuite {
             exclusions = Set((org"acme", name"config")))
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -374,11 +374,11 @@ object ResolutionTests extends TestSuite {
             exclusions = Set((org"*", name"config")))
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -389,11 +389,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"hudsucker", name"mail"), "10.0")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope)
         )
 
@@ -408,11 +408,11 @@ object ResolutionTests extends TestSuite {
             exclusions = Set((org"acme", name"play-json")))
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -426,11 +426,11 @@ object ResolutionTests extends TestSuite {
           Dependency(Module(org"org.gnu", name"glib"), "13.4"),
           Dependency(Module(org"org.gnome", name"desktop"), "7.0"))
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -443,11 +443,11 @@ object ResolutionTests extends TestSuite {
         val trDeps = Seq(
           Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0", exclusions = Set((org"*", name"crypto"))))
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -458,11 +458,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"com.thoughtworks.paranamer", name"paranamer"), "2.6")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope)
         )
 
@@ -475,11 +475,11 @@ object ResolutionTests extends TestSuite {
         val trDeps = Seq(
           Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -494,11 +494,11 @@ object ResolutionTests extends TestSuite {
             val trDeps = Seq(
               Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
             val res = await(resolve0(
-              Set(dep)
+              Seq(dep)
             )).clearCaches
 
             val expected = Resolution(
-              rootDependencies = Set(dep),
+              rootDependencies = Seq(dep),
               dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
             )
 
@@ -521,11 +521,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"com.github.dummy", name"libb"), "0.5.7")
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope)
         )
 
@@ -539,11 +539,11 @@ object ResolutionTests extends TestSuite {
         val trDeps = Seq(
           Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -559,12 +559,12 @@ object ResolutionTests extends TestSuite {
           Dependency(Module(org"an-org", name"another-lib"), "1.0", optional = true),
           Dependency(Module(org"an-org", name"a-name"), "1.0", optional = true))
         val res = await(resolve0(
-          Set(dep),
+          Seq(dep),
           filter = Some(_ => true)
         )).clearCaches.clearFilter
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -574,7 +574,7 @@ object ResolutionTests extends TestSuite {
 
     'exclusionsOfDependenciesFromDifferentPathsShouldNotCollide{
       async {
-        val deps = Set(
+        val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.0"),
           Dependency(Module(org"an-org", name"a-lib"), "1.0", optional = true))
         val trDeps = Seq(
@@ -588,7 +588,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution(
           rootDependencies = deps,
-          dependencies = (deps ++ trDeps).map(_.withCompileScope)
+          dependencies = (deps ++ trDeps).map(_.withCompileScope).toSet
         )
 
         assert(res == expected)
@@ -598,7 +598,7 @@ object ResolutionTests extends TestSuite {
     'dependencyOverrides - {
       * - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(Module(org"an-org", name"a-name"), "1.1"))
           val depOverrides = Map(
             Module(org"an-org", name"a-name") -> "1.0")
@@ -621,7 +621,7 @@ object ResolutionTests extends TestSuite {
       }
 
       * - async {
-        val deps = Set(
+        val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
           Module(org"an-org", name"a-lib") -> "1.0")
@@ -645,7 +645,7 @@ object ResolutionTests extends TestSuite {
       }
 
       * - async {
-        val deps = Set(
+        val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
           Module(org"*", name"a-lib") -> "1.0")
@@ -670,7 +670,7 @@ object ResolutionTests extends TestSuite {
 
       * - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(Module(org"an-org", name"an-app"), "1.2"))
           val depOverrides = Map(
             Module(org"an-org", name"a-lib") -> "1.1")
@@ -708,7 +708,7 @@ object ResolutionTests extends TestSuite {
 
     'forcedProperties - {
       async {
-        val deps = Set(
+        val deps = Seq(
           Dependency(Module(org"com.github.dummy", name"libb"), "0.5.4")
         )
 
@@ -741,11 +741,11 @@ object ResolutionTests extends TestSuite {
           Dependency(Module(org"an-org", name"my-lib-3"), "1.0")
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 
@@ -760,11 +760,11 @@ object ResolutionTests extends TestSuite {
           Dependency(Module(org"an-org", name"my-lib-3"), "1.1")
         )
         val res = await(resolve0(
-          Set(dep)
+          Seq(dep)
         )).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope)
         )
 

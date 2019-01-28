@@ -29,7 +29,7 @@ object IvyLocalTests extends TestSuite {
       'uniqueArtifacts - async {
 
         val res = await(runner.resolve(
-          Set(Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion, transitive = false)),
+          Seq(Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion, transitive = false)),
           extraRepos = extraRepos
         ))
 
@@ -46,7 +46,7 @@ object IvyLocalTests extends TestSuite {
 
       'javadocSources - async {
         val res = await(runner.resolve(
-          Set(Dependency(module, localVersion)),
+          Seq(Dependency(module, localVersion)),
           extraRepos = extraRepos
         ))
 
