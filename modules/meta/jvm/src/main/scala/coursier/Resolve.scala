@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.cache.CacheLogger
+import coursier.cache.{CacheDefaults, CacheLogger}
 import coursier.params.ResolutionParams
 import coursier.util.{Print, Schedulable, Task, ValidationNel}
 
@@ -47,7 +47,7 @@ object Resolve {
 
   def resolve[F[_]](
     dependencies: Iterable[Dependency],
-    repositories: Seq[Repository],
+    repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop

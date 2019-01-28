@@ -2,8 +2,9 @@ package coursier.cache
 
 import java.io.File
 
+import coursier.core.Repository
 import coursier.paths.CachePath
-import coursier.util.Schedulable
+import coursier.util.{Repositories, Schedulable}
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
@@ -52,5 +53,11 @@ object CacheDefaults {
   def defaultRetryCount = 1
 
   val bufferSize = 1024 * 1024
+
+  lazy val defaultRepositories: Seq[Repository] =
+    Seq(
+      LocalRepositories.ivy2Local,
+      Repositories.central
+    )
 
 }
