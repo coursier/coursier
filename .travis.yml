@@ -19,6 +19,8 @@ stages:
     if: tag IS present
   - name: upload-launcher-gh-pages
     if: tag IS present
+  - name: update-brew-formula
+    if: tag IS present
   - name: update-versioned-docs
     if: tag IS present
   - name: update-website
@@ -58,6 +60,9 @@ jobs:
     - stage: upload-launcher-gh-pages
       env: REPO="coursier/coursier" NAME="coursier"
       script: scripts/upload-launcher/upload-gh-pages.sh
+    - stage: update-brew-formula
+      env: REPO="coursier/coursier" FORMULA_REPO="coursier/homebrew-formulas" NAME=coursier TEMPLATE=scripts/coursier.rb.template
+      script: scripts/upload-launcher/update-brew-formula.sh
     - stage: update-versioned-docs
       env: WEBSITE_DIR=doc/website VERSIONED_DOCS_REPO=coursier/versioned-docs
       script:
