@@ -1,16 +1,27 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ExtraName => Short, _ }
+import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import coursier.cli.options.shared.{ArtifactOptions, SharedLoaderOptions}
 
 final case class LaunchOptions(
+
   @Short("M")
   @Short("main")
     mainClass: String = "",
+
   @Short("J")
   @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
+
   @Recurse
-    isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
+    sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
+
+  @Recurse
+    resolveOptions: ResolveOptions = ResolveOptions(),
+
+  @Recurse
+    artifactOptions: ArtifactOptions = ArtifactOptions(),
+
   @Recurse
     common: CommonOptions = CommonOptions()
 )

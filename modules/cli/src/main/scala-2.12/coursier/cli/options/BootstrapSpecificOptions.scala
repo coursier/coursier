@@ -2,6 +2,7 @@ package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.bootstrap.{Assembly, LauncherBat}
+import coursier.cli.options.shared.SharedLoaderOptions
 
 final case class BootstrapSpecificOptions(
   @Short("M")
@@ -51,7 +52,7 @@ final case class BootstrapSpecificOptions(
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
   @Recurse
-    isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
+    isolated: SharedLoaderOptions = SharedLoaderOptions(),
   @Recurse
     common: CommonOptions = CommonOptions()
 ) {

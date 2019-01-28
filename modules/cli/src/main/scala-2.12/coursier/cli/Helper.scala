@@ -3,10 +3,11 @@ package cli
 
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
-import java.util.jar.{Manifest => JManifest}
 
 import coursier.cache.{CacheDefaults, LocalRepositories}
-import coursier.cli.options.{CommonOptions, IsolatedLoaderOptions}
+import coursier.cli.launch.Launch
+import coursier.cli.options.shared.SharedLoaderOptions
+import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.{Classifier, Type}
@@ -21,49 +22,9 @@ import scala.concurrent.duration.Duration
 
 
 object Helper {
-  def fileRepr(f: File) = f.toString
 
   def errPrintln(s: String) = Console.err.println(s)
 
-  private val manifestPath = "META-INF/MANIFEST.MF"
-
-  def baseLoader = {
-
-    @tailrec
-    def rootLoader(cl: ClassLoader): ClassLoader =
-      Option(cl.getParent) match {
-        case Some(par) => rootLoader(par)
-        case None => cl
-      }
-
-    rootLoader(ClassLoader.getSystemClassLoader)
-  }
-
-  def mainClasses(cl: ClassLoader): Map[(String, String), String] = {
-    import scala.collection.JavaConverters._
-
-    val parentMetaInfs = Option(cl.getParent).fold(Set.empty[URL]) { parent =>
-      parent.getResources(manifestPath).asScala.toSet
-    }
-    val allMetaInfs = cl.getResources(manifestPath).asScala.toVector
-
-    val metaInfs = allMetaInfs.filterNot(parentMetaInfs)
-
-    val mainClasses = metaInfs.flatMap { url =>
-      val attributes = new JManifest(url.openStream()).getMainAttributes
-
-      def attributeOpt(name: String) =
-        Option(attributes.getValue(name))
-
-      val vendor = attributeOpt("Implementation-Vendor-Id").getOrElse("")
-      val title = attributeOpt("Specification-Title").getOrElse("")
-      val mainClass = attributeOpt("Main-Class")
-
-      mainClass.map((vendor, title) -> _)
-    }
-
-    mainClasses.toMap
-  }
 }
 
 class Helper(
@@ -72,7 +33,7 @@ class Helper(
   extraJars: Seq[File] = Nil,
   printResultStdout: Boolean = false,
   ignoreErrors: Boolean = false,
-  isolated: IsolatedLoaderOptions = IsolatedLoaderOptions(),
+  isolated: SharedLoaderOptions = SharedLoaderOptions(),
   warnBaseLoaderNotFound: Boolean = true
 ) {
   import Helper.errPrintln
@@ -881,13 +842,13 @@ class Helper(
       classifier0 = Set.empty
     )
 
-    if (isolated.isolated.isEmpty)
-      (Helper.baseLoader, files0)
+    if (isolated.shared.isEmpty)
+      (Launch.baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDeps(common.dependencyOptions.scalaVersion)
+      val isolatedDeps = isolated.isolatedDepsOrExit(common.dependencyOptions.scalaVersion)
 
-      val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((Helper.baseLoader, files0)) {
+      val (isolatedLoader, filteredFiles0) = isolated.targetsOrExit.foldLeft((Launch.baseLoader, files0)) {
         case ((parent, files0), target) =>
 
           // FIXME These were already fetched above
@@ -931,7 +892,7 @@ class Helper(
 
   lazy val retainedMainClass = {
 
-    val mainClasses = Helper.mainClasses(loader)
+    val mainClasses = Launch.mainClasses(loader)
 
     if (common.verbosityLevel >= 2) {
       Console.err.println("Found main classes:")

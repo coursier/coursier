@@ -4,6 +4,7 @@ import java.io.File
 import java.net.URLClassLoader
 
 import caseapp._
+import coursier.cli.launch.Launch
 import coursier.{Dependency, moduleNameString, organizationString}
 import coursier.cli.options.SparkSubmitOptions
 import coursier.cli.spark.{SparkAssembly, Submit}
@@ -199,26 +200,32 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
 
     val submitLoader = new URLClassLoader(
       submitCp.map(_.toURI.toURL).toArray,
-      Helper.baseLoader
+      Launch.baseLoader
     )
 
-    Launch(
+    coursier.cli.launch.Launch.launch(
       submitLoader,
       Submit.mainClassName,
-      sparkSubmitOptions,
-      options.common.verbosityLevel,
-      {
-        if (options.common.verbosityLevel >= 1)
-          Console.err.println(
-            s"Launching spark-submit with arguments:\n" +
-              sparkSubmitOptions.map("  " + _).mkString("\n")
-          )
+      sparkSubmitOptions
+    ) match {
+      case Left(e) =>
+        throw e
+      case Right(f) =>
 
         SparkOutputHelper.handleOutput(
           Some(options.yarnIdFile).filter(_.nonEmpty).map(new File(_)),
           Some(options.maxIdleTime).filter(_ > 0)
         )
-      }
-    )
+
+        if (options.common.verbosityLevel >= 1)
+          Console.err.println(
+            s"Launching spark-submit with arguments:\n" +
+              sparkSubmitOptions.map("  " + _).mkString("\n")
+          )
+        else if (options.common.verbosityLevel >= 2)
+          System.err.println(s"Running ${Submit.mainClassName} ${sparkSubmitOptions.mkString(" ")}")
+
+        f()
+    }
   }
 }

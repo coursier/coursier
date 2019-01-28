@@ -7,6 +7,7 @@ import caseapp.core.help.Help
 import caseapp.core.parser.Parser
 import coursier.bootstrap.util.FileUtil
 import coursier.cli.fetch.Fetch
+import coursier.cli.launch.Launch
 import coursier.cli.options.LauncherOptions
 import coursier.cli.resolve.Resolve
 import shapeless._
