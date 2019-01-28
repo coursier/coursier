@@ -1,9 +1,7 @@
 package coursier
 
-import java.util.concurrent.ExecutorService
-
-import coursier.cache.{CacheDefaults, CacheLogger}
-import coursier.params.{CacheParams, ResolutionParams}
+import coursier.cache.CacheLogger
+import coursier.params.ResolutionParams
 import coursier.util.{Print, Schedulable, Task, ValidationNel}
 
 import scala.concurrent.duration.Duration
@@ -12,7 +10,7 @@ import scala.language.higherKinds
 
 object Resolve {
 
-  def initialResolution(
+  private[coursier] def initialResolution(
     dependencies: Iterable[Dependency],
     params: ResolutionParams = ResolutionParams()
   ): Resolution =
@@ -28,9 +26,9 @@ object Resolve {
       forceProperties = params.forcedProperties
     )
 
-  def runProcess[F[_]](
+  private[coursier] def runProcess[F[_]](
     initialResolution: Resolution,
-    fetch: Fetch.Metadata[F],
+    fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = 200,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): F[Resolution] = {
@@ -47,92 +45,63 @@ object Resolve {
     }
   }
 
-  def run[F[_]](
-    initialResolution: Resolution,
+  def resolve[F[_]](
+    dependencies: Iterable[Dependency],
     repositories: Seq[Repository],
-    maxIterations: Int = 200,
-    cacheParams: CacheParams = CacheParams(),
-    pool: ExecutorService = CacheDefaults.pool,
+    params: ResolutionParams = ResolutionParams(),
+    cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): F[Resolution] = {
-    val fetch = fetchVia[F](
-      repositories,
-      cacheParams,
-      pool,
-      logger
-    )
-    runProcess(initialResolution, fetch, maxIterations, logger)
+    val initialRes = initialResolution(dependencies, params)
+    val fetch = fetchVia[F](repositories, cache)
+    runProcess(initialRes, fetch, params.maxIterations, logger)
   }
 
-
-  def runFuture(
-    initialResolution: Resolution,
+  def resolveFuture(
+    dependencies: Iterable[Dependency],
     repositories: Seq[Repository],
-    maxIterations: Int = 200,
-    cacheParams: CacheParams = CacheParams(),
-    pool: ExecutorService = CacheDefaults.pool,
+    params: ResolutionParams = ResolutionParams(),
+    cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
-  ): Future[Resolution] = {
+  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Future[Resolution] = {
 
-    val task = run[Task](
-      initialResolution,
+    val task = resolve[Task](
+      dependencies,
       repositories,
-      maxIterations,
-      cacheParams,
-      pool,
+      params,
+      cache,
       logger
     )
 
-    task.future()(ExecutionContext.fromExecutorService(pool))
+    task.future()
   }
 
-  def runSync(
-    initialResolution: Resolution,
+  def resolveSync(
+    dependencies: Iterable[Dependency],
     repositories: Seq[Repository],
-    logger: CacheLogger = CacheLogger.nop,
-    maxIterations: Int = 200,
-    cacheParams: CacheParams = CacheParams(),
-    pool: ExecutorService = CacheDefaults.pool
-  ): Resolution = {
+    params: ResolutionParams = ResolutionParams(),
+    cache: Cache[Task] = Cache.default,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Resolution = {
 
-    val f = runFuture(
-      initialResolution,
+    val f = resolveFuture(
+      dependencies,
       repositories,
-      maxIterations,
-      cacheParams,
-      pool,
+      params,
+      cache,
       logger
-    )
+    )(ec)
 
     Await.result(f, Duration.Inf)
   }
 
-  def fetcher[F[_]](
-    cacheParams: CacheParams = CacheParams(),
-    pool: ExecutorService = CacheDefaults.pool,
-    logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F]): Fetch.Content[F] =
-    Cache.fetch[F](
-      cacheParams.cache,
-      cacheParams.cachePolicies,
-      checksums = cacheParams.checksum,
-      logger = Some(logger),
-      pool = pool,
-      ttl = cacheParams.ttl,
-      followHttpToHttpsRedirections = cacheParams.followHttpToHttpsRedirections
-    )
-
-  def fetchVia[F[_]](
+  private[coursier] def fetchVia[F[_]](
     repositories: Seq[Repository],
-    cacheParams: CacheParams = CacheParams(),
-    pool: ExecutorService = CacheDefaults.pool,
-    logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F]): Fetch.Metadata[F] = {
-    val f = fetcher[F](cacheParams, pool, logger)
-    coursier.Fetch.from(repositories, f)
-  }
+    cache: Cache[F] = Cache.default
+  )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] =
+    ResolutionProcess.fetch(repositories, cache.fetch)
 
-  def validate(res: Resolution, verbosity: Int): ValidationNel[String, Unit] = {
+  def validate(res: Resolution, exclusionsInErrors: Boolean): ValidationNel[String, Unit] = {
 
     val checkDone: ValidationNel[String, Unit] =
       if (res.isDone)
@@ -161,7 +130,7 @@ object Resolve {
             Print.dependenciesUnknownConfigs(
               res.conflicts.toVector,
               res.projectCache.map { case (k, (_, p)) => k -> p },
-              printExclusions = verbosity >= 1
+              printExclusions = exclusionsInErrors
             )
         )
 

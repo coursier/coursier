@@ -3,8 +3,8 @@ package coursier.test
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.{Artifact, Attributes, Dependency, Fetch, MavenRepository, Module, Repository, Resolution}
-import coursier.core.{Classifier, Configuration, Extension}
+import coursier.{Artifact, Attributes, Dependency, MavenRepository, Module, Repository, Resolution}
+import coursier.core.{Classifier, Configuration, Extension, ResolutionProcess}
 import coursier.test.compatibility.{textResource, tryCreate}
 import coursier.test.util.ToFuture
 import coursier.util.Gather
@@ -12,12 +12,12 @@ import coursier.util.Gather
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestRunner[F[_]: Gather : ToFuture](
-  artifact: Fetch.Content[F] = compatibility.taskArtifact,
+  artifact: Repository.Fetch[F] = compatibility.taskArtifact,
   repositories: Seq[Repository] = Seq(MavenRepository("https://repo1.maven.org/maven2"))
 )(implicit ec: ExecutionContext) {
 
-  private def fetch(repositories: Seq[Repository]): Fetch.Metadata[F] =
-    Fetch.from(repositories, artifact)
+  private def fetch(repositories: Seq[Repository]): ResolutionProcess.Fetch[F] =
+    ResolutionProcess.fetch(repositories, artifact)
 
   def resolve(
     deps: Set[Dependency],

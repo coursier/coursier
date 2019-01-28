@@ -38,7 +38,7 @@ object CacheFetchTests extends TestSuite {
         Console.err.println(s"Warning: unable to remove temporary directory $tmpDir")
     }
 
-    val fetch = Fetch.from(
+    val fetch = ResolutionProcess.fetch(
       Seq(
         extraRepo
       ) ++ {

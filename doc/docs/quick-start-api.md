@@ -71,7 +71,7 @@ val repositories = Seq(
   MavenRepository("https://repo1.maven.org/maven2")
 )
 
-val fetch = Fetch.from(repositories, Cache.fetch[Task]())
+val fetch = ResolutionProcess.fetch(repositories, Cache.fetch[Task]())
 ```
 
 Then run the resolution per-se,

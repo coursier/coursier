@@ -1,6 +1,5 @@
 package coursier.ivy
 
-import coursier.Fetch
 import coursier.core._
 import coursier.util.{EitherT, Monad, WebPage}
 
@@ -139,7 +138,7 @@ final case class IvyRepository(
   def find[F[_]](
     module: Module,
     version: String,
-    fetch: Fetch.Content[F]
+    fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
@@ -203,7 +202,7 @@ final case class IvyRepository(
   def findNoInverval[F[_]](
     module: Module,
     version: String,
-    fetch: Fetch.Content[F]
+    fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {

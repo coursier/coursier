@@ -118,6 +118,7 @@ object Type {
   val pom = Type("pom")
 
   val empty = Type("")
+  val all = Type("*")
 }
 
 final case class Classifier(value: String) extends AnyVal {

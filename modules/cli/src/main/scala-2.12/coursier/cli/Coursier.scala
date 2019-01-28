@@ -1,5 +1,4 @@
-package coursier
-package cli
+package coursier.cli
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -7,6 +6,7 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
 import coursier.bootstrap.util.FileUtil
+import coursier.cli.fetch.Fetch
 import coursier.cli.options.LauncherOptions
 import coursier.cli.resolve.Resolve
 import shapeless._

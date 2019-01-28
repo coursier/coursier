@@ -50,8 +50,8 @@ final case class ArtifactOptions(
       val javadocTypes = Some(Type.doc).filter(_ => javadoc || classifier0(Classifier.javadoc)).toSet
       val defaultTypes = if (default0) Resolution.defaultTypes else Set()
       sourceTypes ++ javadocTypes ++ defaultTypes
-    } else if (types0(Type("*")))
-      Set(Type("*"))
+    } else if (types0(Type.all))
+      Set(Type.all)
     else
       types0
   }

@@ -27,6 +27,18 @@ object Helper {
 
   private val manifestPath = "META-INF/MANIFEST.MF"
 
+  def baseLoader = {
+
+    @tailrec
+    def rootLoader(cl: ClassLoader): ClassLoader =
+      Option(cl.getParent) match {
+        case Some(par) => rootLoader(par)
+        case None => cl
+      }
+
+    rootLoader(ClassLoader.getSystemClassLoader)
+  }
+
   def mainClasses(cl: ClassLoader): Map[(String, String), String] = {
     import scala.collection.JavaConverters._
 
@@ -404,7 +416,7 @@ class Helper(
     ttl = ttl0,
     followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
   )
-  val fetchQuiet = coursier.Fetch.from(repositories, fetch)
+  val fetchQuiet = ResolutionProcess.fetch(repositories, fetch)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
@@ -636,7 +648,7 @@ class Helper(
 
     val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0).map(t => (t._2, t._3))
 
-    if (artifactTypes(Type("*")))
+    if (artifactTypes(Type.all))
       artifacts0.map(_._2)
     else
       artifacts0.collect {
@@ -855,18 +867,6 @@ class Helper(
   ): Seq[File] =
     fetchMap(sources, javadoc, default, classifier0, artifactTypes, subset).values.toSeq
 
-  def baseLoader = {
-
-    @tailrec
-    def rootLoader(cl: ClassLoader): ClassLoader =
-      Option(cl.getParent) match {
-        case Some(par) => rootLoader(par)
-        case None => cl
-      }
-
-    rootLoader(ClassLoader.getSystemClassLoader)
-  }
-
   lazy val (parentLoader, filteredFiles) = {
 
     // FIXME That shouldn't be hard-coded this way...
@@ -882,12 +882,12 @@ class Helper(
     )
 
     if (isolated.isolated.isEmpty)
-      (baseLoader, files0)
+      (Helper.baseLoader, files0)
     else {
 
       val isolatedDeps = isolated.isolatedDeps(common.dependencyOptions.scalaVersion)
 
-      val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((baseLoader, files0)) {
+      val (isolatedLoader, filteredFiles0) = isolated.targets.foldLeft((Helper.baseLoader, files0)) {
         case ((parent, files0), target) =>
 
           // FIXME These were already fetched above

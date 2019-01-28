@@ -22,13 +22,13 @@ trait CacheLogger {
 
   def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
 
-  /***
+  /**
     *
     * @param beforeOutput: called before any output is printed, iff something else is outputted.
     *                      (That is, if that `Logger` doesn't print any progress,
     *                      `initialMessage` won't be printed either.)
     */
-  def init(beforeOutput: => Unit): Unit = {}
+  def init(beforeOutput: => Unit = ()): Unit = {}
   /**
     *
     * @return whether any message was printed by `Logger`

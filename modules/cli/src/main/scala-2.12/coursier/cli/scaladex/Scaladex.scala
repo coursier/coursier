@@ -5,9 +5,9 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.CacheUrl
-import coursier.core.Artifact
+import coursier.core.{Artifact, Repository}
 import coursier.util.{EitherT, Gather, Task}
-import coursier.{Fetch, Module}
+import coursier.Module
 
 trait Scaladex[F[_]] {
   /**
@@ -37,7 +37,7 @@ object Scaladex {
       })
     }, Gather[Task])
 
-  def withCache(fetch: Fetch.Content[Task]): Scaladex[Task] =
+  def withCache(fetch: Repository.Fetch[Task]): Scaladex[Task] =
     ScaladexWebServiceImpl(
       url => fetch(Artifact(url, Map(), Map(), changing = true, optional = false, None)),
       Gather[Task]

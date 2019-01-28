@@ -1,14 +1,17 @@
 package coursier.params
 
 import java.io.File
+import java.util.concurrent.ExecutorService
 
-import coursier.CachePolicy
-import coursier.cache.CacheDefaults
+import coursier.{Cache, CachePolicy}
+import coursier.cache.{CacheDefaults, CacheLogger}
+import coursier.core.Repository
+import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.duration.Duration
 
 final case class CacheParams(
-  cache: File = CacheDefaults.location, // directory, existing or that can be created
+  cacheLocation: File = CacheDefaults.location, // directory, existing or that can be created
   cachePolicies: Seq[CachePolicy] = CachePolicy.default, // non-empty
   ttl: Option[Duration] = CacheDefaults.ttl,
   parallel: Int = CacheDefaults.concurrentDownloadCount, // FIXME Move elsewhere?
@@ -16,4 +19,28 @@ final case class CacheParams(
   retryCount: Int = 1,
   cacheLocalArtifacts: Boolean = false,
   followHttpToHttpsRedirections: Boolean = true
-)
+) {
+  def cache[F[_]](
+    pool: ExecutorService = CacheDefaults.pool,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit S: Schedulable[F] = Task.schedulable): Cache[F] =
+    Cache[F](
+      cacheLocation,
+      cachePolicies,
+      checksums = checksum,
+      logger = Some(logger),
+      pool = pool,
+      ttl = ttl,
+      retry = retryCount,
+      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+      localArtifactsShouldBeCached = cacheLocalArtifacts,
+      S = S
+    )
+
+  def fetch[F[_]](
+    pool: ExecutorService = CacheDefaults.pool,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit S: Schedulable[F] = Task.schedulable): Repository.Fetch[F] =
+    cache(pool, logger).fetch
+
+}

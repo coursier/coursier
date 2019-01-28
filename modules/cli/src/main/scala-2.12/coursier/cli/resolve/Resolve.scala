@@ -7,7 +7,7 @@ import caseapp._
 import cats.data.Validated
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.{Fetch, Resolution}
+import coursier.Resolution
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -33,7 +33,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val logger = params.output.logger()
 
-      val scaladex = Scaladex.withCache(coursier.Resolve.fetcher[Task](params.cache, pool, logger))
+      val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
 
       val tasks = params.dependency.scaladexLookups.map { s =>
         Dependencies.handleScaladexDependency(s, params.dependency.scalaVersion, scaladex, params.output.verbosity)
@@ -67,7 +67,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   private def runDetailedBenchmark(
     params: ResolveParams,
     startRes: Resolution,
-    fetch0: Fetch.Metadata[Task],
+    fetch0: ResolutionProcess.Fetch[Task],
     iterations: Int
   ): Task[Resolution] = {
 
@@ -146,7 +146,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     params: ResolveParams,
     startRes: Resolution,
     logger: CacheLogger,
-    fetch0: Fetch.Metadata[Task],
+    fetch0: ResolutionProcess.Fetch[Task],
     iterations: Int
   ): Task[Resolution] = {
 
@@ -187,13 +187,13 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val fetch0 = {
 
-      val f = coursier.Resolve.fetcher[Task](params.cache, pool, logger)
+      val f = params.cache.cache(pool, logger).fetch
       val f0 =
         if (params.benchmark != 0 && params.benchmarkCache)
           new InMemoryCachingFetcher(f).fetcher
         else
           f
-      val fetchQuiet = coursier.Fetch.from(repositories, f0)
+      val fetchQuiet = ResolutionProcess.fetch(repositories, f0)
 
       if (params.output.verbosity >= 2) {
         modVers: Seq[(Module, String)] =>
@@ -222,7 +222,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     // stdout / stderr not used everywhere (added mostly for testing)
     stdout: PrintStream,
     stderr: PrintStream,
-    args: Seq[String]
+    args: Seq[String],
+    printOutput: Boolean = true
   ): Task[(Resolution, Boolean)] = {
 
     val e = for {
@@ -284,19 +285,22 @@ object Resolve extends CaseApp[ResolveOptions] {
         pool
       )
 
-      validated = coursier.Resolve.validate(res, params.output.verbosity).either
+      validated = coursier.Resolve.validate(res, params.output.verbosity >= 1).either
 
       valid = validated.isRight
 
-      _ = if (valid || params.output.forcePrint) {
-        Output.printResolutionResult(
-          printResultStdout = true,
-          params,
-          deps0,
-          res,
-          stdout,
-          stderr
-        )
+      _ = {
+        val outputToStdout = printOutput && (valid || params.output.forcePrint)
+        if (outputToStdout || params.output.verbosity >= 2) {
+          Output.printResolutionResult(
+            printResultStdout = outputToStdout,
+            params,
+            deps0,
+            res,
+            stdout,
+            stderr
+          )
+        }
       }
 
       _ = validated match {

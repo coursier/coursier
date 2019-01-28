@@ -1,16 +1,25 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ExtraName => Short, _ }
+import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.shared.ArtifactOptions
 
 final case class FetchOptions(
+
   @Help("Print java -cp compatible output")
   @Short("p")
     classpath: Boolean = false,
+
+  @Help("Specify path for json output")
+  @Short("j")
+    jsonOutputFile: String = "",
+
+
   @Recurse
-    artifactOptions: ArtifactOptions = ArtifactOptions(),
+    resolveOptions: ResolveOptions = ResolveOptions(),
+
   @Recurse
-    common: CommonOptions = CommonOptions()
+    artifactOptions: ArtifactOptions = ArtifactOptions()
+
 )
 
 object FetchOptions {

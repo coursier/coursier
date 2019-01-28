@@ -2,7 +2,7 @@ package coursier.test
 
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 
-import coursier.{Fetch, Module, moduleString}
+import coursier.{Module, moduleString}
 import coursier.core.ResolutionProcess
 import coursier.util.Task
 import utest._
@@ -35,7 +35,7 @@ object ResolutionProcessTests extends TestSuite {
 
         val called = new ConcurrentHashMap[String, Unit]
 
-        val fetch: Fetch.Metadata[Task] = {
+        val fetch: ResolutionProcess.Fetch[Task] = {
 
           case Seq((`mod`, "9")) =>
 

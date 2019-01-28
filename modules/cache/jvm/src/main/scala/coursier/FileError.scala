@@ -2,6 +2,7 @@ package coursier
 
 import java.io.File
 
+// TODO Make that extend Exception
 sealed abstract class FileError(
   val `type`: String,
   val message: String

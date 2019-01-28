@@ -87,7 +87,7 @@ final case class FallbackDependenciesRepository(
   def find[F[_]](
     module: Module,
     version: String,
-    fetch: Fetch.Content[F]
+    fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {

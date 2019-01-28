@@ -5,8 +5,9 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
 import coursier.cache.CacheUrl
+import coursier.core.Repository
 import coursier.util.{EitherT, Schedulable, Task, TestEscape}
-import coursier.{Fetch, Platform}
+import coursier.Platform
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,7 @@ package object compatibility {
 
   private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
 
-  def artifact[F[_]: Schedulable]: Fetch.Content[F] = { artifact =>
+  def artifact[F[_]: Schedulable]: Repository.Fetch[F] = { artifact =>
 
     if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
       EitherT(Platform.readFully(

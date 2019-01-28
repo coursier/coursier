@@ -1,6 +1,5 @@
 package coursier.core
 
-import coursier.Fetch
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{EitherT, Monad}
 
@@ -8,13 +7,16 @@ trait Repository extends Product with Serializable with Artifact.Source {
   def find[F[_]](
     module: Module,
     version: String,
-    fetch: Fetch.Content[F]
+    fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)]
 }
 
 object Repository {
+
+  type Fetch[F[_]] = Artifact => EitherT[F, String, String]
+
 
   implicit class ArtifactExtensions(val underlying: Artifact) extends AnyVal {
     def withDefaultChecksums: Artifact =

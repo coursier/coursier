@@ -9,7 +9,7 @@ final case class TestRepository(projects: Map[(Module, String), Project]) extend
   def find[F[_]](
     module: Module,
     version: String,
-    fetch: Fetch.Content[F]
+    fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ) =

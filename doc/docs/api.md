@@ -103,7 +103,7 @@ wrapping the whole in a monad `F`.
 ```scala mdoc:silent
 import coursier.util.Task
 
-val fetch = Fetch.from(repositories, Cache.fetch[Task]())
+val fetch = ResolutionProcess.fetch(repositories, Cache.fetch[Task]())
 ```
 
 The monad used by `Fetch.from` is `coursier.util.Task`, but the resolution process is not tied to a particular

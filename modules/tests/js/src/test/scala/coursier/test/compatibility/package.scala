@@ -1,7 +1,7 @@
 package coursier.test
 
+import coursier.core.Repository
 import coursier.util.{EitherT, Task, TestEscape}
-import coursier.Fetch
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
@@ -31,7 +31,7 @@ package object compatibility {
 
   private val baseRepo = "modules/tests/metadata"
 
-  val taskArtifact: Fetch.Content[Task] = { artifact =>
+  val taskArtifact: Repository.Fetch[Task] = { artifact =>
     EitherT {
       assert(artifact.authentication.isEmpty)
 

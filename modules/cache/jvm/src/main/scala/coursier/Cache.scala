@@ -12,7 +12,7 @@ import coursier.cache._
 import coursier.core.Authentication
 import coursier.internal.FileUtil
 import coursier.paths.CachePath
-import coursier.util.{EitherT, Schedulable}
+import coursier.util.{EitherT, Schedulable, Task}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -28,8 +28,9 @@ final case class Cache[F[_]](
   localArtifactsShouldBeCached: Boolean = false,
   followHttpToHttpsRedirections: Boolean = false,
   sslRetry: Int = CacheDefaults.sslRetryCount,
+  retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  S: Schedulable[F] = coursier.util.Task.schedulable
+  S: Schedulable[F] = Task.schedulable
 ) {
 
   private implicit val S0 = S
@@ -564,7 +565,7 @@ final case class Cache[F[_]](
     */
   def file(
     artifact: Artifact,
-    retry: Int = 1
+    retry: Int = retry
   ): EitherT[F, FileError, File] = {
 
     val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
@@ -626,7 +627,7 @@ final case class Cache[F[_]](
     (res(cachePolicies.head) /: cachePolicies.tail.map(res))(_ orElse _)
   }
 
-  lazy val fetch: Fetch.Content[F] = {
+  lazy val fetch: Repository.Fetch[F] = {
     artifact =>
       file(artifact).leftMap(_.describe).flatMap { f =>
 
@@ -812,7 +813,7 @@ object Cache {
   }
 
 
-  lazy val default = Cache()
+  lazy val default: Cache[Task] = Cache()
 
   def fetch[F[_]](
     cache: File = CacheDefaults.location,
@@ -824,7 +825,7 @@ object Cache {
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Fetch.Content[F] = {
+  )(implicit S: Schedulable[F]): Repository.Fetch[F] = {
     Cache(
       cache,
       cachePolicies,
@@ -847,7 +848,7 @@ object Cache {
     logger: Option[CacheLogger] = None,
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
-    retry: Int = 1,
+    retry: Int = CacheDefaults.defaultRetryCount,
     localArtifactsShouldBeCached: Boolean = false,
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
