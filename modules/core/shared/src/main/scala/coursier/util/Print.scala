@@ -95,26 +95,20 @@ object Print {
   }
 
   def dependencyTree(
-    roots: Seq[Dependency],
     resolution: Resolution,
-    printExclusions: Boolean,
-    reverse: Boolean
-  ): String =
-    dependencyTree(roots, resolution, printExclusions, reverse, colors = true)
-
-  def dependencyTree(
-    roots: Seq[Dependency],
-    resolution: Resolution,
-    printExclusions: Boolean,
-    reverse: Boolean,
-    colors: Boolean
+    roots: Seq[Dependency] = null,
+    printExclusions: Boolean = false,
+    reverse: Boolean = false,
+    colors: Boolean = true
   ): String = {
+
     val colorsCase = Colors.get(colors)
 
-    if (reverse) {
+    if (reverse)
       reverseTree(resolution.dependencies.toSeq, resolution, printExclusions).render(_.repr(colorsCase))
-    } else {
-      normalTree(roots, resolution, printExclusions).render(_.repr(colorsCase))
+    else {
+      val roots0 = Option(roots).getOrElse(resolution.rootDependencies)
+      normalTree(roots0, resolution, printExclusions).render(_.repr(colorsCase))
     }
 
   }
@@ -156,7 +150,7 @@ object Print {
           s"${dep.module}:$versionStr"
         }
 
-      val children: Seq[Elem] =
+      def children: Seq[Elem] =
         if (excluded)
           Nil
         else {

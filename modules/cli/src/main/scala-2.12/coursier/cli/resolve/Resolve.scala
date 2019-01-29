@@ -187,13 +187,13 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val fetch0 = {
 
-      val f = params.cache.cache(pool, logger).fetch
+      val cache = params.cache.cache(pool, logger)
       val f0 =
         if (params.benchmark != 0 && params.benchmarkCache)
-          new InMemoryCachingFetcher(f).fetcher
+          Seq(new InMemoryCachingFetcher(cache.fetch).fetcher)
         else
-          f
-      val fetchQuiet = ResolutionProcess.fetch(repositories, f0)
+          cache.fetchs
+      val fetchQuiet = ResolutionProcess.fetch(repositories, f0.head, f0.tail: _*)
 
       if (params.output.verbosity >= 2) {
         modVers: Seq[(Module, String)] =>
@@ -294,7 +294,6 @@ object Resolve extends CaseApp[ResolveOptions] {
           Output.printResolutionResult(
             printResultStdout = outputToStdout,
             params,
-            deps0,
             res,
             stdout,
             stderr

@@ -98,8 +98,10 @@ object Resolve {
   private[coursier] def fetchVia[F[_]](
     repositories: Seq[Repository],
     cache: Cache[F] = Cache.default
-  )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] =
-    ResolutionProcess.fetch(repositories, cache.fetch)
+  )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] = {
+    val fetchs = cache.fetchs
+    ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
+  }
 
   def validate(res: Resolution, exclusionsInErrors: Boolean): ValidationNel[String, Unit] = {
 

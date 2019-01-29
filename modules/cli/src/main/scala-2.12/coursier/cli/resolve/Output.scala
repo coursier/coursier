@@ -40,7 +40,6 @@ object Output {
   def printResolutionResult(
     printResultStdout: Boolean,
     params: ResolveParams,
-    dependencies: Seq[Dependency],
     res: Resolution,
     stdout: PrintStream,
     stderr: PrintStream
@@ -58,7 +57,6 @@ object Output {
           ).render(_.repr(Colors.get(true)))
         else if (params.reverseTree || params.tree)
           Print.dependencyTree(
-            dependencies,
             res,
             printExclusions = params.output.verbosity >= 1,
             reverse = params.reverseTree
