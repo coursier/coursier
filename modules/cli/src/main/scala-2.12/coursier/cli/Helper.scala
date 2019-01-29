@@ -524,7 +524,6 @@ class Helper(
     val depsStr =
       if (reverseTree || tree)
         Print.dependencyTree(
-          allDependencies,
           res,
           printExclusions = common.verbosityLevel >= 1,
           reverse = reverseTree

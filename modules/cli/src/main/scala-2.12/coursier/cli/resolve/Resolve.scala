@@ -294,7 +294,6 @@ object Resolve extends CaseApp[ResolveOptions] {
           Output.printResolutionResult(
             printResultStdout = outputToStdout,
             params,
-            deps0,
             res,
             stdout,
             stderr

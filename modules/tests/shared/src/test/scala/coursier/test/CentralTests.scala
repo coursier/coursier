@@ -768,7 +768,7 @@ abstract class CentralTests extends TestSuite {
             |         ├─ de.bwaldvogel:liblinear:1.94
             |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
             |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
-        val tree = Print.dependencyTree(res.rootDependencies, res, printExclusions = false, reverse = false)
+        val tree = Print.dependencyTree(res)
         assert(tree == expectedTree)
       }
     }
