@@ -402,23 +402,6 @@ final case class Cache[F[_]](
       }
     }
 
-    def localInfo(file: File, url: String): EitherT[F, FileError, Boolean] = {
-
-      val errFile0 = errFile(file)
-
-      // memo-ized
-
-      lazy val res: Either[FileError, Boolean] =
-        if (file.exists())
-          Right(true)
-        else if (referenceFileExists && errFile0.exists())
-          Left(FileError.NotFound(url, Some(true)): FileError)
-        else
-          Right(false)
-
-      EitherT(S.schedule(pool)(res))
-    }
-
     def checkFileExists(file: File, url: String, log: Boolean = true): EitherT[F, FileError, Unit] =
       EitherT {
         S.schedule(pool) {
@@ -446,29 +429,11 @@ final case class Cache[F[_]](
         other
     }
 
-    val requiredArtifactCheck = artifact.extra.get("required") match {
-      case None =>
-        EitherT(S.point[Either[FileError, Unit]](Right(())))
-      case Some(required) =>
-        cachePolicy0 match {
-          case CachePolicy.LocalOnly | CachePolicy.LocalUpdateChanging | CachePolicy.LocalUpdate =>
-            val file = localFile(required.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
-            localInfo(file, required.url).flatMap {
-              case true =>
-                EitherT(S.point[Either[FileError, Unit]](Right(())))
-              case false =>
-                EitherT(S.point[Either[FileError, Unit]](Left(FileError.NotFound(file.toString))))
-            }
-          case _ =>
-            EitherT(S.point[Either[FileError, Unit]](Right(())))
-        }
-    }
-
     val tasks =
       for (url <- urls) yield {
         val file = localFile(url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
 
-        def res =
+        val res =
           if (url.startsWith("file:/") && !localArtifactsShouldBeCached) {
             // for debug purposes, flaky with URL-encoded chars anyway
             // def filtered(s: String) =
@@ -502,7 +467,7 @@ final case class Cache[F[_]](
             }
           }
 
-        S.map(requiredArtifactCheck.flatMap(_ => res).run)((file, url) -> _)
+        S.map(res.run)((file, url) -> _)
       }
 
     S.gather(tasks)
