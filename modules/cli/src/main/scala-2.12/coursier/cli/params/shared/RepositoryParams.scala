@@ -1,7 +1,7 @@
 package coursier.cli.params.shared
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import coursier.cache.LocalRepositories
+import coursier.cache.CacheDefaults
 import coursier.CacheParse
 import coursier.cli.options.shared.RepositoryOptions
 import coursier.core.Repository
@@ -11,11 +11,6 @@ import coursier.util.Repositories
 
 
 object RepositoryParams {
-
-  private val defaultRepositories = Seq(
-    LocalRepositories.ivy2Local,
-    Repositories.central
-  )
 
   def apply(options: RepositoryOptions, hasSbtPlugins: Boolean): ValidatedNel[String, Seq[Repository]] = {
 
@@ -37,7 +32,7 @@ object RepositoryParams {
           val extra =
             if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
             else Nil
-          defaultRepositories ++ extra
+          CacheDefaults.defaultRepositories ++ extra
         }
       var repos = defaults ++ repos0
 

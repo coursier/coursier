@@ -24,10 +24,10 @@ abstract class CentralTests extends TestSuite {
     'logback - {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val res = await(runner.resolve(Set(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(
             dep.withCompileScope,
             dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
@@ -40,10 +40,10 @@ abstract class CentralTests extends TestSuite {
     'asm - {
       async {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
-        val res = await(runner.resolve(Set(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(
             dep.withCompileScope,
             dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
@@ -56,11 +56,11 @@ abstract class CentralTests extends TestSuite {
     'jodaVersionInterval - {
       async {
         val dep = Dependency(Module(org"joda-time", name"joda-time"), "[2.2,2.8]")
-        val res0 = await(runner.resolve(Set(dep)))
+        val res0 = await(runner.resolve(Seq(dep)))
         val res = res0.clearCaches
 
         val expected = Resolution(
-          rootDependencies = Set(dep),
+          rootDependencies = Seq(dep),
           dependencies = Set(
             dep.withCompileScope))
 
@@ -250,7 +250,7 @@ abstract class CentralTests extends TestSuite {
         )
 
       runner.withArtifacts(
-        Set(
+        Seq(
           intransitiveCompiler(Configuration.default),
           intransitiveCompiler(Configuration.optional)
         ),
@@ -319,7 +319,7 @@ abstract class CentralTests extends TestSuite {
 
       'vanilla - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(
               Module(org"org.apache.avro", name"avro"), "1.8.1"
             )
@@ -333,7 +333,7 @@ abstract class CentralTests extends TestSuite {
 
       'tests - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(
               Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
             )
@@ -347,7 +347,7 @@ abstract class CentralTests extends TestSuite {
 
       'mixed - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(
               Module(org"org.apache.avro", name"avro"), "1.8.1"
             ),
@@ -366,7 +366,7 @@ abstract class CentralTests extends TestSuite {
     'artifacts - {
       'uniqueness - {
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(
               Module(org"org.scala-lang", name"scala-compiler"), "2.11.8"
             ),
@@ -406,7 +406,7 @@ abstract class CentralTests extends TestSuite {
         // dependencies with type "test-jar" should be given the classifier "tests" by default
 
         async {
-          val deps = Set(
+          val deps = Seq(
             Dependency(
               Module(org"org.apache.hadoop", name"hadoop-yarn-server-resourcemanager"),
               "2.7.1"
@@ -593,7 +593,7 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver)
 
-      * - runner.withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
 
         val jarOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
@@ -606,7 +606,7 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - runner.withDetailedArtifacts(Set(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
 
         val pomOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.pom =>

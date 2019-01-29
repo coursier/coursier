@@ -8,7 +8,7 @@ import java.util.zip.ZipInputStream
 import caseapp.core.RemainingArgs
 import coursier.bootstrap.Bootstrap.resourceDir
 import coursier.cli.options._
-import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions}
+import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions, SharedLoaderOptions}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -64,13 +64,13 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       val common = CommonOptions(
         repositoryOptions = repositoryOpt
       )
-      val isolatedLoaderOptions = IsolatedLoaderOptions(
-        isolateTarget = List("foo"),
-        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+      val sharedLoaderOptions = SharedLoaderOptions(
+        sharedTarget = List("foo"),
+        shared = List("foo:org.scalameta:trees_2.12:1.7.0")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
-        isolated = isolatedLoaderOptions,
+        isolated = sharedLoaderOptions,
         force = true,
         common = common
       )
@@ -156,13 +156,13 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         val common = CommonOptions(
           repositoryOptions = repositoryOpt
         )
-        val isolatedLoaderOptions = IsolatedLoaderOptions(
-          isolateTarget = List("foo"),
-          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+        val sharedLoaderOptions = SharedLoaderOptions(
+          sharedTarget = List("foo"),
+          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
-          isolated = isolatedLoaderOptions,
+          isolated = sharedLoaderOptions,
           force = true,
           common = common,
           standalone = standalone
@@ -216,13 +216,13 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         val common = CommonOptions(
           repositoryOptions = repositoryOpt
         )
-        val isolatedLoaderOptions = IsolatedLoaderOptions(
-          isolateTarget = List("foo"),
-          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+        val sharedLoaderOptions = SharedLoaderOptions(
+          sharedTarget = List("foo"),
+          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
-          isolated = isolatedLoaderOptions,
+          isolated = sharedLoaderOptions,
           force = true,
           common = common,
           deterministic = true
@@ -299,16 +299,16 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
   it should "put everything under the coursier/bootstrap directory in bootstrap" in withFile() {
     (bootstrapFile, _) =>
 
-      val isolationOptions = IsolatedLoaderOptions(
-        isolateTarget = List("launcher"),
-        isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+      val sharedLoaderOptions = SharedLoaderOptions(
+        sharedTarget = List("launcher"),
+        shared = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
         force = true,
         standalone = true,
         property = List("jline.shutdownhook=false"),
-        isolated = isolationOptions
+        isolated = sharedLoaderOptions
       )
       val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
 

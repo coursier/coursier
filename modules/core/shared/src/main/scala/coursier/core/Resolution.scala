@@ -600,7 +600,7 @@ object Resolution {
  * @param errorCache: keeps track of the modules whose project definition could not be found
  */
 final case class Resolution(
-  rootDependencies: Set[Dependency],
+  rootDependencies: Seq[Dependency],
   dependencies: Set[Dependency],
   forceVersions: Map[Module, String],
   conflicts: Set[Dependency],
@@ -616,7 +616,7 @@ final case class Resolution(
 ) {
 
   def copyWithCache(
-    rootDependencies: Set[Dependency] = rootDependencies,
+    rootDependencies: Seq[Dependency] = rootDependencies,
     dependencies: Set[Dependency] = dependencies,
     forceVersions: Map[Module, String] = forceVersions,
     conflicts: Set[Dependency] = conflicts,
@@ -793,6 +793,7 @@ final case class Resolution(
     val rootDependencies0 = rootDependencies
       .map(withDefaultConfig)
       .map(eraseVersion)
+      .toSet
 
     @tailrec
     def helper(
@@ -1169,7 +1170,7 @@ final case class Resolution(
     *
     * @param dependencies: the dependencies to keep from this `Resolution`
     */
-  def subset(dependencies: Set[Dependency]): Resolution = {
+  def subset(dependencies: Seq[Dependency]): Resolution = {
 
     def updateVersion(dep: Dependency): Dependency =
       dep.copy(version = reconciledVersions.getOrElse(dep.module, dep.version))
@@ -1189,7 +1190,7 @@ final case class Resolution(
 
     copyWithCache(
       rootDependencies = dependencies,
-      dependencies = helper(dependencies.map(updateVersion))
+      dependencies = helper(dependencies.map(updateVersion).toSet)
       // don't know if something should be done about conflicts
     )
   }

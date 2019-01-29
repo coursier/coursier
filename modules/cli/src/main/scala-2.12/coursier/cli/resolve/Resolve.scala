@@ -227,7 +227,6 @@ object Resolve extends CaseApp[ResolveOptions] {
   ): Task[(Resolution, Boolean)] = {
 
     val e = for {
-      // parse dependencies, possibly doing some Scala Index lookups
       depsExtraRepoOpt <- Dependencies.withExtraRepo(
         args,
         params.dependency.scalaVersion,

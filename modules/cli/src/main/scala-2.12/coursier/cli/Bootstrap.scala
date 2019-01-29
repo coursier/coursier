@@ -125,10 +125,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         )
       else {
 
-        val isolatedDeps = options.options.isolated.isolatedDeps(options.options.common.dependencyOptions.scalaVersion)
+        val isolatedDeps = options.options.isolated.isolatedDepsOrExit(options.options.common.dependencyOptions.scalaVersion)
 
         val (done, isolatedArtifactFiles) =
-          options.options.isolated.targets.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
+          options.options.isolated.targetsOrExit.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
             case ((done, acc), target) =>
 
               // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
@@ -139,7 +139,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
                 default = options.artifactOptions.default0,
                 classifier0 = options.artifactOptions.classifier0,
                 artifactTypes = options.artifactOptions.artifactTypes,
-                subset = isolatedDeps.getOrElse(target, Seq.empty).toSet
+                subset = isolatedDeps.getOrElse(target, Seq.empty)
               )
 
               val m0 = m.filterKeys(url => !done(url))
@@ -156,7 +156,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
               (done0, updatedAcc)
           }
 
-        val parents = options.options.isolated.targets.toSeq.map { t =>
+        val parents = options.options.isolated.targetsOrExit.toSeq.map { t =>
           val e = isolatedArtifactFiles.get(t)
           val urls = e.map(_._1).getOrElse(Nil).map { url =>
             ClasspathEntry.Url(url)

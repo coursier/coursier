@@ -10,6 +10,7 @@ import cats.data.Validated
 import coursier.cli.options.FetchOptions
 import coursier.cli.params.FetchParams
 import coursier.cli.resolve.{Output, ResolveException}
+import coursier.core.{Artifact, Resolution}
 import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.ExecutionContext
@@ -22,7 +23,7 @@ object Fetch extends CaseApp[FetchOptions] {
     args: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[Seq[File]] = {
+  ): Task[(Resolution, Seq[(Artifact, File)])] = {
 
     val resolveTask = coursier.cli.resolve.Resolve.task(
       params.resolve,
@@ -84,7 +85,7 @@ object Fetch extends CaseApp[FetchOptions] {
             Task.point(())
         }
       }
-    } yield artifactFiles.map(_._2)
+    } yield (res, artifactFiles)
   }
 
   def run(options: FetchOptions, args: RemainingArgs): Unit =
@@ -108,18 +109,18 @@ object Fetch extends CaseApp[FetchOptions] {
             Output.errPrintln(e.getMessage)
             sys.exit(1)
           case Left(e) => throw e
-          case Right(files) =>
+          case Right((_, files)) =>
             // Some progress lines seem to be scraped without this.
             Console.out.flush()
 
             val out =
               if (options.classpath)
                 files
-                  .map(_.toString)
+                  .map(_._2.toString)
                   .mkString(File.pathSeparator)
               else
                 files
-                  .map(_.toString)
+                  .map(_._2.toString)
                   .mkString("\n")
 
             println(out)

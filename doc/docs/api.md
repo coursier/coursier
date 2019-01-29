@@ -38,7 +38,7 @@ import coursier._
 Resolving dependencies involves create an initial resolution state, with all the initial dependencies in it, like
 ```scala mdoc:silent
 val start = Resolution(
-  Set(
+  Seq(
     Dependency(
       Module(org"org.typelevel", name"cats-core_2.11"), "0.6.0"
     ),

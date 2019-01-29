@@ -162,7 +162,7 @@ final class Backend($: BackendScope[_, State]) {
 
       def task = {
         val res = coursier.Resolution(
-          s.modules.toSet,
+          s.modules,
           filter = Some(dep =>
             s.options.followOptional || !dep.optional
           )

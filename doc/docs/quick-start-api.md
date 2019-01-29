@@ -51,7 +51,7 @@ object Cache {
 To resolve dependencies, first create a `Resolution` case class with your dependencies in it,
 ```scala mdoc:silent
 val start = Resolution(
-  Set(
+  Seq(
     Dependency(
       Module(org"org.scalaz", name"scalaz-core_2.11"), "7.2.3"
     ),
