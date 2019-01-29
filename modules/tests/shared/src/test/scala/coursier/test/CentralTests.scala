@@ -748,6 +748,14 @@ abstract class CentralTests extends TestSuite {
         assert(expectedUrls.forall(urls))
       }
     }
+
+    'cycle - {
+      runner.resolution(
+        mod"edu.illinois.cs.cogcomp:illinois-pos",
+        "2.0.2",
+        Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
+      )
+    }
   }
 
 }
