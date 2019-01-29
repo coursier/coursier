@@ -53,13 +53,13 @@ class TestRunner[F[_]: Gather : ToFuture](
     ToFuture[F].toFuture(ec, t)
   }
 
-  def resolutionCheck(
+  def resolution(
     module: Module,
     version: String,
     extraRepos: Seq[Repository] = Nil,
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None
-  ): Future[Unit] =
+  ): Future[Resolution] =
     async {
       val attrPathPart =
         if (module.attributes.isEmpty)
@@ -120,7 +120,24 @@ class TestRunner[F[_]: Gather : ToFuture](
         println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
 
       assert(result == expected)
+
+      res
     }
+
+  def resolutionCheck(
+    module: Module,
+    version: String,
+    extraRepos: Seq[Repository] = Nil,
+    configuration: Configuration = Configuration.empty,
+    profiles: Option[Set[String]] = None
+  ): Future[Unit] =
+    resolution(
+      module,
+      version,
+      extraRepos,
+      configuration,
+      profiles
+    ).map(_ => ())
 
   def withArtifacts[T](
     module: Module,

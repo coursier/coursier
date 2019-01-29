@@ -6,6 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.test.compatibility._
+import coursier.util.Print
 
 import scala.concurrent.Future
 
@@ -750,11 +751,26 @@ abstract class CentralTests extends TestSuite {
     }
 
     'cycle - {
-      runner.resolution(
-        mod"edu.illinois.cs.cogcomp:illinois-pos",
-        "2.0.2",
-        Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
-      )
+      async {
+        val res = await(runner.resolution(
+          mod"edu.illinois.cs.cogcomp:illinois-pos",
+          "2.0.2",
+          Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
+        ))
+        val expectedTree =
+          """└─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
+            |   ├─ edu.illinois.cs.cogcomp:LBJava:1.0.3
+            |   │  ├─ de.bwaldvogel:liblinear:1.94
+            |   │  └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
+            |   │     └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a
+            |   └─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
+            |      └─ edu.illinois.cs.cogcomp:LBJava:1.0.3
+            |         ├─ de.bwaldvogel:liblinear:1.94
+            |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
+            |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
+        val tree = Print.dependencyTree(res.rootDependencies, res, printExclusions = false, reverse = false)
+        assert(tree == expectedTree)
+      }
     }
   }
 

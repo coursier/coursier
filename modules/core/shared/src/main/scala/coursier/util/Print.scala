@@ -156,7 +156,7 @@ object Print {
           s"${dep.module}:$versionStr"
         }
 
-      val children: Seq[Elem] =
+      def children: Seq[Elem] =
         if (excluded)
           Nil
         else {
