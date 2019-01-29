@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService
 
 import coursier.{Cache, CachePolicy}
 import coursier.cache.{CacheDefaults, CacheLogger}
-import coursier.core.Repository
 import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.duration.Duration
@@ -36,11 +35,5 @@ final case class CacheParams(
       localArtifactsShouldBeCached = cacheLocalArtifacts,
       S = S
     )
-
-  def fetch[F[_]](
-    pool: ExecutorService = CacheDefaults.pool,
-    logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F] = Task.schedulable): Repository.Fetch[F] =
-    cache(pool, logger).fetch
 
 }

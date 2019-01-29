@@ -174,35 +174,46 @@ object ResolutionProcess {
     repositories: Seq[Repository],
     module: Module,
     version: String,
-    fetch: Repository.Fetch[F]
+    fetch: Repository.Fetch[F],
+    fetchs: Repository.Fetch[F]*
   )(implicit
     F: Monad[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
-    val lookups = repositories
-      .map(repo => repo -> repo.find(module, version, fetch).run)
+    def get(fetch: Repository.Fetch[F]) = {
+      val lookups = repositories
+        .map(repo => repo -> repo.find(module, version, fetch).run)
 
-    val task0 = lookups.foldLeft[F[Either[Seq[String], (Artifact.Source, Project)]]](F.point(Left(Nil))) {
-      case (acc, (_, eitherProjTask)) =>
-        F.bind(acc) {
-          case Left(errors) =>
-            F.map(eitherProjTask)(_.left.map(error => error +: errors))
-          case res @ Right(_) =>
-            F.point(res)
-        }
+      val task0 = lookups.foldLeft[F[Either[Seq[String], (Artifact.Source, Project)]]](F.point(Left(Nil))) {
+        case (acc, (_, eitherProjTask)) =>
+          F.bind(acc) {
+            case Left(errors) =>
+              F.map(eitherProjTask)(_.left.map(error => error +: errors))
+            case res@Right(_) =>
+              F.point(res)
+          }
+      }
+
+      val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (Artifact.Source, Project)])
+      EitherT(task)
     }
 
-    val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (Artifact.Source, Project)])
-    EitherT(task)
+    (get(fetch) /: fetchs)(_ orElse get(_))
   }
 
-  def fetch[F[_]](repositories: Seq[core.Repository], fetch: Repository.Fetch[F])(implicit F: Gather[F]): Fetch[F] =
+  def fetch[F[_]](
+    repositories: Seq[core.Repository],
+    fetch: Repository.Fetch[F],
+    fetchs: Repository.Fetch[F]*
+  )(implicit
+    F: Gather[F]
+  ): Fetch[F] =
     modVers =>
       F.map(
         F.gather {
           modVers.map {
             case (module, version) =>
-              F.map(fetchOne(repositories, module, version, fetch).run)(d => (module, version) -> d)
+              F.map(fetchOne(repositories, module, version, fetch, fetchs: _*).run)(d => (module, version) -> d)
           }
         }
       )(_.toSeq)

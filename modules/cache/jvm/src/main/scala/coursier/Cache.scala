@@ -556,6 +556,65 @@ final case class Cache[F[_]](
     }
   }
 
+  private val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
+
+  private def filePerPolicy(
+    artifact: Artifact,
+    policy: CachePolicy,
+    retry: Int = retry
+  ): EitherT[F, FileError, File] =
+    EitherT {
+      S.map(download(
+        artifact,
+        checksums = checksums0.collect { case Some(c) => c }.toSet,
+        cachePolicy = policy
+      )) { results =>
+        val checksum = checksums0.find {
+          case None => true
+          case Some(c) =>
+            artifact.checksumUrls.get(c).exists { cUrl =>
+              results.exists { case ((_, u), b) =>
+                u == cUrl && b.isRight
+              }
+            }
+        }
+
+        val ((f, _), res) = results.head
+        res.right.flatMap { _ =>
+          checksum match {
+            case None =>
+              // FIXME All the checksums should be in the error, possibly with their URLs
+              //       from artifact.checksumUrls
+              Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
+            case Some(c) => Right((f, c))
+          }
+        }
+      }
+    }.flatMap {
+      case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
+      case (f, Some(c)) =>
+        validateChecksum(artifact, c).map(_ => f)
+    }.leftFlatMap {
+      case err: FileError.WrongChecksum =>
+        if (retry <= 0) {
+          EitherT(S.point(Left(err)))
+        }
+        else {
+          EitherT {
+            S.schedule[Either[FileError, Unit]](pool) {
+              val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+              badFile.delete()
+              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
+              Right(())
+            }
+          }.flatMap { _ =>
+            filePerPolicy(artifact, policy, retry - 1)
+          }
+        }
+      case err =>
+        EitherT(S.point(Left(err)))
+    }
+
   /**
     * This method computes the task needed to get a file.
     *
@@ -566,126 +625,92 @@ final case class Cache[F[_]](
   def file(
     artifact: Artifact,
     retry: Int = retry
-  ): EitherT[F, FileError, File] = {
+  ): EitherT[F, FileError, File] =
+    (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
 
-    val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
+  private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] =
+    filePerPolicy(artifact, policy).leftMap(_.describe).flatMap { f =>
 
-    def res(policy: CachePolicy): EitherT[F, FileError, File] = {
-      EitherT {
-        S.map(download(
-          artifact,
-          checksums = checksums0.collect { case Some(c) => c }.toSet,
-          cachePolicy = policy
-        )) { results =>
-          val checksum = checksums0.find {
-            case None => true
-            case Some(c) =>
-              artifact.checksumUrls.get(c).exists { cUrl =>
-                results.exists { case ((_, u), b) =>
-                  u == cUrl && b.isRight
-                }
-              }
-          }
+      def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
 
-          val ((f, _), res) = results.head
-          res.right.flatMap { _ =>
-            checksum match {
-              case None =>
-                // FIXME All the checksums should be in the error, possibly with their URLs
-                //       from artifact.checksumUrls
-                Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
-              case Some(c) => Right((f, c))
-            }
-          }
+      def read(f: File) =
+        try Right(new String(Files.readAllBytes(f.toPath), UTF_8))
+        catch {
+          case NonFatal(e) =>
+            Left(s"Could not read (file:${f.getCanonicalPath}): ${e.getMessage}")
         }
-      }.flatMap {
-        case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
-        case (f, Some(c)) =>
-          validateChecksum(artifact, c).map(_ => f)
-      }.leftFlatMap {
-        case err: FileError.WrongChecksum =>
-          if (retry <= 0) {
-            EitherT(S.point(Left(err)))
+
+      val res = if (f.exists()) {
+        if (f.isDirectory) {
+          if (artifact.url.startsWith("file:")) {
+
+            val elements = f.listFiles().map { c =>
+              val name = c.getName
+              val name0 = if (c.isDirectory)
+                name + "/"
+              else
+                name
+
+              s"""<li><a href="$name0">$name0</a></li>"""
+            }.mkString
+
+            val page =
+              s"""<!DOCTYPE html>
+                 |<html>
+                 |<head></head>
+                 |<body>
+                 |<ul>
+                 |$elements
+                 |</ul>
+                 |</body>
+                 |</html>
+               """.stripMargin
+
+            Right(page)
+          } else {
+            val f0 = new File(f, ".directory")
+
+            if (f0.exists()) {
+              if (f0.isDirectory)
+                Left(s"Woops: ${f.getCanonicalPath} is a directory")
+              else
+                read(f0)
+            } else
+              notFound(f0)
           }
-          else {
-            EitherT {
-              S.schedule[Either[FileError, Unit]](pool) {
-                val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
-                badFile.delete()
-                logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
-                Right(())
-              }
-            }.flatMap { _ =>
-              file(artifact, retry - 1)
-            }
-          }
-        case err =>
-          EitherT(S.point(Left(err)))
-      }
+        } else
+          read(f)
+      } else
+        notFound(f)
+
+      EitherT(S.point[Either[String, String]](res))
     }
 
-    (res(cachePolicies.head) /: cachePolicies.tail.map(res))(_ orElse _)
-  }
+  /**
+    * A [[Task]] able to fetch an [[Artifact]].
+    *
+    * Note that this method tries all the [[CachePolicy]]ies of this cache straightaway. During resolutions, you should
+    * prefer to try all repositories for the first policy, then the other policies if needed (in pseudo-code,
+    * `for (policy <- policies; repo <- repositories) …`, rather than
+    * `for (repo <- repositories, policy <- policies) …`). You should use the [[fetchs]] method in that case.
+    */
+  def fetch: Repository.Fetch[F] =
+    a =>
+      (fetchPerPolicy(a, cachePolicies.head) /: cachePolicies.tail)(_ orElse fetchPerPolicy(a, _))
 
-  lazy val fetch: Repository.Fetch[F] = {
-    artifact =>
-      file(artifact).leftMap(_.describe).flatMap { f =>
-
-        def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
-
-        def read(f: File) =
-          try Right(new String(Files.readAllBytes(f.toPath), UTF_8))
-          catch {
-            case NonFatal(e) =>
-              Left(s"Could not read (file:${f.getCanonicalPath}): ${e.getMessage}")
-          }
-
-        val res = if (f.exists()) {
-          if (f.isDirectory) {
-            if (artifact.url.startsWith("file:")) {
-
-              val elements = f.listFiles().map { c =>
-                val name = c.getName
-                val name0 = if (c.isDirectory)
-                  name + "/"
-                else
-                  name
-
-                s"""<li><a href="$name0">$name0</a></li>"""
-              }.mkString
-
-              val page =
-                s"""<!DOCTYPE html>
-                   |<html>
-                   |<head></head>
-                   |<body>
-                   |<ul>
-                   |$elements
-                   |</ul>
-                   |</body>
-                   |</html>
-                 """.stripMargin
-
-              Right(page)
-            } else {
-              val f0 = new File(f, ".directory")
-
-              if (f0.exists()) {
-                if (f0.isDirectory)
-                  Left(s"Woops: ${f.getCanonicalPath} is a directory")
-                else
-                  read(f0)
-              } else
-                notFound(f0)
-            }
-          } else
-            read(f)
-        } else
-          notFound(f)
-
-        EitherT(S.point[Either[String, String]](res))
-      }
-  }
+  /**
+    * Sequence of [[Task]]s able to fetch an [[Artifact]].
+    *
+    * Each element correspond to a [[CachePolicy]] of this [[Cache]]. You may want to pass each of them to
+    * [[ResolutionProcess.fetch()]].
+    *
+    * @return a non empty sequence
+    */
+  def fetchs: Seq[Repository.Fetch[F]] =
+    cachePolicies.map { p =>
+      (a: Artifact) =>
+        fetchPerPolicy(a, p)
+    }
 
 }
 
@@ -825,7 +850,7 @@ object Cache {
     followHttpToHttpsRedirections: Boolean = false,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Repository.Fetch[F] = {
+  )(implicit S: Schedulable[F]): Repository.Fetch[F] =
     Cache(
       cache,
       cachePolicies,
@@ -838,7 +863,30 @@ object Cache {
       bufferSize = bufferSize,
       S = S
     ).fetch
-  }
+
+  def fetchs[F[_]](
+    cache: File = CacheDefaults.location,
+    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
+    checksums: Seq[Option[String]] = CacheDefaults.checksums,
+    logger: Option[CacheLogger] = None,
+    pool: ExecutorService = CacheDefaults.pool,
+    ttl: Option[Duration] = CacheDefaults.ttl,
+    followHttpToHttpsRedirections: Boolean = false,
+    sslRetry: Int = CacheDefaults.sslRetryCount,
+    bufferSize: Int = CacheDefaults.bufferSize
+  )(implicit S: Schedulable[F]): Seq[Repository.Fetch[F]] =
+    Cache(
+      cache,
+      cachePolicies,
+      checksums,
+      logger,
+      pool,
+      ttl,
+      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+      sslRetry = sslRetry,
+      bufferSize = bufferSize,
+      S = S
+    ).fetchs
 
   def file[F[_]](
     artifact: Artifact,

@@ -368,7 +368,7 @@ class Helper(
     else
       None
 
-  val fetch = Cache.fetch[Task](
+  val fetchs = Cache.fetchs[Task](
     cache,
     cachePolicies,
     checksums = checksums,
@@ -377,7 +377,7 @@ class Helper(
     ttl = ttl0,
     followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
   )
-  val fetchQuiet = ResolutionProcess.fetch(repositories, fetch)
+  val fetchQuiet = ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
       modVers: Seq[(Module, String)] =>
