@@ -110,9 +110,6 @@ object Launch extends CaseApp[LaunchOptions] {
       Some(mainClass)
     } else {
 
-      // TODO Add non regression tests for that.
-      // In particular, check the main class for scalafmt, scalafix, ammonite, ...
-
       // Trying to get the main class of the first artifact
       val mainClassOpt = for {
         dep <- mainDependencyOpt
