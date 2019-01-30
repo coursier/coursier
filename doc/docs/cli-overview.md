@@ -43,7 +43,7 @@ the launcher is available as an asset on the GitHub release page, e.g.
 Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
 ```bash
 $ brew tap coursier/formulas
-$ brew install --HEAD coursier/formulas/coursier
+$ brew install coursier/formulas/coursier
 ```
 
 ### Arch Linux
