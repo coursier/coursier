@@ -98,8 +98,17 @@ class Download {
                                 try {
                                     URLConnection conn = url.openConnection();
                                     long lastModified = conn.getLastModified();
+                                    int size = conn.getContentLength();
                                     InputStream s = conn.getInputStream();
                                     byte[] b = Util.readFullySync(s);
+                                    // Seems java.net.HttpURLConnection doesn't always throw if the connection gets
+                                    // abruptly closed during transfer, hence this extra check.
+                                    if (size >= 0 && b.length != size) {
+                                        throw new RuntimeException(
+                                                "Error downloading " + url + " " +
+                                                        "(expected " + size + " B, got " + b.length + " B), " +
+                                                        "try again");
+                                    }
                                     tmpDest.deleteOnExit();
                                     Util.writeBytesToFile(tmpDest, b);
                                     tmpDest.setLastModified(lastModified);
