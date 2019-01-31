@@ -19,7 +19,8 @@ final case class ResolveParams(
   tree: Boolean,
   reverseTree: Boolean,
   whatDependsOn: Set[Module],
-  conflicts: Boolean
+  conflicts: Boolean,
+  failIfConflicts: Boolean
 ) {
   def anyTree: Boolean =
     tree ||
@@ -52,6 +53,7 @@ object ResolveParams {
       }
 
     val conflicts = options.conflicts
+    val failIfConflicts = options.failIfConflicts
 
     val printCheck =
       if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts).count(identity) > 1)
@@ -80,7 +82,8 @@ object ResolveParams {
           tree,
           reverseTree,
           whatDependsOn.toSet,
-          conflicts
+          conflicts,
+          failIfConflicts
         )
     }
   }
