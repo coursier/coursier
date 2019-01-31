@@ -2,15 +2,14 @@ package coursier.util
 
 import scala.collection.mutable.ArrayBuffer
 
-object Tree {
+object LazyTree {
 
-  def apply[A](roots: IndexedSeq[A])(children: A => Seq[A], show: A => String): String = {
-    Tree(roots, children).render(show)
-  }
+  def apply[A](roots: IndexedSeq[A])(children: A => Seq[A]) =
+    new LazyTree(roots, children)
 
 }
 
-case class Tree[A](roots: IndexedSeq[A], children: A => Seq[A]) {
+final class LazyTree[A](val roots: IndexedSeq[A], val children: A => Seq[A]) {
 
   def render(show: A => String): String = {
 

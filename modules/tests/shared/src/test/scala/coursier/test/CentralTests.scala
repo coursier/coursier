@@ -5,8 +5,9 @@ import utest._
 
 import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
+import coursier.graph.ModuleTree
 import coursier.test.compatibility._
-import coursier.util.Print
+import coursier.util.{LazyTree, Print}
 
 import scala.concurrent.Future
 
@@ -750,26 +751,257 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'cycle - {
-      async {
-        val res = await(runner.resolution(
-          mod"edu.illinois.cs.cogcomp:illinois-pos",
-          "2.0.2",
-          Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
-        ))
-        val expectedTree =
-          """└─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
-            |   ├─ edu.illinois.cs.cogcomp:LBJava:1.0.3
-            |   │  ├─ de.bwaldvogel:liblinear:1.94
-            |   │  └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
-            |   │     └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a
-            |   └─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
-            |      └─ edu.illinois.cs.cogcomp:LBJava:1.0.3
-            |         ├─ de.bwaldvogel:liblinear:1.94
-            |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
-            |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
-        val tree = Print.dependencyTree(res)
-        assert(tree == expectedTree)
+    'trees - {
+      'cycle - {
+        async {
+          val res = await(runner.resolution(
+            mod"edu.illinois.cs.cogcomp:illinois-pos",
+            "2.0.2",
+            Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
+          ))
+          val expectedTree =
+            """└─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
+              |   ├─ edu.illinois.cs.cogcomp:LBJava:1.0.3
+              |   │  ├─ de.bwaldvogel:liblinear:1.94
+              |   │  └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
+              |   │     └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a
+              |   └─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
+              |      └─ edu.illinois.cs.cogcomp:LBJava:1.0.3
+              |         ├─ de.bwaldvogel:liblinear:1.94
+              |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
+              |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
+          val tree = Print.dependencyTree(res, colors = false)
+          assert(tree == expectedTree)
+        }
+      }
+
+      'reverse - {
+        async {
+          val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          // not sure the leftmost '├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10' should be there…
+          val expectedTree =
+            """├─ com.chuusai:shapeless_2.12:2.3.3
+              |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
+              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.argonaut:argonaut_2.12:6.2.1
+              |│  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
+              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.scala-lang:scala-library:2.12.8
+              |│  ├─ com.chuusai:shapeless_2.12:2.3.3 org.scala-lang:scala-library:2.12.4 -> 2.12.8
+              |│  │  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│  │  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│  │     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8 org.scala-lang:scala-library:2.12.4 -> 2.12.8
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |│  │  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│  │  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.scala-lang:scala-reflect:2.12.6 org.scala-lang:scala-library:2.12.6 -> 2.12.8
+              |│  │  ├─ io.argonaut:argonaut_2.12:6.2.1 org.scala-lang:scala-reflect:2.12.4 -> 2.12.6
+              |│  │  │  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│  │  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ org.typelevel:machinist_2.12:0.6.6
+              |│  │     ├─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │     │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ org.typelevel:cats-macros_2.12:1.5.0
+              |│  │        └─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │           └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.scala-lang.modules:scala-xml_2.12:1.1.1 org.scala-lang:scala-library:2.12.6 -> 2.12.8
+              |│  │  └─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |│  │     ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│  │     │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │     │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.typelevel:cats-core_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.typelevel:cats-kernel_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.typelevel:cats-macros_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ org.typelevel:machinist_2.12:0.6.6 org.scala-lang:scala-library:2.12.6 -> 2.12.8
+              |│  │  ├─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ org.typelevel:cats-macros_2.12:1.5.0
+              |│  │     └─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ org.typelevel:macro-compat_2.12:1.1.1 org.scala-lang:scala-library:2.12.0 -> 2.12.8
+              |│     └─ com.chuusai:shapeless_2.12:2.3.3
+              |│        ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│        │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│        └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│           └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |│              └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.scala-lang:scala-reflect:2.12.6
+              |│  ├─ io.argonaut:argonaut_2.12:6.2.1 org.scala-lang:scala-reflect:2.12.4 -> 2.12.6
+              |│  │  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ org.typelevel:machinist_2.12:0.6.6
+              |│     ├─ org.typelevel:cats-core_2.12:1.5.0
+              |│     │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ org.typelevel:cats-macros_2.12:1.5.0
+              |│        └─ org.typelevel:cats-core_2.12:1.5.0
+              |│           └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+              |│  └─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |│     ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |│     │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│     │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.typelevel:cats-core_2.12:1.5.0
+              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.typelevel:cats-kernel_2.12:1.5.0
+              |│  └─ org.typelevel:cats-core_2.12:1.5.0
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.typelevel:cats-macros_2.12:1.5.0
+              |│  └─ org.typelevel:cats-core_2.12:1.5.0
+              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |├─ org.typelevel:machinist_2.12:0.6.6
+              |│  ├─ org.typelevel:cats-core_2.12:1.5.0
+              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ org.typelevel:cats-macros_2.12:1.5.0
+              |│     └─ org.typelevel:cats-core_2.12:1.5.0
+              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |└─ org.typelevel:macro-compat_2.12:1.1.1
+              |   └─ com.chuusai:shapeless_2.12:2.3.3
+              |      ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |      │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |      └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |            └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10""".stripMargin
+          val tree = Print.dependencyTree(res, reverse = true, colors = false)
+          assert(tree == expectedTree)
+        }
+      }
+
+      'module - async {
+        val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+        val tree = ModuleTree(res)
+        val str = LazyTree(tree.toVector)(_.children).render { t =>
+          s"${t.module}:${t.reconciledVersion}"
+        }
+        val expectedStr =
+          """└─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+            |   ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+            |   │  ├─ com.chuusai:shapeless_2.12:2.3.3
+            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
+            |   │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  ├─ io.argonaut:argonaut_2.12:6.2.1
+            |   │  │  └─ org.scala-lang:scala-reflect:2.12.6
+            |   │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+            |   │  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
+            |   │  │  └─ org.scala-lang:scala-library:2.12.8
+            |   │  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+            |   │  │  ├─ com.chuusai:shapeless_2.12:2.3.3
+            |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
+            |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  │  └─ org.scala-lang:scala-library:2.12.8
+            |   │  └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
+            |   │  └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+            |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+            |   │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+            |   │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+            |   │     └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+            |   │  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+            |   │  │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+            |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+            |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  │  └─ org.scala-lang:scala-library:2.12.8
+            |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+            |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+            |   │  │     └─ org.scala-lang:scala-library:2.12.8
+            |   │  └─ org.scala-lang:scala-library:2.12.8
+            |   ├─ org.scala-lang:scala-library:2.12.8
+            |   └─ org.typelevel:cats-core_2.12:1.5.0
+            |      ├─ org.scala-lang:scala-library:2.12.8
+            |      ├─ org.typelevel:cats-kernel_2.12:1.5.0
+            |      │  └─ org.scala-lang:scala-library:2.12.8
+            |      ├─ org.typelevel:cats-macros_2.12:1.5.0
+            |      │  ├─ org.scala-lang:scala-library:2.12.8
+            |      │  └─ org.typelevel:machinist_2.12:0.6.6
+            |      │     ├─ org.scala-lang:scala-library:2.12.8
+            |      │     └─ org.scala-lang:scala-reflect:2.12.6
+            |      │        └─ org.scala-lang:scala-library:2.12.8
+            |      └─ org.typelevel:machinist_2.12:0.6.6
+            |         ├─ org.scala-lang:scala-library:2.12.8
+            |         └─ org.scala-lang:scala-reflect:2.12.6
+            |            └─ org.scala-lang:scala-library:2.12.8""".stripMargin
+        assert(str == expectedStr)
       }
     }
   }

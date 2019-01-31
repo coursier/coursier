@@ -57,7 +57,7 @@ object JsonReport {
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
 
       /**
-        * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
+        * Same printing mechanism as [[coursier.util.LazyTree#recursivePrint]]
         */
       def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
         val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)

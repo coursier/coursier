@@ -4,36 +4,35 @@ import utest._
 
 import scala.collection.mutable.ArrayBuffer
 
-object TreeTests extends TestSuite {
+object LazyTreeTests extends TestSuite {
 
-  case class Node(label: String, children: ArrayBuffer[Node]) {
-    def addChild(x: Node): Unit = {
+  private final case class MutableTree(label: String, children: ArrayBuffer[MutableTree]) {
+    def addChild(x: MutableTree): Unit =
       children.append(x)
-    }
 
     // The default behavior of hashcode will calculate things recursively,
     // which will be infinite because we want to test cycles, so hardcoding
     // the hashcode to 0 to get around the issue.
     // TODO: make the hashcode to return something more interesting to
     // improve performance.
-    override def hashCode(): Int = 0
+    override def hashCode(): Int = label.##
   }
 
-  val roots = Array(
-    Node("p1", ArrayBuffer(
-      Node("c1", ArrayBuffer.empty),
-      Node("c2", ArrayBuffer.empty))),
-    Node("p2", ArrayBuffer(
-      Node("c3", ArrayBuffer.empty),
-      Node("c4", ArrayBuffer.empty)))
+  private val roots = Array(
+    MutableTree("p1", ArrayBuffer(
+      MutableTree("c1", ArrayBuffer.empty),
+      MutableTree("c2", ArrayBuffer.empty))),
+    MutableTree("p2", ArrayBuffer(
+      MutableTree("c3", ArrayBuffer.empty),
+      MutableTree("c4", ArrayBuffer.empty)))
   )
 
-  val moreNestedRoots = Array(
-    Node("p1", ArrayBuffer(
-      Node("c1", ArrayBuffer(
-        Node("p2", ArrayBuffer.empty))))),
-    Node("p3", ArrayBuffer(
-      Node("d1", ArrayBuffer.empty))
+  private val moreNestedRoots = Array(
+    MutableTree("p1", ArrayBuffer(
+      MutableTree("c1", ArrayBuffer(
+        MutableTree("p2", ArrayBuffer.empty))))),
+    MutableTree("p3", ArrayBuffer(
+      MutableTree("d1", ArrayBuffer.empty))
     ))
 
 
@@ -41,11 +40,11 @@ object TreeTests extends TestSuite {
   // a -> b -> c -> a
   //             -> e -> f
 
-  val a = Node("a", ArrayBuffer.empty)
-  val b = Node("b", ArrayBuffer.empty)
-  val c = Node("c", ArrayBuffer.empty)
-  val e = Node("e", ArrayBuffer.empty)
-  val f = Node("f", ArrayBuffer.empty)
+  private val a = MutableTree("a", ArrayBuffer.empty)
+  private val b = MutableTree("b", ArrayBuffer.empty)
+  private val c = MutableTree("c", ArrayBuffer.empty)
+  private val e = MutableTree("e", ArrayBuffer.empty)
+  private val f = MutableTree("f", ArrayBuffer.empty)
 
   a.addChild(b)
   b.addChild(c)
@@ -56,7 +55,8 @@ object TreeTests extends TestSuite {
 
   val tests = Tests {
     'basic {
-      val str = Tree[Node](roots)(_.children.toSeq, _.label)
+      val str = LazyTree[MutableTree](roots)(_.children.toSeq)
+        .render(_.label)
       assert(str ==
         """├─ p1
           #│  ├─ c1
@@ -67,7 +67,8 @@ object TreeTests extends TestSuite {
     }
 
     'moreNested {
-      val str = Tree[Node](moreNestedRoots)(_.children.toSeq, _.label)
+      val str = LazyTree[MutableTree](moreNestedRoots)(_.children.toSeq)
+        .render(_.label)
       assert(str ==
         """├─ p1
           #│  └─ c1
@@ -77,7 +78,8 @@ object TreeTests extends TestSuite {
     }
 
     'cyclic1 {
-      val str: String = Tree[Node](Array(a, e))(_.children.toSeq, _.label)
+      val str: String = LazyTree[MutableTree](Array(a, e))(_.children.toSeq)
+        .render(_.label)
       assert(str ==
         """├─ a
           #│  └─ b
@@ -89,7 +91,8 @@ object TreeTests extends TestSuite {
     }
 
     'cyclic2 {
-      val str: String = Tree[Node](Array(a, c))(_.children.toSeq, _.label)
+      val str: String = LazyTree[MutableTree](Array(a, c))(_.children.toSeq)
+        .render(_.label)
       assert(str ==
         """├─ a
           #│  └─ b
