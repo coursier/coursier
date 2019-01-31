@@ -50,11 +50,12 @@ object Output {
 
       val depsStr =
         if (params.whatDependsOn.nonEmpty)
-          Print.reverseTree(
-            res.minDependencies.filter(f => params.whatDependsOn(f.module)).toSeq,
+          Print.dependencyTree(
             res,
-            withExclusions = params.output.verbosity >= 1
-          ).render(_.repr(Colors.get(true)))
+            roots = res.minDependencies.filter(f => params.whatDependsOn(f.module)).toSeq,
+            printExclusions = params.output.verbosity >= 1,
+            reverse = true
+          )
         else if (params.reverseTree || params.tree)
           Print.dependencyTree(
             res,
