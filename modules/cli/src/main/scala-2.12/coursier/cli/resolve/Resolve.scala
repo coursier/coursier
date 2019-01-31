@@ -13,6 +13,7 @@ import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, Repository, ResolutionProcess}
 import coursier.extra.Typelevel
+import coursier.graph.Conflict
 import coursier.internal.InMemoryCachingFetcher
 import coursier.util._
 
