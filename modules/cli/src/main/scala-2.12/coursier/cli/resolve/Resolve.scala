@@ -331,7 +331,9 @@ object Resolve extends CaseApp[ResolveOptions] {
             Output.errPrintln(e.message)
             sys.exit(1)
           case Left(e) => throw e
-          case Right(_) =>
+          case Right((_, valid)) =>
+            if (!valid)
+              sys.exit(1)
         }
     }
 
