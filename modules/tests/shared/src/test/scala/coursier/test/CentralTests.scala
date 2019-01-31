@@ -5,7 +5,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
-import coursier.graph.ModuleTree
+import coursier.graph.{Conflict, ModuleTree}
 import coursier.test.compatibility._
 import coursier.util.{Print, Tree}
 
@@ -1002,6 +1002,29 @@ abstract class CentralTests extends TestSuite {
             |         └─ org.scala-lang:scala-reflect:2.12.6
             |            └─ org.scala-lang:scala-library:2.12.8""".stripMargin
         assert(str == expectedStr)
+      }
+
+      'conflicts - {
+        async {
+          val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          val conflicts = Conflict(res)
+          val expectedConflicts = Seq(
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.chuusai:shapeless_2.12", "2.3.3"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M8"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-annotations_2.12", "2.0.0-M5"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-util_2.12", "2.0.0-M5"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app_2.12", "2.0.0-M5"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang:scala-reflect", "2.12.6"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang.modules:scala-xml_2.12", "1.1.1"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-core_2.12", "1.5.0"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-kernel_2.12", "1.5.0"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-macros_2.12", "1.5.0"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.typelevel:machinist_2.12", "0.6.6"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.0", wasExcluded = false, mod"org.typelevel:macro-compat_2.12", "1.1.1"),
+            Conflict(mod"org.scala-lang:scala-reflect", "2.12.6", "2.12.4", wasExcluded = false, mod"io.argonaut:argonaut_2.12", "6.2.1")
+          )
+          assert(conflicts == expectedConflicts)
+        }
       }
     }
   }
