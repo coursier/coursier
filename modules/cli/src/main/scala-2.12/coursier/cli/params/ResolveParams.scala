@@ -18,7 +18,8 @@ final case class ResolveParams(
   benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
-  whatDependsOn: Set[Module]
+  whatDependsOn: Set[Module],
+  conflicts: Boolean
 ) {
   def anyTree: Boolean =
     tree ||
@@ -50,15 +51,13 @@ object ResolveParams {
           )
       }
 
-    val treeCheck =
-      if (tree && reverseTree)
-        Validated.invalidNel("Cannot specify both --tree and --reverse-tree")
-      else
-        Validated.validNel(())
+    val conflicts = options.conflicts
 
-    val treeWhatDependsOnCheck =
-      if ((tree || reverseTree) && options.whatDependsOn.nonEmpty)
-        Validated.invalidNel("Cannot specify --what-depends-on along with --tree or --reverse-tree")
+    val printCheck =
+      if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts).count(identity) > 1)
+        Validated.invalidNel(
+          "Cannot specify several options among --tree, --reverse-tree, --what-depends-on, --conflicts"
+        )
       else
         Validated.validNel(())
 
@@ -68,8 +67,8 @@ object ResolveParams {
       else
         Validated.validNel(options.benchmarkCache)
 
-    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, treeCheck, treeWhatDependsOnCheck, benchmarkCacheV).mapN {
-      (cache, output, repositories, dependency, resolution, whatDependsOn, _, _, benchmarkCache) =>
+    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
+      (cache, output, repositories, dependency, resolution, whatDependsOn, _, benchmarkCache) =>
         ResolveParams(
           cache,
           output,
@@ -80,7 +79,8 @@ object ResolveParams {
           benchmarkCache,
           tree,
           reverseTree,
-          whatDependsOn.toSet
+          whatDependsOn.toSet,
+          conflicts
         )
     }
   }

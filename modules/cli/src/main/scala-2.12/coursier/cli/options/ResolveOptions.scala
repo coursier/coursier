@@ -21,6 +21,9 @@ final case class ResolveOptions(
   @Value("org:name")
     whatDependsOn: List[String] = Nil,
 
+  @Help("Print conflicts")
+    conflicts: Boolean = false,
+
   @Recurse
     cacheOptions: shared.CacheOptions = shared.CacheOptions(),
 

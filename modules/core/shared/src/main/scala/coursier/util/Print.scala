@@ -1,7 +1,7 @@
 package coursier.util
 
 import coursier.core._
-import coursier.graph.{DependencyTree, ReverseModuleTree}
+import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
 
 object Print {
 
@@ -162,6 +162,49 @@ object Print {
       s"$module:$versionStr"
     }
 
+  private def aligned(l: Seq[(String, String)]): Seq[String] =
+    if (l.isEmpty)
+      Nil
+    else {
+      val m = l.iterator.map(_._1.length).max
+      l.map {
+        case (a, b) =>
+          a + " "*(m - a.length + 1) + b
+      }
+    }
 
+  def conflicts(conflicts: Seq[Conflict]): Seq[String] = {
+
+    // for deterministic order in the output
+    val indices = conflicts
+      .map(_.module)
+      .zipWithIndex
+      .reverse
+      .toMap
+
+    conflicts
+      .groupBy(_.module)
+      .toSeq
+      .sortBy {
+        case (mod, _) =>
+          indices(mod)
+      }
+      .map {
+        case (mod, l) =>
+          assert(l.map(_.version).distinct.size == 1)
+
+          val messages = l.map { c =>
+            val extra =
+              if (c.wasExcluded)
+                " (and excluded it)"
+              else
+                ""
+            (s"${c.dependeeModule}:${c.dependeeVersion}", s"wanted version ${c.wantedVersion}" + extra)
+          }
+
+          s"$mod:${l.head.version} was selected, but\n" +
+            aligned(messages).map("  " + _ + "\n").mkString
+      }
+  }
 
 }
