@@ -88,6 +88,7 @@ of the above command) accepts.
 Both commands below can be given repositories with the `-r` or `--repository` option, like
 ```bash
 -r central
+-r sonatype:snapshots
 -r https://oss.sonatype.org/content/repositories/snapshots
 -r "ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"
 ```
