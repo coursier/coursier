@@ -10,8 +10,8 @@ to handle HTTP requests. `java.net.HttpURLConnection` automatically picks up
 
 To set one of those properties, run the CLI like
 ```
-$ java -jar $(which coursier) \
-    -Dhttps.proxyHost=… -Dhttps.proxyPort=… [args]
+$ java -Dhttps.proxyHost=… -Dhttps.proxyPort=… \
+     -jar $(which coursier) [args]
 ```
 instead of `coursier [args]`. Alternatively, recent versions of coursier
 should accept those options prefixed with `-J`, like
