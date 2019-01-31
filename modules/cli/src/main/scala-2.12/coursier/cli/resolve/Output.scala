@@ -42,7 +42,8 @@ object Output {
     params: ResolveParams,
     res: Resolution,
     stdout: PrintStream,
-    stderr: PrintStream
+    stderr: PrintStream,
+    colors: Boolean
   ): Unit =
     if (printResultStdout || params.output.verbosity >= 1 || params.anyTree) {
       if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2 || params.anyTree)
@@ -54,13 +55,15 @@ object Output {
             res,
             roots = res.minDependencies.filter(f => params.whatDependsOn(f.module)).toSeq,
             printExclusions = params.output.verbosity >= 1,
-            reverse = true
+            reverse = true,
+            colors = colors
           )
         else if (params.reverseTree || params.tree)
           Print.dependencyTree(
             res,
             printExclusions = params.output.verbosity >= 1,
-            reverse = params.reverseTree
+            reverse = params.reverseTree,
+            colors = colors
           )
         else
           Print.dependenciesUnknownConfigs(

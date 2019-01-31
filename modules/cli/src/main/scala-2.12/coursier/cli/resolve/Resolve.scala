@@ -7,7 +7,7 @@ import caseapp._
 import cats.data.Validated
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.Resolution
+import coursier.{Resolution, TermDisplay}
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -296,7 +296,8 @@ object Resolve extends CaseApp[ResolveOptions] {
             params,
             res,
             stdout,
-            stderr
+            stderr,
+            colors = !TermDisplay.defaultFallbackMode
           )
         }
       }
