@@ -209,10 +209,16 @@ object Launch extends CaseApp[LaunchOptions] {
         val t = task(params, pool, args.remaining, args.unparsed)
 
         t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) =>
+          case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
             System.err.println(e.message)
             sys.exit(1)
-          case Left(e: coursier.Fetch.DownloadingArtifactException) =>
+          case Left(e: coursier.Fetch.DownloadingArtifactException) if params.resolve.output.verbosity <= 1 =>
+            System.err.println(e.getMessage)
+            sys.exit(1)
+          case Left(e: LaunchException.NoMainClassFound) if params.resolve.output.verbosity <= 1 =>
+            System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
+            sys.exit(1)
+          case Left(e: LaunchException) if params.resolve.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
             sys.exit(1)
           case Left(e) => throw e

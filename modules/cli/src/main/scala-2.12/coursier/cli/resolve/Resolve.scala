@@ -345,7 +345,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         val t = task(params, pool, System.out, System.err, args.all)
 
         t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) =>
+          case Left(e: ResolveException) if params.output.verbosity <= 1 =>
             Output.errPrintln(e.message)
             sys.exit(1)
           case Left(e) => throw e

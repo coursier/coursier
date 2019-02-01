@@ -102,10 +102,10 @@ object Fetch extends CaseApp[FetchOptions] {
         val t = task(params, pool, args.all)
 
         t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) =>
+          case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
             Output.errPrintln(e.message)
             sys.exit(1)
-          case Left(e: coursier.Fetch.DownloadingArtifactException) =>
+          case Left(e: coursier.Fetch.DownloadingArtifactException) if params.resolve.output.verbosity <= 1 =>
             Output.errPrintln(e.getMessage)
             sys.exit(1)
           case Left(e) => throw e
