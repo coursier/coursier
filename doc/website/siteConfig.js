@@ -43,6 +43,15 @@ const siteConfig = {
   editUrl: 'https://github.com/coursier/coursier/edit/master/doc/docs/',
 
   twitter: true,
+
+  algolia: {
+    apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+    indexName: 'get-coursier',
+    algoliaOptions: {
+      // seems we should need that
+      // facetFilters: [ "version:VERSION" ]
+    },
+  },
 };
 
 module.exports = siteConfig;
