@@ -7,12 +7,13 @@ import caseapp._
 import cats.data.Validated
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.Resolution
+import coursier.{Resolution, TermDisplay}
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, Repository, ResolutionProcess}
 import coursier.extra.Typelevel
+import coursier.graph.Conflict
 import coursier.internal.InMemoryCachingFetcher
 import coursier.util._
 
@@ -288,15 +289,34 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       valid = validated.isRight
 
+      conflicts = {
+        if (valid && params.failIfConflicts) {
+          // not taking into account exclusion-related conflicts here, which may be confusing when
+          // --conflicts is passed (the latter can find conflicts not making things fail here)
+          val l = Conflict(res)
+          if (l.isEmpty) {
+            if (!params.conflicts && params.output.verbosity >= 1)
+              stderr.println("No conflict found.")
+            false
+          } else {
+            val msg = Print.conflicts(l).mkString("\n")
+            stderr.println(msg)
+            true
+          }
+        } else
+          false
+      }
+
       _ = {
         val outputToStdout = printOutput && (valid || params.output.forcePrint)
-        if (outputToStdout || params.output.verbosity >= 2) {
+        if (!conflicts && (outputToStdout || params.output.verbosity >= 2)) {
           Output.printResolutionResult(
             printResultStdout = outputToStdout,
             params,
             res,
             stdout,
-            stderr
+            stderr,
+            colors = !TermDisplay.defaultFallbackMode
           )
         }
       }
@@ -307,7 +327,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           stderr.println("Error:")
           errors.foreach(stderr.println)
       }
-    } yield (res, valid)
+    } yield (res, valid && !conflicts)
   }
 
 
@@ -329,7 +349,9 @@ object Resolve extends CaseApp[ResolveOptions] {
             Output.errPrintln(e.message)
             sys.exit(1)
           case Left(e) => throw e
-          case Right(_) =>
+          case Right((_, valid)) =>
+            if (!valid)
+              sys.exit(1)
         }
     }
 
