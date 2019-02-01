@@ -165,7 +165,7 @@ object Launch extends CaseApp[LaunchOptions] {
             val files0 = artifacts
               .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
               .filter(!alreadyAdded(_))
-            new URLClassLoader(files0.map(_.toURI.toURL).toArray, parent)
+            new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
         }
         val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++
           params.extraJars.map(_.toUri.toURL)

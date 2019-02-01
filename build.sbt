@@ -462,7 +462,8 @@ def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[
     proguardOptions.in(Proguard) ++= Seq(
       "-dontwarn",
       "-repackageclasses coursier.bootstrap.launcher",
-      s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}"
+      s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",
+      "-keep class coursier.bootstrap.launcher.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
     ) ++ extra,
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
     artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
@@ -490,6 +491,7 @@ lazy val proguardedCli = Seq(
     "-dontnote",
     "-dontoptimize", // required since the switch to scala 2.12
     "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
+    "-keep class coursier.cli.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
     "-adaptresourcefilenames **.properties",
     // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
     """-keep class scala.** { *; }"""

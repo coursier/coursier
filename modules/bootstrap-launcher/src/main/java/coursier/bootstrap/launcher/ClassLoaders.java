@@ -49,6 +49,7 @@ class ClassLoaders {
         int i = 1;
         while (true) {
             String[] strUrls = Util.readStringSequence(resourceDir + "bootstrap-jar-urls-" + i, baseLoader);
+            String nameOrNull = Util.readString(resourceDir + "bootstrap-loader-name-" + i, baseLoader);
 
             if (strUrls.length == 0)
                 break;
@@ -56,7 +57,10 @@ class ClassLoaders {
             List<URL> urls = getURLs(strUrls);
             List<URL> localURLs = Download.getLocalURLs(urls);
 
-            parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
+            if (nameOrNull == null)
+                parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
+            else
+                parentLoader = new SharedClassLoader(localURLs.toArray(new URL[0]), parentLoader, new String[] {nameOrNull});
 
             i = i + 1;
         }
