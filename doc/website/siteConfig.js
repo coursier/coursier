@@ -6,8 +6,8 @@ const siteConfig = {
   tagline: 'Pure Scala Artifact Fetching',
 
   // wiped when relativizing stuff
-  url: 'https://coursier.github.io',
-  baseUrl: '/coursier/',
+  url: 'https://get-coursier.io',
+  baseUrl: '/',
 
   projectName: 'coursier',
   organizationName: 'coursier',
