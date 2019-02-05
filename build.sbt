@@ -310,11 +310,7 @@ lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
-    moduleName := "coursier",
-    // POM only
-    publishArtifact.in(Compile, packageDoc) := false,
-    publishArtifact.in(Compile, packageSrc) := false,
-    publishArtifact.in(Compile, packageBin) := false
+    moduleName := "coursier"
   )
 
 lazy val metaJvm = meta.jvm
