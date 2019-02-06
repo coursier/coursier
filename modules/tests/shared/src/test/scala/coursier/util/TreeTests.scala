@@ -19,22 +19,14 @@ object TreeTests extends TestSuite {
   }
 
   private val roots = Array(
-    MutableTree("p1", ArrayBuffer(
-      MutableTree("c1", ArrayBuffer.empty),
-      MutableTree("c2", ArrayBuffer.empty))),
-    MutableTree("p2", ArrayBuffer(
-      MutableTree("c3", ArrayBuffer.empty),
-      MutableTree("c4", ArrayBuffer.empty)))
+    MutableTree("p1", ArrayBuffer(MutableTree("c1", ArrayBuffer.empty), MutableTree("c2", ArrayBuffer.empty))),
+    MutableTree("p2", ArrayBuffer(MutableTree("c3", ArrayBuffer.empty), MutableTree("c4", ArrayBuffer.empty)))
   )
 
   private val moreNestedRoots = Array(
-    MutableTree("p1", ArrayBuffer(
-      MutableTree("c1", ArrayBuffer(
-        MutableTree("p2", ArrayBuffer.empty))))),
-    MutableTree("p3", ArrayBuffer(
-      MutableTree("d1", ArrayBuffer.empty))
-    ))
-
+    MutableTree("p1", ArrayBuffer(MutableTree("c1", ArrayBuffer(MutableTree("p2", ArrayBuffer.empty))))),
+    MutableTree("p3", ArrayBuffer(MutableTree("d1", ArrayBuffer.empty)))
+  )
 
   // Constructing cyclic graph:
   // a -> b -> c -> a
@@ -52,49 +44,55 @@ object TreeTests extends TestSuite {
   c.addChild(e)
   e.addChild(f)
 
-
   val tests = Tests {
     'basic {
       val str = Tree[MutableTree](roots)(_.children.toSeq)
         .render(_.label)
-      assert(str ==
-        """├─ p1
+      assert(
+        str ==
+          """├─ p1
           #│  ├─ c1
           #│  └─ c2
           #└─ p2
           #   ├─ c3
-          #   └─ c4""".stripMargin('#'))
+          #   └─ c4""".stripMargin('#')
+      )
     }
 
     'moreNested {
       val str = Tree[MutableTree](moreNestedRoots)(_.children.toSeq)
         .render(_.label)
-      assert(str ==
-        """├─ p1
+      assert(
+        str ==
+          """├─ p1
           #│  └─ c1
           #│     └─ p2
           #└─ p3
-          #   └─ d1""".stripMargin('#'))
+          #   └─ d1""".stripMargin('#')
+      )
     }
 
     'cyclic1 {
       val str: String = Tree[MutableTree](Array(a, e))(_.children.toSeq)
         .render(_.label)
-      assert(str ==
-        """├─ a
+      assert(
+        str ==
+          """├─ a
           #│  └─ b
           #│     └─ c
           #│        └─ e
           #│           └─ f
           #└─ e
-          #   └─ f""".stripMargin('#'))
+          #   └─ f""".stripMargin('#')
+      )
     }
 
     'cyclic2 {
       val str: String = Tree[MutableTree](Array(a, c))(_.children.toSeq)
         .render(_.label)
-      assert(str ==
-        """├─ a
+      assert(
+        str ==
+          """├─ a
           #│  └─ b
           #│     └─ c
           #│        └─ e
@@ -103,7 +101,8 @@ object TreeTests extends TestSuite {
           #   ├─ a
           #   │  └─ b
           #   └─ e
-          #      └─ f""".stripMargin('#'))
+          #      └─ f""".stripMargin('#')
+      )
     }
   }
 }

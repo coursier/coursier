@@ -2,6 +2,7 @@ package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 
+// format: off
 final case class ResolveOptions(
 
   @Help("Print the duration of each iteration of the resolution")
@@ -42,3 +43,4 @@ final case class ResolveOptions(
     outputOptions: shared.OutputOptions = shared.OutputOptions()
 
 )
+// format: on

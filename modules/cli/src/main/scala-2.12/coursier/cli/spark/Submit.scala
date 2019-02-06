@@ -38,10 +38,11 @@ object Submit {
 
     val helper = new Helper(
       common.copy(
-        dependencyOptions = common.dependencyOptions.copy(
-          intransitive = Nil,
-          scalaVersion = scalaVersion
-        )
+        dependencyOptions = common
+          .dependencyOptions.copy(
+            intransitive = Nil,
+            scalaVersion = scalaVersion
+          )
       ),
       // FIXME We whould be able to pass these as (parsed) Dependency instances to Helper
       (if (noDefault) Nil else defaultDependencies) ++ extraDependencies

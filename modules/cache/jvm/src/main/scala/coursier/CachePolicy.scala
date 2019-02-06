@@ -64,7 +64,6 @@ object CachePolicy {
     */
   case object ForceDownload extends CachePolicy
 
-
   private val baseDefault = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)
     CachePolicy.LocalUpdateChanging,
@@ -77,22 +76,23 @@ object CachePolicy {
   def default: Seq[CachePolicy] = {
 
     def fromOption(value: Option[String], description: String): Option[Seq[CachePolicy]] =
-      value.filter(_.nonEmpty).flatMap {
-        str =>
-          CacheParse.cachePolicies(str).either match {
-            case Right(Seq()) =>
-              Console.err.println(
+      value.filter(_.nonEmpty).flatMap { str =>
+        CacheParse.cachePolicies(str).either match {
+          case Right(Seq()) =>
+            Console
+              .err.println(
                 s"Warning: no mode found in $description, ignoring it."
               )
-              None
-            case Right(policies) =>
-              Some(policies)
-            case Left(_) =>
-              Console.err.println(
+            None
+          case Right(policies) =>
+            Some(policies)
+          case Left(_) =>
+            Console
+              .err.println(
                 s"Warning: unrecognized mode in $description, ignoring it."
               )
-              None
-          }
+            None
+        }
       }
 
     val fromEnv = fromOption(

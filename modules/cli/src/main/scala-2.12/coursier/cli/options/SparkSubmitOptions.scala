@@ -1,8 +1,9 @@
 package coursier.cli.options
 
-import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
+import caseapp.{HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _}
 import coursier.cli.options.shared.ArtifactOptions
 
+// format: off
 final case class SparkSubmitOptions(
   @Short("M")
   @Short("main")
@@ -34,6 +35,7 @@ final case class SparkSubmitOptions(
   @Recurse
     common: CommonOptions = CommonOptions()
 )
+// format: on
 
 object SparkSubmitOptions {
   implicit val parser = Parser[SparkSubmitOptions]

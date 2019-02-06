@@ -13,16 +13,19 @@ import argonaut._
 import Argonaut._
 
 /**
- * Lookup table for files and artifacts to print in the JsonReport.
- */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]])
+  * Lookup table for files and artifacts to print in the JsonReport.
+  */
+final case class JsonPrintRequirement(
+  fileByArtifact: Map[String, File],
+  depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]]
+)
 
 /**
- * Represents a resolved dependency's artifact in the JsonReport.
- * @param coord String representation of the artifact's maven coordinate.
- * @param file The path to the file for the artifact.
- * @param dependencies The dependencies of the artifact.
- */
+  * Represents a resolved dependency's artifact in the JsonReport.
+  * @param coord String representation of the artifact's maven coordinate.
+  * @param file The path to the file for the artifact.
+  * @param dependencies The dependencies of the artifact.
+  */
 final case class DepNode(coord: String, file: Option[String], dependencies: Set[String])
 
 final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode], version: String)
@@ -46,52 +49,56 @@ object ReportNode {
   val version = "0.1.0"
 }
 
-
 object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
-              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
+  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])(
+    children: T => Seq[T],
+    reconciledVersionStr: T => String,
+    requestedVersionStr: T => String,
+    getFile: T => Option[String]
+  ): String = {
 
-    val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
+    val rootDeps: ParSeq[DepNode] = roots
+      .par.map(r => {
 
-      /**
-        * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
-        */
-      def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
-        val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
-        for (elem <- unseenElems) {
-          val depElems = children(elem)
-          acc ++= depElems.map(reconciledVersionStr(_))
+        /**
+          * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
+          */
+        def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
+          val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
+          for (elem <- unseenElems) {
+            val depElems = children(elem)
+            acc ++= depElems.map(reconciledVersionStr(_))
 
-          if (depElems.nonEmpty) {
-            flattenDeps(children(elem), ancestors + elem, acc)
+            if (depElems.nonEmpty) {
+              flattenDeps(children(elem), ancestors + elem, acc)
+            }
           }
         }
-      }
 
-      val acc = scala.collection.mutable.Set[String]()
-      flattenDeps(Seq(r), Set(), acc)
-      DepNode(reconciledVersionStr(r), getFile(r), acc.toSet)
+        val acc = scala.collection.mutable.Set[String]()
+        flattenDeps(Seq(r), Set(), acc)
+        DepNode(reconciledVersionStr(r), getFile(r), acc.toSet)
 
-    })
+      })
     val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
     printer.pretty(report.asJson)
   }
 
 }
 
-
-final case class JsonElem(dep: Dependency,
-                          artifacts: Seq[(Dependency, Artifact)] = Seq(),
-                          jsonPrintRequirement: Option[JsonPrintRequirement],
-                          resolution: Resolution,
-                          colors: Boolean,
-                          printExclusions: Boolean,
-                          excluded: Boolean,
-                          overrideClassifiers: Set[Classifier]
-  ) {
+final case class JsonElem(
+  dep: Dependency,
+  artifacts: Seq[(Dependency, Artifact)] = Seq(),
+  jsonPrintRequirement: Option[JsonPrintRequirement],
+  resolution: Resolution,
+  colors: Boolean,
+  printExclusions: Boolean,
+  excluded: Boolean,
+  overrideClassifiers: Set[Classifier]
+) {
 
   val (red, yellow, reset) =
     if (colors)
@@ -102,8 +109,10 @@ final case class JsonElem(dep: Dependency,
   // This is used to printing json output
   // Option of the file path
   lazy val downloadedFile: Option[String] = {
-    jsonPrintRequirement.flatMap(req =>
-        req.depToArtifacts.getOrElse(dep, Seq())
+    jsonPrintRequirement.flatMap(
+      req =>
+        req
+          .depToArtifacts.getOrElse(dep, Seq())
           .filter(_._1.classifier == dep.attributes.classifier)
           .map(x => req.fileByArtifact.get(x._2.url))
           .filter(_.isDefined)
@@ -113,7 +122,8 @@ final case class JsonElem(dep: Dependency,
     )
   }
 
-  lazy val reconciledVersion: String = resolution.reconciledVersions
+  lazy val reconciledVersion: String = resolution
+    .reconciledVersions
     .getOrElse(dep.module, dep.version)
 
   // These are used to printing json output
@@ -134,8 +144,7 @@ final case class JsonElem(dep: Dependency,
 
           s"${dep.module}:${dep.version} " +
             s"$red(excluded, $versionMsg present anyway)$reset"
-      }
-    else {
+      } else {
       val versionStr =
         if (reconciledVersion == dep.version)
           dep.version
@@ -157,50 +166,71 @@ final case class JsonElem(dep: Dependency,
     else {
       val dep0 = dep.copy(version = reconciledVersion)
 
-      val dependencies = resolution.dependenciesOf(
-        dep0,
-        withReconciledVersions = false
-      ).sortBy { trDep =>
-        (trDep.module.organization, trDep.module.name, trDep.version)
-      }.map { d =>
-        if (overrideClassifiers.contains(dep0.attributes.classifier)) {
-          d.copy(attributes = d.attributes.copy(classifier = dep0.attributes.classifier))
-        } else {
-          d
-        }
-      }
-
-      def excluded = resolution
+      val dependencies = resolution
         .dependenciesOf(
-          dep0.copy(exclusions = Set.empty),
+          dep0,
           withReconciledVersions = false
-        )
-        .sortBy { trDep =>
+        ).sortBy { trDep =>
           (trDep.module.organization, trDep.module.name, trDep.version)
+        }.map { d =>
+          if (overrideClassifiers.contains(dep0.attributes.classifier)) {
+            d.copy(attributes = d.attributes.copy(classifier = dep0.attributes.classifier))
+          } else {
+            d
+          }
         }
-        .map(_.moduleVersion)
-        .filterNot(dependencies.map(_.moduleVersion).toSet).map {
-        case (mod, ver) =>
-          JsonElem(
-            Dependency(mod, ver, Configuration.empty, Set.empty, Attributes.empty, optional = false, transitive = false),
-            artifacts,
-            jsonPrintRequirement,
-            resolution,
-            colors,
-            printExclusions,
-            excluded = true,
-            overrideClassifiers = overrideClassifiers
-          )
-      }
 
-      dependencies.map(JsonElem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false, overrideClassifiers = overrideClassifiers)) ++
+      def excluded =
+        resolution
+          .dependenciesOf(
+            dep0.copy(exclusions = Set.empty),
+            withReconciledVersions = false
+          )
+          .sortBy { trDep =>
+            (trDep.module.organization, trDep.module.name, trDep.version)
+          }
+          .map(_.moduleVersion)
+          .filterNot(dependencies.map(_.moduleVersion).toSet).map {
+            case (mod, ver) =>
+              JsonElem(
+                Dependency(
+                  mod,
+                  ver,
+                  Configuration.empty,
+                  Set.empty,
+                  Attributes.empty,
+                  optional = false,
+                  transitive = false
+                ),
+                artifacts,
+                jsonPrintRequirement,
+                resolution,
+                colors,
+                printExclusions,
+                excluded = true,
+                overrideClassifiers = overrideClassifiers
+              )
+          }
+
+      dependencies.map(
+        JsonElem(
+          _,
+          artifacts,
+          jsonPrintRequirement,
+          resolution,
+          colors,
+          printExclusions,
+          excluded = false,
+          overrideClassifiers = overrideClassifiers
+        )
+      ) ++
         (if (printExclusions) excluded else Nil)
     }
 
-    /**
-      * Override the hashcode to explicitly exclude `children`, because children will result in recursive hash on
-      * children's children, causing performance issue. Hash collision should be rare, but when that happens, the
-      * default equality check should take of the recursive aspect of `children`.
-      */
-    override def hashCode(): Int = Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
+  /**
+    * Override the hashcode to explicitly exclude `children`, because children will result in recursive hash on
+    * children's children, causing performance issue. Hash collision should be rare, but when that happens, the
+    * default equality check should take of the recursive aspect of `children`.
+    */
+  override def hashCode(): Int = Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
 }

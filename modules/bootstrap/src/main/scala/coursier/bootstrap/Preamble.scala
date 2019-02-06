@@ -31,7 +31,7 @@ object Preamble {
 
     val javaCmd = Seq("java") ++
       javaOpts
-        // escaping possibly a bit loose :-|
+      // escaping possibly a bit loose :-|
         .map(s => "'" + s.replace("'", "\\'") + "'") ++
       Seq("\"$@\"")
 

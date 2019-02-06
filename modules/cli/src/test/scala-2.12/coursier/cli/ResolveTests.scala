@@ -22,9 +22,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
   val pool = Schedulable.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
   val ec = ExecutionContext.fromExecutorService(pool)
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll(): Unit =
     pool.shutdown()
-  }
 
   def paramsOrThrow(options: ResolveOptions): ResolveParams =
     ResolveParams(options) match {
@@ -33,7 +32,6 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
       case Validated.Valid(params0) =>
         params0
     }
-
 
   it should "print what depends on" in {
     val options = ResolveOptions(
@@ -45,7 +43,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve
+      .task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -84,7 +83,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     val params = paramsOrThrow(options)
 
     val ps = new PrintStream(stdout, true, "UTF-8")
-    Resolve.task(params, pool, ps, ps, args.all)
+    Resolve
+      .task(params, pool, ps, ps, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -119,7 +119,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve
+      .task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -261,7 +262,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    val (res, valid) = Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    val (res, valid) = Resolve
+      .task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     assert(!valid)

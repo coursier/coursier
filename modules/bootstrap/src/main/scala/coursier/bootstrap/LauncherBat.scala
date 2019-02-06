@@ -10,7 +10,8 @@ import scala.io.{Codec, Source}
 object LauncherBat {
 
   def isWindows: Boolean =
-    sys.props
+    sys
+      .props
       .get("os.name")
       .map(_.toLowerCase(Locale.ROOT))
       .exists(_.contains("windows"))

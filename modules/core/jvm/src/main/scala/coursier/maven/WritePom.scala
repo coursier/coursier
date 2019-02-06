@@ -6,7 +6,7 @@ object WritePom {
 
   def project(proj: Project, packaging: Option[String]) = {
 
-    def dependencyNode(config: Configuration, dep: Dependency) = {
+    def dependencyNode(config: Configuration, dep: Dependency) =
       <dependency>
         <groupId>{dep.module.organization}</groupId>
         <artifactId>{dep.module.name}</artifactId>
@@ -15,24 +15,23 @@ object WritePom {
           Nil
         else
           Seq(<version>{dep.version}</version>)
-        }
+      }
         {
         if (config.isEmpty)
           Nil
         else
           Seq(<scope>{config.value}</scope>)
-        }
+      }
       </dependency>
-    }
-
+    
     <project>
       // parent
       <groupId>{proj.module.organization}</groupId>
       <artifactId>{proj.module.name}</artifactId>
       {
-      packaging
-        .map(p => <packaging>{p}</packaging>)
-        .toSeq
+        packaging
+          .map(p => <packaging>{p}</packaging>)
+          .toSeq
       }
       <description>{proj.info.description}</description>
       <url>{proj.info.homePage}</url>
@@ -46,27 +45,27 @@ object WritePom {
       // SCM
       // developers
       {
-      if (proj.dependencies.isEmpty)
-        Nil
-      else
-        <dependencies>{
-          proj.dependencies.map {
-            case (config, dep) =>
-              dependencyNode(config, dep)
-          }
+        if (proj.dependencies.isEmpty)
+          Nil
+        else
+          <dependencies>{
+            proj.dependencies.map {
+              case (config, dep) =>
+                dependencyNode(config, dep)
+            }
           }</dependencies>
       }
       {
-      if (proj.dependencyManagement.isEmpty)
-        Nil
-      else
-        <dependencyManagement>
+        if (proj.dependencyManagement.isEmpty)
+          Nil
+        else
+          <dependencyManagement>
           <dependencies>{
             proj.dependencyManagement.map {
               case (config, dep) =>
                 dependencyNode(config, dep)
             }
-            }</dependencies>
+          }</dependencies>
         </dependencyManagement>
       }
       // properties

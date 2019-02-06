@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.bootstrap.{Assembly, LauncherBat}
 import coursier.cli.options.shared.SharedLoaderOptions
 
+// format: off
 final case class BootstrapSpecificOptions(
   @Short("M")
   @Short("main")
@@ -56,6 +57,7 @@ final case class BootstrapSpecificOptions(
   @Recurse
     common: CommonOptions = CommonOptions()
 ) {
+  // format: on
 
   val rules = {
 

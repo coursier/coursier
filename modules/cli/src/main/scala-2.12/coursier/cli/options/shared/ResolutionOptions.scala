@@ -7,6 +7,7 @@ import coursier.core._
 import coursier.params.ResolutionParams
 import coursier.util.Parse
 
+// format: off
 final case class ResolutionOptions(
 
   @Help("Keep optional dependencies (Maven)")
@@ -34,6 +35,7 @@ final case class ResolutionOptions(
     typelevel: Boolean = false
 
 ) {
+  // format: on
 
   def params(scalaVersion: String): ValidatedNel[String, ResolutionParams] = {
 
@@ -75,16 +77,15 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
-    (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
-      (maxIterations, forceVersion, forcedProperties) =>
-        ResolutionParams(
-          keepOptional,
-          maxIterations,
-          forceVersion,
-          forcedProperties,
-          profiles,
-          typelevel
-        )
+    (maxIterationsV, forceVersionV, forcedPropertiesV).mapN { (maxIterations, forceVersion, forcedProperties) =>
+      ResolutionParams(
+        keepOptional,
+        maxIterations,
+        forceVersion,
+        forcedProperties,
+        profiles,
+        typelevel
+      )
     }
   }
 }

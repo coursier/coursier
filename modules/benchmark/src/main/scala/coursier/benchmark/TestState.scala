@@ -2,7 +2,7 @@ package coursier.benchmark
 
 import coursier.cache.CacheDefaults
 import coursier.core.{Configuration, ResolutionProcess}
-import coursier.{Cache, Resolve, dependencyString, moduleString}
+import coursier.{dependencyString, moduleString, Cache, Resolve}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
 import coursier.util.{Repositories, Task}

@@ -30,7 +30,8 @@ object SharedLoaderParams {
       Some(l).filter(_.nonEmpty)
     }
 
-    val depsV = options.shared
+    val depsV = options
+      .shared
       .traverse { d =>
         d.split(":", 2) match {
           case Array(target, dep) =>

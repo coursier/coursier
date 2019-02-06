@@ -3,7 +3,7 @@ package coursier.interop
 import coursier.moduleString
 import coursier.interop.scalaz.{coursierGatherFromScalaz => _, _}
 import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
+import coursier.test.{compatibility, TestRunner}
 import _root_.scalaz.concurrent.{Task => ScalazTask}
 import coursier.test.util.ToFuture
 import utest._

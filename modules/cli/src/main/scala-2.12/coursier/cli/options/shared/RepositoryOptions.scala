@@ -2,6 +2,7 @@ package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 
+// format: off
 final case class RepositoryOptions(
 
   @Help("Repository - for multiple repositories, separate with comma and/or add this option multiple times (e.g. -r central,ivy2local -r sonatype:snapshots, or equivalently -r central,ivy2local,sonatype:snapshots)")
@@ -19,6 +20,7 @@ final case class RepositoryOptions(
     dropInfoAttr: Boolean = false
 
 )
+// format: on
 
 object RepositoryOptions {
   implicit val parser = Parser[RepositoryOptions]

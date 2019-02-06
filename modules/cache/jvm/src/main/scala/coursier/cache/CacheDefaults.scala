@@ -17,7 +17,8 @@ object CacheDefaults {
   private def defaultConcurrentDownloadCount = 6
 
   lazy val concurrentDownloadCount: Int =
-    sys.props
+    sys
+      .props
       .get("coursier.parallel-download-count")
       .flatMap(s => Try(s.toInt).toOption)
       .getOrElse(
@@ -45,7 +46,8 @@ object CacheDefaults {
   private def defaultSslRetryCount = 3
 
   lazy val sslRetryCount =
-    sys.props
+    sys
+      .props
       .get("coursier.sslexception-retry")
       .flatMap(s => scala.util.Try(s.toInt).toOption)
       .filter(_ >= 0)
@@ -66,22 +68,25 @@ object CacheDefaults {
 
       CacheParse.repositories(l).either match {
         case Left(errs) =>
-          System.err.println(
-            s"Ignoring $origin, error parsing repositories from it:\n" +
-              errs.map("  " + _ + "\n").mkString
-          )
+          System
+            .err.println(
+              s"Ignoring $origin, error parsing repositories from it:\n" +
+                errs.map("  " + _ + "\n").mkString
+            )
           None
         case Right(repos) =>
           Some(repos)
       }
     }
 
-    val fromEnvOpt = sys.env
+    val fromEnvOpt = sys
+      .env
       .get("COURSIER_REPOSITORIES")
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "environment variable COURSIER_REPOSITORIES"))
 
-    val fromPropsOpt = sys.props
+    val fromPropsOpt = sys
+      .props
       .get("coursier.repositories")
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "Java property coursier.repositories"))

@@ -54,7 +54,8 @@ object IvyXml {
 
   // FIXME Errors ignored as above - warnings should be reported at least for anything suspicious
   private def dependencies(node: Node): Seq[(Configuration, Dependency)] =
-    node.children
+    node
+      .children
       .filter(_.label == "dependency")
       .flatMap { node =>
         // artifact and include sub-nodes are ignored here
@@ -65,7 +66,8 @@ object IvyXml {
           .flatMap { node0 =>
             val org = Organization(node0.attribute("org").right.getOrElse("*"))
             val name = ModuleName(
-              node0.attribute("module").right.toOption
+              node0
+                .attribute("module").right.toOption
                 .orElse(node0.attribute("name").right.toOption)
                 .getOrElse("*")
             )
@@ -117,20 +119,24 @@ object IvyXml {
       }
 
   private def publications(node: Node): Map[Configuration, Seq[Publication]] =
-    node.children
+    node
+      .children
       .filter(_.label == "artifact")
       .flatMap { node =>
         val name = node.attribute("name").right.getOrElse("")
-        val type0 = node.attribute("type")
+        val type0 = node
+          .attribute("type")
           .right.map(Type(_))
           .right.getOrElse(Type.jar)
-        val ext = node.attribute("ext")
+        val ext = node
+          .attribute("ext")
           .right.map(Extension(_))
           .right.getOrElse(type0.asExtension)
         val confs = node
           .attribute("conf")
           .fold(_ => Seq(Configuration.all), _.split(',').toSeq.map(Configuration(_)))
-        val classifier = node.attribute("classifier")
+        val classifier = node
+          .attribute("classifier")
           .right.map(Classifier(_))
           .right.getOrElse(Classifier.empty)
         confs.map(_ -> Publication(name, type0, ext, classifier))
@@ -140,7 +146,8 @@ object IvyXml {
 
   def project(node: Node): Either[String, Project] =
     for {
-      infoNode <- node.children
+      infoNode <- node
+        .children
         .find(_.label == "info")
         .toRight("Info not found")
         .right
@@ -150,29 +157,34 @@ object IvyXml {
 
       val (module, version) = modVer
 
-      val dependenciesNodeOpt = node.children
+      val dependenciesNodeOpt = node
+        .children
         .find(_.label == "dependencies")
 
       val dependencies0 = dependenciesNodeOpt.map(dependencies).getOrElse(Nil)
 
-      val configurationsNodeOpt = node.children
+      val configurationsNodeOpt = node
+        .children
         .find(_.label == "configurations")
 
       val configurationsOpt = configurationsNodeOpt.map(configurations)
 
       val configurations0 = configurationsOpt.getOrElse(Seq(Configuration.default -> Seq.empty[Configuration]))
 
-      val publicationsNodeOpt = node.children
+      val publicationsNodeOpt = node
+        .children
         .find(_.label == "publications")
 
       val publicationsOpt = publicationsNodeOpt.map(publications)
 
-      val description = infoNode.children
+      val description = infoNode
+        .children
         .find(_.label == "description")
         .map(_.textContent.trim)
         .getOrElse("")
 
-      val licenses = infoNode.children
+      val licenses = infoNode
+        .children
         .filter(_.label == "license")
         .flatMap { n =>
           n.attribute("name").right.toSeq.map { name =>
@@ -180,7 +192,8 @@ object IvyXml {
           }
         }
 
-      val publicationDate = infoNode.attribute("publication")
+      val publicationDate = infoNode
+        .attribute("publication")
         .right
         .toOption
         .flatMap(parseDateTime)
@@ -206,8 +219,9 @@ object IvyXml {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)
           val inAllConfs = publicationsOpt.flatMap(_.get(Configuration.all)).getOrElse(Nil)
-          configurations0.flatMap { case (conf, _) =>
-            (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf -> _)
+          configurations0.flatMap {
+            case (conf, _) =>
+              (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf -> _)
           }
         },
         Info(

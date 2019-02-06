@@ -57,7 +57,8 @@ object DependencyParams {
         // meh, I/O
 
         val source = Source.fromFile(options.localExcludeFile) // default codec...
-        val lines = try source.mkString.split("\n") finally source.close()
+        val lines = try source.mkString.split("\n")
+        finally source.close()
 
         lines
           .toList
@@ -70,7 +71,9 @@ object DependencyParams {
               if (child_org_name.length != 2)
                 Validated.invalidNel(s"Failed to parse $child_org_name")
               else
-                Validated.validNel((parent_and_child(0), (Organization(child_org_name(0)), ModuleName(child_org_name(1)))))
+                Validated.validNel(
+                  (parent_and_child(0), (Organization(child_org_name(0)), ModuleName(child_org_name(1))))
+                )
             }
           }
           .map { list =>
@@ -84,15 +87,13 @@ object DependencyParams {
 
     val scalaVersion = options.scalaVersion // TODO Validate that one a bit?
 
-    val moduleReqV = (excludeV, perModuleExcludeV).mapN {
-      (exclude, perModuleExclude) =>
-        ModuleRequirements(exclude, perModuleExclude, options.defaultConfiguration0)
+    val moduleReqV = (excludeV, perModuleExcludeV).mapN { (exclude, perModuleExclude) =>
+      ModuleRequirements(exclude, perModuleExclude, options.defaultConfiguration0)
     }
 
     val intransitiveDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-
         val (intransitiveModVerCfgErrors, intransitiveDepsWithExtraParams) =
           Parse.moduleVersionConfigs(options.intransitive, moduleReq, transitive = false, options.scalaVersion)
 
@@ -100,7 +101,7 @@ object DependencyParams {
           Left(
             NonEmptyList.one(
               s"Cannot parse intransitive dependencies:\n" +
-                intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
+                intransitiveModVerCfgErrors.map("  " + _).mkString("\n")
             )
           )
         else
@@ -111,7 +112,6 @@ object DependencyParams {
     val sbtPluginDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-
         val (sbtPluginModVerCfgErrors, sbtPluginDepsWithExtraParams) =
           Parse.moduleVersionConfigs(options.sbtPlugin, moduleReq, transitive = true, options.scalaVersion)
 
@@ -119,7 +119,7 @@ object DependencyParams {
           Left(
             NonEmptyList.one(
               s"Cannot parse sbt plugin dependencies:\n" +
-                sbtPluginModVerCfgErrors.map("  "+_).mkString("\n")
+                sbtPluginModVerCfgErrors.map("  " + _).mkString("\n")
             )
           )
         else if (sbtPluginDepsWithExtraParams.isEmpty)
@@ -140,9 +140,11 @@ object DependencyParams {
           val l = sbtPluginDepsWithExtraParams.map {
             case (dep, params) =>
               val dep0 = dep.copy(
-                module = dep.module.copy(
-                  attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
-                )
+                module = dep
+                  .module.copy(
+                    attributes = defaults ++ dep
+                      .module.attributes // dependency specific attributes override the default values
+                  )
               )
               (dep0, params)
           }

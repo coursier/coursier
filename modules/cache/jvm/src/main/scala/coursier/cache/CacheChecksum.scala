@@ -32,7 +32,8 @@ object CacheChecksum {
     }
 
   def parseChecksum(content: String): Option[BigInteger] = {
-    val lines = Predef.augmentString(content)
+    val lines = Predef
+      .augmentString(content)
       .lines
       .toVector
 
@@ -44,11 +45,12 @@ object CacheChecksum {
       Some(new BigInteger(content))
     else {
       val s = new String(content, StandardCharsets.UTF_8)
-      val lines = Predef.augmentString(s)
+      val lines = Predef
+        .augmentString(s)
         .lines
         .toVector
 
-      parseChecksumLine(lines) orElse parseChecksumAlternative(lines)
+      parseChecksumLine(lines).orElse(parseChecksumAlternative(lines))
     }
 
 }

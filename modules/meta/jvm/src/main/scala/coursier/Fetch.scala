@@ -55,8 +55,9 @@ object Fetch {
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop,
     retryCount: Int = CacheDefaults.defaultRetryCount
-  )(implicit
-     S: Schedulable[F]
+  )(
+    implicit
+    S: Schedulable[F]
   ): F[Seq[(Artifact, File)]] = {
 
     val tasks = artifacts.map { artifact =>
@@ -75,7 +76,6 @@ object Fetch {
     }
 
     S.bind(task) { results =>
-
       val ignoredErrors = new mutable.ListBuffer[(Artifact, FileError)]
       val errors = new mutable.ListBuffer[(Artifact, FileError)]
       val artifactToFile = new mutable.ListBuffer[(Artifact, File)]
@@ -105,8 +105,9 @@ object Fetch {
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop,
     retryCount: Int = CacheDefaults.defaultRetryCount
-  )(implicit
-     S: Schedulable[F]
+  )(
+    implicit
+    S: Schedulable[F]
   ): F[Seq[File]] = {
 
     val a = artifacts(
@@ -126,9 +127,10 @@ object Fetch {
     S.map(r)(_.map(_._2))
   }
 
-  final class DownloadingArtifactException(val errors: Seq[(Artifact, FileError)]) extends Exception(
-    "Error fetching artifacts:\n" +
-      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
-  )
+  final class DownloadingArtifactException(val errors: Seq[(Artifact, FileError)])
+      extends Exception(
+        "Error fetching artifacts:\n" +
+          errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
+      )
 
 }

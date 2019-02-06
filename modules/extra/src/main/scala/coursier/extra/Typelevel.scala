@@ -1,6 +1,6 @@
 package coursier.extra
 
-import coursier.{Dependency, Module, moduleNameString, organizationString}
+import coursier.{moduleNameString, organizationString, Dependency, Module}
 
 object Typelevel {
 

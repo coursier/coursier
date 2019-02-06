@@ -12,7 +12,8 @@ import coursier.cli.options.LauncherOptions
 import coursier.cli.resolve.Resolve
 import shapeless._
 
-object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
+object Coursier
+    extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
   override val appName = "Coursier"
   override val progName = "coursier"
@@ -21,7 +22,8 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
   private def zshCompletions(): String = {
     var is: InputStream = null
     val b = try {
-      is = Thread.currentThread()
+      is = Thread
+        .currentThread()
         .getContextClassLoader
         .getResource("completions/zsh")
         .openStream()

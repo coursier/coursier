@@ -55,12 +55,10 @@ object CacheLocks {
               out = null
               lockFile.delete()
             }
-        }
-        catch {
+        } catch {
           case _: OverlappingFileLockException =>
             ifLocked
-        }
-        finally if (lock != null) lock.release()
+        } finally if (lock != null) lock.release()
       }
 
       resOpt match {
@@ -88,8 +86,7 @@ object CacheLocks {
       try Some(f)
       finally {
         urlLocks.remove(url)
-      }
-    else
+      } else
       None
   }
 

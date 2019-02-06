@@ -3,6 +3,7 @@ package coursier.cli.options
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.core.Classifier
 
+// format: off
 final case class CommonOptions(
 
   @Help("Print the duration of each iteration of the resolution")
@@ -37,6 +38,7 @@ final case class CommonOptions(
     outputOptions: shared.OutputOptions = shared.OutputOptions()
 
 ) {
+  // format: on
   def verbosityLevel = outputOptions.verbosityLevel
 }
 

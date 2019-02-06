@@ -50,7 +50,6 @@ object ModuleTree {
       }
   }
 
-
   private final case class Node(
     module: Module,
     reconciledVersion: String,

@@ -31,7 +31,8 @@ class ZipTests extends FlatSpec {
     val result = baos.toByteArray
 
     val zos = new ZipOutputStream(new ByteArrayOutputStream)
-    val entryNames = Zip.zipEntries(new ZipInputStream(new ByteArrayInputStream(result)))
+    val entryNames = Zip
+      .zipEntries(new ZipInputStream(new ByteArrayInputStream(result)))
       .map {
         case (ent, content) =>
           println(ent.getCompressedSize)

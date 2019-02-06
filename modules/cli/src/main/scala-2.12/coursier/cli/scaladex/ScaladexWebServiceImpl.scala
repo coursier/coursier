@@ -3,11 +3,16 @@ package coursier.cli.scaladex
 import argonaut.Argonaut._
 import coursier.util.{EitherT, Gather}
 
-final case class ScaladexWebServiceImpl[F[_]](fetch: String => EitherT[F, String, String], G: Gather[F]) extends ScaladexWebService[F] {
+final case class ScaladexWebServiceImpl[F[_]](fetch: String => EitherT[F, String, String], G: Gather[F])
+    extends ScaladexWebService[F] {
 
   // quick & dirty API for querying scaladex
 
-  def search(name: String, target: String, scalaVersion: String): EitherT[F, String, Seq[ScaladexWebService.SearchResult]] = {
+  def search(
+    name: String,
+    target: String,
+    scalaVersion: String
+  ): EitherT[F, String, Seq[ScaladexWebService.SearchResult]] = {
 
     val s = fetch(
       // FIXME Escaping
@@ -24,7 +29,11 @@ final case class ScaladexWebServiceImpl[F[_]](fetch: String => EitherT[F, String
     * @param artifactName: Scaladex artifact name
     * @return
     */
-  def artifactInfos(organization: String, repository: String, artifactName: String): EitherT[F, String, ScaladexWebService.ArtifactInfos] = {
+  def artifactInfos(
+    organization: String,
+    repository: String,
+    artifactName: String
+  ): EitherT[F, String, ScaladexWebService.ArtifactInfos] = {
 
     val s = fetch(
       // FIXME Escaping
@@ -53,6 +62,5 @@ final case class ScaladexWebServiceImpl[F[_]](fetch: String => EitherT[F, String
 
     s.flatMap(s => EitherT.fromEither(s.decodeEither[Result].map(_.artifacts)))
   }
-
 
 }

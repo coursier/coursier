@@ -9,7 +9,8 @@ import coursier.cli.resolve.Resolve
 object CoursierCommand {
 
   val parser =
-    CommandParser.nil
+    CommandParser
+      .nil
       .add(Bootstrap)
       .add(Fetch)
       .add(Launch)
@@ -18,7 +19,8 @@ object CoursierCommand {
       .reverse
 
   val help =
-    CommandsHelp.nil
+    CommandsHelp
+      .nil
       .add(Bootstrap)
       .add(Fetch)
       .add(Launch)

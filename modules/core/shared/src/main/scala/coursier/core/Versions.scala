@@ -71,13 +71,14 @@ final case class VersionInterval(
       case itv => VersionConstraint.interval(itv)
     }
 
-  def repr: String = Seq(
-    if (fromIncluded) "[" else "(",
-    from.map(_.repr).mkString,
-    ",",
-    to.map(_.repr).mkString,
-    if (toIncluded) "]" else ")"
-  ).mkString
+  def repr: String =
+    Seq(
+      if (fromIncluded) "[" else "(",
+      from.map(_.repr).mkString,
+      ",",
+      to.map(_.repr).mkString,
+      if (toIncluded) "]" else ")"
+    ).mkString
 }
 
 object VersionInterval {

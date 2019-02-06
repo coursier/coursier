@@ -12,40 +12,41 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
 
   def substituteProperties(properties: Map[String, String]): Either[String, Pattern] = {
 
-    val validation = chunks.validationNelTraverse[String, Seq[Pattern.Chunk]] {
-      case ChunkOrProperty.Prop(name, alternativesOpt) =>
-        properties.get(name) match {
-          case Some(value) =>
-            ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
-          case None =>
-            alternativesOpt match {
-              case Some(alt) =>
-                ValidationNel.fromEither(
-                  PropertiesPattern(alt)
-                    .substituteProperties(properties)
-                    .right
-                    .map(_.chunks.toVector)
-                )
-              case None =>
-                ValidationNel.failure(name)
-            }
-        }
+    val validation = chunks
+      .validationNelTraverse[String, Seq[Pattern.Chunk]] {
+        case ChunkOrProperty.Prop(name, alternativesOpt) =>
+          properties.get(name) match {
+            case Some(value) =>
+              ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
+            case None =>
+              alternativesOpt match {
+                case Some(alt) =>
+                  ValidationNel.fromEither(
+                    PropertiesPattern(alt)
+                      .substituteProperties(properties)
+                      .right
+                      .map(_.chunks.toVector)
+                  )
+                case None =>
+                  ValidationNel.failure(name)
+              }
+          }
 
-      case ChunkOrProperty.Opt(l @ _*) =>
-        ValidationNel.fromEither(
-          PropertiesPattern(l)
-            .substituteProperties(properties)
-            .right
-            .map(l => Seq(Pattern.Chunk.Opt(l.chunks: _*)))
-        )
+        case ChunkOrProperty.Opt(l @ _*) =>
+          ValidationNel.fromEither(
+            PropertiesPattern(l)
+              .substituteProperties(properties)
+              .right
+              .map(l => Seq(Pattern.Chunk.Opt(l.chunks: _*)))
+          )
 
-      case ChunkOrProperty.Var(name) =>
-        ValidationNel.success(Seq(Pattern.Chunk.Var(name)))
+        case ChunkOrProperty.Var(name) =>
+          ValidationNel.success(Seq(Pattern.Chunk.Var(name)))
 
-      case ChunkOrProperty.Const(value) =>
-        ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
+        case ChunkOrProperty.Const(value) =>
+          ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
 
-    }.map(c => Pattern(c.flatten))
+      }.map(c => Pattern(c.flatten))
 
     validation.either.left.map { notFoundProps =>
       s"Property(ies) not found: ${notFoundProps.mkString(", ")}"
@@ -65,23 +66,24 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
   def substituteVariables(variables: Map[String, String]): Either[String, String] = {
 
     def helper(chunks: Seq[Chunk]): ValidationNel[String, Seq[Chunk.Const]] =
-      chunks.validationNelTraverse[String, Seq[Chunk.Const]] {
-        case Chunk.Var(name) =>
-          variables.get(name) match {
-            case Some(value) =>
-              ValidationNel.success(Seq(Chunk.Const(value)))
-            case None =>
-              ValidationNel.failure(name)
-          }
-        case Chunk.Opt(l @ _*) =>
-          val res = helper(l)
-          if (res.isSuccess)
-            res
-          else
-            ValidationNel.success(Seq())
-        case c: Chunk.Const =>
-          ValidationNel.success(Seq(c))
-      }.map(_.flatten)
+      chunks
+        .validationNelTraverse[String, Seq[Chunk.Const]] {
+          case Chunk.Var(name) =>
+            variables.get(name) match {
+              case Some(value) =>
+                ValidationNel.success(Seq(Chunk.Const(value)))
+              case None =>
+                ValidationNel.failure(name)
+            }
+          case Chunk.Opt(l @ _*) =>
+            val res = helper(l)
+            if (res.isSuccess)
+              res
+            else
+              ValidationNel.success(Seq())
+          case c: Chunk.Const =>
+            ValidationNel.success(Seq(c))
+        }.map(_.flatten)
 
     val validation = helper(chunks)
 
@@ -94,7 +96,6 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
         Right(b.result())
     }
   }
-
 
   def substitute(varName: String, replacement: Seq[Chunk]): Pattern =
     Pattern(
@@ -118,7 +119,7 @@ object PropertiesPattern {
   object ChunkOrProperty {
     final case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]]) extends ChunkOrProperty {
       def string: String =
-      s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
+        s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
     final case class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
@@ -162,7 +163,6 @@ object PropertiesPattern {
     chunks
   }
 
-
   def parse(pattern: String): Either[String, PropertiesPattern] =
     fastparse.parse(pattern, parser(_)) match {
       case f: Parsed.Failure =>
@@ -193,20 +193,27 @@ object Pattern {
     implicit def fromString(s: String): Chunk = Const(s)
   }
 
-  import Chunk.{ Var, Opt }
+  import Chunk.{Opt, Var}
 
   // Corresponds to
   //   [organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
 
   val default = Pattern(
     Seq(
-      Var("organisation"), "/",
-      Var("module"), "/",
+      Var("organisation"),
+      "/",
+      Var("module"),
+      "/",
       Opt("scala_", Var("scalaVersion"), "/"),
       Opt("sbt_", Var("sbtVersion"), "/"),
-      Var("revision"), "/",
-      Var("type"), "s/",
-      Var("artifact"), Opt("-", Var("classifier")), ".", Var("ext")
+      Var("revision"),
+      "/",
+      Var("type"),
+      "s/",
+      Var("artifact"),
+      Opt("-", Var("classifier")),
+      ".",
+      Var("ext")
     )
   )
 

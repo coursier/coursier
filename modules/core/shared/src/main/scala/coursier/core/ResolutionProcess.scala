@@ -5,12 +5,12 @@ import coursier.util.{EitherT, Gather, Monad}
 
 import scala.annotation.tailrec
 
-
 sealed abstract class ResolutionProcess {
   def run[F[_]](
     fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = ResolutionProcess.defaultMaxIterations
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ): F[Resolution] =
     if (maxIterations == 0) F.point(current)
@@ -22,8 +22,8 @@ sealed abstract class ResolutionProcess {
         case Done(res) =>
           F.point(res)
         case missing0 @ Missing(missing, _, _) =>
-          F.bind(ResolutionProcess.fetchAll[F](missing, fetch))(result =>
-            missing0.next0(result).run[F](fetch, maxIterations0)
+          F.bind(ResolutionProcess.fetchAll[F](missing, fetch))(
+            result => missing0.next0(result).run[F](fetch, maxIterations0)
           )
         case cont @ Continue(_, _) =>
           cont
@@ -36,7 +36,8 @@ sealed abstract class ResolutionProcess {
   final def next[F[_]](
     fetch: ResolutionProcess.Fetch[F],
     fastForward: Boolean = true
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ): F[ResolutionProcess] =
     this match {
@@ -152,10 +153,12 @@ final case class Done(resolution: Resolution) extends ResolutionProcess {
 
 object ResolutionProcess {
 
-  type MD = Seq[(
-    (Module, String),
-    Either[Seq[String], (Artifact.Source, Project)]
-  )]
+  type MD = Seq[
+    (
+      (Module, String),
+      Either[Seq[String], (Artifact.Source, Project)]
+    )
+  ]
 
   type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
 
@@ -176,7 +179,8 @@ object ResolutionProcess {
     version: String,
     fetch: Repository.Fetch[F],
     fetchs: Repository.Fetch[F]*
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
@@ -189,7 +193,7 @@ object ResolutionProcess {
           F.bind(acc) {
             case Left(errors) =>
               F.map(eitherProjTask)(_.left.map(error => error +: errors))
-            case res@Right(_) =>
+            case res @ Right(_) =>
               F.point(res)
           }
       }
@@ -198,14 +202,15 @@ object ResolutionProcess {
       EitherT(task)
     }
 
-    (get(fetch) /: fetchs)(_ orElse get(_))
+    (get(fetch) /: fetchs)(_.orElse(get(_)))
   }
 
   def fetch[F[_]](
     repositories: Seq[core.Repository],
     fetch: Repository.Fetch[F],
     fetchs: Repository.Fetch[F]*
-  )(implicit
+  )(
+    implicit
     F: Gather[F]
   ): Fetch[F] =
     modVers =>
@@ -217,8 +222,6 @@ object ResolutionProcess {
           }
         }
       )(_.toSeq)
-
-
 
   def defaultMaxIterations: Int = 100
 
@@ -270,4 +273,3 @@ object ResolutionProcess {
   }
 
 }
-

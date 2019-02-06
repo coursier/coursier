@@ -35,7 +35,6 @@ object SparkOutputHelper {
     t
   }
 
-
   def handleOutput(yarnAppFileOpt: Option[File], maxIdleTimeOpt: Option[Int]): Unit = {
 
     var handlers = Seq.empty[String => Unit]
@@ -76,9 +75,8 @@ object SparkOutputHelper {
 
       @volatile var lastMessageTs = -1L
 
-      def updateLastMessageTs() = {
+      def updateLastMessageTs() =
         lastMessageTs = System.currentTimeMillis()
-      }
 
       val checkThread = new Thread {
         override def run() =
@@ -111,7 +109,7 @@ object SparkOutputHelper {
     }
 
     def createThread(name: String, replaces: PrintStream, install: PrintStream => Unit): Thread = {
-      val in  = new PipedInputStream
+      val in = new PipedInputStream
       val out = new PipedOutputStream(in)
       install(new PrintStream(out))
       outputInspectThread(name, in, replaces, handlers)

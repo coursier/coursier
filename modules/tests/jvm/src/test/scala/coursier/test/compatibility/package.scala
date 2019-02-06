@@ -36,11 +36,12 @@ package object compatibility {
   private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Schedulable]: Repository.Fetch[F] = { artifact =>
-
     if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
-      EitherT(Platform.readFully(
-        CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
-      ))
+      EitherT(
+        Platform.readFully(
+          CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
+        )
+      )
     else {
 
       assert(artifact.authentication.isEmpty)

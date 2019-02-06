@@ -33,28 +33,28 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val tmpDir = new File(options.options.target)
 
     try {
-      coursier.extra.Native.create(
-        mainClass,
-        files,
-        new File(options.options.output),
-        tmpDir,
-        log,
-        verbosity = options.options.common.verbosityLevel
-      )
+      coursier
+        .extra.Native.create(
+          mainClass,
+          files,
+          new File(options.options.output),
+          tmpDir,
+          log,
+          verbosity = options.options.common.verbosityLevel
+        )
     } finally {
       if (!options.options.keepTarget)
         coursier.extra.Native.deleteRecursive(tmpDir)
     }
   }
 
-  def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
+  def run(options: BootstrapOptions, args: RemainingArgs): Unit =
     try bootstrap(options, args)
     catch {
       case e: BootstrapException =>
         Console.err.println(e.message)
         sys.exit(1)
     }
-  }
 
   def bootstrap(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
@@ -96,18 +96,19 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         properties0.map { case (k, v) => s"-D$k=$v" }
 
       val (urls, files) =
-        helper.fetchMap(
-          sources = options.artifactOptions.sources,
-          javadoc = options.artifactOptions.javadoc,
-          default = options.artifactOptions.default0,
-          classifier0 = options.artifactOptions.classifier0,
-          artifactTypes = options.artifactOptions.artifactTypes
-        ).toList.foldLeft((List.empty[String], List.empty[File])){
-          case ((urls, files), (url, file)) =>
-            if (options.options.assembly || options.options.standalone) (urls, file :: files)
-            else if (options.options.embedFiles && url.startsWith("file:/")) (urls, file :: files)
-            else (url :: urls, files)
-        }
+        helper
+          .fetchMap(
+            sources = options.artifactOptions.sources,
+            javadoc = options.artifactOptions.javadoc,
+            default = options.artifactOptions.default0,
+            classifier0 = options.artifactOptions.classifier0,
+            artifactTypes = options.artifactOptions.artifactTypes
+          ).toList.foldLeft((List.empty[String], List.empty[File])) {
+            case ((urls, files), (url, file)) =>
+              if (options.options.assembly || options.options.standalone) (urls, file :: files)
+              else if (options.options.embedFiles && url.startsWith("file:/")) (urls, file :: files)
+              else (url :: urls, files)
+          }
 
       val bat = new File(output0.getParentFile, s"${output0.getName}.bat")
 
@@ -125,36 +126,37 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         )
       else {
 
-        val isolatedDeps = options.options.isolated.isolatedDepsOrExit(options.options.common.dependencyOptions.scalaVersion)
+        val isolatedDeps =
+          options.options.isolated.isolatedDepsOrExit(options.options.common.dependencyOptions.scalaVersion)
 
         val (done, isolatedArtifactFiles) =
-          options.options.isolated.targetsOrExit.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
-            case ((done, acc), target) =>
+          options
+            .options.isolated.targetsOrExit.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
+              case ((done, acc), target) =>
+                // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
 
-              // TODO Add non regression test checking that optional artifacts indeed land in the isolated loader URLs
+                val m = helper.fetchMap(
+                  sources = options.artifactOptions.sources,
+                  javadoc = options.artifactOptions.javadoc,
+                  default = options.artifactOptions.default0,
+                  classifier0 = options.artifactOptions.classifier0,
+                  artifactTypes = options.artifactOptions.artifactTypes,
+                  subset = isolatedDeps.getOrElse(target, Seq.empty)
+                )
 
-              val m = helper.fetchMap(
-                sources = options.artifactOptions.sources,
-                javadoc = options.artifactOptions.javadoc,
-                default = options.artifactOptions.default0,
-                classifier0 = options.artifactOptions.classifier0,
-                artifactTypes = options.artifactOptions.artifactTypes,
-                subset = isolatedDeps.getOrElse(target, Seq.empty)
-              )
+                val m0 = m.filterKeys(url => !done(url))
+                val done0 = done ++ m0.keys
 
-              val m0 = m.filterKeys(url => !done(url))
-              val done0 = done ++ m0.keys
+                val (subUrls, subFiles) =
+                  if (options.options.standalone)
+                    (Nil, m0.values.toSeq)
+                  else
+                    (m0.keys.toSeq, Nil)
 
-              val (subUrls, subFiles) =
-                if (options.options.standalone)
-                  (Nil, m0.values.toSeq)
-                else
-                  (m0.keys.toSeq, Nil)
+                val updatedAcc = acc + (target -> (subUrls, subFiles))
 
-              val updatedAcc = acc + (target -> (subUrls, subFiles))
-
-              (done0, updatedAcc)
-          }
+                (done0, updatedAcc)
+            }
 
         val parents = options.options.isolated.targetsOrExit.toSeq.map { t =>
           val e = isolatedArtifactFiles.get(t)
@@ -189,15 +191,16 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           ClassLoaderContent(urls0 ++ files0)
         }
 
-        coursier.bootstrap.Bootstrap.create(
-          parents :+ main,
-          mainClass,
-          output0.toPath,
-          javaOpts,
-          deterministic = options.options.deterministic,
-          withPreamble = options.options.preamble,
-          proguarded = options.options.proguarded
-        )
+        coursier
+          .bootstrap.Bootstrap.create(
+            parents :+ main,
+            mainClass,
+            output0.toPath,
+            javaOpts,
+            deterministic = options.options.deterministic,
+            withPreamble = options.options.preamble,
+            proguarded = options.options.proguarded
+          )
       }
 
       if (options.options.generateBat)

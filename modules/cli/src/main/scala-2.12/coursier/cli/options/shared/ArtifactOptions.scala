@@ -3,6 +3,7 @@ package coursier.cli.options.shared
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.core.{Classifier, Resolution, Type}
 
+// format: off
 final case class ArtifactOptions(
 
   @Help("Classifiers that should be fetched")
@@ -28,13 +29,14 @@ final case class ArtifactOptions(
     forceFetch: Boolean = false
 
 ) {
+// format: on
 
   lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
 
   def default0: Boolean =
     default.getOrElse {
       (!sources && !javadoc && classifier0.isEmpty) ||
-        classifier0(Classifier("_"))
+      classifier0(Classifier("_"))
     }
 
   def artifactTypes: Set[Type] = {

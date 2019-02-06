@@ -28,7 +28,8 @@ object Main {
     val bootstrapTreeView = BootstrapTreeView
 
     println("Initializing")
-    App.app()
+    App
+      .app()
       .renderIntoDOM(document.getElementById("demoContent"))
     println("Initialized")
   }

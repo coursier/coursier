@@ -33,7 +33,9 @@ abstract class CentralTests extends TestSuite {
           dependencies = Set(
             dep.withCompileScope,
             dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
-            dep"org.slf4j:slf4j-api:1.7.7".withCompileScope))
+            dep"org.slf4j:slf4j-api:1.7.7".withCompileScope
+          )
+        )
 
         assert(res == expected)
       }
@@ -49,7 +51,9 @@ abstract class CentralTests extends TestSuite {
           dependencies = Set(
             dep.withCompileScope,
             dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
-            dep"org.ow2.asm:asm:5.0.2".withCompileScope))
+            dep"org.ow2.asm:asm:5.0.2".withCompileScope
+          )
+        )
 
         assert(res == expected)
       }
@@ -61,10 +65,7 @@ abstract class CentralTests extends TestSuite {
         val res0 = await(runner.resolve(Seq(dep)))
         val res = res0.clearCaches
 
-        val expected = Resolution(
-          rootDependencies = Seq(dep),
-          dependencies = Set(
-            dep.withCompileScope))
+        val expected = Resolution(rootDependencies = Seq(dep), dependencies = Set(dep.withCompileScope))
 
         assert(res == expected)
         assert(res0.projectCache.contains(dep.moduleVersion))
@@ -245,7 +246,8 @@ abstract class CentralTests extends TestSuite {
 
       def intransitiveCompiler(config: Configuration) =
         Dependency(
-          Module(org"org.scala-lang", name"scala-compiler"), "2.11.8",
+          Module(org"org.scala-lang", name"scala-compiler"),
+          "2.11.8",
           configuration = config,
           transitive = false,
           attributes = Attributes(Type.jar)
@@ -323,7 +325,8 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Seq(
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1"
+              Module(org"org.apache.avro", name"avro"),
+              "1.8.1"
             )
           )
           val res = await(runner.resolve(deps))
@@ -337,7 +340,9 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Seq(
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
+              Module(org"org.apache.avro", name"avro"),
+              "1.8.1",
+              attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(runner.resolve(deps))
@@ -351,10 +356,13 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Seq(
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1"
+              Module(org"org.apache.avro", name"avro"),
+              "1.8.1"
             ),
             Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
+              Module(org"org.apache.avro", name"avro"),
+              "1.8.1",
+              attributes = Attributes(Type.empty, Classifier.tests)
             )
           )
           val res = await(runner.resolve(deps))
@@ -370,10 +378,12 @@ abstract class CentralTests extends TestSuite {
         async {
           val deps = Seq(
             Dependency(
-              Module(org"org.scala-lang", name"scala-compiler"), "2.11.8"
+              Module(org"org.scala-lang", name"scala-compiler"),
+              "2.11.8"
             ),
             Dependency(
-              Module(org"org.scala-js", name"scalajs-compiler_2.11.8"), "0.6.8"
+              Module(org"org.scala-js", name"scalajs-compiler_2.11.8"),
+              "0.6.8"
             )
           )
 
@@ -428,8 +438,8 @@ abstract class CentralTests extends TestSuite {
 
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
             case (dep, attributes, artifact)
-              if dep.module == Module(org"org.apache.zookeeper", name"zookeeper") &&
-                 attributes.`type` == Type.testJar =>
+                if dep.module == Module(org"org.apache.zookeeper", name"zookeeper") &&
+                  attributes.`type` == Type.testJar =>
               (attributes, artifact)
           }
 
@@ -503,14 +513,25 @@ abstract class CentralTests extends TestSuite {
 
       'tarGz - {
         * - {
-          runner.withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), transitive = true) { artifacts =>
+          runner.withArtifacts(
+            mod,
+            version,
+            attributes = Attributes(Type("tar.gz"), Classifier("bin")),
+            transitive = true
+          ) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
           }
         }
         * - {
-          runner.withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
+          runner.withArtifacts(
+            mod,
+            version,
+            attributes = Attributes(Type("tar.gz"), Classifier("bin")),
+            classifierOpt = Some(Classifier("bin")),
+            transitive = true
+          ) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
@@ -520,14 +541,22 @@ abstract class CentralTests extends TestSuite {
 
       'zip - {
         * - {
-          runner.withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) { artifacts =>
-            assert(artifacts.nonEmpty)
-            val urls = artifacts.map(_.url).toSet
-            assert(urls.contains(mainZipUrl))
-          }
+          runner
+            .withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) {
+              artifacts =>
+                assert(artifacts.nonEmpty)
+                val urls = artifacts.map(_.url).toSet
+                assert(urls.contains(mainZipUrl))
+            }
         }
         * - {
-          runner.withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
+          runner.withArtifacts(
+            mod,
+            version,
+            attributes = Attributes(Type("zip"), Classifier("bin")),
+            classifierOpt = Some(Classifier("bin")),
+            transitive = true
+          ) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
@@ -572,9 +601,9 @@ abstract class CentralTests extends TestSuite {
 
     'parentVersionInPom - {
       runner.resolutionCheck(
-          Module(org"io.swagger.parser.v3", name"swagger-parser-v3"),
-          "2.0.1"
-        )
+        Module(org"io.swagger.parser.v3", name"swagger-parser-v3"),
+        "2.0.1"
+      )
     }
 
     'parentBeforeImports - {
@@ -595,35 +624,36 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver)
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) {
+        artifacts =>
+          val jarOpt = artifacts.collect {
+            case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
+              artifact
+          }
 
-        val jarOpt = artifacts.collect {
-          case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
-            artifact
-        }
-
-        assert(jarOpt.nonEmpty)
-        assert(jarOpt.forall(hasSha1))
-        assert(jarOpt.forall(hasMd5))
-        assert(jarOpt.forall(hasSig))
+          assert(jarOpt.nonEmpty)
+          assert(jarOpt.forall(hasSha1))
+          assert(jarOpt.forall(hasMd5))
+          assert(jarOpt.forall(hasSig))
       }
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) {
+        artifacts =>
+          val pomOpt = artifacts.collect {
+            case (attr, artifact) if attr.`type` == Type.pom =>
+              artifact
+          }
 
-        val pomOpt = artifacts.collect {
-          case (attr, artifact) if attr.`type` == Type.pom =>
-            artifact
-        }
-
-        assert(pomOpt.nonEmpty)
-        assert(pomOpt.forall(hasSha1))
-        assert(pomOpt.forall(hasMd5))
-        assert(pomOpt.forall(hasSig))
+          assert(pomOpt.nonEmpty)
+          assert(pomOpt.forall(hasSha1))
+          assert(pomOpt.forall(hasMd5))
+          assert(pomOpt.forall(hasSig))
       }
     }
 
     'sbtPluginVersionRange - {
-      val mod = Module(org"org.ensime", name"sbt-ensime", attributes = Map("scalaVersion" -> "2.10", "sbtVersion" -> "0.13"))
+      val mod =
+        Module(org"org.ensime", name"sbt-ensime", attributes = Map("scalaVersion" -> "2.10", "sbtVersion" -> "0.13"))
       val ver = "1.12.+"
 
       * - {
@@ -667,8 +697,12 @@ abstract class CentralTests extends TestSuite {
         assert(mainArtifactOpt.forall(_.optional))
       }
 
-      * - runner.withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", Attributes(Type.jar), transitive = true) { artifacts =>
-
+      * - runner.withArtifacts(
+        Module(org"com.lihaoyi", name"scalatags_2.12"),
+        "0.6.2",
+        Attributes(Type.jar),
+        transitive = true
+      ) { artifacts =>
         val urls = artifacts.map(_.url).toSet
 
         val expectedUrls = Seq(
@@ -688,22 +722,23 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver, extraRepos = Seq(extraRepo))
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
-        val urls = artifacts.map(_.url).toSet
-        val expectedUrls = Set(
-          "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
-          "https://maven.google.com/android/arch/core/core/1.0.0-alpha3/core-1.0.0-alpha3.aar",
-          "https://maven.google.com/android/arch/lifecycle/runtime/1.0.0-alpha3/runtime-1.0.0-alpha3.aar",
-          "https://maven.google.com/android/arch/lifecycle/extensions/1.0.0-alpha3/extensions-1.0.0-alpha3.aar",
-          "https://maven.google.com/com/android/support/support-compat/25.3.1/support-compat-25.3.1.aar",
-          "https://maven.google.com/com/android/support/support-media-compat/25.3.1/support-media-compat-25.3.1.aar",
-          "https://maven.google.com/com/android/support/support-core-ui/25.3.1/support-core-ui-25.3.1.aar",
-          "https://maven.google.com/com/android/support/support-core-utils/25.3.1/support-core-utils-25.3.1.aar",
-          "https://maven.google.com/com/android/support/support-annotations/25.3.1/support-annotations-25.3.1.jar",
-          "https://maven.google.com/android/arch/lifecycle/common/1.0.0-alpha3/common-1.0.0-alpha3.jar"
-        )
+      * - runner.withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) {
+        artifacts =>
+          val urls = artifacts.map(_.url).toSet
+          val expectedUrls = Set(
+            "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
+            "https://maven.google.com/android/arch/core/core/1.0.0-alpha3/core-1.0.0-alpha3.aar",
+            "https://maven.google.com/android/arch/lifecycle/runtime/1.0.0-alpha3/runtime-1.0.0-alpha3.aar",
+            "https://maven.google.com/android/arch/lifecycle/extensions/1.0.0-alpha3/extensions-1.0.0-alpha3.aar",
+            "https://maven.google.com/com/android/support/support-compat/25.3.1/support-compat-25.3.1.aar",
+            "https://maven.google.com/com/android/support/support-media-compat/25.3.1/support-media-compat-25.3.1.aar",
+            "https://maven.google.com/com/android/support/support-core-ui/25.3.1/support-core-ui-25.3.1.aar",
+            "https://maven.google.com/com/android/support/support-core-utils/25.3.1/support-core-utils-25.3.1.aar",
+            "https://maven.google.com/com/android/support/support-annotations/25.3.1/support-annotations-25.3.1.jar",
+            "https://maven.google.com/android/arch/lifecycle/common/1.0.0-alpha3/common-1.0.0-alpha3.jar"
+          )
 
-        assert(expectedUrls.forall(urls))
+          assert(expectedUrls.forall(urls))
       }
     }
 
@@ -725,40 +760,43 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver, extraRepos = extraRepos)
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) { artifacts =>
-        val urls = artifacts.map(_.url).toSet
-        val expectedUrls = Set(
-          "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",
-          "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/org/talend/daikon/daikon/0.19.0-SNAPSHOT/daikon-0.19.0-20171201.100416-43.jar",
-          s"$centralBase/com/fasterxml/jackson/core/jackson-annotations/2.5.3/jackson-annotations-2.5.3.jar",
-          s"$centralBase/com/fasterxml/jackson/core/jackson-core/2.5.3/jackson-core-2.5.3.jar",
-          s"$centralBase/com/fasterxml/jackson/core/jackson-databind/2.5.3/jackson-databind-2.5.3.jar",
-          s"$centralBase/com/thoughtworks/paranamer/paranamer/2.7/paranamer-2.7.jar",
-          s"$centralBase/commons-codec/commons-codec/1.6/commons-codec-1.6.jar",
-          s"$centralBase/javax/inject/javax.inject/1/javax.inject-1.jar",
-          s"$centralBase/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar",
-          s"$centralBase/org/apache/avro/avro/1.8.1/avro-1.8.1.jar",
-          s"$centralBase/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar",
-          s"$centralBase/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar",
-          s"$centralBase/org/codehaus/jackson/jackson-core-asl/1.9.13/jackson-core-asl-1.9.13.jar",
-          s"$centralBase/org/codehaus/jackson/jackson-mapper-asl/1.9.13/jackson-mapper-asl-1.9.13.jar",
-          s"$centralBase/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar",
-          s"$centralBase/org/tukaani/xz/1.5/xz-1.5.jar",
-          s"$centralBase/org/xerial/snappy/snappy-java/1.1.1.3/snappy-java-1.1.1.3.jar"
-        )
+      * - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) {
+        artifacts =>
+          val urls = artifacts.map(_.url).toSet
+          val expectedUrls = Set(
+            "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",
+            "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/org/talend/daikon/daikon/0.19.0-SNAPSHOT/daikon-0.19.0-20171201.100416-43.jar",
+            s"$centralBase/com/fasterxml/jackson/core/jackson-annotations/2.5.3/jackson-annotations-2.5.3.jar",
+            s"$centralBase/com/fasterxml/jackson/core/jackson-core/2.5.3/jackson-core-2.5.3.jar",
+            s"$centralBase/com/fasterxml/jackson/core/jackson-databind/2.5.3/jackson-databind-2.5.3.jar",
+            s"$centralBase/com/thoughtworks/paranamer/paranamer/2.7/paranamer-2.7.jar",
+            s"$centralBase/commons-codec/commons-codec/1.6/commons-codec-1.6.jar",
+            s"$centralBase/javax/inject/javax.inject/1/javax.inject-1.jar",
+            s"$centralBase/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar",
+            s"$centralBase/org/apache/avro/avro/1.8.1/avro-1.8.1.jar",
+            s"$centralBase/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar",
+            s"$centralBase/org/apache/commons/commons-lang3/3.4/commons-lang3-3.4.jar",
+            s"$centralBase/org/codehaus/jackson/jackson-core-asl/1.9.13/jackson-core-asl-1.9.13.jar",
+            s"$centralBase/org/codehaus/jackson/jackson-mapper-asl/1.9.13/jackson-mapper-asl-1.9.13.jar",
+            s"$centralBase/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar",
+            s"$centralBase/org/tukaani/xz/1.5/xz-1.5.jar",
+            s"$centralBase/org/xerial/snappy/snappy-java/1.1.1.3/snappy-java-1.1.1.3.jar"
+          )
 
-        assert(expectedUrls.forall(urls))
+          assert(expectedUrls.forall(urls))
       }
     }
 
     'trees - {
       'cycle - {
         async {
-          val res = await(runner.resolution(
-            mod"edu.illinois.cs.cogcomp:illinois-pos",
-            "2.0.2",
-            Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
-          ))
+          val res = await(
+            runner.resolution(
+              mod"edu.illinois.cs.cogcomp:illinois-pos",
+              "2.0.2",
+              Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo")
+            )
+          )
           val expectedTree =
             """└─ edu.illinois.cs.cogcomp:illinois-pos:2.0.2
               |   ├─ edu.illinois.cs.cogcomp:LBJava:1.0.3
@@ -1009,19 +1047,110 @@ abstract class CentralTests extends TestSuite {
           val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
           val conflicts = Conflict(res)
           val expectedConflicts = Seq(
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.chuusai:shapeless_2.12", "2.3.3"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M8"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-annotations_2.12", "2.0.0-M5"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-util_2.12", "2.0.0-M5"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app_2.12", "2.0.0-M5"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang:scala-reflect", "2.12.6"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang.modules:scala-xml_2.12", "1.1.1"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-core_2.12", "1.5.0"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-kernel_2.12", "1.5.0"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-macros_2.12", "1.5.0"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.typelevel:machinist_2.12", "0.6.6"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.0", wasExcluded = false, mod"org.typelevel:macro-compat_2.12", "1.1.1"),
-            Conflict(mod"org.scala-lang:scala-reflect", "2.12.6", "2.12.4", wasExcluded = false, mod"io.argonaut:argonaut_2.12", "6.2.1")
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.4",
+              wasExcluded = false,
+              mod"com.chuusai:shapeless_2.12",
+              "2.3.3"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.4",
+              wasExcluded = false,
+              mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
+              "1.2.0-M8"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"com.github.alexarchambault:case-app-annotations_2.12",
+              "2.0.0-M5"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"com.github.alexarchambault:case-app-util_2.12",
+              "2.0.0-M5"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"com.github.alexarchambault:case-app_2.12",
+              "2.0.0-M5"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.6",
+              wasExcluded = false,
+              mod"org.scala-lang:scala-reflect",
+              "2.12.6"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.6",
+              wasExcluded = false,
+              mod"org.scala-lang.modules:scala-xml_2.12",
+              "1.1.1"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"org.typelevel:cats-core_2.12",
+              "1.5.0"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"org.typelevel:cats-kernel_2.12",
+              "1.5.0"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.7",
+              wasExcluded = false,
+              mod"org.typelevel:cats-macros_2.12",
+              "1.5.0"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.6",
+              wasExcluded = false,
+              mod"org.typelevel:machinist_2.12",
+              "0.6.6"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-library",
+              "2.12.8",
+              "2.12.0",
+              wasExcluded = false,
+              mod"org.typelevel:macro-compat_2.12",
+              "1.1.1"
+            ),
+            Conflict(
+              mod"org.scala-lang:scala-reflect",
+              "2.12.6",
+              "2.12.4",
+              wasExcluded = false,
+              mod"io.argonaut:argonaut_2.12",
+              "6.2.1"
+            )
           )
           assert(conflicts == expectedConflicts)
         }
