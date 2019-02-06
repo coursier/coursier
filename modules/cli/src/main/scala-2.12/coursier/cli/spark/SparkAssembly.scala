@@ -83,7 +83,8 @@ object SparkAssembly {
 
     val helper = sparkJarsHelper(scalaVersion, sparkVersion, yarnVersion, default, extraDependencies, options)
 
-    helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
+    helper
+      .fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
   }
 
   def spark(
@@ -100,8 +101,15 @@ object SparkAssembly {
 
     val helper = sparkJarsHelper(scalaVersion, sparkVersion, yarnVersion, default, extraDependencies, options)
 
-    val artifacts = helper.artifacts(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
-    val jars = helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
+    val artifacts = helper.artifacts(
+      sources = false,
+      javadoc = false,
+      default = true,
+      artifactTypes = artifactTypes,
+      classifier0 = Set.empty
+    )
+    val jars = helper
+      .fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
 
     val checksums = artifacts.map { a =>
       val f = a.checksumUrls.get("SHA-1") match {
@@ -121,7 +129,6 @@ object SparkAssembly {
           throw new Exception(s"Cannot read SHA-1 sum from $f")
       }
     }
-
 
     val md = MessageDigest.getInstance("SHA-1")
 
@@ -154,21 +161,22 @@ object SparkAssembly {
     if (dest.exists())
       success
     else
-      CacheLocks.withLockFor(helper.cache, dest) {
-        dest.getParentFile.mkdirs()
-        val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
-        // FIXME Acquire lock on tmpDest
-        var fos: FileOutputStream = null
-        try {
-          fos = new FileOutputStream(tmpDest)
-          Assembly.make(jars, fos, Nil, assemblyRules)
-        } finally {
-          if (fos != null)
-            fos.close()
-        }
-        Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
-        Right((dest, jars))
-      }.left.map(_.describe)
+      CacheLocks
+        .withLockFor(helper.cache, dest) {
+          dest.getParentFile.mkdirs()
+          val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
+          // FIXME Acquire lock on tmpDest
+          var fos: FileOutputStream = null
+          try {
+            fos = new FileOutputStream(tmpDest)
+            Assembly.make(jars, fos, Nil, assemblyRules)
+          } finally {
+            if (fos != null)
+              fos.close()
+          }
+          Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
+          Right((dest, jars))
+        }.left.map(_.describe)
   }
 
 }

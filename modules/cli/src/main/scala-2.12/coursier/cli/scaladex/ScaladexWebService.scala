@@ -44,15 +44,26 @@ object ScaladexWebService {
 
 trait ScaladexWebService[F[_]] extends Scaladex[F] {
 
-  def search(name: String, target: String, scalaVersion: String): EitherT[F, String, Seq[ScaladexWebService.SearchResult]]
-  def artifactInfos(organization: String, repository: String, artifactName: String): EitherT[F, String, ScaladexWebService.ArtifactInfos]
+  def search(
+    name: String,
+    target: String,
+    scalaVersion: String
+  ): EitherT[F, String, Seq[ScaladexWebService.SearchResult]]
+  def artifactInfos(
+    organization: String,
+    repository: String,
+    artifactName: String
+  ): EitherT[F, String, ScaladexWebService.ArtifactInfos]
   def artifactNames(organization: String, repository: String): EitherT[F, String, Seq[String]]
 
   protected def G: Gather[F]
   protected final implicit def G0: Gather[F] = G
 
-
-  final def dependencies(name: String, scalaVersion: String, logger: String => Unit): EitherT[F, String, Seq[(Module, String)]] = {
+  final def dependencies(
+    name: String,
+    scalaVersion: String,
+    logger: String => Unit
+  ): EitherT[F, String, Seq[(Module, String)]] = {
     val idx = name.indexOf('/')
     val orgNameOrError =
       if (idx >= 0) {
@@ -65,14 +76,18 @@ trait ScaladexWebService[F[_]] extends Scaladex[F] {
           .flatMap {
             case Seq(first, _*) =>
               logger(s"Using ${first.organization}/${first.repository} for $name")
-              EitherT.fromEither[F](Right((first.organization, first.repository, first.artifacts)): Either[String, (String, String, Seq[String])])
+              EitherT.fromEither[F](
+                Right((first.organization, first.repository, first.artifacts)): Either[
+                  String,
+                  (String, String, Seq[String])
+                ]
+              )
             case Seq() =>
               EitherT.fromEither[F](Left(s"No project found for $name"): Either[String, (String, String, Seq[String])])
           }
 
     orgNameOrError.flatMap {
       case (ghOrg, ghRepo, artifactNames) =>
-
         val moduleVersions = G.map(G.gather(artifactNames.map { artifactName =>
           G.map(artifactInfos(ghOrg, ghRepo, artifactName).run) {
             case Left(err) =>

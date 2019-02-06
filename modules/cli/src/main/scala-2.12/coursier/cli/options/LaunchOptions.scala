@@ -3,6 +3,7 @@ package coursier.cli.options
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.shared.{ArtifactOptions, SharedLoaderOptions}
 
+// format: off
 final case class LaunchOptions(
 
   @Short("M")
@@ -25,6 +26,7 @@ final case class LaunchOptions(
   @Recurse
     common: CommonOptions = CommonOptions()
 )
+// format: on
 
 object LaunchOptions {
   implicit val parser = Parser[LaunchOptions]

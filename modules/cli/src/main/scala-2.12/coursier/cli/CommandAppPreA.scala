@@ -14,7 +14,12 @@ abstract class CommandAppPreA[D, T](
   baseBeforeCommandMessages: Help[D],
   commandParser: CommandParser[T],
   commandsMessages: CommandsHelp[T]
-) extends CommandAppWithPreCommand[D, T]()(beforeCommandParser, baseBeforeCommandMessages, commandParser, commandsMessages) {
+) extends CommandAppWithPreCommand[D, T]()(
+      beforeCommandParser,
+      baseBeforeCommandMessages,
+      commandParser,
+      commandsMessages
+    ) {
 
   def runA: RemainingArgs => T => Unit
 

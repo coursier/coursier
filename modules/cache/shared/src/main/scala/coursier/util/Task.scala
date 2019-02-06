@@ -18,9 +18,9 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
 
   def attempt: Task[Either[Throwable, T]] =
     map(Right(_))
-    .handle {
-      case t: Throwable => Left(t)
-    }
+      .handle {
+        case t: Throwable => Left(t)
+      }
 }
 
 object Task extends PlatformTask {
@@ -56,4 +56,3 @@ object Task extends PlatformTask {
       loop(a)
     }
 }
-

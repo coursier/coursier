@@ -108,7 +108,8 @@ object Activation {
       if (pathSep == ":" && name.indexOf("openvms") < 0 && (name.indexOf("mac") < 0 || name.endsWith("x")))
         families += "unix"
 
-      if (name.indexOf("windows") >= 0 && (name.indexOf("95") >= 0 || name.indexOf("98") >= 0 || name.indexOf("me") >= 0 || name.indexOf("ce") >= 0))
+      if (name.indexOf("windows") >= 0 && (name.indexOf("95") >= 0 || name.indexOf("98") >= 0 || name.indexOf("me") >= 0 || name
+            .indexOf("ce") >= 0))
         families += "win9x"
 
       if (name.indexOf("z/os") >= 0 || name.indexOf("os/390") >= 0)
@@ -123,8 +124,10 @@ object Activation {
 
       Os(
         properties.get("os.arch").map(_.toLowerCase),
-        (for (n <- name; sep <- properties.get("path.separator"))
-          yield families(n, sep)).getOrElse(Set()),
+        (for {
+          n <- name
+          sep <- properties.get("path.separator")
+        } yield families(n, sep)).getOrElse(Set()),
         name,
         properties.get("os.version").map(_.toLowerCase)
       )

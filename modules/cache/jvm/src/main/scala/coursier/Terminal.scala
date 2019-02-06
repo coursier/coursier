@@ -30,10 +30,12 @@ object Terminal {
       * Move up `n` squares
       */
     def up(n: Int): Unit = if (n > 0) control(n, 'A')
+
     /**
       * Move down `n` squares
       */
     def down(n: Int): Unit = if (n > 0) control(n, 'B')
+
     /**
       * Move left `n` squares
       */

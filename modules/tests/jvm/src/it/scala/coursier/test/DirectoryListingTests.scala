@@ -26,10 +26,9 @@ object DirectoryListingTests extends TestSuite {
       version,
       attributes = Attributes(Type.jar),
       extraRepos = Seq(repo)
-    ) {
-      artifacts =>
-        assert(artifacts.length == 1)
-        assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
+    ) { artifacts =>
+      assert(artifacts.length == 1)
+      assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
     }
 
     'jarFoo - runner.withArtifacts(
@@ -37,10 +36,9 @@ object DirectoryListingTests extends TestSuite {
       version,
       attributes = Attributes(Type("jar-foo")),
       extraRepos = Seq(repo)
-    ) {
-      artifacts =>
-        assert(artifacts.length == 1)
-        assert(artifacts.headOption.exists(_.url.endsWith(".jar-foo")))
+    ) { artifacts =>
+      assert(artifacts.length == 1)
+      assert(artifacts.headOption.exists(_.url.endsWith(".jar-foo")))
     }
   }
 

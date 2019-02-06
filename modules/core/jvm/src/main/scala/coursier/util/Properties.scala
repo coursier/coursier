@@ -1,6 +1,6 @@
 package coursier.util
 
-import java.util.{ Properties => JProperties }
+import java.util.{Properties => JProperties}
 
 object Properties {
 
@@ -12,8 +12,7 @@ object Properties {
           .getClassLoader
           .getResourceAsStream("coursier/coursier.properties")
       )
-    }
-    catch  {
+    } catch {
       case e: NullPointerException =>
     }
     p

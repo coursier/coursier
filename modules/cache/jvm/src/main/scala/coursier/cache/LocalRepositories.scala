@@ -12,7 +12,8 @@ object LocalRepositories {
   private lazy val ivy2HomeUri = {
 
     val path =
-      sys.props.get("coursier.ivy.home")
+      sys
+        .props.get("coursier.ivy.home")
         .orElse(sys.props.get("ivy.home"))
         .getOrElse(sys.props("user.home") + "/.ivy2/")
 
@@ -52,19 +53,20 @@ object LocalRepositories {
       MavenRepository(homeUri + ".m2/repository")
     }
 
-    lazy val ivy2Cache = IvyRepository.parse(
-      ivy2HomeUri + "cache/" +
-        "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]",
-      metadataPatternOpt = Some(
+    lazy val ivy2Cache = IvyRepository
+      .parse(
         ivy2HomeUri + "cache/" +
-          "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]-[revision](-[classifier]).[ext]"
-      ),
-      withChecksums = false,
-      withSignatures = false,
-      dropInfoAttributes = true
-    ).right.getOrElse(
-      throw new Exception("Cannot happen")
-    )
+          "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]",
+        metadataPatternOpt = Some(
+          ivy2HomeUri + "cache/" +
+            "(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]-[revision](-[classifier]).[ext]"
+        ),
+        withChecksums = false,
+        withSignatures = false,
+        dropInfoAttributes = true
+      ).right.getOrElse(
+        throw new Exception("Cannot happen")
+      )
   }
 
 }

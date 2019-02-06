@@ -15,8 +15,7 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       getFile = _ => Option("")
     )
 
-    assert(
-      report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}")
+    assert(report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}")
   }
 
   "JsonReport containing two deps" should "not be empty" in {
@@ -35,12 +34,13 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       report == "{\"conflict_resolution\":{},\"dependencies\":[" +
         "{\"coord\":\"a:reconciled\",\"file\":\"\",\"dependencies\":[\"b:reconciled\"]}," +
         "{\"coord\":\"b:reconciled\",\"file\":\"\",\"dependencies\":[]}]," +
-        "\"version\":\"0.1.0\"}")
+        "\"version\":\"0.1.0\"}"
+    )
   }
   "JsonReport containing two deps" should "be sorted alphabetically regardless of input order" in {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
     val report: String = JsonReport[String](
-      roots = IndexedSeq( "b", "a"),
+      roots = IndexedSeq("b", "a"),
       conflictResolutionForRoots = Map()
     )(
       children = children(_),
@@ -53,6 +53,7 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       report == "{\"conflict_resolution\":{},\"dependencies\":[" +
         "{\"coord\":\"a:reconciled\",\"file\":\"\",\"dependencies\":[\"b:reconciled\"]}," +
         "{\"coord\":\"b:reconciled\",\"file\":\"\",\"dependencies\":[]}]," +
-        "\"version\":\"0.1.0\"}")
+        "\"version\":\"0.1.0\"}"
+    )
   }
 }

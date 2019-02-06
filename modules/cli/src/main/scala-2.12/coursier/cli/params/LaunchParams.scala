@@ -42,15 +42,14 @@ object LaunchParams {
       Paths.get(p)
     }
 
-    (resolveV, artifactV, sharedLoaderV).mapN {
-      (resolve, artifact, sharedLoader) =>
-        LaunchParams(
-          resolve,
-          artifact,
-          sharedLoader,
-          mainClassOpt,
-          extraJars
-        )
+    (resolveV, artifactV, sharedLoaderV).mapN { (resolve, artifact, sharedLoader) =>
+      LaunchParams(
+        resolve,
+        artifact,
+        sharedLoader,
+        mainClassOpt,
+        extraJars
+      )
     }
   }
 }

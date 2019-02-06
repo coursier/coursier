@@ -131,12 +131,15 @@ object ReverseModuleTree {
     } yield Node(m, v, m, v, v, excludedDependsOn = false, dependees0, versions0)
   }
 
-  def apply(resolution: Resolution, roots: Seq[Module] = null, withExclusions: Boolean = false): Seq[ReverseModuleTree] = {
+  def apply(
+    resolution: Resolution,
+    roots: Seq[Module] = null,
+    withExclusions: Boolean = false
+  ): Seq[ReverseModuleTree] = {
     val t = DependencyTree(resolution, withExclusions = withExclusions)
     val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
     fromDependencyTree(roots0, t)
   }
-
 
   private final case class Node(
     module: Module,

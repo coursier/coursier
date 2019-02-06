@@ -10,7 +10,8 @@ final case class TestRepository(projects: Map[(Module, String), Project]) extend
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ) =
     EitherT(

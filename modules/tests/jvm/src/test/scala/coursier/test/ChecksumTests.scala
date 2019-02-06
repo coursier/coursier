@@ -9,7 +9,6 @@ import utest._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 object ChecksumTests extends TestSuite {
   val tests = Tests {
 
@@ -28,7 +27,7 @@ object ChecksumTests extends TestSuite {
         // as of 2016-03-02
         val junkSha1 =
           "./spark-core_2.11/1.2.0/spark-core_2.11-1.2.0.pom:\n" +
-          "5630 42A5 4B97 E31A F452  9EA0 DB79 BA2C 4C2B B6CC"
+            "5630 42A5 4B97 E31A F452  9EA0 DB79 BA2C 4C2B B6CC"
 
         val cleanSha1 = "563042a54b97e31af4529ea0db79ba2c4c2bb6cc"
 
@@ -40,7 +39,7 @@ object ChecksumTests extends TestSuite {
         // as of 2016-03-05
         val dirtySha1 =
           "4bf5daa95eb5c12d753a359a3e00621fdc73d187  " + // no CR here
-          "/home/maven/repository-staging/to-ibiblio/maven2/org/json/json/20080701/json-20080701.pom"
+            "/home/maven/repository-staging/to-ibiblio/maven2/org/json/json/20080701/json-20080701.pom"
 
         val cleanSha1 = "4bf5daa95eb5c12d753a359a3e00621fdc73d187"
 
@@ -83,12 +82,13 @@ object ChecksumTests extends TestSuite {
       val cache = HandmadeMetadata.repoBase
 
       def validate(artifact: Artifact, sumType: String): Task[Either[FileError, Unit]] =
-        Cache.validateChecksum[Task](
-          artifact,
-          sumType,
-          cache,
-          Schedulable.defaultThreadPool
-        ).run
+        Cache
+          .validateChecksum[Task](
+            artifact,
+            sumType,
+            cache,
+            Schedulable.defaultThreadPool
+          ).run
 
       def artifact(url: String) = Artifact(
         url,
@@ -110,17 +110,18 @@ object ChecksumTests extends TestSuite {
       ).map(artifact)
 
       def validateAll(sumType: String): Future[Seq[Unit]] =
-        Gather[Task].gather(
-          artifacts.map { artifact =>
-            validate(artifact, sumType).map { res =>
-              assert(res.isRight)
+        Gather[Task]
+          .gather(
+            artifacts.map { artifact =>
+              validate(artifact, sumType).map { res =>
+                assert(res.isRight)
+              }
             }
-          }
-        ).future()(ExecutionContext.global)
+          ).future()(ExecutionContext.global)
 
       'sha1 - validateAll("SHA-1")
       'sha256 - validateAll("SHA-256")
-      'md5  - validateAll("MD5")
+      'md5 - validateAll("MD5")
     }
   }
 }

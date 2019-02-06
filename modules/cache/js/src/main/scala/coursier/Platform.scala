@@ -51,9 +51,10 @@ object Platform {
       Task { implicit ec =>
         get(artifact.url)
           .map(Right(_))
-          .recover { case e: Exception =>
-          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
-        }
+          .recover {
+            case e: Exception =>
+              Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+          }
       }
     )
   }
@@ -74,11 +75,14 @@ object Platform {
       Task { implicit ec =>
         Future(logger.fetching(artifact.url))
           .flatMap(_ => get(artifact.url))
-          .map { s => logger.fetched(artifact.url); Right(s) }
-          .recover { case e: Exception =>
-            val msg = e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")
-            logger.other(artifact.url, msg)
-            Left(msg)
+          .map { s =>
+            logger.fetched(artifact.url); Right(s)
+          }
+          .recover {
+            case e: Exception =>
+              val msg = e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")
+              logger.other(artifact.url, msg)
+              Left(msg)
           }
       }
     )

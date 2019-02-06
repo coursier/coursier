@@ -28,14 +28,13 @@ object FetchParams {
     val resolveV = ResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
 
-    (resolveV, artifactV).mapN {
-      (resolve, artifact) =>
-        FetchParams(
-          classpath,
-          jsonOutputOpt,
-          resolve,
-          artifact
-        )
+    (resolveV, artifactV).mapN { (resolve, artifact) =>
+      FetchParams(
+        classpath,
+        jsonOutputOpt,
+        resolve,
+        artifact
+      )
     }
   }
 }

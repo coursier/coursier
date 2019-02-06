@@ -135,13 +135,14 @@ object ActivationTests extends TestSuite {
     }
 
     'properties - {
-      val activation = Activation.empty.copy(
-        properties = Seq(
-          "required" -> None,
-          "requiredWithValue" -> Some("foo"),
-          "requiredWithNegValue" -> Some("!bar")
+      val activation = Activation
+        .empty.copy(
+          properties = Seq(
+            "required" -> None,
+            "requiredWithValue" -> Some("foo"),
+            "requiredWithNegValue" -> Some("!bar")
+          )
         )
-      )
 
       'match - {
         val isActive = activation.isActive(
@@ -228,7 +229,6 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-
         'wrongExactVersion - {
           val activation = Activation(
             Nil,
@@ -240,7 +240,6 @@ object ActivationTests extends TestSuite {
 
           assert(!isActive)
         }
-
 
         'wrongExactVersionSeveral - {
           val activation = Activation(

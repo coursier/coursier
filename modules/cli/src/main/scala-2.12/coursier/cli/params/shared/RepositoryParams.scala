@@ -9,13 +9,13 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.util.Repositories
 
-
 object RepositoryParams {
 
   def apply(options: RepositoryOptions, hasSbtPlugins: Boolean): ValidatedNel[String, Seq[Repository]] = {
 
     val repositoriesV = Validated.fromEither(
-      CacheParse.repositories(options.repository)
+      CacheParse
+        .repositories(options.repository)
         .either
         .left
         .map {
@@ -24,7 +24,6 @@ object RepositoryParams {
     )
 
     repositoriesV.map { repos0 =>
-
       // preprend defaults
       val defaults =
         if (options.noDefault) Nil

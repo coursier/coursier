@@ -3,7 +3,7 @@ package coursier.test
 import java.io.File
 
 import coursier.core.{Classifier, Type}
-import coursier.{Attributes, Dependency, Module, moduleNameString, moduleString, organizationString}
+import coursier.{moduleNameString, moduleString, organizationString, Attributes, Dependency, Module}
 import coursier.maven.MavenRepository
 import coursier.test.compatibility.executionContext
 import utest._

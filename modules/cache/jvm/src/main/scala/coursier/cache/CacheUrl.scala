@@ -33,36 +33,36 @@ object CacheUrl {
           .orElse(clsOpt(getClass.getClassLoader))
 
         def printError(e: Exception): Unit =
-          scala.Console.err.println(
-            s"Cannot instantiate $clsName: $e${Option(e.getMessage).fold("")(" ("+_+")")}"
-          )
+          scala
+            .Console.err.println(
+              s"Cannot instantiate $clsName: $e${Option(e.getMessage).fold("")(" (" + _ + ")")}"
+            )
 
-        val handlerFactoryOpt = clsOpt0.flatMap {
-          cls =>
-            try Some(cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory])
-            catch {
-              case e: InstantiationException =>
-                printError(e)
-                None
-              case e: IllegalAccessException =>
-                printError(e)
-                None
-              case e: ClassCastException =>
-                printError(e)
-                None
-            }
+        val handlerFactoryOpt = clsOpt0.flatMap { cls =>
+          try Some(cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory])
+          catch {
+            case e: InstantiationException =>
+              printError(e)
+              None
+            case e: IllegalAccessException =>
+              printError(e)
+              None
+            case e: ClassCastException =>
+              printError(e)
+              None
+          }
         }
 
-        val handlerOpt = handlerFactoryOpt.flatMap {
-          factory =>
-            try Some(factory.createURLStreamHandler(protocol))
-            catch {
-              case NonFatal(e) =>
-                scala.Console.err.println(
-                  s"Cannot get handler for $protocol from $clsName: $e${Option(e.getMessage).fold("")(" ("+_+")")}"
+        val handlerOpt = handlerFactoryOpt.flatMap { factory =>
+          try Some(factory.createURLStreamHandler(protocol))
+          catch {
+            case NonFatal(e) =>
+              scala
+                .Console.err.println(
+                  s"Cannot get handler for $protocol from $clsName: $e${Option(e.getMessage).fold("")(" (" + _ + ")")}"
                 )
-                None
-            }
+              None
+          }
         }
 
         val prevOpt = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
@@ -88,9 +88,10 @@ object CacheUrl {
     new URL(null, s, handlerFor(s).orNull)
 
   private def basicAuthenticationEncode(user: String, password: String): String =
-    Base64.getEncoder.encodeToString(
-      s"$user:$password".getBytes(StandardCharsets.UTF_8)
-    )
+    Base64
+      .getEncoder.encodeToString(
+        s"$user:$password".getBytes(StandardCharsets.UTF_8)
+      )
 
   def urlConnection(url0: String, authentication: Option[Authentication]) = {
     var conn: URLConnection = null
@@ -142,7 +143,7 @@ object CacheUrl {
       Pattern.quote("Basic realm=\"") +
       "([^" + Pattern.quote("\"") + "]*)" +
       Pattern.quote("\"") +
-    "$"
+      "$"
   ).r
 
   def realm(conn: URLConnection): Option[String] =

@@ -4,7 +4,7 @@ import _root_.cats.effect.IO
 import coursier.moduleString
 import coursier.interop.cats.{coursierGatherFromCats => _, _}
 import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
+import coursier.test.{compatibility, TestRunner}
 import coursier.test.util.ToFuture
 import utest._
 

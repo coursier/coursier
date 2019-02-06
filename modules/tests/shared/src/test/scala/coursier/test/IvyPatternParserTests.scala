@@ -14,11 +14,14 @@ object IvyPatternParserTests extends TestSuite {
       val strPattern = "[organization]/[module](/scala_[scalaVersion])(/sbt_[sbtVersion])/[revision]/resolved.xml.[ext]"
       val expectedChunks = Seq[ChunkOrProperty](
         Var("organization"),
-        "/", Var("module"),
+        "/",
+        Var("module"),
         Opt("/scala_", Var("scalaVersion")),
         Opt("/sbt_", Var("sbtVersion")),
-        "/", Var("revision"),
-        "/resolved.xml.", Var("ext")
+        "/",
+        Var("revision"),
+        "/resolved.xml.",
+        Var("ext")
       )
 
       assert(PropertiesPattern.parse(strPattern).right.map(_.chunks) == Right(expectedChunks))
@@ -31,20 +34,38 @@ object IvyPatternParserTests extends TestSuite {
           "[revision]/[type]s/[artifact](-[classifier]).[ext]"
       val expectedChunks = Seq[ChunkOrProperty](
         "file://",
-        Prop("activator.local.repository", Some(Seq(
-          Prop("activator.home", Some(Seq(
-            Prop("user.home", None),
-            "/.activator"
-          ))),
-          "/repository"
-        ))), "/",
-        Var("organization"), "/",
-        Var("module"), "/",
+        Prop(
+          "activator.local.repository",
+          Some(
+            Seq(
+              Prop(
+                "activator.home",
+                Some(
+                  Seq(
+                    Prop("user.home", None),
+                    "/.activator"
+                  )
+                )
+              ),
+              "/repository"
+            )
+          )
+        ),
+        "/",
+        Var("organization"),
+        "/",
+        Var("module"),
+        "/",
         Opt("scala_", Var("scalaVersion"), "/"),
         Opt("sbt_", Var("sbtVersion"), "/"),
-        Var("revision"), "/",
-        Var("type"), "s/",
-        Var("artifact"), Opt("-", Var("classifier")), ".", Var("ext")
+        Var("revision"),
+        "/",
+        Var("type"),
+        "s/",
+        Var("artifact"),
+        Opt("-", Var("classifier")),
+        ".",
+        Var("ext")
       )
 
       val pattern0 = PropertiesPattern.parse(strPattern)
@@ -53,9 +74,12 @@ object IvyPatternParserTests extends TestSuite {
       val pattern = pattern0.right.get
 
       * - {
-        val varPattern = pattern.substituteProperties(Map(
-          "activator.local.repository" -> "xyz"
-        )).right.map(_.string)
+        val varPattern = pattern
+          .substituteProperties(
+            Map(
+              "activator.local.repository" -> "xyz"
+            )
+          ).right.map(_.string)
 
         val expectedVarPattern =
           "file://xyz" +
@@ -66,10 +90,13 @@ object IvyPatternParserTests extends TestSuite {
       }
 
       * - {
-        val varPattern = pattern.substituteProperties(Map(
-          "activator.local.repository" -> "xyz",
-          "activator.home" -> "aaaa"
-        )).right.map(_.string)
+        val varPattern = pattern
+          .substituteProperties(
+            Map(
+              "activator.local.repository" -> "xyz",
+              "activator.home" -> "aaaa"
+            )
+          ).right.map(_.string)
 
         val expectedVarPattern =
           "file://xyz" +
@@ -80,9 +107,12 @@ object IvyPatternParserTests extends TestSuite {
       }
 
       * - {
-        val varPattern = pattern.substituteProperties(Map(
-          "activator.home" -> "aaaa"
-        )).right.map(_.string)
+        val varPattern = pattern
+          .substituteProperties(
+            Map(
+              "activator.home" -> "aaaa"
+            )
+          ).right.map(_.string)
 
         val expectedVarPattern =
           "file://aaaa/repository" +
@@ -93,9 +123,11 @@ object IvyPatternParserTests extends TestSuite {
       }
 
       * - {
-        val varPattern0 = pattern.substituteProperties(Map(
-          "user.home" -> "homez"
-        ))
+        val varPattern0 = pattern.substituteProperties(
+          Map(
+            "user.home" -> "homez"
+          )
+        )
 
         val expectedVarPattern =
           "file://homez/.activator/repository" +
@@ -107,15 +139,18 @@ object IvyPatternParserTests extends TestSuite {
         val varPattern = varPattern0.right.toOption.get
 
         * - {
-          val res = varPattern.substituteVariables(Map(
-            "organization" -> "org",
-            "module" -> "mod",
-            "revision" -> "1.1.x",
-            "type" -> "jarr",
-            "artifact" -> "art",
-            "classifier" -> "docc",
-            "ext" -> "jrr"
-          )).right.map(_.string)
+          val res = varPattern
+            .substituteVariables(
+              Map(
+                "organization" -> "org",
+                "module" -> "mod",
+                "revision" -> "1.1.x",
+                "type" -> "jarr",
+                "artifact" -> "art",
+                "classifier" -> "docc",
+                "ext" -> "jrr"
+              )
+            ).right.map(_.string)
           val expectedRes = "file://homez/.activator/repository/org/mod/1.1.x/jarrs/art-docc.jrr"
 
           assert(res == Right(expectedRes))

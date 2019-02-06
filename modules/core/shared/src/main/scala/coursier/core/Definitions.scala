@@ -21,14 +21,14 @@ object ModuleName {
 }
 
 /**
- * Identifies a "module".
- *
- * During resolution, all dependencies having the same module
- * will be given the same version, if there are no version conflicts
- * between them.
- *
- * Using the same terminology as Ivy.
- */
+  * Identifies a "module".
+  *
+  * During resolution, all dependencies having the same module
+  * will be given the same version, if there are no version conflicts
+  * between them.
+  *
+  * Using the same terminology as Ivy.
+  */
 final case class Module(
   organization: Organization,
   name: ModuleName,
@@ -40,10 +40,12 @@ final case class Module(
     name = name.map(_.trim)
   )
 
-  private def attributesStr = attributes.toSeq
-    .sortBy { case (k, _) => k }
-    .map { case (k, v) => s"$k=$v" }
-    .mkString(";")
+  private def attributesStr =
+    attributes
+      .toSeq
+      .sortBy { case (k, _) => k }
+      .map { case (k, v) => s"$k=$v" }
+      .mkString(";")
 
   def nameWithAttributes: String =
     name.value + (if (attributes.nonEmpty) s";$attributesStr" else "")
@@ -58,34 +60,31 @@ final case class Module(
 }
 
 /**
- * Dependencies with the same @module will typically see their @version-s merged.
- *
- * The remaining fields are left untouched, some being transitively
- * propagated (exclusions, optional, in particular).
- */
+  * Dependencies with the same @module will typically see their @version-s merged.
+  *
+  * The remaining fields are left untouched, some being transitively
+  * propagated (exclusions, optional, in particular).
+  */
 final case class Dependency(
   module: Module,
   version: String,
   configuration: Configuration,
   exclusions: Set[(Organization, ModuleName)],
-
   // Maven-specific
   attributes: Attributes,
   optional: Boolean,
-
   transitive: Boolean
 ) {
   lazy val moduleVersion = (module, version)
 
   override lazy val hashCode = Dependency.unapply(this).get.hashCode()
 
-  def mavenPrefix: String = {
+  def mavenPrefix: String =
     if (attributes.isEmpty)
       module.orgName
     else {
       s"${module.orgName}:${attributes.packagingAndClassifier}"
     }
-  }
 }
 
 final case class Type(value: String) extends AnyVal {
@@ -230,7 +229,6 @@ final case class Project(
   dependencies: Seq[(Configuration, Dependency)],
   // For Maven, this is the standard scopes as an Ivy configuration
   configurations: Map[Configuration, Seq[Configuration]],
-
   // Maven-specific
   parent: Option[(Module, String)],
   dependencyManagement: Seq[(Configuration, Dependency)],
@@ -240,15 +238,12 @@ final case class Project(
   snapshotVersioning: Option[SnapshotVersioning],
   packagingOpt: Option[Type],
   relocated: Boolean,
-
   /**
     * Optional exact version used to get this project metadata.
     * May not match `version` for projects having a wrong version in their metadata.
     */
   actualVersionOpt: Option[String],
-
   publications: Seq[(Configuration, Publication)],
-
   // Extra infos, not used during resolution
   info: Info
 ) {

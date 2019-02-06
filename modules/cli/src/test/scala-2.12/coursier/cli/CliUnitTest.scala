@@ -8,8 +8,6 @@ import coursier.cli.options.shared.DependencyOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-
-
 @RunWith(classOf[JUnitRunner])
 class CliUnitTest extends FlatSpec {
 
@@ -20,15 +18,13 @@ class CliUnitTest extends FlatSpec {
     writer.flush()
     try {
       testCode(file, writer) // "loan" the fixture to the test
-    }
-    finally {
+    } finally {
       writer.close()
       file.delete()
     }
   }
 
-  "Normal text" should "parse correctly" in withFile(
-    "org1:name1--org2:name2") { (file, writer) =>
+  "Normal text" should "parse correctly" in withFile("org1:name1--org2:name2") { (file, writer) =>
     val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
     val opt = CommonOptions(dependencyOptions = dependencyOpt)
     val helper = new Helper(opt, Seq())
@@ -38,20 +34,27 @@ class CliUnitTest extends FlatSpec {
   "Multiple excludes" should "be combined" in withFile(
     "org1:name1--org2:name2\n" +
       "org1:name1--org3:name3\n" +
-      "org4:name4--org5:name5") { (file, writer) =>
-
+      "org4:name4--org5:name5"
+  ) { (file, writer) =>
     val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
     val opt = CommonOptions(dependencyOptions = dependencyOpt)
     val helper = new Helper(opt, Seq())
-    assert(helper.localExcludeMap.equals(Map(
-      "org1:name1" -> Set((org"org2", name"name2"), (org"org3", name"name3")),
-      "org4:name4" -> Set((org"org5", name"name5")))))
+    assert(
+      helper
+        .localExcludeMap.equals(
+          Map(
+            "org1:name1" -> Set((org"org2", name"name2"), (org"org3", name"name3")),
+            "org4:name4" -> Set((org"org5", name"name5"))
+          )
+        )
+    )
   }
 
   "extra --" should "error" in withFile(
     "org1:name1--org2:name2--xxx\n" +
       "org1:name1--org3:name3\n" +
-      "org4:name4--org5:name5") { (file, writer) =>
+      "org4:name4--org5:name5"
+  ) { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
       val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
       val opt = CommonOptions(dependencyOptions = dependencyOpt)
@@ -59,8 +62,7 @@ class CliUnitTest extends FlatSpec {
     })
   }
 
-  "child has no name" should "error" in withFile(
-    "org1:name1--org2:") { (file, writer) =>
+  "child has no name" should "error" in withFile("org1:name1--org2:") { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
       val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
       val opt = CommonOptions(dependencyOptions = dependencyOpt)
@@ -68,8 +70,7 @@ class CliUnitTest extends FlatSpec {
     })
   }
 
-  "child has nothing" should "error" in withFile(
-    "org1:name1--:") { (file, writer) =>
+  "child has nothing" should "error" in withFile("org1:name1--:") { (file, writer) =>
     assertThrows[SoftExcludeParsingException]({
       val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
       val opt = CommonOptions(dependencyOptions = dependencyOpt)

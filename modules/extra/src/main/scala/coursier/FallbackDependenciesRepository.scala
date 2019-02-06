@@ -17,7 +17,7 @@ object FallbackDependenciesRepository {
 
     val protocolSpecificAttemptOpt = {
 
-      def ifFile: Option[Boolean] = {
+      def ifFile: Option[Boolean] =
         if (localArtifactsShouldBeCached && !new File(url.getPath).exists()) {
           val cachePath = coursier.cache.CacheDefaults.location
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
@@ -25,7 +25,6 @@ object FallbackDependenciesRepository {
         } else {
           Some(new File(url.getPath).exists()) // FIXME Escaping / de-escaping needed here?
         }
-      }
 
       def ifHttp: Option[Boolean] = {
         // HEAD request attempt, adapted from http://stackoverflow.com/questions/22541629/android-how-can-i-make-an-http-head-request/22545275#22545275
@@ -38,21 +37,19 @@ object FallbackDependenciesRepository {
           conn.setRequestMethod("HEAD")
           conn.getInputStream.close()
           Some(true)
-        }
-        catch {
+        } catch {
           case _: FileNotFoundException => Some(false)
-          case _: IOException           => None // error other than not found
-        }
-        finally {
+          case _: IOException => None // error other than not found
+        } finally {
           if (conn != null)
             CacheUrl.closeConn(conn)
         }
       }
 
       url.getProtocol match {
-        case "file"           => ifFile
+        case "file" => ifFile
         case "http" | "https" => ifHttp
-        case _                => None
+        case _ => None
       }
     }
 
@@ -63,11 +60,9 @@ object FallbackDependenciesRepository {
         // NOT setting request type to HEAD here.
         conn.getInputStream.close()
         true
-      }
-      catch {
+      } catch {
         case _: IOException => false
-      }
-      finally {
+      } finally {
         if (conn != null)
           CacheUrl.closeConn(conn)
       }
@@ -88,7 +83,8 @@ final case class FallbackDependenciesRepository(
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
@@ -96,7 +92,6 @@ final case class FallbackDependenciesRepository(
       .get((module, version))
       .fold[Either[String, (Artifact.Source, Project)]](Left("No fallback URL found")) {
         case (url, _) =>
-
           val urlStr = url.toExternalForm
           val idx = urlStr.lastIndexOf('/')
 

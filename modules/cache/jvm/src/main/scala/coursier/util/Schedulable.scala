@@ -23,7 +23,7 @@ object Schedulable {
     schedulable
 
   lazy val defaultThreadPool =
-    fixedThreadPool(4 max Runtime.getRuntime.availableProcessors())
+    fixedThreadPool(4.max(Runtime.getRuntime.availableProcessors()))
 
   def fixedThreadPool(size: Int): ExecutorService =
     Executors.newFixedThreadPool(

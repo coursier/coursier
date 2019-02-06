@@ -31,7 +31,7 @@ object Conflict {
 
     tree.flatMap { t =>
       t.dependees.collect {
-        case d  if !d.excludedDependsOn && d.dependsOnReconciledVersion != d.dependsOnVersion =>
+        case d if !d.excludedDependsOn && d.dependsOnReconciledVersion != d.dependsOnVersion =>
           Conflicted(d)
       }
     }

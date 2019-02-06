@@ -19,8 +19,7 @@ object FileUtil {
     while ({
       nRead = is.read(data, 0, data.length)
       nRead != -1
-    })
-      buffer.write(data, 0, nRead)
+    }) buffer.write(data, 0, nRead)
 
     buffer.flush()
     buffer.toByteArray
@@ -37,8 +36,7 @@ object FileUtil {
     }
   }
 
-  def tryMakeExecutable(path: Path): Boolean = {
-
+  def tryMakeExecutable(path: Path): Boolean =
     try {
       val perms = Files.getPosixFilePermissions(path).asScala.toSet
 
@@ -61,6 +59,5 @@ object FileUtil {
       case _: UnsupportedOperationException =>
         false
     }
-  }
 
 }

@@ -11,9 +11,8 @@ final class InMemoryCachingFetcher[F[_]](underlying: Repository.Fetch[F])(implic
   private val cache = new ConcurrentHashMap[Artifact, Either[String, String]]
   private val byUrl = new ConcurrentHashMap[String, Either[String, String]]
 
-  def onlyCache(): Unit = {
+  def onlyCache(): Unit =
     onlyCache0 = true
-  }
 
   def fromCache(url: String): String =
     Option(byUrl.get(url)) match {

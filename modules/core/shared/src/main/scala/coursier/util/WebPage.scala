@@ -3,7 +3,8 @@ package coursier.util
 object WebPage {
 
   def listElements(url: String, page: String, directories: Boolean): Seq[String] =
-    coursier.core.compatibility.listWebPageRawElements(page)
+    coursier
+      .core.compatibility.listWebPageRawElements(page)
       .collect {
         case elem if elem.nonEmpty && elem.endsWith("/") == directories =>
           elem

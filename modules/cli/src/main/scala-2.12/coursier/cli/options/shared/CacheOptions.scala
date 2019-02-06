@@ -11,6 +11,7 @@ import coursier.params.CacheParams
 
 import scala.concurrent.duration.Duration
 
+// format: off
 final case class CacheOptions(
 
   @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
@@ -45,6 +46,7 @@ final case class CacheOptions(
     followHttpToHttpsRedirect: Boolean = true
 
 ) {
+  // format: on
 
   def params: ValidatedNel[String, CacheParams] = {
 
@@ -59,7 +61,7 @@ final case class CacheOptions(
             Validated.validNel(cp)
           case Left(errors) =>
             Validated.invalidNel(
-              s"Error parsing modes:\n${errors.map("  "+_).mkString("\n")}"
+              s"Error parsing modes:\n${errors.map("  " + _).mkString("\n")}"
             )
         }
 

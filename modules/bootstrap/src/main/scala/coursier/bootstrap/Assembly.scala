@@ -164,5 +164,4 @@ object Assembly {
     FileUtil.tryMakeExecutable(output)
   }
 
-
 }

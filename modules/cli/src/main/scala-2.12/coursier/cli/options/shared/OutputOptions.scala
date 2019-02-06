@@ -2,6 +2,7 @@ package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 
+// format: off
 final case class OutputOptions(
 
   @Help("Quiet output")
@@ -21,6 +22,7 @@ final case class OutputOptions(
     force: Boolean = false
 
 ) {
+  // format: on
 
   val verbosityLevel = Tag.unwrap(verbose) - (if (quiet) 1 else 0)
 

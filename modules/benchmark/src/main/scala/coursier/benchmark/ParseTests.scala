@@ -18,36 +18,44 @@ class ParseTests {
 
   @Benchmark
   def parseSparkParent(state: TestState): Unit = {
-    val t = state.repositories.head.find(
-      mod"org.apache.spark:spark-parent_2.12",
-      "2.4.0",
-      state.fetcher
-    ).run
+    val t = state
+      .repositories.head.find(
+        mod"org.apache.spark:spark-parent_2.12",
+        "2.4.0",
+        state.fetcher
+      ).run
     val e = Await.result(t.future()(state.ec), Duration.Inf)
     assert(e.isRight)
   }
 
   @Benchmark
   def parseSparkParentXmlDom(state: TestState): Unit = {
-    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val content = state
+      .inMemoryCache.fromCache(
+        "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
+      )
     val res = MavenRepository.parseRawPomDom(content)
     assert(res.isRight)
   }
 
   @Benchmark
   def parseSparkParentXmlSax(state: TestState): Unit = {
-    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val content = state
+      .inMemoryCache.fromCache(
+        "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
+      )
     val res = MavenRepository.parseRawPomSax(content)
     assert(res.isRight)
   }
 
   @Benchmark
   def parseApacheParent(state: TestState): Unit = {
-    val t = state.repositories.head.find(
-      mod"org.apache:apache",
-      "18",
-      state.fetcher
-    ).run
+    val t = state
+      .repositories.head.find(
+        mod"org.apache:apache",
+        "18",
+        state.fetcher
+      ).run
     val e = Await.result(t.future()(state.ec), Duration.Inf)
     assert(e.isRight)
   }

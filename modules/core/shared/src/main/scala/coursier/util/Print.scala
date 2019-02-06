@@ -12,22 +12,23 @@ object Print {
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  case class Colors private(red: String, yellow: String, reset: String)
+  case class Colors private (red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)
 
   def dependency(dep: Dependency, printExclusions: Boolean): String = {
 
-    def exclusionsStr = dep
-      .exclusions
-      .toVector
-      .sorted
-      .map {
-        case (org, name) =>
-          s"\n  exclude($org, $name)"
-      }
-      .mkString
+    def exclusionsStr =
+      dep
+        .exclusions
+        .toVector
+        .sorted
+        .map {
+          case (org, name) =>
+            s"\n  exclude($org, $name)"
+        }
+        .mkString
 
     s"${dep.module}:${dep.version}:${dep.configuration.value}" + (if (printExclusions) exclusionsStr else "")
   }
@@ -57,8 +58,9 @@ object Print {
     val deps1 = minDeps
       .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
       .toVector
-      .map { case (k, l) =>
-        k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
+      .map {
+        case (k, l) =>
+          k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
       }
       .sortBy { dep =>
         (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
@@ -67,13 +69,11 @@ object Print {
     deps1.map(dependency(_, printExclusions)).mkString("\n")
   }
 
-  def compatibleVersions(first: String, second: String): Boolean = {
+  def compatibleVersions(first: String, second: String): Boolean =
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
-
     first.split('.').take(2).toSeq == second.split('.').take(2).toSeq
-  }
 
   def dependencyTree(
     resolution: Resolution,
@@ -93,8 +93,9 @@ object Print {
         DependencyTree(resolution, withExclusions = printExclusions)
       )
 
-      Tree(t.toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(_.dependees)
-        .render { node =>
+      Tree(t.toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(
+        _.dependees
+      ).render { node =>
           if (node.excludedDependsOn)
             s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
           else if (node.dependsOnVersion == node.dependsOnReconciledVersion)
@@ -144,8 +145,7 @@ object Print {
 
           s"$module:$version " +
             s"${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
-      }
-    else {
+      } else {
       val versionStr =
         if (reconciledVersionOpt.forall(_ == version))
           version
@@ -169,7 +169,7 @@ object Print {
       val m = l.iterator.map(_._1.length).max
       l.map {
         case (a, b) =>
-          a + " "*(m - a.length + 1) + b
+          a + " " * (m - a.length + 1) + b
       }
     }
 

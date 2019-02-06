@@ -39,7 +39,6 @@ object DependencyTree {
   ): DependencyTree =
     Node(root, excluded = false, resolution, withExclusions)
 
-
   private case class Node(
     dependency: Dependency,
     excluded: Boolean,
@@ -71,23 +70,24 @@ object DependencyTree {
 
         val dependencies0 = dependencies.map(_.moduleVersion).toSet
 
-        def excluded = resolution
-          .dependenciesOf(
-            dep0.copy(exclusions = Set.empty),
-            withReconciledVersions = false
-          )
-          .sortBy { trDep =>
-            (trDep.module.organization, trDep.module.name, trDep.version)
-          }
-          .collect {
-            case trDep if !dependencies0(trDep.moduleVersion) =>
-              Node(
-                trDep,
-                excluded = true,
-                resolution,
-                withExclusions
-              )
-          }
+        def excluded =
+          resolution
+            .dependenciesOf(
+              dep0.copy(exclusions = Set.empty),
+              withReconciledVersions = false
+            )
+            .sortBy { trDep =>
+              (trDep.module.organization, trDep.module.name, trDep.version)
+            }
+            .collect {
+              case trDep if !dependencies0(trDep.moduleVersion) =>
+                Node(
+                  trDep,
+                  excluded = true,
+                  resolution,
+                  withExclusions
+                )
+            }
 
         dependencies.map(Node(_, excluded = false, resolution, withExclusions)) ++
           (if (withExclusions) excluded else Nil)

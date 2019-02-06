@@ -5,7 +5,7 @@ import coursier.core.Configuration
 import coursier.{Attributes, Dependency}
 import coursier.util.Parse
 
-
+// format: off
 final case class SharedLoaderOptions(
 
   @Value("target:dependency")
@@ -20,6 +20,7 @@ final case class SharedLoaderOptions(
     sharedTarget: List[String] = Nil
 
 ) {
+  // format: on
 
   // the methods below should go away as soon as they're unused / the legacy Helper stuff is removed
 
@@ -38,7 +39,8 @@ final case class SharedLoaderOptions(
       valid.toArray
   }
 
-  private lazy val (validIsolated, unrecognizedIsolated) = shared.partition(s => targetsOrExit.exists(t => s.startsWith(t + ":")))
+  private lazy val (validIsolated, unrecognizedIsolated) =
+    shared.partition(s => targetsOrExit.exists(t => s.startsWith(t + ":")))
 
   def checkOrExit(): Unit =
     if (unrecognizedIsolated.nonEmpty) {

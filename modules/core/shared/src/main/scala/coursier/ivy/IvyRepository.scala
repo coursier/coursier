@@ -50,10 +50,9 @@ final case class IvyRepository(
       "artifact" -> artifact,
       "ext" -> ext.value
     ) ++
-    module.attributes ++
-    classifierOpt.map("classifier" -> _.value).toSeq ++
-    versionOpt.map("revision" -> _).toSeq
-
+      module.attributes ++
+      classifierOpt.map("classifier" -> _.value).toSeq ++
+      versionOpt.map("revision" -> _).toSeq
 
   def artifacts(
     dependency: Dependency,
@@ -65,7 +64,6 @@ final case class IvyRepository(
       val retained =
         overrideClassifiers match {
           case None =>
-
             // FIXME Some duplication with what's done in MavenSource
 
             if (dependency.attributes.classifier.nonEmpty)
@@ -73,25 +71,24 @@ final case class IvyRepository(
               project.publications.collect {
                 case (_, p) if p.classifier == dependency.attributes.classifier =>
                   p
-              }
-            else if (dependency.attributes.`type`.nonEmpty)
+              } else if (dependency.attributes.`type`.nonEmpty)
               project.publications.collect {
                 case (conf, p)
-                  if (conf == Configuration.all ||
-                    conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
-                    (
-                      p.`type` == dependency.attributes.`type` ||
-                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(p.`type`)) // wow
-                    ) =>
+                    if (conf == Configuration.all ||
+                      conf == dependency.configuration ||
+                      project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
+                      (
+                        p.`type` == dependency.attributes.`type` ||
+                          (p.ext == dependency
+                            .attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(p.`type`)) // wow
+                      ) =>
                   p
-              }
-            else
+              } else
               project.publications.collect {
                 case (conf, p)
-                  if conf == Configuration.all ||
-                     conf == dependency.configuration ||
-                     project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
+                    if conf == Configuration.all ||
+                      conf == dependency.configuration ||
+                      project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
                   p
               }
           case Some(classifiers) =>
@@ -103,19 +100,21 @@ final case class IvyRepository(
         }
 
       val retainedWithUrl = retained.distinct.flatMap { p =>
-        pattern.substituteVariables(variables(
-          dependency.module,
-          Some(project.actualVersion),
-          p.`type`,
-          p.name,
-          p.ext,
-          Some(p.classifier).filter(_.nonEmpty)
-        )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
+        pattern
+          .substituteVariables(
+            variables(
+              dependency.module,
+              Some(project.actualVersion),
+              p.`type`,
+              p.name,
+              p.ext,
+              Some(p.classifier).filter(_.nonEmpty)
+            )
+          ).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
       }
 
       retainedWithUrl.map {
         case (p, url) =>
-
           var artifact = Artifact(
             url,
             Map.empty,
@@ -139,15 +138,16 @@ final case class IvyRepository(
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
+  ): EitherT[F, String, (Artifact.Source, Project)] =
     revisionListingPatternOpt match {
       case None =>
         findNoInverval(module, version, fetch)
       case Some(revisionListingPattern) =>
-        Parse.versionInterval(version)
+        Parse
+          .versionInterval(version)
           .orElse(Parse.multiVersionInterval(version))
           .orElse(Parse.ivyLatestSubRevisionInterval(version))
           .filter(_.isValid) match {
@@ -197,21 +197,22 @@ final case class IvyRepository(
             } yield res
         }
     }
-  }
 
   def findNoInverval[F[_]](
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
-  )(implicit
+  )(
+    implicit
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
     val eitherArtifact: Either[String, Artifact] =
       for {
-        url <- metadataPattern.substituteVariables(
-          variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
-        ).right
+        url <- metadataPattern
+          .substituteVariables(
+            variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
+          ).right
       } yield {
         var artifact = Artifact(
           url,
@@ -246,19 +247,21 @@ final case class IvyRepository(
       val proj =
         if (dropInfoAttributes)
           proj0.copy(
-            module = proj0.module.copy(
-              attributes = proj0.module.attributes.filter {
-                case (k, _) => !k.startsWith("info.")
-              }
-            ),
+            module = proj0
+              .module.copy(
+                attributes = proj0.module.attributes.filter {
+                  case (k, _) => !k.startsWith("info.")
+                }
+              ),
             dependencies = proj0.dependencies.map {
               case (config, dep0) =>
                 val dep = dep0.copy(
-                  module = dep0.module.copy(
-                    attributes = dep0.module.attributes.filter {
-                      case (k, _) => !k.startsWith("info.")
-                    }
-                  )
+                  module = dep0
+                    .module.copy(
+                      attributes = dep0.module.attributes.filter {
+                        case (k, _) => !k.startsWith("info.")
+                      }
+                    )
                 )
 
                 config -> dep
@@ -293,7 +296,6 @@ object IvyRepository {
     authentication: Option[Authentication] = None,
     substituteDefault: Boolean = true
   ): Either[String, IvyRepository] =
-
     for {
       propertiesPattern <- PropertiesPattern.parse(pattern).right
       metadataPropertiesPatternOpt <- metadataPatternOpt

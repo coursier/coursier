@@ -117,11 +117,11 @@ object Resolve {
         case ((module, version), errors) =>
           s"$module:$version\n${errors.map("  " + _.replace("\n", "  \n")).mkString("\n")}"
       } match {
-        case Seq() =>
-          ValidationNel.success(())
-        case Seq(h, t @ _*) =>
-          ValidationNel.failures(h, t: _*)
-      }
+      case Seq() =>
+        ValidationNel.success(())
+      case Seq(h, t @ _*) =>
+        ValidationNel.failures(h, t: _*)
+    }
 
     val checkConflicts: ValidationNel[String, Unit] =
       if (res.conflicts.isEmpty)

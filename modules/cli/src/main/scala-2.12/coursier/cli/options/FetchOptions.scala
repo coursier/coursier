@@ -3,6 +3,7 @@ package coursier.cli.options
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.shared.ArtifactOptions
 
+// format: off
 final case class FetchOptions(
 
   @Help("Print java -cp compatible output")
@@ -21,6 +22,7 @@ final case class FetchOptions(
     artifactOptions: ArtifactOptions = ArtifactOptions()
 
 )
+// format: on
 
 object FetchOptions {
   implicit val parser = Parser[FetchOptions]

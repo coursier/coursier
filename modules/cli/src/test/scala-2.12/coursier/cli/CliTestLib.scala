@@ -3,12 +3,11 @@ package coursier.cli
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-
 trait CliTestLib {
 
-  def withFile(content: String = "",
-               fileName: String = "hello",
-               suffix: String = "world")(testCode: (File, FileWriter) => Any) {
+  def withFile(content: String = "", fileName: String = "hello", suffix: String = "world")(
+    testCode: (File, FileWriter) => Any
+  ) {
     val file = File.createTempFile(fileName, suffix) // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)
@@ -22,7 +21,7 @@ trait CliTestLib {
   }
 
   def withTempDir(
-      prefix: String
+    prefix: String
   )(testCode: File => Any) {
     val dir = Files.createTempDirectory(prefix).toFile // create the fixture
     try {
@@ -44,7 +43,6 @@ trait CliTestLib {
         f.delete()
 
     if (!delete(tmpDir))
-      Console.err.println(
-        s"Warning: unable to remove temporary directory $tmpDir")
+      Console.err.println(s"Warning: unable to remove temporary directory $tmpDir")
   }
 }

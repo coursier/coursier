@@ -3,7 +3,16 @@ package coursier.util
 import coursier.core.Configuration
 import coursier.ivy.{IvyRepository, Pattern}
 import coursier.maven.MavenRepository
-import coursier.{Dependency, Module, dependencyString, ivyRepositoryString, mavenRepositoryString, moduleNameString, moduleString, organizationString}
+import coursier.{
+  dependencyString,
+  ivyRepositoryString,
+  mavenRepositoryString,
+  moduleNameString,
+  moduleString,
+  organizationString,
+  Dependency,
+  Module
+}
 import utest._
 
 object InterpolatorsTests extends TestSuite {

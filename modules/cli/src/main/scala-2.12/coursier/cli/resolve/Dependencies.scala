@@ -43,31 +43,33 @@ object Dependencies {
       if (verbosity >= 2) Console.err.println(_) else _ => ()
     )
 
-    deps.map { modVers =>
-      val m = modVers.groupBy(_._2)
-      if (m.size > 1) {
-        val (keptVer, modVers0) = m
-          .map {
-            case (v, l) =>
-              val ver = coursier.core.Parse.version(v)
-                .getOrElse(???) // FIXME
+    deps
+      .map { modVers =>
+        val m = modVers.groupBy(_._2)
+        if (m.size > 1) {
+          val (keptVer, modVers0) = m
+            .map {
+              case (v, l) =>
+                val ver = coursier
+                  .core.Parse.version(v)
+                  .getOrElse(???) // FIXME
 
-              ver -> l
-          }
-          .maxBy(_._1)
+                ver -> l
+            }
+            .maxBy(_._1)
 
-        if (verbosity >= 1)
-          Console.err.println(s"Keeping version ${keptVer.repr}")
+          if (verbosity >= 1)
+            Console.err.println(s"Keeping version ${keptVer.repr}")
 
-        modVers0
-      } else
-        modVers
-    }.run.map(_.right.map { modVers =>
-      modVers.toList.map {
-        case (mod, ver) =>
-          coursier.Dependency(mod, ver)
-      }
-    })
+          modVers0
+        } else
+          modVers
+      }.run.map(_.right.map { modVers =>
+        modVers.toList.map {
+          case (mod, ver) =>
+            coursier.Dependency(mod, ver)
+        }
+      })
   }
 
   /**
@@ -102,7 +104,6 @@ object Dependencies {
   ): Either[Throwable, (List[Dependency], Option[FallbackDependenciesRepository])] =
     handleDependencies(rawDependencies, scalaVersion, defaultConfiguration) match {
       case Validated.Valid(l) =>
-
         val l0 = l ++ extraDependencies
 
         val deps = l0.map(_._1)
@@ -133,16 +134,18 @@ object Dependencies {
         Right((deps, extraRepoOpt))
 
       case Validated.Invalid(err) =>
-        Left(new ResolveException(
-          "Error processing dependencies:\n" +
-            err.toList.map("  " + _).mkString("\n")
-        ))
+        Left(
+          new ResolveException(
+            "Error processing dependencies:\n" +
+              err.toList.map("  " + _).mkString("\n")
+          )
+        )
     }
 
   def addExclusions(
     dep: Dependency,
     exclude: Set[(Organization, ModuleName)],
-    perModuleExclude: Map[String, Set[(Organization, ModuleName)]],
+    perModuleExclude: Map[String, Set[(Organization, ModuleName)]]
   ): Dependency =
     dep.copy(
       exclusions = dep.exclusions |
@@ -153,7 +156,7 @@ object Dependencies {
   def addExclusions(
     deps: Seq[Dependency],
     exclude: Set[(Organization, ModuleName)],
-    perModuleExclude: Map[String, Set[(Organization, ModuleName)]],
+    perModuleExclude: Map[String, Set[(Organization, ModuleName)]]
   ): Seq[Dependency] =
     deps.map { dep =>
       addExclusions(dep, exclude, perModuleExclude)

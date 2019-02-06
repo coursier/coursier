@@ -3,6 +3,7 @@ package coursier.cli.options.shared
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.core.Configuration
 
+// format: off
 final case class DependencyOptions(
 
   @Help("Exclude module")
@@ -40,9 +41,10 @@ final case class DependencyOptions(
   @Help("Default configuration (default(compile) by default)")
   @Value("configuration")
   @Short("c")
-    defaultConfiguration: String = "default(compile)",
+    defaultConfiguration: String = "default(compile)"
 
 ) {
+  // format: on
 
   def defaultConfiguration0 = Configuration(defaultConfiguration)
 

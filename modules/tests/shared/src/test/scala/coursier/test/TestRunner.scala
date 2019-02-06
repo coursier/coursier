@@ -11,7 +11,7 @@ import coursier.util.Gather
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TestRunner[F[_]: Gather : ToFuture](
+class TestRunner[F[_]: Gather: ToFuture](
   artifact: Repository.Fetch[F] = compatibility.taskArtifact,
   repositories: Seq[Repository] = Seq(MavenRepository("https://repo1.maven.org/maven2"))
 )(implicit ec: ExecutionContext) {
@@ -33,13 +33,12 @@ class TestRunner[F[_]: Gather : ToFuture](
     val r = Resolution(
       deps,
       filter = filter,
-      userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
-    )
-      .process
+      userActivations =
+        profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
+    ).process
       .run(fetch0)
 
     val t = Gather[F].map(r) { res =>
-
       val metadataErrors = res.errors
       val conflicts = res.conflicts
       val isDone = res.isDone
@@ -65,9 +64,10 @@ class TestRunner[F[_]: Gather : ToFuture](
         if (module.attributes.isEmpty)
           ""
         else
-          "/" + module.attributes.toVector.sorted.map {
-            case (k, v) => k + "_" + v
-          }.mkString("_")
+          "/" + module
+            .attributes.toVector.sorted.map {
+              case (k, v) => k + "_" + v
+            }.mkString("_")
 
       val path = Seq(
         "resolutions",
@@ -92,7 +92,8 @@ class TestRunner[F[_]: Gather : ToFuture](
         .minDependencies
         .toVector
         .map { dep =>
-          val projOpt = res.projectCache
+          val projOpt = res
+            .projectCache
             .get(dep.moduleVersion)
             .map { case (_, proj) => proj }
           val dep0 = dep.copy(

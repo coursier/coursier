@@ -29,6 +29,7 @@ trait CacheLogger {
     *                      `initialMessage` won't be printed either.)
     */
   def init(beforeOutput: => Unit = ()): Unit = {}
+
   /**
     *
     * @return whether any message was printed by `Logger`
