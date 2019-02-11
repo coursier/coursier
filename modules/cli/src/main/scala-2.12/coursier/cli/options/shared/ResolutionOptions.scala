@@ -34,6 +34,9 @@ final case class ResolutionOptions(
   @Short("e")
     scalaVersion: String = scala.util.Properties.versionNumberString,
 
+  @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent, and adjust the scala version for fully cross-versioned dependencies")
+    forceScalaVersion: Boolean = false,
+
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false
 
@@ -88,6 +91,7 @@ final case class ResolutionOptions(
           forcedProperties,
           profiles,
           scalaVersion,
+          forceScalaVersion,
           typelevel
         )
     }

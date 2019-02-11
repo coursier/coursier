@@ -9,5 +9,6 @@ final case class ResolutionParams(
   forcedProperties: Map[String, String] = Map.empty,
   profiles: Set[String] = Set.empty,
   scalaVersion: String = scala.util.Properties.versionNumberString,
+  forceScalaVersion: Boolean = false,
   typelevel: Boolean = false
 )

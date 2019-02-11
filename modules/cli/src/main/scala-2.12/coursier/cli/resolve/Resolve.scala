@@ -275,9 +275,15 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
-      startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
-        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap) else None
-      )
+      mapDependenciesOpt = {
+        val l = (if (params.resolution.typelevel) Seq(Typelevel.swap) else Nil) ++
+          (if (params.resolution.forceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.resolution.scalaVersion)) else Nil)
+
+        l.reduceOption((f, g) => dep => f(g(dep)))
+      }
+
+      startRes = coursier.Resolve.initialResolution(deps0, params.resolution)
+        .copy(mapDependencies = mapDependenciesOpt)
       res <- runResolution(
         params,
         repositories,

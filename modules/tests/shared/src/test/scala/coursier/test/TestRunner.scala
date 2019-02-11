@@ -23,7 +23,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     deps: Seq[Dependency],
     filter: Option[Dependency => Boolean] = None,
     extraRepos: Seq[Repository] = Nil,
-    profiles: Option[Set[String]] = None
+    profiles: Option[Set[String]] = None,
+    mapDependencies: Option[Dependency => Dependency] = None
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -33,7 +34,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     val r = Resolution(
       deps,
       filter = filter,
-      userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
+      userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
+      mapDependencies = mapDependencies
     )
       .process
       .run(fetch0)
