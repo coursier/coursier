@@ -32,15 +32,18 @@ final case class ResolutionOptions(
 
   @Help("Default scala version")
   @Short("e")
-    scalaVersion: String = scala.util.Properties.versionNumberString,
+    scalaVersion: Option[String] = None,
 
   @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent, and adjust the scala version for fully cross-versioned dependencies")
-    forceScalaVersion: Boolean = false,
+    forceScalaVersion: Option[Boolean] = None,
 
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false
 
 ) {
+
+  def scalaVersionOrDefault: String =
+    scalaVersion.getOrElse(scala.util.Properties.versionNumberString)
 
   def params: ValidatedNel[String, ResolutionParams] = {
 
@@ -53,7 +56,7 @@ final case class ResolutionOptions(
     val forceVersionV = {
 
       val (forceVersionErrors, forceVersions0) =
-        Parse.moduleVersions(forceVersion, scalaVersion)
+        Parse.moduleVersions(forceVersion, scalaVersionOrDefault)
 
       if (forceVersionErrors.nonEmpty)
         Validated.invalidNel(
@@ -82,6 +85,9 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
+    val scalaVersion0 = scalaVersionOrDefault
+    val forceScalaVersion0 = forceScalaVersion.getOrElse(scalaVersion.nonEmpty)
+
     (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
       (maxIterations, forceVersion, forcedProperties) =>
         ResolutionParams(
@@ -90,8 +96,8 @@ final case class ResolutionOptions(
           forceVersion,
           forcedProperties,
           profiles,
-          scalaVersion,
-          forceScalaVersion,
+          scalaVersion0,
+          forceScalaVersion0,
           typelevel
         )
     }

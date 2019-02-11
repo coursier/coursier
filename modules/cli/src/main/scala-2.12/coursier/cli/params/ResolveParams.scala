@@ -36,7 +36,7 @@ object ResolveParams {
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
     val dependencyV = DependencyParams(
-      resolutionV.toOption.fold(options.resolutionOptions.scalaVersion)(_.scalaVersion),
+      resolutionV.toOption.fold(options.resolutionOptions.scalaVersionOrDefault)(_.scalaVersion),
       options.dependencyOptions
     )
 

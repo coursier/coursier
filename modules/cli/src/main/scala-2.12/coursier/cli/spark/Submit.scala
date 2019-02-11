@@ -42,7 +42,7 @@ object Submit {
           intransitive = Nil
         ),
         resolutionOptions = common.resolutionOptions.copy(
-          scalaVersion = scalaVersion
+          scalaVersion = Some(scalaVersion)
         )
       ),
       // FIXME We whould be able to pass these as (parsed) Dependency instances to Helper
