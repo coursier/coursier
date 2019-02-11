@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.cache.{CacheDefaults, CacheLogger}
+import coursier.cache.{CacheDefaults, CacheInterface, CacheLogger}
 import coursier.params.ResolutionParams
 import coursier.util.{Print, Schedulable, Task, ValidationNel}
 
@@ -49,7 +49,7 @@ object Resolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[F] = Cache.default,
+    cache: CacheInterface[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): F[Resolution] = {
     val initialRes = initialResolution(dependencies, params)
@@ -61,7 +61,7 @@ object Resolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository],
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
+    cache: CacheInterface[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Future[Resolution] = {
 
@@ -80,7 +80,7 @@ object Resolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository],
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
+    cache: CacheInterface[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Resolution = {
 
@@ -97,7 +97,7 @@ object Resolve {
 
   private[coursier] def fetchVia[F[_]](
     repositories: Seq[Repository],
-    cache: Cache[F] = Cache.default
+    cache: CacheInterface[F] = Cache.default
   )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] = {
     val fetchs = cache.fetchs
     ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)

@@ -31,7 +31,7 @@ final case class Cache[F[_]](
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   S: Schedulable[F] = Task.schedulable
-) {
+) extends CacheInterface[F] {
 
   private implicit val S0 = S
 
@@ -580,6 +580,9 @@ final case class Cache[F[_]](
         EitherT(S.point(Left(err)))
     }
 
+  def file(artifact: Artifact): EitherT[F, FileError, File] =
+    file(artifact, retry)
+
   /**
     * This method computes the task needed to get a file.
     *
@@ -587,10 +590,7 @@ final case class Cache[F[_]](
     *
     * [[coursier.FileError.DownloadError]] is handled separately at [[downloading]]
     */
-  def file(
-    artifact: Artifact,
-    retry: Int = retry
-  ): EitherT[F, FileError, File] =
+  def file(artifact: Artifact, retry: Int): EitherT[F, FileError, File] =
     (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
 
   private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] =
@@ -803,7 +803,7 @@ object Cache {
   }
 
 
-  lazy val default: Cache[Task] = Cache()
+  lazy val default: CacheInterface[Task] = Cache()
 
   def fetch[F[_]](
     cache: File = CacheDefaults.location,
