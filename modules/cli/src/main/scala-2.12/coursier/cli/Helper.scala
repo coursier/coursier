@@ -4,7 +4,7 @@ package cli
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.cache.{CacheDefaults, LocalRepositories}
+import coursier.cache.{CacheDefaults, FileCache, LocalRepositories}
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
@@ -122,7 +122,7 @@ class Helper(
         else
           None
 
-      val fetch = Cache.fetch[Task](
+      val fetch = FileCache(
         cache,
         cachePolicies,
         checksums = Nil,
@@ -130,7 +130,7 @@ class Helper(
         pool = pool,
         ttl = ttl0,
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      )
+      ).fetch
 
       logger.foreach(_.init())
 
@@ -389,7 +389,7 @@ class Helper(
     else
       None
 
-  val fetchs = Cache.fetchs[Task](
+  val fetchs = FileCache(
     cache,
     cachePolicies,
     checksums = checksums,
@@ -397,7 +397,7 @@ class Helper(
     pool = pool,
     ttl = ttl0,
     followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-  )
+  ).fetchs
   val fetchQuiet = ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
@@ -718,8 +718,7 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      val file0 = Cache.file[Task](
-        artifact,
+      val file0 = FileCache(
         cache,
         cachePolicies,
         checksums = checksums,
@@ -729,7 +728,7 @@ class Helper(
         retry = common.cacheOptions.retryCount,
         localArtifactsShouldBeCached = common.cacheOptions.cacheFileArtifacts,
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      )
+      ).file(artifact)
 
       file0
         .run

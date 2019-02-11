@@ -1,4 +1,4 @@
-package coursier
+package coursier.cache
 
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
@@ -8,8 +8,8 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
-import coursier.cache._
-import coursier.core.Authentication
+import coursier.{CachePolicy, FileError}
+import coursier.core.{Artifact, Authentication, Repository}
 import coursier.internal.FileUtil
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Schedulable, Task}
@@ -18,7 +18,7 @@ import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
-final case class Cache[F[_]](
+final case class FileCache[F[_]](
   cache: File = CacheDefaults.location,
   cachePolicies: Seq[CachePolicy] = CachePolicy.default,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
@@ -31,11 +31,11 @@ final case class Cache[F[_]](
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   S: Schedulable[F] = Task.schedulable
-) extends CacheInterface[F] {
+) extends Cache[F] {
 
   private implicit val S0 = S
 
-  import Cache.{localFile, readFullyTo, downloading, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import FileCache.{localFile, readFullyTo, downloading, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
 
   private def download(
     artifact: Artifact,
@@ -48,7 +48,7 @@ final case class Cache[F[_]](
     val referenceFileOpt = artifact
       .extra
       .get("metadata")
-      .map(a => Cache.localFile(a.url, cache, a.authentication.map(_.user), localArtifactsShouldBeCached))
+      .map(a => FileCache.localFile(a.url, cache, a.authentication.map(_.user), localArtifactsShouldBeCached))
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
@@ -204,7 +204,7 @@ final case class Cache[F[_]](
           var lenOpt = Option.empty[Option[Long]]
 
           def doDownload(): Either[FileError, Unit] =
-            Cache.downloading(url, file, logger, sslRetry) {
+            FileCache.downloading(url, file, logger, sslRetry) {
 
               val alreadyDownloaded = tmp.length()
 
@@ -583,13 +583,6 @@ final case class Cache[F[_]](
   def file(artifact: Artifact): EitherT[F, FileError, File] =
     file(artifact, retry)
 
-  /**
-    * This method computes the task needed to get a file.
-    *
-    * Retry only applies to [[coursier.FileError.WrongChecksum]].
-    *
-    * [[coursier.FileError.DownloadError]] is handled separately at [[downloading]]
-    */
   def file(artifact: Artifact, retry: Int): EitherT[F, FileError, File] =
     (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
 
@@ -651,26 +644,10 @@ final case class Cache[F[_]](
       EitherT(S.point[Either[String, String]](res))
     }
 
-  /**
-    * A [[Task]] able to fetch an [[Artifact]].
-    *
-    * Note that this method tries all the [[CachePolicy]]ies of this cache straightaway. During resolutions, you should
-    * prefer to try all repositories for the first policy, then the other policies if needed (in pseudo-code,
-    * `for (policy <- policies; repo <- repositories) …`, rather than
-    * `for (repo <- repositories, policy <- policies) …`). You should use the [[fetchs]] method in that case.
-    */
   def fetch: Repository.Fetch[F] =
     a =>
       (fetchPerPolicy(a, cachePolicies.head) /: cachePolicies.tail)(_ orElse fetchPerPolicy(a, _))
 
-  /**
-    * Sequence of [[Task]]s able to fetch an [[Artifact]].
-    *
-    * Each element correspond to a [[CachePolicy]] of this [[Cache]]. You may want to pass each of them to
-    * [[ResolutionProcess.fetch()]].
-    *
-    * @return a non empty sequence
-    */
   def fetchs: Seq[Repository.Fetch[F]] =
     cachePolicies.map { p =>
       (a: Artifact) =>
@@ -679,7 +656,7 @@ final case class Cache[F[_]](
 
 }
 
-object Cache {
+object FileCache {
 
   def localFile(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
@@ -803,96 +780,6 @@ object Cache {
   }
 
 
-  lazy val default: CacheInterface[Task] = Cache()
-
-  def fetch[F[_]](
-    cache: File = CacheDefaults.location,
-    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
-    checksums: Seq[Option[String]] = CacheDefaults.checksums,
-    logger: Option[CacheLogger] = None,
-    pool: ExecutorService = CacheDefaults.pool,
-    ttl: Option[Duration] = CacheDefaults.ttl,
-    followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount,
-    bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Repository.Fetch[F] =
-    Cache(
-      cache,
-      cachePolicies,
-      checksums,
-      logger,
-      pool,
-      ttl,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-      sslRetry = sslRetry,
-      bufferSize = bufferSize,
-      S = S
-    ).fetch
-
-  def fetchs[F[_]](
-    cache: File = CacheDefaults.location,
-    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
-    checksums: Seq[Option[String]] = CacheDefaults.checksums,
-    logger: Option[CacheLogger] = None,
-    pool: ExecutorService = CacheDefaults.pool,
-    ttl: Option[Duration] = CacheDefaults.ttl,
-    followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount,
-    bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): Seq[Repository.Fetch[F]] =
-    Cache(
-      cache,
-      cachePolicies,
-      checksums,
-      logger,
-      pool,
-      ttl,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-      sslRetry = sslRetry,
-      bufferSize = bufferSize,
-      S = S
-    ).fetchs
-
-  def file[F[_]](
-    artifact: Artifact,
-    cache: File = CacheDefaults.location,
-    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
-    checksums: Seq[Option[String]] = CacheDefaults.checksums,
-    logger: Option[CacheLogger] = None,
-    pool: ExecutorService = CacheDefaults.pool,
-    ttl: Option[Duration] = CacheDefaults.ttl,
-    retry: Int = CacheDefaults.defaultRetryCount,
-    localArtifactsShouldBeCached: Boolean = false,
-    followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount,
-    bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F]): EitherT[F, FileError, File] =
-    Cache(
-      cache,
-      cachePolicies,
-      checksums,
-      logger,
-      pool,
-      ttl,
-      localArtifactsShouldBeCached,
-      followHttpToHttpsRedirections,
-      sslRetry,
-      bufferSize,
-      S = S
-    ).file(artifact, retry = retry)
-
-  def validateChecksum[F[_]](
-    artifact: Artifact,
-    sumType: String,
-    cache: File,
-    pool: ExecutorService,
-    localArtifactsShouldBeCached: Boolean = false
-  )(implicit S: Schedulable[F]): EitherT[F, FileError, Unit] =
-    Cache(
-      cache,
-      pool = pool,
-      localArtifactsShouldBeCached = localArtifactsShouldBeCached,
-      S = S
-    ).validateChecksum(artifact, sumType)
+  lazy val default: Cache[Task] = FileCache()
 
 }

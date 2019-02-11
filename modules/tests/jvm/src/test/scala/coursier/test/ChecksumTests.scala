@@ -3,7 +3,7 @@ package test
 
 import java.math.BigInteger
 
-import coursier.cache.CacheChecksum
+import coursier.cache.{CacheChecksum, FileCache}
 import coursier.util.{Gather, Schedulable, Task}
 import utest._
 
@@ -83,12 +83,10 @@ object ChecksumTests extends TestSuite {
       val cache = HandmadeMetadata.repoBase
 
       def validate(artifact: Artifact, sumType: String): Task[Either[FileError, Unit]] =
-        Cache.validateChecksum[Task](
-          artifact,
-          sumType,
+        FileCache(
           cache,
-          Schedulable.defaultThreadPool
-        ).run
+          pool = Schedulable.defaultThreadPool
+        ).validateChecksum(artifact, sumType).run
 
       def artifact(url: String) = Artifact(
         url,

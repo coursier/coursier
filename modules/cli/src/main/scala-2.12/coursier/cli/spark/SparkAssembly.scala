@@ -7,9 +7,8 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.jar.JarFile
 
-import coursier.Cache
 import coursier.bootstrap.Assembly
-import coursier.cache.{CacheChecksum, CacheLocks}
+import coursier.cache.{CacheChecksum, CacheLocks, FileCache}
 import coursier.cli.Helper
 import coursier.cli.options.CommonOptions
 import coursier.core.Type
@@ -106,7 +105,7 @@ object SparkAssembly {
     val checksums = artifacts.map { a =>
       val f = a.checksumUrls.get("SHA-1") match {
         case Some(url) =>
-          Cache.localFile(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
+          FileCache.localFile(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
         case None =>
           throw new Exception(s"SHA-1 file not found for ${a.url}")
       }

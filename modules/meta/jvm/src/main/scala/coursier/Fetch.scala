@@ -3,7 +3,7 @@ package coursier
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
-import coursier.cache.{CacheDefaults, CacheInterface, CacheLogger}
+import coursier.cache.{CacheDefaults, Cache, CacheLogger}
 import coursier.core.{Classifier, Type}
 import coursier.util.Schedulable
 
@@ -52,7 +52,7 @@ object Fetch {
 
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
-    cache: CacheInterface[F] = Cache.default,
+    cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit
      S: Schedulable[F]
@@ -101,7 +101,7 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: CacheInterface[F] = Cache.default,
+    cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit
      S: Schedulable[F]
