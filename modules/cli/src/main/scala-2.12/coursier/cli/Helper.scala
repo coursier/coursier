@@ -139,7 +139,7 @@ class Helper(
       val res = Gather[Task].gather(common.dependencyOptions.scaladex.map { s =>
         val deps = scaladex.dependencies(
           s,
-          common.dependencyOptions.scalaVersion,
+          common.resolutionOptions.scalaVersion,
           if (common.verbosityLevel >= 2) Console.err.println(_) else _ => ()
         )
 
@@ -179,7 +179,7 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.dependencyOptions.scalaVersion)
+  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.resolutionOptions.scalaVersion)
 
   prematureExitIf(forceVersionErrors.nonEmpty) {
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
@@ -196,7 +196,7 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(common.dependencyOptions.exclude, common.dependencyOptions.scalaVersion)
+  val (excludeErrors, excludes0) = Parse.modules(common.dependencyOptions.exclude, common.resolutionOptions.scalaVersion)
 
   prematureExitIf(excludeErrors.nonEmpty) {
     s"Cannot parse excluded modules:\n" +
@@ -247,10 +247,10 @@ class Helper(
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(rawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
+    Parse.moduleVersionConfigs(rawDependencies, moduleReq, transitive=true, common.resolutionOptions.scalaVersion)
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.dependencyOptions.scalaVersion)
+    Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.resolutionOptions.scalaVersion)
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
 
@@ -262,11 +262,11 @@ class Helper(
         case arr => arr.take(2).mkString(".")
       }
       Map(
-        "scalaVersion" -> common.dependencyOptions.scalaVersion.split('.').take(2).mkString("."),
+        "scalaVersion" -> common.resolutionOptions.scalaVersion.split('.').take(2).mkString("."),
         "sbtVersion" -> sbtVer
       )
     }
-    val (errors, ok) = Parse.moduleVersionConfigs(common.dependencyOptions.sbtPlugin, moduleReq, transitive = true, common.dependencyOptions.scalaVersion)
+    val (errors, ok) = Parse.moduleVersionConfigs(common.dependencyOptions.sbtPlugin, moduleReq, transitive = true, common.resolutionOptions.scalaVersion)
     val ok0 = ok.map {
       case (dep, params) =>
         val dep0 = dep.copy(
@@ -845,7 +845,7 @@ class Helper(
       (Launch.baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDepsOrExit(common.dependencyOptions.scalaVersion)
+      val isolatedDeps = isolated.isolatedDepsOrExit(common.resolutionOptions.scalaVersion)
 
       val (isolatedLoader, filteredFiles0) = isolated.targetsOrExit.foldLeft((Launch.baseLoader, files0)) {
         case ((parent, files0), target) =>

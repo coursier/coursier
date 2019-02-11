@@ -8,5 +8,6 @@ final case class ResolutionParams(
   forceVersion: Map[Module, String] = Map.empty,
   forcedProperties: Map[String, String] = Map.empty,
   profiles: Set[String] = Set.empty,
+  scalaVersion: String = scala.util.Properties.versionNumberString,
   typelevel: Boolean = false
 )

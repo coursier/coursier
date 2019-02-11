@@ -34,16 +34,17 @@ object ResolveParams {
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
-    val dependencyV = DependencyParams(options.dependencyOptions)
-    val resolutionV = options.resolutionOptions.params(
-      dependencyV.toOption.fold(options.dependencyOptions.scalaVersion)(_.scalaVersion)
+    val resolutionV = options.resolutionOptions.params
+    val dependencyV = DependencyParams(
+      resolutionV.toOption.fold(options.resolutionOptions.scalaVersion)(_.scalaVersion),
+      options.dependencyOptions
     )
 
     val benchmark = options.benchmark
     val tree = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV =
-      dependencyV.toOption.map(_.scalaVersion) match {
+      resolutionV.toOption.map(_.scalaVersion) match {
         case None =>
           Validated.validNel(Nil)
         case Some(sv) =>

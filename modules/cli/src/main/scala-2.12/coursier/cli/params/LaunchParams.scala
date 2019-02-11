@@ -28,11 +28,11 @@ object LaunchParams {
 
     val resolveV = ResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
-    val sharedLoaderV = resolveV.map(_.dependency).toOption match {
+    val sharedLoaderV = resolveV.map(r => (r.dependency, r.resolution)).toOption match {
       case None =>
         Validated.validNel(SharedLoaderParams(Nil, Map.empty))
-      case Some(depsOpts) =>
-        SharedLoaderParams(options.sharedLoaderOptions, depsOpts.scalaVersion, depsOpts.defaultConfiguration)
+      case Some((depsOpts, resolutionOpts)) =>
+        SharedLoaderParams(options.sharedLoaderOptions, resolutionOpts.scalaVersion, depsOpts.defaultConfiguration)
     }
 
     val mainClassOpt = Some(options.mainClass).filter(_.nonEmpty)

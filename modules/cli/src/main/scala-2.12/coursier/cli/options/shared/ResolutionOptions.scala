@@ -30,12 +30,16 @@ final case class ResolutionOptions(
   @Short("F")
     profile: List[String] = Nil,
 
+  @Help("Default scala version")
+  @Short("e")
+    scalaVersion: String = scala.util.Properties.versionNumberString,
+
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false
 
 ) {
 
-  def params(scalaVersion: String): ValidatedNel[String, ResolutionParams] = {
+  def params: ValidatedNel[String, ResolutionParams] = {
 
     val maxIterationsV =
       if (maxIterations > 0)
@@ -83,6 +87,7 @@ final case class ResolutionOptions(
           forceVersion,
           forcedProperties,
           profiles,
+          scalaVersion,
           typelevel
         )
     }
