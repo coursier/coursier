@@ -1,21 +1,8 @@
 package coursier.cache
-import java.io.File
-import java.util.concurrent.ExecutorService
 
-import coursier.FileError
 import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Task}
 
-abstract class Cache[F[_]] {
-
-  /**
-    * This method computes the task needed to get a file.
-    *
-    * Retry only applies to [[coursier.FileError.WrongChecksum]].
-    *
-    * [[coursier.FileError.DownloadError]] is handled separately.
-    */
-  def file(artifact: Artifact): EitherT[F, FileError, File]
+abstract class Cache[F[_]] extends PlatformCache[F] {
 
   /**
     * Method to fetch an [[Artifact]].
@@ -36,12 +23,6 @@ abstract class Cache[F[_]] {
     * @return a non empty sequence
     */
   def fetchs: Seq[Repository.Fetch[F]]
-
-  def pool: ExecutorService
 }
 
-object Cache {
-
-  lazy val default: Cache[Task] = FileCache()
-
-}
+object Cache extends PlatformCacheCompanion
