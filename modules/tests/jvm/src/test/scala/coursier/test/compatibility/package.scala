@@ -4,9 +4,9 @@ import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
-import coursier.cache.CacheUrl
+import coursier.cache.MockCache
 import coursier.core.Repository
-import coursier.util.{EitherT, Schedulable, Task, TestEscape}
+import coursier.util.{Schedulable, Task}
 import coursier.Platform
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,43 +35,8 @@ package object compatibility {
 
   private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
 
-  def artifact[F[_]: Schedulable]: Repository.Fetch[F] = { artifact =>
-
-    if (artifact.url.startsWith("file:/") || artifact.url.startsWith("http://localhost:"))
-      EitherT(Platform.readFully(
-        CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
-      ))
-    else {
-
-      assert(artifact.authentication.isEmpty)
-
-      val path = baseRepo.resolve(TestEscape.urlAsPath(artifact.url))
-
-      val init = EitherT[F, String, Unit] {
-        if (Files.exists(path))
-          Schedulable[F].point(Right(()))
-        else if (fillChunks) {
-          val f = Schedulable[F].delay[Either[String, Unit]] {
-            Files.createDirectories(path.getParent)
-            def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
-            val b = Platform.readFullySync(is())
-            Files.write(path, b)
-            Right(())
-          }
-
-          Schedulable[F].handle(f) {
-            case e: Exception =>
-              Left(e.toString)
-          }
-        } else
-          Schedulable[F].point(Left(s"not found: $path"))
-      }
-
-      init.flatMap { _ =>
-        EitherT(Platform.readFully(Files.newInputStream(path)))
-      }
-    }
-  }
+  def artifact[F[_]: Schedulable]: Repository.Fetch[F] =
+    MockCache.create[F](baseRepo, fillChunks).fetch
 
   val taskArtifact = artifact[Task]
 
