@@ -355,7 +355,7 @@ class Helper(
     userActivations =
       if (userEnabledProfiles.isEmpty) None
       else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap(_)) else None,
+    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap) else None,
     forceProperties = forcedProperties
   )
 

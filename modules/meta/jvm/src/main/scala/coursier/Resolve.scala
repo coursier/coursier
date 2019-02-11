@@ -22,7 +22,7 @@ object Resolve {
         if (params.profiles.isEmpty) None
         else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
       // FIXME Add that back? (Typelevel is in the extra module)
-      // mapDependencies = if (params.typelevel) Some(Typelevel.swap(_)) else None,
+      // mapDependencies = if (params.typelevel) Some(Typelevel.swap) else None,
       forceProperties = params.forcedProperties
     )
 

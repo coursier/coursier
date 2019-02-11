@@ -276,7 +276,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
       startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
-        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None
+        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap) else None
       )
       res <- runResolution(
         params,
