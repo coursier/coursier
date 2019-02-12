@@ -14,6 +14,7 @@ import scala.util.{Failure, Success, Try}
 final case class MockCache[F[_]](
   base: Path,
   writeMissing: Boolean,
+  pool: ExecutorService,
   S: Schedulable[F]
 ) extends Cache[F] {
 
@@ -46,44 +47,43 @@ final case class MockCache[F[_]](
 
       val path = base.resolve(MockCache.urlAsPath(artifact.url))
 
-      val init = EitherT[F, ArtifactError, Unit] {
-        if (Files.exists(path))
-          Schedulable[F].point(Right(()))
-        else if (writeMissing) {
-          val f = Schedulable[F].delay[Either[ArtifactError, Unit]] {
-            Files.createDirectories(path.getParent)
-            def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
-            val b = MockCache.readFullySync(is())
-            Files.write(path, b)
-            Right(())
-          }
+      val init0 = S.bind[Boolean, Either[ArtifactError, Unit]](S.schedule(pool)(Files.exists(path))) {
+        case true => S.point(Right(()))
+        case false =>
+          if (writeMissing) {
+            val f = S.schedule[Either[ArtifactError, Unit]](pool) {
+              Files.createDirectories(path.getParent)
+              def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
+              val b = MockCache.readFullySync(is())
+              Files.write(path, b)
+              Right(())
+            }
 
-          Schedulable[F].handle(f) {
-            case e: Exception =>
-              Left(ArtifactError.DownloadError(e.toString))
-          }
-        } else
-          Schedulable[F].point(Left(ArtifactError.NotFound(path.toString)))
+            S.handle(f) {
+              case e: Exception =>
+                Left(ArtifactError.DownloadError(e.toString))
+            }
+          } else
+            S.point(Left(ArtifactError.NotFound(path.toString)))
       }
 
-      init.map { _ =>
-        path.toFile
-      }
+      EitherT[F, ArtifactError, Unit](init0)
+        .map(_ => path.toFile)
     }
   }
-
-  def pool: ExecutorService =
-    ???
 }
 
 object MockCache {
+
   def create[F[_]: Schedulable](
     base: Path,
-    writeMissing: Boolean
+    writeMissing: Boolean = false,
+    pool: ExecutorService = CacheDefaults.pool
   ): MockCache[F] =
     MockCache(
       base,
       writeMissing,
+      pool,
       Schedulable[F]
     )
 
