@@ -780,6 +780,32 @@ object FileCache {
   }
 
 
-  lazy val default: Cache[Task] = FileCache()
+  def create[F[_]: Schedulable](
+    cache: File = CacheDefaults.location,
+    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
+    checksums: Seq[Option[String]] = CacheDefaults.checksums,
+    logger: Option[CacheLogger] = None,
+    pool: ExecutorService = CacheDefaults.pool,
+    ttl: Option[Duration] = CacheDefaults.ttl,
+    localArtifactsShouldBeCached: Boolean = false,
+    followHttpToHttpsRedirections: Boolean = false,
+    sslRetry: Int = CacheDefaults.sslRetryCount,
+    retry: Int = CacheDefaults.defaultRetryCount,
+    bufferSize: Int = CacheDefaults.bufferSize
+  ): FileCache[F] =
+    FileCache(
+      cache = cache,
+      cachePolicies = cachePolicies,
+      checksums = checksums,
+      logger = logger,
+      pool = pool,
+      ttl = ttl,
+      localArtifactsShouldBeCached = localArtifactsShouldBeCached,
+      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+      sslRetry = sslRetry,
+      retry = retry,
+      bufferSize = bufferSize,
+      Schedulable[F]
+    )
 
 }
