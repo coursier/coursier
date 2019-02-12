@@ -291,7 +291,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         pool
       )
 
-      validated = coursier.Resolve.validate(res, params.output.verbosity >= 1).either
+      validated = coursier.Resolve.validate(res).either
 
       valid = validated.isRight
 
@@ -330,7 +330,8 @@ object Resolve extends CaseApp[ResolveOptions] {
       _ = validated match {
         case Right(()) =>
         case Left(errors) =>
-          errors.foreach(stderr.println)
+          for (err <- errors)
+            stderr.println(err.getMessage)
       }
     } yield (res, valid && !conflicts)
   }
