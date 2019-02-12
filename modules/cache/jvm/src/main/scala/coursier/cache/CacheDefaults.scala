@@ -2,7 +2,6 @@ package coursier.cache
 
 import java.io.File
 
-import coursier.CacheParse
 import coursier.core.Repository
 import coursier.paths.CachePath
 import coursier.util.{Repositories, Schedulable}

@@ -4,7 +4,7 @@ package cli
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.cache.{CacheDefaults, FileCache, LocalRepositories}
+import coursier.cache.{CacheDefaults, CacheParse, CachePolicy, FileCache, LocalRepositories}
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions

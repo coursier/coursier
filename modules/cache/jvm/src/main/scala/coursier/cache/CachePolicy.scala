@@ -1,4 +1,4 @@
-package coursier
+package coursier.cache
 
 sealed abstract class CachePolicy extends Product with Serializable
 

@@ -8,7 +8,7 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
-import coursier.{CachePolicy, FileError}
+import coursier.FileError
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.internal.FileUtil
 import coursier.paths.CachePath
