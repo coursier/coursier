@@ -8,8 +8,8 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
+import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
-import coursier.internal.FileUtil
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Schedulable, Task}
 

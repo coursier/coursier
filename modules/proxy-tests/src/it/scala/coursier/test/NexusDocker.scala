@@ -2,7 +2,7 @@ package coursier.test
 
 import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
-import coursier.internal.FileUtil
+import coursier.cache.internal.FileUtil
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
