@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.Validated
 import cats.implicits._
-import coursier.cache.{CacheLogger, TermDisplay}
+import coursier.cache.{CacheLogger, ProgressBarLogger}
 import coursier.Resolution
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
@@ -322,7 +322,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             res,
             stdout,
             stderr,
-            colors = !TermDisplay.defaultFallbackMode
+            colors = !ProgressBarLogger.defaultFallbackMode
           )
         }
       }

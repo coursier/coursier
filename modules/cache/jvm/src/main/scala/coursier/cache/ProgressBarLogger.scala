@@ -9,7 +9,7 @@ import coursier.cache.internal.Terminal
 
 import scala.collection.mutable.ArrayBuffer
 
-object TermDisplay {
+object ProgressBarLogger {
 
   def defaultFallbackMode: Boolean = {
     val env0 = sys.env.get("COURSIER_PROGRESS").map(_.toLowerCase).collect {
@@ -373,12 +373,12 @@ object TermDisplay {
 
 }
 
-class TermDisplay(
+class ProgressBarLogger(
   out: Writer,
-  val fallbackMode: Boolean = TermDisplay.defaultFallbackMode
+  val fallbackMode: Boolean = ProgressBarLogger.defaultFallbackMode
 ) extends CacheLogger {
 
-  import TermDisplay._
+  import ProgressBarLogger._
 
   private var updateRunnableOpt = Option.empty[UpdateDisplayRunnable]
   @volatile private var scheduler: ScheduledExecutorService = null

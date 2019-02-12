@@ -107,7 +107,7 @@ class Helper(
   }
 
   val loggerFallbackMode =
-    !common.outputOptions.progress && TermDisplay.defaultFallbackMode
+    !common.outputOptions.progress && ProgressBarLogger.defaultFallbackMode
 
   val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
     if (common.dependencyOptions.scaladex.isEmpty)
@@ -115,7 +115,7 @@ class Helper(
     else {
       val logger =
         if (common.verbosityLevel >= 0)
-          Some(new TermDisplay(
+          Some(new ProgressBarLogger(
             new OutputStreamWriter(System.err),
             fallbackMode = loggerFallbackMode
           ))
@@ -382,7 +382,7 @@ class Helper(
 
   val logger =
     if (common.verbosityLevel >= 0)
-      Some(new TermDisplay(
+      Some(new ProgressBarLogger(
         new OutputStreamWriter(System.err),
         fallbackMode = loggerFallbackMode
       ))
@@ -707,7 +707,7 @@ class Helper(
 
     val logger =
       if (common.verbosityLevel >= 0)
-        Some(new TermDisplay(
+        Some(new ProgressBarLogger(
           new OutputStreamWriter(System.err),
           fallbackMode = loggerFallbackMode
         ))

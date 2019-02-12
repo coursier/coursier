@@ -4,7 +4,7 @@ import java.io.OutputStreamWriter
 
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
-import coursier.cache.{CacheLogger, TermDisplay}
+import coursier.cache.{CacheLogger, ProgressBarLogger}
 import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(
@@ -15,10 +15,10 @@ final case class OutputParams(
   def logger(): CacheLogger = {
 
     val loggerFallbackMode =
-      !progressBars && TermDisplay.defaultFallbackMode
+      !progressBars && ProgressBarLogger.defaultFallbackMode
 
     if (verbosity >= 0)
-      new TermDisplay(
+      new ProgressBarLogger(
         new OutputStreamWriter(System.err),
         fallbackMode = loggerFallbackMode
       )
