@@ -101,9 +101,9 @@ Given a sequence of dependencies, designated by their `Module` (organisation and
 and version (just a `String`), it gives either errors (`Seq[String]`) or metadata (`(Artifact.Source, Project)`),
 wrapping the whole in a monad `F`.
 ```scala mdoc:silent
-import coursier.util.Task
+import coursier.cache.Cache
 
-val fetch = ResolutionProcess.fetch(repositories, Cache.fetch[Task]())
+val fetch = ResolutionProcess.fetch(repositories, Cache.default.fetch)
 ```
 
 The monad used by `Fetch.from` is `coursier.util.Task`, but the resolution process is not tied to a particular
@@ -155,11 +155,12 @@ which are dependencies whose versions could not be unified.
 Then, if all went well, we can fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala mdoc:silent
 import java.io.File
-import coursier.util.Gather
+import coursier.cache.Cache
+import coursier.util.{Gather, Task}
 
 val localArtifacts: Seq[Either[FileError, File]] =
   Gather[Task].gather(
-    resolution.artifacts().map(Cache.file[Task](_).run)
+    resolution.artifacts().map(Cache.default.file(_).run)
   ).unsafeRun()
 ```
 
