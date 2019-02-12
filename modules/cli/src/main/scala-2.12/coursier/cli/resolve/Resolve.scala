@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.Validated
 import cats.implicits._
-import coursier.cache.CacheLogger
-import coursier.{Resolution, TermDisplay}
+import coursier.cache.{CacheLogger, TermDisplay}
+import coursier.Resolution
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex

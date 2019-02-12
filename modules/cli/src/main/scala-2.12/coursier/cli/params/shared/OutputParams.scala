@@ -4,8 +4,7 @@ import java.io.OutputStreamWriter
 
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
-import coursier.TermDisplay
-import coursier.cache.CacheLogger
+import coursier.cache.{CacheLogger, TermDisplay}
 import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(
