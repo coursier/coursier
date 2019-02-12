@@ -209,8 +209,8 @@ object ProgressBarLogger {
       update()
     }
 
-    private def reflowed(url: String, info: Info) = {
-      val extra = info match {
+    private def describe(info: Info): String =
+      info match {
         case downloadInfo: DownloadInfo =>
           val pctOpt = downloadInfo.fraction.map(100.0 * _)
 
@@ -222,35 +222,6 @@ object ProgressBarLogger {
         case _: CheckUpdateInfo =>
           "Checking for updates"
       }
-
-      val baseExtraWidth = width / 5
-
-      val total = url.length + 1 + extra.length
-      val (url0, extra0) =
-        if (total >= width) { // or > ? If equal, does it go down 2 lines?
-        val overflow = total - width + 1
-
-          val extra0 =
-            if (extra.length > baseExtraWidth)
-              extra.take((baseExtraWidth max (extra.length - overflow)) - 1) + "…"
-            else
-              extra
-
-          val total0 = url.length + 1 + extra0.length
-          val overflow0 = total0 - width + 1
-
-          val url0 =
-            if (total0 >= width)
-              url.take(((width - baseExtraWidth - 1) max (url.length - overflow0)) - 1) + "…"
-            else
-              url
-
-          (url0, extra0)
-        } else
-          (url, extra)
-
-      (url0, extra0)
-    }
 
     private def truncatedPrintln(s: String): Unit = {
 
@@ -346,10 +317,8 @@ object ProgressBarLogger {
       for ((url, info) <- downloads0 if previous(url)) {
         assert(info != null, s"Incoherent state ($url)")
 
-        val (url0, extra0) = reflowed(url, info)
-
         displayedSomething = true
-        out.write(s"$url0 $extra0\n")
+        out.write(s"$url ${describe(info)}\n")
       }
 
       if (displayedSomething)
