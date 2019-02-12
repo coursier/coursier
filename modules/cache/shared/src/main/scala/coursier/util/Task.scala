@@ -23,7 +23,7 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
     }
 }
 
-object Task extends PlatformTask {
+object Task extends PlatformTaskCompanion {
 
   def point[A](a: A): Task[A] = {
     val future = Future.successful(a)
@@ -55,5 +55,9 @@ object Task extends PlatformTask {
         }
       loop(a)
     }
+
+  def gather: Gather[Task] =
+    schedulable
+
 }
 

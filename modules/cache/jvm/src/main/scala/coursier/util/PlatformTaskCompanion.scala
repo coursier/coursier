@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration.Duration
 
-abstract class PlatformTask { self =>
+abstract class PlatformTaskCompanion { self =>
 
   def schedule[A](pool: ExecutorService)(f: => A): Task[A] = {
 
@@ -18,17 +18,9 @@ abstract class PlatformTask { self =>
   }
 
   implicit val schedulable: Schedulable[Task] =
-    new TaskGather with Schedulable[Task] {
-      def delay[A](a: => A) = Task.delay(a)
-      override def fromAttempt[A](a: Either[Throwable, A]): Task[A] =
-        Task.fromEither(a)
-      def handle[A](a: Task[A])(f: PartialFunction[Throwable, A]) =
-        a.handle(f)
+    new TaskSchedulable {
       def schedule[A](pool: ExecutorService)(f: => A) = self.schedule(pool)(f)
     }
-
-  def gather: Gather[Task] =
-    schedulable
 
   implicit class PlatformTaskOps[T](private val task: Task[T]) {
     def unsafeRun()(implicit ec: ExecutionContext): T =
