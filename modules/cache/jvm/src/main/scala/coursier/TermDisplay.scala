@@ -5,6 +5,7 @@ import java.sql.Timestamp
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
+import coursier.cache.internal.Terminal
 import coursier.cache.{ArtifactError, CacheLogger}
 
 import scala.collection.mutable.ArrayBuffer
