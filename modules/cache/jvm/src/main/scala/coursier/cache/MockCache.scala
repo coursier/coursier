@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
-import coursier.FileError
 import coursier.core.{Artifact, Repository}
 import coursier.util.{EitherT, Schedulable}
 
@@ -37,7 +36,7 @@ final case class MockCache[F[_]](
   def fetchs: Seq[Repository.Fetch[F]] =
     Seq(fetch)
 
-  def file(artifact: Artifact): EitherT[F, FileError, File] = {
+  def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
 
     if (artifact.url.startsWith("file:/"))
       EitherT.point(new File(new URI(artifact.url)))
@@ -47,11 +46,11 @@ final case class MockCache[F[_]](
 
       val path = base.resolve(MockCache.urlAsPath(artifact.url))
 
-      val init = EitherT[F, FileError, Unit] {
+      val init = EitherT[F, ArtifactError, Unit] {
         if (Files.exists(path))
           Schedulable[F].point(Right(()))
         else if (writeMissing) {
-          val f = Schedulable[F].delay[Either[FileError, Unit]] {
+          val f = Schedulable[F].delay[Either[ArtifactError, Unit]] {
             Files.createDirectories(path.getParent)
             def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
             val b = MockCache.readFullySync(is())
@@ -61,10 +60,10 @@ final case class MockCache[F[_]](
 
           Schedulable[F].handle(f) {
             case e: Exception =>
-              Left(FileError.DownloadError(e.toString))
+              Left(ArtifactError.DownloadError(e.toString))
           }
         } else
-          Schedulable[F].point(Left(FileError.NotFound(path.toString)))
+          Schedulable[F].point(Left(ArtifactError.NotFound(path.toString)))
       }
 
       init.map { _ =>

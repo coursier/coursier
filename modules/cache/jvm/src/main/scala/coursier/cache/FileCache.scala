@@ -8,7 +8,6 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
-import coursier.FileError
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.internal.FileUtil
 import coursier.paths.CachePath
@@ -41,7 +40,7 @@ final case class FileCache[F[_]](
     artifact: Artifact,
     checksums: Set[String],
     cachePolicy: CachePolicy
-  ): F[Seq[((File, String), Either[FileError, Unit])]] = {
+  ): F[Seq[((File, String), Either[ArtifactError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
@@ -52,7 +51,7 @@ final case class FileCache[F[_]](
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
-    def fileLastModified(file: File): EitherT[F, FileError, Option[Long]] =
+    def fileLastModified(file: File): EitherT[F, ArtifactError, Option[Long]] =
       EitherT {
         S.schedule(pool) {
           Right {
@@ -61,7 +60,7 @@ final case class FileCache[F[_]](
               Some(lastModified)
             else
               None
-          } : Either[FileError, Option[Long]]
+          } : Either[ArtifactError, Option[Long]]
         }
       }
 
@@ -69,7 +68,7 @@ final case class FileCache[F[_]](
       url: String,
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: Option[CacheLogger]
-    ): EitherT[F, FileError, Option[Long]] =
+    ): EitherT[F, ArtifactError, Option[Long]] =
       EitherT {
         S.schedule(pool) {
           var conn: URLConnection = null
@@ -102,7 +101,8 @@ final case class FileCache[F[_]](
                 }
 
               case other =>
-                Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
+                Left(
+                  ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
             }
           } finally {
             if (conn != null)
@@ -144,7 +144,7 @@ final case class FileCache[F[_]](
       }
     }
 
-    def shouldDownload(file: File, url: String): EitherT[F, FileError, Boolean] = {
+    def shouldDownload(file: File, url: String): EitherT[F, ArtifactError, Boolean] = {
 
       def checkNeeded = ttl.fold(S.point(true)) { ttl =>
         if (ttl.isFinite)
@@ -194,8 +194,7 @@ final case class FileCache[F[_]](
 
     def remote(
       file: File,
-      url: String
-    ): EitherT[F, FileError, Unit] =
+      url: String): EitherT[F, ArtifactError, Unit] =
       EitherT {
         S.schedule(pool) {
 
@@ -203,7 +202,7 @@ final case class FileCache[F[_]](
 
           var lenOpt = Option.empty[Option[Long]]
 
-          def doDownload(): Either[FileError, Unit] =
+          def doDownload(): Either[ArtifactError, Unit] =
             FileCache.downloading(url, file, logger, sslRetry) {
 
               val alreadyDownloaded = tmp.length()
@@ -248,9 +247,9 @@ final case class FileCache[F[_]](
                   }
 
                 if (respCodeOpt.contains(404))
-                  Left(FileError.NotFound(url, permanent = Some(true)))
+                  Left(ArtifactError.NotFound(url, permanent = Some(true)))
                 else if (respCodeOpt.contains(401))
-                  Left(FileError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+                  Left(ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
                 else {
                   for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
                     val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -287,7 +286,7 @@ final case class FileCache[F[_]](
               }
             }
 
-          def checkDownload(): Option[Either[FileError, Unit]] = {
+          def checkDownload(): Option[Either[ArtifactError, Unit]] = {
 
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
@@ -328,7 +327,7 @@ final case class FileCache[F[_]](
 
           logger.foreach(_.downloadingArtifact(url, file))
 
-          var res: Either[FileError, Unit] = null
+          var res: Either[ArtifactError, Unit] = null
 
           try {
             res = CacheLocks.withLockOr(cache, file)(
@@ -345,20 +344,20 @@ final case class FileCache[F[_]](
 
     def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
-    def remoteKeepErrors(file: File, url: String): EitherT[F, FileError, Unit] = {
+    def remoteKeepErrors(file: File, url: String): EitherT[F, ArtifactError, Unit] = {
 
       val errFile0 = errFile(file)
 
       def validErrFileExists =
         EitherT {
-          S.schedule[Either[FileError, Boolean]](pool) {
+          S.schedule[Either[ArtifactError, Boolean]](pool) {
             Right(referenceFileExists && errFile0.exists())
           }
         }
 
       def createErrFile =
         EitherT {
-          S.schedule[Either[FileError, Unit]](pool) {
+          S.schedule[Either[ArtifactError, Unit]](pool) {
             if (referenceFileExists) {
               if (!errFile0.exists())
                 Files.write(errFile0.toPath, Array.emptyByteArray)
@@ -370,7 +369,7 @@ final case class FileCache[F[_]](
 
       def deleteErrFile =
         EitherT {
-          S.schedule[Either[FileError, Unit]](pool) {
+          S.schedule[Either[ArtifactError, Unit]](pool) {
             if (errFile0.exists())
               errFile0.delete()
 
@@ -381,8 +380,8 @@ final case class FileCache[F[_]](
       def retainError =
         EitherT {
           S.bind(remote(file, url).run) {
-            case err @ Left(FileError.NotFound(_, Some(true))) =>
-              S.map(createErrFile.run)(_ => err: Either[FileError, Unit])
+            case err @ Left(ArtifactError.NotFound(_, Some(true))) =>
+              S.map(createErrFile.run)(_ => err: Either[ArtifactError, Unit])
             case other =>
               S.map(deleteErrFile.run)(_ => other)
           }
@@ -392,7 +391,8 @@ final case class FileCache[F[_]](
         case CachePolicy.FetchMissing | CachePolicy.LocalOnly | CachePolicy.LocalUpdate | CachePolicy.LocalUpdateChanging =>
           validErrFileExists.flatMap { exists =>
             if (exists)
-              EitherT(S.point[Either[FileError, Unit]](Left(FileError.NotFound(url, Some(true)))))
+              EitherT(
+                S.point[Either[ArtifactError, Unit]](Left(ArtifactError.NotFound(url, Some(true)))))
             else
               retainError
           }
@@ -402,14 +402,15 @@ final case class FileCache[F[_]](
       }
     }
 
-    def checkFileExists(file: File, url: String, log: Boolean = true): EitherT[F, FileError, Unit] =
+    def checkFileExists(file: File, url: String,
+                        log: Boolean = true): EitherT[F, ArtifactError, Unit] =
       EitherT {
         S.schedule(pool) {
           if (file.exists()) {
             logger.foreach(_.foundLocally(url, file))
             Right(())
           } else
-            Left(FileError.NotFound(file.toString))
+            Left(ArtifactError.NotFound(file.toString))
         }
       }
 
@@ -448,7 +449,7 @@ final case class FileCache[F[_]](
               case true =>
                 remoteKeepErrors(file, url)
               case false =>
-                EitherT(S.point[Either[FileError, Unit]](Right(())))
+                EitherT(S.point[Either[ArtifactError, Unit]](Right(())))
             }
 
             cachePolicy0 match {
@@ -475,8 +476,8 @@ final case class FileCache[F[_]](
 
   def validateChecksum(
     artifact: Artifact,
-    sumType: String
-  ): EitherT[F, FileError, Unit] = {
+                       sumType: String
+  ): EitherT[F, ArtifactError, Unit] = {
 
     val localFile0 = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
 
@@ -490,7 +491,7 @@ final case class FileCache[F[_]](
 
             sumOpt match {
               case None =>
-                Left(FileError.ChecksumFormatError(sumType, sumFile.getPath))
+                Left(ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
 
               case Some(sum) =>
                 val md = MessageDigest.getInstance(sumType)
@@ -505,7 +506,7 @@ final case class FileCache[F[_]](
                 if (sum == calculatedSum)
                   Right(())
                 else
-                  Left(FileError.WrongChecksum(
+                  Left(ArtifactError.WrongChecksum(
                     sumType,
                     calculatedSum.toString(16),
                     sum.toString(16),
@@ -516,7 +517,7 @@ final case class FileCache[F[_]](
           }
 
         case None =>
-          S.point[Either[FileError, Unit]](Left(FileError.ChecksumNotFound(sumType, localFile0.getPath)))
+          S.point[Either[ArtifactError, Unit]](Left(ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)))
       }
     }
   }
@@ -527,7 +528,7 @@ final case class FileCache[F[_]](
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, FileError, File] =
+  ): EitherT[F, ArtifactError, File] =
     EitherT {
       S.map(download(
         artifact,
@@ -550,23 +551,23 @@ final case class FileCache[F[_]](
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
               //       from artifact.checksumUrls
-              Left(FileError.ChecksumNotFound(checksums0.last.get, ""))
+              Left(ArtifactError.ChecksumNotFound(checksums0.last.get, ""))
             case Some(c) => Right((f, c))
           }
         }
       }
     }.flatMap {
-      case (f, None) => EitherT(S.point[Either[FileError, File]](Right(f)))
+      case (f, None) => EitherT(S.point[Either[ArtifactError, File]](Right(f)))
       case (f, Some(c)) =>
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
-      case err: FileError.WrongChecksum =>
+      case err: ArtifactError.WrongChecksum =>
         if (retry <= 0) {
           EitherT(S.point(Left(err)))
         }
         else {
           EitherT {
-            S.schedule[Either[FileError, Unit]](pool) {
+            S.schedule[Either[ArtifactError, Unit]](pool) {
               val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
               badFile.delete()
               logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
@@ -580,10 +581,10 @@ final case class FileCache[F[_]](
         EitherT(S.point(Left(err)))
     }
 
-  def file(artifact: Artifact): EitherT[F, FileError, File] =
+  def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     file(artifact, retry)
 
-  def file(artifact: Artifact, retry: Int): EitherT[F, FileError, File] =
+  def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
     (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
 
   private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] =
@@ -693,11 +694,11 @@ object FileCache {
     logger: Option[CacheLogger],
     sslRetry: Int
   )(
-    f: => Either[FileError, T]
-  ): Either[FileError, T] = {
+    f: => Either[ArtifactError, T]
+  ): Either[ArtifactError, T] = {
 
     @tailrec
-    def helper(retry: Int): Either[FileError, T] = {
+    def helper(retry: Int): Either[ArtifactError, T] = {
 
       val resOpt =
         try {
@@ -705,12 +706,12 @@ object FileCache {
             try f
             catch {
               case nfe: FileNotFoundException if nfe.getMessage != null =>
-                Left(FileError.NotFound(nfe.getMessage))
+                Left(ArtifactError.NotFound(nfe.getMessage))
             }
           }
 
           val res = res0.getOrElse {
-            Left(FileError.ConcurrentDownload(url))
+            Left(ArtifactError.ConcurrentDownload(url))
           }
 
           Some(res)
@@ -721,7 +722,7 @@ object FileCache {
             None
           case NonFatal(e) =>
             Some(Left(
-              FileError.DownloadError(
+              ArtifactError.DownloadError(
                 s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url"
               )
             ))
@@ -744,7 +745,7 @@ object FileCache {
     url: String,
     authentication: Option[Authentication],
     logger: Option[CacheLogger]
-  ): Either[FileError, Option[Long]] = {
+  ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
 
@@ -771,7 +772,7 @@ object FileCache {
           }
 
         case other =>
-          Left(FileError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
+          Left(ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
       }
     } finally {
       if (conn != null)

@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
-import coursier.cache.CacheLogger
+import coursier.cache.{ArtifactError, CacheLogger}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -523,6 +523,6 @@ class TermDisplay(
   }
 
   // TODO(wisechengyi,alexarchambault): implement this
-  override def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
+  override def removedCorruptFile(url: String, file: File, reason: Option[ArtifactError]): Unit = {}
 
 }

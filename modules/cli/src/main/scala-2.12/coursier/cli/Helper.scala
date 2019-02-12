@@ -4,7 +4,7 @@ package cli
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.cache.{CacheDefaults, CacheParse, CachePolicy, FileCache, LocalRepositories}
+import coursier.cache._
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
@@ -749,7 +749,7 @@ class Helper(
       .partition {
         case (a, err) =>
           val notFound = err match {
-            case _: FileError.NotFound => true
+            case _: ArtifactError.NotFound => true
             case _ => false
           }
           a.optional && notFound
