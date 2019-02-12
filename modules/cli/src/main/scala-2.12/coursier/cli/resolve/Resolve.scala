@@ -37,7 +37,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
 
       val tasks = params.dependency.scaladexLookups.map { s =>
-        Dependencies.handleScaladexDependency(s, params.dependency.scalaVersion, scaladex, params.output.verbosity)
+        Dependencies.handleScaladexDependency(s, params.resolution.scalaVersion, scaladex, params.output.verbosity)
           .map {
             case Left(error) => Validated.invalidNel(error)
             case Right(l) => Validated.validNel(l)
@@ -230,7 +230,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     val e = for {
       depsExtraRepoOpt <- Dependencies.withExtraRepo(
         args,
-        params.dependency.scalaVersion,
+        params.resolution.scalaVersion,
         params.dependency.defaultConfiguration,
         params.cache.cacheLocalArtifacts,
         params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
@@ -275,9 +275,15 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
-      startRes = coursier.Resolve.initialResolution(deps0, params.resolution).copy(
-        mapDependencies = if (params.resolution.typelevel) Some(Typelevel.swap(_)) else None
-      )
+      mapDependenciesOpt = {
+        val l = (if (params.resolution.typelevel) Seq(Typelevel.swap) else Nil) ++
+          (if (params.resolution.forceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.resolution.scalaVersion)) else Nil)
+
+        l.reduceOption((f, g) => dep => f(g(dep)))
+      }
+
+      startRes = coursier.Resolve.initialResolution(deps0, params.resolution)
+        .copy(mapDependencies = mapDependenciesOpt)
       res <- runResolution(
         params,
         repositories,

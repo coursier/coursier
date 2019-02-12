@@ -3,8 +3,8 @@ package coursier.params
 import java.io.File
 import java.util.concurrent.ExecutorService
 
-import coursier.{Cache, CachePolicy}
-import coursier.cache.{CacheDefaults, CacheLogger}
+import coursier.CachePolicy
+import coursier.cache.{CacheDefaults, Cache, CacheLogger, FileCache}
 import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.duration.Duration
@@ -23,7 +23,7 @@ final case class CacheParams(
     pool: ExecutorService = CacheDefaults.pool,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F] = Task.schedulable): Cache[F] =
-    Cache[F](
+    FileCache[F](
       cacheLocation,
       cachePolicies,
       checksums = checksum,

@@ -586,6 +586,48 @@ object Resolution {
 
   val defaultTypes = Set[Type](Type.jar, Type.testJar, Type.bundle)
 
+  def forceScalaVersion(sv: String): Dependency => Dependency = {
+
+    val sbv = sv.split('.').take(2).mkString(".")
+
+    val scalaModules = Set(
+      ModuleName("scala-library"),
+      ModuleName("scala-reflect"),
+      ModuleName("scala-compiler"),
+      ModuleName("scalap")
+    )
+
+    def fullCrossVersionBase(module: Module): Option[String] =
+      if (module.attributes.isEmpty && !module.name.value.endsWith("_" + sv)) {
+        val idx = module.name.value.lastIndexOf("_" + sbv + ".")
+        if (idx < 0)
+          None
+        else {
+          val lastPart = module.name.value.substring(idx + 1 + sbv.length + 1)
+          if (lastPart.isEmpty || lastPart.exists(c => !c.isDigit)) // FIXME Not fine with -M5 or -RC1
+            None
+          else
+            Some(module.name.value.substring(0, idx))
+        }
+      } else
+        None
+
+    dep =>
+      if (dep.module.organization == Organization("org.scala-lang") && scalaModules.contains(dep.module.name))
+        dep.copy(version = sv)
+      else
+        fullCrossVersionBase(dep.module) match {
+          case Some(base) =>
+            dep.copy(
+              module = dep.module.copy(
+                name = ModuleName(base + "_" + sv)
+              )
+            )
+          case None =>
+            dep
+        }
+  }
+
 }
 
 

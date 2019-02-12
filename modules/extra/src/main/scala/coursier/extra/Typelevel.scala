@@ -24,8 +24,8 @@ object Typelevel {
     else
       module
 
-  def swap(dependency: Dependency): Dependency =
-    dependency.copy(
+  val swap: Dependency => Dependency =
+    dependency => dependency.copy(
       module = swap(dependency.module)
     )
 

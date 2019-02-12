@@ -20,10 +20,6 @@ final case class DependencyOptions(
   )
     localExcludeFile: String = "",
 
-  @Help("Default scala version")
-  @Short("e")
-    scalaVersion: String = scala.util.Properties.versionNumberString,
-
   @Help("Default sbt version (if --sbt-plugin options are passed)")
   @Value("sbt version (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
     sbtVersion: String = "1.0",

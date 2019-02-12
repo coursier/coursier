@@ -83,7 +83,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
           case Right(versions) => versions
         }
       else
-        (options.common.dependencyOptions.scalaVersion, options.sparkVersion)
+        (options.common.resolutionOptions.scalaVersionOrDefault, options.sparkVersion)
 
     val (sparkYarnExtraConf, sparkBaseJars) =
       if (!options.autoAssembly || sparkVersion.startsWith("2.")) {

@@ -3,7 +3,7 @@ package coursier
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
-import coursier.cache.{CacheDefaults, CacheLogger}
+import coursier.cache.{CacheDefaults, Cache, CacheLogger}
 import coursier.core.{Classifier, Type}
 import coursier.util.Schedulable
 
@@ -53,14 +53,13 @@ object Fetch {
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
     cache: Cache[F] = Cache.default,
-    logger: CacheLogger = CacheLogger.nop,
-    retryCount: Int = CacheDefaults.defaultRetryCount
+    logger: CacheLogger = CacheLogger.nop
   )(implicit
      S: Schedulable[F]
   ): F[Seq[(Artifact, File)]] = {
 
     val tasks = artifacts.map { artifact =>
-      val file0 = cache.file(artifact, retry = retryCount)
+      val file0 = cache.file(artifact)
       S.map(file0.run)(artifact.->)
     }
 
@@ -103,8 +102,7 @@ object Fetch {
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
     cache: Cache[F] = Cache.default,
-    logger: CacheLogger = CacheLogger.nop,
-    retryCount: Int = CacheDefaults.defaultRetryCount
+    logger: CacheLogger = CacheLogger.nop
   )(implicit
      S: Schedulable[F]
   ): F[Seq[File]] = {
@@ -119,8 +117,7 @@ object Fetch {
     val r = fetchArtifacts(
       a.map(_._3),
       cache,
-      logger,
-      retryCount
+      logger
     )
 
     S.map(r)(_.map(_._2))

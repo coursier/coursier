@@ -12,7 +12,6 @@ import scala.io.Source
 final case class DependencyParams(
   exclude: Set[(Organization, ModuleName)],
   perModuleExclude: Map[String, Set[(Organization, ModuleName)]], // FIXME key should be Module
-  scalaVersion: String,
   intransitiveDependencies: Seq[(Dependency, Map[String, String])],
   sbtPluginDependencies: Seq[(Dependency, Map[String, String])],
   scaladexLookups: Seq[String],
@@ -20,11 +19,11 @@ final case class DependencyParams(
 )
 
 object DependencyParams {
-  def apply(options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
+  def apply(scalaVersion: String, options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
 
     val excludeV = {
 
-      val (excludeErrors, excludes0) = Parse.modules(options.exclude, options.scalaVersion)
+      val (excludeErrors, excludes0) = Parse.modules(options.exclude, scalaVersion)
       val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
       if (excludeErrors.nonEmpty)
@@ -82,8 +81,6 @@ object DependencyParams {
           }
       }
 
-    val scalaVersion = options.scalaVersion // TODO Validate that one a bit?
-
     val moduleReqV = (excludeV, perModuleExcludeV).mapN {
       (exclude, perModuleExclude) =>
         ModuleRequirements(exclude, perModuleExclude, options.defaultConfiguration0)
@@ -94,7 +91,7 @@ object DependencyParams {
       .flatMap { moduleReq =>
 
         val (intransitiveModVerCfgErrors, intransitiveDepsWithExtraParams) =
-          Parse.moduleVersionConfigs(options.intransitive, moduleReq, transitive = false, options.scalaVersion)
+          Parse.moduleVersionConfigs(options.intransitive, moduleReq, transitive = false, scalaVersion)
 
         if (intransitiveModVerCfgErrors.nonEmpty)
           Left(
@@ -113,7 +110,7 @@ object DependencyParams {
       .flatMap { moduleReq =>
 
         val (sbtPluginModVerCfgErrors, sbtPluginDepsWithExtraParams) =
-          Parse.moduleVersionConfigs(options.sbtPlugin, moduleReq, transitive = true, options.scalaVersion)
+          Parse.moduleVersionConfigs(options.sbtPlugin, moduleReq, transitive = true, scalaVersion)
 
         if (sbtPluginModVerCfgErrors.nonEmpty)
           Left(
@@ -133,7 +130,7 @@ object DependencyParams {
               case arr => arr.take(2).mkString(".")
             }
             Map(
-              "scalaVersion" -> options.scalaVersion.split('.').take(2).mkString("."),
+              "scalaVersion" -> scalaVersion.split('.').take(2).mkString("."),
               "sbtVersion" -> sbtVer
             )
           }
@@ -163,7 +160,6 @@ object DependencyParams {
         DependencyParams(
           exclude,
           perModuleExclude,
-          scalaVersion,
           intransitiveDependencies,
           sbtPluginDependencies,
           scaladexLookups,

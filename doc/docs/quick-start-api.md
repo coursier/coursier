@@ -16,11 +16,7 @@ import coursier._
 ```
 
 ```scala mdoc:passthrough
-import coursier.{ Cache => _, _ }
-```
-
-```scala mdoc:passthrough
-object Cache {
+object LocalRepositories {
   val ivy2LocalIsIvy = coursier.cache.LocalRepositories.ivy2Local match {
     case _: coursier.ivy.IvyRepository => true
     case _ => false
@@ -42,9 +38,6 @@ object Cache {
     ),
     dropInfoAttributes = true
   )
-
-  def fetch[F[_]: coursier.util.Schedulable]() = coursier.Cache.fetch[F]()
-  def file[F[_]: coursier.util.Schedulable](artifact: Artifact) = coursier.Cache.file[F](artifact)
 }
 ```
 
@@ -63,15 +56,27 @@ val start = Resolution(
 ```
 
 Create a fetch function able to get things from a few repositories via the local cache,
-```scala mdoc:silent
-import coursier.util.Task
+```scala mdoc:passthrough
+import coursier.cache.Cache
 
 val repositories = Seq(
-  Cache.ivy2Local,
+  LocalRepositories.ivy2Local,
   MavenRepository("https://repo1.maven.org/maven2")
 )
 
-val fetch = ResolutionProcess.fetch(repositories, Cache.fetch[Task]())
+val fetch = ResolutionProcess.fetch(repositories, Cache.default.fetch)
+```
+
+```scala
+import coursier.cache.Cache
+import coursier.cache.LocalRepositories
+
+val repositories = Seq(
+  LocalRepositories.ivy2Local,
+  MavenRepository("https://repo1.maven.org/maven2")
+)
+
+val fetch = ResolutionProcess.fetch(repositories, Cache.default.fetch)
 ```
 
 Then run the resolution per-se,
@@ -92,13 +97,13 @@ Any error would mean that the resolution wasn't able to get metadata about some 
 Then fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala mdoc:silent
 import java.io.File
-import coursier.util.Gather
+import coursier.util.{Gather, Task}
 
 val localArtifacts: Seq[Either[FileError, File]] =
   Gather[Task].gather(
     resolution
       .artifacts()
-      .map(Cache.file[Task](_).run)
+      .map(Cache.default.file(_).run)
   ).unsafeRun()
 ```
 

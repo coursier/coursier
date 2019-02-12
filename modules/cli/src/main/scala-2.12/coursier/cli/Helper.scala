@@ -4,7 +4,7 @@ package cli
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.cache.{CacheDefaults, LocalRepositories}
+import coursier.cache.{CacheDefaults, FileCache, LocalRepositories}
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
@@ -122,7 +122,7 @@ class Helper(
         else
           None
 
-      val fetch = Cache.fetch[Task](
+      val fetch = FileCache(
         cache,
         cachePolicies,
         checksums = Nil,
@@ -130,7 +130,7 @@ class Helper(
         pool = pool,
         ttl = ttl0,
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      )
+      ).fetch
 
       logger.foreach(_.init())
 
@@ -139,7 +139,7 @@ class Helper(
       val res = Gather[Task].gather(common.dependencyOptions.scaladex.map { s =>
         val deps = scaladex.dependencies(
           s,
-          common.dependencyOptions.scalaVersion,
+          common.resolutionOptions.scalaVersionOrDefault,
           if (common.verbosityLevel >= 2) Console.err.println(_) else _ => ()
         )
 
@@ -179,7 +179,10 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(common.resolutionOptions.forceVersion, common.dependencyOptions.scalaVersion)
+  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(
+    common.resolutionOptions.forceVersion,
+    common.resolutionOptions.scalaVersionOrDefault
+  )
 
   prematureExitIf(forceVersionErrors.nonEmpty) {
     s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
@@ -196,7 +199,10 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(common.dependencyOptions.exclude, common.dependencyOptions.scalaVersion)
+  val (excludeErrors, excludes0) = Parse.modules(
+    common.dependencyOptions.exclude,
+    common.resolutionOptions.scalaVersionOrDefault
+  )
 
   prematureExitIf(excludeErrors.nonEmpty) {
     s"Cannot parse excluded modules:\n" +
@@ -247,10 +253,20 @@ class Helper(
   val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(rawDependencies, moduleReq, transitive=true, common.dependencyOptions.scalaVersion)
+    Parse.moduleVersionConfigs(
+      rawDependencies,
+      moduleReq,
+      transitive = true,
+      common.resolutionOptions.scalaVersionOrDefault
+    )
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(common.dependencyOptions.intransitive, moduleReq, transitive=false, common.dependencyOptions.scalaVersion)
+    Parse.moduleVersionConfigs(
+      common.dependencyOptions.intransitive,
+      moduleReq,
+      transitive = false,
+      common.resolutionOptions.scalaVersionOrDefault
+    )
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
 
@@ -262,11 +278,16 @@ class Helper(
         case arr => arr.take(2).mkString(".")
       }
       Map(
-        "scalaVersion" -> common.dependencyOptions.scalaVersion.split('.').take(2).mkString("."),
+        "scalaVersion" -> common.resolutionOptions.scalaVersionOrDefault.split('.').take(2).mkString("."),
         "sbtVersion" -> sbtVer
       )
     }
-    val (errors, ok) = Parse.moduleVersionConfigs(common.dependencyOptions.sbtPlugin, moduleReq, transitive = true, common.dependencyOptions.scalaVersion)
+    val (errors, ok) = Parse.moduleVersionConfigs(
+      common.dependencyOptions.sbtPlugin,
+      moduleReq,
+      transitive = true,
+      common.resolutionOptions.scalaVersionOrDefault
+    )
     val ok0 = ok.map {
       case (dep, params) =>
         val dep0 = dep.copy(
@@ -355,7 +376,7 @@ class Helper(
     userActivations =
       if (userEnabledProfiles.isEmpty) None
       else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap(_)) else None,
+    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap) else None,
     forceProperties = forcedProperties
   )
 
@@ -368,7 +389,7 @@ class Helper(
     else
       None
 
-  val fetchs = Cache.fetchs[Task](
+  val fetchs = FileCache(
     cache,
     cachePolicies,
     checksums = checksums,
@@ -376,7 +397,7 @@ class Helper(
     pool = pool,
     ttl = ttl0,
     followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-  )
+  ).fetchs
   val fetchQuiet = ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
@@ -697,8 +718,7 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      val file0 = Cache.file[Task](
-        artifact,
+      val file0 = FileCache(
         cache,
         cachePolicies,
         checksums = checksums,
@@ -708,7 +728,7 @@ class Helper(
         retry = common.cacheOptions.retryCount,
         localArtifactsShouldBeCached = common.cacheOptions.cacheFileArtifacts,
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      )
+      ).file(artifact)
 
       file0
         .run
@@ -845,7 +865,7 @@ class Helper(
       (Launch.baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDepsOrExit(common.dependencyOptions.scalaVersion)
+      val isolatedDeps = isolated.isolatedDepsOrExit(common.resolutionOptions.scalaVersionOrDefault)
 
       val (isolatedLoader, filteredFiles0) = isolated.targetsOrExit.foldLeft((Launch.baseLoader, files0)) {
         case ((parent, files0), target) =>

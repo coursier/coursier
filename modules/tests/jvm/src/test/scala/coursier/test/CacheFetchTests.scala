@@ -4,7 +4,7 @@ package test
 import java.io.File
 import java.nio.file.Files
 
-import coursier.cache.CacheUrl
+import coursier.cache.{CacheUrl, FileCache}
 import coursier.cache.protocol.TestprotocolHandler
 import coursier.util.Task
 import utest._
@@ -38,10 +38,12 @@ object CacheFetchTests extends TestSuite {
         Console.err.println(s"Warning: unable to remove temporary directory $tmpDir")
     }
 
-    val fetchs = Cache.fetchs[Task](
-      tmpDir,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections
-    )
+    val fetchs = FileCache()
+      .copy(
+        cache = tmpDir,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections
+      )
+      .fetchs
 
     val processFetch = ResolutionProcess.fetch(
       Seq(

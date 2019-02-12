@@ -39,8 +39,10 @@ object Submit {
     val helper = new Helper(
       common.copy(
         dependencyOptions = common.dependencyOptions.copy(
-          intransitive = Nil,
-          scalaVersion = scalaVersion
+          intransitive = Nil
+        ),
+        resolutionOptions = common.resolutionOptions.copy(
+          scalaVersion = Some(scalaVersion)
         )
       ),
       // FIXME We whould be able to pass these as (parsed) Dependency instances to Helper
