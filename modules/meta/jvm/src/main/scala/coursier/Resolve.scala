@@ -69,7 +69,7 @@ object Resolve {
 
   def resolveFuture(
     dependencies: Seq[Dependency],
-    repositories: Seq[Repository],
+    repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
