@@ -6,7 +6,6 @@ import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
-import coursier.AuthenticatedURLConnection
 import coursier.core.Authentication
 
 import scala.util.Try
