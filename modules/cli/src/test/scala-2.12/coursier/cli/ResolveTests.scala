@@ -100,9 +100,6 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
         |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
         |""".stripMargin
 
-    System.err.println(s"output:\n" + output + "\n")
-    System.err.println(s"expectedOutput:\n" + expectedOutput + "\n")
-
     assert(output === expectedOutput)
   }
 
