@@ -31,7 +31,7 @@ object RepositoryParams {
           val extra =
             if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
             else Nil
-          CacheDefaults.defaultRepositories ++ extra
+          coursier.Resolve.defaultRepositories ++ extra
         }
       var repos = defaults ++ repos0
 

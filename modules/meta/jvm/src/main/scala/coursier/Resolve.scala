@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.cache.{Cache, CacheDefaults, CacheLogger}
+import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
 import coursier.params.ResolutionParams
 import coursier.util._
@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 
-object Resolve {
+object Resolve extends PlatformResolve {
 
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],
@@ -48,7 +48,7 @@ object Resolve {
 
   def resolve[F[_]](
     dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
+    repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
@@ -69,7 +69,7 @@ object Resolve {
 
   def resolveFuture(
     dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
+    repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
