@@ -95,11 +95,13 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
         |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
         |org.scala-lang:scala-library:2.12.7:default
         |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
-        |Error:
-        |ioi.get-coursier:coursier-core_2.12:1.1.0-M9
+        |Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
         |  not found: HOME/.ivy2/local/ioi.get-coursier/coursier-core_2.12/1.1.0-M9/ivys/ivy.xml
         |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
         |""".stripMargin
+
+    System.err.println(s"output:\n" + output + "\n")
+    System.err.println(s"expectedOutput:\n" + expectedOutput + "\n")
 
     assert(output === expectedOutput)
   }

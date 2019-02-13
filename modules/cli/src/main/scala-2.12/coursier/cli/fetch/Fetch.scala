@@ -41,7 +41,7 @@ object Fetch extends CaseApp[FetchOptions] {
     for {
       t <- resolveTask
       (res, valid) = t
-      _ =  {
+      _ <-  {
         if (valid)
           Task.point(())
         else if (params.artifact.force)
