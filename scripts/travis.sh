@@ -53,7 +53,26 @@ checkBinaryCompatibility() {
 }
 
 testBootstrap() {
+
   sbt scalaFromEnv "project cli" pack
+
+  # nailgun
+
+  modules/cli/target/pack/bin/coursier bootstrap \
+    -o echo-ng \
+    --standalone \
+    io.get-coursier:echo:1.0.0 \
+    com.facebook:nailgun-server:1.0.0 \
+    -M com.facebook.nailgun.NGServer
+  ./echo-ng &
+  sleep 2
+  local OUT="$(ng-nailgun coursier.echo.Echo foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from the nailgun-based echo command." 1>&2
+    exit 1
+  fi
+
+  # other
 
   modules/cli/target/pack/bin/coursier bootstrap -o cs-echo io.get-coursier:echo:1.0.1
   local OUT="$(./cs-echo foo)"
