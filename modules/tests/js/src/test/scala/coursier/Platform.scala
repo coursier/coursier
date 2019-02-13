@@ -59,7 +59,7 @@ object Platform {
   }
 
   def fetch(
-    repositories: Seq[core.Repository]
+    repositories: Seq[Repository]
   ): ResolutionProcess.Fetch[Task] =
     ResolutionProcess.fetch(repositories, Platform.artifact)
 

@@ -1,5 +1,6 @@
 package coursier.cache
-import coursier.Platform
+
+import coursier.cache.internal.Platform
 import coursier.core.Repository
 import coursier.util.{EitherT, Task}
 

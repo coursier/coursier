@@ -8,7 +8,6 @@ import coursier.core.{Dependency, Resolution}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
 import coursier.util.Print
-import coursier.util.Print.Colors
 
 object Output {
 
