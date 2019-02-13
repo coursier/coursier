@@ -1,11 +1,9 @@
 package coursier.cache
 
-import java.io.File
-
 trait CacheLogger {
-  def foundLocally(url: String, f: File): Unit = {}
+  def foundLocally(url: String): Unit = {}
 
-  def downloadingArtifact(url: String, file: File): Unit = {}
+  def downloadingArtifact(url: String): Unit = {}
 
   def downloadProgress(url: String, downloaded: Long): Unit = {}
 
@@ -18,7 +16,7 @@ trait CacheLogger {
   def gettingLength(url: String): Unit = {}
   def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
-  def removedCorruptFile(url: String, file: File, reason: Option[String]): Unit = {}
+  def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
   /**
     *

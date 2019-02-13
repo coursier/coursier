@@ -326,7 +326,7 @@ final case class FileCache[F[_]](
             }
           }
 
-          logger.foreach(_.downloadingArtifact(url, file))
+          logger.foreach(_.downloadingArtifact(url))
 
           var res: Either[ArtifactError, Unit] = null
 
@@ -408,7 +408,7 @@ final case class FileCache[F[_]](
       EitherT {
         S.schedule(pool) {
           if (file.exists()) {
-            logger.foreach(_.foundLocally(url, file))
+            logger.foreach(_.foundLocally(url))
             Right(())
           } else
             Left(ArtifactError.NotFound(file.toString))
@@ -571,7 +571,7 @@ final case class FileCache[F[_]](
             S.schedule[Either[ArtifactError, Unit]](pool) {
               val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
               badFile.delete()
-              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err.describe)))
+              logger.foreach(_.removedCorruptFile(artifact.url, Some(err.describe)))
               Right(())
             }
           }.flatMap { _ =>

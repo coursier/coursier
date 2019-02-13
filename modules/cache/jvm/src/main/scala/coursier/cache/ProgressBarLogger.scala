@@ -422,7 +422,7 @@ class ProgressBarLogger(
   def stop(): Unit =
     stopDidPrintSomething()
 
-  override def downloadingArtifact(url: String, file: File): Unit =
+  override def downloadingArtifact(url: String): Unit =
     updateRunnable.newEntry(
       url,
       DownloadInfo(0L, 0L, None, System.currentTimeMillis(), updateCheck = false, watching = false),
@@ -492,6 +492,6 @@ class ProgressBarLogger(
   }
 
   // TODO(wisechengyi,alexarchambault): implement this
-  override def removedCorruptFile(url: String, file: File, reason: Option[String]): Unit = {}
+  override def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
 }
