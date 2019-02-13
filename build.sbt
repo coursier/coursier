@@ -6,7 +6,7 @@ import Publish._
 lazy val getSbtCoursierVersion = settingKey[String]("")
 
 getSbtCoursierVersion := {
-  coursierVersion
+  sbtCoursierVersion
 }
 
 inThisBuild(List(
