@@ -27,6 +27,7 @@ final case class Cache[F[_]](
   ttl: Option[Duration] = CacheDefaults.ttl,
   localArtifactsShouldBeCached: Boolean = false,
   followHttpToHttpsRedirections: Boolean = false,
+  passAuthenticationOnRedirect: Boolean = true,
   sslRetry: Int = CacheDefaults.sslRetryCount,
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
@@ -233,19 +234,27 @@ final case class Cache[F[_]](
 
                 val respCodeOpt = CacheUrl.responseCode(conn)
 
-                if (followHttpToHttpsRedirections && url.startsWith("http://") && respCodeOpt.exists(c => c == 301 || c == 307 || c == 308))
-                  conn match {
-                    case conn0: HttpURLConnection =>
-                      Option(conn0.getHeaderField("Location")) match {
-                        case Some(loc) if loc.startsWith("https://") =>
-                          CacheUrl.closeConn(conn)
-                          conn = CacheUrl.urlConnection(loc, None) // not keeping authentication here… should we?
-                        case _ =>
+                respCodeOpt match {
+                  case Some(c) if c == 301 || c == 307 || c == 308 =>
+                    conn match {
+                      case conn0: HttpURLConnection =>
+                        Option(conn0.getHeaderField("Location")) match {
+                          case Some(loc) =>
+                            CacheUrl.closeConn(conn)
+                            if (followHttpToHttpsRedirections && loc.startsWith("https://")) {
+                              conn = CacheUrl.urlConnection(loc, None) // not keeping authentication here… should we?
+                            } else if (passAuthenticationOnRedirect) {
+                              conn = CacheUrl.urlConnection(loc, artifact.authentication)
+                            }
+                          case _ =>
                           // ignored
-                      }
-                    case _ =>
+                        }
+                      case _ =>
                       // ignored
-                  }
+                    }
+                  case _ =>
+                  // ignored
+                }
 
                 if (respCodeOpt.contains(404))
                   Left(FileError.NotFound(url, permanent = Some(true)))
@@ -837,6 +846,7 @@ object Cache {
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
     followHttpToHttpsRedirections: Boolean = false,
+    passAuthenticationOnRedirect: Boolean = true,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
   )(implicit S: Schedulable[F]): Seq[Repository.Fetch[F]] =
@@ -848,6 +858,7 @@ object Cache {
       pool,
       ttl,
       followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+      passAuthenticationOnRedirect = passAuthenticationOnRedirect,
       sslRetry = sslRetry,
       bufferSize = bufferSize,
       S = S
@@ -864,6 +875,7 @@ object Cache {
     retry: Int = CacheDefaults.defaultRetryCount,
     localArtifactsShouldBeCached: Boolean = false,
     followHttpToHttpsRedirections: Boolean = false,
+    passAuthenticationOnRedirect: Boolean = true,
     sslRetry: Int = CacheDefaults.sslRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
   )(implicit S: Schedulable[F]): EitherT[F, FileError, File] =
@@ -876,6 +888,7 @@ object Cache {
       ttl,
       localArtifactsShouldBeCached,
       followHttpToHttpsRedirections,
+      passAuthenticationOnRedirect,
       sslRetry,
       bufferSize,
       S = S

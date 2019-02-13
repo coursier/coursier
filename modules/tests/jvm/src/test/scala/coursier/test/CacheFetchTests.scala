@@ -18,6 +18,7 @@ object CacheFetchTests extends TestSuite {
   def check(
     extraRepo: Repository,
     followHttpToHttpsRedirections: Boolean = false,
+    passAuthenticationOnRedirect: Boolean = true,
     deps: Seq[Dependency] = Seq(Dependency(mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test")),
     addCentral: Boolean = true
   ): Unit = {
@@ -40,7 +41,8 @@ object CacheFetchTests extends TestSuite {
 
     val fetchs = Cache.fetchs[Task](
       tmpDir,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections
+      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+      passAuthenticationOnRedirect = passAuthenticationOnRedirect
     )
 
     val processFetch = ResolutionProcess.fetch(

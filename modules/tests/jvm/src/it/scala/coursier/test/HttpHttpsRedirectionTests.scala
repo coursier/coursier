@@ -27,7 +27,8 @@ object HttpHttpsRedirectionTests extends TestSuite {
           CacheFetchTests.check(
             MavenRepository(testRepo),
             addCentral = false,
-            deps = deps
+            deps = deps,
+            passAuthenticationOnRedirect = false
           )
 
           false
@@ -48,7 +49,8 @@ object HttpHttpsRedirectionTests extends TestSuite {
           MavenRepository(testRepo),
           addCentral = false,
           deps = deps,
-          followHttpToHttpsRedirections = true
+          followHttpToHttpsRedirections = true,
+          passAuthenticationOnRedirect = false
         )
     }
   }
