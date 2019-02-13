@@ -571,7 +571,7 @@ final case class FileCache[F[_]](
             S.schedule[Either[ArtifactError, Unit]](pool) {
               val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
               badFile.delete()
-              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err)))
+              logger.foreach(_.removedCorruptFile(artifact.url, badFile, Some(err.describe)))
               Right(())
             }
           }.flatMap { _ =>

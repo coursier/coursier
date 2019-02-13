@@ -492,6 +492,6 @@ class ProgressBarLogger(
   }
 
   // TODO(wisechengyi,alexarchambault): implement this
-  override def removedCorruptFile(url: String, file: File, reason: Option[ArtifactError]): Unit = {}
+  override def removedCorruptFile(url: String, file: File, reason: Option[String]): Unit = {}
 
 }
