@@ -330,7 +330,6 @@ object Resolve extends CaseApp[ResolveOptions] {
       _ = validated match {
         case Right(()) =>
         case Left(errors) =>
-          stderr.println("Error:")
           errors.foreach(stderr.println)
       }
     } yield (res, valid && !conflicts)

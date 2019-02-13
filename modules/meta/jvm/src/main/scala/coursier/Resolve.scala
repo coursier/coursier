@@ -115,7 +115,7 @@ object Resolve {
       .errors
       .map {
         case ((module, version), errors) =>
-          s"$module:$version\n${errors.map("  " + _.replace("\n", "  \n")).mkString("\n")}"
+          s"Error downloading $module:$version\n${errors.map("  " + _.replace("\n", "  \n")).mkString("\n")}"
       } match {
         case Seq() =>
           ValidationNel.success(())
