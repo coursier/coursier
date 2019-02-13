@@ -28,6 +28,10 @@ stages:
 jobs:
   include:
     - env: SCALA_VERSION=2.12 BOOTSTRAP=1
+      addons:
+        apt:
+          packages:
+            - nailgun
     - env: SCALA_VERSION=2.13
       sudo: required
       services: docker

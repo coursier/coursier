@@ -27,9 +27,15 @@ object Preamble {
        |shift "$nargs"
        |""".stripMargin
 
-  def shellPreamble(javaOpts: Seq[String]): String = {
+  def shellPreamble(javaOpts: Seq[String], disableJarChecking: Boolean = false): String = {
 
     val javaCmd = Seq("java") ++
+      {
+        if (disableJarChecking)
+          Seq("-Dsun.misc.URLClassPath.disableJarChecking")
+        else
+          Nil
+      } ++
       javaOpts
         // escaping possibly a bit loose :-|
         .map(s => "'" + s.replace("'", "\\'") + "'") ++

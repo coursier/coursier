@@ -121,7 +121,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           mainClass,
           output0.toPath,
           rules = options.options.rules,
-          withPreamble = options.options.preamble
+          withPreamble = options.options.preamble,
+          disableJarChecking = options.options.disableJarChecking.getOrElse(false)
         )
       else {
 
@@ -191,14 +192,22 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           ClassLoaderContent(urls0 ++ files0)
         }
 
+        val content = parents :+ main
+
         coursier.bootstrap.Bootstrap.create(
-          parents :+ main,
+          content,
           mainClass,
           output0.toPath,
           javaOpts,
           deterministic = options.options.deterministic,
           withPreamble = options.options.preamble,
-          proguarded = options.options.proguarded
+          proguarded = options.options.proguarded,
+          disableJarChecking = options.options.disableJarChecking.getOrElse {
+            content.exists(_.entries.exists {
+              case _: ClasspathEntry.Resource => true
+              case _ => false
+            })
+          }
         )
       }
 

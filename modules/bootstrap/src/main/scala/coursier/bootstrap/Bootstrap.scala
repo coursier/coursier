@@ -118,7 +118,8 @@ object Bootstrap {
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = false,
     withPreamble: Boolean = true,
-    proguarded: Boolean = true
+    proguarded: Boolean = true,
+    disableJarChecking: Boolean = true
   ): Unit = {
 
     val bootstrapResourcePath = bootstrapResourcePathOpt.getOrElse {
@@ -146,7 +147,7 @@ object Bootstrap {
 
     if (withPreamble)
       buffer.write(
-        Preamble.shellPreamble(javaOpts).getBytes(UTF_8)
+        Preamble.shellPreamble(javaOpts, disableJarChecking).getBytes(UTF_8)
       )
 
     writeZip(
