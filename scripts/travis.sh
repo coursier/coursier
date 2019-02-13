@@ -64,7 +64,7 @@ testBootstrap() {
     io.get-coursier:echo:1.0.0 \
     com.facebook:nailgun-server:1.0.0 \
     -M com.facebook.nailgun.NGServer
-  ./echo-ng &
+  java -jar ./echo-ng &
   sleep 2
   local OUT="$(ng-nailgun coursier.echo.Echo foo)"
   if [ "$OUT" != foo ]; then

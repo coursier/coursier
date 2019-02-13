@@ -144,7 +144,8 @@ object Assembly {
     mainClass: String,
     output: Path,
     rules: Seq[Rule] = defaultRules,
-    withPreamble: Boolean = true
+    withPreamble: Boolean = true,
+    disableJarChecking: Boolean = false
   ): Unit = {
 
     val attrs = Seq(
@@ -155,7 +156,7 @@ object Assembly {
 
     if (withPreamble)
       buffer.write(
-        Preamble.shellPreamble(javaOpts).getBytes(UTF_8)
+        Preamble.shellPreamble(javaOpts, disableJarChecking).getBytes(UTF_8)
       )
 
     Assembly.make(files, buffer, attrs, rules)

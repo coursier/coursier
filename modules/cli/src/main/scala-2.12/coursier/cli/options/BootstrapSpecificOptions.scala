@@ -51,6 +51,8 @@ final case class BootstrapSpecificOptions(
     deterministic: Boolean = false,
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
+  @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
+    disableJarChecking: Option[Boolean] = None,
   @Recurse
     isolated: SharedLoaderOptions = SharedLoaderOptions(),
   @Recurse
