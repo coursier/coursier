@@ -14,6 +14,7 @@ import coursier.paths.CachePath
 import coursier.util.{EitherT, Schedulable, Task}
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
@@ -654,6 +655,8 @@ final case class FileCache[F[_]](
       (a: Artifact) =>
         fetchPerPolicy(a, p)
     }
+
+  lazy val ec = ExecutionContext.fromExecutorService(pool)
 
 }
 

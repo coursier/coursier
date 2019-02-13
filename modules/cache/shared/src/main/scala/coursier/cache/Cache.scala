@@ -2,6 +2,8 @@ package coursier.cache
 
 import coursier.core.{Artifact, Repository}
 
+import scala.concurrent.ExecutionContext
+
 abstract class Cache[F[_]] extends PlatformCache[F] {
 
   /**
@@ -23,6 +25,8 @@ abstract class Cache[F[_]] extends PlatformCache[F] {
     * @return a non empty sequence
     */
   def fetchs: Seq[Repository.Fetch[F]]
+
+  def ec: ExecutionContext
 }
 
 object Cache extends PlatformCacheCompanion

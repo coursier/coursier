@@ -73,7 +73,7 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Future[Resolution] = {
+  )(implicit ec: ExecutionContext = cache.ec): Future[Resolution] = {
 
     val task = resolve[Task](
       dependencies,
@@ -92,7 +92,7 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Resolution = {
+  )(implicit ec: ExecutionContext = cache.ec): Resolution = {
 
     val f = resolveFuture(
       dependencies,

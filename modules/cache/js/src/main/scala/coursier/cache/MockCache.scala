@@ -10,7 +10,8 @@ import scala.scalajs.js.Dynamic.{global => g}
 
 final case class MockCache(base: String) extends Cache[Task] {
 
-  private implicit def executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  implicit def ec: ExecutionContext =
+    scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   private lazy val fs = g.require("fs")
 

@@ -10,6 +10,7 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.core.{Artifact, Repository}
 import coursier.util.{EitherT, Schedulable}
 
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 final case class MockCache[F[_]](
@@ -72,6 +73,9 @@ final case class MockCache[F[_]](
         .map(_ => path.toFile)
     }
   }
+
+  lazy val ec = ExecutionContext.fromExecutorService(pool)
+
 }
 
 object MockCache {
