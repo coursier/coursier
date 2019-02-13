@@ -67,7 +67,7 @@ object Fetch {
 
     val task = S.bind(S.delay(logger.init())) { _ =>
       S.bind(S.attempt(gathered)) { a =>
-        S.bind(S.delay(logger.stopDidPrintSomething())) { _ =>
+        S.bind(S.delay(logger.stop())) { _ =>
           S.fromAttempt(a)
         }
       }

@@ -399,7 +399,7 @@ class ProgressBarLogger(
   def init(): Unit =
     init(())
 
-  override def stopDidPrintSomething(): Boolean =
+  override def stop(): Boolean =
     if (scheduler != null || updateRunnableOpt.nonEmpty)
       lock.synchronized {
         if (scheduler != null) {
@@ -418,9 +418,6 @@ class ProgressBarLogger(
       }
     else
       false
-
-  def stop(): Unit =
-    stopDidPrintSomething()
 
   override def downloadingArtifact(url: String): Unit =
     updateRunnable.newEntry(

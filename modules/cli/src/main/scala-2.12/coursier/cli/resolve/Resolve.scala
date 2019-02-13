@@ -60,7 +60,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       for {
         _ <- Task.delay(logger.init(()))
         e <- task.attempt
-        _ <- Task.delay(logger.stopDidPrintSomething())
+        _ <- Task.delay(logger.stop())
         t <- Task.fromEither(e)
       } yield t
     }

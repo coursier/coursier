@@ -39,7 +39,7 @@ object Resolve extends PlatformResolve {
 
     S.bind(S.delay(logger.init(()))) { _ =>
       S.bind(S.attempt(task)) { a =>
-        S.bind(S.delay(logger.stopDidPrintSomething())) { _ =>
+        S.bind(S.delay(logger.stop())) { _ =>
           S.fromAttempt(a)
         }
       }

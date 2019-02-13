@@ -29,7 +29,7 @@ trait CacheLogger {
     *
     * @return whether any message was printed by `Logger`
     */
-  def stopDidPrintSomething(): Boolean = false
+  def stop(): Boolean = false
 }
 
 object CacheLogger {

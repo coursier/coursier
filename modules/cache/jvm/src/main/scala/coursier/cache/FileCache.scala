@@ -22,7 +22,7 @@ final case class FileCache[F[_]](
   cache: File = CacheDefaults.location,
   cachePolicies: Seq[CachePolicy] = CachePolicy.default,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
-  logger: Option[CacheLogger] = None,
+  logger: CacheLogger = CacheLogger.nop,
   pool: ExecutorService = CacheDefaults.pool,
   ttl: Option[Duration] = CacheDefaults.ttl,
   localArtifactsShouldBeCached: Boolean = false,
@@ -35,7 +35,7 @@ final case class FileCache[F[_]](
 
   private implicit val S0 = S
 
-  import FileCache.{localFile, readFullyTo, downloading, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import FileCache.{localFile, readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
 
   private def download(
     artifact: Artifact,
@@ -68,7 +68,7 @@ final case class FileCache[F[_]](
     def urlLastModified(
       url: String,
       currentLastModifiedOpt: Option[Long], // for the logger
-      logger: Option[CacheLogger]
+      logger: CacheLogger
     ): EitherT[F, ArtifactError, Option[Long]] =
       EitherT {
         S.schedule(pool) {
@@ -79,7 +79,7 @@ final case class FileCache[F[_]](
 
             conn match {
               case c: HttpURLConnection =>
-                logger.foreach(_.checkingUpdates(url, currentLastModifiedOpt))
+                logger.checkingUpdates(url, currentLastModifiedOpt)
 
                 var success = false
                 try {
@@ -93,12 +93,12 @@ final case class FileCache[F[_]](
                       None
 
                   success = true
-                  logger.foreach(_.checkingUpdatesResult(url, currentLastModifiedOpt, res))
+                  logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
 
                   Right(res)
                 } finally {
                   if (!success)
-                    logger.foreach(_.checkingUpdatesResult(url, currentLastModifiedOpt, None))
+                    logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
                 }
 
               case other =>
@@ -195,7 +195,8 @@ final case class FileCache[F[_]](
 
     def remote(
       file: File,
-      url: String): EitherT[F, ArtifactError, Unit] =
+      url: String
+    ): EitherT[F, ArtifactError, Unit] =
       EitherT {
         S.schedule(pool) {
 
@@ -204,7 +205,7 @@ final case class FileCache[F[_]](
           var lenOpt = Option.empty[Option[Long]]
 
           def doDownload(): Either[ArtifactError, Unit] =
-            FileCache.downloading(url, file, logger, sslRetry) {
+            FileCache.downloading(url, file, sslRetry) {
 
               val alreadyDownloaded = tmp.length()
 
@@ -254,7 +255,7 @@ final case class FileCache[F[_]](
                 else {
                   for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
                     val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
-                    logger.foreach(_.downloadLength(url, len, alreadyDownloaded, watching = false))
+                    logger.downloadLength(url, len, alreadyDownloaded, watching = false)
                   }
 
                   val in = new BufferedInputStream(conn.getInputStream, bufferSize)
@@ -293,18 +294,18 @@ final case class FileCache[F[_]](
               if (lenOpt.isEmpty) {
                 lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
                 for (o <- lenOpt; len <- o)
-                  logger.foreach(_.downloadLength(url, len, currentLen, watching = true))
+                  logger.downloadLength(url, len, currentLen, watching = true)
               } else
-                logger.foreach(_.downloadProgress(url, currentLen))
+                logger.downloadProgress(url, currentLen)
 
             def done(): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
                 for (o <- lenOpt; len <- o)
-                  logger.foreach(_.downloadLength(url, len, len, watching = true))
+                  logger.downloadLength(url, len, len, watching = true)
               } else
                 for (o <- lenOpt; len <- o)
-                  logger.foreach(_.downloadProgress(url, len))
+                  logger.downloadProgress(url, len)
 
             if (file.exists()) {
               done()
@@ -326,7 +327,7 @@ final case class FileCache[F[_]](
             }
           }
 
-          logger.foreach(_.downloadingArtifact(url))
+          logger.downloadingArtifact(url)
 
           var res: Either[ArtifactError, Unit] = null
 
@@ -336,7 +337,7 @@ final case class FileCache[F[_]](
               checkDownload()
             )
           } finally {
-            logger.foreach(_.downloadedArtifact(url, success = res != null && res.isRight))
+            logger.downloadedArtifact(url, success = res != null && res.isRight)
           }
 
           res
@@ -408,7 +409,7 @@ final case class FileCache[F[_]](
       EitherT {
         S.schedule(pool) {
           if (file.exists()) {
-            logger.foreach(_.foundLocally(url))
+            logger.foundLocally(url)
             Right(())
           } else
             Left(ArtifactError.NotFound(file.toString))
@@ -571,7 +572,7 @@ final case class FileCache[F[_]](
             S.schedule[Either[ArtifactError, Unit]](pool) {
               val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
               badFile.delete()
-              logger.foreach(_.removedCorruptFile(artifact.url, Some(err.describe)))
+              logger.removedCorruptFile(artifact.url, Some(err.describe))
               Right(())
             }
           }.flatMap { _ =>
@@ -668,7 +669,7 @@ object FileCache {
   private def readFullyTo(
     in: InputStream,
     out: OutputStream,
-    logger: Option[CacheLogger],
+    logger: CacheLogger,
     url: String,
     alreadyDownloaded: Long,
     bufferSize: Int
@@ -682,7 +683,7 @@ object FileCache {
       if (read >= 0) {
         out.write(b, 0, read)
         out.flush()
-        logger.foreach(_.downloadProgress(url, count + read))
+        logger.downloadProgress(url, count + read)
         helper(count + read)
       }
     }
@@ -694,7 +695,6 @@ object FileCache {
   private def downloading[T](
     url: String,
     file: File,
-    logger: Option[CacheLogger],
     sslRetry: Int
   )(
     f: => Either[ArtifactError, T]
@@ -747,7 +747,7 @@ object FileCache {
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
-    logger: Option[CacheLogger]
+    logger: CacheLogger
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
@@ -757,7 +757,7 @@ object FileCache {
 
       conn match {
         case c: HttpURLConnection =>
-          logger.foreach(_.gettingLength(url))
+          logger.gettingLength(url)
 
           var success = false
           try {
@@ -766,12 +766,12 @@ object FileCache {
               .filter(_ >= 0L)
 
             success = true
-            logger.foreach(_.gettingLengthResult(url, len))
+            logger.gettingLengthResult(url, len)
 
             Right(len)
           } finally {
             if (!success)
-              logger.foreach(_.gettingLengthResult(url, None))
+              logger.gettingLengthResult(url, None)
           }
 
         case other =>
@@ -788,7 +788,7 @@ object FileCache {
     cache: File = CacheDefaults.location,
     cachePolicies: Seq[CachePolicy] = CachePolicy.default,
     checksums: Seq[Option[String]] = CacheDefaults.checksums,
-    logger: Option[CacheLogger] = None,
+    logger: CacheLogger = CacheLogger.nop,
     pool: ExecutorService = CacheDefaults.pool,
     ttl: Option[Duration] = CacheDefaults.ttl,
     localArtifactsShouldBeCached: Boolean = false,
