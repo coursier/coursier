@@ -19,6 +19,7 @@ import coursier.cache.CacheDefaults
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.params.FetchParams
+import coursier.cli.resolve.ResolveException
 import coursier.util.Schedulable
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}
@@ -1056,5 +1057,146 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val jar = runFetchJunit()
       assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
     }
+  }
+
+  it should "fail because of resolution" in {
+    val options = FetchOptions()
+    val params = paramsOrThrow(options)
+    val a = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
+      .attempt
+      .unsafeRun()(ec)
+
+    a match {
+      case Right(_) =>
+        throw new Exception("should have failed")
+      case Left(_: ResolveException) =>
+      case Left(ex) =>
+        throw new Exception("Unexpected exception type", ex)
+    }
+  }
+
+  it should "fail to resolve, but try to fetch artifacts anyway" in {
+    val artifactOptions = ArtifactOptions(
+      forceFetch = true
+    )
+    val options = FetchOptions(
+      artifactOptions = artifactOptions
+    )
+    val params = paramsOrThrow(options)
+    val (_, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
+      .unsafeRun()(ec)
+
+    val expectedUrls = Seq(
+      "co/fs2/fs2-core_2.12/0.10.7/fs2-core_2.12-0.10.7.jar",
+      "com/chuusai/shapeless_2.12/2.3.3/shapeless_2.12-2.3.3.jar",
+      "com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0.jar",
+      "com/fasterxml/jackson/core/jackson-core/2.8.4/jackson-core-2.8.4.jar",
+      "com/fasterxml/jackson/core/jackson-databind/2.8.4/jackson-databind-2.8.4.jar",
+      "com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M9/argonaut-shapeless_6.2_2.12-1.2.0-M9.jar",
+      "com/github/alexarchambault/case-app-annotations_2.12/2.0.0-M5/case-app-annotations_2.12-2.0.0-M5.jar",
+      "com/github/alexarchambault/case-app-util_2.12/2.0.0-M5/case-app-util_2.12-2.0.0-M5.jar",
+      "com/github/alexarchambault/case-app_2.12/2.0.0-M5/case-app_2.12-2.0.0-M5.jar",
+      "com/github/javaparser/javaparser-core/3.2.5/javaparser-core-3.2.5.jar",
+      "com/github/pathikrit/better-files_2.12/3.6.0/better-files_2.12-3.6.0.jar",
+      "com/github/scopt/scopt_2.12/3.5.0/scopt_2.12-3.5.0.jar",
+      "com/google/protobuf/protobuf-java/3.6.0/protobuf-java-3.6.0.jar",
+      "com/lihaoyi/acyclic_2.12/0.1.5/acyclic_2.12-0.1.5.jar",
+      "com/lihaoyi/ammonite-interp_2.12.8/1.5.0-4-6296f20/ammonite-interp_2.12.8-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/ammonite-ops_2.12/1.5.0-4-6296f20/ammonite-ops_2.12-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/ammonite-repl_2.12.8/1.5.0-4-6296f20/ammonite-repl_2.12.8-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/ammonite-runtime_2.12/1.5.0-4-6296f20/ammonite-runtime_2.12-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/ammonite-terminal_2.12/1.5.0-4-6296f20/ammonite-terminal_2.12-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/ammonite-util_2.12/1.5.0-4-6296f20/ammonite-util_2.12-1.5.0-4-6296f20.jar",
+      "com/lihaoyi/fansi_2.12/0.2.5/fansi_2.12-0.2.5.jar",
+      "com/lihaoyi/fastparse_2.12/2.0.5/fastparse_2.12-2.0.5.jar",
+      "com/lihaoyi/geny_2.12/0.1.5/geny_2.12-0.1.5.jar",
+      "com/lihaoyi/os-lib_2.12/0.2.6/os-lib_2.12-0.2.6.jar",
+      "com/lihaoyi/pprint_2.12/0.5.3/pprint_2.12-0.5.3.jar",
+      "com/lihaoyi/scalaparse_2.12/2.0.5/scalaparse_2.12-2.0.5.jar",
+      "com/lihaoyi/scalatags_2.12/0.6.7/scalatags_2.12-0.6.7.jar",
+      "com/lihaoyi/sourcecode_2.12/0.1.5/sourcecode_2.12-0.1.5.jar",
+      "com/lihaoyi/ujson_2.12/0.7.1/ujson_2.12-0.7.1.jar",
+      "com/lihaoyi/upack_2.12/0.7.1/upack_2.12-0.7.1.jar",
+      "com/lihaoyi/upickle-core_2.12/0.7.1/upickle-core_2.12-0.7.1.jar",
+      "com/lihaoyi/upickle-implicits_2.12/0.7.1/upickle-implicits_2.12-0.7.1.jar",
+      "com/lihaoyi/upickle_2.12/0.7.1/upickle_2.12-0.7.1.jar",
+      "com/lihaoyi/utest_2.12/0.6.4/utest_2.12-0.6.4.jar",
+      "com/thesamet/scalapb/lenses_2.12/0.8.0/lenses_2.12-0.8.0.jar",
+      "com/thesamet/scalapb/scalapb-json4s_2.12/0.7.1/scalapb-json4s_2.12-0.7.1.jar",
+      "com/thesamet/scalapb/scalapb-runtime_2.12/0.8.0/scalapb-runtime_2.12-0.8.0.jar",
+      "com/thoughtworks/paranamer/paranamer/2.8/paranamer-2.8.jar",
+      "com/thoughtworks/qdox/qdox/2.0-M9/qdox-2.0-M9.jar",
+      "io/argonaut/argonaut_2.12/6.2.2/argonaut_2.12-6.2.2.jar",
+      "io/get-coursier/coursier-cache_2.12/1.1.0-M7/coursier-cache_2.12-1.1.0-M7.jar",
+      "io/get-coursier/coursier_2.12/1.1.0-M7/coursier_2.12-1.1.0-M7.jar",
+      "io/github/soc/directories/11/directories-11.jar",
+      "io/undertow/undertow-core/2.0.13.Final/undertow-core-2.0.13.Final.jar",
+      "net/java/dev/jna/jna/4.2.2/jna-4.2.2.jar",
+      "org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA.jar",
+      "org/jboss/logging/jboss-logging/3.3.2.Final/jboss-logging-3.3.2.Final.jar",
+      "org/jboss/threads/jboss-threads/2.3.0.Beta2/jboss-threads-2.3.0.Beta2.jar",
+      "org/jboss/xnio/xnio-api/3.6.5.Final/xnio-api-3.6.5.Final.jar",
+      "org/jboss/xnio/xnio-nio/3.6.5.Final/xnio-nio-3.6.5.Final.jar",
+      "org/jline/jline-reader/3.6.2/jline-reader-3.6.2.jar",
+      "org/jline/jline-terminal-jna/3.6.2/jline-terminal-jna-3.6.2.jar",
+      "org/jline/jline-terminal/3.6.2/jline-terminal-3.6.2.jar",
+      "org/json4s/json4s-ast_2.12/3.5.1/json4s-ast_2.12-3.5.1.jar",
+      "org/json4s/json4s-core_2.12/3.5.1/json4s-core_2.12-3.5.1.jar",
+      "org/json4s/json4s-jackson_2.12/3.5.1/json4s-jackson_2.12-3.5.1.jar",
+      "org/json4s/json4s-scalap_2.12/3.5.1/json4s-scalap_2.12-3.5.1.jar",
+      "org/scala-lang/modules/scala-xml_2.12/1.1.0/scala-xml_2.12-1.1.0.jar",
+      "org/scala-lang/scala-compiler/2.12.8/scala-compiler-2.12.8.jar",
+      "org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
+      "org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar",
+      "org/scala-lang/scalap/2.12.6/scalap-2.12.6.jar",
+      "org/scala-sbt/test-interface/1.0/test-interface-1.0.jar",
+      "org/scalaj/scalaj-http_2.12/2.4.0/scalaj-http_2.12-2.4.0.jar",
+      "org/scalameta/cli_2.12/4.0.0/cli_2.12-4.0.0.jar",
+      "org/scalameta/common_2.12/4.1.0/common_2.12-4.1.0.jar",
+      "org/scalameta/dialects_2.12/4.1.0/dialects_2.12-4.1.0.jar",
+      "org/scalameta/fastparse-utils_2.12/1.0.0/fastparse-utils_2.12-1.0.0.jar",
+      "org/scalameta/fastparse_2.12/1.0.0/fastparse_2.12-1.0.0.jar",
+      "org/scalameta/inputs_2.12/4.1.0/inputs_2.12-4.1.0.jar",
+      "org/scalameta/interactive_2.12.7/4.0.0/interactive_2.12.7-4.0.0.jar",
+      "org/scalameta/io_2.12/4.1.0/io_2.12-4.1.0.jar",
+      "org/scalameta/metabrowse-cli_2.12/0.2.1/metabrowse-cli_2.12-0.2.1.jar",
+      "org/scalameta/metabrowse-core_2.12/0.2.1/metabrowse-core_2.12-0.2.1.jar",
+      "org/scalameta/metabrowse-server_2.12/0.2.1/metabrowse-server_2.12-0.2.1.jar",
+      "org/scalameta/metacp_2.12/4.0.0/metacp_2.12-4.0.0.jar",
+      "org/scalameta/mtags_2.12/0.2.0/mtags_2.12-0.2.0.jar",
+      "org/scalameta/parsers_2.12/4.1.0/parsers_2.12-4.1.0.jar",
+      "org/scalameta/quasiquotes_2.12/4.1.0/quasiquotes_2.12-4.1.0.jar",
+      "org/scalameta/scalameta_2.12/4.1.0/scalameta_2.12-4.1.0.jar",
+      "org/scalameta/semanticdb-scalac-core_2.12.7/4.0.0/semanticdb-scalac-core_2.12.7-4.0.0.jar",
+      "org/scalameta/semanticdb_2.12/4.1.0/semanticdb_2.12-4.1.0.jar",
+      "org/scalameta/tokenizers_2.12/4.1.0/tokenizers_2.12-4.1.0.jar",
+      "org/scalameta/tokens_2.12/4.1.0/tokens_2.12-4.1.0.jar",
+      "org/scalameta/transversers_2.12/4.1.0/transversers_2.12-4.1.0.jar",
+      "org/scalameta/trees_2.12/4.1.0/trees_2.12-4.1.0.jar",
+      "org/slf4j/slf4j-api/1.8.0-beta2/slf4j-api-1.8.0-beta2.jar",
+      "org/slf4j/slf4j-nop/1.7.25/slf4j-nop-1.7.25.jar",
+      "org/typelevel/cats-core_2.12/1.1.0/cats-core_2.12-1.1.0.jar",
+      "org/typelevel/cats-effect_2.12/0.10/cats-effect_2.12-0.10.jar",
+      "org/typelevel/cats-kernel_2.12/1.1.0/cats-kernel_2.12-1.1.0.jar",
+      "org/typelevel/cats-macros_2.12/1.1.0/cats-macros_2.12-1.1.0.jar",
+      "org/typelevel/machinist_2.12/0.6.2/machinist_2.12-0.6.2.jar",
+      "org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar",
+      "org/wildfly/client/wildfly-client-config/1.0.0.Final/wildfly-client-config-1.0.0.Final.jar",
+      "org/wildfly/common/wildfly-common/1.3.0.Beta1/wildfly-common-1.3.0.Beta1.jar",
+      "org/zeromq/jeromq/0.4.3/jeromq-0.4.3.jar",
+      "org/zeromq/jnacl/0.1.0/jnacl-0.1.0.jar",
+      "sh/almond/channels_2.12/0.2.2/channels_2.12-0.2.2.jar",
+      "sh/almond/interpreter-api_2.12/0.2.2/interpreter-api_2.12-0.2.2.jar",
+      "sh/almond/interpreter_2.12/0.2.2/interpreter_2.12-0.2.2.jar",
+      "sh/almond/kernel_2.12/0.2.2/kernel_2.12-0.2.2.jar",
+      "sh/almond/logger_2.12/0.2.2/logger_2.12-0.2.2.jar",
+      "sh/almond/protocol_2.12/0.2.2/protocol_2.12-0.2.2.jar",
+      "sh/almond/scala-interpreter_2.12.8/0.2.2/scala-interpreter_2.12.8-0.2.2.jar",
+      "sh/almond/scala-kernel-api_2.12.8/0.2.2/scala-kernel-api_2.12.8-0.2.2.jar",
+      "sh/almond/scala-kernel_2.12.8/0.2.2/scala-kernel_2.12.8-0.2.2.jar"
+    ).map("https://repo1.maven.org/maven2/" + _)
+
+    val urls = l.map(_._1.url).sorted
+    assert(urls == expectedUrls)
   }
 }
