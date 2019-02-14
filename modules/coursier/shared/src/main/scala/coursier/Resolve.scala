@@ -16,12 +16,12 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams()
   ): Resolution = {
     val forceScalaVersions =
-      if (params.forceScalaVersion)
+      if (params.doForceScalaVersion)
         Seq(
-          mod"org.scala-lang:scala-library" -> params.scalaVersion,
-          mod"org.scala-lang:scala-reflect" -> params.scalaVersion,
-          mod"org.scala-lang:scala-compiler" -> params.scalaVersion,
-          mod"org.scala-lang:scalap" -> params.scalaVersion
+          mod"org.scala-lang:scala-library" -> params.selectedScalaVersion,
+          mod"org.scala-lang:scala-reflect" -> params.selectedScalaVersion,
+          mod"org.scala-lang:scala-compiler" -> params.selectedScalaVersion,
+          mod"org.scala-lang:scalap" -> params.selectedScalaVersion
         )
       else
         Nil

@@ -1,9 +1,5 @@
 package coursier
 
-import java.math.BigInteger
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-
 import coursier.params.ResolutionParams
 
 import scala.async.Async.{async, await}

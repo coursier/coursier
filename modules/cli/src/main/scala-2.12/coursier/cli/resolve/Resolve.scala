@@ -37,7 +37,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
 
       val tasks = params.dependency.scaladexLookups.map { s =>
-        Dependencies.handleScaladexDependency(s, params.resolution.scalaVersion, scaladex, params.output.verbosity)
+        Dependencies.handleScaladexDependency(s, params.resolution.selectedScalaVersion, scaladex, params.output.verbosity)
           .map {
             case Left(error) => Validated.invalidNel(error)
             case Right(l) => Validated.validNel(l)
@@ -230,7 +230,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     val e = for {
       depsExtraRepoOpt <- Dependencies.withExtraRepo(
         args,
-        params.resolution.scalaVersion,
+        params.resolution.selectedScalaVersion,
         params.dependency.defaultConfiguration,
         params.cache.cacheLocalArtifacts,
         params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
@@ -277,7 +277,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       mapDependenciesOpt = {
         val l = (if (params.resolution.typelevel) Seq(Typelevel.swap) else Nil) ++
-          (if (params.resolution.forceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.resolution.scalaVersion)) else Nil)
+          (if (params.resolution.doForceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.resolution.selectedScalaVersion)) else Nil)
 
         l.reduceOption((f, g) => dep => f(g(dep)))
       }

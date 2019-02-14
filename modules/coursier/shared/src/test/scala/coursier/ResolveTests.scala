@@ -28,7 +28,6 @@ object ResolveTests extends TestSuite {
 
       val params = ResolutionParams()
         .withScalaVersion("2.12.7")
-        .withForceScalaVersion(true)
 
       val res = await {
         Resolve.resolveFuture(

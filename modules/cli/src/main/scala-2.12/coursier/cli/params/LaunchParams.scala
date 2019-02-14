@@ -32,7 +32,7 @@ object LaunchParams {
       case None =>
         Validated.validNel(SharedLoaderParams(Nil, Map.empty))
       case Some((depsOpts, resolutionOpts)) =>
-        SharedLoaderParams(options.sharedLoaderOptions, resolutionOpts.scalaVersion, depsOpts.defaultConfiguration)
+        SharedLoaderParams(options.sharedLoaderOptions, resolutionOpts.selectedScalaVersion, depsOpts.defaultConfiguration)
     }
 
     val mainClassOpt = Some(options.mainClass).filter(_.nonEmpty)

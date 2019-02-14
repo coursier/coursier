@@ -43,7 +43,7 @@ final case class ResolutionOptions(
 ) {
 
   def scalaVersionOrDefault: String =
-    scalaVersion.getOrElse(scala.util.Properties.versionNumberString)
+    scalaVersion.getOrElse(ResolutionParams().selectedScalaVersion)
 
   def params: ValidatedNel[String, ResolutionParams] = {
 
@@ -85,9 +85,6 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
-    val scalaVersion0 = scalaVersionOrDefault
-    val forceScalaVersion0 = forceScalaVersion.getOrElse(scalaVersion.nonEmpty)
-
     (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
       (maxIterations, forceVersion, forcedProperties) =>
         ResolutionParams()
@@ -96,8 +93,8 @@ final case class ResolutionOptions(
           .withForceVersion(forceVersion)
           .withForcedProperties(forcedProperties)
           .withProfiles(profiles)
-          .withScalaVersion(scalaVersion0)
-          .withForceScalaVersion(forceScalaVersion0)
+          .withScalaVersion(scalaVersion)
+          .withForceScalaVersion(forceScalaVersion)
           .withTypelevel(typelevel)
     }
   }

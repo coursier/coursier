@@ -4,6 +4,7 @@
       "name": "ResolutionParams",
       "namespace": "coursier.params",
       "target": "Scala",
+      "parents": ["coursier.params.ResolutionParamsHelpers"],
       "type": "record",
       "fields": [
         {
@@ -38,14 +39,14 @@
         },
         {
           "name": "scalaVersion",
-          "type": "String",
-          "default": "coursier.internal.Defaults.scalaVersion",
+          "type": "String?",
+          "default": "None",
           "since": "1.0.0"
         },
         {
           "name": "forceScalaVersion",
-          "type": "Boolean",
-          "default": "false",
+          "type": "Boolean?",
+          "default": "None",
           "since": "1.0.0"
         },
         {
