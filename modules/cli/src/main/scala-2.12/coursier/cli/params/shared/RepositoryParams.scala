@@ -1,8 +1,7 @@
 package coursier.cli.params.shared
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import coursier.cache.CacheDefaults
-import coursier.CacheParse
+import coursier.cache.{CacheDefaults, CacheParse}
 import coursier.cli.options.shared.RepositoryOptions
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
@@ -32,7 +31,7 @@ object RepositoryParams {
           val extra =
             if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
             else Nil
-          CacheDefaults.defaultRepositories ++ extra
+          coursier.Resolve.defaultRepositories ++ extra
         }
       var repos = defaults ++ repos0
 

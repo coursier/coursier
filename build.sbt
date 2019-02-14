@@ -6,7 +6,7 @@ import Publish._
 lazy val getSbtCoursierVersion = settingKey[String]("")
 
 getSbtCoursierVersion := {
-  coursierVersion
+  sbtCoursierVersion
 }
 
 inThisBuild(List(
@@ -310,7 +310,9 @@ lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
-    moduleName := "coursier"
+    moduleName := "coursier",
+    utest,
+    libs += Deps.scalaAsync % Test
   )
 
 lazy val metaJvm = meta.jvm

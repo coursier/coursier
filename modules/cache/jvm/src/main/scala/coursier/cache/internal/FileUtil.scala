@@ -1,4 +1,4 @@
-package coursier.internal
+package coursier.cache.internal
 
 import java.io.{ByteArrayOutputStream, InputStream}
 

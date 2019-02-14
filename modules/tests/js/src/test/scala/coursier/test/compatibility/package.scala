@@ -1,7 +1,8 @@
 package coursier.test
 
+import coursier.cache.MockCache
 import coursier.core.Repository
-import coursier.util.{EitherT, Task, TestEscape}
+import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
@@ -31,22 +32,8 @@ package object compatibility {
 
   private val baseRepo = "modules/tests/metadata"
 
-  val taskArtifact: Repository.Fetch[Task] = { artifact =>
-    EitherT {
-      assert(artifact.authentication.isEmpty)
-
-      val path = baseRepo + "/" + TestEscape.urlAsPath(artifact.url)
-
-      Task { implicit ec =>
-        textResource0(path)
-          .map(Right(_))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(Left(e.getMessage))
-          }
-      }
-    }
-  }
+  val taskArtifact: Repository.Fetch[Task] =
+    MockCache(baseRepo).fetch
 
   def tryCreate(path: String, content: String): Unit = {}
 

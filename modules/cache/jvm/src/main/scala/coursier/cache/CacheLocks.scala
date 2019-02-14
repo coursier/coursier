@@ -4,7 +4,6 @@ import java.io.{File, FileOutputStream}
 import java.nio.channels.{FileLock, OverlappingFileLockException}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
-import coursier.FileError
 import coursier.paths.CachePath
 
 import scala.annotation.tailrec
@@ -24,9 +23,9 @@ object CacheLocks {
     cache: File,
     file: File
   )(
-    f: => Either[FileError, T],
-    ifLocked: => Option[Either[FileError, T]]
-  ): Either[FileError, T] = {
+    f: => Either[ArtifactError, T],
+    ifLocked: => Option[Either[ArtifactError, T]]
+  ): Either[ArtifactError, T] = {
 
     val lockFile = CachePath.lockFile(file)
 
@@ -38,7 +37,7 @@ object CacheLocks {
     }
 
     @tailrec
-    def loop(): Either[FileError, T] = {
+    def loop(): Either[ArtifactError, T] = {
 
       val resOpt = {
         var lock: FileLock = null
@@ -74,8 +73,8 @@ object CacheLocks {
     finally if (out != null) out.close()
   }
 
-  def withLockFor[T](cache: File, file: File)(f: => Either[FileError, T]): Either[FileError, T] =
-    withLockOr(cache, file)(f, Some(Left(FileError.Locked(file))))
+  def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
+    withLockOr(cache, file)(f, Some(Left(ArtifactError.Locked(file))))
 
   private val urlLocks = new ConcurrentHashMap[String, Object]
   private val urlLockDummyObject = new Object

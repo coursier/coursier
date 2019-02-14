@@ -3,7 +3,7 @@ package coursier
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
-import coursier.cache.{CacheDefaults, Cache, CacheLogger}
+import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.core.{Classifier, Type}
 import coursier.util.Schedulable
 
@@ -67,7 +67,7 @@ object Fetch {
 
     val task = S.bind(S.delay(logger.init())) { _ =>
       S.bind(S.attempt(gathered)) { a =>
-        S.bind(S.delay(logger.stopDidPrintSomething())) { _ =>
+        S.bind(S.delay(logger.stop())) { _ =>
           S.fromAttempt(a)
         }
       }
@@ -75,8 +75,8 @@ object Fetch {
 
     S.bind(task) { results =>
 
-      val ignoredErrors = new mutable.ListBuffer[(Artifact, FileError)]
-      val errors = new mutable.ListBuffer[(Artifact, FileError)]
+      val ignoredErrors = new mutable.ListBuffer[(Artifact, ArtifactError)]
+      val errors = new mutable.ListBuffer[(Artifact, ArtifactError)]
       val artifactToFile = new mutable.ListBuffer[(Artifact, File)]
 
       results.foreach {
@@ -123,7 +123,7 @@ object Fetch {
     S.map(r)(_.map(_._2))
   }
 
-  final class DownloadingArtifactException(val errors: Seq[(Artifact, FileError)]) extends Exception(
+  final class DownloadingArtifactException(val errors: Seq[(Artifact, ArtifactError)]) extends Exception(
     "Error fetching artifacts:\n" +
       errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
   )

@@ -1,4 +1,4 @@
-package coursier
+package coursier.cache.internal
 
 import java.io.{File, Writer}
 

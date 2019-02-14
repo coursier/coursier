@@ -59,29 +59,8 @@ object Platform {
   }
 
   def fetch(
-    repositories: Seq[core.Repository]
+    repositories: Seq[Repository]
   ): ResolutionProcess.Fetch[Task] =
     ResolutionProcess.fetch(repositories, Platform.artifact)
-
-  trait Logger {
-    def fetching(url: String): Unit
-    def fetched(url: String): Unit
-    def other(url: String, msg: String): Unit
-  }
-
-  def artifactWithLogger(logger: Logger): Repository.Fetch[Task] = { artifact =>
-    EitherT(
-      Task { implicit ec =>
-        Future(logger.fetching(artifact.url))
-          .flatMap(_ => get(artifact.url))
-          .map { s => logger.fetched(artifact.url); Right(s) }
-          .recover { case e: Exception =>
-            val msg = e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")
-            logger.other(artifact.url, msg)
-            Left(msg)
-          }
-      }
-    )
-  }
 
 }

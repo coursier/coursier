@@ -155,10 +155,10 @@ which are dependencies whose versions could not be unified.
 Then, if all went well, we can fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala mdoc:silent
 import java.io.File
-import coursier.cache.Cache
+import coursier.cache.{ArtifactError, Cache}
 import coursier.util.{Gather, Task}
 
-val localArtifacts: Seq[Either[FileError, File]] =
+val localArtifacts: Seq[Either[ArtifactError, File]] =
   Gather[Task].gather(
     resolution.artifacts().map(Cache.default.file(_).run)
   ).unsafeRun()

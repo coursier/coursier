@@ -1,15 +1,15 @@
-package coursier
+package coursier.cache
 
 import java.io.{File, Writer}
 import java.sql.Timestamp
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
-import coursier.cache.CacheLogger
+import coursier.cache.internal.Terminal
 
 import scala.collection.mutable.ArrayBuffer
 
-object TermDisplay {
+object ProgressBarLogger {
 
   def defaultFallbackMode: Boolean = {
     val env0 = sys.env.get("COURSIER_PROGRESS").map(_.toLowerCase).collect {
@@ -209,8 +209,8 @@ object TermDisplay {
       update()
     }
 
-    private def reflowed(url: String, info: Info) = {
-      val extra = info match {
+    private def describe(info: Info): String =
+      info match {
         case downloadInfo: DownloadInfo =>
           val pctOpt = downloadInfo.fraction.map(100.0 * _)
 
@@ -222,35 +222,6 @@ object TermDisplay {
         case _: CheckUpdateInfo =>
           "Checking for updates"
       }
-
-      val baseExtraWidth = width / 5
-
-      val total = url.length + 1 + extra.length
-      val (url0, extra0) =
-        if (total >= width) { // or > ? If equal, does it go down 2 lines?
-        val overflow = total - width + 1
-
-          val extra0 =
-            if (extra.length > baseExtraWidth)
-              extra.take((baseExtraWidth max (extra.length - overflow)) - 1) + "…"
-            else
-              extra
-
-          val total0 = url.length + 1 + extra0.length
-          val overflow0 = total0 - width + 1
-
-          val url0 =
-            if (total0 >= width)
-              url.take(((width - baseExtraWidth - 1) max (url.length - overflow0)) - 1) + "…"
-            else
-              url
-
-          (url0, extra0)
-        } else
-          (url, extra)
-
-      (url0, extra0)
-    }
 
     private def truncatedPrintln(s: String): Unit = {
 
@@ -346,10 +317,8 @@ object TermDisplay {
       for ((url, info) <- downloads0 if previous(url)) {
         assert(info != null, s"Incoherent state ($url)")
 
-        val (url0, extra0) = reflowed(url, info)
-
         displayedSomething = true
-        out.write(s"$url0 $extra0\n")
+        out.write(s"$url ${describe(info)}\n")
       }
 
       if (displayedSomething)
@@ -373,12 +342,12 @@ object TermDisplay {
 
 }
 
-class TermDisplay(
+class ProgressBarLogger(
   out: Writer,
-  val fallbackMode: Boolean = TermDisplay.defaultFallbackMode
+  val fallbackMode: Boolean = ProgressBarLogger.defaultFallbackMode
 ) extends CacheLogger {
 
-  import TermDisplay._
+  import ProgressBarLogger._
 
   private var updateRunnableOpt = Option.empty[UpdateDisplayRunnable]
   @volatile private var scheduler: ScheduledExecutorService = null
@@ -430,7 +399,7 @@ class TermDisplay(
   def init(): Unit =
     init(())
 
-  override def stopDidPrintSomething(): Boolean =
+  override def stop(): Boolean =
     if (scheduler != null || updateRunnableOpt.nonEmpty)
       lock.synchronized {
         if (scheduler != null) {
@@ -450,10 +419,7 @@ class TermDisplay(
     else
       false
 
-  def stop(): Unit =
-    stopDidPrintSomething()
-
-  override def downloadingArtifact(url: String, file: File): Unit =
+  override def downloadingArtifact(url: String): Unit =
     updateRunnable.newEntry(
       url,
       DownloadInfo(0L, 0L, None, System.currentTimeMillis(), updateCheck = false, watching = false),
@@ -523,6 +489,6 @@ class TermDisplay(
   }
 
   // TODO(wisechengyi,alexarchambault): implement this
-  override def removedCorruptFile(url: String, file: File, reason: Option[FileError]): Unit = {}
+  override def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
 }

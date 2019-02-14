@@ -4,5 +4,5 @@ scala_library(
         "cache:cache",
         "core:core",
     ],
-    sources = rglobs("jvm/*.scala", "shared/*.scala"),
+    sources = rglobs("jvm/src/main/*.scala", "shared/src/main/*.scala"),
 )

@@ -1,4 +1,4 @@
-package coursier
+package coursier.cache
 
 import java.net.URLConnection
 

@@ -97,9 +97,10 @@ Any error would mean that the resolution wasn't able to get metadata about some 
 Then fetch and get local copies of the artifacts themselves (the JARs) with
 ```scala mdoc:silent
 import java.io.File
+import coursier.cache.ArtifactError
 import coursier.util.{Gather, Task}
 
-val localArtifacts: Seq[Either[FileError, File]] =
+val localArtifacts: Seq[Either[ArtifactError, File]] =
   Gather[Task].gather(
     resolution
       .artifacts()

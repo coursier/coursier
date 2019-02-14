@@ -26,7 +26,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     if (e == null)
       throw new NoSuchElementException(s"Entry $path in zip file")
     else if (e.getName == path)
-      coursier.internal.FileUtil.readFullyUnsafe(zis)
+      coursier.cache.internal.FileUtil.readFullyUnsafe(zis)
     else
       zipEntryContent(zis, path)
   }
@@ -46,7 +46,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
     var fis: InputStream = null
 
-    val content = coursier.internal.FileUtil.readFully(new FileInputStream(file))
+    val content = coursier.cache.internal.FileUtil.readFully(new FileInputStream(file))
 
     val header = Seq[Byte](0x50, 0x4b, 0x03, 0x04)
     val idx = content.indexOfSlice(header)

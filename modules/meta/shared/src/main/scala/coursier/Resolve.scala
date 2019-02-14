@@ -1,14 +1,15 @@
 package coursier
 
-import coursier.cache.{CacheDefaults, Cache, CacheLogger}
+import coursier.cache.{Cache, CacheLogger}
+import coursier.error.ResolutionError
 import coursier.params.ResolutionParams
-import coursier.util.{Print, Schedulable, Task, ValidationNel}
+import coursier.util._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 
-object Resolve {
+object Resolve extends PlatformResolve {
 
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],
@@ -38,7 +39,7 @@ object Resolve {
 
     S.bind(S.delay(logger.init(()))) { _ =>
       S.bind(S.attempt(task)) { a =>
-        S.bind(S.delay(logger.stopDidPrintSomething())) { _ =>
+        S.bind(S.delay(logger.stop())) { _ =>
           S.fromAttempt(a)
         }
       }
@@ -47,23 +48,32 @@ object Resolve {
 
   def resolve[F[_]](
     dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = CacheDefaults.defaultRepositories,
+    repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit S: Schedulable[F]): F[Resolution] = {
     val initialRes = initialResolution(dependencies, params)
     val fetch = fetchVia[F](repositories, cache)
-    runProcess(initialRes, fetch, params.maxIterations, logger)
+    val res = runProcess(initialRes, fetch, params.maxIterations, logger)
+    S.bind(res) { res0 =>
+      validate(res0).either match {
+        case Left(errors) =>
+          val err = ResolutionError.from(errors.head, errors.tail: _*)
+          S.fromAttempt(Left(err))
+        case Right(()) =>
+          S.point(res0)
+      }
+    }
   }
 
   def resolveFuture(
     dependencies: Seq[Dependency],
-    repositories: Seq[Repository],
+    repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Future[Resolution] = {
+  )(implicit ec: ExecutionContext = cache.ec): Future[Resolution] = {
 
     val task = resolve[Task](
       dependencies,
@@ -82,7 +92,7 @@ object Resolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
-  )(implicit ec: ExecutionContext = ExecutionContext.fromExecutorService(cache.pool)): Resolution = {
+  )(implicit ec: ExecutionContext = cache.ec): Resolution = {
 
     val f = resolveFuture(
       dependencies,
@@ -98,24 +108,24 @@ object Resolve {
   private[coursier] def fetchVia[F[_]](
     repositories: Seq[Repository],
     cache: Cache[F] = Cache.default
-  )(implicit S: Schedulable[F]): ResolutionProcess.Fetch[F] = {
+  )(implicit S: Gather[F]): ResolutionProcess.Fetch[F] = {
     val fetchs = cache.fetchs
     ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
   }
 
-  def validate(res: Resolution, exclusionsInErrors: Boolean): ValidationNel[String, Unit] = {
+  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] = {
 
-    val checkDone: ValidationNel[String, Unit] =
+    val checkDone: ValidationNel[ResolutionError, Unit] =
       if (res.isDone)
         ValidationNel.success(())
       else
-        ValidationNel.failure("Maximum number of iterations reached!")
+        ValidationNel.failure(new ResolutionError.MaximumIterationReached)
 
-    val checkErrors: ValidationNel[String, Unit] = res
+    val checkErrors: ValidationNel[ResolutionError, Unit] = res
       .errors
       .map {
         case ((module, version), errors) =>
-          s"Error downloading $module:$version\n${errors.map("  " + _.replace("\n", "  \n")).mkString("\n")}"
+          new ResolutionError.CantDownloadModule(module, version, errors)
       } match {
         case Seq() =>
           ValidationNel.success(())
@@ -123,17 +133,18 @@ object Resolve {
           ValidationNel.failures(h, t: _*)
       }
 
-    val checkConflicts: ValidationNel[String, Unit] =
+    val checkConflicts: ValidationNel[ResolutionError, Unit] =
       if (res.conflicts.isEmpty)
         ValidationNel.success(())
       else
         ValidationNel.failure(
-          s"\nConflict:\n" +
-            Print.dependenciesUnknownConfigs(
-              res.conflicts.toVector,
-              res.projectCache.map { case (k, (_, p)) => k -> p },
-              printExclusions = exclusionsInErrors
-            )
+          new ResolutionError.ConflictingDependencies(
+            res.conflicts.map { dep =>
+              dep.copy(
+                version = res.projectCache.get(dep.moduleVersion).fold(dep.version)(_._2.actualVersion)
+              )
+            }
+          )
         )
 
     checkDone.zip(checkErrors, checkConflicts).map {

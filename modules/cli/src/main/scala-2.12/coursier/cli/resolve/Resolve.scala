@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.Validated
 import cats.implicits._
-import coursier.cache.CacheLogger
-import coursier.{Resolution, TermDisplay}
+import coursier.cache.{CacheLogger, ProgressBarLogger}
+import coursier.Resolution
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -60,7 +60,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       for {
         _ <- Task.delay(logger.init(()))
         e <- task.attempt
-        _ <- Task.delay(logger.stopDidPrintSomething())
+        _ <- Task.delay(logger.stop())
         t <- Task.fromEither(e)
       } yield t
     }
@@ -291,7 +291,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         pool
       )
 
-      validated = coursier.Resolve.validate(res, params.output.verbosity >= 1).either
+      validated = coursier.Resolve.validate(res).either
 
       valid = validated.isRight
 
@@ -322,7 +322,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             res,
             stdout,
             stderr,
-            colors = !TermDisplay.defaultFallbackMode
+            colors = !ProgressBarLogger.defaultFallbackMode
           )
         }
       }
@@ -330,7 +330,8 @@ object Resolve extends CaseApp[ResolveOptions] {
       _ = validated match {
         case Right(()) =>
         case Left(errors) =>
-          errors.foreach(stderr.println)
+          for (err <- errors)
+            stderr.println(err.getMessage)
       }
     } yield (res, valid && !conflicts)
   }

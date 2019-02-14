@@ -4,7 +4,7 @@ package cli
 import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.cache.{CacheDefaults, FileCache, LocalRepositories}
+import coursier.cache._
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
@@ -107,7 +107,7 @@ class Helper(
   }
 
   val loggerFallbackMode =
-    !common.outputOptions.progress && TermDisplay.defaultFallbackMode
+    !common.outputOptions.progress && ProgressBarLogger.defaultFallbackMode
 
   val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
     if (common.dependencyOptions.scaladex.isEmpty)
@@ -115,12 +115,12 @@ class Helper(
     else {
       val logger =
         if (common.verbosityLevel >= 0)
-          Some(new TermDisplay(
+          new ProgressBarLogger(
             new OutputStreamWriter(System.err),
             fallbackMode = loggerFallbackMode
-          ))
+          )
         else
-          None
+          CacheLogger.nop
 
       val fetch = FileCache(
         cache,
@@ -132,7 +132,7 @@ class Helper(
         followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
       ).fetch
 
-      logger.foreach(_.init())
+      logger.init()
 
       val scaladex = Scaladex.withCache(fetch)
 
@@ -164,7 +164,7 @@ class Helper(
         }.run
       }).unsafeRun()(ec)
 
-      logger.foreach(_.stop())
+      logger.stop()
 
       val errors = res.collect { case Left(err) => err }
 
@@ -382,12 +382,12 @@ class Helper(
 
   val logger =
     if (common.verbosityLevel >= 0)
-      Some(new TermDisplay(
+      new ProgressBarLogger(
         new OutputStreamWriter(System.err),
         fallbackMode = loggerFallbackMode
-      ))
+      )
     else
-      None
+      CacheLogger.nop
 
   val fetchs = FileCache(
     cache,
@@ -427,7 +427,7 @@ class Helper(
     }
   }
 
-  logger.foreach(_.init())
+  logger.init()
 
   val res =
     if (benchmark > 0) {
@@ -532,7 +532,7 @@ class Helper(
         .run(fetch0, common.resolutionOptions.maxIterations)
         .unsafeRun()(ec)
 
-  logger.foreach(_.stop())
+  logger.stop()
 
   val trDeps = res.minDependencies.toVector
 
@@ -707,12 +707,12 @@ class Helper(
 
     val logger =
       if (common.verbosityLevel >= 0)
-        Some(new TermDisplay(
+        new ProgressBarLogger(
           new OutputStreamWriter(System.err),
           fallbackMode = loggerFallbackMode
-        ))
+        )
       else
-        None
+        CacheLogger.nop
 
     if (common.verbosityLevel >= 1 && artifacts0.nonEmpty)
       println(s"  Found ${artifacts0.length} artifacts")
@@ -735,7 +735,7 @@ class Helper(
         .map(artifact.->)
     }
 
-    logger.foreach(_.init())
+    logger.init()
 
     val task = Task.gather.gather(tasks)
 
@@ -749,7 +749,7 @@ class Helper(
       .partition {
         case (a, err) =>
           val notFound = err match {
-            case _: FileError.NotFound => true
+            case _: ArtifactError.NotFound => true
             case _ => false
           }
           a.optional && notFound
@@ -760,7 +760,7 @@ class Helper(
         (artifact.url, f)
     }.toMap
 
-    logger.foreach(_.stop())
+    logger.stop()
 
     if (common.verbosityLevel >= 2)
       errPrintln(

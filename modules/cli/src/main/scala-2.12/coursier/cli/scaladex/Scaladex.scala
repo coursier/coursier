@@ -27,7 +27,7 @@ object Scaladex {
 
         val b = try {
           conn = new java.net.URL(url).openConnection().asInstanceOf[HttpURLConnection]
-          coursier.internal.FileUtil.readFullyUnsafe(conn.getInputStream)
+          coursier.cache.internal.FileUtil.readFullyUnsafe(conn.getInputStream)
         } finally {
           if (conn != null)
             CacheUrl.closeConn(conn)

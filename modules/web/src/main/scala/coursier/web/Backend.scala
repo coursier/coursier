@@ -1,7 +1,8 @@
 package coursier.web
 
+import coursier.cache.{AlwaysDownload, CacheLogger}
 import coursier.core.ResolutionProcess
-import coursier.{Dependency, MavenRepository, Module, Platform, Repository, Resolution, moduleNameString, organizationString}
+import coursier.{Dependency, MavenRepository, Module, Repository, Resolution, moduleNameString, organizationString}
 import coursier.util.{EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
@@ -143,18 +144,15 @@ final class Backend($: BackendScope[_, State]) {
     g.$("#resLogTab a:last").tab("show")
     $.modState(_.copy(resolving = true, log = Nil)).runNow()
 
-    val logger: Platform.Logger = new Platform.Logger {
-      def fetched(url: String) = {
+    val logger: CacheLogger = new CacheLogger {
+      override def downloadingArtifact(url: String) = {
         println(s"<- $url")
         $.modState(s => s.copy(log = s"<- $url" +: s.log)).runNow()
       }
-      def fetching(url: String) = {
+      override def downloadedArtifact(url: String, success: Boolean) = {
         println(s"-> $url")
-        $.modState(s => s.copy(log = s"-> $url" +: s.log)).runNow()
-      }
-      def other(url: String, msg: String) = {
-        println(s"$url: $msg")
-        $.modState(s => s.copy(log = s"$url: $msg" +: s.log)).runNow()
+        val extra = if (success) "" else " (failed)" // FIXME Have CacheLogger be passed more details in case of error
+        $.modState(s => s.copy(log = s"-> $url$extra" +: s.log)).runNow()
       }
     }
 
@@ -170,7 +168,7 @@ final class Backend($: BackendScope[_, State]) {
 
         res
           .process
-          .run(fetch(s.repositories.map { case (_, repo) => repo }, Platform.artifactWithLogger(logger)), 100)
+          .run(fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch), 100)
       }
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue

@@ -1,23 +1,23 @@
-package coursier
+package coursier.cache
 
 import java.io.File
 
 // TODO Make that extend Exception
-sealed abstract class FileError(
+sealed abstract class ArtifactError(
   val `type`: String,
   val message: String
 ) extends Product with Serializable {
   def describe: String = s"${`type`}: $message"
 
   final def notFound: Boolean = this match {
-    case _: FileError.NotFound => true
+    case _: ArtifactError.NotFound => true
     case _ => false
   }
 }
 
-object FileError {
+object ArtifactError {
 
-  final case class DownloadError(reason: String) extends FileError(
+  final case class DownloadError(reason: String) extends ArtifactError(
     "download error",
     reason
   )
@@ -25,7 +25,7 @@ object FileError {
   final case class NotFound(
     file: String,
     permanent: Option[Boolean] = None
-  ) extends FileError(
+  ) extends ArtifactError(
     "not found",
     file
   )
@@ -33,7 +33,7 @@ object FileError {
   final case class Unauthorized(
     file: String,
     realm: Option[String]
-  ) extends FileError(
+  ) extends ArtifactError(
     "unauthorized",
     file + realm.fold("")(" (" + _ + ")")
   )
@@ -41,7 +41,7 @@ object FileError {
   final case class ChecksumNotFound(
     sumType: String,
     file: String
-  ) extends FileError(
+  ) extends ArtifactError(
     "checksum not found",
     file
   )
@@ -49,7 +49,7 @@ object FileError {
   final case class ChecksumFormatError(
     sumType: String,
     file: String
-  ) extends FileError(
+  ) extends ArtifactError(
     "checksum format error",
     file
   )
@@ -60,7 +60,7 @@ object FileError {
     expected: String,
     file: String,
     sumFile: String
-  ) extends FileError(
+  ) extends ArtifactError(
     "wrong checksum",
     file
   )
@@ -68,7 +68,7 @@ object FileError {
   sealed abstract class Recoverable(
     `type`: String,
     message: String
-  ) extends FileError(`type`, message)
+  ) extends ArtifactError(`type`, message)
   final case class Locked(file: File) extends Recoverable(
     "locked",
     file.toString
