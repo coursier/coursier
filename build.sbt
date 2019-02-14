@@ -306,11 +306,41 @@ lazy val okhttp = project("okhttp")
   )
 
 lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
+  .enablePlugins(ContrabandPlugin)
   .dependsOn(core, cache)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
     moduleName := "coursier",
+    inConfig(Compile) {
+      // from https://github.com/sbt/contraband/blob/63901346c0c92711a874c7189897e9fcd5cd003f/plugin/src/main/scala/ContrabandPlugin.scala#L60-L77,
+      // adjusting the source directory, and calling the former generateContrabands task
+      // This allows to process contraband files from jvm/src/main/contraband (former task) *and* the ones
+      // from shared/src/main/contraband (this task).
+      generateContrabands := {
+        val jvmSpecific = generateContrabands.value
+        val extraSourceDir = (baseDirectory.value / "..").getCanonicalFile / "shared" / "src" / "main" / "contraband"
+        val shared = sbt.contraband.Generate(extraSourceDir,
+          !(skipGeneration in generateContrabands).value,
+          !(skipGeneration in generateJsonCodecs).value,
+          (sourceManaged in generateContrabands).value,
+          (contrabandJavaLazy in generateContrabands).value,
+          (contrabandJavaOption in generateContrabands).value,
+          (contrabandScalaArray in generateContrabands).value,
+          (contrabandScalaFileNames in generateContrabands).value,
+          (contrabandScalaSealInterface in generateContrabands).value,
+          (contrabandScalaPrivateConstructor in generateContrabands).value,
+          (contrabandWrapOption in generateContrabands).value,
+          (contrabandCodecParents in generateContrabands).value,
+          (contrabandInstantiateJavaLazy in generateContrabands).value,
+          (contrabandInstantiateJavaOptional in generateContrabands).value,
+          (contrabandFormatsForType in generateContrabands).value,
+          streams.value)
+
+        jvmSpecific ++ shared
+      }
+    },
+    publishGeneratedSources,
     utest,
     libs += Deps.scalaAsync % Test
   )

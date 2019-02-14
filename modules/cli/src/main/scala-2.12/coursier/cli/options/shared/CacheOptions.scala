@@ -104,16 +104,15 @@ final case class CacheOptions(
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV).mapN {
       (cachePolicy, ttl, parallel, checksum, retryCount) =>
-        CacheParams(
-          cache0,
-          cachePolicy,
-          ttl,
-          parallel,
-          checksum,
-          retryCount,
-          cacheFileArtifacts,
-          followHttpToHttpsRedirect
-        )
+        CacheParams()
+          .withCacheLocation(cache0)
+          .withCachePolicies(cachePolicy)
+          .withTtl(ttl)
+          .withParallel(parallel)
+          .withChecksum(checksum)
+          .withRetryCount(retryCount)
+          .withCacheLocalArtifacts(cacheFileArtifacts)
+          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirect)
     }
   }
 }

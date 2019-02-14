@@ -90,16 +90,15 @@ final case class ResolutionOptions(
 
     (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
       (maxIterations, forceVersion, forcedProperties) =>
-        ResolutionParams(
-          keepOptional,
-          maxIterations,
-          forceVersion,
-          forcedProperties,
-          profiles,
-          scalaVersion0,
-          forceScalaVersion0,
-          typelevel
-        )
+        ResolutionParams()
+          .withKeepOptionalDependencies(keepOptional)
+          .withMaxIterations(maxIterations)
+          .withForceVersion(forceVersion)
+          .withForcedProperties(forcedProperties)
+          .withProfiles(profiles)
+          .withScalaVersion(scalaVersion0)
+          .withForceScalaVersion(forceScalaVersion0)
+          .withTypelevel(typelevel)
     }
   }
 }

@@ -3,21 +3,21 @@ package coursier.params
 import java.io.File
 import java.util.concurrent.ExecutorService
 
-import coursier.cache.{Cache, CacheDefaults, CacheLogger, CachePolicy, FileCache}
+import coursier.cache._
 import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.duration.Duration
 
-final case class CacheParams(
-  cacheLocation: File = CacheDefaults.location, // directory, existing or that can be created
-  cachePolicies: Seq[CachePolicy] = CachePolicy.default, // non-empty
-  ttl: Option[Duration] = CacheDefaults.ttl,
-  parallel: Int = CacheDefaults.concurrentDownloadCount, // FIXME Move elsewhere?
-  checksum: Seq[Option[String]] = CacheDefaults.checksums,
-  retryCount: Int = 1,
-  cacheLocalArtifacts: Boolean = false,
-  followHttpToHttpsRedirections: Boolean = true
-) {
+abstract class CacheParamsHelpers {
+
+  def cacheLocation: File
+  def cachePolicies: Seq[CachePolicy]
+  def ttl: Option[Duration]
+  def checksum: Seq[Option[String]]
+  def retryCount: Int
+  def cacheLocalArtifacts: Boolean
+  def followHttpToHttpsRedirections: Boolean
+
   def cache[F[_]](
     pool: ExecutorService = CacheDefaults.pool,
     logger: CacheLogger = CacheLogger.nop
