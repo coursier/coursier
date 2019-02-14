@@ -1,5 +1,5 @@
 scala_library(
-    name = "meta",
+    name = "coursier",
     dependencies = [
         "cache:cache",
         "core:core",

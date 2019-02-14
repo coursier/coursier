@@ -216,7 +216,7 @@ lazy val extra = project("extra")
   )
 
 lazy val benchmark = project("benchmark")
-  .dependsOn(metaJvm)
+  .dependsOn(coursierJvm)
   .enablePlugins(JmhPlugin)
   .settings(
     shared,
@@ -225,7 +225,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, metaJvm, extra)
+  .dependsOn(bootstrap, coursierJvm, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -305,13 +305,12 @@ lazy val okhttp = project("okhttp")
     libs += Deps.okhttpUrlConnection
   )
 
-lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
+lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .enablePlugins(ContrabandPlugin)
   .dependsOn(core, cache)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
-    moduleName := "coursier",
     inConfig(Compile) {
       // from https://github.com/sbt/contraband/blob/63901346c0c92711a874c7189897e9fcd5cd003f/plugin/src/main/scala/ContrabandPlugin.scala#L60-L77,
       // adjusting the source directory, and calling the former generateContrabands task
@@ -345,8 +344,8 @@ lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
     libs += Deps.scalaAsync % Test
   )
 
-lazy val metaJvm = meta.jvm
-lazy val metaJs = meta.js
+lazy val coursierJvm = coursier.jvm
+lazy val coursierJs = coursier.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -365,7 +364,7 @@ lazy val jvm = project("jvm")
     benchmark,
     cli,
     okhttp,
-    metaJvm
+    coursierJvm
   )
   .settings(
     shared,
@@ -380,7 +379,7 @@ lazy val js = project("js")
     cacheJs,
     testsJs,
     web,
-    metaJs
+    coursierJs
   )
   .settings(
     shared,
@@ -388,7 +387,7 @@ lazy val js = project("js")
     moduleName := "coursier-js"
   )
 
-lazy val coursier = project("coursier")
+lazy val `coursier-repo` = project("coursier-repo")
   .in(root)
   .aggregate(
     catsJvm,
@@ -411,13 +410,12 @@ lazy val coursier = project("coursier")
     scalazJs,
     web,
     okhttp,
-    metaJvm,
-    metaJs
+    coursierJvm,
+    coursierJs
   )
   .settings(
     shared,
-    dontPublish,
-    moduleName := "coursier-root"
+    dontPublish
   )
 
 
