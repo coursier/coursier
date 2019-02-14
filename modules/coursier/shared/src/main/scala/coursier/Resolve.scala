@@ -14,10 +14,20 @@ object Resolve extends PlatformResolve {
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],
     params: ResolutionParams = ResolutionParams()
-  ): Resolution =
+  ): Resolution = {
+    val forceScalaVersions =
+      if (params.forceScalaVersion)
+        Seq(
+          mod"org.scala-lang:scala-library" -> params.scalaVersion,
+          mod"org.scala-lang:scala-reflect" -> params.scalaVersion,
+          mod"org.scala-lang:scala-compiler" -> params.scalaVersion,
+          mod"org.scala-lang:scalap" -> params.scalaVersion
+        )
+      else
+        Nil
     Resolution(
       dependencies,
-      forceVersions = params.forceVersion,
+      forceVersions = params.forceVersion ++ forceScalaVersions,
       filter = Some(dep => params.keepOptionalDependencies || !dep.optional),
       userActivations =
         if (params.profiles.isEmpty) None
@@ -26,6 +36,7 @@ object Resolve extends PlatformResolve {
       // mapDependencies = if (params.typelevel) Some(Typelevel.swap) else None,
       forceProperties = params.forcedProperties
     )
+  }
 
   private[coursier] def runProcess[F[_]](
     initialResolution: Resolution,
