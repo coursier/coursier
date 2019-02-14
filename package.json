@@ -4,6 +4,7 @@
   "devDependencies": {
     "cheerio": "0.22.0",
     "sax": "1.2.4",
+    "sha1": "1.1.1",
     "xhr2": "0.1.4",
     "xmldom": "0.1.27"
   },

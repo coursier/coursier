@@ -1,7 +1,9 @@
 package coursier
 
+import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
+import java.security.MessageDigest
 import java.util.Locale
 
 import coursier.cache.{Cache, MockCache}
@@ -35,6 +37,12 @@ abstract class PlatformTestHelpers {
     val p = Paths.get(path)
     Files.createDirectories(p.getParent)
     Files.write(p, content.getBytes(StandardCharsets.UTF_8))
+  }
+
+  def sha1(s: String): String = {
+    val md = MessageDigest.getInstance("SHA-1")
+    val b = md.digest(s.getBytes(StandardCharsets.UTF_8))
+    new BigInteger(1, b).toString(16)
   }
 
 }

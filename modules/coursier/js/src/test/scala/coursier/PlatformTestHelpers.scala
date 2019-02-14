@@ -5,6 +5,7 @@ import coursier.cache.{Cache, MockCache}
 import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.scalajs.js.Dynamic.{ global => g }
 
 abstract class PlatformTestHelpers {
   val cache: Cache[Task] =
@@ -16,4 +17,10 @@ abstract class PlatformTestHelpers {
     Platform.textResource(path)
 
   def maybeWriteTextResource(path: String, content: String): Unit = {}
+
+  private lazy val sha1Module = g.require("sha1")
+
+  def sha1(s: String): String =
+    sha1Module(s).asInstanceOf[String]
+
 }

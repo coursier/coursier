@@ -1,5 +1,11 @@
 package coursier
 
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+
+import coursier.params.ResolutionParams
+
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -8,7 +14,7 @@ object TestHelpers extends PlatformTestHelpers {
   implicit def ec: ExecutionContext =
     cache.ec
 
-  def validateDependencies(res: Resolution): Future[Unit] = async {
+  def validateDependencies(res: Resolution, params: ResolutionParams = ResolutionParams()): Future[Unit] = async {
     assert(res.rootDependencies.lengthCompare(1) == 0) // only fine with a single root dependency for now
 
     val rootDep = res.rootDependencies.head
@@ -24,6 +30,12 @@ object TestHelpers extends PlatformTestHelpers {
           case (k, v) => k + "_" + v
         }.mkString("_")
 
+    val paramsPart =
+      if (params == ResolutionParams())
+        ""
+      else
+        "_params" + sha1(params.toString)
+
     val path = Seq(
       "modules/tests/shared/src/test/resources/resolutions",
       rootDep.module.organization.value,
@@ -34,7 +46,7 @@ object TestHelpers extends PlatformTestHelpers {
           ""
         else
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-        )
+        ) + paramsPart
     ).filter(_.nonEmpty).mkString("/")
 
     def tryRead = textResource(path)
