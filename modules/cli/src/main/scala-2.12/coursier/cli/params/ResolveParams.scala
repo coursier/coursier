@@ -36,7 +36,7 @@ object ResolveParams {
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
     val dependencyV = DependencyParams(
-      resolutionV.toOption.fold(options.resolutionOptions.scalaVersionOrDefault)(_.scalaVersion),
+      resolutionV.toOption.fold(options.resolutionOptions.scalaVersionOrDefault)(_.selectedScalaVersion),
       options.dependencyOptions
     )
 
@@ -44,7 +44,7 @@ object ResolveParams {
     val tree = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV =
-      resolutionV.toOption.map(_.scalaVersion) match {
+      resolutionV.toOption.map(_.selectedScalaVersion) match {
         case None =>
           Validated.validNel(Nil)
         case Some(sv) =>

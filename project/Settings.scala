@@ -383,5 +383,15 @@ object Settings {
         output
       }
     )
+  
+  lazy val publishGeneratedSources = Seq(
+    // https://github.com/sbt/sbt/issues/2205
+    mappings in (Compile, packageSrc) ++= {
+      val srcs = (managedSources in Compile).value
+      val sdirs = (managedSourceDirectories in Compile).value
+      val base = baseDirectory.value
+      (srcs --- sdirs --- base).pair(Path.relativeTo(sdirs) | Path.relativeTo(base) | Path.flat)
+    }
+  )
 
 }

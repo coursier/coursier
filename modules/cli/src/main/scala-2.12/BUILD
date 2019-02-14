@@ -10,7 +10,7 @@ scala_library(
         "extra/src/main/scala/coursier/extra:extra",
         "extra/src/main/scala-2.12/coursier/extra:native",
         "interop/scalaz:scalaz-interop",
-        "meta:meta",
+        "coursier:coursier",
         ":util",
     ],
     sources = rglobs(

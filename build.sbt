@@ -216,7 +216,7 @@ lazy val extra = project("extra")
   )
 
 lazy val benchmark = project("benchmark")
-  .dependsOn(metaJvm)
+  .dependsOn(coursierJvm)
   .enablePlugins(JmhPlugin)
   .settings(
     shared,
@@ -225,7 +225,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, metaJvm, extra)
+  .dependsOn(bootstrap, coursierJvm, extra)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -305,18 +305,52 @@ lazy val okhttp = project("okhttp")
     libs += Deps.okhttpUrlConnection
   )
 
-lazy val meta = crossProject("meta")(JSPlatform, JVMPlatform)
+lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
+  .enablePlugins(ContrabandPlugin)
   .dependsOn(core, cache)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
-    moduleName := "coursier",
+    inConfig(Compile)(Seq(
+      // commit generated sources in git, mostly for pants
+      // from https://github.com/sbt/librarymanagement/blob/6d35f329b6b6be8da467eefc399ba9fa6f6725c0/build.sbt#L108-L110
+      managedSourceDirectories in Compile += baseDirectory.value / "src" / "main" / "contraband-scala",
+      sourceManaged in (Compile, generateContrabands) := baseDirectory.value / "src" / "main" / "contraband-scala",
+      // from https://github.com/sbt/contraband/blob/63901346c0c92711a874c7189897e9fcd5cd003f/plugin/src/main/scala/ContrabandPlugin.scala#L60-L77,
+      // adjusting the source directory, and calling the former generateContrabands task
+      // This allows to process contraband files from jvm/src/main/contraband (former task) *and* the ones
+      // from shared/src/main/contraband (this task).
+      generateContrabands := {
+        val jvmSpecific = generateContrabands.value
+        val extraSourceDir = (baseDirectory.value / "..").getCanonicalFile / "shared" / "src" / "main" / "contraband"
+        val extraManagedSourceDir = (baseDirectory.value / "..").getCanonicalFile / "shared" / "src" / "main" / "contraband-scala"
+        val shared = sbt.contraband.Generate(extraSourceDir,
+          !(skipGeneration in generateContrabands).value,
+          !(skipGeneration in generateJsonCodecs).value,
+          extraManagedSourceDir,
+          (contrabandJavaLazy in generateContrabands).value,
+          (contrabandJavaOption in generateContrabands).value,
+          (contrabandScalaArray in generateContrabands).value,
+          (contrabandScalaFileNames in generateContrabands).value,
+          (contrabandScalaSealInterface in generateContrabands).value,
+          (contrabandScalaPrivateConstructor in generateContrabands).value,
+          (contrabandWrapOption in generateContrabands).value,
+          (contrabandCodecParents in generateContrabands).value,
+          (contrabandInstantiateJavaLazy in generateContrabands).value,
+          (contrabandInstantiateJavaOptional in generateContrabands).value,
+          (contrabandFormatsForType in generateContrabands).value,
+          streams.value)
+
+        jvmSpecific ++ shared
+      }
+    )),
+    publishGeneratedSources,
     utest,
     libs += Deps.scalaAsync % Test
   )
 
-lazy val metaJvm = meta.jvm
-lazy val metaJs = meta.js
+lazy val coursierJvm = coursier.jvm
+lazy val coursierJs = coursier.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -335,7 +369,7 @@ lazy val jvm = project("jvm")
     benchmark,
     cli,
     okhttp,
-    metaJvm
+    coursierJvm
   )
   .settings(
     shared,
@@ -350,7 +384,7 @@ lazy val js = project("js")
     cacheJs,
     testsJs,
     web,
-    metaJs
+    coursierJs
   )
   .settings(
     shared,
@@ -358,7 +392,7 @@ lazy val js = project("js")
     moduleName := "coursier-js"
   )
 
-lazy val coursier = project("coursier")
+lazy val `coursier-repo` = project("coursier-repo")
   .in(root)
   .aggregate(
     catsJvm,
@@ -381,13 +415,12 @@ lazy val coursier = project("coursier")
     scalazJs,
     web,
     okhttp,
-    metaJvm,
-    metaJs
+    coursierJvm,
+    coursierJs
   )
   .settings(
     shared,
-    dontPublish,
-    moduleName := "coursier-root"
+    dontPublish
   )
 
 
