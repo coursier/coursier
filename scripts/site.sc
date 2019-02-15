@@ -58,7 +58,13 @@ def main(publishLocal: Boolean = false, npmInstall: Boolean = false, yarnRunBuil
 
   if (publishLocal)
     // alternatively, we could try to get the full classpath of cacheJVM, and just inject it in the mdoc classpath
-    Util.runCmd(Seq("sbt", "set version in ThisBuild := \"" + version + "\"", "coreJVM/publishLocal", "cacheJVM/publishLocal"))
+    Util.runCmd(Seq(
+      "sbt",
+      "set version in ThisBuild := \"" + version + "\"",
+      "coreJVM/publishLocal",
+      "cacheJVM/publishLocal",
+      "coursierJVM/publishLocal"
+    ))
 
   val websiteDir = new File("doc/website")
 
