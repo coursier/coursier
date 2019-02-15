@@ -1,6 +1,6 @@
 package coursier.cache
 
-import java.io.Writer
+import java.io.{OutputStream, OutputStreamWriter, Writer}
 import java.sql.Timestamp
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,6 +10,16 @@ import coursier.cache.internal.Terminal
 import scala.collection.mutable.ArrayBuffer
 
 object ProgressBarLogger {
+
+  def create(): ProgressBarLogger =
+    new ProgressBarLogger(new OutputStreamWriter(System.err))
+
+  def create(os: OutputStream): ProgressBarLogger =
+    new ProgressBarLogger(new OutputStreamWriter(os))
+
+  def create(writer: OutputStreamWriter): ProgressBarLogger =
+    new ProgressBarLogger(writer)
+
 
   def defaultFallbackMode: Boolean = {
     val env0 = sys.env.get("COURSIER_PROGRESS").map(_.toLowerCase).collect {
@@ -357,16 +367,16 @@ class ProgressBarLogger(
     throw new Exception("Uninitialized TermDisplay")
   }
 
-  val defaultWidth = 80
+  private val defaultWidth = 80
 
-  lazy val (width, fallbackMode0) = Terminal.consoleDim("cols") match {
+  private lazy val (width, fallbackMode0) = Terminal.consoleDim("cols") match {
     case Some(w) =>
       (w, fallbackMode)
     case None =>
       (defaultWidth, true)
   }
 
-  lazy val refreshInterval =
+  private lazy val refreshInterval =
     if (fallbackMode0)
       1000L
     else

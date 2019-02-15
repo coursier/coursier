@@ -42,7 +42,9 @@ object Resolve extends PlatformResolve {
     initialResolution: Resolution,
     fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = 200,
-    loggerOpt: Option[CacheLogger] = None
+    loggerOpt: Option[CacheLogger] = None,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit S: Schedulable[F]): F[Resolution] = {
 
     val task = initialResolution
@@ -53,9 +55,9 @@ object Resolve extends PlatformResolve {
       case None =>
         task
       case Some(logger) =>
-        S.bind(S.delay(logger.init(()))) { _ =>
+        S.bind(S.delay(logger.init(beforeLogging()))) { _ =>
           S.bind(S.attempt(task)) { a =>
-            S.bind(S.delay(logger.stop())) { _ =>
+            S.bind(S.delay { val b = logger.stop(); afterLogging(b) }) { _ =>
               S.fromAttempt(a)
             }
           }
@@ -67,11 +69,13 @@ object Resolve extends PlatformResolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[F] = Cache.default
+    cache: Cache[F] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit S: Schedulable[F]): F[Resolution] = {
     val initialRes = initialResolution(dependencies, params)
     val fetch = fetchVia[F](repositories, cache)
-    val res = runProcess(initialRes, fetch, params.maxIterations, cache.loggerOpt)
+    val res = runProcess(initialRes, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
     S.bind(res) { res0 =>
       validate(res0).either match {
         case Left(errors) =>
@@ -87,31 +91,65 @@ object Resolve extends PlatformResolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Future[Resolution] = {
 
     val task = resolveIO[Task](
       dependencies,
       repositories,
       params,
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )
 
     task.future()
+  }
+
+  def resolveEither(
+    dependencies: Seq[Dependency],
+    repositories: Seq[Repository] = defaultRepositories,
+    params: ResolutionParams = ResolutionParams(),
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
+  )(implicit ec: ExecutionContext = cache.ec): Either[ResolutionError, Resolution] = {
+
+    val task = resolveIO[Task](
+      dependencies,
+      repositories,
+      params,
+      cache,
+      beforeLogging,
+      afterLogging
+    )
+
+    val f = task
+      .map(Right(_))
+      .handle { case ex: ResolutionError => Left(ex) }
+      .future()
+
+    Await.result(f, Duration.Inf)
   }
 
   def resolve(
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Resolution = {
 
     val f = resolveFuture(
       dependencies,
       repositories,
       params,
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )(ec)
 
     Await.result(f, Duration.Inf)

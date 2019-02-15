@@ -5,9 +5,12 @@ import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.core.{Classifier, Type}
-import coursier.util.Schedulable
+import coursier.error.FetchError
+import coursier.util.{Schedulable, Task}
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Fetch {
 
@@ -91,12 +94,11 @@ object Fetch {
       if (errors.isEmpty)
         S.point(artifactToFile.toList)
       else
-        // FIXME Use more specific exception type
-        S.fromAttempt(Left(new DownloadingArtifactException(errors.toList)))
+        S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
     }
   }
 
-  def fetch[F[_]](
+  def fetchIO[F[_]](
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
@@ -104,8 +106,8 @@ object Fetch {
     cache: Cache[F] = Cache.default,
     logger: CacheLogger = CacheLogger.nop
   )(implicit
-     S: Schedulable[F]
-  ): F[Seq[File]] = {
+     S: Schedulable[F] = Task.schedulable
+  ): F[Seq[(Artifact, File)]] = {
 
     val a = artifacts(
       resolution,
@@ -114,18 +116,79 @@ object Fetch {
       artifactTypes
     )
 
-    val r = fetchArtifacts(
+    fetchArtifacts(
       a.map(_._3),
       cache,
       logger
     )
-
-    S.map(r)(_.map(_._2))
   }
 
-  final class DownloadingArtifactException(val errors: Seq[(Artifact, ArtifactError)]) extends Exception(
-    "Error fetching artifacts:\n" +
-      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
-  )
+  def fetchFuture(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit ec: ExecutionContext = cache.ec): Future[Seq[(Artifact, File)]] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache,
+      logger
+    )
+
+    task.future()
+  }
+
+  def fetchEither(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit ec: ExecutionContext = cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache,
+      logger
+    )
+
+    val f = task
+      .map(Right(_))
+      .handle { case ex: FetchError => Left(ex) }
+      .future()
+
+    Await.result(f, Duration.Inf)
+  }
+
+  def fetch(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default,
+    logger: CacheLogger = CacheLogger.nop
+  )(implicit ec: ExecutionContext = cache.ec): Seq[(Artifact, File)] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache,
+      logger
+    )
+
+    Await.result(task.future(), Duration.Inf)
+  }
 
 }

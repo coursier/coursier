@@ -1,6 +1,7 @@
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.util.Locale
 
 import sbt._
 import sbt.Keys._
@@ -44,7 +45,16 @@ object Settings {
       "-target", "1.8"
     ),
     javacOptions.in(Keys.doc) := Seq()
-  )
+  ) ++ {
+    val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
+    if (prop == "0" || prop == "false")
+      Seq(
+        sources in (Compile, doc) := Seq.empty,
+        publishArtifact in (Compile, packageDoc) := false
+      )
+    else
+      Nil
+  }
 
   def doRunNpmInstallIfNeeded(baseDir: File, log: Logger): Unit = {
     val evFile = baseDir / "node_modules" / ".npm_run"

@@ -212,7 +212,7 @@ object Launch extends CaseApp[LaunchOptions] {
           case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
             System.err.println(e.message)
             sys.exit(1)
-          case Left(e: coursier.Fetch.DownloadingArtifactException) if params.resolve.output.verbosity <= 1 =>
+          case Left(e: coursier.error.FetchError) if params.resolve.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
             sys.exit(1)
           case Left(e: LaunchException.NoMainClassFound) if params.resolve.output.verbosity <= 1 =>
