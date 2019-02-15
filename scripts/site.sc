@@ -81,7 +81,7 @@ def main(publishLocal: Boolean = false, npmInstall: Boolean = false, yarnRunBuil
     new File("doc/docs"),
     new File("doc/processed-docs"),
     scalaVersion,
-    dependencies = Seq(s"io.get-coursier:coursier-cache_2.12:$version"),
+    dependencies = Seq(s"io.get-coursier:coursier_2.12:$version"),
     mdocProps = mdocProps
   )
 
