@@ -27,6 +27,9 @@ abstract class Cache[F[_]] extends PlatformCache[F] {
   def fetchs: Seq[Repository.Fetch[F]]
 
   def ec: ExecutionContext
+
+  def loggerOpt: Option[CacheLogger] =
+    None
 }
 
 object Cache extends PlatformCacheCompanion

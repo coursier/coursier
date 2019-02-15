@@ -37,6 +37,9 @@ final case class FileCache[F[_]](
 
   import FileCache.{localFile, readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
 
+  override def loggerOpt: Some[CacheLogger] =
+    Some(logger)
+
   private def download(
     artifact: Artifact,
     checksums: Set[String],

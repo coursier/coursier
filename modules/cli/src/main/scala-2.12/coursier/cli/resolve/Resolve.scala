@@ -154,7 +154,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     val res =
       for {
         start <- Task.delay(System.currentTimeMillis())
-        res0 <- coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, logger)
+        res0 <- coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, Some(logger))
         end <- Task.delay(System.currentTimeMillis())
         _ <- Task.delay {
           Console.err.println(s"${end - start} ms")
@@ -213,7 +213,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     else if (params.benchmark < 0)
       runSimpleBenchmark(params, startRes, logger, fetch0, -params.benchmark)
     else
-      coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, logger)
+      coursier.Resolve.runProcess(startRes, fetch0, params.resolution.maxIterations, Some(logger))
   }
 
   // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
