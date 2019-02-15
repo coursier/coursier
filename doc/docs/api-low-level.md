@@ -1,8 +1,8 @@
 ---
-title: Usage
+title: Low-level API
 ---
 
-*Direct former README import (possibly not up-to-date)*
+> This page is a direct import of sections of the [former README](https://github.com/coursier/coursier/blob/9bc34e2e60a7ec8d49e912e81cf8f02d1620e63c/README.md) of coursier, and is possibly not up-to-date. The use of [mdoc](https://github.com/scalameta/mdoc) ensures the code snippets below compile fine with the latest version though.
 
 Add to your `build.sbt`
 ```scala
@@ -11,12 +11,8 @@ Add to your `build.sbt`
   "io.get-coursier" %% "coursier-cache" % "@VERSION@"
 )
 ```
-or simply
-```scala
-@EXTRA_SBT@libraryDependencies += "io.get-coursier" %% "coursier" % "@VERSION@"
-```
 
-The first module, `"io.get-coursier" %% "coursier" % "@VERSION@"`, contains among others,
+The first module, `"io.get-coursier" %% "coursier-core" % "@VERSION@"`, contains among others,
 definitions,
 mainly in [`Definitions.scala`](https://github.com/coursier/coursier/blob/master/core/shared/src/main/scala/coursier/core/Definitions.scala),
 [`Resolution`](https://github.com/coursier/coursier/blob/master/core/shared/src/main/scala/coursier/core/Resolution.scala), representing a particular state of the resolution,
