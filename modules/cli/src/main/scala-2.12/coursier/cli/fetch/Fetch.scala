@@ -62,8 +62,7 @@ object Fetch extends CaseApp[FetchOptions] {
 
       artifactFiles <- coursier.Fetch.fetchArtifacts(
         artifacts.map(_._3).distinct,
-        cache,
-        logger
+        cache
         // FIXME Allow to adjust retryCount via CLI args?
       )
 
