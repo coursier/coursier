@@ -156,7 +156,7 @@ object Launch extends CaseApp[LaunchOptions] {
           (parent, name) =>
             val deps = params.sharedLoader.loaderDependencies.getOrElse(name, Nil)
             val subRes = res.subset(deps)
-            val artifacts = coursier.Fetch.artifacts(
+            val artifacts = coursier.Artifacts.artifacts0(
               subRes,
               params.artifact.classifiers,
               params.artifact.mainArtifacts,

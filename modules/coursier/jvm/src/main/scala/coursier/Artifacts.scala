@@ -12,9 +12,9 @@ import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-object Fetch {
+object Artifacts {
 
-  private[coursier] def artifacts(
+  private[coursier] def artifacts0(
     resolution: Resolution,
     classifiers: Set[Classifier],
     mainArtifacts: JBoolean,
@@ -106,7 +106,7 @@ object Fetch {
     }
   }
 
-  def fetchIO[F[_]](
+  def artifactsIO[F[_]](
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
@@ -118,7 +118,7 @@ object Fetch {
      S: Schedulable[F] = Task.schedulable
   ): F[Seq[(Artifact, File)]] = {
 
-    val a = artifacts(
+    val a = artifacts0(
       resolution,
       classifiers,
       mainArtifacts,
@@ -133,7 +133,7 @@ object Fetch {
     )
   }
 
-  def fetchFuture(
+  def artifactsFuture(
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
@@ -143,7 +143,7 @@ object Fetch {
     afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Future[Seq[(Artifact, File)]] = {
 
-    val task = fetchIO(
+    val task = artifactsIO(
       resolution,
       classifiers,
       mainArtifacts,
@@ -156,7 +156,7 @@ object Fetch {
     task.future()
   }
 
-  def fetchEither(
+  def artifactsEither(
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
@@ -166,7 +166,7 @@ object Fetch {
     afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
 
-    val task = fetchIO(
+    val task = artifactsIO(
       resolution,
       classifiers,
       mainArtifacts,
@@ -184,7 +184,7 @@ object Fetch {
     Await.result(f, Duration.Inf)
   }
 
-  def fetch(
+  def artifacts(
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
@@ -194,7 +194,7 @@ object Fetch {
     afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Seq[(Artifact, File)] = {
 
-    val task = fetchIO(
+    val task = artifactsIO(
       resolution,
       classifiers,
       mainArtifacts,
