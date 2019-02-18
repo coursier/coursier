@@ -24,7 +24,8 @@ abstract class Cache[F[_]] extends PlatformCache[F] {
     *
     * @return a non empty sequence
     */
-  def fetchs: Seq[Repository.Fetch[F]]
+  def fetchs: Seq[Repository.Fetch[F]] =
+    Seq(fetch)
 
   def ec: ExecutionContext
 
