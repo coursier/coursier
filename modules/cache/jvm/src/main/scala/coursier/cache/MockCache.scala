@@ -36,9 +36,6 @@ final case class MockCache[F[_]](
         }
   }
 
-  def fetchs: Seq[Repository.Fetch[F]] =
-    Seq(fetch)
-
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
 
     if (artifact.url.startsWith("file:/"))

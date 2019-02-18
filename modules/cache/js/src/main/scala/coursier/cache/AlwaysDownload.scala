@@ -25,8 +25,6 @@ final case class AlwaysDownload(
     )
   }
 
-  def fetchs: Seq[Repository.Fetch[Task]] = Seq(fetch)
-
   def ec: ExecutionContext =
     scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 

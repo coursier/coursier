@@ -85,7 +85,7 @@ object ChecksumTests extends TestSuite {
       def validate(artifact: Artifact, sumType: String): Task[Either[ArtifactError, Unit]] =
         FileCache(
           cache,
-          pool = Schedulable.defaultThreadPool
+          pool = Schedulable.fixedThreadPool(4)
         ).validateChecksum(artifact, sumType).run
 
       def artifact(url: String) = Artifact(

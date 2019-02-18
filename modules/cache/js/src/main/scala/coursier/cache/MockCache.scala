@@ -28,9 +28,6 @@ final case class MockCache(base: String) extends Cache[Task] {
     }
   }
 
-  def fetchs: Seq[Repository.Fetch[Task]] =
-    Seq(fetch)
-
 }
 
 object MockCache {

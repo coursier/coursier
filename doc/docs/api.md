@@ -17,7 +17,8 @@ and fetch their artifacts.
 ## Resolve
 
 The `coursier.Resolve` object exposes methods to run resolutions, that is
-finding all transitive dependencies while reconciling their versions.
+finding all the transitive dependencies of some intial dependencies (while
+reconciling their versions at the same time).
 
 This entirely relies on metadata, that is POM or `maven-metadata.xml` files
 for Maven repositories, and `ivy.xml` files for Ivy repositories.
@@ -82,6 +83,6 @@ These methods also have sibling methods, either returning
 a `scala.concurrent.Future`, or returning the underlying value synchronously,
 so that one can just ignore any IO monad consideration if they want to.
 Also, any IO monad with a `coursier.util.Schedulable` instance can be used
-instead of the low end `coursier.util.Task`.
+instead of the (minimalist and probably low end) `coursier.util.Task`.
 The `cats-interop` and `scalaz-interop` have such instances for cats-effect and
 scalaz 7.2.x.

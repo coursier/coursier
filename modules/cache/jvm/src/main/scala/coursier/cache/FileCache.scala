@@ -657,7 +657,7 @@ final case class FileCache[F[_]](
     a =>
       (fetchPerPolicy(a, cachePolicies.head) /: cachePolicies.tail)(_ orElse fetchPerPolicy(a, _))
 
-  def fetchs: Seq[Repository.Fetch[F]] =
+  override def fetchs: Seq[Repository.Fetch[F]] =
     cachePolicies.map { p =>
       (a: Artifact) =>
         fetchPerPolicy(a, p)

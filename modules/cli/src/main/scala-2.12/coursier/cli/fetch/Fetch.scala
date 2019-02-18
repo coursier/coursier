@@ -53,14 +53,14 @@ object Fetch extends CaseApp[FetchOptions] {
             new ResolveException("Resolution failed")
           ))
       }
-      artifacts = coursier.Fetch.artifacts(
+      artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
         params.artifact.mainArtifacts,
         params.artifact.artifactTypes
       )
 
-      artifactFiles <- coursier.Fetch.fetchArtifacts(
+      artifactFiles <- coursier.Artifacts.fetchArtifacts(
         artifacts.map(_._3).distinct,
         cache
         // FIXME Allow to adjust retryCount via CLI args?

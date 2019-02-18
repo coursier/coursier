@@ -13,6 +13,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import coursier.paths.CachePath;
 
@@ -33,16 +34,27 @@ class Download {
     static List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
-            // from scalaz Strategy.DefaultDaemonThreadFactory
+            AtomicInteger counter = new AtomicInteger(1);
             ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
             public Thread newThread(Runnable r) {
+                String name = "coursier-bootstrap-downloader-" + counter.getAndIncrement();
                 Thread t = defaultThreadFactory.newThread(r);
+                t.setName(name);
                 t.setDaemon(true);
                 return t;
             }
         };
 
         ExecutorService pool = Executors.newFixedThreadPool(concurrentDownloadCount, threadFactory);
+
+        try {
+            return getLocalURLs(urls, pool);
+        } finally {
+            pool.shutdown();
+        }
+    }
+
+    private static List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
 
         CompletionService<URL> completionService =
                 new ExecutorCompletionService<>(pool);
