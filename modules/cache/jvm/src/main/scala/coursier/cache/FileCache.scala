@@ -19,7 +19,7 @@ import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
 final case class FileCache[F[_]](
-  cache: File = CacheDefaults.location,
+  location: File = CacheDefaults.location,
   cachePolicies: Seq[CachePolicy] = CachePolicy.default,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
   logger: CacheLogger = CacheLogger.nop,
@@ -33,9 +33,15 @@ final case class FileCache[F[_]](
   S: Schedulable[F] = Task.schedulable
 ) extends Cache[F] {
 
+  def localFile(url: String, user: Option[String] = None): File =
+    FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
+
   private implicit val S0 = S
 
-  import FileCache.{localFile, readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import FileCache.{readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+
+  override def loggerOpt: Some[CacheLogger] =
+    Some(logger)
 
   private def download(
     artifact: Artifact,
@@ -48,7 +54,7 @@ final case class FileCache[F[_]](
     val referenceFileOpt = artifact
       .extra
       .get("metadata")
-      .map(a => FileCache.localFile(a.url, cache, a.authentication.map(_.user), localArtifactsShouldBeCached))
+      .map(a => localFile(a.url, a.authentication.map(_.user)))
 
     def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
 
@@ -262,7 +268,7 @@ final case class FileCache[F[_]](
 
                   val result =
                     try {
-                      val out = CacheLocks.withStructureLock(cache) {
+                      val out = CacheLocks.withStructureLock(location) {
                         tmp.getParentFile.mkdirs()
                         new FileOutputStream(tmp, partialDownload)
                       }
@@ -270,7 +276,7 @@ final case class FileCache[F[_]](
                       finally out.close()
                     } finally in.close()
 
-                  CacheLocks.withStructureLock(cache) {
+                  CacheLocks.withStructureLock(location) {
                     file.getParentFile.mkdirs()
                     Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
@@ -332,7 +338,7 @@ final case class FileCache[F[_]](
           var res: Either[ArtifactError, Unit] = null
 
           try {
-            res = CacheLocks.withLockOr(cache, file)(
+            res = CacheLocks.withLockOr(location, file)(
               doDownload(),
               checkDownload()
             )
@@ -434,7 +440,7 @@ final case class FileCache[F[_]](
 
     val tasks =
       for (url <- urls) yield {
-        val file = localFile(url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+        val file = localFile(url, artifact.authentication.map(_.user))
 
         val res =
           if (url.startsWith("file:/") && !localArtifactsShouldBeCached) {
@@ -481,12 +487,12 @@ final case class FileCache[F[_]](
                        sumType: String
   ): EitherT[F, ArtifactError, Unit] = {
 
-    val localFile0 = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+    val localFile0 = localFile(artifact.url, artifact.authentication.map(_.user))
 
     EitherT {
       artifact.checksumUrls.get(sumType) match {
         case Some(sumUrl) =>
-          val sumFile = localFile(sumUrl, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+          val sumFile = localFile(sumUrl, artifact.authentication.map(_.user))
 
           S.schedule(pool) {
             val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
@@ -570,7 +576,7 @@ final case class FileCache[F[_]](
         else {
           EitherT {
             S.schedule[Either[ArtifactError, Unit]](pool) {
-              val badFile = localFile(artifact.url, cache, artifact.authentication.map(_.user), localArtifactsShouldBeCached)
+              val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
               badFile.delete()
               logger.removedCorruptFile(artifact.url, Some(err.describe))
               Right(())
@@ -663,7 +669,7 @@ final case class FileCache[F[_]](
 
 object FileCache {
 
-  def localFile(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
+  private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
 
   private def readFullyTo(
@@ -784,7 +790,7 @@ object FileCache {
   }
 
 
-  def create[F[_]: Schedulable](
+  def create[F[_]](
     cache: File = CacheDefaults.location,
     cachePolicies: Seq[CachePolicy] = CachePolicy.default,
     checksums: Seq[Option[String]] = CacheDefaults.checksums,
@@ -796,9 +802,9 @@ object FileCache {
     sslRetry: Int = CacheDefaults.sslRetryCount,
     retry: Int = CacheDefaults.defaultRetryCount,
     bufferSize: Int = CacheDefaults.bufferSize
-  ): FileCache[F] =
+  )(implicit S: Schedulable[F] = Task.schedulable): FileCache[F] =
     FileCache(
-      cache = cache,
+      location = cache,
       cachePolicies = cachePolicies,
       checksums = checksums,
       logger = logger,

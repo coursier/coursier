@@ -105,7 +105,7 @@ object SparkAssembly {
     val checksums = artifacts.map { a =>
       val f = a.checksumUrls.get("SHA-1") match {
         case Some(url) =>
-          FileCache.localFile(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
+          FileCache.localFile0(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
         case None =>
           throw new Exception(s"SHA-1 file not found for ${a.url}")
       }

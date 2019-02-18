@@ -40,7 +40,7 @@ object CacheFetchTests extends TestSuite {
 
     val fetchs = FileCache()
       .copy(
-        cache = tmpDir,
+        location = tmpDir,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections
       )
       .fetchs

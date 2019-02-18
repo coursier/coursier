@@ -2,7 +2,7 @@
 set -e
 
 if [ -z ${VERSION+x} ]; then
-  VERSION="$(git describe --abbrev=0 --match "v*" | sed 's/^v//')"
+  VERSION="$(git describe --tags --abbrev=0 --match "v*" | sed 's/^v//')"
 fi
 
 OUTPUT="${OUTPUT:-"coursier"}"

@@ -3,8 +3,8 @@
     "Intro": ["overview", "overview-motivations", "overview-in-the-wild"],
     "sbt plugins": ["sbt-coursier", "sbt-pgp-coursier"],
     "Command-line": ["cli-overview", "cli-resolve", "cli-fetch", "cli-launch", "cli-bootstrap", "cli-native-bootstrap"],
-    "API": ["api", "scala-js"],
-    "Other": ["cache", "ttl", "other-proxy", "json-report", "extra", "limitations", "faq"],
+    "API": ["api", "api-low-level", "api-scala-js"],
+    "Other": ["cache", "ttl", "other-repositories", "other-proxy", "json-report", "extra", "limitations", "faq"],
     "Development": ["dev-contributing", "dev-cli", "dev-website"]
   }
 }

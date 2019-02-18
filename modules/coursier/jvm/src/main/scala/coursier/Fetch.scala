@@ -3,11 +3,14 @@ package coursier
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
-import coursier.cache.{ArtifactError, Cache, CacheLogger}
+import coursier.cache.{ArtifactError, Cache}
 import coursier.core.{Classifier, Type}
-import coursier.util.Schedulable
+import coursier.error.FetchError
+import coursier.util.{Schedulable, Task}
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Fetch {
 
@@ -52,8 +55,7 @@ object Fetch {
 
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
-    cache: Cache[F] = Cache.default,
-    logger: CacheLogger = CacheLogger.nop
+    cache: Cache[F] = Cache.default
   )(implicit
      S: Schedulable[F]
   ): F[Seq[(Artifact, File)]] = {
@@ -65,12 +67,19 @@ object Fetch {
 
     val gathered = S.gather(tasks)
 
-    val task = S.bind(S.delay(logger.init())) { _ =>
-      S.bind(S.attempt(gathered)) { a =>
-        S.bind(S.delay(logger.stop())) { _ =>
-          S.fromAttempt(a)
+    val loggerOpt = cache.loggerOpt
+
+    val task = loggerOpt match {
+      case None =>
+        gathered
+      case Some(logger) =>
+        S.bind(S.delay(logger.init())) { _ =>
+          S.bind(S.attempt(gathered)) { a =>
+            S.bind(S.delay(logger.stop())) { _ =>
+              S.fromAttempt(a)
+            }
+          }
         }
-      }
     }
 
     S.bind(task) { results =>
@@ -91,21 +100,19 @@ object Fetch {
       if (errors.isEmpty)
         S.point(artifactToFile.toList)
       else
-        // FIXME Use more specific exception type
-        S.fromAttempt(Left(new DownloadingArtifactException(errors.toList)))
+        S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
     }
   }
 
-  def fetch[F[_]](
+  def fetchIO[F[_]](
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: Cache[F] = Cache.default,
-    logger: CacheLogger = CacheLogger.nop
+    cache: Cache[F] = Cache.default
   )(implicit
-     S: Schedulable[F]
-  ): F[Seq[File]] = {
+     S: Schedulable[F] = Task.schedulable
+  ): F[Seq[(Artifact, File)]] = {
 
     val a = artifacts(
       resolution,
@@ -114,18 +121,72 @@ object Fetch {
       artifactTypes
     )
 
-    val r = fetchArtifacts(
+    fetchArtifacts(
       a.map(_._3),
-      cache,
-      logger
+      cache
     )
-
-    S.map(r)(_.map(_._2))
   }
 
-  final class DownloadingArtifactException(val errors: Seq[(Artifact, ArtifactError)]) extends Exception(
-    "Error fetching artifacts:\n" +
-      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
-  )
+  def fetchFuture(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default
+  )(implicit ec: ExecutionContext = cache.ec): Future[Seq[(Artifact, File)]] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache
+    )
+
+    task.future()
+  }
+
+  def fetchEither(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default
+  )(implicit ec: ExecutionContext = cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache
+    )
+
+    val f = task
+      .map(Right(_))
+      .handle { case ex: FetchError => Left(ex) }
+      .future()
+
+    Await.result(f, Duration.Inf)
+  }
+
+  def fetch(
+    resolution: Resolution,
+    classifiers: Set[Classifier] = Set(),
+    mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    cache: Cache[Task] = Cache.default
+  )(implicit ec: ExecutionContext = cache.ec): Seq[(Artifact, File)] = {
+
+    val task = fetchIO(
+      resolution,
+      classifiers,
+      mainArtifacts,
+      artifactTypes,
+      cache
+    )
+
+    Await.result(task.future(), Duration.Inf)
+  }
 
 }
