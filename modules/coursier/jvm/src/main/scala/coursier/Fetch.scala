@@ -55,7 +55,9 @@ object Fetch {
 
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
-    cache: Cache[F] = Cache.default
+    cache: Cache[F] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit
      S: Schedulable[F]
   ): F[Seq[(Artifact, File)]] = {
@@ -73,9 +75,9 @@ object Fetch {
       case None =>
         gathered
       case Some(logger) =>
-        S.bind(S.delay(logger.init())) { _ =>
+        S.bind(S.delay(logger.init(beforeLogging()))) { _ =>
           S.bind(S.attempt(gathered)) { a =>
-            S.bind(S.delay(logger.stop())) { _ =>
+            S.bind(S.delay { val b = logger.stop(); afterLogging(b) }) { _ =>
               S.fromAttempt(a)
             }
           }
@@ -109,7 +111,9 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: Cache[F] = Cache.default
+    cache: Cache[F] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit
      S: Schedulable[F] = Task.schedulable
   ): F[Seq[(Artifact, File)]] = {
@@ -123,7 +127,9 @@ object Fetch {
 
     fetchArtifacts(
       a.map(_._3),
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )
   }
 
@@ -132,7 +138,9 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: Cache[Task] = Cache.default
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Future[Seq[(Artifact, File)]] = {
 
     val task = fetchIO(
@@ -140,7 +148,9 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )
 
     task.future()
@@ -151,7 +161,9 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: Cache[Task] = Cache.default
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
 
     val task = fetchIO(
@@ -159,7 +171,9 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )
 
     val f = task
@@ -175,7 +189,9 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = core.Resolution.defaultTypes,
-    cache: Cache[Task] = Cache.default
+    cache: Cache[Task] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => ()
   )(implicit ec: ExecutionContext = cache.ec): Seq[(Artifact, File)] = {
 
     val task = fetchIO(
@@ -183,7 +199,9 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      cache
+      cache,
+      beforeLogging,
+      afterLogging
     )
 
     Await.result(task.future(), Duration.Inf)
