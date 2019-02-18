@@ -3,7 +3,7 @@ package coursier.error
 import coursier.cache.ArtifactError
 import coursier.core.Artifact
 
-sealed abstract class FetchError(message: String, cause: Throwable = null) extends Exception(message, cause)
+sealed abstract class FetchError(message: String, cause: Throwable = null) extends CoursierError(message, cause)
 
 object FetchError {
 
