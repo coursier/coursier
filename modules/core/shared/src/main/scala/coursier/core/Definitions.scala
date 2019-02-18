@@ -193,7 +193,6 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-// Maven-specific
 final case class Attributes(
   `type`: Type,
   classifier: Classifier
@@ -335,7 +334,6 @@ final case class SnapshotVersioning(
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-// Ivy-specific
 final case class Publication(
   name: String,
   `type`: Type,
@@ -356,9 +354,6 @@ final case class Artifact(
 
   // attributes, `type`, and classifier don't live here anymore.
   // Get them via the dependencyArtifacts method on Resolution.
-
-  @deprecated("Use optional instead", "1.1.0-M8")
-  def isOptional: Boolean = optional
 }
 
 object Artifact {
