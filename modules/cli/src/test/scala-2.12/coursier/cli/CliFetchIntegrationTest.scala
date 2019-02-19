@@ -1174,7 +1174,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       "org/scalameta/transversers_2.12/4.1.0/transversers_2.12-4.1.0.jar",
       "org/scalameta/trees_2.12/4.1.0/trees_2.12-4.1.0.jar",
       "org/slf4j/slf4j-api/1.8.0-beta2/slf4j-api-1.8.0-beta2.jar",
-      "org/slf4j/slf4j-nop/1.7.25/slf4j-nop-1.7.25.jar",
+      "org/slf4j/slf4j-nop/1.7.26/slf4j-nop-1.7.25.jar",
       "org/typelevel/cats-core_2.12/1.1.0/cats-core_2.12-1.1.0.jar",
       "org/typelevel/cats-effect_2.12/0.10/cats-effect_2.12-0.10.jar",
       "org/typelevel/cats-kernel_2.12/1.1.0/cats-kernel_2.12-1.1.0.jar",
