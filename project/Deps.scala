@@ -41,7 +41,7 @@ object Deps {
   def scalaNativeTools = "org.scala-native" %% "tools" % SharedVersions.scalaNative
   def scalaNativeUtil = "org.scala-native" %% "util" % SharedVersions.scalaNative
 
-  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.25"
+  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.26"
   
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value) 
 }
