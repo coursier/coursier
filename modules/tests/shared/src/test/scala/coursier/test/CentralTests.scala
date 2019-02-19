@@ -1109,7 +1109,7 @@ abstract class CentralTests extends TestSuite {
         "org.scalameta:transversers_2.12:4.1.4",
         "org.scalameta:trees_2.12:4.1.4",
         "org.slf4j:slf4j-api:1.8.0-beta2",
-        "org.slf4j:slf4j-nop:1.7.26",
+        "org.slf4j:slf4j-nop:1.7.25",
         "org.typelevel:cats-core_2.12:1.1.0",
         "org.typelevel:cats-effect_2.12:0.10",
         "org.typelevel:cats-kernel_2.12:1.1.0",
