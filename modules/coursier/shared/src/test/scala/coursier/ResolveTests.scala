@@ -2,7 +2,7 @@ package coursier
 
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
-import coursier.params.rule.{AlwaysFail, RuleResolution}
+import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion}
 import coursier.util.Repositories
 import utest._
 
@@ -126,6 +126,32 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      'sameVersionRule - async {
+
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.7")
+          .addRule(
+            SameVersion(
+              mod"com.fasterxml.jackson.core:jackson-annotations",
+              mod"com.fasterxml.jackson.core:jackson-core",
+              mod"com.fasterxml.jackson.core:jackson-databind"
+            ),
+            RuleResolution.TryResolve
+          )
+
+        val res = await {
+          Resolve.resolveFuture(
+            Seq(dep"sh.almond:scala-kernel_2.12.7:0.2.2"),
+            repositories = Resolve.defaultRepositories ++ Seq(
+              Repositories.jitpack
+            ),
+            params = params,
+            cache = cache
+          )
+        }
+
+        await(validateDependencies(res, params))
+      }
     }
   }
 }

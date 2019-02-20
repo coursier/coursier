@@ -1203,6 +1203,13 @@ final case class Resolution(
   @deprecated("Use errors instead", "1.1.0")
   def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
 
+  def dependenciesWithSelectedVersions: Set[Dependency] =
+    dependencies.map { dep =>
+      reconciledVersions.get(dep.module).fold(dep) { v =>
+        dep.copy(version = v)
+      }
+    }
+
   /**
     * Removes from this `Resolution` dependencies that are not in `dependencies` neither brought
     * transitively by them.

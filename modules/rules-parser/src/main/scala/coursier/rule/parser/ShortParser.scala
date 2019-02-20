@@ -29,8 +29,13 @@ object ShortParser {
           Module(Organization(org), ModuleName(name), Map.empty)
       }
 
+    def sameVersion =
+      P("SameVersion(" ~ module.rep(min = 1, sep = P("," ~ " ".rep)) ~ ")").map { modules =>
+          SameVersion(modules.toSet)
+      }
+
     def rule =
-      P((resolution ~ ":").? ~ alwaysFail).map {
+      P((resolution ~ ":").? ~ (alwaysFail | sameVersion)).map {
         case (resOpt, rule) =>
           rule -> resOpt.getOrElse(defaultResolution)
       }
