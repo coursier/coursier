@@ -2,6 +2,7 @@ package coursier
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
+import coursier.extra.Typelevel
 import coursier.params.ResolutionParams
 import coursier.util._
 
@@ -15,6 +16,7 @@ object Resolve extends PlatformResolve {
     dependencies: Seq[Dependency],
     params: ResolutionParams = ResolutionParams()
   ): Resolution = {
+
     val forceScalaVersions =
       if (params.doForceScalaVersion)
         Seq(
@@ -25,6 +27,14 @@ object Resolve extends PlatformResolve {
         )
       else
         Nil
+
+    val mapDependencies = {
+      val l = (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
+        (if (params.doForceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.selectedScalaVersion)) else Nil)
+
+      l.reduceOption((f, g) => dep => f(g(dep)))
+    }
+
     Resolution(
       dependencies,
       forceVersions = params.forceVersion ++ forceScalaVersions,
@@ -32,9 +42,8 @@ object Resolve extends PlatformResolve {
       userActivations =
         if (params.profiles.isEmpty) None
         else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-      // FIXME Add that back? (Typelevel is in the extra module)
-      // mapDependencies = if (params.typelevel) Some(Typelevel.swap) else None,
-      forceProperties = params.forcedProperties
+      forceProperties = params.forcedProperties,
+      mapDependencies = mapDependencies
     )
   }
 
@@ -71,11 +80,28 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
     beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => ()
+    afterLogging: Boolean => Unit = _ => (),
+    through: F[Resolution] => F[Resolution] = null, // running into weird inference issues at call site when using identity here
+    transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] = null
   )(implicit S: Schedulable[F]): F[Resolution] = {
+
     val initialRes = initialResolution(dependencies, params)
-    val fetch = fetchVia[F](repositories, cache)
-    val res = runProcess(initialRes, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
+    val fetch = {
+      val f = fetchVia[F](repositories, cache)
+      if (transformFetcher == null)
+        f
+      else
+        transformFetcher(f)
+    }
+
+    val res = {
+      val t = runProcess(initialRes, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
+      if (through == null)
+        t
+      else
+        through(t)
+    }
+
     S.bind(res) { res0 =>
       validate(res0).either match {
         case Left(errors) =>
@@ -93,7 +119,8 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => ()
+    afterLogging: Boolean => Unit = _ => (),
+    through: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Future[Resolution] = {
 
     val task = resolveIO[Task](
@@ -102,7 +129,8 @@ object Resolve extends PlatformResolve {
       params,
       cache,
       beforeLogging,
-      afterLogging
+      afterLogging,
+      through
     )
 
     task.future()
@@ -114,7 +142,8 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
     beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => ()
+    afterLogging: Boolean => Unit = _ => (),
+    through: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Either[ResolutionError, Resolution] = {
 
     val task = resolveIO[Task](
@@ -123,7 +152,8 @@ object Resolve extends PlatformResolve {
       params,
       cache,
       beforeLogging,
-      afterLogging
+      afterLogging,
+      through
     )
 
     val f = task
