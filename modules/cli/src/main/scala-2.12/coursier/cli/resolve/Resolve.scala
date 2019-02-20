@@ -12,6 +12,7 @@ import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, ResolutionProcess}
+import coursier.error.ResolutionError
 import coursier.graph.Conflict
 import coursier.util._
 
@@ -177,7 +178,12 @@ object Resolve extends CaseApp[ResolveOptions] {
             } else
               f
         }
-      )
+      ).attempt.flatMap {
+        case Left(ex: ResolutionError) =>
+          Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
+        case e =>
+          Task.fromEither(e)
+      }
 
       validated = coursier.Resolve.validate(res).either
 
