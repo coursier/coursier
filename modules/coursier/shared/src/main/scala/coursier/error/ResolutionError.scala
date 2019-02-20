@@ -1,6 +1,8 @@
 package coursier.error
 
 import coursier.core.{Dependency, Module}
+import coursier.error.conflict.UnsatisfiedRule
+import coursier.params.rule.Rule
 import coursier.util.Print
 
 sealed abstract class ResolutionError(message: String, cause: Throwable = null) extends CoursierError(message, cause)
@@ -50,5 +52,12 @@ object ResolutionError {
     else
       new Several(errors.head, errors.tail)
   }
+
+  abstract class UnsatisfiableRule(
+    val rule: Rule,
+    val conflict: UnsatisfiedRule,
+    message: String
+  ) extends Simple(s"Unsatisfiable rule $rule: $message", conflict)
+
 
 }

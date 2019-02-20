@@ -1,6 +1,8 @@
 package coursier
 
+import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
+import coursier.params.rule.{AlwaysFail, RuleResolution}
 import coursier.util.Repositories
 import utest._
 
@@ -41,6 +43,89 @@ object ResolveTests extends TestSuite {
       }
 
       await(validateDependencies(res, params))
+    }
+
+    'rules - {
+
+      'alwaysFail - {
+        'wrongRuleTryResolve - async {
+
+          val rule = AlwaysFail(doTryResolve = true)
+          // should fail anyway (tryResolve of AlwaysFail does nothing)
+          val ruleRes = RuleResolution.TryResolve
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+
+          val ex = await {
+            Resolve.resolveFuture(
+              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
+              params = params,
+              cache = cache
+            ).failed
+          }
+
+          ex match {
+            case f: UnsatisfiedRule =>
+              assert(f.rule == rule)
+              assert(f.isInstanceOf[AlwaysFail.Nope])
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+        }
+
+        'failRuleTryResolve - async {
+
+          val rule = AlwaysFail(doTryResolve = false)
+          // should fail anyway (tryResolve of AlwaysFail fails anyway)
+          val ruleRes = RuleResolution.TryResolve
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+
+          val ex = await {
+            Resolve.resolveFuture(
+              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
+              params = params,
+              cache = cache
+            ).failed
+          }
+
+          ex match {
+            case f: AlwaysFail.NopityNope =>
+              assert(f.rule == rule)
+              assert(f.conflict.isInstanceOf[AlwaysFail.Nope])
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+        }
+
+        'failRuleResolution - async {
+
+          val rule = AlwaysFail()
+          val ruleRes = RuleResolution.Fail
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+
+          val ex = await {
+            Resolve.resolveFuture(
+              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
+              params = params,
+              cache = cache
+            ).failed
+          }
+
+          ex match {
+            case f: StrictRule =>
+              assert(f.rule == rule)
+              assert(f.conflict.isInstanceOf[AlwaysFail.Nope])
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+        }
+      }
+
     }
   }
 }

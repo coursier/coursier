@@ -2,8 +2,11 @@ package coursier
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
+import coursier.error.ResolutionError.UnsatisfiableRule
+import coursier.error.conflict.UnsatisfiedRule
 import coursier.extra.Typelevel
 import coursier.params.ResolutionParams
+import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 
 import scala.concurrent.duration.Duration
@@ -74,7 +77,7 @@ object Resolve extends PlatformResolve {
     }
   }
 
-  def resolveIO[F[_]](
+  def resolveIOWithConflicts[F[_]](
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
@@ -83,7 +86,7 @@ object Resolve extends PlatformResolve {
     afterLogging: Boolean => Unit = _ => (),
     through: F[Resolution] => F[Resolution] = null, // running into weird inference issues at call site when using identity here
     transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] = null
-  )(implicit S: Schedulable[F]): F[Resolution] = {
+  )(implicit S: Schedulable[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
 
     val initialRes = initialResolution(dependencies, params)
     val fetch = {
@@ -94,23 +97,90 @@ object Resolve extends PlatformResolve {
         transformFetcher(f)
     }
 
-    val res = {
-      val t = runProcess(initialRes, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
+    def run(res: Resolution): F[Resolution] = {
+      val t = runProcess(res, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
       if (through == null)
         t
       else
         through(t)
     }
 
-    S.bind(res) { res0 =>
-      validate(res0).either match {
+    def validate0(res: Resolution): F[Resolution] =
+      validate(res).either match {
         case Left(errors) =>
           val err = ResolutionError.from(errors.head, errors.tail: _*)
           S.fromAttempt(Left(err))
         case Right(()) =>
-          S.point(res0)
+          S.point(res)
+      }
+
+    def recurseOnRules(res: Resolution, rules: Seq[(Rule, RuleResolution)]): F[(Resolution, List[UnsatisfiedRule])] =
+      rules match {
+        case Seq() =>
+          S.point((res, Nil))
+        case Seq((rule, ruleRes), t @ _*) =>
+          rule.enforce(res, ruleRes) match {
+            case Left(c) =>
+              S.fromAttempt(Left(c))
+            case Right(Left(c)) =>
+              S.map(recurseOnRules(res, t)) {
+                case (res0, conflicts) =>
+                  (res0, c :: conflicts)
+              }
+            case Right(Right(None)) =>
+              recurseOnRules(res, t)
+            case Right(Right(Some(newRes))) =>
+              S.bind(S.bind(run(newRes.copy(dependencies = Set.empty)))(validate0)) { res0 =>
+                // FIXME check that the rule passes after it tried to address itself
+                recurseOnRules(res0, t)
+              }
+          }
+      }
+
+    def validateAllRules(res: Resolution, rules: Seq[(Rule, RuleResolution)]): F[Resolution] =
+      rules match {
+        case Seq() =>
+          S.point(res)
+        case Seq((rule, _), t @ _*) =>
+          rule.check(res) match {
+            case Some(c) =>
+              S.fromAttempt(Left(c))
+            case None =>
+              validateAllRules(res, t)
+          }
+      }
+
+    S.bind(S.bind(run(initialRes))(validate0)) { res0 =>
+      S.bind(recurseOnRules(res0, params.rules)) {
+        case (res0, conflicts) =>
+          S.map(validateAllRules(res0, params.rules)) { _ =>
+            (res0, conflicts)
+          }
       }
     }
+  }
+
+  def resolveIO[F[_]](
+    dependencies: Seq[Dependency],
+    repositories: Seq[Repository] = defaultRepositories,
+    params: ResolutionParams = ResolutionParams(),
+    cache: Cache[F] = Cache.default,
+    beforeLogging: () => Unit = () => (),
+    afterLogging: Boolean => Unit = _ => (),
+    through: F[Resolution] => F[Resolution] = null, // running into weird inference issues at call site when using identity here
+    transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] = null
+  )(implicit S: Schedulable[F]): F[Resolution] = {
+    val s = resolveIOWithConflicts(
+      dependencies,
+      repositories,
+      params,
+      cache,
+      beforeLogging,
+      afterLogging,
+      through,
+      transformFetcher
+    )
+    S.map(s)(_._1)
   }
 
   def resolveFuture(
