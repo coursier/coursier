@@ -151,7 +151,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
-      res <- coursier.Resolve.resolveIO(
+      resAndWarnings <- coursier.Resolve.resolveIOWithConflicts(
         deps0,
         repositories,
         params.resolution,
@@ -184,6 +184,8 @@ object Resolve extends CaseApp[ResolveOptions] {
         case e =>
           Task.fromEither(e)
       }
+
+      (res, _) = resAndWarnings // TODO Print warnings
 
       validated = coursier.Resolve.validate(res).either
 

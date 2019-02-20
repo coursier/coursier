@@ -5,6 +5,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
 import coursier.params.ResolutionParams
+import coursier.rule.parser.ShortParser
 import coursier.util.Parse
 
 final case class ResolutionOptions(
@@ -38,7 +39,11 @@ final case class ResolutionOptions(
     forceScalaVersion: Option[Boolean] = None,
 
   @Help("Swap the mainline Scala JARs by Typelevel ones")
-    typelevel: Boolean = false
+    typelevel: Boolean = false,
+
+  @Help("Enforce resolution rules")
+  @Short("rule")
+    rules: List[String] = Nil
 
 ) {
 
@@ -85,8 +90,17 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
-    (maxIterationsV, forceVersionV, forcedPropertiesV).mapN {
-      (maxIterations, forceVersion, forcedProperties) =>
+    val rulesV = rules
+      .traverse { s =>
+        ShortParser.parseRules(s) match {
+          case Left(err) => Validated.invalidNel(s"Malformed rules '$s': $err")
+          case Right(l) => Validated.validNel(l)
+        }
+      }
+      .map(_.flatten)
+
+    (maxIterationsV, forceVersionV, forcedPropertiesV, rulesV).mapN {
+      (maxIterations, forceVersion, forcedProperties, rules) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
           .withMaxIterations(maxIterations)
@@ -96,6 +110,7 @@ final case class ResolutionOptions(
           .withScalaVersion(scalaVersion)
           .withForceScalaVersion(forceScalaVersion)
           .withTypelevel(typelevel)
+          .withRules(rules)
     }
   }
 }
