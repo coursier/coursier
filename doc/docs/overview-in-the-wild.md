@@ -21,6 +21,10 @@ handle dependencies.
 Twitter's internal builds, based on [Pants](https://www.pantsbuild.org),
 [rely on coursier to handle dependencies](https://www.pantsbuild.org/coursier_migration.html).
 
+## Fury
+
+[Fury](https://fury.build/) uses coursier to download binaries.
+
 ## scalafmt and scalafix
 
 The command-line interfaces of [scalafmt](https://github.com/scalameta/scalafmt)
