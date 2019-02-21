@@ -18,7 +18,7 @@ abstract class Rule extends Product with Serializable {
       case Some(c) =>
         ruleRes match {
           case RuleResolution.Fail =>
-            Left(new StrictRule(this, c))
+            Left(new StrictRule(res, this, c))
           case RuleResolution.Warn =>
             Right(Left(c))
           case RuleResolution.TryResolve =>

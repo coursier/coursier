@@ -24,14 +24,14 @@ final case class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
     if (doTryResolve)
       Right(res)
     else
-      Left(new NopityNope(this, conflict))
+      Left(new NopityNope(res, this, conflict))
 
 }
 
 object AlwaysFail {
 
   final class Nope(override val rule: AlwaysFail) extends UnsatisfiedRule(rule, "nope") {}
-  final class NopityNope(rule: AlwaysFail, conflict: Nope)
-    extends UnsatisfiableRule(rule, conflict, "Nopity nope")
+  final class NopityNope(resolution: Resolution, rule: AlwaysFail, conflict: Nope)
+    extends UnsatisfiableRule(resolution, rule, conflict, "Nopity nope")
 
 }

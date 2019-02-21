@@ -56,6 +56,7 @@ final case class SameVersion(modules: Set[Module]) extends Rule {
       Right(res0)
     } else {
       val c = new CantForceSameVersion(
+        res,
         this,
         cantForce.keySet,
         selectedVersion,
@@ -83,11 +84,13 @@ object SameVersion {
   }
 
   final class CantForceSameVersion(
+    resolution: Resolution,
     override val rule: SameVersion,
     modules: Set[Module],
     version: String,
     conflict: SameVersionConflict
   ) extends UnsatisfiableRule(
+    resolution,
     rule,
     conflict,
     // FIXME More detailed message? (say why it can't be forced)

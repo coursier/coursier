@@ -52,7 +52,7 @@ case object DontBumpRootDependencies extends Rule {
 
       Right(res0)
     } else {
-      val c = new CantForceRootDependencyVersions(cantForce, conflict)
+      val c = new CantForceRootDependencyVersions(res, cantForce, conflict)
       Left(c)
     }
   }
@@ -69,10 +69,12 @@ case object DontBumpRootDependencies extends Rule {
   }
 
   final class CantForceRootDependencyVersions(
+    resolution: Resolution,
     cantBump: Map[Module, String],
     conflict: BumpedRootDependencies,
     override val rule: DontBumpRootDependencies.type = DontBumpRootDependencies
   ) extends UnsatisfiableRule(
+    resolution,
     rule,
     conflict,
     // FIXME More detailed message? (say why it can't be forced)

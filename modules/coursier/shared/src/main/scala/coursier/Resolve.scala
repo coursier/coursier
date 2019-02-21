@@ -269,13 +269,13 @@ object Resolve extends PlatformResolve {
       if (res.isDone)
         ValidationNel.success(())
       else
-        ValidationNel.failure(new ResolutionError.MaximumIterationReached)
+        ValidationNel.failure(new ResolutionError.MaximumIterationReached(res))
 
     val checkErrors: ValidationNel[ResolutionError, Unit] = res
       .errors
       .map {
         case ((module, version), errors) =>
-          new ResolutionError.CantDownloadModule(module, version, errors)
+          new ResolutionError.CantDownloadModule(res, module, version, errors)
       } match {
         case Seq() =>
           ValidationNel.success(())
@@ -289,6 +289,7 @@ object Resolve extends PlatformResolve {
       else
         ValidationNel.failure(
           new ResolutionError.ConflictingDependencies(
+            res,
             res.conflicts.map { dep =>
               dep.copy(
                 version = res.projectCache.get(dep.moduleVersion).fold(dep.version)(_._2.actualVersion)
