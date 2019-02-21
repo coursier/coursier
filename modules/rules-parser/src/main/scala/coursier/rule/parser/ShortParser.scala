@@ -34,8 +34,13 @@ object ShortParser {
           SameVersion(modules.toSet)
       }
 
+    def dontBumpRootDependencies =
+      P("DontBumpRootDependencies").map { _ =>
+        DontBumpRootDependencies
+      }
+
     def rule =
-      P((resolution ~ ":").? ~ (alwaysFail | sameVersion)).map {
+      P((resolution ~ ":").? ~ (alwaysFail | sameVersion | dontBumpRootDependencies)).map {
         case (resOpt, rule) =>
           rule -> resOpt.getOrElse(defaultResolution)
       }

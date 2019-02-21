@@ -1,7 +1,7 @@
 package coursier.rule.parser
 
 import coursier.moduleString
-import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion}
+import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion}
 import utest._
 
 object ShortParserTests extends TestSuite {
@@ -104,6 +104,44 @@ object ShortParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+       * - {
+         val s = "DontBumpRootDependencies"
+         val expectedRes = Right(Seq((DontBumpRootDependencies, RuleResolution.TryResolve)))
+         val res = ShortParser.parseRules(s)
+         assert(res == expectedRes)
+       }
+
+       * - {
+         val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)"
+         val expectedRes = Right(Seq(
+           DontBumpRootDependencies,
+           SameVersion(mod"com.michael:jackson-core")
+         ).map(_ -> RuleResolution.TryResolve))
+         val res = ShortParser.parseRules(s)
+         assert(res == expectedRes)
+       }
+
+       * - {
+         val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
+         val expectedRes = Right(Seq(
+           DontBumpRootDependencies,
+           SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind")
+         ).map(_ -> RuleResolution.TryResolve))
+         val res = ShortParser.parseRules(s)
+         assert(res == expectedRes)
+       }
+
+       * - {
+         val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core), SameVersion(com.a:b,com.a:c,com.a:d)"
+         val expectedRes = Right(Seq(
+           DontBumpRootDependencies,
+           SameVersion(mod"com.michael:jackson-core"),
+           SameVersion(mod"com.a:b", mod"com.a:c", mod"com.a:d")
+         ).map(_ -> RuleResolution.TryResolve))
+         val res = ShortParser.parseRules(s)
+         assert(res == expectedRes)
+       }
+
       'trailingCharacters - {
         * - {
           val s = "AlwaysFail, AlwaysFailzzz"
@@ -113,6 +151,12 @@ object ShortParserTests extends TestSuite {
 
         * - {
           val s = "AlwaysFail, AlwaysFail zzz"
+          val res = ShortParser.parseRules(s)
+          assert(res.isLeft)
+        }
+
+        * - {
+          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)zzz"
           val res = ShortParser.parseRules(s)
           assert(res.isLeft)
         }
