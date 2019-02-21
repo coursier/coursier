@@ -40,3 +40,15 @@ The Visual Studio Code Scala language servers,
 [vscode-scala](https://github.com/dragos/dragos-vscode-scala), and
 [vscode-dotty](https://github.com/lampepfl/dotty/tree/master/vscode-dotty), all
 rely on coursier to spawn their server process.
+
+## Other build tools
+
+### bazel-deps
+
+[bazel-deps](https://github.com/johnynek/bazel-deps) allows to handle Maven
+dependencies in bazel using coursier.
+
+### fury
+
+The [fury](https://fury.build) build
+tool handles Maven dependencies via coursier.
