@@ -100,8 +100,9 @@ object Resolve extends CaseApp[ResolveOptions] {
     stdout: PrintStream,
     stderr: PrintStream,
     args: Seq[String],
-    printOutput: Boolean = true
-  ): Task[(Resolution, Boolean)] = {
+    printOutput: Boolean = true,
+    force: Boolean = false
+  ): Task[Resolution] = {
 
     val depsAndReposOrError = for {
       depsExtraRepoOpt <- Dependencies.withExtraRepo(
@@ -180,20 +181,20 @@ object Resolve extends CaseApp[ResolveOptions] {
         }
       ).attempt.flatMap {
         case Left(ex: ResolutionError) =>
-          Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
+          if (force || params.output.forcePrint)
+            Task.point((ex.resolution, Nil, ex.errors))
+          else
+            Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
         case e =>
-          Task.fromEither(e)
+          Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
       }
 
-      (res, _) = resAndWarnings // TODO Print warnings
-
-      validated = coursier.Resolve.validate(res).either
-
-      valid = validated.isRight
+      (res, _, errors) = resAndWarnings // TODO Print warnings
+      valid = errors.isEmpty
 
       _ = {
         val outputToStdout = printOutput && (valid || params.output.forcePrint)
-        if (!conflicts && (outputToStdout || params.output.verbosity >= 2)) {
+        if (outputToStdout || params.output.verbosity >= 2) {
           Output.printResolutionResult(
             printResultStdout = outputToStdout,
             params,
@@ -205,13 +206,11 @@ object Resolve extends CaseApp[ResolveOptions] {
         }
       }
 
-      _ = validated match {
-        case Right(()) =>
-        case Left(errors) =>
-          for (err <- errors)
-            stderr.println(err.getMessage)
+      _ = {
+        for (err <- errors)
+          stderr.println(err.getMessage)
       }
-    } yield (res, valid && !conflicts)
+    } yield res
   }
 
 
@@ -233,9 +232,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             Output.errPrintln(e.message)
             sys.exit(1)
           case Left(e) => throw e
-          case Right((_, valid)) =>
-            if (!valid)
-              sys.exit(1)
+          case Right(_) =>
         }
     }
 
