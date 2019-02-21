@@ -23,8 +23,6 @@ final case class ResolveOptions(
 
   @Help("Print conflicts")
     conflicts: Boolean = false,
-  @Help("Fail if some conflicts are found")
-    failIfConflicts: Boolean = false,
 
   @Recurse
     cacheOptions: shared.CacheOptions = shared.CacheOptions(),

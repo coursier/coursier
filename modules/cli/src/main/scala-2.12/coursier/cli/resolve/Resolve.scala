@@ -191,24 +191,6 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       valid = validated.isRight
 
-      conflicts = {
-        if (valid && params.failIfConflicts) {
-          // not taking into account exclusion-related conflicts here, which may be confusing when
-          // --conflicts is passed (the latter can find conflicts not making things fail here)
-          val l = Conflict(res)
-          if (l.isEmpty) {
-            if (!params.conflicts && params.output.verbosity >= 1)
-              stderr.println("No conflict found.")
-            false
-          } else {
-            val msg = Print.conflicts(l).mkString("\n")
-            stderr.println(msg)
-            true
-          }
-        } else
-          false
-      }
-
       _ = {
         val outputToStdout = printOutput && (valid || params.output.forcePrint)
         if (!conflicts && (outputToStdout || params.output.verbosity >= 2)) {
