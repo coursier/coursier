@@ -43,6 +43,12 @@ rely on coursier to spawn their server process.
 
 ## Other build tools
 
+### bazel-deps
+
 [bazel-deps](https://github.com/johnynek/bazel-deps) allows to handle Maven
-dependencies in bazel using coursier. The [fury](https://fury.build) build
+dependencies in bazel using coursier.
+
+### fury
+
+The [fury](https://fury.build) build
 tool handles Maven dependencies via coursier.
