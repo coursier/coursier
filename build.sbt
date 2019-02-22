@@ -192,7 +192,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, `rules-parsers`)
+  .dependsOn(bootstrap, coursierJvm, rulesParsersJvm)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -320,15 +320,18 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
 
-lazy val `rules-parsers` = project("rules-parser")
-  .dependsOn(coursierJvm)
+lazy val `rules-parsers` = crossProject("rules-parser")(JSPlatform, JVMPlatform)
+  .dependsOn(coursier)
   .settings(
     shared,
     utest,
     libs ++= Seq(
-      Deps.fastParse // TODO shade that
+      CrossDeps.fastParse.value // TODO shade that
     )
   )
+
+lazy val rulesParsersJvm = `rules-parsers`.jvm
+lazy val rulesParsersJs = `rules-parsers`.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -347,7 +350,7 @@ lazy val jvm = project("jvm")
     cli,
     okhttp,
     coursierJvm,
-    `rules-parsers`
+    rulesParsersJvm
   )
   .settings(
     shared,
@@ -394,7 +397,8 @@ lazy val `coursier-repo` = project("coursier-repo")
     okhttp,
     coursierJvm,
     coursierJs,
-    `rules-parsers`
+    rulesParsersJvm,
+    rulesParsersJs
   )
   .settings(
     shared,
