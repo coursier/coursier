@@ -325,9 +325,15 @@ lazy val `rules-parsers` = crossProject("rules-parser")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     utest,
-    libs ++= Seq(
-      CrossDeps.fastParse.value // TODO shade that
-    )
+    // TODO shade those
+    libs += Deps.fastParse,
+    // not yet published for 2.13
+    libs ++= {
+      if (scalaVersion.value.startsWith("2.12"))
+        Seq(CrossDeps.argonautShapeless.value)
+      else
+        Nil
+    }
   )
 
 lazy val rulesParsersJvm = `rules-parsers`.jvm
