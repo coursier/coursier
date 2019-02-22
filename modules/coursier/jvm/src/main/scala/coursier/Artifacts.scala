@@ -14,6 +14,33 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Artifacts {
 
+  def defaultTypes(
+    classifiers: Set[Classifier] = Set.empty,
+    mainArtifacts: JBoolean = null
+  ): Set[Type] = {
+
+    val mainArtifacts0: Boolean =
+      if (mainArtifacts == null)
+        classifiers.isEmpty
+      else
+        mainArtifacts
+
+    val fromMainArtifacts =
+      if (mainArtifacts0)
+        Set[Type](Type.jar, Type.testJar, Type.bundle)
+      else
+        Set.empty[Type]
+
+    val fromClassifiers = classifiers.flatMap {
+      case Classifier.sources => Set(Type.source)
+      case Classifier.javadoc => Set(Type.doc)
+      case _ => Set.empty[Type]
+    }
+
+    fromMainArtifacts ++ fromClassifiers
+  }
+
+
   private[coursier] def artifacts0(
     resolution: Resolution,
     classifiers: Set[Classifier],
@@ -26,6 +53,10 @@ object Artifacts {
         classifiers.isEmpty
       else
         mainArtifacts
+
+    val artifactTypes0 =
+      Option(artifactTypes)
+        .getOrElse(defaultTypes(classifiers, mainArtifacts))
 
     val main =
       if (mainArtifacts0)
@@ -44,12 +75,12 @@ object Artifacts {
         (dep.copy(attributes = dep.attributes.copy(classifier = attr.classifier)), attr, artifact)
     }
 
-    if (artifactTypes(Type.all))
+    if (artifactTypes0(Type.all))
       artifacts
     else
       artifacts.filter {
         case (_, attr, _) =>
-          artifactTypes(attr.`type`)
+          artifactTypes0(attr.`type`)
       }
   }
 
@@ -110,7 +141,7 @@ object Artifacts {
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    artifactTypes: Set[Type] = null,
     cache: Cache[F] = Cache.default,
     beforeLogging: () => Unit = () => (),
     afterLogging: Boolean => Unit = _ => ()
@@ -137,7 +168,7 @@ object Artifacts {
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    artifactTypes: Set[Type] = null,
     cache: Cache[Task] = Cache.default,
     beforeLogging: () => Unit = () => (),
     afterLogging: Boolean => Unit = _ => ()
@@ -160,7 +191,7 @@ object Artifacts {
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    artifactTypes: Set[Type] = null,
     cache: Cache[Task] = Cache.default,
     beforeLogging: () => Unit = () => (),
     afterLogging: Boolean => Unit = _ => ()
@@ -188,7 +219,7 @@ object Artifacts {
     resolution: Resolution,
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = core.Resolution.defaultTypes,
+    artifactTypes: Set[Type] = null,
     cache: Cache[Task] = Cache.default,
     beforeLogging: () => Unit = () => (),
     afterLogging: Boolean => Unit = _ => ()

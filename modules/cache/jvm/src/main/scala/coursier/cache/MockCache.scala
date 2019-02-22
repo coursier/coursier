@@ -1,6 +1,6 @@
 package coursier.cache
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
+import java.io._
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
@@ -17,7 +17,8 @@ final case class MockCache[F[_]](
   base: Path,
   writeMissing: Boolean,
   pool: ExecutorService,
-  S: Schedulable[F]
+  S: Schedulable[F],
+  dummyArtifact: Artifact => Boolean = _ => false
 ) extends Cache[F] {
 
   private implicit def S0 = S
@@ -52,7 +53,11 @@ final case class MockCache[F[_]](
           if (writeMissing) {
             val f = S.schedule[Either[ArtifactError, Unit]](pool) {
               Files.createDirectories(path.getParent)
-              def is() = CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
+              def is(): InputStream =
+                if (dummyArtifact(artifact))
+                  new ByteArrayInputStream(Array.emptyByteArray)
+                else
+                  CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
               val b = MockCache.readFullySync(is())
               Files.write(path, b)
               Right(())

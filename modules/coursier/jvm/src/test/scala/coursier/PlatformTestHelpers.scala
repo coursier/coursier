@@ -25,6 +25,7 @@ abstract class PlatformTestHelpers {
 
   val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, writeMissing = writeMockData)
+      .copy(dummyArtifact = _.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Future {
