@@ -4,6 +4,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 
 import coursier.cache._
+import coursier.internal.InMemoryCache
 import coursier.util.{Schedulable, Task}
 
 import scala.concurrent.duration.Duration
@@ -20,9 +21,11 @@ abstract class CacheParamsHelpers {
 
   def cache[F[_]](
     pool: ExecutorService = CacheDefaults.pool,
-    logger: CacheLogger = CacheLogger.nop
-  )(implicit S: Schedulable[F] = Task.schedulable): Cache[F] =
-    FileCache[F](
+    logger: CacheLogger = CacheLogger.nop,
+    inMemoryCache: Boolean = false
+  )(implicit S: Schedulable[F] = Task.schedulable): Cache[F] = {
+
+    val c = FileCache[F](
       cacheLocation,
       cachePolicies,
       checksums = checksum,
@@ -34,5 +37,11 @@ abstract class CacheParamsHelpers {
       localArtifactsShouldBeCached = cacheLocalArtifacts,
       S = S
     )
+
+    if (inMemoryCache)
+      InMemoryCache(c, S)
+    else
+      c
+  }
 
 }

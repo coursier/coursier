@@ -11,6 +11,7 @@ scala_library(
         "extra/src/main/scala-2.12/coursier/extra:native",
         "interop/scalaz:scalaz-interop",
         "coursier:coursier",
+        "rules-parser:rules-parser",
         ":util",
     ],
     sources = rglobs(

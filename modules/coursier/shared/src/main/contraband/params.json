@@ -54,6 +54,12 @@
           "type": "Boolean",
           "default": "false",
           "since": "1.0.0"
+        },
+        {
+          "name": "rules",
+          "type": "Seq[(coursier.params.rule.Rule, coursier.params.rule.RuleResolution)]",
+          "default": "Nil",
+          "since": "1.0.0"
         }
       ]
     }

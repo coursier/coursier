@@ -31,7 +31,8 @@ object Fetch extends CaseApp[FetchOptions] {
       System.out,
       System.err,
       args,
-      printOutput = false
+      printOutput = false,
+      force = params.artifact.force
     )
 
     val logger = params.resolve.output.logger()
@@ -39,20 +40,7 @@ object Fetch extends CaseApp[FetchOptions] {
     val cache = params.resolve.cache.cache[Task](pool, logger)
 
     for {
-      t <- resolveTask
-      (res, valid) = t
-      _ <-  {
-        if (valid)
-          Task.point(())
-        else if (params.artifact.force)
-          Task.delay {
-            stderr.println("Resolution failed, trying to fetch artifacts anyway")
-          }
-        else
-          Task.fromEither(Left(
-            new ResolveException("Resolution failed")
-          ))
-      }
+      res <- resolveTask
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,

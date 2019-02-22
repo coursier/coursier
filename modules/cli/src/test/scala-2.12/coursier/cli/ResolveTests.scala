@@ -249,20 +249,4 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     assert(output === expectedOutput)
   }
-
-  it should "fail on conflicts" in {
-    val options = ResolveOptions(
-      failIfConflicts = true
-    )
-    val args = RemainingArgs(Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M10"), Nil)
-
-    val stdout = new ByteArrayOutputStream
-
-    val params = paramsOrThrow(options)
-
-    val (res, valid) = Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-      .unsafeRun()(ec)
-
-    assert(!valid)
-  }
 }

@@ -25,7 +25,8 @@ object Fetch {
     beforeResolutionLogging: () => Unit = () => (),
     afterResolutionLogging: Boolean => Unit = _ => (),
     beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => ()
+    afterFetchLogging: Boolean => Unit = _ => (),
+    resolutionThrough: F[Resolution] => F[Resolution] = identity _
   )(implicit S: Schedulable[F] = Task.schedulable): F[(Resolution, Seq[(Artifact, File)])] = {
 
     val resolutionIO = Resolve.resolveIO[F](
@@ -34,7 +35,8 @@ object Fetch {
       resolutionParams,
       cache,
       beforeResolutionLogging,
-      afterResolutionLogging
+      afterResolutionLogging,
+      resolutionThrough
     )
 
     S.bind(resolutionIO) { resolution =>
@@ -65,7 +67,8 @@ object Fetch {
     beforeResolutionLogging: () => Unit = () => (),
     afterResolutionLogging: Boolean => Unit = _ => (),
     beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => ()
+    afterFetchLogging: Boolean => Unit = _ => (),
+    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Future[(Resolution, Seq[(Artifact, File)])] = {
 
     val task = fetchIO(
@@ -79,7 +82,8 @@ object Fetch {
       beforeResolutionLogging,
       afterResolutionLogging,
       beforeFetchLogging,
-      afterFetchLogging
+      afterFetchLogging,
+      resolutionThrough
     )
 
     task.future()
@@ -96,7 +100,8 @@ object Fetch {
     beforeResolutionLogging: () => Unit = () => (),
     afterResolutionLogging: Boolean => Unit = _ => (),
     beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => ()
+    afterFetchLogging: Boolean => Unit = _ => (),
+    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
 
     val task = fetchIO(
@@ -110,7 +115,8 @@ object Fetch {
       beforeResolutionLogging,
       afterResolutionLogging,
       beforeFetchLogging,
-      afterFetchLogging
+      afterFetchLogging,
+      resolutionThrough
     )
 
     val f = task
@@ -132,7 +138,8 @@ object Fetch {
     beforeResolutionLogging: () => Unit = () => (),
     afterResolutionLogging: Boolean => Unit = _ => (),
     beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => ()
+    afterFetchLogging: Boolean => Unit = _ => (),
+    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): (Resolution, Seq[(Artifact, File)]) = {
 
     val task = fetchIO(
@@ -146,7 +153,8 @@ object Fetch {
       beforeResolutionLogging,
       afterResolutionLogging,
       beforeFetchLogging,
-      afterFetchLogging
+      afterFetchLogging,
+      resolutionThrough
     )
 
     val f = task.future()

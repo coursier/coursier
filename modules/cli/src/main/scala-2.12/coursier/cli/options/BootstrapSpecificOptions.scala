@@ -42,9 +42,9 @@ final case class BootstrapSpecificOptions(
   @Help("Add assembly rule")
   @Value("append:$path|append-pattern:$pattern|exclude:$path|exclude-pattern:$pattern")
   @Short("R")
-    rule: List[String] = Nil,
+    assemblyRule: List[String] = Nil,
   @Help("Add default rules to assembly rule list")
-    defaultRules: Boolean = true,
+    defaultAssemblyRules: Boolean = true,
   @Help("Add preamble")
     preamble: Boolean = true,
   @Help("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")
@@ -61,7 +61,7 @@ final case class BootstrapSpecificOptions(
 
   val rules = {
 
-    val parsedRules = rule.map { s =>
+    val parsedRules = assemblyRule.map { s =>
       s.split(":", 2) match {
         case Array("append", v) => Assembly.Rule.Append(v)
         case Array("append-pattern", v) => Assembly.Rule.AppendPattern(v)
@@ -72,7 +72,7 @@ final case class BootstrapSpecificOptions(
       }
     }
 
-    (if (defaultRules) Assembly.defaultRules else Nil) ++ parsedRules
+    (if (defaultAssemblyRules) Assembly.defaultRules else Nil) ++ parsedRules
   }
 
   def generateBat: Boolean =

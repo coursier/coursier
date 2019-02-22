@@ -21,6 +21,6 @@ abstract class PlatformTestHelpers {
   private lazy val sha1Module = g.require("sha1")
 
   def sha1(s: String): String =
-    sha1Module(s).asInstanceOf[String]
+    sha1Module(s).asInstanceOf[String].dropWhile(_ == '0')
 
 }
