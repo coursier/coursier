@@ -783,18 +783,18 @@ abstract class CentralTests extends TestSuite {
             """├─ com.chuusai:shapeless_2.12:2.3.3
               |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
               |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
-              |│     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |│  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
               |├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
               |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M6
-              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
+              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
-              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |├─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
               |├─ io.argonaut:argonaut_2.12:6.2.1
               |│  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
@@ -820,18 +820,18 @@ abstract class CentralTests extends TestSuite {
               |│  ├─ com.chuusai:shapeless_2.12:2.3.3 org.scala-lang:scala-library:2.12.4 -> 2.12.8
               |│  │  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
               |│  │  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  │  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
-              |│  │     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |│  │  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│  │     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
               |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8 org.scala-lang:scala-library:2.12.4 -> 2.12.8
               |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M6 org.scala-lang:scala-library:2.12.7 -> 2.12.8
-              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |│  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6 org.scala-lang:scala-library:2.12.7 -> 2.12.8
-              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |│  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M6 org.scala-lang:scala-library:2.12.7 -> 2.12.8
+              |│  ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
               |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
               |│  ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
               |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
@@ -887,8 +887,8 @@ abstract class CentralTests extends TestSuite {
               |│     └─ com.chuusai:shapeless_2.12:2.3.3
               |│        ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
               |│        │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│        └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
-              |│           └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |│        └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |│           └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |│              └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
               |├─ org.scala-lang:scala-reflect:2.12.6
               |│  ├─ io.argonaut:argonaut_2.12:6.2.1 org.scala-lang:scala-reflect:2.12.4 -> 2.12.6
@@ -927,8 +927,8 @@ abstract class CentralTests extends TestSuite {
               |   └─ com.chuusai:shapeless_2.12:2.3.3
               |      ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
               |      │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |      └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
-              |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
+              |      └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |            └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10""".stripMargin
           val tree = Print.dependencyTree(res, reverse = true, colors = false)
           assert(tree == expectedTree)
@@ -952,10 +952,10 @@ abstract class CentralTests extends TestSuite {
             |   │  │  └─ org.scala-lang:scala-reflect:2.12.6
             |   │  │     └─ org.scala-lang:scala-library:2.12.8
             |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M6
-            |   │  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M6
+            |   ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+            |   │  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
             |   │  │  └─ org.scala-lang:scala-library:2.12.8
-            |   │  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M6
+            |   │  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
             |   │  │  ├─ com.chuusai:shapeless_2.12:2.3.3
             |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
             |   │  │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
@@ -1011,9 +1011,9 @@ abstract class CentralTests extends TestSuite {
           val expectedConflicts = Seq(
             Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.chuusai:shapeless_2.12", "2.3.3"),
             Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.4", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M8"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-annotations_2.12", "2.0.0-M6"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-util_2.12", "2.0.0-M6"),
-            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app_2.12", "2.0.0-M6"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-annotations_2.12", "2.0.0-M5"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app-util_2.12", "2.0.0-M5"),
+            Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"com.github.alexarchambault:case-app_2.12", "2.0.0-M5"),
             Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang:scala-reflect", "2.12.6"),
             Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.6", wasExcluded = false, mod"org.scala-lang.modules:scala-xml_2.12", "1.1.1"),
             Conflict(mod"org.scala-lang:scala-library", "2.12.8", "2.12.7", wasExcluded = false, mod"org.typelevel:cats-core_2.12", "1.5.0"),
@@ -1037,9 +1037,9 @@ abstract class CentralTests extends TestSuite {
         "com.fasterxml.jackson.core:jackson-core:2.8.4",
         "com.fasterxml.jackson.core:jackson-databind:2.8.4",
         "com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
-        "com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M6",
-        "com.github.alexarchambault:case-app-util_2.12:2.0.0-M6",
-        "com.github.alexarchambault:case-app_2.12:2.0.0-M6",
+        "com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5",
+        "com.github.alexarchambault:case-app-util_2.12:2.0.0-M5",
+        "com.github.alexarchambault:case-app_2.12:2.0.0-M5",
         "com.github.javaparser:javaparser-core:3.2.5",
         "com.github.jupyter:jvm-repr:0.4.0",
         "com.github.pathikrit:better-files_2.12:3.6.0",
