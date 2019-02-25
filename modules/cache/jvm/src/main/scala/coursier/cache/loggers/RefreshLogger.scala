@@ -166,7 +166,7 @@ class RefreshLogger(
     throw new Exception("Uninitialized TermDisplay")
   }
 
-  override def init(beforeOutput: => Unit): Unit =
+  override def init(): Unit =
     if (scheduler == null || updateRunnableOpt.isEmpty)
       lock.synchronized {
         if (scheduler == null)
@@ -197,10 +197,7 @@ class RefreshLogger(
         }
       }
 
-  def init(): Unit =
-    init(())
-
-  override def stop(): Boolean =
+  override def stop(): Unit =
     if (scheduler != null || updateRunnableOpt.nonEmpty)
       lock.synchronized {
         if (scheduler != null) {
@@ -214,14 +211,9 @@ class RefreshLogger(
 
         if (updateRunnableOpt.nonEmpty) {
           updateRunnable.stop()
-          val b = updateRunnable.printedAnything()
           updateRunnableOpt = None
-          b
-        } else
-          false
+        }
       }
-    else
-      false
 
   override def downloadingArtifact(url: String): Unit =
     updateRunnable.newEntry(
