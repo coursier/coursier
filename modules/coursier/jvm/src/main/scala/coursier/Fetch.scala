@@ -22,10 +22,6 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
     resolutionThrough: F[Resolution] => F[Resolution] = identity _
   )(implicit S: Schedulable[F] = Task.schedulable): F[(Resolution, Seq[(Artifact, File)])] = {
 
@@ -34,8 +30,6 @@ object Fetch {
       repositories,
       resolutionParams,
       cache,
-      beforeResolutionLogging,
-      afterResolutionLogging,
       resolutionThrough
     )
 
@@ -45,9 +39,7 @@ object Fetch {
         classifiers,
         mainArtifacts,
         artifactTypes,
-        cache,
-        beforeFetchLogging,
-        afterFetchLogging
+        cache
       )
 
       S.map(fetchIO_) { artifacts =>
@@ -64,10 +56,6 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
     resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Future[(Resolution, Seq[(Artifact, File)])] = {
 
@@ -79,10 +67,6 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
       resolutionThrough
     )
 
@@ -97,10 +81,6 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
     resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
 
@@ -112,10 +92,6 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
       resolutionThrough
     )
 
@@ -135,10 +111,6 @@ object Fetch {
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
     resolutionThrough: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): (Resolution, Seq[(Artifact, File)]) = {
 
@@ -150,10 +122,6 @@ object Fetch {
       classifiers,
       mainArtifacts,
       artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
       resolutionThrough
     )
 

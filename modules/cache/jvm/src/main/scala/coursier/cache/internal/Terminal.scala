@@ -11,8 +11,11 @@ object Terminal {
 
   private lazy val pathedTput = if (new File("/usr/bin/tput").exists()) "/usr/bin/tput" else "tput"
 
+  lazy val ttyAvailable: Boolean =
+    new File("/dev/tty").exists()
+
   def consoleDim(s: String): Option[Int] =
-    if (new File("/dev/tty").exists()) {
+    if (ttyAvailable) {
       import sys.process._
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
@@ -22,6 +25,18 @@ object Terminal {
       Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt).toOption
     } else
       None
+
+  def consoleDimOrThrow(s: String): Int =
+    if (ttyAvailable) {
+      import sys.process._
+      val nullLog = new ProcessLogger {
+        def out(s: => String): Unit = {}
+        def err(s: => String): Unit = {}
+        def buffer[T](f: => T): T = f
+      }
+      Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt
+    } else
+      throw new Exception("TTY not available")
 
   implicit class Ansi(val output: Writer) extends AnyVal {
     private def control(n: Int, c: Char) = output.write(s"\033[" + n + c)

@@ -54,9 +54,7 @@ object Resolve extends PlatformResolve {
     initialResolution: Resolution,
     fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = 200,
-    loggerOpt: Option[CacheLogger] = None,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => ()
+    loggerOpt: Option[CacheLogger] = None
   )(implicit S: Schedulable[F]): F[Resolution] = {
 
     val task = initialResolution
@@ -67,9 +65,9 @@ object Resolve extends PlatformResolve {
       case None =>
         task
       case Some(logger) =>
-        S.bind(S.delay(logger.init(beforeLogging()))) { _ =>
+        S.bind(S.delay(logger.init())) { _ =>
           S.bind(S.attempt(task)) { a =>
-            S.bind(S.delay { val b = logger.stop(); afterLogging(b) }) { _ =>
+            S.bind(S.delay(logger.stop())) { _ =>
               S.fromAttempt(a)
             }
           }
@@ -82,8 +80,6 @@ object Resolve extends PlatformResolve {
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => (),
     through: F[Resolution] => F[Resolution] = null, // running into weird inference issues at call site when using identity here
     transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] = null
   )(implicit S: Schedulable[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
@@ -98,7 +94,7 @@ object Resolve extends PlatformResolve {
     }
 
     def run(res: Resolution): F[Resolution] = {
-      val t = runProcess(res, fetch, params.maxIterations, cache.loggerOpt, beforeLogging, afterLogging)
+      val t = runProcess(res, fetch, params.maxIterations, cache.loggerOpt)
       if (through == null)
         t
       else
@@ -165,8 +161,6 @@ object Resolve extends PlatformResolve {
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[F] = Cache.default,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => (),
     through: F[Resolution] => F[Resolution] = null, // running into weird inference issues at call site when using identity here
     transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] = null
   )(implicit S: Schedulable[F]): F[Resolution] = {
@@ -175,8 +169,6 @@ object Resolve extends PlatformResolve {
       repositories,
       params,
       cache,
-      beforeLogging,
-      afterLogging,
       through,
       transformFetcher
     )
@@ -188,8 +180,6 @@ object Resolve extends PlatformResolve {
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => (),
     through: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Future[Resolution] = {
 
@@ -198,8 +188,6 @@ object Resolve extends PlatformResolve {
       repositories,
       params,
       cache,
-      beforeLogging,
-      afterLogging,
       through
     )
 
@@ -211,8 +199,6 @@ object Resolve extends PlatformResolve {
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
     cache: Cache[Task] = Cache.default,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => (),
     through: Task[Resolution] => Task[Resolution] = identity
   )(implicit ec: ExecutionContext = cache.ec): Either[ResolutionError, Resolution] = {
 
@@ -221,8 +207,6 @@ object Resolve extends PlatformResolve {
       repositories,
       params,
       cache,
-      beforeLogging,
-      afterLogging,
       through
     )
 
@@ -238,18 +222,14 @@ object Resolve extends PlatformResolve {
     dependencies: Seq[Dependency],
     repositories: Seq[Repository] = defaultRepositories,
     params: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
-    beforeLogging: () => Unit = () => (),
-    afterLogging: Boolean => Unit = _ => ()
+    cache: Cache[Task] = Cache.default
   )(implicit ec: ExecutionContext = cache.ec): Resolution = {
 
     val f = resolveFuture(
       dependencies,
       repositories,
       params,
-      cache,
-      beforeLogging,
-      afterLogging
+      cache
     )(ec)
 
     Await.result(f, Duration.Inf)

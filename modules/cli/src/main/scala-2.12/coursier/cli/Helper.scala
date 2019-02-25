@@ -5,6 +5,7 @@ import java.io.{File, OutputStreamWriter, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
 import coursier.cache._
+import coursier.cache.loggers.RefreshLogger
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
@@ -107,7 +108,7 @@ class Helper(
   }
 
   val loggerFallbackMode =
-    !common.outputOptions.progress && ProgressBarLogger.defaultFallbackMode
+    !common.outputOptions.progress && RefreshLogger.defaultFallbackMode
 
   val scaladexDepsWithExtraParams: List[(Dependency, Map[String, String])] =
     if (common.dependencyOptions.scaladex.isEmpty)
@@ -115,9 +116,9 @@ class Helper(
     else {
       val logger =
         if (common.verbosityLevel >= 0)
-          new ProgressBarLogger(
-            new OutputStreamWriter(System.err),
-            fallbackMode = loggerFallbackMode
+          RefreshLogger.create(
+            System.err,
+            RefreshLogger.defaultDisplay(loggerFallbackMode)
           )
         else
           CacheLogger.nop
@@ -382,9 +383,9 @@ class Helper(
 
   val logger =
     if (common.verbosityLevel >= 0)
-      new ProgressBarLogger(
-        new OutputStreamWriter(System.err),
-        fallbackMode = loggerFallbackMode
+      RefreshLogger.create(
+        System.err,
+        RefreshLogger.defaultDisplay(loggerFallbackMode)
       )
     else
       CacheLogger.nop
@@ -707,9 +708,9 @@ class Helper(
 
     val logger =
       if (common.verbosityLevel >= 0)
-        new ProgressBarLogger(
-          new OutputStreamWriter(System.err),
-          fallbackMode = loggerFallbackMode
+        RefreshLogger.create(
+          System.err,
+          RefreshLogger.defaultDisplay(loggerFallbackMode)
         )
       else
         CacheLogger.nop
