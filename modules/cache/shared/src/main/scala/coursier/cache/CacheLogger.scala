@@ -18,7 +18,8 @@ trait CacheLogger {
 
   def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
-  def init(): Unit = {}
+  // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
+  def init(sizeHint: Option[Int] = None): Unit = {}
   def stop(): Unit = {}
 }
 

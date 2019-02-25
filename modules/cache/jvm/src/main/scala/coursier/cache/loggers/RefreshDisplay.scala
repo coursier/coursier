@@ -11,6 +11,7 @@ trait RefreshDisplay {
   def newEntry(out: Writer, url: String, info: RefreshInfo): Unit = ()
   def removeEntry(out: Writer, url: String, info: RefreshInfo): Unit = ()
 
+  def sizeHint(n: Int): Unit = ()
   def update(
     out: Writer,
     done: Seq[(String, RefreshInfo)],

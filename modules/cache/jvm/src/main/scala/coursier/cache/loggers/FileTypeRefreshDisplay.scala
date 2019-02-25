@@ -15,9 +15,14 @@ class FileTypeRefreshDisplay extends RefreshDisplay {
     20.millis
 
   private var currentHeight = 0
+  private var sizeHintOpt = Option.empty[Int]
 
   private var done = Map.empty[String, RefreshInfo]
   private var ongoing = Map.empty[String, RefreshInfo]
+
+  override def sizeHint(n: Int) = {
+    sizeHintOpt = Some(n)
+  }
 
   override def clear(out: Writer): Unit = {
 
@@ -33,6 +38,7 @@ class FileTypeRefreshDisplay extends RefreshDisplay {
     done = Map.empty
     ongoing = Map.empty
     currentHeight = 0
+    sizeHintOpt = None
   }
 
   private def truncatedPrintln(out: Writer, s: String, width: Int): Unit = {
@@ -72,20 +78,22 @@ class FileTypeRefreshDisplay extends RefreshDisplay {
 
       var newHeight = 0
 
-      if (done.nonEmpty) {
-        val perExt = done
-          .filter {
-            case (url, _) =>
-              !excluded(url)
-          }
-          .groupBy {
-            case (url, _) =>
-              extension(url)
-          }
-          .mapValues(_.size)
-          .toVector
-          .sortBy(-_._2)
+      val perExt = done
+        .filter {
+          case (url, _) =>
+            !excluded(url)
+        }
+        .groupBy {
+          case (url, _) =>
+            extension(url)
+        }
+        .mapValues(_.size)
+        .toVector
+        .sortBy(-_._2)
 
+      if (perExt.nonEmpty) {
+
+        val total = perExt.map(_._2).sum
         val line = perExt
           .map {
             case (ext, count) =>
@@ -94,22 +102,36 @@ class FileTypeRefreshDisplay extends RefreshDisplay {
                 else ext
               s"$count $ext0 files"
           }
-          .mkString("Downloaded ", ", ", "")
+          .mkString("Downloaded ", ", ", sizeHintOpt.filter(_ >= total).fold("")(t => s" / $t"))
 
-        truncatedPrintln(out, line, width)
-        newHeight += 1
-      }
+        val bar = sizeHintOpt match {
+          case None =>
+            val pos = (done.count { case (url, _) => !excluded(url) } / 4) % 19
+            val pos0 =
+              if (pos < 10) pos
+              else 18 - pos
+            s" [${" " * pos0}#${" " * (9 - pos0)}] "
+          case Some(total) =>
+            val count = done.count { case (url, _) => !excluded(url) }
+            val n = 10 * count.max(0).min(total) / total
+            s" [${"#" * n}${" " * (10 - n)}] "
+        }
 
-      if (ongoing.nonEmpty) {
+        val ratePart =
+          if (sizeHintOpt.isEmpty) "  "
+          else {
 
-        val rate = ongoing
-          .collect {
-            case (_, info: RefreshInfo.DownloadInfo) =>
-              info.rate().getOrElse(0.0)
+            val rate = ongoing
+              .collect {
+                case (_, info: RefreshInfo.DownloadInfo) =>
+                  info.rate().getOrElse(0.0)
+              }
+              .sum
+
+            s"${ProgressBarRefreshDisplay.byteCount(rate.toLong)} / s  "
           }
-          .sum
 
-        truncatedPrintln(out, s"Downloading at ${ProgressBarRefreshDisplay.byteCount(rate.toLong)} / s", width)
+        truncatedPrintln(out, bar + ratePart + line, width)
         newHeight += 1
       }
 

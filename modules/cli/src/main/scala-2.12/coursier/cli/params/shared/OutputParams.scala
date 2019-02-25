@@ -16,24 +16,16 @@ final case class OutputParams(
     val loggerFallbackMode =
       !progressBars && RefreshLogger.defaultFallbackMode
 
-    def default = RefreshLogger.create(
-      System.err,
-      RefreshLogger.defaultDisplay(loggerFallbackMode)
-    )
-
-    def quiet = RefreshLogger.create(
-      System.err,
-      new FallbackRefreshDisplay(quiet = true)
-    )
-
-    def nop = CacheLogger.nop
-
-    if (verbosity >= 1 || (verbosity == 0 && !sys.env.contains("CI")))
-      default
-    else if (verbosity >= -1)
-      quiet
+    if (verbosity >= -1)
+      RefreshLogger.create(
+        System.err,
+        RefreshLogger.defaultDisplay(
+          loggerFallbackMode,
+          quiet = verbosity == -1 || sys.env.contains("CI")
+        )
+      )
     else
-      nop
+      CacheLogger.nop
   }
 }
 

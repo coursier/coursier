@@ -12,9 +12,11 @@ import scala.collection.mutable.ArrayBuffer
 
 object RefreshLogger {
 
-  def defaultDisplay(fallbackMode: Boolean = defaultFallbackMode): RefreshDisplay =
+  def defaultDisplay(fallbackMode: Boolean = defaultFallbackMode, quiet: Boolean = false): RefreshDisplay =
     if (fallbackMode)
-      new FallbackRefreshDisplay()
+      new FallbackRefreshDisplay(quiet = quiet)
+    else if (quiet)
+      FileTypeRefreshDisplay.create()
     else
       ProgressBarRefreshDisplay.create()
 
@@ -166,7 +168,7 @@ class RefreshLogger(
     throw new Exception("Uninitialized TermDisplay")
   }
 
-  override def init(): Unit =
+  override def init(sizeHint: Option[Int]): Unit =
     if (scheduler == null || updateRunnableOpt.isEmpty)
       lock.synchronized {
         if (scheduler == null)
@@ -185,6 +187,9 @@ class RefreshLogger(
         if (updateRunnableOpt.isEmpty) {
 
           updateRunnableOpt = Some(new UpdateDisplayRunnable(out, display))
+
+          for (n <- sizeHint)
+            display.sizeHint(n)
 
           val refreshInterval = display.refreshInterval
 

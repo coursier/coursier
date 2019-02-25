@@ -104,7 +104,7 @@ object Artifacts {
       case None =>
         gathered
       case Some(logger) =>
-        S.bind(S.delay(logger.init())) { _ =>
+        S.bind(S.delay(logger.init(sizeHint = Some(artifacts.length)))) { _ =>
           S.bind(S.attempt(gathered)) { a =>
             S.bind(S.delay(logger.stop())) { _ =>
               S.fromAttempt(a)
