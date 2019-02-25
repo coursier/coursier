@@ -2,7 +2,6 @@ package coursier
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
-import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.extra.Typelevel
 import coursier.params.ResolutionParams
