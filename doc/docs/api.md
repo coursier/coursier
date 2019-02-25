@@ -4,7 +4,7 @@ title: API
 
 > This page describes the new high level API of coursier, being added since
 `1.1.0-M10`. It's still subject to source / binary compatibility breakages,
-even though its general outline shouldn't change much.
+even though its general outline shouldn't change much. See [low level API](api-low-level.md) for the former API, less subject to change.
 
 The high level API of coursier aims at being as simple to use as its
 [CLI](cli-overview.md), with sensible defaults in particular, while retaining
@@ -16,7 +16,7 @@ and fetch their artifacts.
 
 ## Resolve
 
-The `coursier.Resolve` object exposes methods to run resolutions, that is
+`coursier.Resolve` allows to run resolutions, that is
 finding all the transitive dependencies of some intial dependencies (while
 reconciling their versions at the same time).
 
@@ -28,17 +28,18 @@ resolution parameters, …), you can just resolve some dependencies with
 ```scala mdoc:silent
 import coursier._
 
-val resolution = Resolve.resolve(
-  Seq(dep"org.tpolecat:doobie-core_2.12:0.6.0")
-)
+val resolution = Resolve()
+  .addDependencies(dep"org.tpolecat:doobie-core_2.12:0.6.0")
+  .run()
 ```
 
 ```scala mdoc:passthrough
 resolution: Resolution
 ```
 
-This runs the resolution synchronously. The `resolveFuture` and
-`resolveIO` methods allow to run resolutions in the background, either
+This runs the resolution synchronously.
+To run resolutions in the background, the `future` and
+`io` methods can be called instead of `run`, to start resolution
 eagerly via `scala.concurrent.Future`, or lazily via an IO monad.
 
 `resolution` is a `coursier.core.Resolution`, which represents the
@@ -46,7 +47,8 @@ eagerly via `scala.concurrent.Future`, or lazily via an IO monad.
 process dependencies, most notably `minDependencies`, returning a
 set of dependencies (with redundant dependencies stripped).
 
-The `resolve*` methods accept a number of optional parameters, discussed below.
+The object returned by `Resolve()` allows to optionally change a number of
+parameters, discussed below.
 
 ### Repositories
 
@@ -58,10 +60,10 @@ a `repositories` parameter, like
 import coursier._
 import coursier.util.Repositories
 
-val resolution = Resolve.resolve(
-  Seq(dep"sh.almond:scala-kernel-api_2.12.8:0.2.2"),
-  repositories = Resolve.defaultRepositories :+ Repositories.jitpack
-)
+val resolution = Resolve()
+  .addDependencies(dep"sh.almond:scala-kernel-api_2.12.8:0.2.2")
+  .addRepositories(Repositories.jitpack)
+  .run()
 ```
 
 ## Philosophy

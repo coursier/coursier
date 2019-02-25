@@ -12,7 +12,100 @@ import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Params[F]) {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: Artifacts[_] =>
+        params == other.params
+    }
+
+  override def hashCode(): Int =
+    17 + params.##
+
+  override def toString: String =
+    s"Artifacts($params)"
+
+  private def withParams(params: Artifacts.Params[F]): Artifacts[F] =
+    new Artifacts(params)
+
+
+  def withResolution(resolution: Resolution): Artifacts[F] =
+    withParams(params.copy(resolution = resolution))
+  def withClassifiers(classifiers: Set[Classifier]): Artifacts[F] =
+    withParams(params.copy(classifiers = classifiers))
+  def withMainArtifacts(mainArtifacts: JBoolean): Artifacts[F] =
+    withParams(params.copy(mainArtifacts = mainArtifacts))
+  def withArtifactTypes(artifactTypes: Set[Type]): Artifacts[F] =
+    withParams(params.copy(artifactTypes = artifactTypes))
+  def withCache(cache: Cache[F]): Artifacts[F] =
+    withParams(params.copy(cache = cache))
+
+  private def S = params.S
+
+  def io: F[Seq[(Artifact, File)]] = {
+
+    val a = Artifacts.artifacts0(
+      params.resolution,
+      params.classifiers,
+      params.mainArtifacts,
+      params.artifactTypes
+    )
+
+    Artifacts.fetchArtifacts(
+      a.map(_._3),
+      params.cache
+    )(S)
+  }
+
+}
+
 object Artifacts {
+
+  // see Resolve.apply for why cache is passed here
+  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Artifacts[F] =
+    new Artifacts(
+      Params(
+        Resolution(),
+        Set(),
+        null,
+        null,
+        cache,
+        S
+      )
+    )
+
+  implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
+
+    def future()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Seq[(Artifact, File)]] =
+      artifacts.io.future()
+
+    def either()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+
+      val f = artifacts
+        .io
+        .map(Right(_))
+        .handle { case ex: FetchError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def run()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Seq[(Artifact, File)] = {
+      val f = artifacts.io.future()
+      Await.result(f, Duration.Inf)
+    }
+
+  }
+
+  private[coursier] final case class Params[F[_]](
+    resolution: Resolution,
+    classifiers: Set[Classifier],
+    mainArtifacts: JBoolean,
+    artifactTypes: Set[Type],
+    cache: Cache[F],
+    S: Schedulable[F]
+  )
 
   def defaultTypes(
     classifiers: Set[Classifier] = Set.empty,
@@ -133,91 +226,6 @@ object Artifacts {
       else
         S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
     }
-  }
-
-  def artifactsIO[F[_]](
-    resolution: Resolution,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    cache: Cache[F] = Cache.default
-  )(implicit
-     S: Schedulable[F] = Task.schedulable
-  ): F[Seq[(Artifact, File)]] = {
-
-    val a = artifacts0(
-      resolution,
-      classifiers,
-      mainArtifacts,
-      artifactTypes
-    )
-
-    fetchArtifacts(
-      a.map(_._3),
-      cache
-    )
-  }
-
-  def artifactsFuture(
-    resolution: Resolution,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    cache: Cache[Task] = Cache.default
-  )(implicit ec: ExecutionContext = cache.ec): Future[Seq[(Artifact, File)]] = {
-
-    val task = artifactsIO(
-      resolution,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      cache
-    )
-
-    task.future()
-  }
-
-  def artifactsEither(
-    resolution: Resolution,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    cache: Cache[Task] = Cache.default
-  )(implicit ec: ExecutionContext = cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
-
-    val task = artifactsIO(
-      resolution,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      cache
-    )
-
-    val f = task
-      .map(Right(_))
-      .handle { case ex: FetchError => Left(ex) }
-      .future()
-
-    Await.result(f, Duration.Inf)
-  }
-
-  def artifacts(
-    resolution: Resolution,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    cache: Cache[Task] = Cache.default
-  )(implicit ec: ExecutionContext = cache.ec): Seq[(Artifact, File)] = {
-
-    val task = artifactsIO(
-      resolution,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      cache
-    )
-
-    Await.result(task.future(), Duration.Inf)
   }
 
 }

@@ -17,10 +17,10 @@ object ResolveTests extends TestSuite {
     'simple - async {
 
       val res = await {
-        Resolve.resolveFuture(
-          Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-          cache = cache
-        )
+        Resolve()
+          .withCache(cache)
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+          .future()
       }
 
       await(validateDependencies(res))
@@ -32,14 +32,12 @@ object ResolveTests extends TestSuite {
         .withScalaVersion("2.12.7")
 
       val res = await {
-        Resolve.resolveFuture(
-          Seq(dep"sh.almond:scala-kernel_2.12.7:0.2.2"),
-          repositories = Resolve.defaultRepositories ++ Seq(
-            Repositories.jitpack
-          ),
-          params = params,
-          cache = cache
-        )
+        Resolve()
+          .withCache(cache)
+          .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+          .addRepositories(Repositories.jitpack)
+          .withResolutionParams(params)
+          .future()
       }
 
       await(validateDependencies(res, params))
@@ -58,11 +56,12 @@ object ResolveTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve.resolveFuture(
-              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-              params = params,
-              cache = cache
-            ).failed
+            Resolve()
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+              .failed
           }
 
           ex match {
@@ -84,11 +83,12 @@ object ResolveTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve.resolveFuture(
-              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-              params = params,
-              cache = cache
-            ).failed
+            Resolve()
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+              .failed
           }
 
           ex match {
@@ -109,11 +109,12 @@ object ResolveTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve.resolveFuture(
-              Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-              params = params,
-              cache = cache
-            ).failed
+            Resolve()
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+              .failed
           }
 
           ex match {
@@ -140,14 +141,12 @@ object ResolveTests extends TestSuite {
           )
 
         val res = await {
-          Resolve.resolveFuture(
-            Seq(dep"sh.almond:scala-kernel_2.12.7:0.2.2"),
-            repositories = Resolve.defaultRepositories ++ Seq(
-              Repositories.jitpack
-            ),
-            params = params,
-            cache = cache
-          )
+          Resolve()
+            .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+            .addRepositories(Repositories.jitpack)
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
         }
 
         await(validateDependencies(res, params))
