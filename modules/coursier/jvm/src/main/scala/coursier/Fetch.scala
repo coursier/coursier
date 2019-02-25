@@ -31,7 +31,7 @@ final class Fetch[F[_]] private (
 
   private def withResolveParams(resolveParams: Resolve.Params[F]): Fetch[F] =
     new Fetch(resolveParams, artifactsParams)
-  private def withArtifactsParams(params: Artifacts.Params[F]): Fetch[F] =
+  private def withArtifactsParams(artifactsParams: Artifacts.Params[F]): Fetch[F] =
     new Fetch(resolveParams, artifactsParams)
 
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
@@ -50,6 +50,11 @@ final class Fetch[F[_]] private (
   def withCache(cache: Cache[F]): Fetch[F] =
     withResolveParams(resolveParams.copy(cache = cache))
       .withArtifactsParams(artifactsParams.copy(cache = cache))
+
+  def withResolveCache(cache: Cache[F]): Fetch[F] =
+    withResolveParams(resolveParams.copy(cache = cache))
+  def withArtifactsCache(cache: Cache[F]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(cache = cache))
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
     withResolveParams(resolveParams.copy(through = f))
