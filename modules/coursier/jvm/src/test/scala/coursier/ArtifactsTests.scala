@@ -88,6 +88,33 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
+    'noDuplicatedArtifacts - async {
+
+      val res = await {
+        Resolve()
+          .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
+          .withCache(cache)
+          .future()
+      }
+
+      val artifacts = await {
+        Artifacts()
+          .withResolutions(Seq(res, res))
+          .withCache(cache)
+          .future()
+      }
+
+      val urls = artifacts.map(_._1.url).sorted
+
+      val expectedUrls = Seq(
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.2/shapeless_2.12-2.3.2.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.0/scala-library-2.12.0.jar",
+        "https://repo1.maven.org/maven2/org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar"
+      )
+
+      assert(urls == expectedUrls)
+    }
+
   }
 
 }
