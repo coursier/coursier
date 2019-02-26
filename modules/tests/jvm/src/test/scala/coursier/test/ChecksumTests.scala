@@ -83,10 +83,10 @@ object ChecksumTests extends TestSuite {
       val cache = HandmadeMetadata.repoBase
 
       def validate(artifact: Artifact, sumType: String): Task[Either[ArtifactError, Unit]] =
-        FileCache(
-          cache,
-          pool = Schedulable.fixedThreadPool(4)
-        ).validateChecksum(artifact, sumType).run
+        FileCache()
+          .withLocation(cache)
+          .withPool(Schedulable.fixedThreadPool(4))
+          .validateChecksum(artifact, sumType).run
 
       def artifact(url: String) = Artifact(
         url,

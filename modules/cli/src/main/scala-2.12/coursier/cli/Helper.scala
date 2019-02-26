@@ -123,15 +123,15 @@ class Helper(
         else
           CacheLogger.nop
 
-      val fetch = FileCache(
-        cache,
-        cachePolicies,
-        checksums = Nil,
-        logger = logger,
-        pool = pool,
-        ttl = ttl0,
-        followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      ).fetch
+      val fetch = FileCache()
+        .withLocation(cache)
+        .withCachePolicies(cachePolicies)
+        .withChecksums(Nil)
+        .withLogger(logger)
+        .withPool(pool)
+        .withTtl(ttl0)
+        .withFollowHttpToHttpsRedirections(common.cacheOptions.followHttpToHttpsRedirect)
+        .fetch
 
       logger.init()
 
@@ -390,15 +390,15 @@ class Helper(
     else
       CacheLogger.nop
 
-  val fetchs = FileCache(
-    cache,
-    cachePolicies,
-    checksums = checksums,
-    logger = logger,
-    pool = pool,
-    ttl = ttl0,
-    followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-  ).fetchs
+  val fetchs = FileCache()
+    .withLocation(cache)
+    .withCachePolicies(cachePolicies)
+    .withChecksums(checksums)
+    .withLogger(logger)
+    .withPool(pool)
+    .withTtl(ttl0)
+    .withFollowHttpToHttpsRedirections(common.cacheOptions.followHttpToHttpsRedirect)
+    .fetchs
   val fetchQuiet = ResolutionProcess.fetch(repositories, fetchs.head, fetchs.tail: _*)
   val fetch0 =
     if (common.verbosityLevel >= 2) {
@@ -719,17 +719,17 @@ class Helper(
       println(s"  Found ${artifacts0.length} artifacts")
 
     val tasks = artifacts0.map { artifact =>
-      val file0 = FileCache(
-        cache,
-        cachePolicies,
-        checksums = checksums,
-        logger = logger,
-        pool = pool,
-        ttl = ttl0,
-        retry = common.cacheOptions.retryCount,
-        localArtifactsShouldBeCached = common.cacheOptions.cacheFileArtifacts,
-        followHttpToHttpsRedirections = common.cacheOptions.followHttpToHttpsRedirect
-      ).file(artifact)
+      val file0 = FileCache()
+        .withLocation(cache)
+        .withCachePolicies(cachePolicies)
+        .withChecksums(checksums)
+        .withLogger(logger)
+        .withPool(pool)
+        .withTtl(ttl0)
+        .withRetry(common.cacheOptions.retryCount)
+        .withLocalArtifactsShouldBeCached(common.cacheOptions.cacheFileArtifacts)
+        .withFollowHttpToHttpsRedirections(common.cacheOptions.followHttpToHttpsRedirect)
+        .file(artifact)
 
       file0
         .run
