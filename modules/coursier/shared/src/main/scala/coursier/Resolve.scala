@@ -186,14 +186,17 @@ object Resolve extends PlatformResolve {
   ): Resolution = {
 
     val forceScalaVersions =
-      if (params.doForceScalaVersion)
+      if (params.doForceScalaVersion) {
+        val scalaOrg =
+          if (params.typelevel) org"org.typelevel"
+          else org"org.scala-lang"
         Seq(
-          mod"org.scala-lang:scala-library" -> params.selectedScalaVersion,
-          mod"org.scala-lang:scala-reflect" -> params.selectedScalaVersion,
-          mod"org.scala-lang:scala-compiler" -> params.selectedScalaVersion,
-          mod"org.scala-lang:scalap" -> params.selectedScalaVersion
+          Module(scalaOrg, name"scala-library") -> params.selectedScalaVersion,
+          Module(scalaOrg, name"org.scala-lang:scala-reflect") -> params.selectedScalaVersion,
+          Module(scalaOrg, name"org.scala-lang:scala-compiler") -> params.selectedScalaVersion,
+          Module(scalaOrg, name"org.scala-lang:scalap") -> params.selectedScalaVersion
         )
-      else
+      } else
         Nil
 
     val mapDependencies = {

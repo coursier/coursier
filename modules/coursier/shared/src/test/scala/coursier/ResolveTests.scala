@@ -43,6 +43,23 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, params))
     }
 
+    'typelevel - async {
+
+      val params = ResolutionParams()
+        .withScalaVersion("2.11.8")
+        .withTypelevel(true)
+
+      val res = await {
+        Resolve()
+          .withCache(cache)
+          .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
+          .withResolutionParams(params)
+          .future()
+      }
+
+      await(validateDependencies(res, params))
+    }
+
     'rules - {
 
       'alwaysFail - {
