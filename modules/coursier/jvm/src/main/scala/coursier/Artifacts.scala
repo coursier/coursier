@@ -49,14 +49,17 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
 
   def io: F[Seq[(Artifact, File)]] = {
 
-    val a = params.resolutions.flatMap { r =>
-      Artifacts.artifacts0(
-        r,
-        params.classifiers,
-        params.mainArtifacts,
-        params.artifactTypes
-      ).map(_._3)
-    }
+    val a = params
+      .resolutions
+      .flatMap { r =>
+        Artifacts.artifacts0(
+          r,
+          params.classifiers,
+          params.mainArtifacts,
+          params.artifactTypes
+        ).map(_._3)
+      }
+      .distinct
 
     Artifacts.fetchArtifacts(
       params.transformArtifacts(a),
