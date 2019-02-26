@@ -101,11 +101,12 @@ object Fetch {
         S
       ),
       Artifacts.Params(
-        Resolution(),
+        Nil,
         Set(),
         null,
         null,
         cache,
+        identity,
         S
       )
     )

@@ -31,7 +31,9 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
 
 
   def withResolution(resolution: Resolution): Artifacts[F] =
-    withParams(params.copy(resolution = resolution))
+    withParams(params.copy(resolutions = Seq(resolution)))
+  def withResolutions(resolutions: Seq[Resolution]): Artifacts[F] =
+    withParams(params.copy(resolutions = resolutions))
   def withClassifiers(classifiers: Set[Classifier]): Artifacts[F] =
     withParams(params.copy(classifiers = classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Artifacts[F] =
@@ -40,20 +42,24 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     withParams(params.copy(artifactTypes = artifactTypes))
   def withCache(cache: Cache[F]): Artifacts[F] =
     withParams(params.copy(cache = cache))
+  def withTransformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
+    withParams(params.copy(transformArtifacts = f))
 
   private def S = params.S
 
   def io: F[Seq[(Artifact, File)]] = {
 
-    val a = Artifacts.artifacts0(
-      params.resolution,
-      params.classifiers,
-      params.mainArtifacts,
-      params.artifactTypes
-    )
+    val a = params.resolutions.flatMap { r =>
+      Artifacts.artifacts0(
+        r,
+        params.classifiers,
+        params.mainArtifacts,
+        params.artifactTypes
+      ).map(_._3)
+    }
 
     Artifacts.fetchArtifacts(
-      a.map(_._3),
+      params.transformArtifacts(a),
       params.cache
     )(S)
   }
@@ -66,11 +72,12 @@ object Artifacts {
   def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Artifacts[F] =
     new Artifacts(
       Params(
-        Resolution(),
+        Nil,
         Set(),
         null,
         null,
         cache,
+        identity,
         S
       )
     )
@@ -99,11 +106,12 @@ object Artifacts {
   }
 
   private[coursier] final case class Params[F[_]](
-    resolution: Resolution,
+    resolutions: Seq[Resolution],
     classifiers: Set[Classifier],
     mainArtifacts: JBoolean,
     artifactTypes: Set[Type],
     cache: Cache[F],
+    transformArtifacts: Seq[Artifact] => Seq[Artifact],
     S: Schedulable[F]
   )
 
