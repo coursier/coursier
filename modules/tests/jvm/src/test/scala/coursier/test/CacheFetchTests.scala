@@ -39,10 +39,8 @@ object CacheFetchTests extends TestSuite {
     }
 
     val fetchs = FileCache()
-      .copy(
-        location = tmpDir,
-        followHttpToHttpsRedirections = followHttpToHttpsRedirections
-      )
+      .withLocation(tmpDir)
+      .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
       .fetchs
 
     val processFetch = ResolutionProcess.fetch(

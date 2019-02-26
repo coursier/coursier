@@ -6,7 +6,7 @@ final case class OutputOptions(
 
   @Help("Quiet output")
   @Short("q")
-    quiet: Boolean = false,
+    quiet: Int @@ Counter = Tag.of(0),
 
   @Help("Increase verbosity (specify several times to increase more)")
   @Short("v")
@@ -22,7 +22,7 @@ final case class OutputOptions(
 
 ) {
 
-  val verbosityLevel = Tag.unwrap(verbose) - (if (quiet) 1 else 0)
+  val verbosityLevel = Tag.unwrap(verbose) - Tag.unwrap(quiet)
 
 }
 

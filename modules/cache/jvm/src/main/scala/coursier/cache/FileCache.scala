@@ -18,20 +18,45 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
-final case class FileCache[F[_]](
-  location: File = CacheDefaults.location,
-  cachePolicies: Seq[CachePolicy] = CachePolicy.default,
-  checksums: Seq[Option[String]] = CacheDefaults.checksums,
-  logger: CacheLogger = CacheLogger.nop,
-  pool: ExecutorService = CacheDefaults.pool,
-  ttl: Option[Duration] = CacheDefaults.ttl,
-  localArtifactsShouldBeCached: Boolean = false,
-  followHttpToHttpsRedirections: Boolean = false,
-  sslRetry: Int = CacheDefaults.sslRetryCount,
-  retry: Int = CacheDefaults.defaultRetryCount,
-  bufferSize: Int = CacheDefaults.bufferSize,
-  S: Schedulable[F] = Task.schedulable
-) extends Cache[F] {
+final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cache[F] {
+
+  def location: File = params.location
+  def cachePolicies: Seq[CachePolicy] = params.cachePolicies
+  def checksums: Seq[Option[String]] = params.checksums
+  def logger: CacheLogger = params.logger
+  def pool: ExecutorService = params.pool
+  def ttl: Option[Duration] = params.ttl
+  def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
+  def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
+  def sslRetry: Int = params.sslRetry
+  def retry: Int = params.retry
+  def bufferSize: Int = params.bufferSize
+  def S: Schedulable[F] = params.S
+
+  private def withParams[G[_]](params: FileCache.Params[G]): FileCache[G] =
+    new FileCache(params)
+
+  def withLocation(location: File): FileCache[F] =
+    withParams(params.copy(location = location))
+  def withCachePolicies(cachePolicies: Seq[CachePolicy]): FileCache[F] =
+    withParams(params.copy(cachePolicies = cachePolicies))
+  def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
+    withParams(params.copy(checksums = checksums))
+  def withLogger(logger: CacheLogger): FileCache[F] =
+    withParams(params.copy(logger = logger))
+  def withPool(pool: ExecutorService): FileCache[F] =
+    withParams(params.copy(pool = pool))
+  def withTtl(ttl: Option[Duration]): FileCache[F] =
+    withParams(params.copy(ttl = ttl))
+  def withRetry(retry: Int): FileCache[F] =
+    withParams(params.copy(retry = retry))
+  def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
+    withParams(params.copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections))
+  def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
+    withParams(params.copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached))
+  def withSchedulable[G[_]](implicit S0: Schedulable[G]): FileCache[G] =
+    withParams(params.copy(S = S0))
+
 
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
@@ -669,6 +694,21 @@ final case class FileCache[F[_]](
 
 object FileCache {
 
+  private final case class Params[F[_]](
+    location: File, // CacheDefaults.location,
+    cachePolicies: Seq[CachePolicy], // CachePolicy.default,
+    checksums: Seq[Option[String]], // CacheDefaults.checksums,
+    logger: CacheLogger, // CacheLogger.nop,
+    pool: ExecutorService, // CacheDefaults.pool,
+    ttl: Option[Duration], // CacheDefaults.ttl,
+    localArtifactsShouldBeCached: Boolean, // false,
+    followHttpToHttpsRedirections: Boolean, // false,
+    sslRetry: Int, // CacheDefaults.sslRetryCount,
+    retry: Int, // CacheDefaults.defaultRetryCount,
+    bufferSize: Int, // CacheDefaults.bufferSize,
+    S: Schedulable[F] // Task.schedulable
+  )
+
   private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
 
@@ -790,32 +830,22 @@ object FileCache {
   }
 
 
-  def create[F[_]](
-    cache: File = CacheDefaults.location,
-    cachePolicies: Seq[CachePolicy] = CachePolicy.default,
-    checksums: Seq[Option[String]] = CacheDefaults.checksums,
-    logger: CacheLogger = CacheLogger.nop,
-    pool: ExecutorService = CacheDefaults.pool,
-    ttl: Option[Duration] = CacheDefaults.ttl,
-    localArtifactsShouldBeCached: Boolean = false,
-    followHttpToHttpsRedirections: Boolean = false,
-    sslRetry: Int = CacheDefaults.sslRetryCount,
-    retry: Int = CacheDefaults.defaultRetryCount,
-    bufferSize: Int = CacheDefaults.bufferSize
-  )(implicit S: Schedulable[F] = Task.schedulable): FileCache[F] =
-    FileCache(
-      location = cache,
-      cachePolicies = cachePolicies,
-      checksums = checksums,
-      logger = logger,
-      pool = pool,
-      ttl = ttl,
-      localArtifactsShouldBeCached = localArtifactsShouldBeCached,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-      sslRetry = sslRetry,
-      retry = retry,
-      bufferSize = bufferSize,
-      Schedulable[F]
+  def apply[F[_]]()(implicit S: Schedulable[F] = Task.schedulable): FileCache[F] =
+    new FileCache(
+      Params(
+        location = CacheDefaults.location,
+        cachePolicies = CachePolicy.default,
+        checksums = CacheDefaults.checksums,
+        logger = CacheLogger.nop,
+        pool = CacheDefaults.pool,
+        ttl = CacheDefaults.ttl,
+        localArtifactsShouldBeCached = false,
+        followHttpToHttpsRedirections = false,
+        sslRetry = CacheDefaults.sslRetryCount,
+        retry = CacheDefaults.defaultRetryCount,
+        bufferSize = CacheDefaults.bufferSize,
+        S = S
+      )
     )
 
 }

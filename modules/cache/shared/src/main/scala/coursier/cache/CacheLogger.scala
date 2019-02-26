@@ -18,18 +18,9 @@ trait CacheLogger {
 
   def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
-  /**
-    *
-    * @param beforeOutput: called before any output is printed, iff something else is outputted.
-    *                      (That is, if that `Logger` doesn't print any progress,
-    *                      `initialMessage` won't be printed either.)
-    */
-  def init(beforeOutput: => Unit = ()): Unit = {}
-  /**
-    *
-    * @return whether any message was printed by `Logger`
-    */
-  def stop(): Boolean = false
+  // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
+  def init(sizeHint: Option[Int] = None): Unit = {}
+  def stop(): Unit = {}
 }
 
 object CacheLogger {

@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.Validated
 import cats.implicits._
-import coursier.cache.ProgressBarLogger
 import coursier.Resolution
+import coursier.cache.loggers.RefreshLogger
 import coursier.cli.options.ResolveOptions
 import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
@@ -57,7 +57,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         })
 
       for {
-        _ <- Task.delay(logger.init(()))
+        _ <- Task.delay(logger.init())
         e <- task.attempt
         _ <- Task.delay(logger.stop())
         t <- Task.fromEither(e)
@@ -152,23 +152,22 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
-      resAndWarnings <- coursier.Resolve.resolveIOWithConflicts(
-        deps0,
-        repositories,
-        params.resolution,
-        cache = params.cache.cache(
-          pool,
-          params.output.logger(),
-          inMemoryCache = params.benchmark != 0 && params.benchmarkCache
-        ),
-        through = {
-          t: Task[Resolution] =>
+      resAndWarnings <- coursier.Resolve()
+          .withDependencies(deps0)
+          .withRepositories(repositories)
+          .withResolutionParams(params.resolution)
+          .withCache(
+            params.cache.cache(
+              pool,
+              params.output.logger(),
+              inMemoryCache = params.benchmark != 0 && params.benchmarkCache
+            )
+          )
+          .transformResolution { t: Task[Resolution] =>
             if (params.benchmark == 0) t
-            else
-              benchmark(math.abs(params.benchmark))(t)
-        },
-        transformFetcher = {
-          f: ResolutionProcess.Fetch[Task] =>
+            else benchmark(math.abs(params.benchmark))(t)
+          }
+          .transformFetcher { f: ResolutionProcess.Fetch[Task] =>
             if (params.output.verbosity >= 2) {
               modVers: Seq[(Module, String)] =>
                 val print = Task.delay {
@@ -178,16 +177,18 @@ object Resolve extends CaseApp[ResolveOptions] {
                 print.flatMap(_ => f(modVers))
             } else
               f
-        }
-      ).attempt.flatMap {
-        case Left(ex: ResolutionError) =>
-          if (force || params.output.forcePrint)
-            Task.point((ex.resolution, Nil, ex.errors))
-          else
-            Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
-        case e =>
-          Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
-      }
+          }
+          .ioWithConflicts
+          .attempt
+          .flatMap {
+            case Left(ex: ResolutionError) =>
+              if (force || params.output.forcePrint)
+                Task.point((ex.resolution, Nil, ex.errors))
+              else
+                Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
+            case e =>
+              Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
+          }
 
       (res, _, errors) = resAndWarnings // TODO Print warnings
       valid = errors.isEmpty
@@ -201,7 +202,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             res,
             stdout,
             stderr,
-            colors = !ProgressBarLogger.defaultFallbackMode
+            colors = !RefreshLogger.defaultFallbackMode
           )
         }
       }

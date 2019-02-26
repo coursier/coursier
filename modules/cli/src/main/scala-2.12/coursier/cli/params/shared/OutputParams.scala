@@ -1,10 +1,9 @@
 package coursier.cli.params.shared
 
-import java.io.OutputStreamWriter
-
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
-import coursier.cache.{CacheLogger, ProgressBarLogger}
+import coursier.cache.CacheLogger
+import coursier.cache.loggers.{FallbackRefreshDisplay, RefreshLogger}
 import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(
@@ -15,12 +14,15 @@ final case class OutputParams(
   def logger(): CacheLogger = {
 
     val loggerFallbackMode =
-      !progressBars && ProgressBarLogger.defaultFallbackMode
+      !progressBars && RefreshLogger.defaultFallbackMode
 
-    if (verbosity >= 0)
-      new ProgressBarLogger(
-        new OutputStreamWriter(System.err),
-        fallbackMode = loggerFallbackMode
+    if (verbosity >= -1)
+      RefreshLogger.create(
+        System.err,
+        RefreshLogger.defaultDisplay(
+          loggerFallbackMode,
+          quiet = verbosity == -1 || sys.env.contains("CI")
+        )
       )
     else
       CacheLogger.nop
@@ -31,12 +33,10 @@ object OutputParams {
   def apply(options: OutputOptions): ValidatedNel[String, OutputParams] = {
 
     val verbosityV =
-      if (options.quiet && Tag.unwrap(options.verbose) > 0)
+      if (Tag.unwrap(options.quiet) > 0 && Tag.unwrap(options.verbose) > 0)
         Validated.invalidNel("Cannot have both quiet, and verbosity > 0")
-      else if (options.quiet)
-        Validated.validNel(-1)
       else
-        Validated.validNel(Tag.unwrap(options.verbose))
+        Validated.validNel(Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet))
 
     val progressBars = options.progress
     val forcePrint = options.force

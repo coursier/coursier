@@ -15,10 +15,10 @@ object FetchTests extends TestSuite {
       'default - async {
 
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1)))
@@ -28,11 +28,11 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.sources)
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache,
-            classifiers = classifiers
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .withClassifiers(classifiers)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
@@ -43,12 +43,12 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.sources)
         val mainArtifacts = true
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache,
-            classifiers = classifiers,
-            mainArtifacts = mainArtifacts
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .withClassifiers(classifiers)
+            .withMainArtifacts(mainArtifacts)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
@@ -58,11 +58,11 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.javadoc)
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache,
-            classifiers = classifiers
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .withClassifiers(classifiers)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
@@ -73,12 +73,12 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.javadoc)
         val mainArtifacts = true
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache,
-            classifiers = classifiers,
-            mainArtifacts = mainArtifacts
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .withClassifiers(classifiers)
+            .withMainArtifacts(mainArtifacts)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
@@ -88,11 +88,11 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.javadoc, Classifier.sources)
         val (res, artifacts) = await {
-          Fetch.fetchFuture(
-            Seq(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8"),
-            cache = cache,
-            classifiers = classifiers
-          )
+          Fetch()
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(cache)
+            .withClassifiers(classifiers)
+            .future()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))

@@ -12,154 +12,132 @@ import coursier.util.{Schedulable, Task}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-object Fetch {
+final class Fetch[F[_]] private (
+  private val resolveParams: Resolve.Params[F],
+  private val artifactsParams: Artifacts.Params[F]
+) {
 
-  def fetchIO[F[_]](
-    dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = Resolve.defaultRepositories,
-    resolutionParams: ResolutionParams = ResolutionParams(),
-    cache: Cache[F] = Cache.default,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
-    resolutionThrough: F[Resolution] => F[Resolution] = identity _
-  )(implicit S: Schedulable[F] = Task.schedulable): F[(Resolution, Seq[(Artifact, File)])] = {
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: Fetch[_] =>
+        resolveParams == other.resolveParams && artifactsParams == other.artifactsParams
+    }
 
-    val resolutionIO = Resolve.resolveIO[F](
-      dependencies,
-      repositories,
-      resolutionParams,
-      cache,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      resolutionThrough
-    )
+  override def hashCode(): Int =
+    37 * (17 + resolveParams.##) + artifactsParams.##
+
+  override def toString: String =
+    s"Fetch($resolveParams, $artifactsParams)"
+
+  private def withResolveParams(resolveParams: Resolve.Params[F]): Fetch[F] =
+    new Fetch(resolveParams, artifactsParams)
+  private def withArtifactsParams(artifactsParams: Artifacts.Params[F]): Fetch[F] =
+    new Fetch(resolveParams, artifactsParams)
+
+  def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
+    withResolveParams(resolveParams.copy(dependencies = dependencies))
+  def addDependencies(dependencies: Dependency*): Fetch[F] =
+    withResolveParams(resolveParams.copy(dependencies = resolveParams.dependencies ++ dependencies))
+
+  def withRepositories(repositories: Seq[Repository]): Fetch[F] =
+    withResolveParams(resolveParams.copy(repositories = repositories))
+  def addRepositories(repositories: Repository*): Fetch[F] =
+    withResolveParams(resolveParams.copy(repositories = resolveParams.repositories ++ repositories))
+
+  def withResolutionParams(resolutionParams: ResolutionParams): Fetch[F] =
+    withResolveParams(resolveParams.copy(resolutionParams = resolutionParams))
+
+  def withCache(cache: Cache[F]): Fetch[F] =
+    withResolveParams(resolveParams.copy(cache = cache))
+      .withArtifactsParams(artifactsParams.copy(cache = cache))
+
+  def withResolveCache(cache: Cache[F]): Fetch[F] =
+    withResolveParams(resolveParams.copy(cache = cache))
+  def withArtifactsCache(cache: Cache[F]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(cache = cache))
+
+  def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
+    withResolveParams(resolveParams.copy(through = f))
+  def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Fetch[F] =
+    withResolveParams(resolveParams.copy(transformFetcher = f))
+
+  def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(classifiers = classifiers))
+  def withMainArtifacts(mainArtifacts: JBoolean): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(mainArtifacts = mainArtifacts))
+  def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(artifactTypes = artifactTypes))
+
+  private def S = resolveParams.S
+
+  def io: F[(Resolution, Seq[(Artifact, File)])] = {
+
+    val resolutionIO = new Resolve(resolveParams).io
 
     S.bind(resolutionIO) { resolution =>
-      val fetchIO_ = Artifacts.artifactsIO(
-        resolution,
-        classifiers,
-        mainArtifacts,
-        artifactTypes,
-        cache,
-        beforeFetchLogging,
-        afterFetchLogging
-      )
-
+      val fetchIO_ = new Artifacts(artifactsParams)
+        .withResolution(resolution)
+        .io
       S.map(fetchIO_) { artifacts =>
         (resolution, artifacts)
       }
     }
   }
 
-  def fetchFuture(
-    dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = Resolve.defaultRepositories,
-    resolutionParams: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
-    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
-  )(implicit ec: ExecutionContext = cache.ec): Future[(Resolution, Seq[(Artifact, File)])] = {
+}
 
-    val task = fetchIO(
-      dependencies,
-      repositories,
-      resolutionParams,
-      cache,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
-      resolutionThrough
+object Fetch {
+
+  // see Resolve.apply for why cache is passed here
+  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Fetch[F] =
+    new Fetch[F](
+      Resolve.Params(
+        Nil,
+        Resolve.defaultRepositories,
+        ResolutionParams(),
+        cache,
+        identity,
+        identity,
+        S
+      ),
+      Artifacts.Params(
+        Nil,
+        Set(),
+        null,
+        null,
+        cache,
+        identity,
+        S
+      )
     )
 
-    task.future()
+  implicit class FetchTaskOps(private val fetch: Fetch[Task]) extends AnyVal {
+
+    def future()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Future[(Resolution, Seq[(Artifact, File)])] =
+      fetch.io.future()
+
+    def either()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
+
+      val f = fetch
+        .io
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def run()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): (Resolution, Seq[(Artifact, File)]) = {
+      val f = fetch.io.future()
+      Await.result(f, Duration.Inf)
+    }
+
   }
 
-  def fetchEither(
-    dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = Resolve.defaultRepositories,
-    resolutionParams: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
-    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
-  )(implicit ec: ExecutionContext = cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
-
-    val task = fetchIO(
-      dependencies,
-      repositories,
-      resolutionParams,
-      cache,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
-      resolutionThrough
-    )
-
-    val f = task
-      .map(Right(_))
-      .handle { case ex: CoursierError => Left(ex) }
-      .future()
-
-    Await.result(f, Duration.Inf)
-  }
-
-  def fetch(
-    dependencies: Seq[Dependency],
-    repositories: Seq[Repository] = Resolve.defaultRepositories,
-    resolutionParams: ResolutionParams = ResolutionParams(),
-    cache: Cache[Task] = Cache.default,
-    classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null,
-    artifactTypes: Set[Type] = null,
-    beforeResolutionLogging: () => Unit = () => (),
-    afterResolutionLogging: Boolean => Unit = _ => (),
-    beforeFetchLogging: () => Unit = () => (),
-    afterFetchLogging: Boolean => Unit = _ => (),
-    resolutionThrough: Task[Resolution] => Task[Resolution] = identity
-  )(implicit ec: ExecutionContext = cache.ec): (Resolution, Seq[(Artifact, File)]) = {
-
-    val task = fetchIO(
-      dependencies,
-      repositories,
-      resolutionParams,
-      cache,
-      classifiers,
-      mainArtifacts,
-      artifactTypes,
-      beforeResolutionLogging,
-      afterResolutionLogging,
-      beforeFetchLogging,
-      afterFetchLogging,
-      resolutionThrough
-    )
-
-    val f = task.future()
-
-    Await.result(f, Duration.Inf)
-  }
+  private final case class Params[F[_]](
+    classifiers: Set[Classifier],
+    mainArtifacts: JBoolean,
+    artifactTypes: Set[Type]
+  )
 
 }

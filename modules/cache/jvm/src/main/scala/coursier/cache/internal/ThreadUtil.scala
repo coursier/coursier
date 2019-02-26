@@ -35,4 +35,16 @@ object ThreadUtil {
     executor
   }
 
+  def withFixedThreadPool[T](size: Int)(f: ExecutorService => T): T = {
+
+    var pool: ExecutorService = null
+    try {
+      pool = fixedThreadPool(size)
+      f(pool)
+    } finally {
+      if (pool != null)
+        pool.shutdown()
+    }
+  }
+
 }

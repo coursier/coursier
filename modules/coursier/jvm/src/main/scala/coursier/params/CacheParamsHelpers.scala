@@ -25,18 +25,17 @@ abstract class CacheParamsHelpers {
     inMemoryCache: Boolean = false
   )(implicit S: Schedulable[F] = Task.schedulable): Cache[F] = {
 
-    val c = FileCache[F](
-      cacheLocation,
-      cachePolicies,
-      checksums = checksum,
-      logger = logger,
-      pool = pool,
-      ttl = ttl,
-      retry = retryCount,
-      followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-      localArtifactsShouldBeCached = cacheLocalArtifacts,
-      S = S
-    )
+    val c = FileCache[F]()
+      .withLocation(cacheLocation)
+      .withCachePolicies(cachePolicies)
+      .withChecksums(checksum)
+      .withLogger(logger)
+      .withPool(pool)
+      .withTtl(ttl)
+      .withRetry(retryCount)
+      .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
+      .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
+      .withSchedulable(S)
 
     if (inMemoryCache)
       InMemoryCache(c, S)
