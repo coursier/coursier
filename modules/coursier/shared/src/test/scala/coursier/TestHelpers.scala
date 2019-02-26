@@ -96,6 +96,17 @@ object TestHelpers extends PlatformTestHelpers {
         }
     }
 
+  def versionOf(res: Resolution, mod: Module): Option[String] =
+    res
+      .minDependencies
+      .collectFirst {
+        case dep if dep.module == mod =>
+          res
+            .projectCache
+            .get(dep.moduleVersion)
+            .fold(dep.version)(_._2.actualVersion)
+      }
+
   def validateArtifacts(
     res: Resolution,
     artifacts: Seq[Artifact],
