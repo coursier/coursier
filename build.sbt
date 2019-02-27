@@ -182,39 +182,6 @@ lazy val bootstrap = project("bootstrap")
     addBootstrapJarAsResource
   )
 
-lazy val extra = project("extra")
-  .enablePlugins(ShadingPlugin)
-  .dependsOn(coreJvm, cacheJvm)
-  .settings(
-    shared,
-    coursierPrefix,
-    shading,
-    libs ++= {
-      if (scalaBinaryVersion.value == "2.12")
-        Seq(
-          Deps.scalaNativeTools % "shaded",
-          // Still applies?
-          //   brought by only tools, so should be automatically shaded,
-	        //   but issues in ShadingPlugin (with things published locally?)
-	        //   seem to require explicit shading...
-          Deps.scalaNativeNir % "shaded",
-          Deps.scalaNativeUtil % "shaded",
-          Deps.fastParse % "shaded"
-        )
-      else
-        Nil
-    },
-    shadeNamespaces ++=
-      Set(
-        "fastparse",
-        "sourcecode"
-      ) ++
-      // not blindly shading the whole scala.scalanative here, for some constant strings starting with
-      // "scala.scalanative.native." in scalanative not to get prefixed with "coursier.shaded."
-      Seq("codegen", "io", "linker", "nir", "optimizer", "tools", "util")
-        .map("scala.scalanative." + _)
-  )
-
 lazy val benchmark = project("benchmark")
   .dependsOn(coursierJvm)
   .enablePlugins(JmhPlugin)
@@ -225,7 +192,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, extra, `rules-parsers`)
+  .dependsOn(bootstrap, coursierJvm, `rules-parsers`)
   .enablePlugins(PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -239,9 +206,10 @@ lazy val cli = project("cli")
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
+          Deps.argonautShapeless,
           Deps.caseApp,
           Deps.catsCore,
-          Deps.argonautShapeless,
+          Deps.scalaNativeTools,
           Deps.junit % Test, // to be able to run tests with pants
           Deps.scalatest % Test
         )
@@ -375,7 +343,6 @@ lazy val jvm = project("jvm")
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
     bootstrap,
-    extra,
     benchmark,
     cli,
     okhttp,
@@ -419,7 +386,6 @@ lazy val `coursier-repo` = project("coursier-repo")
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
     bootstrap,
-    extra,
     benchmark,
     cli,
     scalazJvm,
