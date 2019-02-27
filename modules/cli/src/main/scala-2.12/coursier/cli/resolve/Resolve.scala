@@ -13,7 +13,6 @@ import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, ResolutionProcess}
 import coursier.error.ResolutionError
-import coursier.graph.Conflict
 import coursier.util._
 
 import scala.concurrent.ExecutionContext

@@ -695,18 +695,18 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 object FileCache {
 
   private final case class Params[F[_]](
-    location: File, // CacheDefaults.location,
-    cachePolicies: Seq[CachePolicy], // CachePolicy.default,
-    checksums: Seq[Option[String]], // CacheDefaults.checksums,
-    logger: CacheLogger, // CacheLogger.nop,
-    pool: ExecutorService, // CacheDefaults.pool,
-    ttl: Option[Duration], // CacheDefaults.ttl,
-    localArtifactsShouldBeCached: Boolean, // false,
-    followHttpToHttpsRedirections: Boolean, // false,
-    sslRetry: Int, // CacheDefaults.sslRetryCount,
-    retry: Int, // CacheDefaults.defaultRetryCount,
-    bufferSize: Int, // CacheDefaults.bufferSize,
-    S: Sync[F] // Task.schedulable
+    location: File,
+    cachePolicies: Seq[CachePolicy],
+    checksums: Seq[Option[String]],
+    logger: CacheLogger,
+    pool: ExecutorService,
+    ttl: Option[Duration],
+    localArtifactsShouldBeCached: Boolean,
+    followHttpToHttpsRedirections: Boolean,
+    sslRetry: Int,
+    retry: Int,
+    bufferSize: Int,
+    S: Sync[F]
   )
 
   private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
