@@ -1,7 +1,7 @@
 package coursier
 package cli
 
-import java.io.{File, OutputStreamWriter, PrintWriter}
+import java.io.{File, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
 import coursier.cache._
@@ -333,7 +333,7 @@ class Helper(
     .flatMap {
       case (dep, extraParams) =>
         extraParams.get("url").map { url =>
-          dep.moduleVersion -> (new URL(URLDecoder.decode(url, "UTF-8")), true)
+          dep.moduleVersion -> ((new URL(URLDecoder.decode(url, "UTF-8")), true))
         }
     }.toMap
 

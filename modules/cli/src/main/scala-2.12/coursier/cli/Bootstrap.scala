@@ -155,7 +155,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
                 else
                   (m0.keys.toSeq, Nil)
 
-              val updatedAcc = acc + (target -> (subUrls, subFiles))
+              val updatedAcc = acc + (target -> ((subUrls, subFiles)))
 
               (done0, updatedAcc)
           }
