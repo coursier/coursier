@@ -1,7 +1,7 @@
 package coursier.util
 import scala.concurrent.Future
 
-trait TaskSchedulable extends Schedulable[Task] {
+trait TaskSync extends Sync[Task] {
   def point[A](a: A) = Task.point(a)
   def bind[A, B](elem: Task[A])(f: A => Task[B]) =
     elem.flatMap(f)

@@ -223,7 +223,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Schedulable.fixedThreadPool(params.cache.parallel)
+        val pool = Sync.fixedThreadPool(params.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, System.out, System.err, args.all)

@@ -7,7 +7,7 @@ import coursier.cache.Cache
 import coursier.core.{Classifier, Type}
 import coursier.error.CoursierError
 import coursier.params.ResolutionParams
-import coursier.util.{Schedulable, Task}
+import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -89,7 +89,7 @@ final class Fetch[F[_]] private (
 object Fetch {
 
   // see Resolve.apply for why cache is passed here
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Fetch[F] =
+  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Fetch[F] =
     new Fetch[F](
       Resolve.Params(
         Nil,

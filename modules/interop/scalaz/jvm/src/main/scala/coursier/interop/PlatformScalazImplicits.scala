@@ -2,13 +2,13 @@ package coursier.interop
 
 import java.util.concurrent.ExecutorService
 
-import coursier.util.Schedulable
+import coursier.util.Sync
 import _root_.scalaz.concurrent.{Task => ScalazTask}
 
 abstract class PlatformScalazImplicits {
 
-  implicit val scalazTaskSchedulable: Schedulable[ScalazTask] =
-    new Schedulable[ScalazTask] {
+  implicit val scalazTaskSync: Sync[ScalazTask] =
+    new Sync[ScalazTask] {
       def point[A](a: A) =
         ScalazTask.point(a)
       def delay[A](a: => A): ScalazTask[A] =

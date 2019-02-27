@@ -4,7 +4,7 @@ package test
 import java.math.BigInteger
 
 import coursier.cache.{ArtifactError, CacheChecksum, FileCache}
-import coursier.util.{Gather, Schedulable, Task}
+import coursier.util.{Gather, Sync, Task}
 import utest._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -85,7 +85,7 @@ object ChecksumTests extends TestSuite {
       def validate(artifact: Artifact, sumType: String): Task[Either[ArtifactError, Unit]] =
         FileCache()
           .withLocation(cache)
-          .withPool(Schedulable.fixedThreadPool(4))
+          .withPool(Sync.fixedThreadPool(4))
           .validateChecksum(artifact, sumType).run
 
       def artifact(url: String) = Artifact(

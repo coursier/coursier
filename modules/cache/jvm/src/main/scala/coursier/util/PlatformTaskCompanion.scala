@@ -17,8 +17,8 @@ abstract class PlatformTaskCompanion { self =>
     Task(_ => Future(f)(ec0))
   }
 
-  implicit val schedulable: Schedulable[Task] =
-    new TaskSchedulable {
+  implicit val sync: Sync[Task] =
+    new TaskSync {
       def schedule[A](pool: ExecutorService)(f: => A) = self.schedule(pool)(f)
     }
 

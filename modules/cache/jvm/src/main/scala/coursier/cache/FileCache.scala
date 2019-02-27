@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService
 import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.paths.CachePath
-import coursier.util.{EitherT, Schedulable, Task}
+import coursier.util.{EitherT, Sync, Task}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -31,7 +31,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def sslRetry: Int = params.sslRetry
   def retry: Int = params.retry
   def bufferSize: Int = params.bufferSize
-  def S: Schedulable[F] = params.S
+  def S: Sync[F] = params.S
 
   private def withParams[G[_]](params: FileCache.Params[G]): FileCache[G] =
     new FileCache(params)
@@ -54,7 +54,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections))
   def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
     withParams(params.copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached))
-  def withSchedulable[G[_]](implicit S0: Schedulable[G]): FileCache[G] =
+  def withSync[G[_]](implicit S0: Sync[G]): FileCache[G] =
     withParams(params.copy(S = S0))
 
 
@@ -706,7 +706,7 @@ object FileCache {
     sslRetry: Int, // CacheDefaults.sslRetryCount,
     retry: Int, // CacheDefaults.defaultRetryCount,
     bufferSize: Int, // CacheDefaults.bufferSize,
-    S: Schedulable[F] // Task.schedulable
+    S: Sync[F] // Task.schedulable
   )
 
   private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
@@ -830,7 +830,7 @@ object FileCache {
   }
 
 
-  def apply[F[_]]()(implicit S: Schedulable[F] = Task.schedulable): FileCache[F] =
+  def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
     new FileCache(
       Params(
         location = CacheDefaults.location,

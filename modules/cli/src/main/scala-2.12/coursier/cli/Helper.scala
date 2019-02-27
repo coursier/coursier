@@ -65,7 +65,7 @@ class Helper(
 
   val cache = new File(common.cacheOptions.cache)
 
-  val pool = Schedulable.fixedThreadPool(common.cacheOptions.parallel)
+  val pool = Sync.fixedThreadPool(common.cacheOptions.parallel)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(

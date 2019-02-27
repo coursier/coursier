@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
 import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Schedulable}
+import coursier.util.{EitherT, Sync}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -17,7 +17,7 @@ final case class MockCache[F[_]](
   base: Path,
   writeMissing: Boolean,
   pool: ExecutorService,
-  S: Schedulable[F],
+  S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false
 ) extends Cache[F] {
 
@@ -82,7 +82,7 @@ final case class MockCache[F[_]](
 
 object MockCache {
 
-  def create[F[_]: Schedulable](
+  def create[F[_]: Sync](
     base: Path,
     writeMissing: Boolean = false,
     pool: ExecutorService = CacheDefaults.pool
@@ -91,7 +91,7 @@ object MockCache {
       base,
       writeMissing,
       pool,
-      Schedulable[F]
+      Sync[F]
     )
 
 
@@ -109,8 +109,8 @@ object MockCache {
     buffer.toByteArray
   }
 
-  private def readFully[F[_]: Schedulable](is: => InputStream): F[Either[String, String]] =
-    Schedulable[F].delay {
+  private def readFully[F[_]: Sync](is: => InputStream): F[Either[String, String]] =
+    Sync[F].delay {
       val t = Try {
         val is0 = is
         val b =

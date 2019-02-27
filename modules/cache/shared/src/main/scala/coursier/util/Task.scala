@@ -57,7 +57,7 @@ object Task extends PlatformTaskCompanion {
     }
 
   def gather: Gather[Task] =
-    schedulable
+    sync
 
 }
 

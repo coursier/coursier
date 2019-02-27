@@ -20,7 +20,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.params.FetchParams
 import coursier.cli.resolve.ResolveException
-import coursier.util.Schedulable
+import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.junit.JUnitRunner
@@ -31,7 +31,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
-  val pool = Schedulable.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  val pool = Sync.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   def paramsOrThrow(options: FetchOptions): FetchParams =

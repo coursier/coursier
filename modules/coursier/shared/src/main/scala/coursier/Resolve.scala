@@ -132,9 +132,9 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 object Resolve extends PlatformResolve {
 
   // Ideally, cache shouldn't be passed here, and a default one should be created from S.
-  // But that would require changes in Schedulable or an extra typeclass (similar to Async in cats-effect)
+  // But that would require changes in Sync or an extra typeclass (similar to Async in cats-effect)
   // to allow to use the default cache on Scala.JS with a generic F.
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Resolve[F] =
+  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Resolve[F] =
     new Resolve(
       Params(
         Nil,
@@ -177,7 +177,7 @@ object Resolve extends PlatformResolve {
     cache: Cache[F],
     through: F[Resolution] => F[Resolution],
     transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F],
-    S: Schedulable[F]
+    S: Sync[F]
   )
 
   private[coursier] def initialResolution(
@@ -223,7 +223,7 @@ object Resolve extends PlatformResolve {
     fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = 200,
     loggerOpt: Option[CacheLogger] = None
-  )(implicit S: Schedulable[F]): F[Resolution] = {
+  )(implicit S: Sync[F]): F[Resolution] = {
 
     val task = initialResolution
       .process

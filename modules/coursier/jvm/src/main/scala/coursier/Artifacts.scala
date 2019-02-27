@@ -6,7 +6,7 @@ import java.lang.{Boolean => JBoolean}
 import coursier.cache.{ArtifactError, Cache}
 import coursier.core.{Classifier, Type}
 import coursier.error.FetchError
-import coursier.util.{Schedulable, Task}
+import coursier.util.{Sync, Task}
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
@@ -72,7 +72,7 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
 object Artifacts {
 
   // see Resolve.apply for why cache is passed here
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Schedulable[F]): Artifacts[F] =
+  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Artifacts[F] =
     new Artifacts(
       Params(
         Nil,
@@ -115,7 +115,7 @@ object Artifacts {
     artifactTypes: Set[Type],
     cache: Cache[F],
     transformArtifacts: Seq[Artifact] => Seq[Artifact],
-    S: Schedulable[F]
+    S: Sync[F]
   )
 
   def defaultTypes(
@@ -192,7 +192,7 @@ object Artifacts {
     artifacts: Seq[Artifact],
     cache: Cache[F] = Cache.default
   )(implicit
-     S: Schedulable[F]
+     S: Sync[F]
   ): F[Seq[(Artifact, File)]] = {
 
     val tasks = artifacts.map { artifact =>

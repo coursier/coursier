@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths}
 
 import coursier.cache.MockCache
 import coursier.core.Repository
-import coursier.util.{Schedulable, Task}
+import coursier.util.{Sync, Task}
 import coursier.Platform
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +35,7 @@ package object compatibility {
 
   private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
 
-  def artifact[F[_]: Schedulable]: Repository.Fetch[F] =
+  def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, fillChunks).fetch
 
   val taskArtifact = artifact[Task]

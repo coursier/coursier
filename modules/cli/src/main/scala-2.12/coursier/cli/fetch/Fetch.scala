@@ -11,7 +11,7 @@ import coursier.cli.options.FetchOptions
 import coursier.cli.params.FetchParams
 import coursier.cli.resolve.{Output, ResolveException}
 import coursier.core.{Artifact, Resolution}
-import coursier.util.{Schedulable, Task}
+import coursier.util.{Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
@@ -83,7 +83,7 @@ object Fetch extends CaseApp[FetchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Schedulable.fixedThreadPool(params.resolve.cache.parallel)
+        val pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, args.all)

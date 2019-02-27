@@ -13,7 +13,7 @@ import coursier.cli.options.LaunchOptions
 import coursier.cli.params.LaunchParams
 import coursier.cli.resolve.ResolveException
 import coursier.core.Dependency
-import coursier.util.{Schedulable, Task}
+import coursier.util.{Sync, Task}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -203,7 +203,7 @@ object Launch extends CaseApp[LaunchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Schedulable.fixedThreadPool(params.resolve.cache.parallel)
+        val pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, args.remaining, args.unparsed)
