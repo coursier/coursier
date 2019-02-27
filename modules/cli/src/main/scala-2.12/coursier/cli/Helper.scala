@@ -337,7 +337,7 @@ class Helper(
         }
     }.toMap
 
-  val depsWithUrlRepo = FallbackDependenciesRepository(depsWithUrls, common.cacheOptions.cacheFileArtifacts)
+  val depsWithUrlRepo = InMemoryRepository(depsWithUrls, common.cacheOptions.cacheFileArtifacts)
 
   // Prepend FallbackDependenciesRepository to the repository list
   // so that dependencies with URIs are resolved against this repo
