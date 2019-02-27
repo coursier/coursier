@@ -7,6 +7,7 @@ import java.nio.file.Files
 import caseapp._
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.cli.options.BootstrapOptions
+import coursier.cli.util.Native
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
@@ -33,7 +34,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val tmpDir = new File(options.options.target)
 
     try {
-      coursier.extra.Native.create(
+      Native.create(
         mainClass,
         files,
         new File(options.options.output),
@@ -43,7 +44,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       )
     } finally {
       if (!options.options.keepTarget)
-        coursier.extra.Native.deleteRecursive(tmpDir)
+        Native.deleteRecursive(tmpDir)
     }
   }
 

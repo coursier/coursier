@@ -1,4 +1,4 @@
-package coursier.extra
+package coursier.cli.util
 
 import java.io.File
 import java.nio.file.Path
