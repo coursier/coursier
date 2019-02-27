@@ -9,7 +9,7 @@ import coursier.cli.options.ResolveOptions
 import coursier.cli.options.shared.{DependencyOptions, OutputOptions}
 import coursier.cli.params.ResolveParams
 import coursier.cli.resolve.Resolve
-import coursier.util.Schedulable
+import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import org.scalatest.junit.JUnitRunner
@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 @RunWith(classOf[JUnitRunner])
 class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
-  val pool = Schedulable.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  val pool = Sync.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   override protected def afterAll(): Unit = {

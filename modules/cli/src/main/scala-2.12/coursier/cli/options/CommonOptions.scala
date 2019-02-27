@@ -1,7 +1,6 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.Classifier
 
 final case class CommonOptions(
 

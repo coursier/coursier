@@ -5,15 +5,15 @@ import java.util.concurrent.ExecutorService
 import _root_.cats.effect.IO
 import _root_.cats.instances.vector._
 import _root_.cats.syntax.apply._
-import coursier.util.Schedulable
+import coursier.util.Sync
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 abstract class PlatformCatsImplicits {
 
   // wish cs wasn't needed here (parSequence in gather needs it)
-  implicit def catsIOSchedulable(implicit cs: _root_.cats.effect.ContextShift[IO]): Schedulable[IO] =
-    new Schedulable[IO] {
+  implicit def catsIOSync(implicit cs: _root_.cats.effect.ContextShift[IO]): Sync[IO] =
+    new Sync[IO] {
       def point[A](a: A) =
         IO.pure(a)
       def delay[A](a: => A) =

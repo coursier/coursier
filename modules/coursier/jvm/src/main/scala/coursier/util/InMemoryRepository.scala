@@ -1,13 +1,12 @@
-package coursier
+package coursier.util
 
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
 import coursier.cache.CacheUrl
-import coursier.core.{Classifier, Type}
-import coursier.util.{EitherT, Monad}
+import coursier.core._
 
-object FallbackDependenciesRepository {
+object InMemoryRepository {
 
   def exists(url: URL, localArtifactsShouldBeCached: Boolean): Boolean = {
 
@@ -79,7 +78,7 @@ object FallbackDependenciesRepository {
 
 }
 
-final case class FallbackDependenciesRepository(
+final case class InMemoryRepository(
   fallbacks: Map[(Module, String), (URL, Boolean)],
   localArtifactsShouldBeCached: Boolean = false
 ) extends Repository {
@@ -105,7 +104,7 @@ final case class FallbackDependenciesRepository(
           else {
             val (dirUrlStr, fileName) = urlStr.splitAt(idx + 1)
 
-            if (FallbackDependenciesRepository.exists(url, localArtifactsShouldBeCached)) {
+            if (InMemoryRepository.exists(url, localArtifactsShouldBeCached)) {
               val proj = Project(
                 module,
                 version,
@@ -145,7 +144,7 @@ final case class FallbackDependenciesRepository(
         case (url, changing) =>
           val url0 = url.toString
           val ext = url0.substring(url0.lastIndexOf('.') + 1)
-          val attr = Attributes(Type(ext))
+          val attr = Attributes(Type(ext), Classifier.empty)
           (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
       }
 

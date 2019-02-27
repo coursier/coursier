@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 
 import coursier.paths.CachePath
-import coursier.util.Schedulable
+import coursier.util.Sync
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
@@ -22,7 +22,7 @@ object CacheDefaults {
         defaultConcurrentDownloadCount
       )
 
-  lazy val pool = Schedulable.fixedThreadPool(concurrentDownloadCount)
+  lazy val pool = Sync.fixedThreadPool(concurrentDownloadCount)
 
   lazy val ttl: Option[Duration] = {
     def fromString(s: String) =

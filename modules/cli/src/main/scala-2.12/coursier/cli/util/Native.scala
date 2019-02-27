@@ -1,4 +1,4 @@
-package coursier.extra
+package coursier.cli.util
 
 import java.io.File
 import java.nio.file.Path
@@ -18,7 +18,6 @@ object Native {
     val main: String         = mainClass + "$"
     val outpath              = output0.toPath
 
-    val logger    = sn.Logger(log, log, log, log)
     val clang     = sn.Discover.clang()
     val clangpp   = sn.Discover.clangpp()
     val linkopts  = linkingOptions()

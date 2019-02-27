@@ -1,7 +1,7 @@
 package coursier
 package cli
 
-import java.io.{File, OutputStreamWriter, PrintWriter}
+import java.io.{File, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
 import coursier.cache._
@@ -65,7 +65,7 @@ class Helper(
 
   val cache = new File(common.cacheOptions.cache)
 
-  val pool = Schedulable.fixedThreadPool(common.cacheOptions.parallel)
+  val pool = Sync.fixedThreadPool(common.cacheOptions.parallel)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   val defaultRepositories = Seq(
@@ -333,11 +333,11 @@ class Helper(
     .flatMap {
       case (dep, extraParams) =>
         extraParams.get("url").map { url =>
-          dep.moduleVersion -> (new URL(URLDecoder.decode(url, "UTF-8")), true)
+          dep.moduleVersion -> ((new URL(URLDecoder.decode(url, "UTF-8")), true))
         }
     }.toMap
 
-  val depsWithUrlRepo = FallbackDependenciesRepository(depsWithUrls, common.cacheOptions.cacheFileArtifacts)
+  val depsWithUrlRepo = InMemoryRepository(depsWithUrls, common.cacheOptions.cacheFileArtifacts)
 
   // Prepend FallbackDependenciesRepository to the repository list
   // so that dependencies with URIs are resolved against this repo

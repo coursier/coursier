@@ -4,10 +4,9 @@ import java.net.{URL, URLDecoder}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.FallbackDependenciesRepository
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, ModuleName, Organization}
-import coursier.util.{Parse, Task}
+import coursier.util.{InMemoryRepository, Parse, Task}
 import coursier.util.Parse.ModuleRequirements
 
 object Dependencies {
@@ -99,7 +98,7 @@ object Dependencies {
     defaultConfiguration: Configuration,
     cacheLocalArtifacts: Boolean,
     extraDependencies: Seq[(Dependency, Map[String, String])]
-  ): Either[Throwable, (List[Dependency], Option[FallbackDependenciesRepository])] =
+  ): Either[Throwable, (List[Dependency], Option[InMemoryRepository])] =
     handleDependencies(rawDependencies, scalaVersion, defaultConfiguration) match {
       case Validated.Valid(l) =>
 
@@ -123,7 +122,7 @@ object Dependencies {
             None
           else
             Some(
-              FallbackDependenciesRepository(
+              InMemoryRepository(
                 m.mapValues((_, true)),
                 cacheLocalArtifacts
               )

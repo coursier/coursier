@@ -1,6 +1,6 @@
 package coursier.util
 
-trait Schedulable[F[_]] extends Gather[F] with PlatformSchedulable[F] {
+trait Sync[F[_]] extends Gather[F] with PlatformSync[F] {
   def delay[A](a: => A): F[A]
   def handle[A](a: F[A])(f: PartialFunction[Throwable, A]): F[A]
   def fromAttempt[A](a: Either[Throwable, A]): F[A]
@@ -14,9 +14,9 @@ trait Schedulable[F[_]] extends Gather[F] with PlatformSchedulable[F] {
     }
 }
 
-object Schedulable extends PlatformSchedulableCompanion {
+object Sync extends PlatformSyncCompanion {
 
-  def apply[F[_]](implicit schedulable: Schedulable[F]): Schedulable[F] =
-    schedulable
+  def apply[F[_]](implicit sync: Sync[F]): Sync[F] =
+    sync
 
 }

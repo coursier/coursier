@@ -3,7 +3,7 @@ package coursier.cli.params.shared
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
 import coursier.cache.CacheLogger
-import coursier.cache.loggers.{FallbackRefreshDisplay, RefreshLogger}
+import coursier.cache.loggers.RefreshLogger
 import coursier.cli.options.shared.OutputOptions
 
 final case class OutputParams(

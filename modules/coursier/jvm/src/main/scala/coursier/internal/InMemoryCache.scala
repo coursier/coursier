@@ -4,11 +4,11 @@ import java.io.File
 
 import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Schedulable}
+import coursier.util.{EitherT, Sync}
 
 import scala.concurrent.ExecutionContext
 
-final case class InMemoryCache[F[_]](underlying: Cache[F], S: Schedulable[F]) extends Cache[F] {
+final case class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends Cache[F] {
 
   private implicit def S0 = S
 

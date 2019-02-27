@@ -4,7 +4,7 @@ import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
 
 import coursier.cache.CacheUrl
-import coursier.util.{EitherT, Schedulable, Task}
+import coursier.util.{EitherT, Sync, Task}
 
 import scala.util.{Failure, Success, Try}
 
@@ -24,8 +24,8 @@ object Platform {
     buffer.toByteArray
   }
 
-  def readFully[F[_]: Schedulable](is: => InputStream): F[Either[String, String]] =
-    Schedulable[F].delay {
+  def readFully[F[_]: Sync](is: => InputStream): F[Either[String, String]] =
+    Sync[F].delay {
       val t = Try {
         val is0 = is
         val b =
