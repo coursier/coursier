@@ -4,10 +4,9 @@ import java.net.{URL, URLDecoder}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.FallbackDependenciesRepository
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, ModuleName, Organization}
-import coursier.util.{Parse, Task}
+import coursier.util.{FallbackDependenciesRepository, Parse, Task}
 import coursier.util.Parse.ModuleRequirements
 
 object Dependencies {

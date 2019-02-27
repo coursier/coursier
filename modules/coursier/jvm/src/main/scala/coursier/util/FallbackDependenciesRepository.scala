@@ -1,11 +1,10 @@
-package coursier
+package coursier.util
 
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{HttpURLConnection, URL, URLConnection}
 
 import coursier.cache.CacheUrl
-import coursier.core.{Classifier, Type}
-import coursier.util.{EitherT, Monad}
+import coursier.core._
 
 object FallbackDependenciesRepository {
 
@@ -145,7 +144,7 @@ final case class FallbackDependenciesRepository(
         case (url, changing) =>
           val url0 = url.toString
           val ext = url0.substring(url0.lastIndexOf('.') + 1)
-          val attr = Attributes(Type(ext))
+          val attr = Attributes(Type(ext), Classifier.empty)
           (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
       }
 
