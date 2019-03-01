@@ -3,7 +3,7 @@ package coursier
 import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
-import coursier.extra.Typelevel
+import coursier.internal.Typelevel
 import coursier.params.ResolutionParams
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
@@ -188,13 +188,13 @@ object Resolve extends PlatformResolve {
     val forceScalaVersions =
       if (params.doForceScalaVersion) {
         val scalaOrg =
-          if (params.typelevel) org"org.typelevel"
-          else org"org.scala-lang"
+          if (params.typelevel) Organization("org.typelevel")
+          else Organization("org.scala-lang")
         Seq(
-          Module(scalaOrg, name"scala-library") -> params.selectedScalaVersion,
-          Module(scalaOrg, name"org.scala-lang:scala-reflect") -> params.selectedScalaVersion,
-          Module(scalaOrg, name"org.scala-lang:scala-compiler") -> params.selectedScalaVersion,
-          Module(scalaOrg, name"org.scala-lang:scalap") -> params.selectedScalaVersion
+          Module(scalaOrg, ModuleName("scala-library")) -> params.selectedScalaVersion,
+          Module(scalaOrg, ModuleName("org.scala-lang:scala-reflect")) -> params.selectedScalaVersion,
+          Module(scalaOrg, ModuleName("org.scala-lang:scala-compiler")) -> params.selectedScalaVersion,
+          Module(scalaOrg, ModuleName("org.scala-lang:scalap")) -> params.selectedScalaVersion
         )
       } else
         Nil

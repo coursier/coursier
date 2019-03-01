@@ -24,6 +24,7 @@ scala_library(
         "3rdparty/jvm:scala-native",
         "cache:cache",
         "core:core",
+        "coursier:coursier",
     ],
     sources = globs("coursier/cli/util/*.scala"),
 )

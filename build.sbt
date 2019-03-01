@@ -49,7 +49,6 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shared,
     coursierPrefix,
     dontPublishScalaJsIn("2.11"),
-    libs += Deps.scalaReflect.value % Provided,
     Mima.previousArtifacts,
     Mima.coreFilters
   )
@@ -58,7 +57,7 @@ lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
 lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
-  .dependsOn(core, cache % Test)
+  .dependsOn(core, coursier % Test)
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage,
     testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
@@ -227,7 +226,7 @@ lazy val cli = project("cli")
 
 lazy val web = project("web")
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
-  .dependsOn(coreJs, cacheJs)
+  .dependsOn(coursierJs)
   .settings(
     shared,
     onlyPublishIn("2.12"),
@@ -279,6 +278,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     dontPublishScalaJsIn("2.11"),
+    libs += Deps.scalaReflect.value % Provided,
     inConfig(Compile)(Seq(
       // commit generated sources in git, mostly for pants
       // from https://github.com/sbt/librarymanagement/blob/6d35f329b6b6be8da467eefc399ba9fa6f6725c0/build.sbt#L108-L110
