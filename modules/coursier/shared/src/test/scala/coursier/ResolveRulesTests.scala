@@ -3,7 +3,7 @@ package coursier
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
-import coursier.util.{ModuleMatcher, ModuleMatchers, Repositories}
+import coursier.util.Repositories
 import utest._
 
 import scala.async.Async.{async, await}
@@ -181,11 +181,10 @@ object ResolveRulesTests extends TestSuite {
       * - async {
 
         val params = ResolutionParams()
-          .addRule(DontBumpRootDependencies(
-            ModuleMatchers(
-              Set(ModuleMatcher(mod"org.scala-lang:scala-library"))
-            )
-          ), RuleResolution.TryResolve)
+          .addRule(
+            DontBumpRootDependencies(excl"org.scala-lang:scala-library"),
+            RuleResolution.TryResolve
+          )
 
         val res = await {
           Resolve()

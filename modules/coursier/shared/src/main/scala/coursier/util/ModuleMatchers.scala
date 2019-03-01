@@ -15,6 +15,12 @@ final case class ModuleMatchers(
   def matches(module: Module): Boolean =
     !exclude.exists(_.matches(module)) || include.exists(_.matches(module))
 
+  def +(other: ModuleMatchers): ModuleMatchers =
+    ModuleMatchers(
+      exclude ++ other.exclude,
+      include ++ other.include
+    )
+
 }
 
 object ModuleMatchers {

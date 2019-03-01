@@ -24,6 +24,14 @@ object StringInterpolators {
     def mod(args: Any*): Module = macro safeModule
   }
 
+  implicit class SafeModuleExclusionMatcher(val sc: StringContext) extends AnyVal {
+    def excl(args: Any*): ModuleMatchers = macro safeModuleExclusionMatcher
+  }
+
+  implicit class SafeModuleInclusionMatcher(val sc: StringContext) extends AnyVal {
+    def incl(args: Any*): ModuleMatchers = macro safeModuleInclusionMatcher
+  }
+
   implicit class SafeDependency(val sc: StringContext) extends AnyVal {
     def dep(args: Any*): Dependency = macro safeDependency
   }
@@ -70,7 +78,7 @@ object StringInterpolators {
               case (k, v) =>
                 q"_root_.scala.Tuple2($k, $v)"
             }
-            c.Expr( q"""
+            c.Expr(q"""
               _root_.coursier.core.Module(
                 _root_.coursier.core.Organization(${mod.organization.value}),
                 _root_.coursier.core.ModuleName(${mod.name.value}),
@@ -81,6 +89,29 @@ object StringInterpolators {
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }
+  }
+
+  def safeModuleExclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+    import c.universe._
+    c.Expr(q"""
+      _root_.coursier.util.ModuleMatchers(
+        _root_.scala.collection.immutable.Set[_root_.coursier.util.ModuleMatcher](
+          _root_.coursier.util.ModuleMatcher(${safeModule(c)(args: _*)})
+        )
+      )
+    """)
+  }
+
+  def safeModuleInclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+    import c.universe._
+    c.Expr(q"""
+      _root_.coursier.util.ModuleMatchers(
+        _root_.scala.collection.immutable.Set.empty[_root_.coursier.util.ModuleMatcher],
+        _root_.scala.collection.immutable.Set[_root_.coursier.util.ModuleMatcher](
+          _root_.coursier.util.ModuleMatcher(${safeModule(c)(args: _*)})
+        )
+      )
+    """)
   }
 
   private val safeDefModuleRequirements = ModuleRequirements(

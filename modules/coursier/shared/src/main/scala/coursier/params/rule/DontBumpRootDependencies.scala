@@ -5,9 +5,7 @@ import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
 
-final case class DontBumpRootDependencies(
-  matchers: ModuleMatchers = ModuleMatchers.all
-) extends Rule {
+final case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
 
   import DontBumpRootDependencies._
 
@@ -72,6 +70,12 @@ final case class DontBumpRootDependencies(
 }
 
 object DontBumpRootDependencies {
+
+  def apply(): DontBumpRootDependencies =
+    DontBumpRootDependencies(ModuleMatchers.all)
+
+  def apply(matcher: ModuleMatchers, matcher1: ModuleMatchers, matchers: ModuleMatchers*): DontBumpRootDependencies =
+    DontBumpRootDependencies(matchers.foldLeft(matcher + matcher1)(_ + _))
 
   final class BumpedRootDependencies(
     val bumpedRootDependencies: Seq[(Dependency, String)],

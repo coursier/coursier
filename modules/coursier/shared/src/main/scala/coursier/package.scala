@@ -124,6 +124,10 @@ package object coursier {
     SafeModuleName(sc)
   implicit def moduleString(sc: StringContext): SafeModule =
     SafeModule(sc)
+  implicit def moduleExclString(sc: StringContext): SafeModuleExclusionMatcher =
+    SafeModuleExclusionMatcher(sc)
+  implicit def moduleInclString(sc: StringContext): SafeModuleInclusionMatcher =
+    SafeModuleInclusionMatcher(sc)
   implicit def dependencyString(sc: StringContext): SafeDependency =
     SafeDependency(sc)
   implicit def mavenRepositoryString(sc: StringContext): SafeMavenRepository =
