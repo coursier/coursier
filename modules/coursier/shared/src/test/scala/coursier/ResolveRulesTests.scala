@@ -2,7 +2,7 @@ package coursier
 
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
-import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion, Strict}
+import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
 import coursier.util.Repositories
 import utest._
 
@@ -147,6 +147,35 @@ object ResolveRulesTests extends TestSuite {
           case _ =>
             throw new Exception("Unexpected exception type", ex)
         }
+      }
+    }
+
+    'dontBumpRootDependencies - {
+      * - async {
+
+        val params = ResolutionParams()
+          .addRule(DontBumpRootDependencies, RuleResolution.TryResolve)
+
+        val res = await {
+          Resolve()
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
+              dep"com.chuusai:shapeless_2.12:2.3.2"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+        }
+
+        val deps = res.dependenciesWithSelectedVersions
+
+        val shapelessVersions = deps.collect {
+          case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
+            dep.version
+        }
+        val expectedShapelessVersions = Set("2.3.2")
+
+        assert(shapelessVersions == expectedShapelessVersions)
       }
     }
   }

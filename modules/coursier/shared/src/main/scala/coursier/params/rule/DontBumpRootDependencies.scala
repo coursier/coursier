@@ -20,7 +20,10 @@ case object DontBumpRootDependencies extends Rule {
       .filter {
         case (dep, selectedVer) =>
           val wanted = Parse.versionConstraint(dep.version)
-          !wanted.interval.contains(selectedVer) && !wanted.preferred.contains(selectedVer)
+          if (wanted.preferred.nonEmpty)
+            !wanted.preferred.contains(selectedVer)
+          else
+            !wanted.interval.contains(selectedVer)
       }
       .map {
         case (dep, selectedVer) =>
@@ -36,7 +39,7 @@ case object DontBumpRootDependencies extends Rule {
 
   def tryResolve(res: Resolution, conflict: BumpedRootDependencies): Either[UnsatisfiableRule, Resolution] = {
 
-    val modules = conflict.bumpedRootDependencies.map { case (dep, v) => dep.module -> v }.toMap
+    val modules = conflict.bumpedRootDependencies.map { case (dep, _) => dep.module -> dep.version }.toMap
     val cantForce = res
       .forceVersions
       .filter {
