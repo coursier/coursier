@@ -1,7 +1,7 @@
 package coursier.rule.parser
 
 import coursier.moduleString
-import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion}
+import coursier.params.rule._
 import utest._
 
 object ShortParserTests extends TestSuite {
@@ -52,6 +52,17 @@ object ShortParserTests extends TestSuite {
         * - {
           val s = "SameVersion(com.michael:jackson-core,com.michael:jackson-databind)"
           val expectedRes = Right((SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind"), RuleResolution.TryResolve))
+          val res = ShortParser.parseRule(s)
+          assert(res == expectedRes)
+        }
+
+      }
+
+      'strict - {
+
+        'simple - {
+          val s = "Strict"
+          val expectedRes = Right((Strict, RuleResolution.TryResolve))
           val res = ShortParser.parseRule(s)
           assert(res == expectedRes)
         }

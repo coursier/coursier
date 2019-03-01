@@ -2,7 +2,7 @@ package coursier
 
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
-import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion}
+import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion, Strict}
 import coursier.util.Repositories
 import utest._
 
@@ -193,6 +193,35 @@ object ResolveTests extends TestSuite {
         }
 
         await(validateDependencies(res, params))
+      }
+
+      'strict - {
+        'fail - async {
+
+          val rule = Strict
+          val ruleRes = RuleResolution.Fail
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+
+          val ex = await {
+            Resolve()
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+              .failed
+          }
+
+          ex match {
+            case f: StrictRule =>
+              assert(f.rule == rule)
+              assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+              f.conflict.asInstanceOf[Strict.EvictedDependencies].evicted.foreach(println)
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+        }
       }
     }
   }

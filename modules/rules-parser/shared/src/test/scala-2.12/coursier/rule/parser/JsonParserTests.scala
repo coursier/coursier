@@ -1,7 +1,7 @@
 package coursier.rule.parser
 
 import coursier.moduleString
-import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion}
+import coursier.params.rule._
 import utest._
 
 object JsonParserTests extends TestSuite {
@@ -80,6 +80,33 @@ object JsonParserTests extends TestSuite {
             """.stripMargin
           val res = JsonParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((DontBumpRootDependencies, RuleResolution.TryResolve))
+          assert(res == expectedRes)
+        }
+
+      }
+
+      'strict - {
+
+        'simple - {
+          val rule =
+            """{
+              |  "rule": "strict"
+              |}
+            """.stripMargin
+          val res = JsonParser.parseRule(rule, "2.12.8")
+          val expectedRes = Right((Strict, RuleResolution.TryResolve))
+          assert(res == expectedRes)
+        }
+
+        'defaultAction - {
+          val rule =
+            """{
+              |  "rule": "strict"
+              |}
+            """.stripMargin
+          val action = RuleResolution.Warn
+          val res = JsonParser.parseRule(rule, "2.12.8", action)
+          val expectedRes = Right((Strict, action))
           assert(res == expectedRes)
         }
 
