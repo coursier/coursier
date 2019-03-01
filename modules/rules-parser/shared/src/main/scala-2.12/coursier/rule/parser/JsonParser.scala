@@ -5,7 +5,7 @@ import argonaut.Argonaut._
 import argonaut.ArgonautShapeless._
 import coursier.core.Module
 import coursier.params.rule._
-import coursier.util.Parse
+import coursier.util.{ModuleMatcher, ModuleMatchers, Parse}
 
 class JsonParser(
   defaultScalaVersion: String,
@@ -26,6 +26,22 @@ class JsonParser(
       }
     }
 
+  private implicit val decodeModuleMatcher: DecodeJson[ModuleMatcher] =
+    decodeModule.map(ModuleMatcher(_))
+
+  private implicit val decodeModuleMatchers: DecodeJson[ModuleMatchers] =
+    DecodeJson {
+
+      final case class Helper(exclude: List[ModuleMatcher] = Nil, include: List[ModuleMatcher] = Nil)
+
+      val decodeHelper = DecodeJson.of[Helper]
+
+      c =>
+        decodeHelper(c).map { h =>
+          ModuleMatchers(h.exclude.toSet, h.include.toSet)
+        }
+    }
+
   private val decodeAlwaysFail: DecodeJson[AlwaysFail] =
     DecodeJson { c =>
       if (c.focus.isObject)
@@ -43,12 +59,14 @@ class JsonParser(
     }
   }
 
-  private val decodeDontBumpRootDependencies: DecodeJson[DontBumpRootDependencies.type] =
+  private val decodeDontBumpRootDependencies: DecodeJson[DontBumpRootDependencies] =
     DecodeJson { c =>
       if (c.focus.isObject)
-        DecodeResult.ok(DontBumpRootDependencies)
+        decodeModuleMatchers(c).map { m =>
+          DontBumpRootDependencies(m)
+        }
       else
-        DecodeResult.fail[DontBumpRootDependencies.type]("Expected JSON object for AlwaysFail rule", c.history)
+        DecodeResult.fail[DontBumpRootDependencies]("Expected JSON object for AlwaysFail rule", c.history)
     }
 
   private val decodeStrict: DecodeJson[Strict.type] =

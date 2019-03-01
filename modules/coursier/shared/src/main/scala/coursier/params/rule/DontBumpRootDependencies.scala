@@ -3,8 +3,13 @@ package coursier.params.rule
 import coursier.core.{Dependency, Module, Parse, Resolution, Version}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
+import coursier.util.ModuleMatchers
 
-case object DontBumpRootDependencies extends Rule {
+final case class DontBumpRootDependencies(
+  matchers: ModuleMatchers = ModuleMatchers.all
+) extends Rule {
+
+  import DontBumpRootDependencies._
 
   type C = BumpedRootDependencies
 
@@ -16,6 +21,10 @@ case object DontBumpRootDependencies extends Rule {
       .map { rootDep =>
         val selected = Version(res.reconciledVersions.getOrElse(rootDep.module, rootDep.version))
         rootDep -> selected
+      }
+      .filter {
+        case (dep, _) =>
+          matchers.matches(dep.module)
       }
       .filter {
         case (dep, selectedVer) =>
@@ -34,7 +43,7 @@ case object DontBumpRootDependencies extends Rule {
     if (bumped.isEmpty)
       None
     else
-      Some(new BumpedRootDependencies(bumped))
+      Some(new BumpedRootDependencies(bumped, this))
   }
 
   def tryResolve(res: Resolution, conflict: BumpedRootDependencies): Either[UnsatisfiableRule, Resolution] = {
@@ -55,14 +64,18 @@ case object DontBumpRootDependencies extends Rule {
 
       Right(res0)
     } else {
-      val c = new CantForceRootDependencyVersions(res, cantForce, conflict)
+      val c = new CantForceRootDependencyVersions(res, cantForce, conflict, this)
       Left(c)
     }
   }
 
+}
+
+object DontBumpRootDependencies {
+
   final class BumpedRootDependencies(
     val bumpedRootDependencies: Seq[(Dependency, String)],
-    override val rule: DontBumpRootDependencies.type = DontBumpRootDependencies
+    override val rule: DontBumpRootDependencies
   ) extends UnsatisfiedRule(
     rule,
     s"Some root dependency versions were bumped: " +
@@ -75,7 +88,7 @@ case object DontBumpRootDependencies extends Rule {
     resolution: Resolution,
     cantBump: Map[Module, String],
     conflict: BumpedRootDependencies,
-    override val rule: DontBumpRootDependencies.type = DontBumpRootDependencies
+    override val rule: DontBumpRootDependencies
   ) extends UnsatisfiableRule(
     resolution,
     rule,

@@ -2,6 +2,7 @@ package coursier.rule.parser
 
 import coursier.moduleString
 import coursier.params.rule._
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
 object JsonParserTests extends TestSuite {
@@ -79,7 +80,48 @@ object JsonParserTests extends TestSuite {
               |}
             """.stripMargin
           val res = JsonParser.parseRule(rule, "2.12.8")
-          val expectedRes = Right((DontBumpRootDependencies, RuleResolution.TryResolve))
+          val expectedRes = Right((DontBumpRootDependencies(), RuleResolution.TryResolve))
+          assert(res == expectedRes)
+        }
+
+        * - {
+          val rule =
+            """{
+              |  "rule": "dont-bump-root-dependencies",
+              |  "exclude": [
+              |    "org.scala-lang:*"
+              |  ]
+              |}
+            """.stripMargin
+          val res = JsonParser.parseRule(rule, "2.12.8")
+          val expectedRes = Right((DontBumpRootDependencies(
+            ModuleMatchers(
+              Set(ModuleMatcher(mod"org.scala-lang:*")),
+              Set()
+            )
+          ), RuleResolution.TryResolve))
+          assert(res == expectedRes)
+        }
+
+        * - {
+          val rule =
+            """{
+              |  "rule": "dont-bump-root-dependencies",
+              |  "exclude": [
+              |    "org.scala-lang:*"
+              |  ],
+              |  "include": [
+              |    "org.scala-lang:scala-library"
+              |  ]
+              |}
+            """.stripMargin
+          val res = JsonParser.parseRule(rule, "2.12.8")
+          val expectedRes = Right((DontBumpRootDependencies(
+            ModuleMatchers(
+              Set(ModuleMatcher(mod"org.scala-lang:*")),
+              Set(ModuleMatcher(mod"org.scala-lang:scala-library"))
+            )
+          ), RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
 
@@ -214,7 +256,7 @@ object JsonParserTests extends TestSuite {
             """.stripMargin
           val res = JsonParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq(
-            (DontBumpRootDependencies, RuleResolution.Fail),
+            (DontBumpRootDependencies(), RuleResolution.Fail),
             (SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.Warn)
           ))
           assert(res == expectedRes)

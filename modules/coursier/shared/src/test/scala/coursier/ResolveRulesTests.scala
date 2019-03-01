@@ -3,14 +3,14 @@ package coursier
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
-import coursier.util.Repositories
+import coursier.util.{ModuleMatcher, ModuleMatchers, Repositories}
 import utest._
 
 import scala.async.Async.{async, await}
 
 object ResolveRulesTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, validateDependencies, versionOf}
+  import TestHelpers.{ec, cache, validateDependencies}
 
   val tests = Tests {
 
@@ -154,7 +154,7 @@ object ResolveRulesTests extends TestSuite {
       * - async {
 
         val params = ResolutionParams()
-          .addRule(DontBumpRootDependencies, RuleResolution.TryResolve)
+          .addRule(DontBumpRootDependencies(), RuleResolution.TryResolve)
 
         val res = await {
           Resolve()
@@ -176,6 +176,46 @@ object ResolveRulesTests extends TestSuite {
         val expectedShapelessVersions = Set("2.3.2")
 
         assert(shapelessVersions == expectedShapelessVersions)
+      }
+
+      * - async {
+
+        val params = ResolutionParams()
+          .addRule(DontBumpRootDependencies(
+            ModuleMatchers(
+              Set(ModuleMatcher(mod"org.scala-lang:scala-library"))
+            )
+          ), RuleResolution.TryResolve)
+
+        val res = await {
+          Resolve()
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
+              dep"com.chuusai:shapeless_2.12:2.3.2",
+              dep"org.scala-lang:scala-library:2.12.1"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+        }
+
+        val deps = res.dependenciesWithSelectedVersions
+
+        val shapelessVersions = deps.collect {
+          case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
+            dep.version
+        }
+        val expectedShapelessVersions = Set("2.3.2")
+
+        assert(shapelessVersions == expectedShapelessVersions)
+
+        val scalaLibraryVersions = deps.collect {
+          case dep if dep.module == mod"org.scala-lang:scala-library" =>
+            dep.version
+        }
+        val expectedScalaLibraryVersions = Set("2.12.6")
+
+        assert(scalaLibraryVersions == expectedScalaLibraryVersions)
       }
     }
   }
