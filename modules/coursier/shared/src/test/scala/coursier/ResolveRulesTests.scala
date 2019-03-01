@@ -96,29 +96,52 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'sameVersionRule - async {
+    'sameVersionRule - {
+      * - async {
 
-      val params = ResolutionParams()
-        .withScalaVersion("2.12.7")
-        .addRule(
-          SameVersion(
-            mod"com.fasterxml.jackson.core:jackson-annotations",
-            mod"com.fasterxml.jackson.core:jackson-core",
-            mod"com.fasterxml.jackson.core:jackson-databind"
-          ),
-          RuleResolution.TryResolve
-        )
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.7")
+          .addRule(
+            SameVersion(
+              mod"com.fasterxml.jackson.core:jackson-annotations",
+              mod"com.fasterxml.jackson.core:jackson-core",
+              mod"com.fasterxml.jackson.core:jackson-databind"
+            ),
+            RuleResolution.TryResolve
+          )
 
-      val res = await {
-        Resolve()
-          .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
-          .addRepositories(Repositories.jitpack)
-          .withResolutionParams(params)
-          .withCache(cache)
-          .future()
+        val res = await {
+          Resolve()
+            .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+            .addRepositories(Repositories.jitpack)
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+        }
+
+        await(validateDependencies(res, params))
       }
 
-      await(validateDependencies(res, params))
+      * - async {
+
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.7")
+          .addRule(
+            SameVersion(mod"com.fasterxml.jackson.core:jackson-*"),
+            RuleResolution.TryResolve
+          )
+
+        val res = await {
+          Resolve()
+            .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+            .addRepositories(Repositories.jitpack)
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+        }
+
+        await(validateDependencies(res, params))
+      }
     }
 
     'strict - {

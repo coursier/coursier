@@ -55,7 +55,7 @@ class JsonParser(
     final case class Repr(modules: List[Module])
 
     DecodeJson.of[Repr].map { r =>
-      SameVersion(r.modules.toSet)
+      SameVersion(r.modules.map(ModuleMatcher(_)).toSet)
     }
   }
 

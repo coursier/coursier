@@ -57,6 +57,13 @@ object ShortParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
+        * - {
+          val s = "SameVersion(com.michael:jackson-*)"
+          val expectedRes = Right((SameVersion(mod"com.michael:jackson-*"), RuleResolution.TryResolve))
+          val res = ShortParser.parseRule(s)
+          assert(res == expectedRes)
+        }
+
       }
 
       'strict - {

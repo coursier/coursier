@@ -46,7 +46,7 @@ object ShortParser {
 
     def sameVersion =
       P("SameVersion(" ~ module.rep(min = 1, sep = P("," ~ " ".rep)) ~ ")").map { modules =>
-          SameVersion(modules.toSet)
+          SameVersion(modules.map(ModuleMatcher(_)).toSet)
       }
 
     def dontBumpRootDependencies =
