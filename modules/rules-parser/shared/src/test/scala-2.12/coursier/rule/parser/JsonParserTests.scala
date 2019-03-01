@@ -1,6 +1,7 @@
 package coursier.rule.parser
 
-import coursier.params.rule.{AlwaysFail, RuleResolution}
+import coursier.moduleString
+import coursier.params.rule.{AlwaysFail, RuleResolution, SameVersion}
 import utest._
 
 object JsonParserTests extends TestSuite {
@@ -30,6 +31,40 @@ object JsonParserTests extends TestSuite {
           val action = RuleResolution.Warn
           val res = JsonParser.parseRule(rule, "2.12.8", action)
           val expectedRes = Right((AlwaysFail(), action))
+          assert(res == expectedRes)
+        }
+
+      }
+
+      'sameVersion - {
+
+        * - {
+          val rule =
+            """{
+              |  "rule": "same-version",
+              |  "modules": ["com.fasterxml.jackson.core:jackson-*"]
+              |}
+            """.stripMargin
+          val res = JsonParser.parseRule(rule, "2.12.8")
+          val expectedRes = Right((SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.TryResolve))
+          assert(res == expectedRes)
+        }
+
+        * - {
+          val rule =
+            """{
+              |  "rule": "same-version",
+              |  "modules": [
+              |    "com.fasterxml.jackson.core:jackson-core",
+              |    "com.fasterxml.jackson.core:jackson-databind"
+              |  ]
+              |}
+            """.stripMargin
+          val res = JsonParser.parseRule(rule, "2.12.8")
+          val expectedRes = Right((SameVersion(
+            mod"com.fasterxml.jackson.core:jackson-core",
+            mod"com.fasterxml.jackson.core:jackson-databind"
+          ), RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
 
@@ -92,6 +127,29 @@ object JsonParserTests extends TestSuite {
           val expectedRes = Right(Seq(
             (AlwaysFail(), RuleResolution.TryResolve),
             (AlwaysFail(), RuleResolution.TryResolve)
+          ))
+          assert(res == expectedRes)
+        }
+
+        * - {
+          val rules =
+            """[
+              |  {
+              |    "rule": "always-fail"
+              |  },
+              |  {
+              |    "rule": "same-version",
+              |    "modules": [
+              |      "com.fasterxml.jackson.core:jackson-*"
+              |    ],
+              |    "action": "warn"
+              |  }
+              |]
+            """.stripMargin
+          val res = JsonParser.parseRules(rules, "2.12.8")
+          val expectedRes = Right(Seq(
+            (AlwaysFail(), RuleResolution.TryResolve),
+            (SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.Warn)
           ))
           assert(res == expectedRes)
         }

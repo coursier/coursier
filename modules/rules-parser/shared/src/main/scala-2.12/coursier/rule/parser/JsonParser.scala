@@ -4,7 +4,7 @@ import argonaut.{Parse => _, _}
 import argonaut.Argonaut._
 import argonaut.ArgonautShapeless._
 import coursier.core.Module
-import coursier.params.rule.{AlwaysFail, Rule, RuleResolution}
+import coursier.params.rule.{AlwaysFail, Rule, RuleResolution, SameVersion}
 import coursier.util.Parse
 
 class JsonParser(
@@ -34,8 +34,18 @@ class JsonParser(
         DecodeResult.fail[AlwaysFail]("Expected JSON object for AlwaysFail rule", c.history)
     }
 
+  private val decodeSameVersion: DecodeJson[SameVersion] = {
+
+    final case class Repr(modules: List[Module])
+
+    DecodeJson.of[Repr].map { r =>
+      SameVersion(r.modules.toSet)
+    }
+  }
+
   private val ruleDecoders = Map[String, DecodeJson[Rule]](
-    "always-fail" -> decodeAlwaysFail.map(x => x)
+    "always-fail" -> decodeAlwaysFail.map(x => x),
+    "same-version" -> decodeSameVersion.map(x => x)
   )
 
   private val decodeRule: DecodeJson[(Rule, RuleResolution)] =
