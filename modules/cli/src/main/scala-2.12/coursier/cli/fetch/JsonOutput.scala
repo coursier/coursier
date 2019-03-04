@@ -2,9 +2,8 @@ package coursier.cli.fetch
 
 import java.io.File
 
-import coursier.{Artifact, Attributes, Dependency, Resolution}
+import coursier.{Artifact, Attributes, Classifier, Dependency, Resolution}
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
-import coursier.core.Classifier
 
 object JsonOutput {
 

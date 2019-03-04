@@ -11,7 +11,6 @@ import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
-import coursier.core.{Classifier, Type}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.util.Parse.ModuleRequirements

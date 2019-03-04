@@ -1,6 +1,5 @@
 package coursier
 
-import coursier.core.Classifier
 import utest._
 
 import scala.async.Async.{async, await}

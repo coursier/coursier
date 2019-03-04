@@ -2,7 +2,6 @@ package coursier
 
 import java.lang.{Boolean => JBoolean}
 
-import coursier.core.Classifier
 import coursier.params.ResolutionParams
 
 import scala.async.Async.{async, await}

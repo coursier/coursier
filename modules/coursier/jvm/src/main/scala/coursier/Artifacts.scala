@@ -4,7 +4,6 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{ArtifactError, Cache}
-import coursier.core.{Classifier, Type}
 import coursier.error.FetchError
 import coursier.util.{Sync, Task}
 

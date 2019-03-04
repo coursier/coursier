@@ -4,7 +4,6 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.Cache
-import coursier.core.{Classifier, Type}
 import coursier.error.CoursierError
 import coursier.params.ResolutionParams
 import coursier.util.{Sync, Task}
