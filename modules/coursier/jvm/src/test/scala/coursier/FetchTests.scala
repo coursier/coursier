@@ -17,7 +17,7 @@ object FetchTests extends TestSuite {
           Fetch()
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1)))
@@ -31,7 +31,7 @@ object FetchTests extends TestSuite {
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
@@ -47,7 +47,7 @@ object FetchTests extends TestSuite {
             .withCache(cache)
             .withClassifiers(classifiers)
             .withMainArtifacts(mainArtifacts)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
@@ -61,7 +61,7 @@ object FetchTests extends TestSuite {
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
@@ -77,7 +77,7 @@ object FetchTests extends TestSuite {
             .withCache(cache)
             .withClassifiers(classifiers)
             .withMainArtifacts(mainArtifacts)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
@@ -91,7 +91,7 @@ object FetchTests extends TestSuite {
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
-            .future()
+            .futureResult()
         }
 
         await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))

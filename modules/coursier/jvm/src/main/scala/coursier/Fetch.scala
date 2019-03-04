@@ -69,7 +69,7 @@ final class Fetch[F[_]] private (
 
   private def S = resolveParams.S
 
-  def io: F[(Resolution, Seq[(Artifact, File)])] = {
+  def ioResult: F[(Resolution, Seq[(Artifact, File)])] = {
 
     val resolutionIO = new Resolve(resolveParams).io
 
@@ -82,6 +82,9 @@ final class Fetch[F[_]] private (
       }
     }
   }
+
+  def io: F[Seq[File]] =
+    S.map(ioResult)(_._2.map(_._2))
 
 }
 
@@ -112,10 +115,24 @@ object Fetch {
 
   implicit class FetchTaskOps(private val fetch: Fetch[Task]) extends AnyVal {
 
-    def future()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Future[(Resolution, Seq[(Artifact, File)])] =
+    def futureResult()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Future[(Resolution, Seq[(Artifact, File)])] =
+      fetch.ioResult.future()
+
+    def future()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Future[Seq[File]] =
       fetch.io.future()
 
-    def either()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
+    def eitherResult()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Either[CoursierError, (Resolution, Seq[(Artifact, File)])] = {
+
+      val f = fetch
+        .ioResult
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def either()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Either[CoursierError, Seq[File]] = {
 
       val f = fetch
         .io
@@ -126,7 +143,12 @@ object Fetch {
       Await.result(f, Duration.Inf)
     }
 
-    def run()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): (Resolution, Seq[(Artifact, File)]) = {
+    def runResult()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): (Resolution, Seq[(Artifact, File)]) = {
+      val f = fetch.ioResult.future()
+      Await.result(f, Duration.Inf)
+    }
+
+    def run()(implicit ec: ExecutionContext = fetch.resolveParams.cache.ec): Seq[File] = {
       val f = fetch.io.future()
       Await.result(f, Duration.Inf)
     }
