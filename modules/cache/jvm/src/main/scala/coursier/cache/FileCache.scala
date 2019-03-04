@@ -38,6 +38,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
   def withLocation(location: File): FileCache[F] =
     withParams(params.copy(location = location))
+  def withLocation(location: String): FileCache[F] =
+    withLocation(new File(location))
   def withCachePolicies(cachePolicies: Seq[CachePolicy]): FileCache[F] =
     withParams(params.copy(cachePolicies = cachePolicies))
   def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
@@ -48,6 +50,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(pool = pool))
   def withTtl(ttl: Option[Duration]): FileCache[F] =
     withParams(params.copy(ttl = ttl))
+  def withTtl(ttl: Duration): FileCache[F] =
+    withTtl(Some(ttl))
   def withRetry(retry: Int): FileCache[F] =
     withParams(params.copy(retry = retry))
   def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
