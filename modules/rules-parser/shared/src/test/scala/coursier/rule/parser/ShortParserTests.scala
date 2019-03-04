@@ -1,7 +1,8 @@
 package coursier.rule.parser
 
 import coursier.moduleString
-import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion}
+import coursier.params.rule._
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
 object ShortParserTests extends TestSuite {
@@ -56,6 +57,24 @@ object ShortParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
+        * - {
+          val s = "SameVersion(com.michael:jackson-*)"
+          val expectedRes = Right((SameVersion(mod"com.michael:jackson-*"), RuleResolution.TryResolve))
+          val res = ShortParser.parseRule(s)
+          assert(res == expectedRes)
+        }
+
+      }
+
+      'strict - {
+
+        'simple - {
+          val s = "Strict"
+          val expectedRes = Right((Strict, RuleResolution.TryResolve))
+          val res = ShortParser.parseRule(s)
+          assert(res == expectedRes)
+        }
+
       }
 
     }
@@ -106,15 +125,57 @@ object ShortParserTests extends TestSuite {
 
        * - {
          val s = "DontBumpRootDependencies"
-         val expectedRes = Right(Seq((DontBumpRootDependencies, RuleResolution.TryResolve)))
+         val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
          val res = ShortParser.parseRules(s)
          assert(res == expectedRes)
        }
 
+      * - {
+        val s = "DontBumpRootDependencies()"
+        val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
+        val res = ShortParser.parseRules(s)
+        assert(res == expectedRes)
+      }
+
+      * - {
+        val s = "DontBumpRootDependencies(exclude=[])"
+        val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
+        val res = ShortParser.parseRules(s)
+        assert(res == expectedRes)
+      }
+
+      * - {
+        val s = "DontBumpRootDependencies(exclude=[], include=[])"
+        val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
+        val res = ShortParser.parseRules(s)
+        assert(res == expectedRes)
+      }
+
+      * - {
+        val s = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[])"
+        val matchers = ModuleMatchers(
+          Set(ModuleMatcher(mod"org.scala-lang:*"))
+        )
+        val expectedRes = Right(Seq((DontBumpRootDependencies(matchers), RuleResolution.TryResolve)))
+        val res = ShortParser.parseRules(s)
+        assert(res == expectedRes)
+      }
+
+      * - {
+        val s = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[org.scala-lang:scala-library])"
+        val matchers = ModuleMatchers(
+          Set(ModuleMatcher(mod"org.scala-lang:*")),
+          Set(ModuleMatcher(mod"org.scala-lang:scala-library"))
+        )
+        val expectedRes = Right(Seq((DontBumpRootDependencies(matchers), RuleResolution.TryResolve)))
+        val res = ShortParser.parseRules(s)
+        assert(res == expectedRes)
+      }
+
        * - {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)"
          val expectedRes = Right(Seq(
-           DontBumpRootDependencies,
+           DontBumpRootDependencies(),
            SameVersion(mod"com.michael:jackson-core")
          ).map(_ -> RuleResolution.TryResolve))
          val res = ShortParser.parseRules(s)
@@ -124,7 +185,7 @@ object ShortParserTests extends TestSuite {
        * - {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
          val expectedRes = Right(Seq(
-           DontBumpRootDependencies,
+           DontBumpRootDependencies(),
            SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind")
          ).map(_ -> RuleResolution.TryResolve))
          val res = ShortParser.parseRules(s)
@@ -134,7 +195,7 @@ object ShortParserTests extends TestSuite {
        * - {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core), SameVersion(com.a:b,com.a:c,com.a:d)"
          val expectedRes = Right(Seq(
-           DontBumpRootDependencies,
+           DontBumpRootDependencies(),
            SameVersion(mod"com.michael:jackson-core"),
            SameVersion(mod"com.a:b", mod"com.a:c", mod"com.a:d")
          ).map(_ -> RuleResolution.TryResolve))

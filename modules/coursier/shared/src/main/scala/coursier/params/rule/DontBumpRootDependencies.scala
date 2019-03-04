@@ -3,8 +3,11 @@ package coursier.params.rule
 import coursier.core.{Dependency, Module, Parse, Resolution, Version}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
+import coursier.util.ModuleMatchers
 
-case object DontBumpRootDependencies extends Rule {
+final case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
+
+  import DontBumpRootDependencies._
 
   type C = BumpedRootDependencies
 
@@ -18,9 +21,16 @@ case object DontBumpRootDependencies extends Rule {
         rootDep -> selected
       }
       .filter {
+        case (dep, _) =>
+          matchers.matches(dep.module)
+      }
+      .filter {
         case (dep, selectedVer) =>
           val wanted = Parse.versionConstraint(dep.version)
-          !wanted.interval.contains(selectedVer) && !wanted.preferred.contains(selectedVer)
+          if (wanted.preferred.nonEmpty)
+            !wanted.preferred.contains(selectedVer)
+          else
+            !wanted.interval.contains(selectedVer)
       }
       .map {
         case (dep, selectedVer) =>
@@ -31,12 +41,12 @@ case object DontBumpRootDependencies extends Rule {
     if (bumped.isEmpty)
       None
     else
-      Some(new BumpedRootDependencies(bumped))
+      Some(new BumpedRootDependencies(bumped, this))
   }
 
   def tryResolve(res: Resolution, conflict: BumpedRootDependencies): Either[UnsatisfiableRule, Resolution] = {
 
-    val modules = conflict.bumpedRootDependencies.map { case (dep, v) => dep.module -> v }.toMap
+    val modules = conflict.bumpedRootDependencies.map { case (dep, _) => dep.module -> dep.version }.toMap
     val cantForce = res
       .forceVersions
       .filter {
@@ -52,14 +62,24 @@ case object DontBumpRootDependencies extends Rule {
 
       Right(res0)
     } else {
-      val c = new CantForceRootDependencyVersions(res, cantForce, conflict)
+      val c = new CantForceRootDependencyVersions(res, cantForce, conflict, this)
       Left(c)
     }
   }
 
+}
+
+object DontBumpRootDependencies {
+
+  def apply(): DontBumpRootDependencies =
+    DontBumpRootDependencies(ModuleMatchers.all)
+
+  def apply(matcher: ModuleMatchers, matcher1: ModuleMatchers, matchers: ModuleMatchers*): DontBumpRootDependencies =
+    DontBumpRootDependencies(matchers.foldLeft(matcher + matcher1)(_ + _))
+
   final class BumpedRootDependencies(
     val bumpedRootDependencies: Seq[(Dependency, String)],
-    override val rule: DontBumpRootDependencies.type = DontBumpRootDependencies
+    override val rule: DontBumpRootDependencies
   ) extends UnsatisfiedRule(
     rule,
     s"Some root dependency versions were bumped: " +
@@ -72,7 +92,7 @@ case object DontBumpRootDependencies extends Rule {
     resolution: Resolution,
     cantBump: Map[Module, String],
     conflict: BumpedRootDependencies,
-    override val rule: DontBumpRootDependencies.type = DontBumpRootDependencies
+    override val rule: DontBumpRootDependencies
   ) extends UnsatisfiableRule(
     resolution,
     rule,

@@ -1,7 +1,6 @@
 package coursier.core
 
-import java.io.{ByteArrayInputStream, CharArrayReader}
-import java.nio.charset.StandardCharsets
+import java.io.CharArrayReader
 
 import coursier.util.{SaxHandler, Xml}
 import java.util.regex.Pattern.quote

@@ -1,8 +1,10 @@
 package coursier.rule.parser
 
-import fastparse._, NoWhitespace._
+import fastparse._
+import NoWhitespace._
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.params.rule._
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 
 object ShortParser {
 
@@ -22,25 +24,44 @@ object ShortParser {
     def alwaysFail = P("AlwaysFail").map(_ => AlwaysFail())
 
     def identifier =
-      P(CharsWhile(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '.' || c == '-' || c == '_').!)
+      P(CharsWhile(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '.' || c == '-' || c == '_' || c == '*').!)
     def module =
       P(identifier ~ ":" ~ identifier).map {
         case (org, name) =>
           Module(Organization(org), ModuleName(name), Map.empty)
       }
+    def moduleMatcher = module.map(ModuleMatcher(_))
+
+    def excludes =
+      // FIXME There should be better ways to handle whitespaces here…
+      P("exclude" ~ " ".rep ~ "=" ~ " ".rep ~ "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]").map { l =>
+        ModuleMatchers(l.toSet)
+      }
+
+    def includes =
+    // FIXME There should be better ways to handle whitespaces here…
+      P("include" ~ " ".rep ~ "=" ~ " ".rep ~ "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]").map { l =>
+        ModuleMatchers(Set(), l.toSet)
+      }
 
     def sameVersion =
       P("SameVersion(" ~ module.rep(min = 1, sep = P("," ~ " ".rep)) ~ ")").map { modules =>
-          SameVersion(modules.toSet)
+          SameVersion(modules.map(ModuleMatcher(_)).toSet)
       }
 
     def dontBumpRootDependencies =
-      P("DontBumpRootDependencies").map { _ =>
-        DontBumpRootDependencies
+      P("DontBumpRootDependencies" ~ ("(" ~ (excludes | includes).rep(sep = P("," ~ " ".rep)) ~ ")").?).map { l =>
+        val matchers = l.getOrElse(Nil).foldLeft(ModuleMatchers.all) {
+          (m, m0) =>
+            ModuleMatchers(m.exclude ++ m0.exclude, m.include ++ m0.include)
+        }
+        DontBumpRootDependencies(matchers)
       }
 
+    def strict = P("Strict").map(_ => Strict)
+
     def rule =
-      P((resolution ~ ":").? ~ (alwaysFail | sameVersion | dontBumpRootDependencies)).map {
+      P((resolution ~ ":").? ~ (alwaysFail | sameVersion | dontBumpRootDependencies | strict)).map {
         case (resOpt, rule) =>
           rule -> resOpt.getOrElse(defaultResolution)
       }

@@ -6,7 +6,6 @@ import java.nio.file.Files
 
 import coursier.cache.{CacheUrl, FileCache}
 import coursier.cache.protocol.TestprotocolHandler
-import coursier.util.Task
 import utest._
 
 import scala.concurrent.{Await, ExecutionContext}
@@ -76,25 +75,20 @@ object CacheFetchTests extends TestSuite {
 
   val tests = Tests {
 
-    // using scala-test would allow to put the below comments in the test names...
-
-    * - {
-      // test that everything's fine with basic file protocol
+    "ensure everything's fine with basic file protocol" - {
       val f = new File(HandmadeMetadata.repoBase, "http/abc.com").getAbsoluteFile
       check(MavenRepository(f.toURI.toString))
     }
 
     'customProtocol - {
-      * - {
-        // test the Cache.url method
+      "Cache.url method" - {
         val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)
 
         CacheUrl.url("testprotocol://foo/bar")
       }
 
-      * - {
-        // the real custom protocol test
+      "actual custom protocol test" - {
         check(MavenRepository(s"${TestprotocolHandler.protocol}://foo/"))
       }
     }

@@ -3,5 +3,5 @@ scala_library(
     dependencies = [
         "coursier:coursier",
     ],
-    sources = rglobs("src/main/scala/*.scala"),
+    sources = rglobs("shared/src/main/scala/*.scala"),
 )

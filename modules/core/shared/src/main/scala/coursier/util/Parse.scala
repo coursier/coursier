@@ -1,6 +1,5 @@
 package coursier.util
 
-import coursier.{Attributes, Dependency}
 import coursier.core._
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
@@ -166,8 +165,8 @@ object Parse {
           case None =>
 
             val attributes = attrs.get("classifier") match {
-              case Some(c) => Attributes(classifier = Classifier(c))
-              case None => Attributes()
+              case Some(c) => Attributes(Type.empty, Classifier(c))
+              case None => Attributes(Type.empty, Classifier.empty)
             }
 
             val extraDependencyParams: Map[String, String] = attrs.get("url") match {
@@ -183,54 +182,62 @@ object Parse {
               case Array(org, "", rawName, version, config) =>
                 module(s"$org::$rawName", defaultScalaVersion)
                   .right
-                  .map(mod => {
+                  .map(mod =>
                     Dependency(
                       mod,
                       version,
                       Configuration(config),
+                      localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes,
                       attributes,
-                      transitive = transitive,
-                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-                  })
+                      optional = false,
+                      transitive = transitive
+                    )
+                  )
 
               case Array(org, "", rawName, version) =>
                 module(s"$org::$rawName", defaultScalaVersion)
                   .right
-                  .map(mod => {
+                  .map(mod =>
                     Dependency(
                       mod,
                       version,
-                      configuration = defaultConfig,
-                      attributes = attributes,
-                      transitive = transitive,
-                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-                  })
+                      defaultConfig,
+                      localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes,
+                      attributes,
+                      optional = false,
+                      transitive
+                    )
+                  )
 
               case Array(org, rawName, version, config) =>
                 module(s"$org:$rawName", defaultScalaVersion)
                   .right
-                  .map(mod => {
+                  .map(mod =>
                     Dependency(
                       mod,
                       version,
                       Configuration(config),
+                      localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes,
                       attributes,
-                      transitive = transitive,
-                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-                  })
+                      optional = false,
+                      transitive
+                    )
+                  )
 
               case Array(org, rawName, version) =>
                 module(s"$org:$rawName", defaultScalaVersion)
                   .right
-                  .map(mod => {
+                  .map(mod =>
                     Dependency(
                       mod,
                       version,
-                      configuration = defaultConfig,
-                      attributes = attributes,
-                      transitive = transitive,
-                      exclusions = localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes)
-                  })
+                      defaultConfig,
+                      localExcludes.getOrElse(mod.orgName, Set()) | globalExcludes,
+                      attributes,
+                      optional = false,
+                      transitive
+                    )
+                  )
 
               case _ =>
                 Left(s"Malformed dependency: $s")
