@@ -62,10 +62,18 @@ final class Fetch[F[_]] private (
 
   def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(classifiers = classifiers))
+  def addClassifiers(classifiers: Classifier*): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(classifiers = artifactsParams.classifiers ++ classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(mainArtifacts = mainArtifacts))
+  def withMainArtifacts(): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(mainArtifacts = true))
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(artifactTypes = artifactTypes))
+  def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(artifactTypes = Option(artifactsParams.artifactTypes).getOrElse(Set()) ++ artifactTypes))
+  def allArtifactTypes(): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(artifactTypes = Set(Type.all)))
 
   private def S = resolveParams.S
 
