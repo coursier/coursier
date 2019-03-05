@@ -8,7 +8,7 @@ further, by downloading their artifacts, and printing their paths.
 
 Use like
 ```bash
-$ coursier fetch org.http4s:http4s-dsl_2.12:1.18.21
+$ coursier fetch org.http4s:http4s-dsl_2.12:0.18.21
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.6/scala-reflect-2.12.6.jar
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar
