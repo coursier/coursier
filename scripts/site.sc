@@ -63,6 +63,7 @@ def main(publishLocal: Boolean = false, npmInstall: Boolean = false, yarnRunBuil
       "set version in ThisBuild := \"" + version + "\"",
       "coreJVM/publishLocal",
       "cacheJVM/publishLocal",
+      "catsJVM/publishLocal",
       "coursierJVM/publishLocal"
     ))
 
@@ -81,7 +82,10 @@ def main(publishLocal: Boolean = false, npmInstall: Boolean = false, yarnRunBuil
     new File("doc/docs"),
     new File("doc/processed-docs"),
     scalaVersion,
-    dependencies = Seq(s"io.get-coursier:coursier_2.12:$version"),
+    dependencies = Seq(
+      s"io.get-coursier:coursier_2.12:$version",
+      s"io.get-coursier:coursier-cats-interop_2.12:$version"
+    ),
     mdocProps = mdocProps
   )
 

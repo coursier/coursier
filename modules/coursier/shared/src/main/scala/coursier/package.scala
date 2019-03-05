@@ -110,6 +110,12 @@ package object coursier {
   type Artifact = core.Artifact
   val Artifact = core.Artifact
 
+  type Classifier = core.Classifier
+  val Classifier = core.Classifier
+
+  type Type = core.Type
+  val Type = core.Type
+
   type ResolutionProcess = core.ResolutionProcess
   val ResolutionProcess = core.ResolutionProcess
 

@@ -26,7 +26,8 @@ case object Strict extends Rule {
     val evicted: Seq[Conflict]
   ) extends UnsatisfiedRule(
     rule,
-    s"Found evicted dependencies:"
+    s"Found evicted dependencies:\n" +
+      evicted.map(_.toString + "\n").mkString
   )
 
   final class UnsatisfiableRule(
