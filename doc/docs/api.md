@@ -101,16 +101,20 @@ import coursier.cache.loggers._
 
 import scala.concurrent.duration._
 
+val pool = java.util.concurrent.Executors.newFixedThreadPool(3)
+
 val cache = FileCache()
   .withLocation("./path/to/custom-cache")
   .withLogger(RefreshLogger.create(System.out))
-  .withPool(java.util.concurrent.Executors.newFixedThreadPool(3))
+  .withPool(pool)
   .withTtl(1.hour)
 
 val resolution = Resolve()
   .addDependencies(dep"org.tpolecat:doobie-core_2.12:0.6.0")
   .withCache(cache)
   .run()
+
+pool.shutdown()
 ```
 
 ### Resolution parameters
