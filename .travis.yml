@@ -51,7 +51,7 @@ jobs:
       script: amm scripts/site.sc --publishLocal true
     - name: "Pants"
       # Sanity check for Pants build path.
-      script: cd modules && ./pants run cli/src/main/scala-2.12:coursier-cli -- fetch --help
+      script: cd modules && ./pants run cli:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
       script: sbt ci-release

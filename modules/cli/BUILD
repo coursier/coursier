@@ -12,7 +12,8 @@ scala_library(
         ":util",
     ],
     sources = rglobs(
-        "coursier/cli/*.scala",
+        "src/main/scala-2.12/coursier/cli/*.scala",
+        "src/main/contraband-scala/*.scala",
     ),
 )
 
@@ -26,7 +27,7 @@ scala_library(
         "core:core",
         "coursier:coursier",
     ],
-    sources = globs("coursier/cli/util/*.scala"),
+    sources = globs("src/main/scala-2.12/coursier/cli/util/*.scala"),
 )
 
 jvm_binary(
