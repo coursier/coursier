@@ -23,9 +23,9 @@ object CacheLocks {
     cache: File,
     file: File
   )(
-    f: => Either[ArtifactError, T],
-    ifLocked: => Option[Either[ArtifactError, T]]
-  ): Either[ArtifactError, T] = {
+    f: => T,
+    ifLocked: => Option[T]
+  ): T = {
 
     val lockFile = CachePath.lockFile(file)
 
@@ -37,7 +37,7 @@ object CacheLocks {
     }
 
     @tailrec
-    def loop(): Either[ArtifactError, T] = {
+    def loop(): T = {
 
       val resOpt = {
         var lock: FileLock = null
