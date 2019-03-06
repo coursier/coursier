@@ -192,6 +192,9 @@ object Resolve extends PlatformResolve {
       throughOpt.getOrElse(identity[F[Resolution]])
     def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
       transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
+
+    override def toString: String =
+      productIterator.mkString("ResolveParams(", ", ", ")")
   }
 
   private[coursier] def initialResolution(

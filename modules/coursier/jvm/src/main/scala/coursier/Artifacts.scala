@@ -123,6 +123,9 @@ object Artifacts {
   ) {
     def transformArtifacts: Seq[Artifact] => Seq[Artifact] =
       transformArtifactsOpt.getOrElse(identity[Seq[Artifact]])
+
+    override def toString: String =
+      productIterator.mkString("ArtifactsParams(", ", ", ")")
   }
 
   def defaultTypes(
