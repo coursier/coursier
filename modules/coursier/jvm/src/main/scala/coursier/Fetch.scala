@@ -172,10 +172,4 @@ object Fetch {
 
   }
 
-  private final case class Params[F[_]](
-    classifiers: Set[Classifier],
-    mainArtifacts: JBoolean,
-    artifactTypes: Set[Type]
-  )
-
 }
