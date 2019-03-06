@@ -3,8 +3,9 @@ package coursier
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
-import coursier.cache.Cache
+import coursier.cache.{Cache, FileCache}
 import coursier.error.CoursierError
+import coursier.internal.FetchCache
 import coursier.params.ResolutionParams
 import coursier.util.{Sync, Task}
 
@@ -13,7 +14,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 final class Fetch[F[_]] private (
   private val resolveParams: Resolve.Params[F],
-  private val artifactsParams: Artifacts.Params[F]
+  private val artifactsParams: Artifacts.Params[F],
+  private val fetchParams: Fetch.Params
 ) {
 
   override def equals(obj: Any): Boolean =
@@ -28,10 +30,51 @@ final class Fetch[F[_]] private (
   override def toString: String =
     s"Fetch($resolveParams, $artifactsParams)"
 
+  private def cacheKeyOpt: Option[FetchCache.Key] = {
+
+    val mayBeCached =
+      resolveParams.throughOpt.isEmpty &&
+        resolveParams.transformFetcherOpt.isEmpty &&
+        artifactsParams.transformArtifactsOpt.isEmpty &&
+        artifactsParams.resolutions.isEmpty
+
+    if (mayBeCached)
+      artifactsParams.cache match {
+        case f: FileCache[F] =>
+          val key = FetchCache.Key(
+            resolveParams.dependencies,
+            resolveParams.repositories,
+            resolveParams
+              .resolutionParams
+              .withForceVersion(Map())
+              .withForcedProperties(Map())
+              .withProfiles(Set()),
+            resolveParams.resolutionParams.forceVersion.toVector.sortBy { case (m, v) => s"$m:$v" },
+            resolveParams.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
+            resolveParams.resolutionParams.profiles.toVector.sorted,
+            f.location.getAbsolutePath,
+            artifactsParams.classifiers.toVector.sorted,
+            artifactsParams.mainArtifactsOpt,
+            artifactsParams.artifactTypesOpt.map(_.toVector.sorted)
+          )
+          Some(key)
+        case _ =>
+          None
+      }
+    else
+      None
+  }
+
+  def canBeCached: Boolean =
+    cacheKeyOpt.nonEmpty
+
+
   private def withResolveParams(resolveParams: Resolve.Params[F]): Fetch[F] =
-    new Fetch(resolveParams, artifactsParams)
+    new Fetch(resolveParams, artifactsParams, fetchParams)
   private def withArtifactsParams(artifactsParams: Artifacts.Params[F]): Fetch[F] =
-    new Fetch(resolveParams, artifactsParams)
+    new Fetch(resolveParams, artifactsParams, fetchParams)
+  private def withFetchParams(fetchParams: Fetch.Params): Fetch[F] =
+    new Fetch(resolveParams, artifactsParams, fetchParams)
 
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
     withResolveParams(resolveParams.copy(dependencies = dependencies))
@@ -54,6 +97,11 @@ final class Fetch[F[_]] private (
     withResolveParams(resolveParams.copy(cache = cache))
   def withArtifactsCache(cache: Cache[F]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(cache = cache))
+
+  def withFetchCache(location: File): Fetch[F] =
+    withFetchParams(fetchParams.copy(fetchCacheOpt = Some(location)))
+  def withFetchCache(locationOpt: Option[File]): Fetch[F] =
+    withFetchParams(fetchParams.copy(fetchCacheOpt = locationOpt))
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
     withResolveParams(resolveParams.copy(throughOpt = Some(resolveParams.throughOpt.fold(f)(_ andThen f))))
@@ -100,8 +148,39 @@ final class Fetch[F[_]] private (
     }
   }
 
-  def io: F[Seq[File]] =
-    S.map(ioResult)(_._2.map(_._2))
+  def io: F[Seq[File]] = {
+
+    val cacheKeyOpt0 = for {
+      fetchCache <- fetchParams.fetchCacheOpt
+      key <- cacheKeyOpt
+    } yield {
+      val cache = FetchCache(fetchCache.toPath)
+      (cache, key)
+    }
+
+    cacheKeyOpt0 match {
+      case Some((cache, key)) =>
+        cache.read(key) match {
+          case Some(files) =>
+            S.point(files)
+          case None =>
+            S.bind(ioResult) {
+              case (_, l) =>
+                val files = l.map(_._2)
+
+                val maybeWrite =
+                  if (l.forall(!_._1.changing))
+                    S.delay[Unit](cache.write(key, files))
+                  else
+                    S.point(())
+
+                S.map(maybeWrite)(_ => files)
+            }
+        }
+      case None =>
+        S.map(ioResult)(_._2.map(_._2))
+    }
+  }
 
 }
 
@@ -127,6 +206,9 @@ object Fetch {
         cache,
         None,
         S
+      ),
+      Params(
+        None
       )
     )
 
@@ -171,5 +253,9 @@ object Fetch {
     }
 
   }
+
+  private final case class Params(
+    fetchCacheOpt: Option[File]
+  )
 
 }
