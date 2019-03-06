@@ -74,15 +74,15 @@ final class Fetch[F[_]] private (
   def addClassifiers(classifiers: Classifier*): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(classifiers = artifactsParams.classifiers ++ classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(mainArtifacts = mainArtifacts))
+    withArtifactsParams(artifactsParams.copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x)))
   def withMainArtifacts(): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(mainArtifacts = true))
+    withArtifactsParams(artifactsParams.copy(mainArtifactsOpt = Some(true)))
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypes = artifactTypes))
+    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(artifactTypes)))
   def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypes = Option(artifactsParams.artifactTypes).getOrElse(Set()) ++ artifactTypes))
+    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(artifactsParams.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)))
   def allArtifactTypes(): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypes = Set(Type.all)))
+    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(Set(Type.all))))
 
   private def S = resolveParams.S
 
@@ -122,8 +122,8 @@ object Fetch {
       Artifacts.Params(
         Nil,
         Set(),
-        null,
-        null,
+        None,
+        None,
         cache,
         None,
         S
