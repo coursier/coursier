@@ -41,8 +41,13 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     withParams(params.copy(artifactTypes = artifactTypes))
   def withCache(cache: Cache[F]): Artifacts[F] =
     withParams(params.copy(cache = cache))
-  def withTransformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
-    withParams(params.copy(transformArtifacts = f))
+
+  def transformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = Some(params.transformArtifactsOpt.fold(f)(_ andThen f))))
+  def noTransformArtifacts(): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = None))
+  def withTransformArtifacts(fOpt: Option[Seq[Artifact] => Seq[Artifact]]): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = fOpt))
 
   private def S = params.S
 
@@ -79,7 +84,7 @@ object Artifacts {
         null,
         null,
         cache,
-        identity,
+        None,
         S
       )
     )
@@ -113,9 +118,12 @@ object Artifacts {
     mainArtifacts: JBoolean,
     artifactTypes: Set[Type],
     cache: Cache[F],
-    transformArtifacts: Seq[Artifact] => Seq[Artifact],
+    transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]],
     S: Sync[F]
-  )
+  ) {
+    def transformArtifacts: Seq[Artifact] => Seq[Artifact] =
+      transformArtifactsOpt.getOrElse(identity[Seq[Artifact]])
+  }
 
   def defaultTypes(
     classifiers: Set[Classifier] = Set.empty,

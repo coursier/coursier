@@ -65,7 +65,7 @@ object ArtifactsTests extends TestSuite {
         Artifacts()
           .withResolution(res)
           .withCache(cache)
-          .withTransformArtifacts { l =>
+          .transformArtifacts { l =>
             l.flatMap { a =>
               val sigOpt = a.extra.get("sig")
               Seq(a) ++ sigOpt.toSeq

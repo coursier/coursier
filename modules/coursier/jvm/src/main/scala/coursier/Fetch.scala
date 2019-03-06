@@ -56,9 +56,18 @@ final class Fetch[F[_]] private (
     withArtifactsParams(artifactsParams.copy(cache = cache))
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
-    withResolveParams(resolveParams.copy(through = f))
+    withResolveParams(resolveParams.copy(throughOpt = Some(resolveParams.throughOpt.fold(f)(_ andThen f))))
+  def noTransformResolution(): Fetch[F] =
+    withResolveParams(resolveParams.copy(throughOpt = None))
+  def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Fetch[F] =
+    withResolveParams(resolveParams.copy(throughOpt = fOpt))
+
   def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Fetch[F] =
-    withResolveParams(resolveParams.copy(transformFetcher = f))
+    withResolveParams(resolveParams.copy(transformFetcherOpt = Some(resolveParams.transformFetcherOpt.fold(f)(_ andThen f))))
+  def noTransformFetcher(): Fetch[F] =
+    withResolveParams(resolveParams.copy(transformFetcherOpt = None))
+  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Fetch[F] =
+    withResolveParams(resolveParams.copy(transformFetcherOpt = fOpt))
 
   def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(classifiers = classifiers))
@@ -106,8 +115,8 @@ object Fetch {
         Resolve.defaultRepositories,
         ResolutionParams(),
         cache,
-        identity,
-        identity,
+        None,
+        None,
         S
       ),
       Artifacts.Params(
@@ -116,7 +125,7 @@ object Fetch {
         null,
         null,
         cache,
-        identity,
+        None,
         S
       )
     )
