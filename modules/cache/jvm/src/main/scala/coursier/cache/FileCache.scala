@@ -20,6 +20,20 @@ import scala.util.control.NonFatal
 
 final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cache[F] {
 
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: FileCache[_] =>
+        params == other.params
+      case _ => false
+    }
+
+  override def hashCode(): Int =
+    17 + params.##
+
+  override def toString: String =
+    s"FileCache($params)"
+
+
   def location: File = params.location
   def cachePolicies: Seq[CachePolicy] = params.cachePolicies
   def checksums: Seq[Option[String]] = params.checksums
