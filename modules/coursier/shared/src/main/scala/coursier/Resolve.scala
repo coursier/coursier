@@ -26,6 +26,22 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   override def toString: String =
     s"Resolve($params)"
 
+
+  def dependencies: Seq[Dependency] =
+    params.dependencies
+  def repositories: Seq[Repository] =
+    params.repositories
+  def resolutionParams: ResolutionParams =
+    params.resolutionParams
+  def cache: Cache[F] =
+    params.cache
+  def throughOpt: Option[F[Resolution] => F[Resolution]] =
+    params.throughOpt
+  def transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] =
+    params.transformFetcherOpt
+  def S: Sync[F] =
+    params.S
+
   private def withParams(params: Resolve.Params[F]): Resolve[F] =
     new Resolve(params)
 
@@ -60,8 +76,6 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
     withParams(params.copy(transformFetcherOpt = fOpt))
 
-
-  private def S = params.S
 
   private def fetchVia: ResolutionProcess.Fetch[F] = {
     val fetchs = params.cache.fetchs

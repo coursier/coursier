@@ -30,6 +30,32 @@ final class Fetch[F[_]] private (
   override def toString: String =
     s"Fetch($resolveParams, $artifactsParams)"
 
+
+  def dependencies: Seq[Dependency] =
+    resolveParams.dependencies
+  def repositories: Seq[Repository] =
+    resolveParams.repositories
+  def resolutionParams: ResolutionParams =
+    resolveParams.resolutionParams
+  def cache: Cache[F] =
+    resolveParams.cache
+  def throughOpt: Option[F[Resolution] => F[Resolution]] =
+    resolveParams.throughOpt
+  def transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] =
+    resolveParams.transformFetcherOpt
+  def S: Sync[F] =
+    resolveParams.S
+
+  def classifiers: Set[Classifier] =
+    artifactsParams.classifiers
+  def mainArtifactsOpt: Option[Boolean] =
+    artifactsParams.mainArtifactsOpt
+  def artifactTypesOpt: Option[Set[Type]] =
+    artifactsParams.artifactTypesOpt
+  def transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]] =
+    artifactsParams.transformArtifactsOpt
+
+
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 
     val mayBeCached =
@@ -132,7 +158,12 @@ final class Fetch[F[_]] private (
   def allArtifactTypes(): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(Set(Type.all))))
 
-  private def S = resolveParams.S
+  def transformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(transformArtifactsOpt = Some(artifactsParams.transformArtifactsOpt.fold(f)(_ andThen f))))
+  def noTransformArtifacts(): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(transformArtifactsOpt = None))
+  def withTransformArtifacts(fOpt: Option[Seq[Artifact] => Seq[Artifact]]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(transformArtifactsOpt = fOpt))
 
   def ioResult: F[(Resolution, Seq[(Artifact, File)])] = {
 
