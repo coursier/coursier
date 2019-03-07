@@ -41,16 +41,16 @@ package object compatibility {
 
   private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
     override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit =
-      handler.startElement(localName)
+      handler.startElement(qName)
     override def characters(ch: Array[Char], start: Int, length: Int): Unit =
       handler.characters(ch, start, length)
     override def endElement(uri: String, localName: String, qName: String): Unit =
-      handler.endElement(localName)
+      handler.endElement(qName)
   }
 
   private lazy val spf = {
     val spf0 = SAXParserFactory.newInstance()
-    spf0.setNamespaceAware(true) // ???
+    spf0.setNamespaceAware(false)
     spf0
   }
 

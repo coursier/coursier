@@ -159,8 +159,8 @@ object Launch extends CaseApp[LaunchOptions] {
             val artifacts = coursier.Artifacts.artifacts0(
               subRes,
               params.artifact.classifiers,
-              params.artifact.mainArtifacts,
-              params.artifact.artifactTypes
+              Option(params.artifact.mainArtifacts).map(x => x),
+              Option(params.artifact.artifactTypes)
             ).map(_._3)
             val files0 = artifacts
               .map(a => fileMap.getOrElse(a, sys.error("should not happen")))

@@ -11,6 +11,15 @@ object Publish {
     publishArtifact := false
   )
 
+  def isSbv(sbv: String) =
+    Def.setting {
+      val Array(maj, min) = sbv.split('.').map(_.toInt)
+      CrossVersion.partialVersion(scalaBinaryVersion.value) match {
+        case Some((`maj`, `min`)) => true
+        case _ => false
+      }
+    }
+
   def onlyPublishIn(sbv: String) = Seq(
     publishArtifact := {
       val sbv0 = CrossVersion.partialVersion(scalaBinaryVersion.value).fold("") {

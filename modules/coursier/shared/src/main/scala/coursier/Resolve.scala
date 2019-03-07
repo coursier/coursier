@@ -47,9 +47,18 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     withParams(params.copy(cache = cache))
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Resolve[F] =
-    withParams(params.copy(through = f))
+    withParams(params.copy(throughOpt = Some(params.throughOpt.fold(f)(_ andThen f))))
+  def noTransformResolution(): Resolve[F] =
+    withParams(params.copy(throughOpt = None))
+  def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Resolve[F] =
+    withParams(params.copy(throughOpt = fOpt))
+
   def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Resolve[F] =
-    withParams(params.copy(transformFetcher = f))
+    withParams(params.copy(transformFetcherOpt = Some(params.transformFetcherOpt.fold(f)(_ andThen f))))
+  def noTransformFetcher(): Resolve[F] =
+    withParams(params.copy(transformFetcherOpt = None))
+  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
+    withParams(params.copy(transformFetcherOpt = fOpt))
 
 
   private def S = params.S
@@ -141,8 +150,8 @@ object Resolve extends PlatformResolve {
         defaultRepositories,
         ResolutionParams(),
         cache,
-        identity,
-        identity,
+        None,
+        None,
         S
       )
     )
@@ -175,10 +184,18 @@ object Resolve extends PlatformResolve {
     repositories: Seq[Repository],
     resolutionParams: ResolutionParams,
     cache: Cache[F],
-    through: F[Resolution] => F[Resolution],
-    transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F],
+    throughOpt: Option[F[Resolution] => F[Resolution]],
+    transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]],
     S: Sync[F]
-  )
+  ) {
+    def through: F[Resolution] => F[Resolution] =
+      throughOpt.getOrElse(identity[F[Resolution]])
+    def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
+      transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
+
+    override def toString: String =
+      productIterator.mkString("ResolveParams(", ", ", ")")
+  }
 
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],

@@ -44,8 +44,8 @@ object Fetch extends CaseApp[FetchOptions] {
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
-        params.artifact.mainArtifacts,
-        params.artifact.artifactTypes
+        Option(params.artifact.mainArtifacts).map(x => x),
+        Option(params.artifact.artifactTypes)
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(

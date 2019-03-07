@@ -36,13 +36,18 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
   def withClassifiers(classifiers: Set[Classifier]): Artifacts[F] =
     withParams(params.copy(classifiers = classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Artifacts[F] =
-    withParams(params.copy(mainArtifacts = mainArtifacts))
+    withParams(params.copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x)))
   def withArtifactTypes(artifactTypes: Set[Type]): Artifacts[F] =
-    withParams(params.copy(artifactTypes = artifactTypes))
+    withParams(params.copy(artifactTypesOpt = Option(artifactTypes)))
   def withCache(cache: Cache[F]): Artifacts[F] =
     withParams(params.copy(cache = cache))
-  def withTransformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
-    withParams(params.copy(transformArtifacts = f))
+
+  def transformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = Some(params.transformArtifactsOpt.fold(f)(_ andThen f))))
+  def noTransformArtifacts(): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = None))
+  def withTransformArtifacts(fOpt: Option[Seq[Artifact] => Seq[Artifact]]): Artifacts[F] =
+    withParams(params.copy(transformArtifactsOpt = fOpt))
 
   private def S = params.S
 
@@ -54,8 +59,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
         Artifacts.artifacts0(
           r,
           params.classifiers,
-          params.mainArtifacts,
-          params.artifactTypes
+          params.mainArtifactsOpt,
+          params.artifactTypesOpt
         ).map(_._3)
       }
       .distinct
@@ -76,10 +81,10 @@ object Artifacts {
       Params(
         Nil,
         Set(),
-        null,
-        null,
+        None,
+        None,
         cache,
-        identity,
+        None,
         S
       )
     )
@@ -110,23 +115,25 @@ object Artifacts {
   private[coursier] final case class Params[F[_]](
     resolutions: Seq[Resolution],
     classifiers: Set[Classifier],
-    mainArtifacts: JBoolean,
-    artifactTypes: Set[Type],
+    mainArtifactsOpt: Option[Boolean],
+    artifactTypesOpt: Option[Set[Type]],
     cache: Cache[F],
-    transformArtifacts: Seq[Artifact] => Seq[Artifact],
+    transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]],
     S: Sync[F]
-  )
+  ) {
+    def transformArtifacts: Seq[Artifact] => Seq[Artifact] =
+      transformArtifactsOpt.getOrElse(identity[Seq[Artifact]])
+
+    override def toString: String =
+      productIterator.mkString("ArtifactsParams(", ", ", ")")
+  }
 
   def defaultTypes(
     classifiers: Set[Classifier] = Set.empty,
-    mainArtifacts: JBoolean = null
+    mainArtifactsOpt: Option[Boolean] = None
   ): Set[Type] = {
 
-    val mainArtifacts0: Boolean =
-      if (mainArtifacts == null)
-        classifiers.isEmpty
-      else
-        mainArtifacts
+    val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
 
     val fromMainArtifacts =
       if (mainArtifacts0)
@@ -147,19 +154,15 @@ object Artifacts {
   private[coursier] def artifacts0(
     resolution: Resolution,
     classifiers: Set[Classifier],
-    mainArtifacts: JBoolean,
-    artifactTypes: Set[Type]
+    mainArtifactsOpt: Option[Boolean],
+    artifactTypesOpt: Option[Set[Type]]
   ): Seq[(Dependency, Attributes, Artifact)] = {
 
-    val mainArtifacts0: Boolean =
-      if (mainArtifacts == null)
-        classifiers.isEmpty
-      else
-        mainArtifacts
+    val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
 
     val artifactTypes0 =
-      Option(artifactTypes)
-        .getOrElse(defaultTypes(classifiers, mainArtifacts))
+      artifactTypesOpt
+        .getOrElse(defaultTypes(classifiers, mainArtifactsOpt))
 
     val main =
       if (mainArtifacts0)

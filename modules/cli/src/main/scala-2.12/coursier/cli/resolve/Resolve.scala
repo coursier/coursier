@@ -162,11 +162,11 @@ object Resolve extends CaseApp[ResolveOptions] {
               inMemoryCache = params.benchmark != 0 && params.benchmarkCache
             )
           )
-          .transformResolution { t: Task[Resolution] =>
+          .transformResolution { t =>
             if (params.benchmark == 0) t
             else benchmark(math.abs(params.benchmark))(t)
           }
-          .transformFetcher { f: ResolutionProcess.Fetch[Task] =>
+          .transformFetcher { f =>
             if (params.output.verbosity >= 2) {
               modVers: Seq[(Module, String)] =>
                 val print = Task.delay {
