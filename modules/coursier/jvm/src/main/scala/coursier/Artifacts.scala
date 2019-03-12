@@ -28,6 +28,20 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
   private def withParams(params: Artifacts.Params[F]): Artifacts[F] =
     new Artifacts(params)
 
+  def resolutions: Seq[Resolution] =
+    params.resolutions
+  def classifiers: Set[Classifier] =
+    params.classifiers
+  def mainArtifactsOpt: Option[Boolean] =
+    params.mainArtifactsOpt
+  def artifactTypesOpt: Option[Set[Type]] =
+    params.artifactTypesOpt
+  def cache: Cache[F] =
+    params.cache
+  def transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]] =
+    params.transformArtifactsOpt
+  def S: Sync[F] =
+    params.S
 
   def withResolution(resolution: Resolution): Artifacts[F] =
     withParams(params.copy(resolutions = Seq(resolution)))
@@ -48,8 +62,6 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     withParams(params.copy(transformArtifactsOpt = None))
   def withTransformArtifacts(fOpt: Option[Seq[Artifact] => Seq[Artifact]]): Artifacts[F] =
     withParams(params.copy(transformArtifactsOpt = fOpt))
-
-  private def S = params.S
 
   def io: F[Seq[(Artifact, File)]] = {
 
