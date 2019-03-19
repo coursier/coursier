@@ -1,0 +1,3 @@
+[submodule "sonatype-stats"]
+	path = scripts
+	url = https://github.com/alexarchambault/sonatype-stats.git
