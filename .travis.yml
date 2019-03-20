@@ -1,0 +1,6 @@
+language: scala
+jdk: openjdk8
+script: scripts/update.sh
+cache:
+  directories:
+  - $HOME/.cache
