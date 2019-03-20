@@ -1,8 +1,6 @@
 # Results
 
-[# downloads](http://htmlpreview.github.io/?)
-
-[Unique IPs](http://htmlpreview.github.io/?)
+[Stats](https://get-coursier.io/stats.html)
 
 # Update the stats
 
