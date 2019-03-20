@@ -1,5 +1,6 @@
 language: scala
 jdk: openjdk8
+env: REPO=coursier/coursier
 script: scripts/update.sh
 cache:
   directories:
