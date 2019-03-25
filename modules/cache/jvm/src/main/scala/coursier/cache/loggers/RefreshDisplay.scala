@@ -18,7 +18,7 @@ trait RefreshDisplay {
     downloads: Seq[(String, RefreshInfo)],
     changed: Boolean
   ): Unit
-  def clear(out: Writer): Unit = ()
+  def stop(out: Writer): Unit = ()
 
   def refreshInterval: Duration
 

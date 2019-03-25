@@ -21,7 +21,7 @@ class SingleLineRefreshDisplay(
   private var printedAnything0 = false
   private var currentHeight = 0
 
-  override def clear(out: Writer): Unit = {
+  override def stop(out: Writer): Unit = {
 
     for (_ <- 1 to 2; _ <- 0 until currentHeight) {
       out.clearLine(2)

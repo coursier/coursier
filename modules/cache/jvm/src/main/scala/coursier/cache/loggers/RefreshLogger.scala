@@ -117,7 +117,7 @@ object RefreshLogger {
     }
 
     def stop(): Unit = {
-      display.clear(out)
+      display.stop(out)
       printedAnything0 = false
       stopped = true
     }
