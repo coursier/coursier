@@ -7,6 +7,9 @@ object CachePolicy {
   /** Only pick local files, possibly from the cache. Don't try to download anything. */
   case object LocalOnly extends CachePolicy
 
+  /** Only pick local files, possibly from the cache. Don't return changing artifacts (whose last check is) older than TTL */
+  case object LocalOnlyIfValid extends CachePolicy
+
   /**
     * Only pick local files. If one of these local files corresponds to a changing artifact, check
     * for updates, and download these if needed.

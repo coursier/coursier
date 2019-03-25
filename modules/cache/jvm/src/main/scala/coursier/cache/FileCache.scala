@@ -439,7 +439,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         }
 
       cachePolicy match {
-        case CachePolicy.FetchMissing | CachePolicy.LocalOnly | CachePolicy.LocalUpdate | CachePolicy.LocalUpdateChanging =>
+        case CachePolicy.FetchMissing | CachePolicy.LocalOnly | CachePolicy.LocalUpdate | CachePolicy.LocalOnlyIfValid | CachePolicy.LocalUpdateChanging =>
           validErrFileExists.flatMap { exists =>
             if (exists)
               EitherT(
@@ -475,7 +475,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     val cachePolicy0 = cachePolicy match {
       case CachePolicy.UpdateChanging if !artifact.changing =>
         CachePolicy.FetchMissing
-      case CachePolicy.LocalUpdateChanging if !artifact.changing =>
+      case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid if !artifact.changing =>
         CachePolicy.LocalOnly
       case other =>
         other
@@ -509,6 +509,15 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               case CachePolicy.LocalUpdateChanging | CachePolicy.LocalUpdate =>
                 checkFileExists(file, url, log = false).flatMap { _ =>
                   update
+                }
+              case CachePolicy.LocalOnlyIfValid =>
+                checkFileExists(file, url, log = false).flatMap { _ =>
+                  shouldDownload(file, url).flatMap {
+                    case true =>
+                      EitherT[F, ArtifactError, Unit](S.point(Left(ArtifactError.FileTooOldOrNotFound(file.toString))))
+                    case false =>
+                      EitherT(S.point[Either[ArtifactError, Unit]](Right(())))
+                  }
                 }
               case CachePolicy.UpdateChanging | CachePolicy.Update =>
                 update

@@ -91,6 +91,8 @@ object CacheParse {
       .validationNelTraverse[String, Seq[CachePolicy]] {
         case "offline" =>
           ValidationNel.success(Seq(CachePolicy.LocalOnly))
+        case "local" =>
+          ValidationNel.success(Seq(CachePolicy.LocalOnlyIfValid))
         case "update-local-changing" =>
           ValidationNel.success(Seq(CachePolicy.LocalUpdateChanging))
         case "update-local" =>
