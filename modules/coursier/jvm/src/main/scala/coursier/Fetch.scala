@@ -124,6 +124,9 @@ final class Fetch[F[_]] private (
   def withArtifactsCache(cache: Cache[F]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(cache = cache))
 
+  def withOtherArtifactsCaches(caches: Seq[Cache[F]]): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(otherCaches = caches))
+
   def withFetchCache(location: File): Fetch[F] =
     withFetchParams(fetchParams.copy(fetchCacheOpt = Some(location)))
   def withFetchCache(locationOpt: Option[File]): Fetch[F] =
@@ -235,6 +238,7 @@ object Fetch {
         None,
         None,
         cache,
+        Nil,
         None,
         S
       ),

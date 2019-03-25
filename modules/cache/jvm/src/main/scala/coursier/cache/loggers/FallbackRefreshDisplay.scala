@@ -88,7 +88,7 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
 
     previous = previous ++ downloads.map(_._1)
   }
-  override def clear(out: Writer): Unit = {
+  override def stop(out: Writer): Unit = {
     previous = Set.empty
     lastInstantOpt = None
   }

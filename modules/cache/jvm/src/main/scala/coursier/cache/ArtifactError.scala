@@ -65,6 +65,13 @@ object ArtifactError {
     file
   )
 
+  final case class FileTooOldOrNotFound(
+    file: String
+  ) extends ArtifactError(
+    "file in cache not found or too old",
+    file
+  )
+
   sealed abstract class Recoverable(
     `type`: String,
     message: String

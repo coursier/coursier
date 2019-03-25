@@ -7,6 +7,9 @@ object CachePolicy {
   /** Only pick local files, possibly from the cache. Don't try to download anything. */
   case object LocalOnly extends CachePolicy
 
+  /** Only pick local files, possibly from the cache. Don't return changing artifacts (whose last check is) older than TTL */
+  case object LocalOnlyIfValid extends CachePolicy
+
   /**
     * Only pick local files. If one of these local files corresponds to a changing artifact, check
     * for updates, and download these if needed.
@@ -65,7 +68,7 @@ object CachePolicy {
   case object ForceDownload extends CachePolicy
 
 
-  private val baseDefault = Seq(
+  val noEnvDefault = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)
     CachePolicy.LocalUpdateChanging,
     // then, use what's available locally
@@ -107,7 +110,7 @@ object CachePolicy {
 
     fromEnv
       .orElse(fromProps)
-      .getOrElse(baseDefault)
+      .getOrElse(noEnvDefault)
   }
 
 }
