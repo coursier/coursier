@@ -68,7 +68,7 @@ object CachePolicy {
   case object ForceDownload extends CachePolicy
 
 
-  private val baseDefault = Seq(
+  val noEnvDefault = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)
     CachePolicy.LocalUpdateChanging,
     // then, use what's available locally
@@ -110,7 +110,7 @@ object CachePolicy {
 
     fromEnv
       .orElse(fromProps)
-      .getOrElse(baseDefault)
+      .getOrElse(noEnvDefault)
   }
 
 }
