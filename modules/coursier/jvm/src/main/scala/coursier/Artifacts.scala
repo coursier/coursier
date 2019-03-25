@@ -38,6 +38,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     params.artifactTypesOpt
   def cache: Cache[F] =
     params.cache
+  def otherCaches: Seq[Cache[F]] =
+    params.otherCaches
   def transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]] =
     params.transformArtifactsOpt
   def S: Sync[F] =
@@ -55,6 +57,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     withParams(params.copy(artifactTypesOpt = Option(artifactTypes)))
   def withCache(cache: Cache[F]): Artifacts[F] =
     withParams(params.copy(cache = cache))
+  def withOtherCaches(caches: Seq[Cache[F]]): Artifacts[F] =
+    withParams(params.copy(otherCaches = caches))
 
   def transformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
     withParams(params.copy(transformArtifactsOpt = Some(params.transformArtifactsOpt.fold(f)(_ andThen f))))
@@ -79,7 +83,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
 
     Artifacts.fetchArtifacts(
       params.transformArtifacts(a),
-      params.cache
+      params.cache,
+      params.otherCaches: _*
     )(S)
   }
 
@@ -96,6 +101,7 @@ object Artifacts {
         None,
         None,
         cache,
+        Nil,
         None,
         S
       )
@@ -130,6 +136,7 @@ object Artifacts {
     mainArtifactsOpt: Option[Boolean],
     artifactTypesOpt: Option[Set[Type]],
     cache: Cache[F],
+    otherCaches: Seq[Cache[F]],
     transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]],
     S: Sync[F]
   ) {
@@ -204,7 +211,8 @@ object Artifacts {
 
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
-    cache: Cache[F] = Cache.default
+    cache: Cache[F],
+    otherCaches: Cache[F]*
   )(implicit
      S: Sync[F]
   ): F[Seq[(Artifact, File)]] = {
@@ -246,10 +254,19 @@ object Artifacts {
           artifactToFile += artifact -> f
       }
 
-      if (errors.isEmpty)
-        S.point(artifactToFile.toList)
-      else
-        S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
+      if (otherCaches.isEmpty) {
+        if (errors.isEmpty)
+          S.point(artifactToFile.toList)
+        else
+          S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
+      } else {
+        if (errors.isEmpty && ignoredErrors.isEmpty)
+          S.point(artifactToFile.toList)
+        else
+          S.map(fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*)) { l =>
+            artifactToFile.toList ++ l
+          }
+      }
     }
   }
 
