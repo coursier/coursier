@@ -46,6 +46,19 @@ $ brew tap coursier/formulas
 $ brew install coursier/formulas/coursier
 ```
 
+### Windows
+
+Install and run coursier from the current directory at the Windows prompt, with
+```bat
+> bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "%cd%\coursier"
+> bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "%cd%\coursier.bat"
+```
+
+You can then run coursier from the same directory, like
+```bat
+> coursier resolve io.circe:circe-core_2.12:0.10.0
+```
+
 ### Arch Linux
 
 Install it from [AUR](https://aur.archlinux.org/packages/coursier/),
