@@ -37,6 +37,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def location: File = params.location
   def cachePolicies: Seq[CachePolicy] = params.cachePolicies
   def checksums: Seq[Option[String]] = params.checksums
+  def credentials: Seq[Credentials] = params.credentials
   def logger: CacheLogger = params.logger
   def pool: ExecutorService = params.pool
   def ttl: Option[Duration] = params.ttl
@@ -58,6 +59,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(cachePolicies = cachePolicies))
   def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
     withParams(params.copy(checksums = checksums))
+  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
+    withParams(params.copy(credentials = credentials))
+  def addCredentials(credentials: Credentials*): FileCache[F] =
+    withParams(params.copy(credentials = params.credentials ++ credentials))
   def withLogger(logger: CacheLogger): FileCache[F] =
     withParams(params.copy(logger = logger))
   def withPool(pool: ExecutorService): FileCache[F] =
@@ -588,17 +593,27 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] =
+  ): EitherT[F, ArtifactError, File] = {
+
+    val artifact0 =
+      if (artifact.authentication.isEmpty) {
+        val authOpt = credentials
+          .find(_.matches(artifact.url))
+          .map(_.authentication)
+        artifact.copy(authentication = authOpt)
+      } else
+        artifact
+
     EitherT {
       S.map(download(
-        artifact,
+        artifact0,
         checksums = checksums0.collect { case Some(c) => c }.toSet,
         cachePolicy = policy
       )) { results =>
         val checksum = checksums0.find {
           case None => true
           case Some(c) =>
-            artifact.checksumUrls.get(c).exists { cUrl =>
+            artifact0.checksumUrls.get(c).exists { cUrl =>
               results.exists { case ((_, u), b) =>
                 u == cUrl && b.isRight
               }
@@ -610,7 +625,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
           checksum match {
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
-              //       from artifact.checksumUrls
+              //       from artifact0.checksumUrls
               Left(ArtifactError.ChecksumNotFound(checksums0.last.get, ""))
             case Some(c) => Right((f, c))
           }
@@ -619,7 +634,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     }.flatMap {
       case (f, None) => EitherT(S.point[Either[ArtifactError, File]](Right(f)))
       case (f, Some(c)) =>
-        validateChecksum(artifact, c).map(_ => f)
+        validateChecksum(artifact0, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
         if (retry <= 0) {
@@ -628,18 +643,19 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         else {
           EitherT {
             S.schedule[Either[ArtifactError, Unit]](pool) {
-              val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
+              val badFile = localFile(artifact0.url, artifact0.authentication.map(_.user))
               badFile.delete()
-              logger.removedCorruptFile(artifact.url, Some(err.describe))
+              logger.removedCorruptFile(artifact0.url, Some(err.describe))
               Right(())
             }
           }.flatMap { _ =>
-            filePerPolicy(artifact, policy, retry - 1)
+            filePerPolicy(artifact0, policy, retry - 1)
           }
         }
       case err =>
         EitherT(S.point(Left(err)))
     }
+  }
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     file(artifact, retry)
@@ -725,6 +741,7 @@ object FileCache {
     location: File,
     cachePolicies: Seq[CachePolicy],
     checksums: Seq[Option[String]],
+    credentials: Seq[Credentials],
     logger: CacheLogger,
     pool: ExecutorService,
     ttl: Option[Duration],
@@ -863,6 +880,7 @@ object FileCache {
         location = CacheDefaults.location,
         cachePolicies = CachePolicy.default,
         checksums = CacheDefaults.checksums,
+        credentials = Nil,
         logger = CacheLogger.nop,
         pool = CacheDefaults.pool,
         ttl = CacheDefaults.ttl,

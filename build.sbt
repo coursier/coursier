@@ -102,6 +102,7 @@ lazy val paths = project("paths")
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(core)
+  .enablePlugins(ContrabandPlugin)
   .jvmSettings(
     addPathsSources
   )
@@ -113,7 +114,10 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
     coursierPrefix,
-    Mima.cacheFilters
+    Mima.cacheFilters,
+    // from https://github.com/sbt/librarymanagement/blob/6d35f329b6b6be8da467eefc399ba9fa6f6725c0/build.sbt#L108-L110
+    managedSourceDirectories in Compile += baseDirectory.value / "src" / "main" / "contraband-scala",
+    sourceManaged in (Compile, generateContrabands) := baseDirectory.value / "src" / "main" / "contraband-scala"
   )
 
 lazy val cacheJvm = cache.jvm
@@ -301,8 +305,10 @@ lazy val okhttp = project("okhttp")
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .enablePlugins(ContrabandPlugin)
   .dependsOn(core, cache)
+  .configs(Integration)
   .settings(
     shared,
+    hasITs,
     dontPublishScalaJsIn("2.11"),
     libs += Deps.scalaReflect.value % Provided,
     inConfig(Compile)(Seq(

@@ -1,0 +1,37 @@
+{
+  "types": [
+    {
+      "name": "Credentials",
+      "namespace": "coursier.cache",
+      "target": "Scala",
+      "parents": ["coursier.cache.internal.CredentialsHelpers"],
+      "type": "record",
+      "fields": [
+        {
+          "name": "realm",
+          "type": "String?",
+          "default": "None",
+          "since": "1.0.0"
+        },
+        {
+          "name": "host",
+          "type": "String",
+          "default": "\"\"",
+          "since": "1.0.0"
+        },
+        {
+          "name": "username",
+          "type": "String",
+          "default": "\"\"",
+          "since": "1.0.0"
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "default": "\"\"",
+          "since": "1.0.0"
+        }
+      ]
+    }
+  ]
+}
