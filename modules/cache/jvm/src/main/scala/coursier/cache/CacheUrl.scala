@@ -91,35 +91,122 @@ object CacheUrl {
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
     )
 
-  def urlConnection(url0: String, authentication: Option[Authentication]) = {
+  private def partialContentResponseCode = 206
+  private def invalidPartialContentResponseCode = 416
+
+  private def initialize(conn: URLConnection, authentication: Option[Authentication]): Unit = {
+
+    conn match {
+      case conn0: HttpURLConnection =>
+        // Dummy user-agent instead of the default "Java/...",
+        // so that we are not returned incomplete/erroneous metadata
+        // (Maven 2 compatibility? - happens for snapshot versioning metadata)
+        conn0.setRequestProperty("User-Agent", "")
+      case _ =>
+    }
+
+    for (auth <- authentication)
+      conn match {
+        case authenticated: AuthenticatedURLConnection =>
+          authenticated.authenticate(auth)
+        case conn0: HttpURLConnection =>
+          conn0.setRequestProperty(
+            "Authorization",
+            "Basic " + basicAuthenticationEncode(auth.user, auth.password)
+          )
+        case _ =>
+        // FIXME Authentication is ignored
+      }
+
+  }
+
+  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean): Option[String] =
+    conn match {
+      case conn0: HttpURLConnection =>
+        val c = conn0.getResponseCode
+        if (followHttpToHttpsRedirections && url.startsWith("http://") && (c == 301 || c == 307 || c == 308))
+          Option(conn0.getHeaderField("Location")).filter(_.startsWith("https://"))
+        else
+          None
+      case _ =>
+        None
+    }
+
+  private def rangeResOpt(conn: URLConnection, alreadyDownloaded: Long): Option[Boolean] =
+    if (alreadyDownloaded > 0L)
+      conn match {
+        case conn0: HttpURLConnection =>
+          conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
+
+          val startOver = ((conn0.getResponseCode == partialContentResponseCode)
+            || (conn0.getResponseCode == invalidPartialContentResponseCode)) && {
+            val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
+            !ackRange.startsWith(s"bytes $alreadyDownloaded-")
+          }
+
+          Some(startOver)
+        case _ =>
+          None
+      }
+    else
+      None
+
+  private def is4xx(conn: URLConnection): Boolean =
+    conn match {
+      case conn0: HttpURLConnection =>
+        val c = conn0.getResponseCode
+        c / 100 == 4
+      case _ =>
+        false
+    }
+
+
+  def urlConnection(
+    url0: String,
+    authentication: Option[Authentication],
+    followHttpToHttpsRedirections: Boolean = false
+  ): URLConnection = {
+    val (c, partial) = urlConnectionMaybePartial(url0, authentication, 0L, followHttpToHttpsRedirections)
+    assert(!partial)
+    c
+  }
+
+  def urlConnectionMaybePartial(
+    url0: String,
+    authentication: Option[Authentication],
+    alreadyDownloaded: Long = 0L,
+    followHttpToHttpsRedirections: Boolean = false
+  ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
 
     try {
-      conn = url(url0).openConnection() // FIXME Should this be closed?
+      conn = url(url0).openConnection()
+      initialize(conn, authentication.filter(!_.optional))
 
-      conn match {
-        case conn0: HttpURLConnection =>
-          // Dummy user-agent instead of the default "Java/...",
-          // so that we are not returned incomplete/erroneous metadata
-          // (Maven 2 compatibility? - happens for snapshot versioning metadata)
-          conn0.setRequestProperty("User-Agent", "")
+      val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
+
+      rangeResOpt0 match {
+        case Some(true) =>
+          closeConn(conn)
+          urlConnectionMaybePartial(url0, authentication, alreadyDownloaded = 0L, followHttpToHttpsRedirections)
         case _ =>
+          val partialDownload = rangeResOpt0.nonEmpty
+          val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
+
+          redirectOpt match {
+            case Some(loc) =>
+              closeConn(conn)
+              urlConnectionMaybePartial(loc, None, alreadyDownloaded, followHttpToHttpsRedirections)
+            case None =>
+
+              if (authentication.exists(_.optional) && is4xx(conn)) {
+                val authentication0 = authentication.map(_.copy(optional = false))
+                closeConn(conn)
+                urlConnectionMaybePartial(url0, authentication0, alreadyDownloaded, followHttpToHttpsRedirections)
+              } else
+                (conn, partialDownload)
+          }
       }
-
-      for (auth <- authentication)
-        conn match {
-          case authenticated: AuthenticatedURLConnection =>
-            authenticated.authenticate(auth)
-          case conn0: HttpURLConnection =>
-            conn0.setRequestProperty(
-              "Authorization",
-              "Basic " + basicAuthenticationEncode(auth.user, auth.password)
-            )
-          case _ =>
-          // FIXME Authentication is ignored
-        }
-
-      conn
     } catch {
       case NonFatal(e) =>
         if (conn != null)

@@ -86,7 +86,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
   private implicit val S0 = S
 
-  import FileCache.{readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import FileCache.{readFullyTo, contentLength}
 
   override def loggerOpt: Some[CacheLogger] =
     Some(logger)
@@ -129,7 +129,11 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
           var conn: URLConnection = null
 
           try {
-            conn = CacheUrl.urlConnection(url, artifact.authentication)
+            conn = CacheUrl.urlConnection(
+              url,
+              artifact.authentication,
+              followHttpToHttpsRedirections = followHttpToHttpsRedirections
+            )
 
             conn match {
               case c: HttpURLConnection =>
@@ -266,41 +270,15 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               var conn: URLConnection = null
 
               try {
-                conn = CacheUrl.urlConnection(url, artifact.authentication)
-
-                val partialDownload = conn match {
-                  case conn0: HttpURLConnection if alreadyDownloaded > 0L =>
-                    conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
-
-                    ((conn0.getResponseCode == partialContentResponseCode)
-                       || (conn0.getResponseCode == invalidPartialContentResponseCode)) && {
-                      val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
-
-                      ackRange.startsWith(s"bytes $alreadyDownloaded-") || {
-                        // unrecognized Content-Range header -> start a new connection with no resume
-                        CacheUrl.closeConn(conn)
-                        conn = CacheUrl.urlConnection(url, artifact.authentication)
-                        false
-                      }
-                    }
-                  case _ => false
-                }
+                val (conn0, partialDownload) = CacheUrl.urlConnectionMaybePartial(
+                  url,
+                  artifact.authentication,
+                  alreadyDownloaded,
+                  followHttpToHttpsRedirections
+                )
+                conn = conn0
 
                 val respCodeOpt = CacheUrl.responseCode(conn)
-
-                if (followHttpToHttpsRedirections && url.startsWith("http://") && respCodeOpt.exists(c => c == 301 || c == 307 || c == 308))
-                  conn match {
-                    case conn0: HttpURLConnection =>
-                      Option(conn0.getHeaderField("Location")) match {
-                        case Some(loc) if loc.startsWith("https://") =>
-                          CacheUrl.closeConn(conn)
-                          conn = CacheUrl.urlConnection(loc, None) // not keeping authentication here… should we?
-                        case _ =>
-                          // ignored
-                      }
-                    case _ =>
-                      // ignored
-                  }
 
                 if (respCodeOpt.contains(404))
                   Left(ArtifactError.NotFound(url, permanent = Some(true)))
@@ -830,9 +808,6 @@ object FileCache {
 
     helper(sslRetry)
   }
-
-  private val partialContentResponseCode = 206
-  private val invalidPartialContentResponseCode = 416
 
   private def contentLength(
     url: String,
