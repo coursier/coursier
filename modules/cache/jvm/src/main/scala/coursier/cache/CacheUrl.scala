@@ -98,10 +98,14 @@ object CacheUrl {
 
     conn match {
       case conn0: HttpURLConnection =>
-        // Dummy user-agent instead of the default "Java/...",
-        // so that we are not returned incomplete/erroneous metadata
-        // (Maven 2 compatibility? - happens for snapshot versioning metadata)
+
+        // handling those ourselves, so that we can update credentials upon redirection
+        conn0.setInstanceFollowRedirects(false)
+
+        // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
+        // returning the same content for user agent "Java/…".
         conn0.setRequestProperty("User-Agent", "")
+
       case _ =>
     }
 
@@ -117,20 +121,36 @@ object CacheUrl {
         case _ =>
         // FIXME Authentication is ignored
       }
-
   }
 
-  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean): Option[String] =
+  private def redirectTo(conn: URLConnection): Option[String] =
     conn match {
       case conn0: HttpURLConnection =>
         val c = conn0.getResponseCode
-        if (followHttpToHttpsRedirections && url.startsWith("http://") && (c == 301 || c == 307 || c == 308))
-          Option(conn0.getHeaderField("Location")).filter(_.startsWith("https://"))
+        if (c == 301 || c == 307 || c == 308)
+          Option(conn0.getHeaderField("Location"))
         else
           None
       case _ =>
         None
     }
+
+  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean): Option[String] =
+    redirectTo(conn)
+      .map { loc =>
+        new URI(url).resolve(loc).toASCIIString
+      }
+      .filter { target =>
+        val isHttp = url.startsWith("http://")
+        val isHttps = url.startsWith("https://")
+
+        val redirToHttp = target.startsWith("http://")
+        val redirToHttps = target.startsWith("https://")
+
+        (isHttp && redirToHttp) ||
+          (isHttps && redirToHttps) ||
+          (followHttpToHttpsRedirections && isHttp && redirToHttps)
+      }
 
   private def rangeResOpt(conn: URLConnection, alreadyDownloaded: Long): Option[Boolean] =
     if (alreadyDownloaded > 0L)
@@ -138,10 +158,11 @@ object CacheUrl {
         case conn0: HttpURLConnection =>
           conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
 
-          val startOver = ((conn0.getResponseCode == partialContentResponseCode)
-            || (conn0.getResponseCode == invalidPartialContentResponseCode)) && {
-            val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
-            !ackRange.startsWith(s"bytes $alreadyDownloaded-")
+          val startOver = (conn0.getResponseCode == partialContentResponseCode
+            || conn0.getResponseCode == invalidPartialContentResponseCode) && {
+            val hasMatchingHeader = Option(conn0.getHeaderField("Content-Range"))
+              .exists(_.startsWith(s"bytes $alreadyDownloaded-"))
+            !hasMatchingHeader
           }
 
           Some(startOver)
@@ -196,6 +217,7 @@ object CacheUrl {
           redirectOpt match {
             case Some(loc) =>
               closeConn(conn)
+              // TODO Try to get fresh credentials from some global preferences
               urlConnectionMaybePartial(loc, None, alreadyDownloaded, followHttpToHttpsRedirections)
             case None =>
 
