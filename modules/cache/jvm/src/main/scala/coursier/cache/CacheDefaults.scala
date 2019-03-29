@@ -53,4 +53,12 @@ object CacheDefaults {
 
   val bufferSize = 1024 * 1024
 
+  def credentialFiles: Seq[CredentialFile] =
+    sys.env.get("COURSIER_CREDENTIALS")
+      .orElse(sys.props.get("coursier.credentials"))
+      .map { path =>
+        CredentialFile(path, optional = true)
+      }
+      .toSeq
+
 }
