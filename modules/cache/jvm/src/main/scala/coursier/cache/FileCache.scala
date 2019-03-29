@@ -12,6 +12,7 @@ import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Sync, Task}
+import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -44,6 +45,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
   def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
   def sslRetry: Int = params.sslRetry
+  def sslSocketFactoryOpt: Option[SSLSocketFactory] = params.sslSocketFactoryOpt
+  def hostnameVerifierOpt: Option[HostnameVerifier] = params.hostnameVerifierOpt
   def retry: Int = params.retry
   def bufferSize: Int = params.bufferSize
   def S: Sync[F] = params.S
@@ -71,6 +74,16 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(ttl = ttl))
   def withTtl(ttl: Duration): FileCache[F] =
     withTtl(Some(ttl))
+  def withSslRetry(sslRetry: Int): FileCache[F] =
+    withParams(params.copy(sslRetry = sslRetry))
+  def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
+    withParams(params.copy(sslSocketFactoryOpt = Some(sslSocketFactory)))
+  def withSslSocketFactoryOpt(sslSocketFactoryOpt: Option[SSLSocketFactory]): FileCache[F] =
+    withParams(params.copy(sslSocketFactoryOpt = sslSocketFactoryOpt))
+  def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
+    withParams(params.copy(hostnameVerifierOpt = Some(hostnameVerifier)))
+  def withHostnameVerifierOpt(hostnameVerifierOpt: Option[HostnameVerifier]): FileCache[F] =
+    withParams(params.copy(hostnameVerifierOpt = hostnameVerifierOpt))
   def withRetry(retry: Int): FileCache[F] =
     withParams(params.copy(retry = retry))
   def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
@@ -134,6 +147,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               artifact.authentication,
               followHttpToHttpsRedirections = followHttpToHttpsRedirections,
               credentials = credentials,
+              sslSocketFactoryOpt,
+              hostnameVerifierOpt,
               method = "HEAD"
             )
 
@@ -277,6 +292,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
                   credentials,
+                  sslSocketFactoryOpt,
+                  hostnameVerifierOpt,
                   "GET"
                 )
                 conn = conn0
@@ -328,7 +345,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -339,7 +356,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def done(): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -735,6 +752,8 @@ object FileCache {
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean,
     sslRetry: Int,
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
     retry: Int,
     bufferSize: Int,
     S: Sync[F]
@@ -823,6 +842,8 @@ object FileCache {
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean,
     credentials: Seq[Credentials],
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
     logger: CacheLogger
   ): Either[ArtifactError, Option[Long]] = {
 
@@ -834,6 +855,8 @@ object FileCache {
         authentication,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
         credentials = credentials,
+        sslSocketFactoryOpt = sslSocketFactoryOpt,
+        hostnameVerifierOpt = hostnameVerifierOpt,
         method = "HEAD"
       )
 
@@ -878,6 +901,8 @@ object FileCache {
         localArtifactsShouldBeCached = false,
         followHttpToHttpsRedirections = false,
         sslRetry = CacheDefaults.sslRetryCount,
+        sslSocketFactoryOpt = None,
+        hostnameVerifierOpt = None,
         retry = CacheDefaults.defaultRetryCount,
         bufferSize = CacheDefaults.bufferSize,
         S = S

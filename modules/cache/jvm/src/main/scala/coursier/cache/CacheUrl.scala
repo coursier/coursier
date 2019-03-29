@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
+import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -97,6 +98,8 @@ object CacheUrl {
   private def initialize(
     conn: URLConnection,
     authentication: Option[Authentication],
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
     method: String
   ): Unit = {
 
@@ -112,6 +115,18 @@ object CacheUrl {
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
         conn0.setRequestProperty("User-Agent", "")
+
+        conn0 match {
+          case conn1: HttpsURLConnection =>
+
+            for (f <- sslSocketFactoryOpt)
+              conn1.setSSLSocketFactory(f)
+
+            for (v <- hostnameVerifierOpt)
+              conn1.setHostnameVerifier(v)
+
+          case _ =>
+        }
 
       case _ =>
     }
@@ -194,6 +209,8 @@ object CacheUrl {
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean = false,
     credentials: Seq[Credentials] = Nil,
+    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
+    hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET"
   ): URLConnection = {
     val (c, partial) = urlConnectionMaybePartial(
@@ -202,6 +219,8 @@ object CacheUrl {
       0L,
       followHttpToHttpsRedirections,
       credentials,
+      sslSocketFactoryOpt,
+      hostnameVerifierOpt,
       method
     )
     assert(!partial)
@@ -214,13 +233,15 @@ object CacheUrl {
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
     credentials: Seq[Credentials],
+    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
+    hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET"
   ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
 
     try {
       conn = url(url0).openConnection()
-      initialize(conn, authentication.filter(!_.optional), method)
+      initialize(conn, authentication.filter(!_.optional), sslSocketFactoryOpt, hostnameVerifierOpt, method)
 
       val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 
@@ -233,6 +254,8 @@ object CacheUrl {
             alreadyDownloaded = 0L,
             followHttpToHttpsRedirections,
             credentials,
+            sslSocketFactoryOpt,
+            hostnameVerifierOpt,
             method
           )
         case _ =>
@@ -249,6 +272,8 @@ object CacheUrl {
                 alreadyDownloaded,
                 followHttpToHttpsRedirections,
                 credentials,
+                sslSocketFactoryOpt,
+                hostnameVerifierOpt,
                 method
               )
             case None =>
@@ -262,6 +287,8 @@ object CacheUrl {
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
                   credentials,
+                  sslSocketFactoryOpt,
+                  hostnameVerifierOpt,
                   method
                 )
               } else
