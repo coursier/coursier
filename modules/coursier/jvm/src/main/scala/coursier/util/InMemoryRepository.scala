@@ -1,7 +1,7 @@
 package coursier.util
 
 import java.io.{File, FileNotFoundException, IOException}
-import java.net.{HttpURLConnection, URL, URLConnection}
+import java.net.{URL, URLConnection}
 
 import coursier.cache.CacheUrl
 import coursier.core._
@@ -29,12 +29,9 @@ object InMemoryRepository {
       def ifHttp: Option[Boolean] = {
         // HEAD request attempt, adapted from http://stackoverflow.com/questions/22541629/android-how-can-i-make-an-http-head-request/22545275#22545275
 
-        var conn: HttpURLConnection = null
+        var conn: URLConnection = null
         try {
-          conn = url
-            .openConnection()
-            .asInstanceOf[HttpURLConnection]
-          conn.setRequestMethod("HEAD")
+          conn = CacheUrl.urlConnection(url.toString, None, method = "HEAD")
           conn.getInputStream.close()
           Some(true)
         }
