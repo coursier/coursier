@@ -6,6 +6,7 @@ import coursier.core.Authentication
 
 abstract class CredentialsHelpers {
 
+  def realm: Option[String]
   def host: String
   def username: String
   def password: String
@@ -18,6 +19,6 @@ abstract class CredentialsHelpers {
   }
 
   def authentication: Authentication =
-    Authentication(username, password)
+    Authentication(username, password, realmOpt = realm)
 
 }

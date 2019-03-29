@@ -371,8 +371,9 @@ object Artifact {
 final case class Authentication(
   user: String,
   password: String,
-  optional: Boolean = false
+  optional: Boolean = false,
+  realmOpt: Option[String] = None
 ) {
   override def toString: String =
-    s"Authentication($user, *******, $optional)"
+    s"Authentication($user, *******, $optional, $realmOpt)"
 }

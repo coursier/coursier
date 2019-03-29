@@ -235,13 +235,18 @@ object CacheUrl {
     credentials: Seq[Credentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
-    method: String = "GET"
+    method: String = "GET",
+    authRealm: Option[String] = None
   ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
 
     try {
       conn = url(url0).openConnection()
-      initialize(conn, authentication.filter(!_.optional), sslSocketFactoryOpt, hostnameVerifierOpt, method)
+      val authOpt = authentication.filter { a =>
+        a.realmOpt.forall(authRealm.contains) &&
+          !a.optional
+      }
+      initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
 
       val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 
@@ -278,19 +283,25 @@ object CacheUrl {
               )
             case None =>
 
-              if (authentication.exists(_.optional) && is4xx(conn)) {
+              if (is4xx(conn)) {
                 val authentication0 = authentication.map(_.copy(optional = false))
-                closeConn(conn)
-                urlConnectionMaybePartial(
-                  url0,
-                  authentication0,
-                  alreadyDownloaded,
-                  followHttpToHttpsRedirections,
-                  credentials,
-                  sslSocketFactoryOpt,
-                  hostnameVerifierOpt,
-                  method
-                )
+                val realmOpt = realm(conn)
+                if (authentication0 == authentication && realmOpt == authRealm)
+                  (conn, partialDownload)
+                else {
+                  closeConn(conn)
+                  urlConnectionMaybePartial(
+                    url0,
+                    authentication0,
+                    alreadyDownloaded,
+                    followHttpToHttpsRedirections,
+                    credentials,
+                    sslSocketFactoryOpt,
+                    hostnameVerifierOpt,
+                    method,
+                    realmOpt
+                  )
+                }
               } else
                 (conn, partialDownload)
           }
