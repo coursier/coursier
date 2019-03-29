@@ -300,6 +300,17 @@ object FileCacheTests extends TestSuite {
           )
         }
 
+        'enabledSeveralCreds - {
+          expect(
+            httpBaseUri / "auth" / "self-redirect",
+            "hello auth",
+            _.addCredentials(
+              httpCredentials,
+              httpsCredentials
+            )
+          )
+        }
+
         'disabled - {
           error(
             httpBaseUri / "auth" / "self-redirect",

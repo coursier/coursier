@@ -270,7 +270,7 @@ object CacheUrl {
           redirectOpt match {
             case Some(loc) =>
               closeConn(conn)
-              val newAuthOpt = credentials.find(_.matches(loc)).map(_.authentication)
+              val newAuthOpt = credentials.find(_.matches(loc, None)).map(_.authentication)
               urlConnectionMaybePartial(
                 loc,
                 newAuthOpt,
@@ -284,8 +284,10 @@ object CacheUrl {
             case None =>
 
               if (is4xx(conn)) {
-                val authentication0 = authentication.map(_.copy(optional = false))
                 val realmOpt = realm(conn)
+                val authentication0 = authentication
+                  .map(_.copy(optional = false))
+                  .orElse(credentials.find(_.matches(url0, realmOpt)).map(_.authentication))
                 if (authentication0 == authentication && realmOpt == authRealm)
                   (conn, partialDownload)
                 else {

@@ -617,7 +617,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     val artifact0 = S.map(allCredentials) { allCredentials =>
       if (artifact.authentication.isEmpty) {
         val authOpt = allCredentials
-          .find(_.matches(artifact.url))
+          .find(_.matches(artifact.url, None))
           .map(_.authentication)
         artifact.copy(authentication = authOpt)
       } else

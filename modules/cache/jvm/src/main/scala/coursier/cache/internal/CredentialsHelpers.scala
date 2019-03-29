@@ -11,11 +11,11 @@ abstract class CredentialsHelpers {
   def username: String
   def password: String
 
-  def matches(url: String): Boolean = {
+  def matches(url: String, realm0: Option[String]): Boolean = {
     val uri = new URI(url)
     val scheme = uri.getScheme
     val host0 = uri.getHost
-    (scheme == "http" || scheme == "https") && host == host0
+    (scheme == "http" || scheme == "https") && host == host0 && realm.forall(realm0.contains)
   }
 
   def authentication: Authentication =
