@@ -133,6 +133,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               url,
               artifact.authentication,
               followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+              credentials = credentials,
               method = "HEAD"
             )
 
@@ -275,6 +276,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   artifact.authentication,
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
+                  credentials,
                   "GET"
                 )
                 conn = conn0
@@ -326,7 +328,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -337,7 +339,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def done(): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, credentials, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -820,6 +822,7 @@ object FileCache {
     url: String,
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean,
+    credentials: Seq[Credentials],
     logger: CacheLogger
   ): Either[ArtifactError, Option[Long]] = {
 
@@ -830,6 +833,7 @@ object FileCache {
         url,
         authentication,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        credentials = credentials,
         method = "HEAD"
       )
 

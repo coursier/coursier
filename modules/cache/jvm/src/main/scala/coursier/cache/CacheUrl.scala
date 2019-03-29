@@ -193,6 +193,7 @@ object CacheUrl {
     url0: String,
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean = false,
+    credentials: Seq[Credentials] = Nil,
     method: String = "GET"
   ): URLConnection = {
     val (c, partial) = urlConnectionMaybePartial(
@@ -200,6 +201,7 @@ object CacheUrl {
       authentication,
       0L,
       followHttpToHttpsRedirections,
+      credentials,
       method
     )
     assert(!partial)
@@ -211,6 +213,7 @@ object CacheUrl {
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
+    credentials: Seq[Credentials],
     method: String = "GET"
   ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
@@ -229,6 +232,7 @@ object CacheUrl {
             authentication,
             alreadyDownloaded = 0L,
             followHttpToHttpsRedirections,
+            credentials,
             method
           )
         case _ =>
@@ -238,11 +242,13 @@ object CacheUrl {
           redirectOpt match {
             case Some(loc) =>
               closeConn(conn)
+              val newAuthOpt = credentials.find(_.matches(loc)).map(_.authentication)
               urlConnectionMaybePartial(
                 loc,
-                None,
+                newAuthOpt,
                 alreadyDownloaded,
                 followHttpToHttpsRedirections,
+                credentials,
                 method
               )
             case None =>
@@ -255,6 +261,7 @@ object CacheUrl {
                   authentication0,
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
+                  credentials,
                   method
                 )
               } else
