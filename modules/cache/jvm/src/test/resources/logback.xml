@@ -1,0 +1,19 @@
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+          <Pattern>
+                %d{HH:mm:ss.SSS} %highlight(%-5level) %cyan(%logger{15}) - %msg %n
+          </Pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.http4s" level="off" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <root level="debug">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

@@ -4,5 +4,5 @@ scala_library(
         "core:core",
         "paths/src/main/java:paths",
     ],
-    sources = rglobs("jvm/*.scala", "shared/*.scala"),
+    sources = rglobs("jvm/src/main/*.scala", "shared/*.scala"),
 )

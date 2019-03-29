@@ -111,6 +111,19 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    utest,
+    libs ++= {
+      CrossVersion.partialVersion(scalaBinaryVersion.value) match {
+        case Some((2, 12)) =>
+          Seq(
+            "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
+            "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
+            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
+          )
+        case _ =>
+          Nil
+      }
+    },
     dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
     coursierPrefix,
