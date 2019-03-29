@@ -32,6 +32,25 @@
           "since": "1.0.0"
         }
       ]
+    },
+    {
+      "name": "CredentialFile",
+      "namespace": "coursier.cache",
+      "target": "Scala",
+      "parents": ["coursier.cache.internal.CredentialFileHelpers"],
+      "type": "record",
+      "fields": [
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "optional",
+          "type": "Boolean",
+          "default": "true",
+          "since": "1.0.0"
+        }
+      ]
     }
   ]
 }

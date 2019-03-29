@@ -1,5 +1,6 @@
 package coursier.cache
 
+import java.io.File
 import java.security.KeyStore
 import java.security.cert.X509Certificate
 
@@ -355,6 +356,35 @@ object FileCacheTests extends TestSuite {
             _.startsWith("unauthorized: ")
           )
         }
+      }
+
+      'credentialFile - {
+
+        val credFilePath = Option(getClass.getResource("/credentials.properties"))
+          .map(_.getPath)
+          .getOrElse {
+            throw new Exception("credentials.properties resource not found")
+          }
+        val credFile = new File(credFilePath)
+        assert(credFile.exists())
+
+        * - {
+          expect(
+            httpBaseUri / "auth-redirect",
+            "hello auth secure",
+            _.withFollowHttpToHttpsRedirections(true)
+              .addCredentialFile(credFile)
+          )
+        }
+
+        * - {
+          expect(
+            httpBaseUri / "auth" / "self-redirect",
+            "hello auth",
+            _.addCredentialFile(credFile)
+          )
+        }
+
       }
 
     }
