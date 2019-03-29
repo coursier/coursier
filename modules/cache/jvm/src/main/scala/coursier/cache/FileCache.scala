@@ -132,7 +132,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             conn = CacheUrl.urlConnection(
               url,
               artifact.authentication,
-              followHttpToHttpsRedirections = followHttpToHttpsRedirections
+              followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+              method = "HEAD"
             )
 
             conn match {
@@ -141,7 +142,6 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
                 var success = false
                 try {
-                  c.setRequestMethod("HEAD")
                   val remoteLastModified = c.getLastModified
 
                   val res =
@@ -274,7 +274,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   url,
                   artifact.authentication,
                   alreadyDownloaded,
-                  followHttpToHttpsRedirections
+                  followHttpToHttpsRedirections,
+                  "GET"
                 )
                 conn = conn0
 
@@ -324,7 +325,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
-                lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
+                lenOpt = Some(
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, logger)
+                    .right.toOption.flatten
+                )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, currentLen, watching = true)
               } else
@@ -332,7 +336,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             def done(): Unit =
               if (lenOpt.isEmpty) {
-                lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
+                lenOpt = Some(
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, logger)
+                    .right.toOption.flatten
+                )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, len, watching = true)
               } else
@@ -812,13 +819,19 @@ object FileCache {
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
+    followHttpToHttpsRedirections: Boolean,
     logger: CacheLogger
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
 
     try {
-      conn = CacheUrl.urlConnection(url, authentication)
+      conn = CacheUrl.urlConnection(
+        url,
+        authentication,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        method = "HEAD"
+      )
 
       conn match {
         case c: HttpURLConnection =>
@@ -826,7 +839,6 @@ object FileCache {
 
           var success = false
           try {
-            c.setRequestMethod("HEAD")
             val len = Some(c.getContentLengthLong)
               .filter(_ >= 0L)
 

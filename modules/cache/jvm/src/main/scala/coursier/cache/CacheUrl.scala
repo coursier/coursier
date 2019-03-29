@@ -94,10 +94,17 @@ object CacheUrl {
   private def partialContentResponseCode = 206
   private def invalidPartialContentResponseCode = 416
 
-  private def initialize(conn: URLConnection, authentication: Option[Authentication]): Unit = {
+  private def initialize(
+    conn: URLConnection,
+    authentication: Option[Authentication],
+    method: String
+  ): Unit = {
 
     conn match {
       case conn0: HttpURLConnection =>
+
+        if (method != "GET")
+          conn0.setRequestMethod(method)
 
         // handling those ourselves, so that we can update credentials upon redirection
         conn0.setInstanceFollowRedirects(false)
@@ -185,9 +192,16 @@ object CacheUrl {
   def urlConnection(
     url0: String,
     authentication: Option[Authentication],
-    followHttpToHttpsRedirections: Boolean = false
+    followHttpToHttpsRedirections: Boolean = false,
+    method: String = "GET"
   ): URLConnection = {
-    val (c, partial) = urlConnectionMaybePartial(url0, authentication, 0L, followHttpToHttpsRedirections)
+    val (c, partial) = urlConnectionMaybePartial(
+      url0,
+      authentication,
+      0L,
+      followHttpToHttpsRedirections,
+      method
+    )
     assert(!partial)
     c
   }
@@ -195,21 +209,28 @@ object CacheUrl {
   def urlConnectionMaybePartial(
     url0: String,
     authentication: Option[Authentication],
-    alreadyDownloaded: Long = 0L,
-    followHttpToHttpsRedirections: Boolean = false
+    alreadyDownloaded: Long,
+    followHttpToHttpsRedirections: Boolean,
+    method: String = "GET"
   ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
 
     try {
       conn = url(url0).openConnection()
-      initialize(conn, authentication.filter(!_.optional))
+      initialize(conn, authentication.filter(!_.optional), method)
 
       val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 
       rangeResOpt0 match {
         case Some(true) =>
           closeConn(conn)
-          urlConnectionMaybePartial(url0, authentication, alreadyDownloaded = 0L, followHttpToHttpsRedirections)
+          urlConnectionMaybePartial(
+            url0,
+            authentication,
+            alreadyDownloaded = 0L,
+            followHttpToHttpsRedirections,
+            method
+          )
         case _ =>
           val partialDownload = rangeResOpt0.nonEmpty
           val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
@@ -217,14 +238,25 @@ object CacheUrl {
           redirectOpt match {
             case Some(loc) =>
               closeConn(conn)
-              // TODO Try to get fresh credentials from some global preferences
-              urlConnectionMaybePartial(loc, None, alreadyDownloaded, followHttpToHttpsRedirections)
+              urlConnectionMaybePartial(
+                loc,
+                None,
+                alreadyDownloaded,
+                followHttpToHttpsRedirections,
+                method
+              )
             case None =>
 
               if (authentication.exists(_.optional) && is4xx(conn)) {
                 val authentication0 = authentication.map(_.copy(optional = false))
                 closeConn(conn)
-                urlConnectionMaybePartial(url0, authentication0, alreadyDownloaded, followHttpToHttpsRedirections)
+                urlConnectionMaybePartial(
+                  url0,
+                  authentication0,
+                  alreadyDownloaded,
+                  followHttpToHttpsRedirections,
+                  method
+                )
               } else
                 (conn, partialDownload)
           }
