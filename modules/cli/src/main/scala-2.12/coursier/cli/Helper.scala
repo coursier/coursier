@@ -53,7 +53,7 @@ class Helper(
 
   val cachePolicies =
     if (common.cacheOptions.mode.isEmpty)
-      CachePolicy.default
+      CacheDefaults.cachePolicies
     else
       CachePolicyParser.cachePolicies(common.cacheOptions.mode).either match {
         case Right(cp) => cp

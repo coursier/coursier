@@ -921,7 +921,7 @@ object FileCache {
     new FileCache(
       Params(
         location = CacheDefaults.location,
-        cachePolicies = CachePolicy.default,
+        cachePolicies = CacheDefaults.cachePolicies,
         checksums = CacheDefaults.checksums,
         credentials = Nil,
         credentialFiles = CacheDefaults.credentialFiles,

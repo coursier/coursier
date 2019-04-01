@@ -6,32 +6,44 @@ import coursier.util.Traverse.TraverseOps
 
 object CachePolicyParser {
 
-  def cachePolicies(s: String): ValidationNel[String, Seq[CachePolicy]] =
-    s
+  def cachePolicy(input: String): Either[String, CachePolicy] =
+    input match {
+        case "offline" =>
+          Right(CachePolicy.LocalOnly)
+        case "local" =>
+          Right(CachePolicy.LocalOnlyIfValid)
+        case "update-local-changing" =>
+          Right(CachePolicy.LocalUpdateChanging)
+        case "update-local" =>
+          Right(CachePolicy.LocalUpdate)
+        case "update-changing" =>
+          Right(CachePolicy.UpdateChanging)
+        case "update" =>
+          Right(CachePolicy.Update)
+        case "missing" =>
+          Right(CachePolicy.FetchMissing)
+        case "force" =>
+          Right(CachePolicy.ForceDownload)
+        case other =>
+          Left(s"Unrecognized cache policy: $other")
+      }
+
+  private def cachePolicies0(input: String, default: Option[Seq[CachePolicy]]): ValidationNel[String, Seq[CachePolicy]] =
+    input
       .split(',')
       .toVector
       .validationNelTraverse[String, Seq[CachePolicy]] {
-        case "offline" =>
-          ValidationNel.success(Seq(CachePolicy.LocalOnly))
-        case "local" =>
-          ValidationNel.success(Seq(CachePolicy.LocalOnlyIfValid))
-        case "update-local-changing" =>
-          ValidationNel.success(Seq(CachePolicy.LocalUpdateChanging))
-        case "update-local" =>
-          ValidationNel.success(Seq(CachePolicy.LocalUpdate))
-        case "update-changing" =>
-          ValidationNel.success(Seq(CachePolicy.UpdateChanging))
-        case "update" =>
-          ValidationNel.success(Seq(CachePolicy.Update))
-        case "missing" =>
-          ValidationNel.success(Seq(CachePolicy.FetchMissing))
-        case "force" =>
-          ValidationNel.success(Seq(CachePolicy.ForceDownload))
-        case "default" =>
-          ValidationNel.success(Seq(CachePolicy.LocalOnly, CachePolicy.FetchMissing))
+        case "default" if default.nonEmpty =>
+          ValidationNel.success(default.getOrElse(Nil))
         case other =>
-          ValidationNel.failure(s"Unrecognized mode: $other")
+          ValidationNel.fromEither(cachePolicy(other).right.map(Seq(_)))
       }
       .map(_.flatten)
+
+  def cachePolicies(input: String): ValidationNel[String, Seq[CachePolicy]] =
+    cachePolicies0(input, None)
+
+  def cachePolicies(input: String, default: Seq[CachePolicy]): ValidationNel[String, Seq[CachePolicy]] =
+    cachePolicies0(input, Some(default))
 
 }

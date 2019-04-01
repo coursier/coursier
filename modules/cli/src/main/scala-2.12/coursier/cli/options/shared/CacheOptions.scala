@@ -52,7 +52,7 @@ final case class CacheOptions(
 
     val cachePoliciesV =
       if (mode.isEmpty)
-        Validated.validNel(CachePolicy.default)
+        Validated.validNel(CacheDefaults.cachePolicies)
       else
         CachePolicyParser.cachePolicies(mode).either match {
           case Right(cp) =>

@@ -14,7 +14,7 @@ final class CacheParams private (
   val cacheLocalArtifacts: Boolean,
   val followHttpToHttpsRedirections: Boolean) extends coursier.params.CacheParamsHelpers with Serializable {
   
-  private def this() = this(coursier.cache.CacheDefaults.location, coursier.cache.CachePolicy.default, coursier.cache.CacheDefaults.ttl, coursier.cache.CacheDefaults.concurrentDownloadCount, coursier.cache.CacheDefaults.checksums, 1, false, true)
+  private def this() = this(coursier.cache.CacheDefaults.location, coursier.cache.CacheDefaults.cachePolicies, coursier.cache.CacheDefaults.ttl, coursier.cache.CacheDefaults.concurrentDownloadCount, coursier.cache.CacheDefaults.checksums, 1, false, true)
   
   override def equals(o: Any): Boolean = o match {
     case x: CacheParams => (this.cacheLocation == x.cacheLocation) && (this.cachePolicies == x.cachePolicies) && (this.ttl == x.ttl) && (this.parallel == x.parallel) && (this.checksum == x.checksum) && (this.retryCount == x.retryCount) && (this.cacheLocalArtifacts == x.cacheLocalArtifacts) && (this.followHttpToHttpsRedirections == x.followHttpToHttpsRedirections)

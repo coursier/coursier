@@ -2,6 +2,7 @@ package coursier.cache
 
 import java.io.File
 
+import coursier.parse.CachePolicyParser
 import coursier.paths.CachePath
 import coursier.util.Sync
 
@@ -60,5 +61,50 @@ object CacheDefaults {
         CredentialFile(path, optional = true)
       }
       .toSeq
+
+  val noEnvCachePolicies = Seq(
+    // first, try to update changing artifacts that were previously downloaded (follows TTL)
+    CachePolicy.LocalUpdateChanging,
+    // then, use what's available locally
+    CachePolicy.LocalOnly,
+    // lastly, try to download what's missing
+    CachePolicy.FetchMissing
+  )
+
+  def cachePolicies: Seq[CachePolicy] = {
+
+    def fromOption(value: Option[String], description: String): Option[Seq[CachePolicy]] =
+      value.filter(_.nonEmpty).flatMap {
+        str =>
+          CachePolicyParser.cachePolicies(str, noEnvCachePolicies).either match {
+            case Right(Seq()) =>
+              Console.err.println(
+                s"Warning: no mode found in $description, ignoring it."
+              )
+              None
+            case Right(policies) =>
+              Some(policies)
+            case Left(_) =>
+              Console.err.println(
+                s"Warning: unrecognized mode in $description, ignoring it."
+              )
+              None
+          }
+      }
+
+    val fromEnv = fromOption(
+      sys.env.get("COURSIER_MODE"),
+      "COURSIER_MODE environment variable"
+    )
+
+    def fromProps = fromOption(
+      sys.props.get("coursier.mode"),
+      "Java property coursier.mode"
+    )
+
+    fromEnv
+      .orElse(fromProps)
+      .getOrElse(noEnvCachePolicies)
+  }
 
 }
