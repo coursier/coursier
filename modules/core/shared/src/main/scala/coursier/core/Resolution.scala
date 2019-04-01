@@ -487,12 +487,12 @@ object Resolution {
 
     val properties = project.properties.toMap
 
-    val (actualConfig, configurations) = withParentConfigurations(from.configuration, project.configurations)
+    val (_, configurations) = withParentConfigurations(
+      if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
+      project.configurations
+    )
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
-
-    val config = if (actualConfig.isEmpty) defaultConfiguration else actualConfig
-    val keepOpt = mavenScopes.get(config)
 
     withExclusions(
       // 2.1 & 2.2
@@ -517,28 +517,10 @@ object Resolution {
 
         val config = if (config0.isEmpty) defaultConfiguration else config0
 
-        def default =
-          if (configurations(config))
-            Seq(dep)
-          else
-            Nil
-
-        if (dep.configuration.nonEmpty)
-          default
+        if (configurations(config))
+          Seq(dep)
         else
-          keepOpt.fold(default) { keep =>
-            if (keep(config)) {
-              val depConfig =
-                if (actualConfig == Configuration.optional)
-                  defaultConfiguration
-                else
-                  // really keeping the  from.configuration, with its fallback config part
-                  from.configuration
-
-              Seq(dep.copy(configuration = depConfig))
-            } else
-              Nil
-          }
+          Nil
     }
   }
 
