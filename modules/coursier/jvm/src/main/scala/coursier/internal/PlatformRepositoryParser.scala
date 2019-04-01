@@ -15,6 +15,8 @@ object PlatformRepositoryParser {
       Right(LocalRepositories.ivy2Local)
     else if (input == "ivy2cache" || input == "ivy2Cache")
       Right(LocalRepositories.Dangerous.ivy2Cache)
+    else if (input == "m2Local" || input == "m2local")
+      Right(LocalRepositories.Dangerous.maven2Local)
     else {
       val repo = SharedRepositoryParser.repository(input)
 
