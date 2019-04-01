@@ -208,7 +208,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, rulesParsersJvm)
+  .dependsOn(bootstrap, coursierJvm, parsersJvm)
   .enablePlugins(ContrabandPlugin, PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -365,7 +365,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
 
-lazy val `rules-parsers` = crossProject("rules-parser")(JSPlatform, JVMPlatform)
+lazy val parsers = crossProject("parsers")(JSPlatform, JVMPlatform)
   .dependsOn(coursier)
   .settings(
     shared,
@@ -381,8 +381,8 @@ lazy val `rules-parsers` = crossProject("rules-parser")(JSPlatform, JVMPlatform)
     }
   )
 
-lazy val rulesParsersJvm = `rules-parsers`.jvm
-lazy val rulesParsersJs = `rules-parsers`.js
+lazy val parsersJvm = parsers.jvm
+lazy val parsersJs = parsers.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -401,7 +401,7 @@ lazy val jvm = project("jvm")
     cli,
     okhttp,
     coursierJvm,
-    rulesParsersJvm
+    parsersJvm
   )
   .settings(
     shared,
@@ -448,8 +448,8 @@ lazy val `coursier-repo` = project("coursier-repo")
     okhttp,
     coursierJvm,
     coursierJs,
-    rulesParsersJvm,
-    rulesParsersJs
+    parsersJvm,
+    parsersJs
   )
   .settings(
     shared,
