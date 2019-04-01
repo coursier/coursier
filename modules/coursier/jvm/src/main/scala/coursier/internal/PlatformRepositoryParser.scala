@@ -2,7 +2,8 @@ package coursier.internal
 
 import java.net.MalformedURLException
 
-import coursier.cache.{CacheUrl, LocalRepositories}
+import coursier.LocalRepositories
+import coursier.cache.CacheUrl
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository

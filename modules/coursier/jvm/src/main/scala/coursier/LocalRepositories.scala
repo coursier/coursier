@@ -1,9 +1,8 @@
-package coursier.cache
+package coursier
 
 import java.io.File
 
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
 
 // not sure this should live in the coursier.cache namespace…
 

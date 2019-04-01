@@ -1,6 +1,5 @@
 package coursier
 
-import coursier.cache.LocalRepositories
 import coursier.parse.RepositoryParser
 import coursier.util.Repositories
 

@@ -1,7 +1,6 @@
 package coursier.test
 
-import coursier.cache.LocalRepositories
-import coursier.{Classifier, Dependency, Type, moduleString}
+import coursier.{Classifier, Dependency, LocalRepositories, Type, moduleString}
 import coursier.test.compatibility._
 
 import scala.async.Async.{async, await}

@@ -17,7 +17,7 @@ import coursier._
 
 ```scala mdoc:passthrough
 object LocalRepositories {
-  val ivy2LocalIsIvy = coursier.cache.LocalRepositories.ivy2Local match {
+  val ivy2LocalIsIvy = coursier.LocalRepositories.ivy2Local match {
     case _: coursier.ivy.IvyRepository => true
     case _ => false
   }
@@ -69,7 +69,7 @@ val fetch = ResolutionProcess.fetch(repositories, Cache.default.fetch)
 
 ```scala
 import coursier.cache.Cache
-import coursier.cache.LocalRepositories
+import coursier.LocalRepositories
 
 val repositories = Seq(
   LocalRepositories.ivy2Local,

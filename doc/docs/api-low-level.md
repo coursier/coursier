@@ -60,7 +60,7 @@ assert(!start.isDone)
 In order for the resolution to go on, we'll need things from a few repositories,
 ```scala mdoc:silent
 val repositories = Seq(
-  coursier.cache.LocalRepositories.ivy2Local,
+  coursier.LocalRepositories.ivy2Local,
   MavenRepository("https://repo1.maven.org/maven2")
 )
 ```
