@@ -11,7 +11,7 @@ object CrossDeps {
   // The setting / .value hoop-and-loop is necessary because of the expansion of the %%% macro, which references
   // other settings.
 
-  def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % "1.2.0-M8")
+  def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % "1.2.0-M10")
   def catsEffect = setting("org.typelevel" %%% "cats-effect" % "1.2.0")
   def fastParse = setting("com.lihaoyi" %%% "fastparse" % SharedVersions.fastParse)
   def scalazCore = setting("org.scalaz" %%% "scalaz-core" % SharedVersions.scalaz)

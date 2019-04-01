@@ -334,14 +334,10 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     libs += Deps.scalaReflect.value % Provided,
     publishGeneratedSources,
     utest,
-    libs += Deps.scalaAsync % Test,
-    // not yet published for 2.13
-    libs ++= {
-      if (scalaVersion.value.startsWith("2.12"))
-        Seq(CrossDeps.argonautShapeless.value)
-      else
-        Nil
-    }
+    libs ++= Seq(
+      Deps.scalaAsync % Test,
+      CrossDeps.argonautShapeless.value
+    )
   )
 
 lazy val coursierJvm = coursier.jvm
