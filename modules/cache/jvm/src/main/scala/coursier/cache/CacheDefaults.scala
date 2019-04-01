@@ -65,18 +65,24 @@ object CacheDefaults {
     s.startsWith("/") || s.startsWith("file:")
 
   def credentialFiles: Seq[CredentialFile] =
-    credentialPropOpt
-      .filter(isPropFile)
-      .map { path =>
-        // hope Windows users can manage to use file:// URLs fine
-        val path0 =
-          if (path.startsWith("file:"))
-            new File(new URI(path)).getAbsolutePath
-          else
-            path
-        CredentialFile(path0, optional = true)
-      }
-      .toSeq
+    if (credentialPropOpt.isEmpty) {
+      val configDir = coursier.paths.CoursierPaths.configDirectory()
+      val propFile = new File(configDir, "credentials.properties")
+      // Warn if propFile has group and others read permissions?
+      Seq(CredentialFile(propFile.getAbsolutePath, optional = true))
+    } else
+      credentialPropOpt
+        .filter(isPropFile)
+        .map { path =>
+          // hope Windows users can manage to use file:// URLs fine
+          val path0 =
+            if (path.startsWith("file:"))
+              new File(new URI(path)).getAbsolutePath
+            else
+              path
+          CredentialFile(path0, optional = true)
+        }
+        .toSeq
 
   def credentials: Seq[Credentials] =
     credentialPropOpt
