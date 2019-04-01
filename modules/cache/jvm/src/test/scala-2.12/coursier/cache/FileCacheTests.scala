@@ -213,8 +213,10 @@ object FileCacheTests extends TestSuite {
       assert(res.left.exists(check))
     }
 
-  private val httpCredentials = Credentials(httpRealm, httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
-  private val httpsCredentials = Credentials(httpsRealm, httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
+  private val httpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
+    .withRealm(httpRealm)
+  private val httpsCredentials = Credentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
+    .withRealm(httpsRealm)
 
   val tests = Tests {
 

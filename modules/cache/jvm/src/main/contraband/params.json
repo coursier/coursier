@@ -8,12 +8,6 @@
       "type": "record",
       "fields": [
         {
-          "name": "realm",
-          "type": "String?",
-          "default": "None",
-          "since": "1.0.0"
-        },
-        {
           "name": "host",
           "type": "String",
           "default": "\"\"",
@@ -32,10 +26,16 @@
           "since": "1.0.0"
         },
         {
+          "name": "realm",
+          "type": "String?",
+          "default": "None",
+          "since": "1.0.1"
+        },
+        {
           "name": "optional",
           "type": "Boolean",
           "default": "true",
-          "since": "1.0.1"
+          "since": "1.0.2"
         }
       ]
     },

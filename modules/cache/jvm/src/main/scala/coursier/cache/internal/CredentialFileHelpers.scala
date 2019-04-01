@@ -49,7 +49,8 @@ abstract class CredentialFileHelpers {
 
         val realmOpt = Option(props.getProperty(s"$prefix.realm")) // filter if empty?
 
-        Credentials(realmOpt, host, user, password)
+        Credentials(host, user, password)
+          .withRealm(realmOpt)
       }
 
     } else if (optional)
