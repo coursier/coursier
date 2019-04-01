@@ -53,6 +53,13 @@ object FileCacheTests extends TestSuite {
       case GET -> Root / "hello" =>
         Ok(s"hello$suffix")
 
+      case req @ GET -> Root / "hello-no-auth" =>
+        val authHeaderOpt = req.headers.get(Authorization)
+        if (authHeaderOpt.isEmpty)
+          Ok(s"hello no auth$suffix")
+        else
+          BadRequest()
+
       case GET -> Root / "self-redirect" =>
         TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
 
@@ -80,6 +87,12 @@ object FileCacheTests extends TestSuite {
       case req @ GET -> Root / "auth" / "redirect" =>
         if (authorized(req))
           TemporaryRedirect("redirecting", Location(redirectBase / "hello"))
+        else
+          unauth
+
+      case req @ GET -> Root / "auth" / "redirect-no-auth" =>
+        if (authorized(req))
+          TemporaryRedirect("redirecting", Location(redirectBase / "hello-no-auth"))
         else
           unauth
 
@@ -365,6 +378,26 @@ object FileCacheTests extends TestSuite {
           error(
             httpsBaseUri / "auth" / "self-redirect",
             _.startsWith("unauthorized: ")
+          )
+        }
+      }
+
+      'authHttpToNoAuthHttps - {
+        'enabled - {
+          expect(
+            httpBaseUri / "auth" / "redirect-no-auth",
+            "hello no auth secure",
+            _.addCredentials(httpsCredentials, httpCredentials)
+              .withFollowHttpToHttpsRedirections(true)
+          )
+        }
+
+        'disabled - {
+          error(
+            httpBaseUri / "auth" / "redirect-no-auth",
+            _.startsWith("unauthorized: "),
+            _.addCredentials(httpsCredentials)
+              .withFollowHttpToHttpsRedirections(true)
           )
         }
       }
