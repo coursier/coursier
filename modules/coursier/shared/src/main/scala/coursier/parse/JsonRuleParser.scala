@@ -1,4 +1,4 @@
-package coursier.rule.parser
+package coursier.parse
 
 import argonaut.{Parse => _, _}
 import argonaut.Argonaut._
@@ -7,7 +7,7 @@ import coursier.core.Module
 import coursier.params.rule._
 import coursier.util.{ModuleMatcher, ModuleMatchers, Parse}
 
-class JsonParser(
+class JsonRuleParser(
   defaultScalaVersion: String,
   defaultRuleResolution: RuleResolution
 ) {
@@ -128,20 +128,20 @@ class JsonParser(
 
 }
 
-object JsonParser {
+object JsonRuleParser {
 
   def parseRule(
     s: String,
     defaultScalaVersion: String,
     defaultRuleResolution: RuleResolution = RuleResolution.TryResolve
   ): Either[String, (Rule, RuleResolution)] =
-    new JsonParser(defaultScalaVersion, defaultRuleResolution).parseRule(s)
+    new JsonRuleParser(defaultScalaVersion, defaultRuleResolution).parseRule(s)
 
   def parseRules(
     s: String,
     defaultScalaVersion: String,
     defaultRuleResolution: RuleResolution = RuleResolution.TryResolve
   ): Either[String, Seq[(Rule, RuleResolution)]] =
-    new JsonParser(defaultScalaVersion, defaultRuleResolution).parseRules(s)
+    new JsonRuleParser(defaultScalaVersion, defaultRuleResolution).parseRules(s)
 
 }

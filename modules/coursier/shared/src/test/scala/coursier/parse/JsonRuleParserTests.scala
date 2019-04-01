@@ -1,11 +1,11 @@
-package coursier.rule.parser
+package coursier.parse
 
 import coursier.moduleString
 import coursier.params.rule._
 import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
-object JsonParserTests extends TestSuite {
+object JsonRuleParserTests extends TestSuite {
 
   val tests = Tests {
 
@@ -18,7 +18,7 @@ object JsonParserTests extends TestSuite {
               |  "rule": "always-fail"
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((AlwaysFail(), RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
@@ -30,7 +30,7 @@ object JsonParserTests extends TestSuite {
               |}
             """.stripMargin
           val action = RuleResolution.Warn
-          val res = JsonParser.parseRule(rule, "2.12.8", action)
+          val res = JsonRuleParser.parseRule(rule, "2.12.8", action)
           val expectedRes = Right((AlwaysFail(), action))
           assert(res == expectedRes)
         }
@@ -46,7 +46,7 @@ object JsonParserTests extends TestSuite {
               |  "modules": ["com.fasterxml.jackson.core:jackson-*"]
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
@@ -61,7 +61,7 @@ object JsonParserTests extends TestSuite {
               |  ]
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((SameVersion(
             mod"com.fasterxml.jackson.core:jackson-core",
             mod"com.fasterxml.jackson.core:jackson-databind"
@@ -79,7 +79,7 @@ object JsonParserTests extends TestSuite {
               |  "rule": "dont-bump-root-dependencies"
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((DontBumpRootDependencies(), RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
@@ -93,7 +93,7 @@ object JsonParserTests extends TestSuite {
               |  ]
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((DontBumpRootDependencies(
             ModuleMatchers(
               Set(ModuleMatcher(mod"org.scala-lang:*")),
@@ -115,7 +115,7 @@ object JsonParserTests extends TestSuite {
               |  ]
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((DontBumpRootDependencies(
             ModuleMatchers(
               Set(ModuleMatcher(mod"org.scala-lang:*")),
@@ -135,7 +135,7 @@ object JsonParserTests extends TestSuite {
               |  "rule": "strict"
               |}
             """.stripMargin
-          val res = JsonParser.parseRule(rule, "2.12.8")
+          val res = JsonRuleParser.parseRule(rule, "2.12.8")
           val expectedRes = Right((Strict, RuleResolution.TryResolve))
           assert(res == expectedRes)
         }
@@ -147,7 +147,7 @@ object JsonParserTests extends TestSuite {
               |}
             """.stripMargin
           val action = RuleResolution.Warn
-          val res = JsonParser.parseRule(rule, "2.12.8", action)
+          val res = JsonRuleParser.parseRule(rule, "2.12.8", action)
           val expectedRes = Right((Strict, action))
           assert(res == expectedRes)
         }
@@ -158,7 +158,7 @@ object JsonParserTests extends TestSuite {
     'rules - {
       'empty - {
         val rules = "[]"
-        val res = JsonParser.parseRules(rules, "2.12.8")
+        val res = JsonRuleParser.parseRules(rules, "2.12.8")
         val expectedRes = Right(Nil)
         assert(res == expectedRes)
       }
@@ -173,7 +173,7 @@ object JsonParserTests extends TestSuite {
               |  }
               |]
             """.stripMargin
-          val res = JsonParser.parseRules(rules, "2.12.8")
+          val res = JsonRuleParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq((AlwaysFail(), RuleResolution.TryResolve)))
           assert(res == expectedRes)
         }
@@ -187,7 +187,7 @@ object JsonParserTests extends TestSuite {
               |  }
               |]
             """.stripMargin
-          val res = JsonParser.parseRules(rules, "2.12.8")
+          val res = JsonRuleParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq((AlwaysFail(), RuleResolution.Fail)))
           assert(res == expectedRes)
         }
@@ -207,7 +207,7 @@ object JsonParserTests extends TestSuite {
               |  }
               |]
             """.stripMargin
-          val res = JsonParser.parseRules(rules, "2.12.8")
+          val res = JsonRuleParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq(
             (AlwaysFail(), RuleResolution.TryResolve),
             (AlwaysFail(), RuleResolution.TryResolve)
@@ -230,7 +230,7 @@ object JsonParserTests extends TestSuite {
               |  }
               |]
             """.stripMargin
-          val res = JsonParser.parseRules(rules, "2.12.8")
+          val res = JsonRuleParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq(
             (AlwaysFail(), RuleResolution.TryResolve),
             (SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.Warn)
@@ -254,7 +254,7 @@ object JsonParserTests extends TestSuite {
               |  }
               |]
             """.stripMargin
-          val res = JsonParser.parseRules(rules, "2.12.8")
+          val res = JsonRuleParser.parseRules(rules, "2.12.8")
           val expectedRes = Right(Seq(
             (DontBumpRootDependencies(), RuleResolution.Fail),
             (SameVersion(mod"com.fasterxml.jackson.core:jackson-*"), RuleResolution.Warn)

@@ -1,12 +1,11 @@
-package coursier.rule.parser
+package coursier.parse
 
-import fastparse._
-import NoWhitespace._
+import fastparse._, NoWhitespace._
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.params.rule._
 import coursier.util.{ModuleMatcher, ModuleMatchers}
 
-object ShortParser {
+object RuleParser {
 
   private def ruleParser[_: P](defaultResolution: RuleResolution): P[(Rule, RuleResolution)] = {
 
@@ -76,22 +75,28 @@ object ShortParser {
     rules
   }
 
-  def parseRule(s: String, defaultResolution: RuleResolution = RuleResolution.TryResolve): Either[String, (Rule, RuleResolution)] =
-    fastparse.parse(s, ruleParser(defaultResolution)(_)) match {
+  def rule(input: String): Either[String, (Rule, RuleResolution)] =
+    rule(input, RuleResolution.TryResolve)
+
+  def rule(input: String, defaultResolution: RuleResolution): Either[String, (Rule, RuleResolution)] =
+    fastparse.parse(input, ruleParser(defaultResolution)(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
-      case Parsed.Success(_, idx) if idx < s.length =>
-        Left(s"Unexpected characters at end of rule: '${s.drop(idx)}'")
+      case Parsed.Success(_, idx) if idx < input.length =>
+        Left(s"Unexpected characters at end of rule: '${input.drop(idx)}'")
       case Parsed.Success(rule, _) =>
         Right(rule)
     }
 
-  def parseRules(s: String, defaultResolution: RuleResolution = RuleResolution.TryResolve): Either[String, Seq[(Rule, RuleResolution)]] =
-    fastparse.parse(s, rulesParser(defaultResolution)(_)) match {
+  def rules(input: String): Either[String, Seq[(Rule, RuleResolution)]] =
+    rules(input, RuleResolution.TryResolve)
+
+  def rules(input: String, defaultResolution: RuleResolution): Either[String, Seq[(Rule, RuleResolution)]] =
+    fastparse.parse(input, rulesParser(defaultResolution)(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
-      case Parsed.Success(_, idx) if idx < s.length =>
-        Left(s"Unexpected characters at end of rules: '${s.drop(idx)}'")
+      case Parsed.Success(_, idx) if idx < input.length =>
+        Left(s"Unexpected characters at end of rules: '${input.drop(idx)}'")
       case Parsed.Success(rules, idx) =>
         Right(rules)
     }

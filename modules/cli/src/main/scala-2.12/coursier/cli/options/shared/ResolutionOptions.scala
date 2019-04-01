@@ -5,7 +5,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
 import coursier.params.ResolutionParams
-import coursier.rule.parser.ShortParser
+import coursier.parse.RuleParser
 import coursier.util.Parse
 
 final case class ResolutionOptions(
@@ -92,7 +92,7 @@ final case class ResolutionOptions(
 
     val rulesV = rules
       .traverse { s =>
-        ShortParser.parseRules(s) match {
+        RuleParser.rules(s) match {
           case Left(err) => Validated.invalidNel(s"Malformed rules '$s': $err")
           case Right(l) => Validated.validNel(l)
         }
