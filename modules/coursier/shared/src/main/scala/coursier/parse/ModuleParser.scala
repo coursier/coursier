@@ -1,10 +1,10 @@
-package coursier.util
+package coursier.parse
 
-import coursier.core._
+import coursier.core.{Module, ModuleName, Organization}
+import coursier.util.Traverse._
+import coursier.util.ValidationNel
 
-import scala.collection.mutable.ArrayBuffer
-
-object Parse {
+object ModuleParser {
 
   /**
     * Parses a module like
@@ -46,26 +46,13 @@ object Parse {
     }
   }
 
-  private def valuesAndErrors[L, R](f: String => Either[L, R], l: Seq[String]): (Seq[L], Seq[R]) = {
-
-    val errors = new ArrayBuffer[L]
-    val values = new ArrayBuffer[R]
-
-    for (elem <- l)
-      f(elem) match {
-        case Left(err) => errors += err
-        case Right(modVer) => values += modVer
-      }
-
-    (errors.toSeq, values.toSeq)
-  }
-
-  /**
-    * Parses a sequence of coordinates.
-    *
-    * @return Sequence of errors, and sequence of modules/versions
-    */
-  def modules(l: Seq[String], defaultScalaVersion: String): (Seq[String], Seq[Module]) =
-    valuesAndErrors(module(_, defaultScalaVersion), l)
+  def modules(
+    inputs: Seq[String],
+    defaultScalaVersion: String
+  ): ValidationNel[String, Seq[Module]] =
+    inputs.validationNelTraverse { input =>
+      val e = module(input, defaultScalaVersion)
+      ValidationNel.fromEither(e)
+    }
 
 }

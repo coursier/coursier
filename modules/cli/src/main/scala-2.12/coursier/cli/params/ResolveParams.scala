@@ -6,7 +6,7 @@ import coursier.cli.options.ResolveOptions
 import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryParams}
 import coursier.core.{Module, Repository}
 import coursier.params.{CacheParams, ResolutionParams}
-import coursier.util.Parse
+import coursier.parse.ModuleParser
 
 final case class ResolveParams(
   cache: CacheParams,
@@ -48,7 +48,7 @@ object ResolveParams {
           Validated.validNel(Nil)
         case Some(sv) =>
           options.whatDependsOn.traverse(
-            Parse.module(_, sv).toValidatedNel
+            ModuleParser.module(_, sv).toValidatedNel
           )
       }
 

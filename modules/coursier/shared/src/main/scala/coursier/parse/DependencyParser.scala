@@ -1,7 +1,7 @@
 package coursier.parse
 
 import coursier.core.{Attributes, Classifier, Configuration, Dependency, Module, Type}
-import coursier.util.{Parse, ValidationNel}
+import coursier.util.ValidationNel
 import coursier.util.Traverse._
 
 object DependencyParser {
@@ -48,12 +48,12 @@ object DependencyParser {
 
     parts match {
       case Array(org, rawName, version) =>
-         Parse.module(s"$org:$rawName", defaultScalaVersion)
+        ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
            .right
            .map((_, version))
 
       case Array(org, "", rawName, version) =>
-        Parse.module(s"$org::$rawName", defaultScalaVersion)
+        ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
           .right
           .map((_, version))
 
@@ -185,7 +185,7 @@ object DependencyParser {
 
             val depOrError = parts match {
               case Array(org, "", rawName, version, config) =>
-                Parse.module(s"$org::$rawName", defaultScalaVersion)
+                ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
                   .right
                   .map(mod =>
                     Dependency(
@@ -200,7 +200,7 @@ object DependencyParser {
                   )
 
               case Array(org, "", rawName, version) =>
-                Parse.module(s"$org::$rawName", defaultScalaVersion)
+                ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
                   .right
                   .map(mod =>
                     Dependency(
@@ -215,7 +215,7 @@ object DependencyParser {
                   )
 
               case Array(org, rawName, version, config) =>
-                Parse.module(s"$org:$rawName", defaultScalaVersion)
+                ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
                   .right
                   .map(mod =>
                     Dependency(
@@ -230,7 +230,7 @@ object DependencyParser {
                   )
 
               case Array(org, rawName, version) =>
-                Parse.module(s"$org:$rawName", defaultScalaVersion)
+                ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
                   .right
                   .map(mod =>
                     Dependency(

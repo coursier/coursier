@@ -5,8 +5,7 @@ import cats.implicits._
 import coursier.cli.options.shared.DependencyOptions
 import coursier.cli.util.DeprecatedModuleRequirements
 import coursier.core._
-import coursier.parse.DependencyParser
-import coursier.util.Parse
+import coursier.parse.{DependencyParser, ModuleParser}
 
 import scala.io.Source
 
@@ -22,32 +21,33 @@ final case class DependencyParams(
 object DependencyParams {
   def apply(scalaVersion: String, options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
 
-    val excludeV = {
+    val excludeV =
+      ModuleParser.modules(options.exclude, scalaVersion).either match {
+        case Left(errors) =>
+          Validated.invalidNel(
+            s"Cannot parse excluded modules:\n" +
+              errors
+                .map("  " + _)
+                .mkString("\n")
+          )
 
-      val (excludeErrors, excludes0) = Parse.modules(options.exclude, scalaVersion)
-      val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
+        case Right(excludes0) =>
+          val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
-      if (excludeErrors.nonEmpty)
-        Validated.invalidNel(
-          s"Cannot parse excluded modules:\n" +
-            excludeErrors
-              .map("  " + _)
-              .mkString("\n")
-        )
-      else if (excludesWithAttr.nonEmpty)
-        Validated.invalidNel(
-          s"Excluded modules with attributes not supported:\n" +
-            excludesWithAttr
-              .map("  " + _)
-              .mkString("\n")
-        )
-      else
-        Validated.validNel(
-          excludesNoAttr
-            .map(mod => (mod.organization, mod.name))
-            .toSet
-        )
-    }
+          if (excludesWithAttr.isEmpty)
+            Validated.validNel(
+              excludesNoAttr
+                .map(mod => (mod.organization, mod.name))
+                .toSet
+            )
+          else
+            Validated.invalidNel(
+              s"Excluded modules with attributes not supported:\n" +
+                excludesWithAttr
+                  .map("  " + _)
+                  .mkString("\n")
+            )
+      }
 
     val perModuleExcludeV =
       if (options.localExcludeFile.isEmpty)

@@ -5,7 +5,7 @@ import argonaut.Argonaut._
 import argonaut.ArgonautShapeless._
 import coursier.core.Module
 import coursier.params.rule._
-import coursier.util.{ModuleMatcher, ModuleMatchers, Parse}
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 
 class JsonRuleParser(
   defaultScalaVersion: String,
@@ -15,7 +15,7 @@ class JsonRuleParser(
   private implicit val decodeModule: DecodeJson[Module] =
     DecodeJson { c =>
       val fromStringOpt = c.focus.string.map { s =>
-        Parse.module(s, defaultScalaVersion) match {
+        ModuleParser.module(s, defaultScalaVersion) match {
           case Left(err) => DecodeResult.fail[Module](s"Cannot decode module '$s': $err", c.history)
           case Right(mod) => DecodeResult.ok(mod)
         }

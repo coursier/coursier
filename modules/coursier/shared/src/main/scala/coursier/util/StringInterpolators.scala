@@ -3,7 +3,7 @@ package coursier.util
 import coursier.core._
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
-import coursier.parse.DependencyParser
+import coursier.parse.{DependencyParser, ModuleParser}
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -70,7 +70,7 @@ object StringInterpolators {
     import c.universe._
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-        coursier.util.Parse.module(modString, scala.util.Properties.versionNumberString) match {
+        ModuleParser.module(modString, scala.util.Properties.versionNumberString) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
           case Right(mod) =>

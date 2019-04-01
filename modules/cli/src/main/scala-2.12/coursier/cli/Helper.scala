@@ -10,10 +10,10 @@ import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
-import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport, DeprecatedModuleRequirements}
+import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.parse.{CachePolicyParser, DependencyParser, RepositoryParser}
+import coursier.parse.{CachePolicyParser, DependencyParser, ModuleParser, RepositoryParser}
 import coursier.util._
 
 import scala.annotation.tailrec
@@ -207,17 +207,21 @@ class Helper(
     grouped.map { case (mod, versions) => mod -> versions.last }
   }
 
-  val (excludeErrors, excludes0) = Parse.modules(
-    common.dependencyOptions.exclude,
-    common.resolutionOptions.scalaVersionOrDefault
-  )
-
-  prematureExitIf(excludeErrors.nonEmpty) {
-    s"Cannot parse excluded modules:\n" +
-    excludeErrors
-      .map("  " + _)
-      .mkString("\n")
-  }
+  val excludes0 =
+    ModuleParser.modules(
+      common.dependencyOptions.exclude,
+      common.resolutionOptions.scalaVersionOrDefault
+    ).either match {
+      case Left(errors) =>
+        prematureExit(
+          s"Cannot parse excluded modules:\n" +
+            errors
+              .map("  " + _)
+              .mkString("\n")
+        )
+      case Right(l) =>
+        l
+    }
 
   val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
