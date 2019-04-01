@@ -6,7 +6,6 @@ import java.nio.file.{Files, Path}
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Credentials, FileCache}
-import coursier.util.Repositories
 import utest._
 
 object AuthenticationTests extends TestSuite {

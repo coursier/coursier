@@ -1,9 +1,9 @@
 package coursier.internal
 
+import coursier.Repositories
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
-import coursier.util.Repositories
 
 object SharedRepositoryParser {
 

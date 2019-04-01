@@ -1,7 +1,6 @@
 package coursier
 
 import coursier.parse.RepositoryParser
-import coursier.util.Repositories
 
 abstract class PlatformResolve {
 
