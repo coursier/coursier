@@ -94,10 +94,6 @@ object Parse {
     }
   }
 
-  class ModuleParseError(private val message: String = "",
-                              private val cause: Throwable = None.orNull)
-    extends Exception(message, cause)
-
   /**
     * Parses coordinates like
     *   org:name:version
