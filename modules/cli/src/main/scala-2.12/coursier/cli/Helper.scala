@@ -13,6 +13,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
+import coursier.parse.CachePolicyParser
 import coursier.util.Parse.ModuleRequirements
 import coursier.util._
 
@@ -54,7 +55,7 @@ class Helper(
     if (common.cacheOptions.mode.isEmpty)
       CachePolicy.default
     else
-      CacheParse.cachePolicies(common.cacheOptions.mode).either match {
+      CachePolicyParser.cachePolicies(common.cacheOptions.mode).either match {
         case Right(cp) => cp
         case Left(errors) =>
           prematureExit(

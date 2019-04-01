@@ -208,7 +208,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, parsersJvm)
+  .dependsOn(bootstrap, coursierJvm)
   .enablePlugins(ContrabandPlugin, PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -316,23 +316,6 @@ lazy val okhttp = project("okhttp")
   )
 
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
-  .dependsOn(core, cache)
-  .configs(Integration)
-  .settings(
-    shared,
-    hasITs,
-    dontPublishScalaJsIn("2.11"),
-    libs += Deps.scalaReflect.value % Provided,
-    publishGeneratedSources,
-    utest,
-    libs += Deps.scalaAsync % Test
-  )
-
-lazy val coursierJvm = coursier.jvm
-lazy val coursierJs = coursier.js
-
-lazy val parsers = crossProject("parsers")(JSPlatform, JVMPlatform)
-  .dependsOn(coursier)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading,
@@ -342,9 +325,16 @@ lazy val parsers = crossProject("parsers")(JSPlatform, JVMPlatform)
   .jsSettings(
     libs += CrossDeps.fastParse.value
   )
+  .dependsOn(core, cache)
+  .configs(Integration)
   .settings(
     shared,
+    hasITs,
+    dontPublishScalaJsIn("2.11"),
+    libs += Deps.scalaReflect.value % Provided,
+    publishGeneratedSources,
     utest,
+    libs += Deps.scalaAsync % Test,
     // not yet published for 2.13
     libs ++= {
       if (scalaVersion.value.startsWith("2.12"))
@@ -354,8 +344,8 @@ lazy val parsers = crossProject("parsers")(JSPlatform, JVMPlatform)
     }
   )
 
-lazy val parsersJvm = parsers.jvm
-lazy val parsersJs = parsers.js
+lazy val coursierJvm = coursier.jvm
+lazy val coursierJs = coursier.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -373,8 +363,7 @@ lazy val jvm = project("jvm")
     benchmark,
     cli,
     okhttp,
-    coursierJvm,
-    parsersJvm
+    coursierJvm
   )
   .settings(
     shared,
@@ -420,9 +409,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     web,
     okhttp,
     coursierJvm,
-    coursierJs,
-    parsersJvm,
-    parsersJs
+    coursierJs
   )
   .settings(
     shared,

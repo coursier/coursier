@@ -1,5 +1,7 @@
 package coursier.cache
 
+import coursier.parse.CachePolicyParser
+
 sealed abstract class CachePolicy extends Product with Serializable
 
 object CachePolicy {
@@ -82,7 +84,7 @@ object CachePolicy {
     def fromOption(value: Option[String], description: String): Option[Seq[CachePolicy]] =
       value.filter(_.nonEmpty).flatMap {
         str =>
-          CacheParse.cachePolicies(str).either match {
+          CachePolicyParser.cachePolicies(str).either match {
             case Right(Seq()) =>
               Console.err.println(
                 s"Warning: no mode found in $description, ignoring it."

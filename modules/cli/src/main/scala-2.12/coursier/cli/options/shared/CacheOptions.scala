@@ -5,8 +5,9 @@ import java.io.File
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cache.{CacheDefaults, CacheParse, CachePolicy}
+import coursier.cache.{CacheDefaults, CachePolicy}
 import coursier.params.CacheParams
+import coursier.parse.CachePolicyParser
 
 import scala.concurrent.duration.Duration
 
@@ -53,7 +54,7 @@ final case class CacheOptions(
       if (mode.isEmpty)
         Validated.validNel(CachePolicy.default)
       else
-        CacheParse.cachePolicies(mode).either match {
+        CachePolicyParser.cachePolicies(mode).either match {
           case Right(cp) =>
             Validated.validNel(cp)
           case Left(errors) =>

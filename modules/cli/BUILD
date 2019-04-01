@@ -8,7 +8,6 @@ scala_library(
         "core:core",
         "interop/scalaz:scalaz-interop",
         "coursier:coursier",
-        "rules-parser:rules-parser",
         ":util",
     ],
     sources = rglobs(
