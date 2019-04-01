@@ -367,11 +367,18 @@ lazy val coursierJs = coursier.js
 
 lazy val parsers = crossProject("parsers")(JSPlatform, JVMPlatform)
   .dependsOn(coursier)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jvmSettings(
+    shading,
+    // TODO shade those
+    libs += Deps.fastParse % "shaded"
+  )
+  .jsSettings(
+    libs += CrossDeps.fastParse.value
+  )
   .settings(
     shared,
     utest,
-    // TODO shade those
-    libs += Deps.fastParse,
     // not yet published for 2.13
     libs ++= {
       if (scalaVersion.value.startsWith("2.12"))
