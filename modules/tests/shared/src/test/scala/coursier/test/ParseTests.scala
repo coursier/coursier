@@ -1,56 +1,16 @@
 package coursier.test
 
 import coursier.core.{Classifier, Configuration, Type}
-import coursier.{Attributes, MavenRepository, Repository, moduleNameString, organizationString}
-import coursier.ivy.IvyRepository
+import coursier.{Attributes, moduleNameString, organizationString}
 import coursier.util.Parse
 import coursier.util.Parse.ModuleRequirements
 import utest._
 
 object ParseTests extends TestSuite {
 
-  def isMavenRepo(repo: Repository): Boolean =
-    repo match {
-      case _: MavenRepository => true
-      case _ => false
-    }
-
-  def isIvyRepo(repo: Repository): Boolean =
-    repo match {
-      case _: IvyRepository => true
-      case _ => false
-    }
-
   val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
   val tests = Tests {
-    "bintray-ivy:" - {
-      val obtained = Parse.repository("bintray-ivy:scalameta/maven")
-      assert(obtained.right.exists(isIvyRepo))
-    }
-    "bintray:" - {
-      val obtained = Parse.repository("bintray:scalameta/maven")
-      assert(obtained.right.exists(isMavenRepo))
-    }
-
-    "sbt-plugin:" - {
-      val res = Parse.repository("sbt-plugin:releases")
-      assert(res.right.exists(isIvyRepo))
-    }
-
-    "typesafe:ivy-" - {
-      val res = Parse.repository("typesafe:ivy-releases")
-      assert(res.right.exists(isIvyRepo))
-    }
-    "typesafe:" - {
-      val res = Parse.repository("typesafe:releases")
-      assert(res.right.exists(isMavenRepo))
-    }
-
-    "jitpack" - {
-      val res = Parse.repository("jitpack")
-      assert(res.right.exists(isMavenRepo))
-    }
 
     // Module parsing tests
     "org:name:version" - {

@@ -13,7 +13,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.parse.CachePolicyParser
+import coursier.parse.{CachePolicyParser, RepositoryParser}
 import coursier.util.Parse.ModuleRequirements
 import coursier.util._
 
@@ -80,7 +80,7 @@ class Helper(
       )
   }
 
-  val repositoriesValidation = CacheParse.repositories(common.repositoryOptions.repository).map { repos0 =>
+  val repositoriesValidation = RepositoryParser.repositories(common.repositoryOptions.repository).map { repos0 =>
 
     var repos = (if (common.repositoryOptions.noDefault) Nil else defaultRepositories) ++ repos0
 

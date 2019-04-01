@@ -1,22 +1,21 @@
-package coursier.cache
+package coursier.internal
 
 import java.net.MalformedURLException
 
+import coursier.cache.{CacheUrl, LocalRepositories}
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
-import coursier.util.{Parse, ValidationNel}
-import coursier.util.Traverse.TraverseOps
 
-object CacheParse {
+object PlatformRepositoryParser {
 
-  def repository(s: String): Either[String, Repository] =
-    if (s == "ivy2local" || s == "ivy2Local")
+  def repository(input: String): Either[String, Repository] =
+    if (input == "ivy2local" || input == "ivy2Local")
       Right(LocalRepositories.ivy2Local)
-    else if (s == "ivy2cache" || s == "ivy2Cache")
+    else if (input == "ivy2cache" || input == "ivy2Cache")
       Right(LocalRepositories.Dangerous.ivy2Cache)
     else {
-      val repo = Parse.repository(s)
+      val repo = SharedRepositoryParser.repository(input)
 
       val url = repo.right.map {
         case m: MavenRepository =>
@@ -77,11 +76,6 @@ object CacheParse {
             }
         }
       }
-    }
-
-  def repositories(l: Seq[String]): ValidationNel[String, Seq[Repository]] =
-    l.toVector.validationNelTraverse { s =>
-      ValidationNel.fromEither(repository(s))
     }
 
 }

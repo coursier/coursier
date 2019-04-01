@@ -1,11 +1,11 @@
 package coursier.cli.params.shared
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import coursier.cache.CacheParse
 import coursier.cli.options.shared.RepositoryOptions
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
+import coursier.parse.RepositoryParser
 import coursier.util.Repositories
 
 
@@ -14,7 +14,7 @@ object RepositoryParams {
   def apply(options: RepositoryOptions, hasSbtPlugins: Boolean): ValidatedNel[String, Seq[Repository]] = {
 
     val repositoriesV = Validated.fromEither(
-      CacheParse.repositories(options.repository)
+      RepositoryParser.repositories(options.repository)
         .either
         .left
         .map {
