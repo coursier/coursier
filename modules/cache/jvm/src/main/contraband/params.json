@@ -30,6 +30,12 @@
           "type": "String",
           "default": "\"\"",
           "since": "1.0.0"
+        },
+        {
+          "name": "optional",
+          "type": "Boolean",
+          "default": "true",
+          "since": "1.0.1"
         }
       ]
     },

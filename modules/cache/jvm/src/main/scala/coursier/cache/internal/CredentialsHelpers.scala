@@ -10,6 +10,7 @@ abstract class CredentialsHelpers {
   def host: String
   def username: String
   def password: String
+  def optional: Boolean
 
   def matches(url: String, realm0: Option[String]): Boolean = {
     val uri = new URI(url)
@@ -19,6 +20,11 @@ abstract class CredentialsHelpers {
   }
 
   def authentication: Authentication =
-    Authentication(username, password, realmOpt = realm)
+    Authentication(
+      username,
+      password,
+      realmOpt = realm,
+      optional = optional
+    )
 
 }

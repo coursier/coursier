@@ -392,6 +392,15 @@ object FileCacheTests extends TestSuite {
           )
         }
 
+        'enabledAllRealms - {
+          expect(
+            httpBaseUri / "auth" / "redirect-no-auth",
+            "hello no auth secure",
+            _.addCredentials(httpCredentials.withRealm(None))
+              .withFollowHttpToHttpsRedirections(true)
+          )
+        }
+
         'disabled - {
           error(
             httpBaseUri / "auth" / "redirect-no-auth",
