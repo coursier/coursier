@@ -10,11 +10,10 @@ import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
-import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport, DeprecatedModuleRequirements}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
-import coursier.parse.{CachePolicyParser, RepositoryParser}
-import coursier.util.Parse.ModuleRequirements
+import coursier.parse.{CachePolicyParser, DependencyParser, RepositoryParser}
 import coursier.util._
 
 import scala.annotation.tailrec
@@ -180,19 +179,27 @@ class Helper(
         .toList
     }
 
-  val (forceVersionErrors, forceVersions0) = Parse.moduleVersions(
-    common.resolutionOptions.forceVersion,
-    common.resolutionOptions.scalaVersionOrDefault
-  )
-
-  prematureExitIf(forceVersionErrors.nonEmpty) {
-    s"Cannot parse forced versions:\n" + forceVersionErrors.map("  "+_).mkString("\n")
-  }
-
   val forceVersions = {
+
+    val forceVersions0 =
+      DependencyParser.moduleVersions(
+        common.resolutionOptions.forceVersion,
+        common.resolutionOptions.scalaVersionOrDefault
+      ).either match {
+        case Left(e) =>
+          prematureExit(
+            s"Cannot parse forced versions:\n" +
+              e.map("  " + _).mkString("\n")
+          )
+        case Right(l) =>
+          l
+      }
+
     val grouped = forceVersions0
-      .groupBy { case (mod, _) => mod }
-      .map { case (mod, l) => mod -> l.map { case (_, version) => version } }
+      .groupBy(_._1)
+      .mapValues(_.map(_._2))
+      .iterator
+      .toMap
 
     for ((mod, forcedVersions) <- grouped if forcedVersions.distinct.lengthCompare(1) > 0)
       errPrintln(s"Warning: version of $mod forced several times, using only the last one (${forcedVersions.last})")
@@ -251,23 +258,31 @@ class Helper(
         .toMap
     }
 
-  val moduleReq = ModuleRequirements(globalExcludes, localExcludeMap, common.dependencyOptions.defaultConfiguration0)
+  val moduleReq = DeprecatedModuleRequirements(globalExcludes, localExcludeMap)
 
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(
+    DependencyParser.dependenciesParams(
       rawDependencies,
-      moduleReq,
-      transitive = true,
+      common.dependencyOptions.defaultConfiguration0,
       common.resolutionOptions.scalaVersionOrDefault
-    )
+    ).either match {
+      case Left(e) =>
+        (e, Nil)
+      case Right(deps) =>
+        (Nil, moduleReq(deps))
+    }
 
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
-    Parse.moduleVersionConfigs(
+    DependencyParser.dependenciesParams(
       common.dependencyOptions.intransitive,
-      moduleReq,
-      transitive = false,
+      common.dependencyOptions.defaultConfiguration0,
       common.resolutionOptions.scalaVersionOrDefault
-    )
+    ).either match {
+      case Left(e) =>
+        (e, Nil)
+      case Right(deps) =>
+        (Nil, moduleReq(deps).map { case (d, p) => (d.copy(transitive = false), p) })
+    }
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
 
@@ -283,12 +298,17 @@ class Helper(
         "sbtVersion" -> sbtVer
       )
     }
-    val (errors, ok) = Parse.moduleVersionConfigs(
-      common.dependencyOptions.sbtPlugin,
-      moduleReq,
-      transitive = true,
-      common.resolutionOptions.scalaVersionOrDefault
-    )
+    val (errors, ok) =
+      DependencyParser.dependenciesParams(
+        common.dependencyOptions.sbtPlugin,
+        common.dependencyOptions.defaultConfiguration0,
+        common.resolutionOptions.scalaVersionOrDefault
+      ).either match {
+        case Left(e) =>
+          (e, Nil)
+        case Right(deps) =>
+          (Nil, moduleReq(deps))
+      }
     val ok0 = ok.map {
       case (dep, params) =>
         val dep0 = dep.copy(

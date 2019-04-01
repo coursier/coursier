@@ -5,8 +5,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
 import coursier.params.ResolutionParams
-import coursier.parse.RuleParser
-import coursier.util.Parse
+import coursier.parse.{DependencyParser, RuleParser}
 
 final case class ResolutionOptions(
 
@@ -58,23 +57,24 @@ final case class ResolutionOptions(
       else
         Validated.invalidNel(s"Max iteration must be > 0 (got $maxIterations")
 
-    val forceVersionV = {
-
-      val (forceVersionErrors, forceVersions0) =
-        Parse.moduleVersions(forceVersion, scalaVersionOrDefault)
-
-      if (forceVersionErrors.nonEmpty)
-        Validated.invalidNel(
-          s"Cannot parse forced versions:\n" + forceVersionErrors.map("  " + _).mkString("\n")
-        )
-      else
-        // TODO Warn if some versions are forced multiple times?
-        Validated.validNel(
-          forceVersions0
-            .groupBy(_._1)
-            .mapValues(_.map(_._2).last)
-        )
-    }
+    val forceVersionV =
+      DependencyParser.moduleVersions(
+        forceVersion, scalaVersionOrDefault
+      ).either match {
+        case Left(e) =>
+          Validated.invalidNel(
+            s"Cannot parse forced versions:\n" +
+              e.map("  " + _).mkString("\n")
+          )
+        case Right(elems) =>
+          Validated.validNel(
+            elems
+              .groupBy(_._1)
+              .mapValues(_.map(_._2).last)
+              .iterator
+              .toMap
+          )
+      }
 
     val forcedPropertiesV = forceProperty
       .traverse { s =>

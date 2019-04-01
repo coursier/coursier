@@ -3,7 +3,7 @@ package coursier.util
 import coursier.core._
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
-import coursier.util.Parse.ModuleRequirements
+import coursier.parse.DependencyParser
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -114,18 +114,15 @@ object StringInterpolators {
     """)
   }
 
-  private val safeDefModuleRequirements = ModuleRequirements(
-    defaultConfiguration = Configuration.empty // same as coursier.Dependency.apply default value for configuration
-  )
   def safeDependency(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Dependency] = {
     import c.universe._
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
-        coursier.util.Parse.moduleVersionConfig(modString, safeDefModuleRequirements, transitive = true, scala.util.Properties.versionNumberString) match {
+        // same default configuration as coursier.Dependency.apply
+        DependencyParser.dependency(modString, scala.util.Properties.versionNumberString, Configuration.empty) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
-          case Right((dep, config)) =>
-            assert(config.isEmpty)
+          case Right(dep) =>
             val attrs = dep.module.attributes.toSeq.map {
               case (k, v) =>
                 q"_root_.scala.Tuple2($k, $v)"

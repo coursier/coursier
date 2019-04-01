@@ -6,8 +6,8 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, ModuleName, Organization}
-import coursier.util.{InMemoryRepository, Parse, Task}
-import coursier.util.Parse.ModuleRequirements
+import coursier.parse.DependencyParser
+import coursier.util.{InMemoryRepository, Task}
 
 object Dependencies {
 
@@ -19,11 +19,10 @@ object Dependencies {
     scalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, (Dependency, Map[String, String])] =
-    Parse.moduleVersionConfig(
+    DependencyParser.dependencyParams(
       rawDependency,
-      ModuleRequirements(defaultConfiguration = defaultConfiguration),
-      transitive = true,
-      scalaVersion
+      scalaVersion,
+      defaultConfiguration
     )
 
   /**

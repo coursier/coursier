@@ -1,20 +1,18 @@
-package coursier.test
+package coursier.parse
 
 import coursier.core.{Classifier, Configuration, Type}
 import coursier.{Attributes, moduleNameString, organizationString}
-import coursier.util.Parse
-import coursier.util.Parse.ModuleRequirements
 import utest._
 
-object ParseTests extends TestSuite {
-
-  val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
+object DependencyParserTests extends TestSuite {
 
   val tests = Tests {
 
+    val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
+
     // Module parsing tests
     "org:name:version" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -26,7 +24,7 @@ object ParseTests extends TestSuite {
     }
 
     "org:name:version:conifg" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -38,7 +36,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -50,7 +48,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with url" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,url=" + url, ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,url=" + url, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -64,7 +62,7 @@ object ParseTests extends TestSuite {
     }
 
     "multiple attrs with url" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url, ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -78,7 +76,7 @@ object ParseTests extends TestSuite {
     }
 
     "single attr with org::name:version" - {
-      Parse.moduleVersionConfig("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
@@ -89,24 +87,25 @@ object ParseTests extends TestSuite {
     }
 
     "illegal 1" - {
-      Parse.moduleVersionConfig("org.apache.avro:avro,1.7.4:runtime,classifier=tests", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("org.apache.avro:avro,1.7.4:runtime,classifier=tests", "2.11.11") match {
         case Left(err) => assert(err.contains("':' is not allowed in attribute"))
         case Right(dep) => assert(false)
       }
     }
 
     "illegal 2" - {
-      Parse.moduleVersionConfig("junit:junit:4.12,attr", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("junit:junit:4.12,attr", "2.11.11") match {
         case Left(err) => assert(err.contains("Failed to parse attribute"))
         case Right(dep) => assert(false)
       }
     }
 
     "illegal 3" - {
-      Parse.moduleVersionConfig("a:b:c,batman=robin", ModuleRequirements(), transitive = true, "2.11.11") match {
+      DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
         case Left(err) => assert(err.contains("The only attributes allowed are:"))
         case Right(dep) => assert(false)
       }
     }
   }
+
 }

@@ -2,8 +2,8 @@ package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.core.Configuration
+import coursier.parse.DependencyParser
 import coursier.{Attributes, Dependency}
-import coursier.util.Parse
 
 
 final case class SharedLoaderOptions(
@@ -55,14 +55,13 @@ final case class SharedLoaderOptions(
 
   private def isolatedModuleVersions(defaultScalaVersion: String) = rawIsolatedOrExit.groupBy { case (t, _) => t }.map {
     case (t, l) =>
-      val (errors, modVers) = Parse.moduleVersions(l.map { case (_, d) => d }, defaultScalaVersion)
-
-      if (errors.nonEmpty) {
-        errors.foreach(Console.err.println)
-        sys.exit(255)
+      DependencyParser.moduleVersions(l.map(_._2), defaultScalaVersion).either match {
+        case Left(errors0) =>
+          errors0.foreach(System.err.println)
+          sys.exit(255)
+        case Right(elems) =>
+          t -> elems
       }
-
-      t -> modVers
   }
 
   def isolatedDepsOrExit(defaultScalaVersion: String) =
