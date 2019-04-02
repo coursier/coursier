@@ -89,7 +89,7 @@ object CacheDefaults {
       .filter(!isPropFile(_))
       .toSeq
       .flatMap { s =>
-        CredentialsParser.parseSeq(s).right.toSeq.flatten
+        CredentialsParser.parseSeq(s).either.right.toSeq.flatten
       }
 
   val noEnvCachePolicies = Seq(

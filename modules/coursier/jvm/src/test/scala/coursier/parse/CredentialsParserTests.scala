@@ -37,13 +37,13 @@ object CredentialsParserTests extends TestSuite {
 
     "seq" - {
       'empty - {
-        val res = CredentialsParser.parseSeq("")
+        val res = CredentialsParser.parseSeq("").either
         val expectedRes = Right(Seq())
         assert(res == expectedRes)
       }
 
       "one" - {
-        val res = CredentialsParser.parseSeq("artifacts.foo.com alex:my-pass")
+        val res = CredentialsParser.parseSeq("artifacts.foo.com alex:my-pass").either
         val expectedRes = Right(Seq(Credentials("artifacts.foo.com", "alex", "my-pass")))
         assert(res == expectedRes)
       }
@@ -54,7 +54,7 @@ object CredentialsParserTests extends TestSuite {
             |
             |  artifacts.foo.com(tha realm) alex a:my-pass
             |artifacts.foo.com(tha realm) alex:$%_^12//,.;:   """.stripMargin
-        )
+        ).either
         val expectedRes = Right(Seq(
           Credentials("artifacts.foo.com", "alex", "my-pass"),
           Credentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm"),
