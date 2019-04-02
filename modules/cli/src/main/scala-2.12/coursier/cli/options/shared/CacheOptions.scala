@@ -3,11 +3,12 @@ package coursier.cli.options.shared
 import java.io.File
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import cats.data.{Validated, ValidatedNel}
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.CredentialFile
 import coursier.cache.{CacheDefaults, CachePolicy}
 import coursier.params.CacheParams
-import coursier.parse.CachePolicyParser
+import coursier.parse.{CachePolicyParser, CredentialsParser}
 
 import scala.concurrent.duration.Duration
 
@@ -42,7 +43,17 @@ final case class CacheOptions(
     cacheFileArtifacts: Boolean = false,
 
   @Help("Whether to follow http to https redirections")
-    followHttpToHttpsRedirect: Boolean = true
+    followHttpToHttpsRedirect: Boolean = true,
+
+  @Help("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
+  @Value("host(realm) user:pass|host user:pass")
+    credentials: List[String] = Nil,
+
+  @Help("Path to credential files to read credentials from")
+    credentialFile: List[String] = Nil,
+
+  @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
+  useEnvCredentials: Boolean = true
 
 ) {
 
@@ -103,8 +114,22 @@ final case class CacheOptions(
       else
         Validated.invalidNel(s"Retry count must be > 0 (got $retryCount)")
 
-    (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV).mapN {
-      (cachePolicy, ttl, parallel, checksum, retryCount) =>
+    val credentialsV = credentials.traverse { s =>
+      CredentialsParser.parseSeq(s).either match {
+        case Left(errors) =>
+          Validated.invalid(NonEmptyList.of(errors.head, errors.tail: _*))
+        case Right(l) =>
+          Validated.validNel(l)
+      }
+    }.map(_.flatten)
+
+    val credentialFiles = credentialFile.map { f =>
+      // warn if f doesn't exist or has too open permissions?
+      CredentialFile(f)
+    }
+
+    (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
+      (cachePolicy, ttl, parallel, checksum, retryCount, credentials0) =>
         CacheParams()
           .withCacheLocation(cache0)
           .withCachePolicies(cachePolicy)
@@ -114,6 +139,9 @@ final case class CacheOptions(
           .withRetryCount(retryCount)
           .withCacheLocalArtifacts(cacheFileArtifacts)
           .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirect)
+          .withCredentials(credentials0)
+          .withCredentialFiles(credentialFiles)
+          .withUseEnvCredentials(useEnvCredentials)
     }
   }
 }
