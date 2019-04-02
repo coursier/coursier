@@ -16,7 +16,7 @@
         {
           "name": "cachePolicies",
           "type": "Seq[coursier.cache.CachePolicy]",
-          "default": "coursier.cache.CachePolicy.default",
+          "default": "coursier.cache.CacheDefaults.cachePolicies",
           "since": "1.0.0"
         },
         {

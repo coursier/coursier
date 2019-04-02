@@ -1,7 +1,6 @@
 package coursier
 
-import coursier.cache.{CacheParse, LocalRepositories}
-import coursier.util.Repositories
+import coursier.parse.RepositoryParser
 
 abstract class PlatformResolve {
 
@@ -14,7 +13,7 @@ abstract class PlatformResolve {
         .toSeq
         .filter(_.nonEmpty)
 
-      CacheParse.repositories(l).either match {
+      RepositoryParser.repositories(l).either match {
         case Left(errs) =>
           System.err.println(
             s"Ignoring $origin, error parsing repositories from it:\n" +

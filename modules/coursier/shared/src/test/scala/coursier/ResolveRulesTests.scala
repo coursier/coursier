@@ -3,7 +3,6 @@ package coursier
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
-import coursier.util.Repositories
 import utest._
 
 import scala.async.Async.{async, await}

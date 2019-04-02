@@ -3,9 +3,9 @@ package coursier.cli.params.shared
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.shared.DependencyOptions
+import coursier.cli.util.DeprecatedModuleRequirements
 import coursier.core._
-import coursier.util.Parse
-import coursier.util.Parse.ModuleRequirements
+import coursier.parse.{DependencyParser, ModuleParser}
 
 import scala.io.Source
 
@@ -21,32 +21,33 @@ final case class DependencyParams(
 object DependencyParams {
   def apply(scalaVersion: String, options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
 
-    val excludeV = {
+    val excludeV =
+      ModuleParser.modules(options.exclude, scalaVersion).either match {
+        case Left(errors) =>
+          Validated.invalidNel(
+            s"Cannot parse excluded modules:\n" +
+              errors
+                .map("  " + _)
+                .mkString("\n")
+          )
 
-      val (excludeErrors, excludes0) = Parse.modules(options.exclude, scalaVersion)
-      val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
+        case Right(excludes0) =>
+          val (excludesNoAttr, excludesWithAttr) = excludes0.partition(_.attributes.isEmpty)
 
-      if (excludeErrors.nonEmpty)
-        Validated.invalidNel(
-          s"Cannot parse excluded modules:\n" +
-            excludeErrors
-              .map("  " + _)
-              .mkString("\n")
-        )
-      else if (excludesWithAttr.nonEmpty)
-        Validated.invalidNel(
-          s"Excluded modules with attributes not supported:\n" +
-            excludesWithAttr
-              .map("  " + _)
-              .mkString("\n")
-        )
-      else
-        Validated.validNel(
-          excludesNoAttr
-            .map(mod => (mod.organization, mod.name))
-            .toSet
-        )
-    }
+          if (excludesWithAttr.isEmpty)
+            Validated.validNel(
+              excludesNoAttr
+                .map(mod => (mod.organization, mod.name))
+                .toSet
+            )
+          else
+            Validated.invalidNel(
+              s"Excluded modules with attributes not supported:\n" +
+                excludesWithAttr
+                  .map("  " + _)
+                  .mkString("\n")
+            )
+      }
 
     val perModuleExcludeV =
       if (options.localExcludeFile.isEmpty)
@@ -83,67 +84,74 @@ object DependencyParams {
 
     val moduleReqV = (excludeV, perModuleExcludeV).mapN {
       (exclude, perModuleExclude) =>
-        ModuleRequirements(exclude, perModuleExclude, options.defaultConfiguration0)
+        DeprecatedModuleRequirements(exclude, perModuleExclude)
     }
 
     val intransitiveDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-
-        val (intransitiveModVerCfgErrors, intransitiveDepsWithExtraParams) =
-          Parse.moduleVersionConfigs(options.intransitive, moduleReq, transitive = false, scalaVersion)
-
-        if (intransitiveModVerCfgErrors.nonEmpty)
-          Left(
-            NonEmptyList.one(
-              s"Cannot parse intransitive dependencies:\n" +
-                intransitiveModVerCfgErrors.map("  "+_).mkString("\n")
+        DependencyParser.dependenciesParams(
+          options.intransitive,
+          options.defaultConfiguration0,
+          scalaVersion
+        ).either match {
+          case Left(e) =>
+            Left(
+              NonEmptyList.one(
+                s"Cannot parse intransitive dependencies:\n" +
+                  e.map("  " + _).mkString("\n")
+              )
             )
-          )
-        else
-          Right(intransitiveDepsWithExtraParams)
+          case Right(l) =>
+            Right(
+              moduleReq(l.map { case (d, p) => (d.copy(transitive = false), p) })
+            )
+        }
       }
       .toValidated
 
     val sbtPluginDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-
-        val (sbtPluginModVerCfgErrors, sbtPluginDepsWithExtraParams) =
-          Parse.moduleVersionConfigs(options.sbtPlugin, moduleReq, transitive = true, scalaVersion)
-
-        if (sbtPluginModVerCfgErrors.nonEmpty)
-          Left(
-            NonEmptyList.one(
-              s"Cannot parse sbt plugin dependencies:\n" +
-                sbtPluginModVerCfgErrors.map("  "+_).mkString("\n")
-            )
-          )
-        else if (sbtPluginDepsWithExtraParams.isEmpty)
-          Right(Nil)
-        else {
-          val defaults = {
-            val sbtVer = options.sbtVersion.split('.') match {
-              case Array("1", _, _) =>
-                // all sbt 1.x versions use 1.0 as short version
-                "1.0"
-              case arr => arr.take(2).mkString(".")
-            }
-            Map(
-              "scalaVersion" -> scalaVersion.split('.').take(2).mkString("."),
-              "sbtVersion" -> sbtVer
-            )
-          }
-          val l = sbtPluginDepsWithExtraParams.map {
-            case (dep, params) =>
-              val dep0 = dep.copy(
-                module = dep.module.copy(
-                  attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
-                )
+        DependencyParser.dependenciesParams(
+          options.sbtPlugin,
+          options.defaultConfiguration0,
+          scalaVersion
+        ).either match {
+          case Left(e) =>
+            Left(
+              NonEmptyList.one(
+                s"Cannot parse sbt plugin dependencies:\n" +
+                  e.map("  " + _).mkString("\n")
               )
-              (dep0, params)
-          }
-          Right(l)
+            )
+
+          case Right(Seq()) =>
+            Right(Nil)
+
+          case Right(l0) =>
+            val defaults = {
+              val sbtVer = options.sbtVersion.split('.') match {
+                case Array("1", _, _) =>
+                  // all sbt 1.x versions use 1.0 as short version
+                  "1.0"
+                case arr => arr.take(2).mkString(".")
+              }
+              Map(
+                "scalaVersion" -> scalaVersion.split('.').take(2).mkString("."),
+                "sbtVersion" -> sbtVer
+              )
+            }
+            val l = l0.map {
+              case (dep, params) =>
+                val dep0 = dep.copy(
+                  module = dep.module.copy(
+                    attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+                  )
+                )
+                (dep0, params)
+            }
+            Right(l)
         }
       }
       .toValidated

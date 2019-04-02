@@ -102,6 +102,7 @@ lazy val paths = project("paths")
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(core)
+  .enablePlugins(ContrabandPlugin)
   .jvmSettings(
     addPathsSources
   )
@@ -110,10 +111,26 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    utest,
+    libs ++= {
+      CrossVersion.partialVersion(scalaBinaryVersion.value) match {
+        case Some((2, 12)) =>
+          Seq(
+            "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
+            "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
+            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
+          )
+        case _ =>
+          Nil
+      }
+    },
     dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
     coursierPrefix,
-    Mima.cacheFilters
+    Mima.cacheFilters,
+    // from https://github.com/sbt/librarymanagement/blob/6d35f329b6b6be8da467eefc399ba9fa6f6725c0/build.sbt#L108-L110
+    managedSourceDirectories in Compile += baseDirectory.value / "src" / "main" / "contraband-scala",
+    sourceManaged in (Compile, generateContrabands) := baseDirectory.value / "src" / "main" / "contraband-scala"
   )
 
 lazy val cacheJvm = cache.jvm
@@ -191,7 +208,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, rulesParsersJvm)
+  .dependsOn(bootstrap, coursierJvm)
   .enablePlugins(ContrabandPlugin, PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -299,71 +316,32 @@ lazy val okhttp = project("okhttp")
   )
 
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
-  .enablePlugins(ContrabandPlugin)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jvmSettings(
+    shading,
+    // TODO shade those
+    libs += Deps.fastParse % "shaded"
+  )
+  .jsSettings(
+    libs += CrossDeps.fastParse.value
+  )
   .dependsOn(core, cache)
+  .configs(Integration)
   .settings(
     shared,
+    hasITs,
     dontPublishScalaJsIn("2.11"),
     libs += Deps.scalaReflect.value % Provided,
-    inConfig(Compile)(Seq(
-      // commit generated sources in git, mostly for pants
-      // from https://github.com/sbt/librarymanagement/blob/6d35f329b6b6be8da467eefc399ba9fa6f6725c0/build.sbt#L108-L110
-      managedSourceDirectories in Compile += baseDirectory.value / "src" / "main" / "contraband-scala",
-      sourceManaged in (Compile, generateContrabands) := baseDirectory.value / "src" / "main" / "contraband-scala",
-      // from https://github.com/sbt/contraband/blob/63901346c0c92711a874c7189897e9fcd5cd003f/plugin/src/main/scala/ContrabandPlugin.scala#L60-L77,
-      // adjusting the source directory, and calling the former generateContrabands task
-      // This allows to process contraband files from jvm/src/main/contraband (former task) *and* the ones
-      // from shared/src/main/contraband (this task).
-      generateContrabands := {
-        val jvmSpecific = generateContrabands.value
-        val extraSourceDir = (baseDirectory.value / "..").getCanonicalFile / "shared" / "src" / "main" / "contraband"
-        val extraManagedSourceDir = (baseDirectory.value / "..").getCanonicalFile / "shared" / "src" / "main" / "contraband-scala"
-        val shared = sbt.contraband.Generate(extraSourceDir,
-          !(skipGeneration in generateContrabands).value,
-          !(skipGeneration in generateJsonCodecs).value,
-          extraManagedSourceDir,
-          (contrabandJavaLazy in generateContrabands).value,
-          (contrabandJavaOption in generateContrabands).value,
-          (contrabandScalaArray in generateContrabands).value,
-          (contrabandScalaFileNames in generateContrabands).value,
-          (contrabandScalaSealInterface in generateContrabands).value,
-          (contrabandScalaPrivateConstructor in generateContrabands).value,
-          (contrabandWrapOption in generateContrabands).value,
-          (contrabandCodecParents in generateContrabands).value,
-          (contrabandInstantiateJavaLazy in generateContrabands).value,
-          (contrabandInstantiateJavaOptional in generateContrabands).value,
-          (contrabandFormatsForType in generateContrabands).value,
-          streams.value)
-
-        jvmSpecific ++ shared
-      }
-    )),
     publishGeneratedSources,
     utest,
-    libs += Deps.scalaAsync % Test
+    libs ++= Seq(
+      Deps.scalaAsync % Test,
+      CrossDeps.argonautShapeless.value
+    )
   )
 
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
-
-lazy val `rules-parsers` = crossProject("rules-parser")(JSPlatform, JVMPlatform)
-  .dependsOn(coursier)
-  .settings(
-    shared,
-    utest,
-    // TODO shade those
-    libs += Deps.fastParse,
-    // not yet published for 2.13
-    libs ++= {
-      if (scalaVersion.value.startsWith("2.12"))
-        Seq(CrossDeps.argonautShapeless.value)
-      else
-        Nil
-    }
-  )
-
-lazy val rulesParsersJvm = `rules-parsers`.jvm
-lazy val rulesParsersJs = `rules-parsers`.js
 
 lazy val jvm = project("jvm")
   .dummy
@@ -381,8 +359,7 @@ lazy val jvm = project("jvm")
     benchmark,
     cli,
     okhttp,
-    coursierJvm,
-    rulesParsersJvm
+    coursierJvm
   )
   .settings(
     shared,
@@ -428,9 +405,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     web,
     okhttp,
     coursierJvm,
-    coursierJs,
-    rulesParsersJvm,
-    rulesParsersJs
+    coursierJs
   )
   .settings(
     shared,

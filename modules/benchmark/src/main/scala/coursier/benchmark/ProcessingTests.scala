@@ -2,7 +2,7 @@ package coursier.benchmark
 
 import java.util.concurrent.TimeUnit
 
-import coursier.util.Repositories
+import coursier.Repositories
 import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit}
 
 @BenchmarkMode(Array(Mode.AverageTime))

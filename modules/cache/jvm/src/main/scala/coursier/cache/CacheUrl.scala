@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
+import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -91,35 +92,222 @@ object CacheUrl {
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
     )
 
-  def urlConnection(url0: String, authentication: Option[Authentication]) = {
+  private def partialContentResponseCode = 206
+  private def invalidPartialContentResponseCode = 416
+
+  private def initialize(
+    conn: URLConnection,
+    authentication: Option[Authentication],
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    method: String
+  ): Unit = {
+
+    conn match {
+      case conn0: HttpURLConnection =>
+
+        if (method != "GET")
+          conn0.setRequestMethod(method)
+
+        // handling those ourselves, so that we can update credentials upon redirection
+        conn0.setInstanceFollowRedirects(false)
+
+        // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
+        // returning the same content for user agent "Java/…".
+        conn0.setRequestProperty("User-Agent", "")
+
+        conn0 match {
+          case conn1: HttpsURLConnection =>
+
+            for (f <- sslSocketFactoryOpt)
+              conn1.setSSLSocketFactory(f)
+
+            for (v <- hostnameVerifierOpt)
+              conn1.setHostnameVerifier(v)
+
+          case _ =>
+        }
+
+      case _ =>
+    }
+
+    for (auth <- authentication)
+      conn match {
+        case authenticated: AuthenticatedURLConnection =>
+          authenticated.authenticate(auth)
+        case conn0: HttpURLConnection =>
+          conn0.setRequestProperty(
+            "Authorization",
+            "Basic " + basicAuthenticationEncode(auth.user, auth.password)
+          )
+        case _ =>
+        // FIXME Authentication is ignored
+      }
+  }
+
+  private def redirectTo(conn: URLConnection): Option[String] =
+    conn match {
+      case conn0: HttpURLConnection =>
+        val c = conn0.getResponseCode
+        if (c == 301 || c == 307 || c == 308)
+          Option(conn0.getHeaderField("Location"))
+        else
+          None
+      case _ =>
+        None
+    }
+
+  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean): Option[String] =
+    redirectTo(conn)
+      .map { loc =>
+        new URI(url).resolve(loc).toASCIIString
+      }
+      .filter { target =>
+        val isHttp = url.startsWith("http://")
+        val isHttps = url.startsWith("https://")
+
+        val redirToHttp = target.startsWith("http://")
+        val redirToHttps = target.startsWith("https://")
+
+        (isHttp && redirToHttp) ||
+          (isHttps && redirToHttps) ||
+          (followHttpToHttpsRedirections && isHttp && redirToHttps)
+      }
+
+  private def rangeResOpt(conn: URLConnection, alreadyDownloaded: Long): Option[Boolean] =
+    if (alreadyDownloaded > 0L)
+      conn match {
+        case conn0: HttpURLConnection =>
+          conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
+
+          val startOver = (conn0.getResponseCode == partialContentResponseCode
+            || conn0.getResponseCode == invalidPartialContentResponseCode) && {
+            val hasMatchingHeader = Option(conn0.getHeaderField("Content-Range"))
+              .exists(_.startsWith(s"bytes $alreadyDownloaded-"))
+            !hasMatchingHeader
+          }
+
+          Some(startOver)
+        case _ =>
+          None
+      }
+    else
+      None
+
+  private def is4xx(conn: URLConnection): Boolean =
+    conn match {
+      case conn0: HttpURLConnection =>
+        val c = conn0.getResponseCode
+        c / 100 == 4
+      case _ =>
+        false
+    }
+
+
+  def urlConnection(
+    url0: String,
+    authentication: Option[Authentication],
+    followHttpToHttpsRedirections: Boolean = false,
+    credentials: Seq[Credentials] = Nil,
+    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
+    hostnameVerifierOpt: Option[HostnameVerifier] = None,
+    method: String = "GET"
+  ): URLConnection = {
+    val (c, partial) = urlConnectionMaybePartial(
+      url0,
+      authentication,
+      0L,
+      followHttpToHttpsRedirections,
+      credentials,
+      sslSocketFactoryOpt,
+      hostnameVerifierOpt,
+      method
+    )
+    assert(!partial)
+    c
+  }
+
+  def urlConnectionMaybePartial(
+    url0: String,
+    authentication: Option[Authentication],
+    alreadyDownloaded: Long,
+    followHttpToHttpsRedirections: Boolean,
+    credentials: Seq[Credentials],
+    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
+    hostnameVerifierOpt: Option[HostnameVerifier] = None,
+    method: String = "GET",
+    authRealm: Option[String] = None
+  ): (URLConnection, Boolean) = {
     var conn: URLConnection = null
 
     try {
-      conn = url(url0).openConnection() // FIXME Should this be closed?
-
-      conn match {
-        case conn0: HttpURLConnection =>
-          // Dummy user-agent instead of the default "Java/...",
-          // so that we are not returned incomplete/erroneous metadata
-          // (Maven 2 compatibility? - happens for snapshot versioning metadata)
-          conn0.setRequestProperty("User-Agent", "")
-        case _ =>
+      conn = url(url0).openConnection()
+      val authOpt = authentication.filter { a =>
+        a.realmOpt.forall(authRealm.contains) &&
+          !a.optional
       }
+      initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
 
-      for (auth <- authentication)
-        conn match {
-          case authenticated: AuthenticatedURLConnection =>
-            authenticated.authenticate(auth)
-          case conn0: HttpURLConnection =>
-            conn0.setRequestProperty(
-              "Authorization",
-              "Basic " + basicAuthenticationEncode(auth.user, auth.password)
-            )
-          case _ =>
-          // FIXME Authentication is ignored
-        }
+      val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 
-      conn
+      rangeResOpt0 match {
+        case Some(true) =>
+          closeConn(conn)
+          urlConnectionMaybePartial(
+            url0,
+            authentication,
+            alreadyDownloaded = 0L,
+            followHttpToHttpsRedirections,
+            credentials,
+            sslSocketFactoryOpt,
+            hostnameVerifierOpt,
+            method
+          )
+        case _ =>
+          val partialDownload = rangeResOpt0.nonEmpty
+          val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
+
+          redirectOpt match {
+            case Some(loc) =>
+              closeConn(conn)
+              val newAuthOpt = credentials.find(_.matches(loc, None)).map(_.authentication)
+              urlConnectionMaybePartial(
+                loc,
+                newAuthOpt,
+                alreadyDownloaded,
+                followHttpToHttpsRedirections,
+                credentials,
+                sslSocketFactoryOpt,
+                hostnameVerifierOpt,
+                method
+              )
+            case None =>
+
+              if (is4xx(conn)) {
+                val realmOpt = realm(conn)
+                val authentication0 = authentication
+                  .map(_.copy(optional = false))
+                  .orElse(credentials.find(_.matches(url0, realmOpt)).map(_.authentication))
+                if (authentication0 == authentication && realmOpt == authRealm)
+                  (conn, partialDownload)
+                else {
+                  closeConn(conn)
+                  urlConnectionMaybePartial(
+                    url0,
+                    authentication0,
+                    alreadyDownloaded,
+                    followHttpToHttpsRedirections,
+                    credentials,
+                    sslSocketFactoryOpt,
+                    hostnameVerifierOpt,
+                    method,
+                    realmOpt
+                  )
+                }
+              } else
+                (conn, partialDownload)
+          }
+      }
     } catch {
       case NonFatal(e) =>
         if (conn != null)

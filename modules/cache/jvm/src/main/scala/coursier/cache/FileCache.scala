@@ -12,6 +12,7 @@ import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Sync, Task}
+import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -37,15 +38,25 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def location: File = params.location
   def cachePolicies: Seq[CachePolicy] = params.cachePolicies
   def checksums: Seq[Option[String]] = params.checksums
+  def credentials: Seq[Credentials] = params.credentials
+  def credentialFiles: Seq[CredentialFile] = params.credentialFiles
   def logger: CacheLogger = params.logger
   def pool: ExecutorService = params.pool
   def ttl: Option[Duration] = params.ttl
   def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
   def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
   def sslRetry: Int = params.sslRetry
+  def sslSocketFactoryOpt: Option[SSLSocketFactory] = params.sslSocketFactoryOpt
+  def hostnameVerifierOpt: Option[HostnameVerifier] = params.hostnameVerifierOpt
   def retry: Int = params.retry
   def bufferSize: Int = params.bufferSize
   def S: Sync[F] = params.S
+
+  private lazy val credentialsFromFiles =
+    credentialFiles.flatMap(_.read())
+
+  def allCredentials: F[Seq[Credentials]] =
+    S.delay(credentialsFromFiles ++ credentials)
 
   private def withParams[G[_]](params: FileCache.Params[G]): FileCache[G] =
     new FileCache(params)
@@ -58,6 +69,18 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(cachePolicies = cachePolicies))
   def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
     withParams(params.copy(checksums = checksums))
+  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
+    withParams(params.copy(credentials = credentials))
+  def addCredentials(credentials: Credentials*): FileCache[F] =
+    withParams(params.copy(credentials = params.credentials ++ credentials))
+  def withCredentialFiles(credentialFiles: Seq[CredentialFile]): FileCache[F] =
+    withParams(params.copy(credentialFiles = credentialFiles))
+  def addCredentialFiles(credentialFiles: CredentialFile*): FileCache[F] =
+    withParams(params.copy(credentialFiles = params.credentialFiles ++ credentialFiles))
+  def addCredentialFile(credentialFile: CredentialFile): FileCache[F] =
+    withParams(params.copy(credentialFiles = params.credentialFiles :+ credentialFile))
+  def addCredentialFile(credentialFile: File): FileCache[F] =
+    withParams(params.copy(credentialFiles = params.credentialFiles :+ CredentialFile(credentialFile.getAbsolutePath)))
   def withLogger(logger: CacheLogger): FileCache[F] =
     withParams(params.copy(logger = logger))
   def withPool(pool: ExecutorService): FileCache[F] =
@@ -66,6 +89,16 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(ttl = ttl))
   def withTtl(ttl: Duration): FileCache[F] =
     withTtl(Some(ttl))
+  def withSslRetry(sslRetry: Int): FileCache[F] =
+    withParams(params.copy(sslRetry = sslRetry))
+  def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
+    withParams(params.copy(sslSocketFactoryOpt = Some(sslSocketFactory)))
+  def withSslSocketFactoryOpt(sslSocketFactoryOpt: Option[SSLSocketFactory]): FileCache[F] =
+    withParams(params.copy(sslSocketFactoryOpt = sslSocketFactoryOpt))
+  def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
+    withParams(params.copy(hostnameVerifierOpt = Some(hostnameVerifier)))
+  def withHostnameVerifierOpt(hostnameVerifierOpt: Option[HostnameVerifier]): FileCache[F] =
+    withParams(params.copy(hostnameVerifierOpt = hostnameVerifierOpt))
   def withRetry(retry: Int): FileCache[F] =
     withParams(params.copy(retry = retry))
   def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
@@ -81,7 +114,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
   private implicit val S0 = S
 
-  import FileCache.{readFullyTo, partialContentResponseCode, invalidPartialContentResponseCode, contentLength}
+  import FileCache.{readFullyTo, contentLength}
 
   override def loggerOpt: Some[CacheLogger] =
     Some(logger)
@@ -119,12 +152,20 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger
     ): EitherT[F, ArtifactError, Option[Long]] =
-      EitherT {
+      EitherT(S.bind(allCredentials) { allCredentials0 =>
         S.schedule(pool) {
           var conn: URLConnection = null
 
           try {
-            conn = CacheUrl.urlConnection(url, artifact.authentication)
+            conn = CacheUrl.urlConnection(
+              url,
+              artifact.authentication,
+              followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+              credentials = allCredentials0,
+              sslSocketFactoryOpt,
+              hostnameVerifierOpt,
+              method = "HEAD"
+            )
 
             conn match {
               case c: HttpURLConnection =>
@@ -132,7 +173,6 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
                 var success = false
                 try {
-                  c.setRequestMethod("HEAD")
                   val remoteLastModified = c.getLastModified
 
                   val res =
@@ -159,7 +199,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               CacheUrl.closeConn(conn)
           }
         }
-      }
+      })
 
     def fileExists(file: File): F[Boolean] =
       S.schedule(pool) {
@@ -246,7 +286,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
       file: File,
       url: String
     ): EitherT[F, ArtifactError, Unit] =
-      EitherT {
+      EitherT(S.bind(allCredentials) { allCredentials0 =>
         S.schedule(pool) {
 
           val tmp = CachePath.temporaryFile(file)
@@ -261,41 +301,19 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               var conn: URLConnection = null
 
               try {
-                conn = CacheUrl.urlConnection(url, artifact.authentication)
-
-                val partialDownload = conn match {
-                  case conn0: HttpURLConnection if alreadyDownloaded > 0L =>
-                    conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
-
-                    ((conn0.getResponseCode == partialContentResponseCode)
-                       || (conn0.getResponseCode == invalidPartialContentResponseCode)) && {
-                      val ackRange = Option(conn0.getHeaderField("Content-Range")).getOrElse("")
-
-                      ackRange.startsWith(s"bytes $alreadyDownloaded-") || {
-                        // unrecognized Content-Range header -> start a new connection with no resume
-                        CacheUrl.closeConn(conn)
-                        conn = CacheUrl.urlConnection(url, artifact.authentication)
-                        false
-                      }
-                    }
-                  case _ => false
-                }
+                val (conn0, partialDownload) = CacheUrl.urlConnectionMaybePartial(
+                  url,
+                  artifact.authentication,
+                  alreadyDownloaded,
+                  followHttpToHttpsRedirections,
+                  allCredentials0,
+                  sslSocketFactoryOpt,
+                  hostnameVerifierOpt,
+                  "GET"
+                )
+                conn = conn0
 
                 val respCodeOpt = CacheUrl.responseCode(conn)
-
-                if (followHttpToHttpsRedirections && url.startsWith("http://") && respCodeOpt.exists(c => c == 301 || c == 307 || c == 308))
-                  conn match {
-                    case conn0: HttpURLConnection =>
-                      Option(conn0.getHeaderField("Location")) match {
-                        case Some(loc) if loc.startsWith("https://") =>
-                          CacheUrl.closeConn(conn)
-                          conn = CacheUrl.urlConnection(loc, None) // not keeping authentication here… should we?
-                        case _ =>
-                          // ignored
-                      }
-                    case _ =>
-                      // ignored
-                  }
 
                 if (respCodeOpt.contains(404))
                   Left(ArtifactError.NotFound(url, permanent = Some(true)))
@@ -341,7 +359,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
-                lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
+                lenOpt = Some(
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
+                    .right.toOption.flatten
+                )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, currentLen, watching = true)
               } else
@@ -349,7 +370,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             def done(): Unit =
               if (lenOpt.isEmpty) {
-                lenOpt = Some(contentLength(url, artifact.authentication, logger).right.toOption.flatten)
+                lenOpt = Some(
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
+                    .right.toOption.flatten
+                )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, len, watching = true)
               } else
@@ -391,7 +415,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
           res
         }
-      }
+      })
 
     def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
@@ -588,7 +612,30 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] =
+  ): EitherT[F, ArtifactError, File] = {
+
+    val artifact0 = S.map(allCredentials) { allCredentials =>
+      if (artifact.authentication.isEmpty) {
+        val authOpt = allCredentials
+          .find(_.matches(artifact.url, None))
+          .map(_.authentication)
+        artifact.copy(authentication = authOpt)
+      } else
+        artifact
+    }
+
+    EitherT[F, ArtifactError, Artifact](S.map(artifact0)(Right(_)))
+      .flatMap { a =>
+        filePerPolicy0(a, policy, retry)
+      }
+  }
+
+  private def filePerPolicy0(
+    artifact: Artifact,
+    policy: CachePolicy,
+    retry: Int = retry
+  ): EitherT[F, ArtifactError, File] = {
+
     EitherT {
       S.map(download(
         artifact,
@@ -610,7 +657,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
           checksum match {
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
-              //       from artifact.checksumUrls
+              //       from artifact0.checksumUrls
               Left(ArtifactError.ChecksumNotFound(checksums0.last.get, ""))
             case Some(c) => Right((f, c))
           }
@@ -634,12 +681,13 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               Right(())
             }
           }.flatMap { _ =>
-            filePerPolicy(artifact, policy, retry - 1)
+            filePerPolicy0(artifact, policy, retry - 1)
           }
         }
       case err =>
         EitherT(S.point(Left(err)))
     }
+  }
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     file(artifact, retry)
@@ -725,12 +773,16 @@ object FileCache {
     location: File,
     cachePolicies: Seq[CachePolicy],
     checksums: Seq[Option[String]],
+    credentials: Seq[Credentials],
+    credentialFiles: Seq[CredentialFile],
     logger: CacheLogger,
     pool: ExecutorService,
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean,
     sslRetry: Int,
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
     retry: Int,
     bufferSize: Int,
     S: Sync[F]
@@ -814,19 +866,28 @@ object FileCache {
     helper(sslRetry)
   }
 
-  private val partialContentResponseCode = 206
-  private val invalidPartialContentResponseCode = 416
-
   private def contentLength(
     url: String,
     authentication: Option[Authentication],
+    followHttpToHttpsRedirections: Boolean,
+    credentials: Seq[Credentials],
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
     logger: CacheLogger
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
 
     try {
-      conn = CacheUrl.urlConnection(url, authentication)
+      conn = CacheUrl.urlConnection(
+        url,
+        authentication,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        credentials = credentials,
+        sslSocketFactoryOpt = sslSocketFactoryOpt,
+        hostnameVerifierOpt = hostnameVerifierOpt,
+        method = "HEAD"
+      )
 
       conn match {
         case c: HttpURLConnection =>
@@ -834,7 +895,6 @@ object FileCache {
 
           var success = false
           try {
-            c.setRequestMethod("HEAD")
             val len = Some(c.getContentLengthLong)
               .filter(_ >= 0L)
 
@@ -861,14 +921,18 @@ object FileCache {
     new FileCache(
       Params(
         location = CacheDefaults.location,
-        cachePolicies = CachePolicy.default,
+        cachePolicies = CacheDefaults.cachePolicies,
         checksums = CacheDefaults.checksums,
+        credentials = Nil,
+        credentialFiles = CacheDefaults.credentialFiles,
         logger = CacheLogger.nop,
         pool = CacheDefaults.pool,
         ttl = CacheDefaults.ttl,
         localArtifactsShouldBeCached = false,
         followHttpToHttpsRedirections = false,
         sslRetry = CacheDefaults.sslRetryCount,
+        sslSocketFactoryOpt = None,
+        hostnameVerifierOpt = None,
         retry = CacheDefaults.defaultRetryCount,
         bufferSize = CacheDefaults.bufferSize,
         S = S

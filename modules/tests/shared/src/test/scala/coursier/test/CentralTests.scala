@@ -7,7 +7,7 @@ import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.graph.{Conflict, ModuleTree}
 import coursier.test.compatibility._
-import coursier.util.{Print, Repositories, Tree}
+import coursier.util.{Print, Tree}
 
 import scala.concurrent.Future
 

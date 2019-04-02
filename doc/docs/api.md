@@ -79,7 +79,6 @@ repositories at once, wiping the default ones and any previously passed one.
 
 ```scala mdoc:silent:reset
 import coursier._
-import coursier.util.Repositories
 
 val resolution = Resolve()
   .addDependencies(dep"sh.almond:scala-kernel-api_2.12.8:0.2.2")

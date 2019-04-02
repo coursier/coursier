@@ -1,7 +1,6 @@
 package coursier
 
 import coursier.params.ResolutionParams
-import coursier.util.Repositories
 import utest._
 
 import scala.async.Async.{async, await}
