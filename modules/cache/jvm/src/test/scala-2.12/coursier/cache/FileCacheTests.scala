@@ -6,6 +6,7 @@ import java.security.cert.X509Certificate
 
 import cats.data.NonEmptyList
 import cats.effect.IO
+import coursier.Credentials
 import coursier.cache.TestUtil.withTmpDir
 import coursier.core.Artifact
 import coursier.util.{Sync, Task}

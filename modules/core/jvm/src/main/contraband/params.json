@@ -2,9 +2,9 @@
   "types": [
     {
       "name": "Credentials",
-      "namespace": "coursier.cache",
+      "namespace": "coursier",
       "target": "Scala",
-      "parents": ["coursier.cache.internal.CredentialsHelpers"],
+      "parents": ["coursier.internal.CredentialsHelpers"],
       "type": "record",
       "fields": [
         {
@@ -41,9 +41,9 @@
     },
     {
       "name": "CredentialFile",
-      "namespace": "coursier.cache",
+      "namespace": "coursier",
       "target": "Scala",
-      "parents": ["coursier.cache.internal.CredentialFileHelpers"],
+      "parents": ["coursier.internal.CredentialFileHelpers"],
       "type": "record",
       "fields": [
         {

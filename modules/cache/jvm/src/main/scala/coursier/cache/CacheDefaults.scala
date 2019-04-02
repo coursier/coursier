@@ -2,6 +2,7 @@ package coursier.cache
 
 import java.io.File
 
+import coursier.CredentialFile
 import coursier.parse.CachePolicyParser
 import coursier.paths.CachePath
 import coursier.util.Sync

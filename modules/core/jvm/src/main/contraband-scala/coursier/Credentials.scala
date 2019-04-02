@@ -3,13 +3,13 @@
  */
 
 // DO NOT EDIT MANUALLY
-package coursier.cache
+package coursier
 final class Credentials private (
   val host: String,
   val username: String,
   val password: String,
   val realm: Option[String],
-  val optional: Boolean) extends coursier.cache.internal.CredentialsHelpers with Serializable {
+  val optional: Boolean) extends coursier.internal.CredentialsHelpers with Serializable {
   
   private def this() = this("", "", "", None, true)
   private def this(host: String, username: String, password: String) = this(host, username, password, None, true)
@@ -20,7 +20,7 @@ final class Credentials private (
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.cache.Credentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.Credentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##)
   }
   override def toString: String = {
     "Credentials(" + host + ", " + username + ", " + password + ", " + realm + ", " + optional + ")"
