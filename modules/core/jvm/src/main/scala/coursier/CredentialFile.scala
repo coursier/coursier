@@ -1,8 +1,8 @@
 /**
- * This code is generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
- */
+  * This code USED TO BE generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
+  */
 
-// DO NOT EDIT MANUALLY
+// DO EDIT MANUALLY from now on
 package coursier
 final class CredentialFile private (
   val path: String,
