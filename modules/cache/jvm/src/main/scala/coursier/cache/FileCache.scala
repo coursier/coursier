@@ -924,7 +924,7 @@ object FileCache {
         location = CacheDefaults.location,
         cachePolicies = CacheDefaults.cachePolicies,
         checksums = CacheDefaults.checksums,
-        credentials = Nil,
+        credentials = CacheDefaults.credentials,
         credentialFiles = CacheDefaults.credentialFiles,
         logger = CacheLogger.nop,
         pool = CacheDefaults.pool,
