@@ -33,7 +33,8 @@ abstract class CredentialFileHelpers {
         .propertyNames()
         .asScala
         .map(_.asInstanceOf[String])
-        .filter(_.endsWith(".username")).toVector
+        .filter(_.endsWith(".username"))
+        .toVector
 
       userProps.map { userProp =>
         val prefix = userProp.stripSuffix(".username")
@@ -55,9 +56,8 @@ abstract class CredentialFileHelpers {
 
     } else if (optional)
       Nil
-    else {
+    else
       throw new Exception(s"Credential file $path not found")
-    }
   }
 
 }
