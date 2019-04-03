@@ -6,9 +6,9 @@ import java.security.cert.X509Certificate
 
 import cats.data.NonEmptyList
 import cats.effect.IO
-import coursier.Credentials
 import coursier.cache.TestUtil.withTmpDir
 import coursier.core.Artifact
+import coursier.credentials.Credentials
 import coursier.util.{Sync, Task}
 import javax.net.ssl.{HostnameVerifier, KeyManagerFactory, SSLContext, SSLSession, TrustManager, X509TrustManager}
 import org.http4s.dsl.io._
@@ -429,7 +429,7 @@ object FileCacheTests extends TestSuite {
             httpBaseUri / "auth-redirect",
             "hello auth secure",
             _.withFollowHttpToHttpsRedirections(true)
-              .addCredentialFile(credFile)
+              .addFileCredentials(credFile)
           )
         }
 
@@ -437,7 +437,7 @@ object FileCacheTests extends TestSuite {
           expect(
             httpBaseUri / "auth" / "self-redirect",
             "hello auth",
-            _.addCredentialFile(credFile)
+            _.addFileCredentials(credFile)
           )
         }
 

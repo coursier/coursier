@@ -5,8 +5,8 @@ import java.io.File
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.CredentialFile
-import coursier.cache.{CacheDefaults, CachePolicy}
+import coursier.cache.CacheDefaults
+import coursier.credentials.FileCredentials
 import coursier.params.CacheParams
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 
@@ -114,6 +114,9 @@ final case class CacheOptions(
       else
         Validated.invalidNel(s"Retry count must be > 0 (got $retryCount)")
 
+    // FIXME Here, we're giving direct credentials a higher priority than file credentials,
+    //       even if some of the latter were passed before the former on the command-line
+
     val credentialsV = credentials.traverse { s =>
       CredentialsParser.parseSeq(s).either match {
         case Left(errors) =>
@@ -125,7 +128,7 @@ final case class CacheOptions(
 
     val credentialFiles = credentialFile.map { f =>
       // warn if f doesn't exist or has too open permissions?
-      CredentialFile(f)
+      FileCredentials(f)
     }
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
@@ -139,8 +142,7 @@ final case class CacheOptions(
           .withRetryCount(retryCount)
           .withCacheLocalArtifacts(cacheFileArtifacts)
           .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirect)
-          .withCredentials(credentials0)
-          .withCredentialFiles(credentialFiles)
+          .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
     }
   }

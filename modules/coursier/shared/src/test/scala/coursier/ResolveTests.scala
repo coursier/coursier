@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.params.ResolutionParams
+import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -80,6 +80,47 @@ object ResolveTests extends TestSuite {
       val coursierVersionOpt = versionOf(res, mod"io.get-coursier:coursier_2.12")
       val expectedCoursierVersion = "1.1.0-M6"
       assert(coursierVersionOpt.contains(expectedCoursierVersion))
+    }
+
+    'mirrors - {
+
+      def run(mirror: Mirror) = async {
+        val res = await {
+          Resolve()
+            .withCache(cache)
+            .addMirrors(mirror)
+            .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")
+            .future()
+        }
+
+        await(validateDependencies(res))
+
+        val artifacts = res.artifacts()
+        assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
+      }
+
+      'mavenMirror - {
+        'specific - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        'all - run(MavenMirror("https://jcenter.bintray.com", "*"))
+
+        'trailingSlash - {
+          'specific - {
+            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+            * - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+          }
+          'all - run(MavenMirror("https://jcenter.bintray.com/", "*"))
+        }
+      }
+
+      'treeMirror - {
+        * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        'trailingSlash - {
+          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+          * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+        }
+      }
     }
   }
 }

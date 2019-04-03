@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 
-import coursier.{CredentialFile, Credentials}
+import coursier.credentials.{Credentials, FileCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.CachePath
 import coursier.util.Sync
@@ -64,33 +64,28 @@ object CacheDefaults {
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
 
-  def credentialFiles: Seq[CredentialFile] =
+  def credentials: Seq[Credentials] =
     if (credentialPropOpt.isEmpty) {
       val configDir = coursier.paths.CoursierPaths.configDirectory()
       val propFile = new File(configDir, "credentials.properties")
       // Warn if propFile has group and others read permissions?
-      Seq(CredentialFile(propFile.getAbsolutePath, optional = true))
+      Seq(FileCredentials(propFile.getAbsolutePath, optional = true))
     } else
       credentialPropOpt
         .filter(isPropFile)
-        .map { path =>
-          // hope Windows users can manage to use file:// URLs fine
-          val path0 =
-            if (path.startsWith("file:"))
-              new File(new URI(path)).getAbsolutePath
-            else
-              path
-          CredentialFile(path0, optional = true)
-        }
         .toSeq
-
-  def credentials: Seq[Credentials] =
-    credentialPropOpt
-      .filter(!isPropFile(_))
-      .toSeq
-      .flatMap { s =>
-        CredentialsParser.parseSeq(s).either.right.toSeq.flatten
-      }
+        .flatMap {
+          case path if isPropFile(path) =>
+            // hope Windows users can manage to use file:// URLs fine
+            val path0 =
+              if (path.startsWith("file:"))
+                new File(new URI(path)).getAbsolutePath
+              else
+                path
+            Seq(FileCredentials(path0, optional = true))
+          case s =>
+            CredentialsParser.parseSeq(s).either.right.toSeq.flatten
+        }
 
   val noEnvCachePolicies = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)

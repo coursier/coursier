@@ -6,7 +6,7 @@ import java.lang.{Boolean => JBoolean}
 import coursier.cache.{Cache, FileCache}
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
-import coursier.params.ResolutionParams
+import coursier.params.{Mirror, ResolutionParams}
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
@@ -35,6 +35,8 @@ final class Fetch[F[_]] private (
     resolveParams.dependencies
   def repositories: Seq[Repository] =
     resolveParams.repositories
+  def mirrors: Seq[Mirror] =
+    resolveParams.mirrors
   def resolutionParams: ResolutionParams =
     resolveParams.resolutionParams
   def cache: Cache[F] =
@@ -111,6 +113,11 @@ final class Fetch[F[_]] private (
     withResolveParams(resolveParams.copy(repositories = repositories))
   def addRepositories(repositories: Repository*): Fetch[F] =
     withResolveParams(resolveParams.copy(repositories = resolveParams.repositories ++ repositories))
+
+  def withMirrors(mirrors: Seq[Mirror]): Fetch[F] =
+    withResolveParams(resolveParams.copy(mirrors = mirrors))
+  def addMirrors(mirrors: Mirror*): Fetch[F] =
+    withResolveParams(resolveParams.copy(mirrors = resolveParams.mirrors ++ mirrors))
 
   def withResolutionParams(resolutionParams: ResolutionParams): Fetch[F] =
     withResolveParams(resolveParams.copy(resolutionParams = resolutionParams))
@@ -223,15 +230,7 @@ object Fetch {
   // see Resolve.apply for why cache is passed here
   def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Fetch[F] =
     new Fetch[F](
-      Resolve.Params(
-        Nil,
-        Resolve.defaultRepositories,
-        ResolutionParams(),
-        cache,
-        None,
-        None,
-        S
-      ),
+      Resolve.defaultParams(cache),
       Artifacts.Params(
         Nil,
         Set(),

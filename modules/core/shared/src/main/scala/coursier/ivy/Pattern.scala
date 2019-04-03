@@ -107,6 +107,26 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
 
   def substituteDefault: Pattern =
     substitute("defaultPattern", Pattern.default.chunks)
+
+  private lazy val constStart = chunks
+    .iterator
+    .map {
+      case Pattern.Chunk.Const(c) => Some(c)
+      case _ => None
+    }
+    .takeWhile(_.nonEmpty)
+    .flatten
+    .mkString
+
+  def startsWith(s: String): Boolean =
+    constStart.startsWith(s)
+  def stripPrefix(s: String): Pattern =
+    Pattern(
+      Pattern.Chunk.Const(constStart.stripPrefix(s)) +:
+        chunks.dropWhile { case _: Pattern.Chunk.Const => true; case _ => false }
+    )
+  def addPrefix(s: String): Pattern =
+    Pattern(Pattern.Chunk.Const(s) +: chunks)
 }
 
 object PropertiesPattern {

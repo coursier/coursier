@@ -4,7 +4,7 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
-import coursier.params.ResolutionParams
+import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 
@@ -31,6 +31,10 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     params.dependencies
   def repositories: Seq[Repository] =
     params.repositories
+  def mirrors: Seq[Mirror] =
+    params.mirrors
+  def mirrorConfFiles: Seq[MirrorConfFile] =
+    params.mirrorConfFiles
   def resolutionParams: ResolutionParams =
     params.resolutionParams
   def cache: Cache[F] =
@@ -41,6 +45,24 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     params.transformFetcherOpt
   def S: Sync[F] =
     params.S
+
+  def finalRepositories: Seq[Repository] = {
+
+    val repositories0 = repositories
+    val mirrors0 = mirrors
+
+    repositories0
+      .map { repo =>
+        val it = mirrors0
+          .iterator
+          .flatMap(_.matches(repo).iterator)
+        if (it.hasNext)
+          it.next()
+        else
+          repo
+      }
+      .distinct
+  }
 
   private def withParams(params: Resolve.Params[F]): Resolve[F] =
     new Resolve(params)
@@ -55,6 +77,16 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     withParams(params.copy(repositories = repositories))
   def addRepositories(repositories: Repository*): Resolve[F] =
     withParams(params.copy(repositories = params.repositories ++ repositories))
+
+  def withMirrors(mirrors: Seq[Mirror]): Resolve[F] =
+    withParams(params.copy(mirrors = mirrors))
+  def addMirrors(mirrors: Mirror*): Resolve[F] =
+    withParams(params.copy(mirrors = params.mirrors ++ mirrors))
+
+  def withMirrorConfFiles(mirrorConfFiles: Seq[MirrorConfFile]): Resolve[F] =
+    withParams(params.copy(mirrorConfFiles = mirrorConfFiles))
+  def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Resolve[F] =
+    withParams(params.copy(mirrorConfFiles = params.mirrorConfFiles ++ mirrorConfFiles))
 
   def withResolutionParams(resolutionParams: ResolutionParams): Resolve[F] =
     withParams(params.copy(resolutionParams = resolutionParams))
@@ -79,7 +111,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   private def fetchVia: ResolutionProcess.Fetch[F] = {
     val fetchs = params.cache.fetchs
-    ResolutionProcess.fetch(params.repositories, fetchs.head, fetchs.tail: _*)(S)
+    ResolutionProcess.fetch(finalRepositories, fetchs.head, fetchs.tail: _*)(S)
   }
 
   def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] = {
@@ -154,21 +186,24 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
 object Resolve extends PlatformResolve {
 
+  private[coursier] def defaultParams[F[_]](cache: Cache[F])(implicit S: Sync[F]) =
+    Params(
+      Nil,
+      defaultRepositories,
+      defaultMirrorConfFiles,
+      Nil,
+      ResolutionParams(),
+      cache,
+      None,
+      None,
+      S
+    )
+
   // Ideally, cache shouldn't be passed here, and a default one should be created from S.
   // But that would require changes in Sync or an extra typeclass (similar to Async in cats-effect)
   // to allow to use the default cache on Scala.JS with a generic F.
   def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Resolve[F] =
-    new Resolve(
-      Params(
-        Nil,
-        defaultRepositories,
-        ResolutionParams(),
-        cache,
-        None,
-        None,
-        S
-      )
-    )
+    new Resolve(defaultParams(cache))
 
   implicit class ResolveTaskOps(private val resolve: Resolve[Task]) extends AnyVal {
 
@@ -196,6 +231,8 @@ object Resolve extends PlatformResolve {
   private[coursier] final case class Params[F[_]](
     dependencies: Seq[Dependency],
     repositories: Seq[Repository],
+    mirrorConfFiles: Seq[MirrorConfFile],
+    mirrors: Seq[Mirror],
     resolutionParams: ResolutionParams,
     cache: Cache[F],
     throughOpt: Option[F[Resolution] => F[Resolution]],

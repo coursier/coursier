@@ -57,13 +57,7 @@
         },
         {
           "name": "credentials",
-          "type": "Seq[coursier.Credentials]",
-          "default": "Nil",
-          "since": "1.0.1"
-        },
-        {
-          "name": "credentialFiles",
-          "type": "Seq[coursier.CredentialFile]",
+          "type": "Seq[coursier.credentials.Credentials]",
           "default": "Nil",
           "since": "1.0.1"
         },

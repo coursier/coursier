@@ -5,6 +5,7 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.cache.FileCache
+import coursier.credentials.DirectCredentials
 import utest._
 
 object AuthenticationTests extends TestSuite {
@@ -43,7 +44,7 @@ object AuthenticationTests extends TestSuite {
             FileCache()
               .withLocation(dir.toFile)
               .addCredentials(
-                Credentials()
+                DirectCredentials()
                   .withHost(testHost)
                   .withUsername(user)
                   .withPassword(password)
