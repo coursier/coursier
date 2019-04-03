@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 
 import coursier.cache._
-import coursier.credentials.{CredentialFile, DirectCredentials}
+import coursier.credentials.{FileCredentials, DirectCredentials}
 import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
 
@@ -20,7 +20,7 @@ abstract class CacheParamsHelpers {
   def cacheLocalArtifacts: Boolean
   def followHttpToHttpsRedirections: Boolean
   def credentials: Seq[DirectCredentials]
-  def credentialFiles: Seq[CredentialFile]
+  def credentialFiles: Seq[FileCredentials]
   def useEnvCredentials: Boolean
 
   def cache[F[_]](

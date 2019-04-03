@@ -6,7 +6,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheDefaults
-import coursier.credentials.CredentialFile
+import coursier.credentials.FileCredentials
 import coursier.params.CacheParams
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 
@@ -125,7 +125,7 @@ final case class CacheOptions(
 
     val credentialFiles = credentialFile.map { f =>
       // warn if f doesn't exist or has too open permissions?
-      CredentialFile(f)
+      FileCredentials(f)
     }
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {

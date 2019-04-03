@@ -5,7 +5,7 @@ import java.util.Properties
 
 import scala.collection.JavaConverters._
 
-final class CredentialFile private (
+final class FileCredentials private(
   val path: String,
   val optional: Boolean
 ) extends Serializable {
@@ -13,7 +13,7 @@ final class CredentialFile private (
   private def this(path: String) = this(path, true)
 
   override def equals(o: Any): Boolean = o match {
-    case x: CredentialFile => (this.path == x.path) && (this.optional == x.optional)
+    case x: FileCredentials => (this.path == x.path) && (this.optional == x.optional)
     case _ => false
   }
   override def hashCode: Int = {
@@ -22,13 +22,13 @@ final class CredentialFile private (
   override def toString: String = {
     "CredentialFile(" + path + ", " + optional + ")"
   }
-  private[this] def copy(path: String = path, optional: Boolean = optional): CredentialFile = {
-    new CredentialFile(path, optional)
+  private[this] def copy(path: String = path, optional: Boolean = optional): FileCredentials = {
+    new FileCredentials(path, optional)
   }
-  def withPath(path: String): CredentialFile = {
+  def withPath(path: String): FileCredentials = {
     copy(path = path)
   }
-  def withOptional(optional: Boolean): CredentialFile = {
+  def withOptional(optional: Boolean): FileCredentials = {
     copy(optional = optional)
   }
 
@@ -80,8 +80,8 @@ final class CredentialFile private (
       throw new Exception(s"Credential file $path not found")
   }
 }
-object CredentialFile {
+object FileCredentials {
 
-  def apply(path: String): CredentialFile = new CredentialFile(path)
-  def apply(path: String, optional: Boolean): CredentialFile = new CredentialFile(path, optional)
+  def apply(path: String): FileCredentials = new FileCredentials(path)
+  def apply(path: String, optional: Boolean): FileCredentials = new FileCredentials(path, optional)
 }

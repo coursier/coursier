@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
-import coursier.credentials.{DirectCredentials, CredentialFile}
+import coursier.credentials.{DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Sync, Task}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
@@ -40,7 +40,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def cachePolicies: Seq[CachePolicy] = params.cachePolicies
   def checksums: Seq[Option[String]] = params.checksums
   def credentials: Seq[DirectCredentials] = params.credentials
-  def credentialFiles: Seq[CredentialFile] = params.credentialFiles
+  def credentialFiles: Seq[FileCredentials] = params.credentialFiles
   def logger: CacheLogger = params.logger
   def pool: ExecutorService = params.pool
   def ttl: Option[Duration] = params.ttl
@@ -74,14 +74,14 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(credentials = credentials))
   def addCredentials(credentials: DirectCredentials*): FileCache[F] =
     withParams(params.copy(credentials = params.credentials ++ credentials))
-  def withCredentialFiles(credentialFiles: Seq[CredentialFile]): FileCache[F] =
+  def withCredentialFiles(credentialFiles: Seq[FileCredentials]): FileCache[F] =
     withParams(params.copy(credentialFiles = credentialFiles))
-  def addCredentialFiles(credentialFiles: CredentialFile*): FileCache[F] =
+  def addCredentialFiles(credentialFiles: FileCredentials*): FileCache[F] =
     withParams(params.copy(credentialFiles = params.credentialFiles ++ credentialFiles))
-  def addCredentialFile(credentialFile: CredentialFile): FileCache[F] =
+  def addCredentialFile(credentialFile: FileCredentials): FileCache[F] =
     withParams(params.copy(credentialFiles = params.credentialFiles :+ credentialFile))
   def addCredentialFile(credentialFile: File): FileCache[F] =
-    withParams(params.copy(credentialFiles = params.credentialFiles :+ CredentialFile(credentialFile.getAbsolutePath)))
+    withParams(params.copy(credentialFiles = params.credentialFiles :+ FileCredentials(credentialFile.getAbsolutePath)))
   def withLogger(logger: CacheLogger): FileCache[F] =
     withParams(params.copy(logger = logger))
   def withPool(pool: ExecutorService): FileCache[F] =
@@ -775,7 +775,7 @@ object FileCache {
     cachePolicies: Seq[CachePolicy],
     checksums: Seq[Option[String]],
     credentials: Seq[DirectCredentials],
-    credentialFiles: Seq[CredentialFile],
+    credentialFiles: Seq[FileCredentials],
     logger: CacheLogger,
     pool: ExecutorService,
     ttl: Option[Duration],

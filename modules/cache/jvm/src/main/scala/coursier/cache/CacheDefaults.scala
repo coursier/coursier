@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 
-import coursier.credentials.{CredentialFile, DirectCredentials}
+import coursier.credentials.{FileCredentials, DirectCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.CachePath
 import coursier.util.Sync
@@ -64,12 +64,12 @@ object CacheDefaults {
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
 
-  def credentialFiles: Seq[CredentialFile] =
+  def credentialFiles: Seq[FileCredentials] =
     if (credentialPropOpt.isEmpty) {
       val configDir = coursier.paths.CoursierPaths.configDirectory()
       val propFile = new File(configDir, "credentials.properties")
       // Warn if propFile has group and others read permissions?
-      Seq(CredentialFile(propFile.getAbsolutePath, optional = true))
+      Seq(FileCredentials(propFile.getAbsolutePath, optional = true))
     } else
       credentialPropOpt
         .filter(isPropFile)
@@ -80,7 +80,7 @@ object CacheDefaults {
               new File(new URI(path)).getAbsolutePath
             else
               path
-          CredentialFile(path0, optional = true)
+          FileCredentials(path0, optional = true)
         }
         .toSeq
 
