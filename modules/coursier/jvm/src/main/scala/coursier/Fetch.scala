@@ -230,16 +230,7 @@ object Fetch {
   // see Resolve.apply for why cache is passed here
   def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Fetch[F] =
     new Fetch[F](
-      Resolve.Params(
-        Nil,
-        Resolve.defaultRepositories,
-        Nil,
-        ResolutionParams(),
-        cache,
-        None,
-        None,
-        S
-      ),
+      Resolve.defaultParams(cache),
       Artifacts.Params(
         Nil,
         Set(),
