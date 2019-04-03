@@ -4,7 +4,7 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
-import coursier.params.ResolutionParams
+import coursier.params.{Mirror, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 
@@ -31,6 +31,8 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     params.dependencies
   def repositories: Seq[Repository] =
     params.repositories
+  def mirrors: Seq[Mirror] =
+    params.mirrors
   def resolutionParams: ResolutionParams =
     params.resolutionParams
   def cache: Cache[F] =
@@ -41,6 +43,24 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     params.transformFetcherOpt
   def S: Sync[F] =
     params.S
+
+  def finalRepositories: Seq[Repository] = {
+
+    val repositories0 = repositories
+    val mirrors0 = mirrors
+
+    repositories0
+      .map { repo =>
+        val it = mirrors0
+          .iterator
+          .flatMap(_.matches(repo).iterator)
+        if (it.hasNext)
+          it.next()
+        else
+          repo
+      }
+      .distinct
+  }
 
   private def withParams(params: Resolve.Params[F]): Resolve[F] =
     new Resolve(params)
@@ -55,6 +75,11 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
     withParams(params.copy(repositories = repositories))
   def addRepositories(repositories: Repository*): Resolve[F] =
     withParams(params.copy(repositories = params.repositories ++ repositories))
+
+  def withMirrors(mirrors: Seq[Mirror]): Resolve[F] =
+    withParams(params.copy(mirrors = mirrors))
+  def addMirrors(mirrors: Mirror*): Resolve[F] =
+    withParams(params.copy(mirrors = params.mirrors ++ mirrors))
 
   def withResolutionParams(resolutionParams: ResolutionParams): Resolve[F] =
     withParams(params.copy(resolutionParams = resolutionParams))
@@ -79,7 +104,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   private def fetchVia: ResolutionProcess.Fetch[F] = {
     val fetchs = params.cache.fetchs
-    ResolutionProcess.fetch(params.repositories, fetchs.head, fetchs.tail: _*)(S)
+    ResolutionProcess.fetch(finalRepositories, fetchs.head, fetchs.tail: _*)(S)
   }
 
   def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] = {
@@ -162,6 +187,7 @@ object Resolve extends PlatformResolve {
       Params(
         Nil,
         defaultRepositories,
+        Nil,
         ResolutionParams(),
         cache,
         None,
@@ -196,6 +222,7 @@ object Resolve extends PlatformResolve {
   private[coursier] final case class Params[F[_]](
     dependencies: Seq[Dependency],
     repositories: Seq[Repository],
+    mirrors: Seq[Mirror],
     resolutionParams: ResolutionParams,
     cache: Cache[F],
     throughOpt: Option[F[Resolution] => F[Resolution]],
