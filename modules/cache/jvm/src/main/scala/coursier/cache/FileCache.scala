@@ -54,7 +54,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def S: Sync[F] = params.S
 
   private lazy val credentialsFromFiles =
-    credentialFiles.flatMap(_.read())
+    credentialFiles.flatMap(_.get())
 
   def allCredentials: F[Seq[DirectCredentials]] =
     S.delay(credentialsFromFiles ++ credentials)

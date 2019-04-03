@@ -10,7 +10,7 @@ final class DirectCredentials private(
   val password: String,
   val realm: Option[String],
   val optional: Boolean
-) extends Serializable {
+) extends Credentials {
 
   private def this() = this("", "", "", None, true)
   private def this(host: String, username: String, password: String) = this(host, username, password, None, true)
@@ -62,6 +62,9 @@ final class DirectCredentials private(
       realmOpt = realm,
       optional = optional
     )
+
+  def get(): Seq[DirectCredentials] =
+    Seq(this)
 
 }
 object DirectCredentials {

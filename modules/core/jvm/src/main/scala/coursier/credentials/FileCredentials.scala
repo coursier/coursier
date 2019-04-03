@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 final class FileCredentials private(
   val path: String,
   val optional: Boolean
-) extends Serializable {
+) extends Credentials {
 
   private def this(path: String) = this(path, true)
 
@@ -32,7 +32,7 @@ final class FileCredentials private(
     copy(optional = optional)
   }
 
-  def read(): Seq[DirectCredentials] = {
+  def get(): Seq[DirectCredentials] = {
 
     val f = new File(path)
 
