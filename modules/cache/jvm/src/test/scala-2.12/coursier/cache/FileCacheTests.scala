@@ -8,7 +8,7 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import coursier.cache.TestUtil.withTmpDir
 import coursier.core.Artifact
-import coursier.credentials.DirectCredentials
+import coursier.credentials.Credentials
 import coursier.util.{Sync, Task}
 import javax.net.ssl.{HostnameVerifier, KeyManagerFactory, SSLContext, SSLSession, TrustManager, X509TrustManager}
 import org.http4s.dsl.io._
@@ -214,9 +214,9 @@ object FileCacheTests extends TestSuite {
       assert(res.left.exists(check))
     }
 
-  private val httpCredentials = DirectCredentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
+  private val httpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
     .withRealm(httpRealm)
-  private val httpsCredentials = DirectCredentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
+  private val httpsCredentials = Credentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
     .withRealm(httpsRealm)
 
   val tests = Tests {
@@ -429,7 +429,7 @@ object FileCacheTests extends TestSuite {
             httpBaseUri / "auth-redirect",
             "hello auth secure",
             _.withFollowHttpToHttpsRedirections(true)
-              .addCredentialFile(credFile)
+              .addFileCredentials(credFile)
           )
         }
 
@@ -437,7 +437,7 @@ object FileCacheTests extends TestSuite {
           expect(
             httpBaseUri / "auth" / "self-redirect",
             "hello auth",
-            _.addCredentialFile(credFile)
+            _.addFileCredentials(credFile)
           )
         }
 

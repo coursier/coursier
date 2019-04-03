@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 
 import coursier.cache._
-import coursier.credentials.{FileCredentials, DirectCredentials}
+import coursier.credentials.Credentials
 import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
 
@@ -19,8 +19,7 @@ abstract class CacheParamsHelpers {
   def retryCount: Int
   def cacheLocalArtifacts: Boolean
   def followHttpToHttpsRedirections: Boolean
-  def credentials: Seq[DirectCredentials]
-  def credentialFiles: Seq[FileCredentials]
+  def credentials: Seq[Credentials]
   def useEnvCredentials: Boolean
 
   def cache[F[_]](
@@ -43,9 +42,8 @@ abstract class CacheParamsHelpers {
 
     if (!useEnvCredentials)
       c = c.withCredentials(Nil)
-            .withCredentialFiles(Nil)
 
-    c = c.addCredentials(credentials: _*).addCredentialFiles(credentialFiles: _*)
+    c = c.addCredentials(credentials: _*)
 
     if (inMemoryCache)
       InMemoryCache(c, S)

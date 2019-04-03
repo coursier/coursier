@@ -114,6 +114,9 @@ final case class CacheOptions(
       else
         Validated.invalidNel(s"Retry count must be > 0 (got $retryCount)")
 
+    // FIXME Here, we're giving direct credentials a higher priority than file credentials,
+    //       even if some of the latter were passed before the former on the command-line
+
     val credentialsV = credentials.traverse { s =>
       CredentialsParser.parseSeq(s).either match {
         case Left(errors) =>
@@ -139,8 +142,7 @@ final case class CacheOptions(
           .withRetryCount(retryCount)
           .withCacheLocalArtifacts(cacheFileArtifacts)
           .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirect)
-          .withCredentials(credentials0)
-          .withCredentialFiles(credentialFiles)
+          .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
     }
   }

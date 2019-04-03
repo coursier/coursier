@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
-import coursier.credentials.{DirectCredentials, FileCredentials}
+import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Sync, Task}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
@@ -39,8 +39,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def location: File = params.location
   def cachePolicies: Seq[CachePolicy] = params.cachePolicies
   def checksums: Seq[Option[String]] = params.checksums
-  def credentials: Seq[DirectCredentials] = params.credentials
-  def credentialFiles: Seq[FileCredentials] = params.credentialFiles
+  def credentials: Seq[Credentials] = params.credentials
   def logger: CacheLogger = params.logger
   def pool: ExecutorService = params.pool
   def ttl: Option[Duration] = params.ttl
@@ -53,11 +52,11 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def bufferSize: Int = params.bufferSize
   def S: Sync[F] = params.S
 
-  private lazy val credentialsFromFiles =
-    credentialFiles.flatMap(_.get())
+  private lazy val allCredentials0 =
+    credentials.flatMap(_.get())
 
   def allCredentials: F[Seq[DirectCredentials]] =
-    S.delay(credentialsFromFiles ++ credentials)
+    S.delay(allCredentials0)
 
   private def withParams[G[_]](params: FileCache.Params[G]): FileCache[G] =
     new FileCache(params)
@@ -70,18 +69,12 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(cachePolicies = cachePolicies))
   def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
     withParams(params.copy(checksums = checksums))
-  def withCredentials(credentials: Seq[DirectCredentials]): FileCache[F] =
+  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
     withParams(params.copy(credentials = credentials))
-  def addCredentials(credentials: DirectCredentials*): FileCache[F] =
+  def addCredentials(credentials: Credentials*): FileCache[F] =
     withParams(params.copy(credentials = params.credentials ++ credentials))
-  def withCredentialFiles(credentialFiles: Seq[FileCredentials]): FileCache[F] =
-    withParams(params.copy(credentialFiles = credentialFiles))
-  def addCredentialFiles(credentialFiles: FileCredentials*): FileCache[F] =
-    withParams(params.copy(credentialFiles = params.credentialFiles ++ credentialFiles))
-  def addCredentialFile(credentialFile: FileCredentials): FileCache[F] =
-    withParams(params.copy(credentialFiles = params.credentialFiles :+ credentialFile))
-  def addCredentialFile(credentialFile: File): FileCache[F] =
-    withParams(params.copy(credentialFiles = params.credentialFiles :+ FileCredentials(credentialFile.getAbsolutePath)))
+  def addFileCredentials(credentialFile: File): FileCache[F] =
+    withParams(params.copy(credentials = params.credentials :+ FileCredentials(credentialFile.getAbsolutePath)))
   def withLogger(logger: CacheLogger): FileCache[F] =
     withParams(params.copy(logger = logger))
   def withPool(pool: ExecutorService): FileCache[F] =
@@ -774,8 +767,7 @@ object FileCache {
     location: File,
     cachePolicies: Seq[CachePolicy],
     checksums: Seq[Option[String]],
-    credentials: Seq[DirectCredentials],
-    credentialFiles: Seq[FileCredentials],
+    credentials: Seq[Credentials],
     logger: CacheLogger,
     pool: ExecutorService,
     ttl: Option[Duration],
@@ -925,7 +917,6 @@ object FileCache {
         cachePolicies = CacheDefaults.cachePolicies,
         checksums = CacheDefaults.checksums,
         credentials = CacheDefaults.credentials,
-        credentialFiles = CacheDefaults.credentialFiles,
         logger = CacheLogger.nop,
         pool = CacheDefaults.pool,
         ttl = CacheDefaults.ttl,

@@ -62,12 +62,6 @@
           "since": "1.0.1"
         },
         {
-          "name": "credentialFiles",
-          "type": "Seq[coursier.credentials.CredentialFile]",
-          "default": "Nil",
-          "since": "1.0.1"
-        },
-        {
           "name": "useEnvCredentials",
           "type": "Boolean",
           "default": "true",
