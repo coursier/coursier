@@ -3,8 +3,8 @@ package coursier.params
 import java.io.File
 import java.util.concurrent.ExecutorService
 
-import coursier.{CredentialFile, Credentials}
 import coursier.cache._
+import coursier.credentials.{CredentialFile, Credentials}
 import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
 

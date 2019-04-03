@@ -8,9 +8,9 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
-import coursier.{Credentials, CredentialFile}
 import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
+import coursier.credentials.{Credentials, CredentialFile}
 import coursier.paths.CachePath
 import coursier.util.{EitherT, Sync, Task}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}

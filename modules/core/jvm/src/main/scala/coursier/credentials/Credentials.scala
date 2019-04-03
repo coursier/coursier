@@ -1,26 +1,27 @@
-/**
- * This code USED TO BE generated using [[http://www.scala-sbt.org/contraband/ sbt-contraband]].
- */
+package coursier.credentials
 
-// DO EDIT MANUALLY from now on
-package coursier
+import java.net.URI
+
+import coursier.core.Authentication
+
 final class Credentials private (
   val host: String,
   val username: String,
   val password: String,
   val realm: Option[String],
-  val optional: Boolean) extends coursier.internal.CredentialsHelpers with Serializable {
+  val optional: Boolean
+) extends Serializable {
   
   private def this() = this("", "", "", None, true)
   private def this(host: String, username: String, password: String) = this(host, username, password, None, true)
   private def this(host: String, username: String, password: String, realm: Option[String]) = this(host, username, password, realm, true)
-  
+
   override def equals(o: Any): Boolean = o match {
     case x: Credentials => (this.host == x.host) && (this.username == x.username) && (this.password == x.password) && (this.realm == x.realm) && (this.optional == x.optional)
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.Credentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.Credentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##)
   }
   override def toString: String = {
     "Credentials(" + host + ", " + username + ", " + password + ", " + realm + ", " + optional + ")"
@@ -46,6 +47,22 @@ final class Credentials private (
   def withOptional(optional: Boolean): Credentials = {
     copy(optional = optional)
   }
+
+  def matches(url: String, realm0: Option[String]): Boolean = {
+    val uri = new URI(url)
+    val scheme = uri.getScheme
+    val host0 = uri.getHost
+    (scheme == "http" || scheme == "https") && host == host0 && realm.forall(realm0.contains)
+  }
+
+  def authentication: Authentication =
+    Authentication(
+      username,
+      password,
+      realmOpt = realm,
+      optional = optional
+    )
+
 }
 object Credentials {
   

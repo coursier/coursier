@@ -1,7 +1,7 @@
 package coursier.parse
 
 import fastparse._, NoWhitespace._
-import coursier.Credentials
+import coursier.credentials.Credentials
 import coursier.util.Traverse._
 import coursier.util.ValidationNel
 

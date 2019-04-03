@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 
-import coursier.{CredentialFile, Credentials}
+import coursier.credentials.{CredentialFile, Credentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.CachePath
 import coursier.util.Sync

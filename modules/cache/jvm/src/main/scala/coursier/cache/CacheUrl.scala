@@ -6,8 +6,8 @@ import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
-import coursier.Credentials
 import coursier.core.Authentication
+import coursier.credentials.Credentials
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.util.Try

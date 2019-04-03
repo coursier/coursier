@@ -5,8 +5,8 @@ import java.io.File
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.CredentialFile
-import coursier.cache.{CacheDefaults, CachePolicy}
+import coursier.cache.CacheDefaults
+import coursier.credentials.CredentialFile
 import coursier.params.CacheParams
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 

@@ -5,6 +5,7 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.cache.FileCache
+import coursier.credentials.Credentials
 import utest._
 
 object AuthenticationTests extends TestSuite {
