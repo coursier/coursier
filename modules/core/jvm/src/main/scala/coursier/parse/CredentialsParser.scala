@@ -1,13 +1,13 @@
 package coursier.parse
 
 import fastparse._, NoWhitespace._
-import coursier.credentials.Credentials
+import coursier.credentials.DirectCredentials
 import coursier.util.Traverse._
 import coursier.util.ValidationNel
 
 object CredentialsParser {
 
-  private def parser[_: P]: P[Credentials] = {
+  private def parser[_: P]: P[DirectCredentials] = {
 
     def host = P(CharsWhile(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '-').!)
     def user = P((CharPred(c => !c.isSpaceChar && c != ':') ~ CharsWhile(_ != ':')).!)
@@ -19,12 +19,12 @@ object CredentialsParser {
 
     P(host ~ ("(" ~ realm ~ ")").? ~ space.rep(1) ~ user ~ ":" ~ password).map {
       case (host0, realmOpt, user0, password0) =>
-        Credentials(host0, user0, password0)
+        DirectCredentials(host0, user0, password0)
           .withRealm(realmOpt)
     }
   }
 
-  def parse(s: String): Either[String, Credentials] =
+  def parse(s: String): Either[String, DirectCredentials] =
     fastparse.parse(s, parser(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
@@ -32,7 +32,7 @@ object CredentialsParser {
         Right(v)
     }
 
-  def parseSeq(input: String): ValidationNel[String, Seq[Credentials]] =
+  def parseSeq(input: String): ValidationNel[String, Seq[DirectCredentials]] =
     Predef.augmentString(input)
       .lines
       .map(_.dropWhile(_.isSpaceChar)) // not trimming chars on the right (password)

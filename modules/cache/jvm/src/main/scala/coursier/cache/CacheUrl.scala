@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
-import coursier.credentials.Credentials
+import coursier.credentials.DirectCredentials
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.util.Try
@@ -209,7 +209,7 @@ object CacheUrl {
     url0: String,
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean = false,
-    credentials: Seq[Credentials] = Nil,
+    credentials: Seq[DirectCredentials] = Nil,
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET"
@@ -233,7 +233,7 @@ object CacheUrl {
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
-    credentials: Seq[Credentials],
+    credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",

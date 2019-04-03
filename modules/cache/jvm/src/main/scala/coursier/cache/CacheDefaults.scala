@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 
-import coursier.credentials.{CredentialFile, Credentials}
+import coursier.credentials.{CredentialFile, DirectCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.CachePath
 import coursier.util.Sync
@@ -84,7 +84,7 @@ object CacheDefaults {
         }
         .toSeq
 
-  def credentials: Seq[Credentials] =
+  def credentials: Seq[DirectCredentials] =
     credentialPropOpt
       .filter(!isPropFile(_))
       .toSeq

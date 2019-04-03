@@ -32,7 +32,7 @@ final class CredentialFile private (
     copy(optional = optional)
   }
 
-  def read(): Seq[Credentials] = {
+  def read(): Seq[DirectCredentials] = {
 
     val f = new File(path)
 
@@ -70,7 +70,7 @@ final class CredentialFile private (
 
         val realmOpt = Option(props.getProperty(s"$prefix.realm")) // filter if empty?
 
-        Credentials(host, user, password)
+        DirectCredentials(host, user, password)
           .withRealm(realmOpt)
       }
 

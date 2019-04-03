@@ -1,6 +1,6 @@
 package coursier.parse
 
-import coursier.credentials.Credentials
+import coursier.credentials.DirectCredentials
 import utest._
 
 object CredentialsParserTests extends TestSuite {
@@ -10,28 +10,28 @@ object CredentialsParserTests extends TestSuite {
     'simple - {
       val s = "artifacts.foo.com(tha realm) alex:my-pass"
       val res = CredentialsParser.parse(s)
-      val expectedRes = Right(Credentials("artifacts.foo.com", "alex", "my-pass").withRealm("tha realm"))
+      val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex", "my-pass").withRealm("tha realm"))
       assert(res == expectedRes)
     }
 
     'noRealm - {
       val s = "artifacts.foo.com alex:my-pass"
       val res = CredentialsParser.parse(s)
-      val expectedRes = Right(Credentials("artifacts.foo.com", "alex", "my-pass"))
+      val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex", "my-pass"))
       assert(res == expectedRes)
     }
 
     "space in user name" - {
       val s = "artifacts.foo.com(tha realm) alex a:my-pass"
       val res = CredentialsParser.parse(s)
-      val expectedRes = Right(Credentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm"))
+      val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm"))
       assert(res == expectedRes)
     }
 
     "special chars in password" - {
       val s = "artifacts.foo.com(tha realm) alex:$%_^12//,.;:"
       val res = CredentialsParser.parse(s)
-      val expectedRes = Right(Credentials("artifacts.foo.com", "alex", "$%_^12//,.;:").withRealm("tha realm"))
+      val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex", "$%_^12//,.;:").withRealm("tha realm"))
       assert(res == expectedRes)
     }
 
@@ -44,7 +44,7 @@ object CredentialsParserTests extends TestSuite {
 
       "one" - {
         val res = CredentialsParser.parseSeq("artifacts.foo.com alex:my-pass").either
-        val expectedRes = Right(Seq(Credentials("artifacts.foo.com", "alex", "my-pass")))
+        val expectedRes = Right(Seq(DirectCredentials("artifacts.foo.com", "alex", "my-pass")))
         assert(res == expectedRes)
       }
 
@@ -56,9 +56,9 @@ object CredentialsParserTests extends TestSuite {
             |artifacts.foo.com(tha realm) alex:$%_^12//,.;:   """.stripMargin
         ).either
         val expectedRes = Right(Seq(
-          Credentials("artifacts.foo.com", "alex", "my-pass"),
-          Credentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm"),
-          Credentials("artifacts.foo.com", "alex", "$%_^12//,.;:   ").withRealm("tha realm")
+          DirectCredentials("artifacts.foo.com", "alex", "my-pass"),
+          DirectCredentials("artifacts.foo.com", "alex a", "my-pass").withRealm("tha realm"),
+          DirectCredentials("artifacts.foo.com", "alex", "$%_^12//,.;:   ").withRealm("tha realm")
         ))
         assert(res == expectedRes)
       }
