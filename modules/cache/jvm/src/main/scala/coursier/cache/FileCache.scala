@@ -8,6 +8,7 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 
+import coursier.{Credentials, CredentialFile}
 import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.paths.CachePath
@@ -923,7 +924,7 @@ object FileCache {
         location = CacheDefaults.location,
         cachePolicies = CacheDefaults.cachePolicies,
         checksums = CacheDefaults.checksums,
-        credentials = Nil,
+        credentials = CacheDefaults.credentials,
         credentialFiles = CacheDefaults.credentialFiles,
         logger = CacheLogger.nop,
         pool = CacheDefaults.pool,

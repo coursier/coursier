@@ -1,4 +1,4 @@
-package coursier.cache.internal
+package coursier.internal
 
 import java.net.URI
 

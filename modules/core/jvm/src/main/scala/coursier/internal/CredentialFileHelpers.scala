@@ -1,9 +1,9 @@
-package coursier.cache.internal
+package coursier.internal
 
 import java.io.{File, FileInputStream}
 import java.util.Properties
 
-import coursier.cache.Credentials
+import coursier.Credentials
 
 import scala.collection.JavaConverters._
 

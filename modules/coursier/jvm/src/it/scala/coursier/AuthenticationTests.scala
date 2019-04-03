@@ -4,8 +4,7 @@ import java.io.File
 import java.net.URI
 import java.nio.file.{Files, Path}
 
-import coursier.cache.internal.FileUtil
-import coursier.cache.{Credentials, FileCache}
+import coursier.cache.FileCache
 import utest._
 
 object AuthenticationTests extends TestSuite {

@@ -1,8 +1,9 @@
 package coursier.parse
 
 import fastparse._, NoWhitespace._
-import coursier.cache.Credentials
+import coursier.Credentials
 import coursier.util.Traverse._
+import coursier.util.ValidationNel
 
 object CredentialsParser {
 
@@ -31,12 +32,15 @@ object CredentialsParser {
         Right(v)
     }
 
-  def parseSeq(input: String): Either[String, Seq[Credentials]] =
+  def parseSeq(input: String): ValidationNel[String, Seq[Credentials]] =
     Predef.augmentString(input)
       .lines
       .map(_.dropWhile(_.isSpaceChar)) // not trimming chars on the right (password)
       .filter(_.nonEmpty)
       .toVector
-      .eitherTraverse(parse)
+      .validationNelTraverse { s =>
+        val e = parse(s)
+        ValidationNel.fromEither(e)
+      }
 
 }

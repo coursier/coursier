@@ -1,8 +1,10 @@
 package coursier.cache
 
 import java.io.File
+import java.net.URI
 
-import coursier.parse.CachePolicyParser
+import coursier.{CredentialFile, Credentials}
+import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.CachePath
 import coursier.util.Sync
 
@@ -54,13 +56,41 @@ object CacheDefaults {
 
   val bufferSize = 1024 * 1024
 
-  def credentialFiles: Seq[CredentialFile] =
+  private def credentialPropOpt =
     sys.env.get("COURSIER_CREDENTIALS")
       .orElse(sys.props.get("coursier.credentials"))
-      .map { path =>
-        CredentialFile(path, optional = true)
-      }
+      .map(s => s.dropWhile(_.isSpaceChar))
+
+  private def isPropFile(s: String) =
+    s.startsWith("/") || s.startsWith("file:")
+
+  def credentialFiles: Seq[CredentialFile] =
+    if (credentialPropOpt.isEmpty) {
+      val configDir = coursier.paths.CoursierPaths.configDirectory()
+      val propFile = new File(configDir, "credentials.properties")
+      // Warn if propFile has group and others read permissions?
+      Seq(CredentialFile(propFile.getAbsolutePath, optional = true))
+    } else
+      credentialPropOpt
+        .filter(isPropFile)
+        .map { path =>
+          // hope Windows users can manage to use file:// URLs fine
+          val path0 =
+            if (path.startsWith("file:"))
+              new File(new URI(path)).getAbsolutePath
+            else
+              path
+          CredentialFile(path0, optional = true)
+        }
+        .toSeq
+
+  def credentials: Seq[Credentials] =
+    credentialPropOpt
+      .filter(!isPropFile(_))
       .toSeq
+      .flatMap { s =>
+        CredentialsParser.parseSeq(s).either.right.toSeq.flatten
+      }
 
   val noEnvCachePolicies = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)

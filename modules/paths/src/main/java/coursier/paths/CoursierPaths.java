@@ -53,7 +53,7 @@ public final class CoursierPaths {
         return new File(path).getAbsoluteFile();
     }
 
-    public static File cacheDirectory() {
+    private static void init() {
 
         if (cacheDirectory0 == null)
             synchronized (lock) {
@@ -62,7 +62,15 @@ public final class CoursierPaths {
                     cacheDirectory0 = computeCacheDirectory();
                 }
             }
+    }
 
+    public static File cacheDirectory() {
+        init();
         return cacheDirectory0;
+    }
+
+    public static File configDirectory() {
+        init();
+        return new File(coursierDirectories.configDir);
     }
 }
