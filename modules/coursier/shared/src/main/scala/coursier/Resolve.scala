@@ -46,23 +46,20 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   def S: Sync[F] =
     params.S
 
-  def finalRepositories: Seq[Repository] = {
-
-    val repositories0 = repositories
-    val mirrors0 = mirrors
-
-    repositories0
-      .map { repo =>
-        val it = mirrors0
-          .iterator
-          .flatMap(_.matches(repo).iterator)
-        if (it.hasNext)
-          it.next()
-        else
-          repo
-      }
-      .distinct
-  }
+  def finalRepositories: F[Seq[Repository]] =
+    S.map(allMirrors) { mirrors0 =>
+      repositories
+        .map { repo =>
+          val it = mirrors0
+            .iterator
+            .flatMap(_.matches(repo).iterator)
+          if (it.hasNext)
+            it.next()
+          else
+            repo
+        }
+        .distinct
+    }
 
   private def withParams(params: Resolve.Params[F]): Resolve[F] =
     new Resolve(params)
@@ -114,16 +111,25 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
     withParams(params.copy(transformFetcherOpt = fOpt))
 
-
-  private def fetchVia: ResolutionProcess.Fetch[F] = {
-    val fetchs = params.cache.fetchs
-    ResolutionProcess.fetch(finalRepositories, fetchs.head, fetchs.tail: _*)(S)
+  private def allMirrors0 = {
+    val l = mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
+    println(s"mirrorConfFiles=${mirrorConfFiles}")
+    println(s"allMirrors0=$l")
+    l
   }
 
-  def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] = {
+  def allMirrors: F[Seq[Mirror]] =
+    S.delay(allMirrors0)
+
+
+  private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
+    val fetchs = params.cache.fetchs
+    S.map(finalRepositories)(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail: _*)(S))
+  }
+
+  private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
 
     val initialRes = Resolve.initialResolution(params.dependencies, params.resolutionParams)
-    val fetch = params.transformFetcher(fetchVia)
 
     def run(res: Resolution): F[Resolution] = {
       val t = Resolve.runProcess(res, fetch, params.resolutionParams.maxIterations, params.cache.loggerOpt)(S)
@@ -184,6 +190,12 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
       }
     }
   }
+
+  def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] =
+    S.bind(fetchVia) { f =>
+      val fetchVia0 = params.transformFetcher(f)
+      ioWithConflicts0(fetchVia0)
+    }
 
   def io: F[Resolution] =
     S.map(ioWithConflicts)(_._1)
