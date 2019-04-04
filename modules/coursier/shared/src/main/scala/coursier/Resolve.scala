@@ -78,6 +78,12 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   def addRepositories(repositories: Repository*): Resolve[F] =
     withParams(params.copy(repositories = params.repositories ++ repositories))
 
+  def noMirrors: Resolve[F] =
+    withParams(params.copy(
+      mirrors = Nil,
+      mirrorConfFiles = Nil
+    ))
+
   def withMirrors(mirrors: Seq[Mirror]): Resolve[F] =
     withParams(params.copy(mirrors = mirrors))
   def addMirrors(mirrors: Mirror*): Resolve[F] =

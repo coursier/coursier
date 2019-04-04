@@ -14,6 +14,7 @@ object ResolveTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .withCache(cache)
           .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
           .future()
@@ -29,6 +30,7 @@ object ResolveTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .withCache(cache)
           .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
           .addRepositories(Repositories.jitpack)
@@ -47,6 +49,7 @@ object ResolveTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .withCache(cache)
           .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
           .withResolutionParams(params)
@@ -65,6 +68,7 @@ object ResolveTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .withCache(cache)
           .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
           .withResolutionParams(params)
@@ -87,6 +91,7 @@ object ResolveTests extends TestSuite {
       def run(mirror: Mirror) = async {
         val res = await {
           Resolve()
+            .noMirrors
             .withCache(cache)
             .addMirrors(mirror)
             .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")

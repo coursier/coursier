@@ -25,6 +25,7 @@ object ResolveRulesTests extends TestSuite {
 
         val ex = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withResolutionParams(params)
             .withCache(cache)
@@ -52,6 +53,7 @@ object ResolveRulesTests extends TestSuite {
 
         val ex = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withResolutionParams(params)
             .withCache(cache)
@@ -78,6 +80,7 @@ object ResolveRulesTests extends TestSuite {
 
         val ex = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withResolutionParams(params)
             .withCache(cache)
@@ -111,6 +114,7 @@ object ResolveRulesTests extends TestSuite {
 
         val res = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
             .addRepositories(Repositories.jitpack)
             .withResolutionParams(params)
@@ -132,6 +136,7 @@ object ResolveRulesTests extends TestSuite {
 
         val res = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
             .addRepositories(Repositories.jitpack)
             .withResolutionParams(params)
@@ -154,6 +159,7 @@ object ResolveRulesTests extends TestSuite {
 
         val ex = await {
           Resolve()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withResolutionParams(params)
             .withCache(cache)
@@ -180,6 +186,7 @@ object ResolveRulesTests extends TestSuite {
 
         val res = await {
           Resolve()
+            .noMirrors
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
               dep"com.chuusai:shapeless_2.12:2.3.2"
@@ -210,6 +217,7 @@ object ResolveRulesTests extends TestSuite {
 
         val res = await {
           Resolve()
+            .noMirrors
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
               dep"com.chuusai:shapeless_2.12:2.3.2",

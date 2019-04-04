@@ -14,6 +14,7 @@ object ArtifactsTests extends TestSuite {
 
       val res1 = await {
         Resolve()
+          .noMirrors
           .addDependencies(dep"io.argonaut:argonaut_2.12:6.2.2")
           .withCache(cache)
           .future()
@@ -21,6 +22,7 @@ object ArtifactsTests extends TestSuite {
 
       val res2 = await {
         Resolve()
+          .noMirrors
           .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
           .withCache(cache)
           .future()
@@ -56,6 +58,7 @@ object ArtifactsTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
           .withCache(cache)
           .future()
@@ -92,6 +95,7 @@ object ArtifactsTests extends TestSuite {
 
       val res = await {
         Resolve()
+          .noMirrors
           .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
           .withCache(cache)
           .future()

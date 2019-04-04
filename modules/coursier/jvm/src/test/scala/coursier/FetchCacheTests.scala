@@ -57,6 +57,7 @@ object FetchCacheTests extends TestSuite {
 
       def artifacts() =
         Fetch()
+          .noMirrors
           .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
           .withCache(
             FileCache()

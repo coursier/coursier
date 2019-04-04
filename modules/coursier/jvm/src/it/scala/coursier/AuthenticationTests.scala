@@ -35,6 +35,7 @@ object AuthenticationTests extends TestSuite {
     * - {
       val result = withTmpDir { dir =>
         Resolve()
+          .noMirrors
           .withRepositories(Seq(
             MavenRepository(testRepo),
             Repositories.central
