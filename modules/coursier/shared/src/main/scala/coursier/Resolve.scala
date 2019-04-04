@@ -111,12 +111,8 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
   def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
     withParams(params.copy(transformFetcherOpt = fOpt))
 
-  private def allMirrors0 = {
-    val l = mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
-    println(s"mirrorConfFiles=${mirrorConfFiles}")
-    println(s"allMirrors0=$l")
-    l
-  }
+  private def allMirrors0 =
+    mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
 
   def allMirrors: F[Seq[Mirror]] =
     S.delay(allMirrors0)
