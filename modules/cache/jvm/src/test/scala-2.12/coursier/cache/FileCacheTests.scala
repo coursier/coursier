@@ -208,6 +208,7 @@ object FileCacheTests extends TestSuite {
     }
 
   private def fileCache0() = FileCache()
+    .noCredentials
     .withSslSocketFactory(clientSslContext.getSocketFactory)
     .withHostnameVerifier(dummyHostnameVerifier)
 

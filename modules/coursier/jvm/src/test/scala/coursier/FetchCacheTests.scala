@@ -61,6 +61,7 @@ object FetchCacheTests extends TestSuite {
           .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
           .withCache(
             FileCache()
+              .noCredentials
               .withLocation(tmpCache.toFile)
           )
           .withFetchCache(tmpFetchCache.toFile)

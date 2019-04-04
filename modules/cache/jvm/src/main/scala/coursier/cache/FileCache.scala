@@ -71,6 +71,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(checksums = checksums))
   def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
     withParams(params.copy(credentials = credentials))
+  def noCredentials: FileCache[F] =
+    withParams(params.copy(credentials = Nil))
   def addCredentials(credentials: Credentials*): FileCache[F] =
     withParams(params.copy(credentials = params.credentials ++ credentials))
   def addFileCredentials(credentialFile: File): FileCache[F] =
