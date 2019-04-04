@@ -61,8 +61,23 @@ object FileCacheTests extends TestSuite {
         else
           BadRequest()
 
+      case GET -> Root / "self-redirect-301" =>
+        MovedPermanently("redirecting", Location(Uri(path = "/hello")))
+
+      case GET -> Root / "self-redirect-302" =>
+        Found("redirecting", Location(Uri(path = "/hello")))
+
+      case GET -> Root / "self-redirect-303" =>
+        SeeOther("redirecting", Location(Uri(path = "/hello")))
+
+      case GET -> Root / "self-redirect-304" =>
+        NotModified(Location(Uri(path = "/hello")))
+
       case GET -> Root / "self-redirect" =>
         TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
+
+      case GET -> Root / "self-redirect-308" =>
+        PermanentRedirect("redirecting", Location(Uri(path = "/hello")))
 
       case GET -> Root / "self-auth-redirect" =>
         TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
@@ -232,7 +247,11 @@ object FileCacheTests extends TestSuite {
     'redirections - {
 
       'httpToHttp - {
-        expect(httpBaseUri / "self-redirect", "hello")
+        "301" - expect(httpBaseUri / "self-redirect-301", "hello")
+        "302" - expect(httpBaseUri / "self-redirect-302", "hello")
+        "302" - expect(httpBaseUri / "self-redirect-304", "hello")
+        "307" - expect(httpBaseUri / "self-redirect", "hello")
+        "308" - expect(httpBaseUri / "self-redirect-308", "hello")
       }
 
       'httpsToHttps - {
