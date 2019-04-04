@@ -38,6 +38,7 @@ object CacheFetchTests extends TestSuite {
     }
 
     val fetchs = FileCache()
+      .noCredentials
       .withLocation(tmpDir)
       .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
       .fetchs

@@ -150,7 +150,7 @@ object CacheUrl {
     conn match {
       case conn0: HttpURLConnection =>
         val c = conn0.getResponseCode
-        if (c == 301 || c == 307 || c == 308)
+        if (c == 301 || c == 302 || c == 303 || c == 304 || c == 307 || c == 308)
           Option(conn0.getHeaderField("Location"))
         else
           None

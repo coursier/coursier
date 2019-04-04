@@ -114,6 +114,12 @@ final class Fetch[F[_]] private (
   def addRepositories(repositories: Repository*): Fetch[F] =
     withResolveParams(resolveParams.copy(repositories = resolveParams.repositories ++ repositories))
 
+  def noMirrors: Fetch[F] =
+    withResolveParams(resolveParams.copy(
+      mirrors = Nil,
+      mirrorConfFiles = Nil
+    ))
+
   def withMirrors(mirrors: Seq[Mirror]): Fetch[F] =
     withResolveParams(resolveParams.copy(mirrors = mirrors))
   def addMirrors(mirrors: Mirror*): Fetch[F] =

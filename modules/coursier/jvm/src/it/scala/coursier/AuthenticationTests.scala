@@ -35,6 +35,7 @@ object AuthenticationTests extends TestSuite {
     * - {
       val result = withTmpDir { dir =>
         Resolve()
+          .noMirrors
           .withRepositories(Seq(
             MavenRepository(testRepo),
             Repositories.central
@@ -42,6 +43,7 @@ object AuthenticationTests extends TestSuite {
           .addDependencies(dep"com.abc:test:0.1".copy(transitive = false))
           .withCache(
             FileCache()
+              .noCredentials
               .withLocation(dir.toFile)
               .addCredentials(
                 DirectCredentials()

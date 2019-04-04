@@ -15,6 +15,7 @@ object FetchTests extends TestSuite {
 
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .futureResult()
@@ -28,6 +29,7 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.sources)
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
@@ -43,6 +45,7 @@ object FetchTests extends TestSuite {
         val mainArtifacts = true
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
@@ -58,6 +61,7 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.javadoc)
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
@@ -73,6 +77,7 @@ object FetchTests extends TestSuite {
         val mainArtifacts = true
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
@@ -88,6 +93,7 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.javadoc, Classifier.sources)
         val (res, artifacts) = await {
           Fetch()
+            .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(cache)
             .withClassifiers(classifiers)
