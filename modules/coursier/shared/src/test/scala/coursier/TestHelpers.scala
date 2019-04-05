@@ -56,7 +56,9 @@ object TestHelpers extends PlatformTestHelpers {
 
     def tryRead = textResource(path)
 
-    val result0 = result
+    val result0 = result.map { r =>
+      r.replace(handmadeMetadataBase, "file:///handmade-metadata/")
+    }
 
     val expected =
       await(
@@ -111,7 +113,8 @@ object TestHelpers extends PlatformTestHelpers {
     artifacts: Seq[Artifact],
     params: ResolutionParams = ResolutionParams(),
     classifiers: Set[Classifier] = Set(),
-    mainArtifacts: JBoolean = null
+    mainArtifacts: JBoolean = null,
+    extraKeyPart: String = ""
   ): Future[Unit] = {
 
     val classifiersPart =
@@ -126,7 +129,7 @@ object TestHelpers extends PlatformTestHelpers {
         case Some(b) => s"_main_$b"
       }
 
-    validate("artifacts", res, params, mainArtifactsPart + classifiersPart) {
+    validate("artifacts", res, params, mainArtifactsPart + classifiersPart + extraKeyPart) {
       artifacts
         .map(_.url)
         .sorted

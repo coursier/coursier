@@ -396,7 +396,7 @@ object Resolution {
       Configuration.optional -> Set(Configuration.compile, Configuration.optional, Configuration.runtime),
       Configuration.provided -> Set(),
       Configuration.runtime -> Set(Configuration.compile, Configuration.runtime),
-      Configuration.test -> Set()
+      Configuration.test -> Set(Configuration.compile, Configuration.runtime, Configuration.test)
     )
 
     base ++ Seq(
@@ -531,6 +531,8 @@ object Resolution {
               val depConfig =
                 if (actualConfig == Configuration.optional)
                   defaultConfiguration
+                else if (actualConfig == Configuration.test)
+                  Configuration.runtime
                 else
                   // really keeping the  from.configuration, with its fallback config part
                   from.configuration
