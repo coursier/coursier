@@ -1,5 +1,6 @@
 package coursier
 
+import java.io.File
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
@@ -18,6 +19,13 @@ abstract class PlatformTestHelpers {
     assert(Files.isDirectory(dir))
     dir
   }
+
+  val handmadeMetadataBase =
+    new File("modules/tests/handmade-metadata/data")
+      .getAbsoluteFile
+      .toURI
+      .toASCIIString
+      .stripSuffix("/") + "/"
 
   val writeMockData = sys.env
     .get("FETCH_MOCK_DATA")

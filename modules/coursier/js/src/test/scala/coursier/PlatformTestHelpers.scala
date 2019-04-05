@@ -11,6 +11,8 @@ abstract class PlatformTestHelpers {
   val cache: Cache[Task] =
     MockCache("modules/tests/metadata")
 
+  val handmadeMetadataBase = "???" // no JS test should rely on that anyway
+
   val writeMockData = false
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =

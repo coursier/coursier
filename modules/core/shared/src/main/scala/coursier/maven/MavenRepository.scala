@@ -460,30 +460,40 @@ final case class MavenRepository(
           )
         }
 
-      val type0 = if (dependency.attributes.`type`.isEmpty) Type.jar else dependency.attributes.`type`
+      val types =
+        if (dependency.attributes.`type`.isEmpty) {
+          if (dependency.configuration == Configuration.test)
+            Seq(Type.jar, Type.testJar)
+          else
+            Seq(Type.jar)
+        } else
+          Seq(dependency.attributes.`type`)
 
-      val ext = MavenAttributes.typeExtension(type0)
+      val extraPubs = types.map { type0 =>
 
-      val classifier =
-        if (dependency.attributes.classifier.isEmpty)
-          MavenAttributes.typeDefaultClassifier(type0)
-        else
-          dependency.attributes.classifier
+        val ext = MavenAttributes.typeExtension(type0)
 
-      val tpe = packagingTpeMap.getOrElse(
-        (classifier, ext),
-        MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
-      )
+        val classifier =
+          if (dependency.attributes.classifier.isEmpty)
+            MavenAttributes.typeDefaultClassifier(type0)
+          else
+            dependency.attributes.classifier
 
-      val pubs = packagingPublicationOpt.toSeq :+
+        val tpe = packagingTpeMap.getOrElse(
+          (classifier, ext),
+          MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+        )
+
         Publication(
           dependency.module.name.value,
           tpe,
           ext,
           classifier
         )
+      }
 
-      pubs.distinct
+      (packagingPublicationOpt.toSeq ++ extraPubs)
+        .distinct
     }
 
     overrideClassifiers
