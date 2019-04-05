@@ -33,7 +33,7 @@ package object compatibility {
     dir
   }
 
-  private val fillChunks = sys.env.get("FILL_CHUNKS").exists(s => s == "1" || s == "true")
+  private val fillChunks = sys.env.get("FETCH_MOCK_DATA").exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, fillChunks).fetch

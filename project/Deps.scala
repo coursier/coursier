@@ -10,11 +10,11 @@ object Deps {
   def quasiQuotes = "org.scalamacros" %% "quasiquotes" % "2.1.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % SharedVersions.fastParse
   def jsoup = "org.jsoup" % "jsoup" % "1.11.3"
-  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
+  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % SharedVersions.scalaz
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M6"
   def okhttpUrlConnection = "com.squareup.okhttp" % "okhttp-urlconnection" % "2.7.5"
-  def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % "1.2.0-M10"
+  def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % SharedVersions.argonautShapeless
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.7"
   def junit = "junit" % "junit" % "4.12"
   def dockerClient = "com.spotify" % "docker-client" % "8.15.2"
@@ -26,7 +26,13 @@ object Deps {
     sbtPluginExtra("com.jsuereth" % "sbt-pgp" % ver, sbtv, sv)
   }
 
-  def scalaAsync = "org.scala-lang.modules" %% "scala-async" % "0.9.7"
+  def scalaAsync = Def.setting {
+    val sv = scalaVersion.value
+    val ver =
+      if (sv.startsWith("2.11.")) "0.9.7"
+      else "0.10.0"
+    "org.scala-lang.modules" %% "scala-async" % ver
+  }
 
   def jarjar = "io.get-coursier.jarjar" % "jarjar-core" % "1.0.1-coursier-1"
 

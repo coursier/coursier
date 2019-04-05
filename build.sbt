@@ -69,7 +69,7 @@ lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
     dontPublish,
     hasITs,
     coursierPrefix,
-    libs += Deps.scalaAsync,
+    libs += Deps.scalaAsync.value,
     utest,
     sharedTestResources
   )
@@ -87,7 +87,7 @@ lazy val `proxy-tests` = project("proxy-tests")
     coursierPrefix,
     libs ++= Seq(
       Deps.dockerClient,
-      Deps.scalaAsync,
+      Deps.scalaAsync.value,
       Deps.slf4JNop
     ),
     utest,
@@ -119,7 +119,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
             "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
             "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
             "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
-            Deps.scalaAsync % Test
+            Deps.scalaAsync.value % Test
           )
         case _ =>
           Nil
@@ -163,7 +163,8 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     utest,
     Mima.previousArtifacts,
     coursierPrefix,
-    libs += CrossDeps.catsEffect.value
+    libs += CrossDeps.catsEffect.value,
+    onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
   )
 
 lazy val catsJvm = cats.jvm
@@ -333,7 +334,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     publishGeneratedSources,
     utest,
     libs ++= Seq(
-      Deps.scalaAsync % Test,
+      Deps.scalaAsync.value % Test,
       CrossDeps.argonautShapeless.value
     )
   )
