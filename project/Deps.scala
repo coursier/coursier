@@ -15,7 +15,7 @@ object Deps {
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M6"
   def okhttpUrlConnection = "com.squareup.okhttp" % "okhttp-urlconnection" % "2.7.5"
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % "1.2.0-M10"
-  def scalatest = "org.scalatest" %% "scalatest" % "3.0.6"
+  def scalatest = "org.scalatest" %% "scalatest" % "3.0.7"
   def junit = "junit" % "junit" % "4.12"
   def dockerClient = "com.spotify" % "docker-client" % "8.15.2"
 
