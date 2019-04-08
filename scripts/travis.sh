@@ -137,6 +137,16 @@ testBootstrap() {
     exit 1
   fi
 
+  if [ "$(JAVA_OPTS=-Dhappy=days ./cs-props happy)" != days ]; then
+    echo "Error: unexpected output from bootstrapped props command." 1>&2
+    exit 1
+  fi
+
+  if [ "$(JAVA_OPTS="-Dhappy=days -Dfoo=other" ./cs-props happy)" != days ]; then
+    echo "Error: unexpected output from bootstrapped props command." 1>&2
+    exit 1
+  fi
+
   # assembly tests
   ./coursier-test bootstrap -a -o cs-props-assembly -D other=thing -J -Dfoo=baz io.get-coursier:props:1.0.2
   local OUT="$(./cs-props-assembly foo)"

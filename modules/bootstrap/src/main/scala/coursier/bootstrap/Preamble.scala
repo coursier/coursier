@@ -39,7 +39,7 @@ object Preamble {
       javaOpts
         // escaping possibly a bit loose :-|
         .map(s => "'" + s.replace("'", "\\'") + "'") ++
-      Seq("\"$@\"")
+      Seq("$JAVA_OPTS", "\"$@\"")
 
     Seq(
       "#!/usr/bin/env sh",
