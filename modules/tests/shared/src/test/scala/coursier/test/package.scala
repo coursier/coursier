@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.core.{Configuration, Type}
+import coursier.core.Configuration
 
 package object test {
 
