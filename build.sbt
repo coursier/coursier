@@ -200,7 +200,7 @@ lazy val benchmark = project("benchmark")
   .settings(
     shared,
     dontPublish,
-    libraryDependencies += "org.apache.maven" % "maven-model" % "3.6.0"
+    libraryDependencies += "org.apache.maven" % "maven-model" % "3.6.1"
   )
 
 lazy val cli = project("cli")
