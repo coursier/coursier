@@ -27,7 +27,7 @@ final class DirectCredentials private(
     37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.DirectCredentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##) + matchHost.##) + httpsOnly.##)
   }
   override def toString: String = {
-    "Credentials(" + host + ", " + username + ", " + password + ", " + realm + ", " + optional + ", " + matchHost + ", " + httpsOnly + ")"
+    "Credentials(" + host + ", " + username + ", " + "****" + ", " + realm + ", " + optional + ", " + matchHost + ", " + httpsOnly + ")"
   }
   private[this] def copy(host: String = host, username: String = username, password: String = password, realm: Option[String] = realm, optional: Boolean = optional, matchHost: Boolean = matchHost, httpsOnly: Boolean = httpsOnly): DirectCredentials = {
     new DirectCredentials(host, username, password, realm, optional, matchHost, httpsOnly)
