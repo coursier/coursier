@@ -232,8 +232,12 @@ object FileCacheTests extends TestSuite {
 
   private val httpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
     .withRealm(httpRealm)
+    .withHttpsOnly(false)
   private val httpsCredentials = Credentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
     .withRealm(httpsRealm)
+
+  private val alternativeHttpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
+    .withHttpsOnly(false)
 
   val tests = Tests {
 
@@ -312,9 +316,18 @@ object FileCacheTests extends TestSuite {
         }
 
         'disabled - {
-          error(
+          * - error(
             httpBaseUri / "self-auth-redirect",
             _.startsWith("unauthorized: ")
+          )
+
+          * - error(
+            httpBaseUri / "self-auth-redirect",
+            _.startsWith("unauthorized: "),
+            _.addCredentials(
+              httpCredentials
+                .withHttpsOnly(true) // should make things fail
+            )
           )
         }
       }
