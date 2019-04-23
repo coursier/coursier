@@ -7,10 +7,11 @@ import java.security.cert.X509Certificate
 import cats.data.NonEmptyList
 import cats.effect.IO
 import coursier.cache.TestUtil.withTmpDir
-import coursier.core.Artifact
+import coursier.core.{Artifact, Authentication}
 import coursier.credentials.Credentials
 import coursier.util.{Sync, Task}
 import javax.net.ssl.{HostnameVerifier, KeyManagerFactory, SSLContext, SSLSession, TrustManager, X509TrustManager}
+import org.http4s.Uri.Authority
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location, `WWW-Authenticate`}
 import org.http4s.{BasicCredentials, Challenge, HttpService, Request, Uri}
@@ -199,8 +200,27 @@ object FileCacheTests extends TestSuite {
     pool.shutdown()
   }
 
-  private implicit def artifact(uri: Uri): Artifact =
-    Artifact(uri.renderString, Map(), Map(), changing = false, optional = false, None)
+  private implicit class UserUriOps(private val uri: Uri) extends AnyVal {
+    def withUser(user: String): Uri =
+      uri.copy(
+        authority = uri.authority.map { authority =>
+          authority.copy(
+            userInfo = Some(user)
+          )
+        }
+      )
+  }
+
+  private implicit def artifact(uri: Uri): Artifact = {
+    val (uri0, authOpt) = uri.userInfo match {
+      case Some(info) =>
+        assert(!info.contains(':'))
+        (uri.copy(authority = uri.authority.map(_.copy(userInfo = None))), Some(Authentication(info)))
+      case None =>
+        (uri, None)
+    }
+    Artifact(uri0.renderString, Map(), Map(), changing = false, optional = false, authOpt)
+  }
 
   private val dummyHostnameVerifier =
     new HostnameVerifier {
@@ -232,9 +252,11 @@ object FileCacheTests extends TestSuite {
 
   private val httpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
     .withRealm(httpRealm)
+    .withMatchHost(true)
     .withHttpsOnly(false)
   private val httpsCredentials = Credentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
     .withRealm(httpsRealm)
+    .withMatchHost(true)
 
   private val alternativeHttpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
     .withHttpsOnly(false)
@@ -420,10 +442,18 @@ object FileCacheTests extends TestSuite {
 
       'authHttpToNoAuthHttps - {
         'enabled - {
-          expect(
+          * - expect(
             httpBaseUri / "auth" / "redirect-no-auth",
             "hello no auth secure",
             _.addCredentials(httpsCredentials, httpCredentials)
+              .withFollowHttpToHttpsRedirections(true)
+          )
+
+          * - expect(
+            (httpBaseUri / "auth" / "redirect-no-auth")
+              .withUser(alternativeHttpCredentials.username),
+            "hello no auth secure",
+            _.addCredentials(httpsCredentials, alternativeHttpCredentials)
               .withFollowHttpToHttpsRedirections(true)
           )
         }

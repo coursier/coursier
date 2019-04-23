@@ -7,5 +7,5 @@ scala_library(
         # and this is needed at runtime.
         "3rdparty/jvm:scala-xml",
     ],
-    sources = rglobs("jvm/*.scala", "shared/*.scala"),
+    sources = rglobs("jvm/src/main/*.scala", "shared/src/main/*.scala"),
 )

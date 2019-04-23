@@ -296,13 +296,25 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
               var conn: URLConnection = null
 
+              val authenticationOpt =
+                artifact.authentication match {
+                  case Some(auth) if auth.userOnly =>
+                    allCredentials0
+                      .find(_.matches(url, auth.user))
+                      .map(_.authentication)
+                      .orElse(artifact.authentication)
+                  case _ =>
+                    artifact.authentication
+                }
+
               try {
                 val (conn0, partialDownload) = CacheUrl.urlConnectionMaybePartial(
                   url,
-                  artifact.authentication,
+                  authenticationOpt,
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
-                  allCredentials0,
+                  allCredentials0
+                    .filter(_.matchHost), // just in case
                   sslSocketFactoryOpt,
                   hostnameVerifierOpt,
                   "GET"
@@ -613,7 +625,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     val artifact0 = S.map(allCredentials) { allCredentials =>
       if (artifact.authentication.isEmpty) {
         val authOpt = allCredentials
-          .find(_.matches(artifact.url, None))
+          .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
         artifact.copy(authentication = authOpt)
       } else

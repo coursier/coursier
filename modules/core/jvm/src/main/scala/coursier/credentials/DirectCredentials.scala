@@ -10,25 +10,27 @@ final class DirectCredentials private(
   val password: String,
   val realm: Option[String],
   val optional: Boolean,
+  val matchHost: Boolean,
   val httpsOnly: Boolean
 ) extends Credentials {
 
-  private def this() = this("", "", "", None, true)
-  private def this(host: String, username: String, password: String) = this(host, username, password, None, true)
-  private def this(host: String, username: String, password: String, realm: Option[String]) = this(host, username, password, realm, true)
+  private def this() = this("", "", "", None, true, false, true)
+  private def this(host: String, username: String, password: String) = this(host, username, password, None, true, false, true)
+  private def this(host: String, username: String, password: String, realm: Option[String]) = this(host, username, password, realm, true, false, true)
+  private def this(host: String, username: String, password: String, realm: Option[String], optional: Boolean) = this(host, username, password, realm, optional, false, true)
 
   override def equals(o: Any): Boolean = o match {
-    case x: DirectCredentials => (this.host == x.host) && (this.username == x.username) && (this.password == x.password) && (this.realm == x.realm) && (this.optional == x.optional) && (this.httpsOnly == x.httpsOnly)
+    case x: DirectCredentials => (this.host == x.host) && (this.username == x.username) && (this.password == x.password) && (this.realm == x.realm) && (this.optional == x.optional) && (this.matchHost == x.matchHost) && (this.httpsOnly == x.httpsOnly)
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.DirectCredentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##) + httpsOnly.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.DirectCredentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##) + matchHost.##) + httpsOnly.##)
   }
   override def toString: String = {
-    "Credentials(" + host + ", " + username + ", " + password + ", " + realm + ", " + optional + ", " + httpsOnly + ")"
+    "Credentials(" + host + ", " + username + ", " + password + ", " + realm + ", " + optional + ", " + matchHost + ", " + httpsOnly + ")"
   }
-  private[this] def copy(host: String = host, username: String = username, password: String = password, realm: Option[String] = realm, optional: Boolean = optional, httpsOnly: Boolean = httpsOnly): DirectCredentials = {
-    new DirectCredentials(host, username, password, realm, optional, httpsOnly)
+  private[this] def copy(host: String = host, username: String = username, password: String = password, realm: Option[String] = realm, optional: Boolean = optional, matchHost: Boolean = matchHost, httpsOnly: Boolean = httpsOnly): DirectCredentials = {
+    new DirectCredentials(host, username, password, realm, optional, matchHost, httpsOnly)
   }
   def withHost(host: String): DirectCredentials = {
     copy(host = host)
@@ -48,16 +50,31 @@ final class DirectCredentials private(
   def withOptional(optional: Boolean): DirectCredentials = {
     copy(optional = optional)
   }
+  def withMatchHost(matchHost: Boolean): DirectCredentials =
+    copy(matchHost = matchHost)
   def withHttpsOnly(httpsOnly: Boolean): DirectCredentials =
     copy(httpsOnly = httpsOnly)
 
-  def matches(url: String, realm0: Option[String]): Boolean = {
+  def autoMatches(url: String, realm0: Option[String]): Boolean =
+    matchHost && {
+      val uri = new URI(url)
+      val schemeOpt = Option(uri.getScheme)
+      val hostOpt = Option(uri.getHost)
+      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
+        hostOpt.contains(host) &&
+        realm.forall(realm0.contains)
+    }
+
+  def matches(url: String, user: String): Boolean = {
     val uri = new URI(url)
     val schemeOpt = Option(uri.getScheme)
     val hostOpt = Option(uri.getHost)
-    ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
+    val userInfoOpt = Option(uri.getUserInfo)
+    // !matchHost && // ?
+    userInfoOpt.isEmpty &&
+      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
       hostOpt.contains(host) &&
-      realm.forall(realm0.contains)
+      user == username
   }
 
   def authentication: Authentication =

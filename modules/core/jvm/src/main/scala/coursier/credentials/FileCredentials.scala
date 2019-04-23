@@ -70,10 +70,12 @@ final class FileCredentials private(
 
         val realmOpt = Option(props.getProperty(s"$prefix.realm")) // filter if empty?
 
+        val matchHost = Option(props.getProperty(s"$prefix.auto")).fold(false)(_.toBoolean)
         val httpsOnly = Option(props.getProperty(s"$prefix.https-only")).fold(true)(_.toBoolean)
 
         DirectCredentials(host, user, password)
           .withRealm(realmOpt)
+          .withMatchHost(matchHost)
           .withHttpsOnly(httpsOnly)
       }
 

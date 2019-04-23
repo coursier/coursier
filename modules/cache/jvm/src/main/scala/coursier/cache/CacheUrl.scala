@@ -233,12 +233,13 @@ object CacheUrl {
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
-    credentials: Seq[DirectCredentials],
+    autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
     authRealm: Option[String] = None
   ): (URLConnection, Boolean) = {
+
     var conn: URLConnection = null
 
     try {
@@ -259,7 +260,7 @@ object CacheUrl {
             authentication,
             alreadyDownloaded = 0L,
             followHttpToHttpsRedirections,
-            credentials,
+            autoCredentials,
             sslSocketFactoryOpt,
             hostnameVerifierOpt,
             method
@@ -271,13 +272,13 @@ object CacheUrl {
           redirectOpt match {
             case Some(loc) =>
               closeConn(conn)
-              val newAuthOpt = credentials.find(_.matches(loc, None)).map(_.authentication)
+              val newAuthOpt = autoCredentials.find(_.autoMatches(loc, None)).map(_.authentication)
               urlConnectionMaybePartial(
                 loc,
                 newAuthOpt,
                 alreadyDownloaded,
                 followHttpToHttpsRedirections,
-                credentials,
+                autoCredentials,
                 sslSocketFactoryOpt,
                 hostnameVerifierOpt,
                 method
@@ -288,7 +289,7 @@ object CacheUrl {
                 val realmOpt = realm(conn)
                 val authentication0 = authentication
                   .map(_.copy(optional = false))
-                  .orElse(credentials.find(_.matches(url0, realmOpt)).map(_.authentication))
+                  .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
                 if (authentication0 == authentication && realmOpt == authRealm)
                   (conn, partialDownload)
                 else {
@@ -298,7 +299,7 @@ object CacheUrl {
                     authentication0,
                     alreadyDownloaded,
                     followHttpToHttpsRedirections,
-                    credentials,
+                    autoCredentials,
                     sslSocketFactoryOpt,
                     hostnameVerifierOpt,
                     method,
