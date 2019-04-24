@@ -20,8 +20,8 @@ final case class DependencyOptions(
   )
     localExcludeFile: String = "",
 
-  @Help("Default sbt version (if --sbt-plugin options are passed)")
-  @Value("sbt version (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
+  @Help("If --sbt-plugin options are passed: default sbt version  (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
+  @Value("sbt version")
     sbtVersion: String = "1.0",
 
   @Help("Add intransitive dependencies")

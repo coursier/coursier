@@ -31,8 +31,8 @@ final case class CacheOptions(
   @Short("n")
     parallel: Int = 6,
 
-  @Help("Checksums")
-  @Value("checksum1,checksum2,... - end with none to allow for no checksum validation if none are available")
+  @Help("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
+  @Value("checksum1,checksum2,...")
     checksum: List[String] = Nil,
 
   @Help("Retry limit for Checksum error when fetching a file")

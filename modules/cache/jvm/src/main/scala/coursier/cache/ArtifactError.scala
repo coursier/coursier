@@ -46,6 +46,13 @@ object ArtifactError {
     file
   )
 
+  final case class ChecksumErrors(
+    errors: Seq[(String, String)]
+  ) extends ArtifactError(
+    "checksum errors",
+    errors.map { case (k, v) => s"$k: $v" }.mkString(", ")
+  )
+
   final case class ChecksumFormatError(
     sumType: String,
     file: String
