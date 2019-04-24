@@ -27,6 +27,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading,
+    utest,
     libs ++= Seq(
       Deps.fastParse % "shaded",
       Deps.jsoup % "shaded",

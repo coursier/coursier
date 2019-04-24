@@ -50,6 +50,8 @@ object AuthenticationTests extends TestSuite {
                   .withHost(testHost)
                   .withUsername(user)
                   .withPassword(password)
+                  .withMatchHost(true)
+                  .withHttpsOnly(false)
               )
           )
           .run()

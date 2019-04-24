@@ -1,21 +1,14 @@
 package coursier.cache
 
 import java.io.File
-import java.security.KeyStore
-import java.security.cert.X509Certificate
 
-import cats.data.NonEmptyList
 import cats.effect.IO
-import coursier.cache.TestUtil.withTmpDir
-import coursier.core.Artifact
-import coursier.credentials.Credentials
+import coursier.cache.TestUtil._
+import coursier.credentials.{Credentials, DirectCredentials}
 import coursier.util.{Sync, Task}
-import javax.net.ssl.{HostnameVerifier, KeyManagerFactory, SSLContext, SSLSession, TrustManager, X509TrustManager}
 import org.http4s.dsl.io._
-import org.http4s.headers.{Authorization, Location, `WWW-Authenticate`}
-import org.http4s.{BasicCredentials, Challenge, HttpService, Request, Uri}
-import org.http4s.server.blaze.BlazeBuilder
-import org.http4s.util.CaseInsensitiveString
+import org.http4s.headers.{Authorization, Location}
+import org.http4s.{HttpService, Response, Uri}
 import utest._
 
 import scala.concurrent.ExecutionContext
@@ -25,191 +18,14 @@ object FileCacheTests extends TestSuite {
   private val pool = Sync.fixedThreadPool(4)
   private implicit val ec = ExecutionContext.fromExecutorService(pool)
 
-  private def routes(
-    redirectBase: => Uri,
-    realm: String,
-    userPass: (String, String),
-    suffix: String = ""
-  ): HttpService[IO] = {
-
-    def authorized(req: Request[IO]): Boolean = {
-
-      val res = for {
-        token <- req.headers.get(Authorization).map(_.credentials).collect {
-          case t: org.http4s.Credentials.Token => t
-        }
-        if token.authScheme == CaseInsensitiveString("Basic")
-        c = BasicCredentials(token.token)
-        if (c.username, c.password) == userPass
-      } yield ()
-
-      res.nonEmpty
-    }
-
-    val unauth =
-      Unauthorized(`WWW-Authenticate`(NonEmptyList.one(Challenge("Basic", realm))))
-
-    HttpService[IO] {
-
-      case GET -> Root / "hello" =>
-        Ok(s"hello$suffix")
-
-      case req @ GET -> Root / "hello-no-auth" =>
-        val authHeaderOpt = req.headers.get(Authorization)
-        if (authHeaderOpt.isEmpty)
-          Ok(s"hello no auth$suffix")
-        else
-          BadRequest()
-
-      case GET -> Root / "self-redirect-301" =>
-        MovedPermanently("redirecting", Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-redirect-302" =>
-        Found("redirecting", Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-redirect-303" =>
-        SeeOther("redirecting", Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-redirect-304" =>
-        NotModified(Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-redirect" =>
-        TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-redirect-308" =>
-        PermanentRedirect("redirecting", Location(Uri(path = "/hello")))
-
-      case GET -> Root / "self-auth-redirect" =>
-        TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
-
-      case GET -> Root / "redirect" =>
-        TemporaryRedirect("redirecting", Location(redirectBase / "hello"))
-
-      case GET -> Root / "auth-redirect" =>
-        TemporaryRedirect("redirecting", Location(redirectBase / "auth" / "hello"))
-
-      case req @ GET -> Root / "auth" / "hello" =>
-        if (authorized(req))
-          Ok(s"hello auth$suffix")
-        else
-          unauth
-
-      case req @ GET -> Root / "auth" / "self-redirect" =>
-        if (authorized(req))
-          TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
-        else
-          unauth
-
-      case req @ GET -> Root / "auth" / "redirect" =>
-        if (authorized(req))
-          TemporaryRedirect("redirecting", Location(redirectBase / "hello"))
-        else
-          unauth
-
-      case req @ GET -> Root / "auth" / "redirect-no-auth" =>
-        if (authorized(req))
-          TemporaryRedirect("redirecting", Location(redirectBase / "hello-no-auth"))
-        else
-          unauth
-
-      case req @ GET -> Root / "auth" / "auth-redirect" =>
-        if (authorized(req))
-          TemporaryRedirect("redirecting", Location(redirectBase / "auth" / "hello"))
-        else
-          unauth
-    }
-  }
-
-  private val httpRealm = "simple realm"
-  private val httpsRealm = "secure realm"
-  private val httpUserPass = ("simple", "SiMpLe")
-  private val httpsUserPass = ("secure", "sEcUrE")
-
-  private val httpRoutes = routes(
-    httpsBaseUri,
-    httpRealm,
-    httpUserPass
-  )
-  private val httpsRoutes = routes(
-    httpBaseUri,
-    httpsRealm,
-    httpsUserPass,
-    " secure"
-  )
-
-  private val clientSslContext: SSLContext = {
-
-    // see https://stackoverflow.com/a/42807185/3714539
-
-    val dummyTrustManager = Array[TrustManager](
-      new X509TrustManager {
-        def getAcceptedIssuers = null
-        def checkClientTrusted(certs: Array[X509Certificate], authType: String) = {}
-        def checkServerTrusted(certs: Array[X509Certificate], authType: String) = {}
-      }
-    )
-
-    val sc = SSLContext.getInstance("SSL")
-    sc.init(null, dummyTrustManager, new java.security.SecureRandom)
-    sc
-  }
-
-  private val serverSslContext: SSLContext = {
-
-    val keyPassword = "ssl-pass"
-    val keyManagerPassword = keyPassword
-
-    val ks = KeyStore.getInstance("JKS")
-    val ksIs = Thread.currentThread().getContextClassLoader.getResourceAsStream("server.keystore")
-    ks.load(ksIs, keyPassword.toCharArray)
-    ksIs.close()
-
-    val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
-    kmf.init(ks, keyManagerPassword.toCharArray)
-
-    val sc = SSLContext.getInstance("TLS")
-    sc.init(kmf.getKeyManagers, null, null)
-    sc
-  }
-
-  private val httpServer = BlazeBuilder[IO]
-    .mountService(httpRoutes)
-    .bindLocal(0)
-    .start
-    .unsafeRunSync()
-
-  assert(httpServer.baseUri.renderString.startsWith("http://"))
-
-  private val httpsServer = BlazeBuilder[IO]
-    .mountService(httpsRoutes)
-    .withSSLContext(serverSslContext)
-    .bindHttp(0, "localhost")
-    .start
-    .unsafeRunSync()
-
-  private def httpBaseUri: Uri = httpServer.baseUri
-  private def httpsBaseUri: Uri = httpsServer.baseUri
-
-  assert(httpsBaseUri.renderString.startsWith("https://"))
-
   override def utestAfterAll() = {
-    httpServer.shutdownNow()
-    httpsServer.shutdownNow()
     ec.shutdown()
     pool.shutdown()
   }
 
-  private implicit def artifact(uri: Uri): Artifact =
-    Artifact(uri.renderString, Map(), Map(), changing = false, optional = false, None)
-
-  private val dummyHostnameVerifier =
-    new HostnameVerifier {
-      def verify(s: String, sslSession: SSLSession) = true
-    }
-
   private def fileCache0() = FileCache()
     .noCredentials
-    .withSslSocketFactory(clientSslContext.getSocketFactory)
+    .withSslSocketFactory(dummyClientSslContext.getSocketFactory)
     .withHostnameVerifier(dummyHostnameVerifier)
 
   private def expect(uri: Uri, content: String, transform: FileCache[Task] => FileCache[Task] = c => c): Unit =
@@ -230,211 +46,565 @@ object FileCacheTests extends TestSuite {
       assert(res.left.exists(check))
     }
 
-  private val httpCredentials = Credentials(httpBaseUri.host.fold("")(_.value), httpUserPass._1, httpUserPass._2)
-    .withRealm(httpRealm)
-  private val httpsCredentials = Credentials(httpsBaseUri.host.fold("")(_.value), httpsUserPass._1, httpsUserPass._2)
-    .withRealm(httpsRealm)
+  private def credentials(base: Uri, userPass: (String, String)): DirectCredentials =
+    Credentials(base.host.fold("")(_.value), userPass._1, userPass._2)
 
   val tests = Tests {
 
     'test - withTmpDir { dir =>
-      val c = fileCache0()
-        .withLocation(dir.toFile)
-      val res = c.fetch(httpsBaseUri / "hello").run.unsafeRun()
-      val expectedRes = Right("hello secure")
-      assert(res == expectedRes)
+      val c = fileCache0().withLocation(dir.toFile)
+      val routes = HttpService[IO] {
+        case GET -> Root / "hello" => Ok("hello secure")
+      }
+      withHttpServer(routes) { base =>
+        val res = c.fetch(base / "hello").run.unsafeRun()
+        val expectedRes = Right("hello secure")
+        assert(res == expectedRes)
+      }
     }
 
     'redirections - {
 
       'httpToHttp - {
-        "301" - expect(httpBaseUri / "self-redirect-301", "hello")
-        "302" - expect(httpBaseUri / "self-redirect-302", "hello")
-        "302" - expect(httpBaseUri / "self-redirect-304", "hello")
-        "307" - expect(httpBaseUri / "self-redirect", "hello")
-        "308" - expect(httpBaseUri / "self-redirect-308", "hello")
+
+        def routes(resp: Location => IO[Response[IO]]): HttpService[IO] =
+          HttpService[IO] {
+            case GET -> Root / "hello" => Ok("hello")
+            case GET -> Root / "redirect" => resp(Location(Uri(path = "/hello")))
+          }
+        def test(resp: Location => IO[Response[IO]]): Unit =
+          withHttpServer(routes(resp)) { base =>
+            expect(base / "redirect", "hello")
+          }
+
+        "301" - test(MovedPermanently("redirecting", _))
+        "302" - test(Found("redirecting", _))
+        "304" - test(NotModified(_))
+        "307" - test(TemporaryRedirect("redirecting", _))
+        "308" - test(PermanentRedirect("redirecting", _))
       }
 
       'httpsToHttps - {
-        expect(httpsBaseUri / "self-redirect", "hello secure")
+        val routes = HttpService[IO] {
+          case GET -> Root / "hello" => Ok("hello")
+          case GET -> Root / "redirect" =>
+            TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
+        }
+        withHttpServer(routes, withSsl = true) { base =>
+          expect(base / "redirect", "hello")
+        }
       }
 
       'httpToHttps - {
+
+        def withServers[T](f: (Uri, Uri) => T): T = {
+
+          var httpsBaseOpt = Option.empty[Uri]
+
+          val httpRoutes = HttpService[IO] {
+            case GET -> Root / "redirect" =>
+              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "hello"))
+          }
+
+          val httpsRoutes = HttpService[IO] {
+            case GET -> Root / "hello" => Ok("hello secure")
+          }
+
+          withHttpServer(httpRoutes) { httpBase =>
+            withHttpServer(httpsRoutes, withSsl = true) { httpsBase =>
+              httpsBaseOpt = Some(httpsBase)
+              f(httpBase, httpsBase)
+            }
+          }
+        }
+
         'enabled - {
-          expect(
-            httpBaseUri / "redirect",
-            "hello secure",
-            _.withFollowHttpToHttpsRedirections(true)
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "redirect",
+              "hello secure",
+              _.withFollowHttpToHttpsRedirections(true)
+            )
+          }
         }
 
         'disabled - {
-          expect(
-            httpBaseUri / "redirect",
-            "redirecting"
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "redirect",
+              "redirecting"
+            )
+          }
         }
       }
 
       'httpToAuthHttps - {
+
+        val realm = "secure realm"
+        val userPass = ("secure", "sEcUrE")
+
+        def withServers[T](f: (Uri, Uri) => T): T = {
+
+          var httpsBaseOpt = Option.empty[Uri]
+
+          val httpRoutes = HttpService[IO] {
+            case GET -> Root / "auth-redirect" =>
+              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+          }
+
+          val httpsRoutes = HttpService[IO] {
+            case req @ GET -> Root / "auth" / "hello" =>
+              if (authorized(req, userPass))
+                Ok("hello auth secure")
+              else
+                unauth(realm)
+          }
+
+          withHttpServer(httpRoutes) { httpBase =>
+            withHttpServer(httpsRoutes, withSsl = true) { httpsBase =>
+              httpsBaseOpt = Some(httpsBase)
+              f(httpBase, httpsBase)
+            }
+          }
+        }
+
         'enabled - {
-          expect(
-            httpBaseUri / "auth-redirect",
-            "hello auth secure",
-            _.withFollowHttpToHttpsRedirections(true)
-              .addCredentials(httpsCredentials)
-          )
+          withServers { (httpBaseUri, httpsBaseUri) =>
+            expect(
+              httpBaseUri / "auth-redirect",
+              "hello auth secure",
+              _.withFollowHttpToHttpsRedirections(true)
+                .addCredentials(
+                  credentials(httpsBaseUri, userPass)
+                    .withRealm(realm)
+                    .withMatchHost(true)
+                )
+            )
+          }
         }
 
         'disabled - {
-          expect(
-            httpBaseUri / "auth-redirect",
-            "redirecting"
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth-redirect",
+              "redirecting"
+            )
+          }
         }
       }
 
       'httpToAuthHttp - {
+
+        val realm = "simple realm"
+        val userPass = ("simple", "SiMpLe")
+
+        val routes = HttpService[IO] {
+          case GET -> Root / "redirect" =>
+            TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
+          case req @ GET -> Root / "auth" / "hello" =>
+            if (authorized(req, userPass))
+              Ok("hello auth")
+            else
+              unauth(realm)
+        }
+
         'enabled - {
-          expect(
-            httpBaseUri / "self-auth-redirect",
-            "hello auth",
-            _.addCredentials(httpCredentials)
-          )
+          withHttpServer(routes) { base =>
+
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(realm)
+                  .withHttpsOnly(false)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'enabledAllRealms - {
-          expect(
-            httpBaseUri / "self-auth-redirect",
-            "hello auth",
-            _.addCredentials(httpCredentials.withRealm(None))
-          )
+          withHttpServer(routes) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withHttpsOnly(false)
+                  .withRealm(None)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'disabled - {
-          error(
-            httpBaseUri / "self-auth-redirect",
-            _.startsWith("unauthorized: ")
-          )
+          * - {
+            withHttpServer(routes) { base =>
+              error(
+                base / "redirect",
+                _.startsWith("unauthorized: ")
+              )
+            }
+          }
+
+          * - {
+            withHttpServer(routes) { base =>
+              error(
+                base / "redirect",
+                _.startsWith("unauthorized: "),
+                _.addCredentials(
+                  credentials(base, userPass)
+                    .withRealm(realm)
+                    .withHttpsOnly(true) // should make things fail
+                    .withMatchHost(true)
+                )
+              )
+            }
+          }
         }
       }
 
       'authHttpToAuthHttp - {
+
+        val realm = "simple realm"
+        val userPass = ("simple", "SiMpLe")
+
+        val routes = HttpService[IO] {
+          case req @ GET -> Root / "redirect" =>
+            if (authorized(req, userPass))
+              TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
+            else
+              unauth(realm)
+          case req @ GET -> Root / "hello" =>
+            if (authorized(req, userPass))
+              Ok("hello auth")
+            else
+              unauth(realm)
+        }
+
         'enabled - {
-          expect(
-            httpBaseUri / "auth" / "self-redirect",
-            "hello auth",
-            _.addCredentials(httpCredentials)
-          )
+          withHttpServer(routes) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(realm)
+                  .withHttpsOnly(false)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'enabledAllRealms - {
-          expect(
-            httpBaseUri / "auth" / "self-redirect",
-            "hello auth",
-            _.addCredentials(httpCredentials.withRealm(None))
-          )
+          withHttpServer(routes) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withHttpsOnly(false)
+                  .withRealm(None)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'enabledSeveralCreds - {
-          expect(
-            httpBaseUri / "auth" / "self-redirect",
-            "hello auth",
-            _.addCredentials(
-              httpCredentials,
-              httpsCredentials
+          withHttpServer(routes) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(realm)
+                  .withHttpsOnly(false)
+                  .withMatchHost(true),
+                credentials(base.copy(authority = base.authority.map(a => a.copy(port = a.port.map(_ + 1)))), ("something", "pass123"))
+                  .withRealm("other realm")
+                  .withMatchHost(true)
+              )
             )
-          )
+          }
         }
 
         'disabled - {
-          error(
-            httpBaseUri / "auth" / "self-redirect",
-            _.startsWith("unauthorized: ")
-          )
+          withHttpServer(routes) { base =>
+            error(
+              base / "redirect",
+              _.startsWith("unauthorized: ")
+            )
+          }
         }
       }
 
       'httpsToAuthHttps - {
+
+        val realm = "secure realm"
+        val userPass = ("secure", "sEcUrE")
+
+        val routes = HttpService[IO] {
+          case GET -> Root / "redirect" =>
+            TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
+          case req @ GET -> Root / "auth" / "hello" =>
+            if (authorized(req, userPass))
+              Ok("hello auth")
+            else
+              unauth(realm)
+        }
+
         'enabled - {
-          expect(
-            httpsBaseUri / "self-auth-redirect",
-            "hello auth secure",
-            _.addCredentials(httpsCredentials)
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(realm)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'enabledAllRealms - {
-          expect(
-            httpsBaseUri / "self-auth-redirect",
-            "hello auth secure",
-            _.addCredentials(httpsCredentials.withRealm(None))
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(None)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'disabled - {
-          error(
-            httpsBaseUri / "self-auth-redirect",
-            _.startsWith("unauthorized: ")
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            error(
+              base / "redirect",
+              _.startsWith("unauthorized: ")
+            )
+          }
         }
       }
 
       'authHttpsToAuthHttps - {
+
+        val realm = "secure realm"
+        val userPass = ("secure", "sEcUrE")
+
+        val routes = HttpService[IO] {
+          case req @ GET -> Root / "redirect" =>
+            if (authorized(req, userPass))
+              TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
+            else
+              unauth(realm)
+          case req @ GET -> Root / "hello" =>
+            if (authorized(req, userPass))
+              Ok("hello auth")
+            else
+              unauth(realm)
+        }
+
         'enabled - {
-          expect(
-            httpsBaseUri / "auth" / "self-redirect",
-            "hello auth secure",
-            _.addCredentials(httpsCredentials)
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(realm)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'enabledAllRealms - {
-          expect(
-            httpsBaseUri / "auth" / "self-redirect",
-            "hello auth secure",
-            _.addCredentials(httpsCredentials.withRealm(None))
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            expect(
+              base / "redirect",
+              "hello auth",
+              _.addCredentials(
+                credentials(base, userPass)
+                  .withRealm(None)
+                  .withMatchHost(true)
+              )
+            )
+          }
         }
 
         'disabled - {
-          error(
-            httpsBaseUri / "auth" / "self-redirect",
-            _.startsWith("unauthorized: ")
-          )
+          withHttpServer(routes, withSsl = true) { base =>
+            error(
+              base / "redirect",
+              _.startsWith("unauthorized: ")
+            )
+          }
         }
       }
 
       'authHttpToNoAuthHttps - {
+
+        val httpRealm = "simple realm"
+        val httpsRealm = "secure realm"
+
+        val httpUserPass = ("simple", "SiMpLe")
+        val httpsUserPass = ("secure", "sEcUrE")
+
+        def withServers[T](f: (Uri, Uri) => T): T = {
+
+          var httpsBaseOpt = Option.empty[Uri]
+
+          val httpRoutes = HttpService[IO] {
+            case req @ GET -> Root / "redirect" =>
+              if (authorized(req, httpUserPass))
+                TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "hello"))
+              else
+                unauth(httpRealm)
+          }
+
+          val httpsRoutes = HttpService[IO] {
+            case req @ GET -> Root / "hello" =>
+              val authHeaderOpt = req.headers.get(Authorization)
+              if (authHeaderOpt.isEmpty)
+                Ok("hello")
+              else
+                BadRequest()
+          }
+
+          withHttpServer(httpRoutes) { httpBase =>
+            withHttpServer(httpsRoutes, withSsl = true) { httpsBase =>
+              httpsBaseOpt = Some(httpsBase)
+              f(httpBase, httpsBase)
+            }
+          }
+        }
+
         'enabled - {
-          expect(
-            httpBaseUri / "auth" / "redirect-no-auth",
-            "hello no auth secure",
-            _.addCredentials(httpsCredentials, httpCredentials)
-              .withFollowHttpToHttpsRedirections(true)
-          )
+          * - {
+            withServers { (httpBaseUri, httpsBaseUri) =>
+              expect(
+                httpBaseUri / "redirect",
+                "hello",
+                _
+                  .addCredentials(
+                    credentials(httpsBaseUri, httpsUserPass)
+                      .withRealm(httpsRealm)
+                      .withMatchHost(true),
+                    credentials(httpBaseUri, httpUserPass)
+                      .withRealm(httpRealm)
+                      .withHttpsOnly(false)
+                      .withMatchHost(true)
+                  )
+                  .withFollowHttpToHttpsRedirections(true)
+              )
+            }
+          }
+
+          * - {
+            withServers { (httpBaseUri, httpsBaseUri) =>
+              val cred = credentials(httpBaseUri, httpUserPass)
+                .withHttpsOnly(false)
+              expect(
+                (httpBaseUri / "redirect")
+                  .withUser(cred.username),
+                "hello",
+                _
+                  .addCredentials(
+                    credentials(httpsBaseUri, httpsUserPass)
+                      .withRealm(httpsRealm)
+                      .withMatchHost(true),
+                    cred
+                  )
+                  .withFollowHttpToHttpsRedirections(true)
+              )
+            }
+          }
         }
 
         'enabledAllRealms - {
-          expect(
-            httpBaseUri / "auth" / "redirect-no-auth",
-            "hello no auth secure",
-            _.addCredentials(httpCredentials.withRealm(None))
-              .withFollowHttpToHttpsRedirections(true)
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "redirect",
+              "hello",
+              _.addCredentials(
+                credentials(httpBaseUri, httpUserPass)
+                  .withHttpsOnly(false)
+                  .withRealm(None)
+                  .withMatchHost(true)
+              )
+                .withFollowHttpToHttpsRedirections(true)
+            )
+          }
         }
 
         'disabled - {
-          error(
-            httpBaseUri / "auth" / "redirect-no-auth",
-            _.startsWith("unauthorized: "),
-            _.addCredentials(httpsCredentials)
-              .withFollowHttpToHttpsRedirections(true)
-          )
+          withServers { (httpBaseUri, httpsBaseUri) =>
+            error(
+              httpBaseUri / "redirect",
+              _.startsWith("unauthorized: "),
+              _
+                .addCredentials(
+                  credentials(httpsBaseUri, httpsUserPass)
+                    .withRealm(httpsRealm)
+                    .withMatchHost(true)
+                )
+                .withFollowHttpToHttpsRedirections(true)
+            )
+          }
         }
       }
 
       'credentialFile - {
+
+        val httpRealm = "simple realm"
+        val httpsRealm = "secure realm"
+
+        val httpUserPass = ("simple", "SiMpLe")
+        val httpsUserPass = ("secure", "sEcUrE")
+
+        def withServers[T](f: (Uri, Uri) => T): T = {
+
+          var httpsBaseOpt = Option.empty[Uri]
+
+          val httpRoutes = HttpService[IO] {
+            case GET -> Root / "auth-redirect" =>
+              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+            case req @ GET -> Root / "auth" / "redirect" =>
+              if (authorized(req, httpUserPass))
+                TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
+              else
+                unauth(httpRealm)
+            case req @ GET -> Root / "auth" / "hello" =>
+              if (authorized(req, httpUserPass))
+                Ok("hello auth")
+              else
+                unauth(httpRealm)
+          }
+
+          val httpsRoutes = HttpService[IO] {
+            case req @ GET -> Root / "auth" / "hello" =>
+              if (authorized(req, httpsUserPass))
+                Ok("hello auth secure")
+              else
+                unauth(httpsRealm)
+          }
+
+          withHttpServer(httpRoutes) { httpBase =>
+            withHttpServer(httpsRoutes, withSsl = true) { httpsBase =>
+              httpsBaseOpt = Some(httpsBase)
+              f(httpBase, httpsBase)
+            }
+          }
+        }
 
         val credFilePath = Option(getClass.getResource("/credentials.properties"))
           .map(_.getPath)
@@ -445,20 +615,24 @@ object FileCacheTests extends TestSuite {
         assert(credFile.exists())
 
         * - {
-          expect(
-            httpBaseUri / "auth-redirect",
-            "hello auth secure",
-            _.withFollowHttpToHttpsRedirections(true)
-              .addFileCredentials(credFile)
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth-redirect",
+              "hello auth secure",
+              _.withFollowHttpToHttpsRedirections(true)
+                .addFileCredentials(credFile)
+            )
+          }
         }
 
         * - {
-          expect(
-            httpBaseUri / "auth" / "self-redirect",
-            "hello auth",
-            _.addFileCredentials(credFile)
-          )
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth" / "redirect",
+              "hello auth",
+              _.addFileCredentials(credFile)
+            )
+          }
         }
 
       }
