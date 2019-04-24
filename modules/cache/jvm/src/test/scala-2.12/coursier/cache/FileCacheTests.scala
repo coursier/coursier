@@ -1,9 +1,11 @@
 package coursier.cache
 
 import java.io.File
+import java.net.URI
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
+import coursier.core.Artifact
 import coursier.credentials.{Credentials, DirectCredentials}
 import coursier.util.{Sync, Task}
 import org.http4s.dsl.io._
@@ -11,6 +13,7 @@ import org.http4s.headers.{Authorization, Location}
 import org.http4s.{HttpService, Response, Uri}
 import utest._
 
+import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext
 
 object FileCacheTests extends TestSuite {
@@ -637,6 +640,80 @@ object FileCacheTests extends TestSuite {
 
       }
 
+    }
+
+    'checksums - {
+
+      val dummyFileUri = Option(getClass.getResource("/data/foo.xml"))
+        .map(_.toURI.toASCIIString)
+        .getOrElse {
+          throw new Exception("data/foo.xml resource not found")
+        }
+
+      val artifact = Artifact(
+        dummyFileUri,
+        Map(
+          "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
+          "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
+          "SHA-1" -> s"$dummyFileUri.sha1",
+          "MD5" -> s"$dummyFileUri.md5"
+        ),
+        Map(),
+        changing = false,
+        optional = false,
+        None
+      )
+
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-1")))
+            .file(artifact)
+            .run
+            .future()
+        }
+
+        assert(res.isRight)
+      }
+
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-256")))
+            .file(artifact)
+            .run
+            .future()
+        }
+
+        val expectedRes = Left(
+          ArtifactError.ChecksumErrors(Seq(
+            "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
+          ))
+        )
+
+        assert(res.isLeft)
+        assert(res == expectedRes)
+      }
+
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-512"), Some("SHA-256")))
+            .file(artifact)
+            .run
+            .future()
+        }
+
+        val expectedRes = Left(
+          ArtifactError.ChecksumErrors(Seq(
+            "SHA-512" -> s"not found: ${new File(new URI(dummyFileUri + ".sha512"))}",
+            "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
+          ))
+        )
+
+        assert(res.isLeft)
+        assert(res == expectedRes)
+      }
     }
   }
 

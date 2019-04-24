@@ -118,7 +118,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
           Seq(
             "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
             "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
-            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
+            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
+            Deps.scalaAsync % Test
           )
         case _ =>
           Nil

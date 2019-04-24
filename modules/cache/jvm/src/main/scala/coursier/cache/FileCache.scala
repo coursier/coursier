@@ -650,14 +650,33 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         checksums = checksums0.collect { case Some(c) => c }.toSet,
         cachePolicy = policy
       )) { results =>
-        val checksum = checksums0.find {
-          case None => true
+        val resultsMap = results
+          .map {
+            case ((_, u), b) => u -> b
+          }
+          .toMap
+
+        val checksumResults = checksums0.map {
+          case None => None
           case Some(c) =>
-            artifact.checksumUrls.get(c).exists { cUrl =>
-              results.exists { case ((_, u), b) =>
-                u == cUrl && b.isRight
-              }
-            }
+            Some((c, artifact.checksumUrls.get(c).map(url => url -> resultsMap.get(url))))
+        }
+        val checksum = checksumResults.collectFirst {
+          case None => None
+          case Some((c, Some((_, Some(Right(())))))) =>
+            Some(c)
+        }
+        def checksumErrors: Seq[(String, String)] = checksumResults.collect {
+          case Some((c, None)) =>
+            // FIXME Happens when repository didn't put a checksum URL for this checksum type in an artifact…
+            //       Checksum support ought to be reworked, so that repositories don't have to put every existing checksum URLs
+            //       in artifacts beforehand like this.
+            c -> "not avalaible"
+          case Some((c, Some((url, None)))) =>
+            // shouldn't happen, the download method must have returned results for this…
+            c -> s"$url not downloaded"
+          case Some((c, Some((_, Some(Left(e)))))) =>
+            c -> e.describe
         }
 
         val ((f, _), res) = results.head
@@ -666,7 +685,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
               //       from artifact0.checksumUrls
-              Left(ArtifactError.ChecksumNotFound(checksums0.last.get, ""))
+              Left(ArtifactError.ChecksumErrors(checksumErrors))
             case Some(c) => Right((f, c))
           }
         }
