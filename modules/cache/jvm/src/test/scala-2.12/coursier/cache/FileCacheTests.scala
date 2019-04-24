@@ -54,18 +54,6 @@ object FileCacheTests extends TestSuite {
 
   val tests = Tests {
 
-    'test - withTmpDir { dir =>
-      val c = fileCache0().withLocation(dir.toFile)
-      val routes = HttpService[IO] {
-        case GET -> Root / "hello" => Ok("hello secure")
-      }
-      withHttpServer(routes) { base =>
-        val res = c.fetch(base / "hello").run.unsafeRun()
-        val expectedRes = Right("hello secure")
-        assert(res == expectedRes)
-      }
-    }
-
     'redirections - {
 
       'httpToHttp - {
