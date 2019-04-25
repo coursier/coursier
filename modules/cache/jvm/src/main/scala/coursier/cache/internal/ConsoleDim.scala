@@ -14,13 +14,17 @@ final class ConsoleDim {
 
     val terminalSizeChangedHandler: SignalHandler =
       new SignalHandler {
-        override def handle(sig: Signal): Unit =
+        def handle(sig: Signal): Unit =
           lock.synchronized {
             dimsOpt = None
           }
       }
 
-    Signal.handle(new Signal("WINCH"), terminalSizeChangedHandler)
+    try Signal.handle(new Signal("WINCH"), terminalSizeChangedHandler)
+    catch {
+      case _: IllegalArgumentException =>
+        // ignored
+    }
 
     initialized = true
   }
