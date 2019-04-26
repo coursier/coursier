@@ -116,8 +116,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
         case Some((2, 12)) =>
           Seq(
-            "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
-            "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
+            "org.http4s" %% "http4s-blaze-server" % "0.20.0" % Test,
+            "org.http4s" %% "http4s-dsl" % "0.20.0" % Test,
             "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
             Deps.scalaAsync % Test
           )
