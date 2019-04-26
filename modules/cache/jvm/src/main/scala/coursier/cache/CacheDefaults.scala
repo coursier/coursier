@@ -52,6 +52,18 @@ object CacheDefaults {
       .filter(_ >= 0)
       .getOrElse(defaultSslRetryCount)
 
+  private def defaultMaxRedirections = Option(20) // same default as java.net.HttpURLConnection
+  lazy val maxRedirections: Option[Int] = {
+    def prop(name: String) =
+      sys.props
+        .get(name)
+        .flatMap(s => scala.util.Try(s.toInt).toOption)
+        .filter(_ >= 0)
+    prop("coursier.http.maxRedirects")
+      .orElse(prop("http.maxRedirects")) // same property as java.net.HttpURLConnection
+      .orElse(defaultMaxRedirections)
+  }
+
   def defaultRetryCount = 1
 
   val bufferSize = 1024 * 1024

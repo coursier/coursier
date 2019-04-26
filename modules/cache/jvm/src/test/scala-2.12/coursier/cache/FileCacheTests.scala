@@ -15,6 +15,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object FileCacheTests extends TestSuite {
 
@@ -626,6 +627,56 @@ object FileCacheTests extends TestSuite {
           }
         }
 
+      }
+
+      'maxRedirects - {
+
+        val httpRoutes = HttpService[IO] {
+          case GET -> Root / "hello" =>
+            Ok("hello")
+          case GET -> Root / "redirect" / n if Try(n.toInt).isSuccess =>
+            val n0 = n.toInt
+            val dest =
+              if (n0 <= 0) "/hello"
+              else s"/redirect/${n0 - 1}"
+            TemporaryRedirect("redirecting", Location(Uri(path = dest)))
+        }
+
+        "should be followed" - {
+          * - withHttpServer(httpRoutes) { base =>
+            error(
+              base / "redirect" / "5",
+              _ => true,
+              _.withMaxRedirections(3)
+            )
+          }
+
+          * - withHttpServer(httpRoutes) { base =>
+            error(
+              base / "redirect" / "5",
+              _ => true,
+              _.withMaxRedirections(5)
+            )
+          }
+
+          * - withHttpServer(httpRoutes) { base =>
+            expect(
+              base / "redirect" / "5",
+              "hello",
+              _.withMaxRedirections(6)
+            )
+          }
+        }
+
+        "should not stackoverflow" - {
+          * - withHttpServer(httpRoutes) { base =>
+            expect(
+              base / "redirect" / "10000",
+              "hello",
+              _.withMaxRedirections(None)
+            )
+          }
+        }
       }
 
     }

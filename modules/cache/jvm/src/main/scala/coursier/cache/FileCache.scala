@@ -45,6 +45,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def ttl: Option[Duration] = params.ttl
   def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
   def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
+  def maxRedirections: Option[Int] = params.maxRedirections
   def sslRetry: Int = params.sslRetry
   def sslSocketFactoryOpt: Option[SSLSocketFactory] = params.sslSocketFactoryOpt
   def hostnameVerifierOpt: Option[HostnameVerifier] = params.hostnameVerifierOpt
@@ -99,6 +100,10 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(retry = retry))
   def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
     withParams(params.copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections))
+  def withMaxRedirections(max: Int): FileCache[F] =
+    withParams(params.copy(maxRedirections = Some(max)))
+  def withMaxRedirections(maxOpt: Option[Int]): FileCache[F] =
+    withParams(params.copy(maxRedirections = maxOpt))
   def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
     withParams(params.copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached))
   def withSync[G[_]](implicit S0: Sync[G]): FileCache[G] =
@@ -317,7 +322,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                     .filter(_.matchHost), // just in case
                   sslSocketFactoryOpt,
                   hostnameVerifierOpt,
-                  "GET"
+                  "GET",
+                  maxRedirectionsOpt = maxRedirections
                 )
                 conn = conn0
 
@@ -806,6 +812,7 @@ object FileCache {
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean,
+    maxRedirections: Option[Int],
     sslRetry: Int,
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
@@ -955,6 +962,7 @@ object FileCache {
         ttl = CacheDefaults.ttl,
         localArtifactsShouldBeCached = false,
         followHttpToHttpsRedirections = false,
+        maxRedirections = CacheDefaults.maxRedirections,
         sslRetry = CacheDefaults.sslRetryCount,
         sslSocketFactoryOpt = None,
         hostnameVerifierOpt = None,
