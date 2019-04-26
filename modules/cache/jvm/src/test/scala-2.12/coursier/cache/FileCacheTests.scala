@@ -642,11 +642,38 @@ object FileCacheTests extends TestSuite {
             TemporaryRedirect("redirecting", Location(Uri(path = dest)))
         }
 
+        "should be followed" - {
+          * - withHttpServer(httpRoutes) { base =>
+            error(
+              base / "redirect" / "5",
+              _ => true,
+              _.withMaxRedirections(3)
+            )
+          }
+
+          * - withHttpServer(httpRoutes) { base =>
+            error(
+              base / "redirect" / "5",
+              _ => true,
+              _.withMaxRedirections(5)
+            )
+          }
+
+          * - withHttpServer(httpRoutes) { base =>
+            expect(
+              base / "redirect" / "5",
+              "hello",
+              _.withMaxRedirections(6)
+            )
+          }
+        }
+
         "should not stackoverflow" - {
           * - withHttpServer(httpRoutes) { base =>
             expect(
               base / "redirect" / "10000",
-              "hello"
+              "hello",
+              _.withMaxRedirections(None)
             )
           }
         }

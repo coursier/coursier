@@ -230,6 +230,7 @@ object CacheUrl {
   }
 
   private final case class Args(
+    initialUrl: String,
     url0: String,
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
@@ -238,7 +239,9 @@ object CacheUrl {
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
     method: String,
-    authRealm: Option[String]
+    authRealm: Option[String],
+    redirectionCount: Int,
+    maxRedirectionsOpt: Option[Int]
   )
 
   def urlConnectionMaybePartial(
@@ -250,9 +253,11 @@ object CacheUrl {
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
-    authRealm: Option[String] = None
+    authRealm: Option[String] = None,
+    maxRedirectionsOpt: Option[Int] = None
   ): (URLConnection, Boolean) =
     urlConnectionMaybePartial(Args(
+      url0,
       url0,
       authentication,
       alreadyDownloaded,
@@ -261,7 +266,9 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      authRealm
+      authRealm,
+      redirectionCount = 0,
+      maxRedirectionsOpt
     ))
 
   @tailrec
@@ -294,16 +301,21 @@ object CacheUrl {
               case Some(loc) =>
                 closeConn(conn)
 
-                val newAuthOpt = autoCredentials
-                  .find(_.autoMatches(loc, None))
-                  .map(_.authentication)
-                Left(
-                  args.copy(
-                    url0 = loc,
-                    authentication = newAuthOpt,
-                    authRealm = None
+                if (maxRedirectionsOpt.exists(_ <= redirectionCount))
+                  throw new Exception(s"Too many redirections for $initialUrl (more than $redirectionCount redirections)")
+                else {
+                  val newAuthOpt = autoCredentials
+                    .find(_.autoMatches(loc, None))
+                    .map(_.authentication)
+                  Left(
+                    args.copy(
+                      url0 = loc,
+                      authentication = newAuthOpt,
+                      authRealm = None,
+                      redirectionCount = redirectionCount + 1
+                    )
                   )
-                )
+                }
               case None =>
 
                 if (is4xx(conn)) {
