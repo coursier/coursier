@@ -10,6 +10,7 @@ import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
+import scala.annotation.tailrec
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -228,6 +229,18 @@ object CacheUrl {
     c
   }
 
+  private final case class Args(
+    url0: String,
+    authentication: Option[Authentication],
+    alreadyDownloaded: Long,
+    followHttpToHttpsRedirections: Boolean,
+    autoCredentials: Seq[DirectCredentials],
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    method: String,
+    authRealm: Option[String]
+  )
+
   def urlConnectionMaybePartial(
     url0: String,
     authentication: Option[Authentication],
@@ -238,83 +251,94 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
     authRealm: Option[String] = None
-  ): (URLConnection, Boolean) = {
+  ): (URLConnection, Boolean) =
+    urlConnectionMaybePartial(Args(
+      url0,
+      authentication,
+      alreadyDownloaded,
+      followHttpToHttpsRedirections,
+      autoCredentials,
+      sslSocketFactoryOpt,
+      hostnameVerifierOpt,
+      method,
+      authRealm
+    ))
+
+  @tailrec
+  private def urlConnectionMaybePartial(args: Args): (URLConnection, Boolean) = {
+
+    import args._
 
     var conn: URLConnection = null
 
-    try {
-      conn = url(url0).openConnection()
-      val authOpt = authentication.filter { a =>
-        a.realmOpt.forall(authRealm.contains) &&
-          !a.optional
-      }
-      initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
+    val res: Either[Args, (URLConnection, Boolean)] =
+      try {
+        conn = url(url0).openConnection()
+        val authOpt = authentication.filter { a =>
+          a.realmOpt.forall(authRealm.contains) &&
+            !a.optional
+        }
+        initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
 
-      val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
+        val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 
-      rangeResOpt0 match {
-        case Some(true) =>
-          closeConn(conn)
-          urlConnectionMaybePartial(
-            url0,
-            authentication,
-            alreadyDownloaded = 0L,
-            followHttpToHttpsRedirections,
-            autoCredentials,
-            sslSocketFactoryOpt,
-            hostnameVerifierOpt,
-            method
-          )
-        case _ =>
-          val partialDownload = rangeResOpt0.nonEmpty
-          val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
+        rangeResOpt0 match {
+          case Some(true) =>
+            closeConn(conn)
+            Left(args.copy(alreadyDownloaded = 0L))
+          case _ =>
+            val partialDownload = rangeResOpt0.nonEmpty
+            val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
 
-          redirectOpt match {
-            case Some(loc) =>
-              closeConn(conn)
-              val newAuthOpt = autoCredentials.find(_.autoMatches(loc, None)).map(_.authentication)
-              urlConnectionMaybePartial(
-                loc,
-                newAuthOpt,
-                alreadyDownloaded,
-                followHttpToHttpsRedirections,
-                autoCredentials,
-                sslSocketFactoryOpt,
-                hostnameVerifierOpt,
-                method
-              )
-            case None =>
+            redirectOpt match {
+              case Some(loc) =>
+                closeConn(conn)
 
-              if (is4xx(conn)) {
-                val realmOpt = realm(conn)
-                val authentication0 = authentication
-                  .map(_.copy(optional = false))
-                  .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
-                if (authentication0 == authentication && realmOpt == authRealm)
-                  (conn, partialDownload)
-                else {
-                  closeConn(conn)
-                  urlConnectionMaybePartial(
-                    url0,
-                    authentication0,
-                    alreadyDownloaded,
-                    followHttpToHttpsRedirections,
-                    autoCredentials,
-                    sslSocketFactoryOpt,
-                    hostnameVerifierOpt,
-                    method,
-                    realmOpt
+                val newAuthOpt = autoCredentials
+                  .find(_.autoMatches(loc, None))
+                  .map(_.authentication)
+                Left(
+                  args.copy(
+                    url0 = loc,
+                    authentication = newAuthOpt,
+                    authRealm = None
                   )
-                }
-              } else
-                (conn, partialDownload)
-          }
+                )
+              case None =>
+
+                if (is4xx(conn)) {
+                  val realmOpt = realm(conn)
+                  val authentication0 = authentication
+                    .map(_.copy(optional = false))
+                    .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
+                  if (authentication0 == authentication && realmOpt == authRealm)
+                    Right((conn, partialDownload))
+                  else {
+                    closeConn(conn)
+
+                    Left(
+                      args.copy(
+                        authentication = authentication0,
+                        authRealm = realmOpt
+                      )
+                    )
+                  }
+                } else
+                  Right((conn, partialDownload))
+            }
+        }
+      } catch {
+        case NonFatal(e) =>
+          if (conn != null)
+            closeConn(conn)
+          throw e
       }
-    } catch {
-      case NonFatal(e) =>
-        if (conn != null)
-          closeConn(conn)
-        throw e
+
+    res match {
+      case Left(newArgs) =>
+        urlConnectionMaybePartial(newArgs)
+      case Right(ret) =>
+        ret
     }
   }
 
