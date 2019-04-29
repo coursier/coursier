@@ -545,40 +545,6 @@ object Resolution {
   }
 
   /**
-   * Default function checking whether a profile is active, given
-   * its id, activation conditions, and the properties of its project.
-   */
-  def defaultProfileActivation(
-    id: String,
-    activation: Activation,
-    props: Map[String, String]
-  ): Boolean =
-    activation.properties.nonEmpty &&
-      activation.properties.forall {
-        case (name, valueOpt) =>
-          if (name.startsWith("!")) {
-            props.get(name.drop(1)).isEmpty
-          } else {
-            props.get(name).exists { v =>
-              valueOpt.forall { reqValue =>
-                if (reqValue.startsWith("!"))
-                  v != reqValue.drop(1)
-                else
-                  v == reqValue
-              }
-            }
-          }
-      }
-
-  def userProfileActivation(userProfiles: Set[String])(
-    id: String,
-    activation: Activation,
-    props: Map[String, String]
-  ): Boolean =
-    userProfiles(id) ||
-      defaultProfileActivation(id, activation, props)
-
-  /**
    * Default dependency filter used during resolution.
    *
    * Does not follow optional dependencies.
