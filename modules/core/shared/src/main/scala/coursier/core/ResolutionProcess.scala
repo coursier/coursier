@@ -122,9 +122,7 @@ final case class Missing(
         Missing(depMgmtMissing.toSeq, res, cont0)
     }
 
-    val current0 = current.copyWithCache(
-      errorCache = current.errorCache ++ errors
-    )
+    val current0 = current.addToErrorCache(errors)
 
     cont0(current0)
   }

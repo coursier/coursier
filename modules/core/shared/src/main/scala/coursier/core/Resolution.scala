@@ -626,16 +626,16 @@ final case class Resolution(
   forceProperties: Map[String, String] // FIXME Make that a seq too?
 ) {
 
-  def copyWithCache(
+  def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
+    copyWithCache(
+      errorCache = errorCache ++ entries
+    )
+
+  private def copyWithCache(
     rootDependencies: Seq[Dependency] = rootDependencies,
     dependencies: Set[Dependency] = dependencies,
-    forceVersions: Map[Module, String] = forceVersions,
     conflicts: Set[Dependency] = conflicts,
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
-    filter: Option[Dependency => Boolean] = filter,
-    osInfo: Activation.Os = osInfo,
-    jdkVersion: Option[Version] = jdkVersion,
-    userActivations: Option[Map[String, Boolean]] = userActivations
+    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache
     // don't allow changing mapDependencies here - that would invalidate finalDependenciesCache
     // don't allow changing projectCache here - use addToProjectCache that takes forceProperties into account
   ): Resolution =
