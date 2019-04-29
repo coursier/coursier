@@ -127,5 +127,38 @@ object ResolveTests extends TestSuite {
         }
       }
     }
+
+    'latest - {
+
+      val resolve0 = Resolve()
+        .noMirrors
+        .withCache(cache)
+        .withRepositories(Seq(
+          Repositories.sonatype("snapshots"),
+          Repositories.central
+        ))
+
+      'integration - async {
+
+        val res = await {
+          resolve0
+            .addDependencies(dep"com.chuusai:shapeless_2.12:latest.integration")
+            .future()
+        }
+
+        await(validateDependencies(res))
+      }
+
+      'release - async {
+
+        val res = await {
+          resolve0
+            .addDependencies(dep"com.chuusai:shapeless_2.12:latest.release")
+            .future()
+        }
+
+        await(validateDependencies(res))
+      }
+    }
   }
 }
