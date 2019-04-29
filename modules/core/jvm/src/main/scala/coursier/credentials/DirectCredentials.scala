@@ -11,26 +11,27 @@ final class DirectCredentials private(
   val realm: Option[String],
   val optional: Boolean,
   val matchHost: Boolean,
-  val httpsOnly: Boolean
+  val httpsOnly: Boolean,
+  val passOnRedirect: Boolean
 ) extends Credentials {
 
-  private def this() = this("", "", "", None, true, false, true)
-  private def this(host: String, username: String, password: String) = this(host, username, password, None, true, false, true)
-  private def this(host: String, username: String, password: String, realm: Option[String]) = this(host, username, password, realm, true, false, true)
-  private def this(host: String, username: String, password: String, realm: Option[String], optional: Boolean) = this(host, username, password, realm, optional, false, true)
+  private def this() = this("", "", "", None, true, false, true, false)
+  private def this(host: String, username: String, password: String) = this(host, username, password, None, true, false, true, false)
+  private def this(host: String, username: String, password: String, realm: Option[String]) = this(host, username, password, realm, true, false, true, false)
+  private def this(host: String, username: String, password: String, realm: Option[String], optional: Boolean) = this(host, username, password, realm, optional, false, true, false)
 
   override def equals(o: Any): Boolean = o match {
-    case x: DirectCredentials => (this.host == x.host) && (this.username == x.username) && (this.password == x.password) && (this.realm == x.realm) && (this.optional == x.optional) && (this.matchHost == x.matchHost) && (this.httpsOnly == x.httpsOnly)
+    case x: DirectCredentials => (this.host == x.host) && (this.username == x.username) && (this.password == x.password) && (this.realm == x.realm) && (this.optional == x.optional) && (this.matchHost == x.matchHost) && (this.httpsOnly == x.httpsOnly) && (this.passOnRedirect == x.passOnRedirect)
     case _ => false
   }
   override def hashCode: Int = {
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.DirectCredentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##) + matchHost.##) + httpsOnly.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.credentials.DirectCredentials".##) + host.##) + username.##) + password.##) + realm.##) + optional.##) + matchHost.##) + httpsOnly.##) + passOnRedirect.##)
   }
   override def toString: String = {
-    "Credentials(" + host + ", " + username + ", " + "****" + ", " + realm + ", " + optional + ", " + matchHost + ", " + httpsOnly + ")"
+    "Credentials(" + host + ", " + username + ", " + "****" + ", " + realm + ", " + optional + ", " + matchHost + ", " + httpsOnly + ", " + passOnRedirect + ")"
   }
-  private[this] def copy(host: String = host, username: String = username, password: String = password, realm: Option[String] = realm, optional: Boolean = optional, matchHost: Boolean = matchHost, httpsOnly: Boolean = httpsOnly): DirectCredentials = {
-    new DirectCredentials(host, username, password, realm, optional, matchHost, httpsOnly)
+  private[this] def copy(host: String = host, username: String = username, password: String = password, realm: Option[String] = realm, optional: Boolean = optional, matchHost: Boolean = matchHost, httpsOnly: Boolean = httpsOnly, passOnRedirect: Boolean = passOnRedirect): DirectCredentials = {
+    new DirectCredentials(host, username, password, realm, optional, matchHost, httpsOnly, passOnRedirect)
   }
   def withHost(host: String): DirectCredentials = {
     copy(host = host)
@@ -54,6 +55,8 @@ final class DirectCredentials private(
     copy(matchHost = matchHost)
   def withHttpsOnly(httpsOnly: Boolean): DirectCredentials =
     copy(httpsOnly = httpsOnly)
+  def withPassOnRedirect(passOnRedirect: Boolean): DirectCredentials =
+    copy(passOnRedirect = passOnRedirect)
 
   def autoMatches(url: String, realm0: Option[String]): Boolean =
     matchHost && {
@@ -82,7 +85,9 @@ final class DirectCredentials private(
       username,
       password,
       realmOpt = realm,
-      optional = optional
+      optional = optional,
+      httpsOnly = httpsOnly,
+      passOnRedirect = passOnRedirect
     )
 
   def get(): Seq[DirectCredentials] =
@@ -97,4 +102,6 @@ object DirectCredentials {
   def apply(host: String, username: String, password: String, realm: String): DirectCredentials = new DirectCredentials(host, username, password, Option(realm))
   def apply(host: String, username: String, password: String, realm: Option[String], optional: Boolean): DirectCredentials = new DirectCredentials(host, username, password, realm, optional)
   def apply(host: String, username: String, password: String, realm: String, optional: Boolean): DirectCredentials = new DirectCredentials(host, username, password, Option(realm), optional)
+  def apply(host: String, username: String, password: String, realm: Option[String], optional: Boolean, passOnRedirect: Boolean): DirectCredentials = new DirectCredentials(host, username, password, realm, optional, false, false, passOnRedirect)
+  def apply(host: String, username: String, password: String, realm: String, optional: Boolean, passOnRedirect: Boolean): DirectCredentials = new DirectCredentials(host, username, password, Option(realm), optional, false, false, passOnRedirect)
 }

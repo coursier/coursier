@@ -32,23 +32,41 @@ object FileCacheTests extends TestSuite {
     .withSslSocketFactory(dummyClientSslContext.getSocketFactory)
     .withHostnameVerifier(dummyHostnameVerifier)
 
-  private def expect(uri: Uri, content: String, transform: FileCache[Task] => FileCache[Task] = c => c): Unit =
+  private def expect(artifact: Artifact, content: String, transform: FileCache[Task] => FileCache[Task]): Unit =
     withTmpDir { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res = transform(c).fetch(uri).run.unsafeRun()
+      val res = transform(c).fetch(artifact).run.unsafeRun()
       val expectedRes = Right(content)
       assert(res == expectedRes)
     }
 
-  private def error(uri: Uri, check: String => Boolean, transform: FileCache[Task] => FileCache[Task] = c => c): Unit =
+  private def expect(artifact: Artifact, content: String): Unit =
+    expect(artifact, content, c => c)
+
+  private def expect(uri: Uri, content: String, transform: FileCache[Task] => FileCache[Task]): Unit =
+    expect(artifact(uri), content, transform)
+
+  private def expect(uri: Uri, content: String): Unit =
+    expect(artifact(uri), content, c => c)
+
+  private def error(artifact: Artifact, check: String => Boolean, transform: FileCache[Task] => FileCache[Task]): Unit =
     withTmpDir { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res = transform(c).fetch(uri).run.unsafeRun()
+      val res = transform(c).fetch(artifact).run.unsafeRun()
       assert(res.isLeft)
       assert(res.left.exists(check))
     }
+
+  private def error(artifact: Artifact, check: String => Boolean): Unit =
+    error(artifact, check, c => c)
+
+  private def error(uri: Uri, check: String => Boolean, transform: FileCache[Task] => FileCache[Task]): Unit =
+    error(artifact(uri), check, transform)
+
+  private def error(uri: Uri, check: String => Boolean): Unit =
+    error(artifact(uri), check, c => c)
 
   private def credentials(base: Uri, userPass: (String, String)): DirectCredentials =
     Credentials(base.host.fold("")(_.value), userPass._1, userPass._2)
@@ -675,6 +693,90 @@ object FileCacheTests extends TestSuite {
               "hello",
               _.withMaxRedirections(None)
             )
+          }
+        }
+      }
+
+      'passCredentialsOnRedirect - {
+        val realm = "secure realm"
+        val userPass = ("secure", "sEcUrE")
+
+        def withServers[T](secondServerUseSsl: Boolean = true)(f: (Uri, Uri) => T): T = {
+
+          var base2Opt = Option.empty[Uri]
+
+          val routes1 = HttpService[IO] {
+            case GET -> Root / "redirect" =>
+              TemporaryRedirect("redirecting", Location(base2Opt.getOrElse(???) / "hello"))
+          }
+
+          val routes2 = HttpService[IO] {
+            case req @ GET -> Root / "hello" =>
+              if (authorized(req, userPass))
+                Ok("hello")
+              else
+                unauth(realm)
+          }
+
+          withHttpServer(routes1, withSsl = true) { base1 =>
+            withHttpServer(routes2, withSsl = secondServerUseSsl) { base2 =>
+              base2Opt = Some(base2)
+              f(base1, base2)
+            }
+          }
+        }
+
+        def artifact(base: Uri)(f: DirectCredentials => DirectCredentials) =
+          TestUtil.artifact(base / "redirect").copy(
+            authentication = Some(f(credentials(base, userPass)).authentication)
+          )
+
+        // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact
+
+        'enabled - {
+          * - {
+            withServers() { (base, _) =>
+              expect(
+                artifact(base)(
+                  _.withPassOnRedirect(true)
+                ),
+                "hello"
+              )
+            }
+          }
+
+          * - {
+            withServers(secondServerUseSsl = false) { (base, _) =>
+              expect(
+                artifact(base)(
+                  _.withPassOnRedirect(true).withHttpsOnly(false)
+                ),
+                "hello",
+                _.withFollowHttpsToHttpRedirections(true)
+              )
+            }
+          }
+        }
+
+        'disabled - {
+          * - {
+            withServers() { (base, _) =>
+              error(
+                artifact(base)(identity),
+                _.startsWith("unauthorized: ")
+              )
+            }
+          }
+
+          * - {
+            withServers(secondServerUseSsl = false) { (base, _) =>
+              expect(
+                artifact(base)(
+                  _.withPassOnRedirect(true) // shouldn't be passed to http redirection by default
+                ),
+                "redirecting"
+              )
+            }
           }
         }
       }

@@ -45,6 +45,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def ttl: Option[Duration] = params.ttl
   def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
   def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
+  def followHttpsToHttpRedirections: Boolean = params.followHttpsToHttpRedirections
   def maxRedirections: Option[Int] = params.maxRedirections
   def sslRetry: Int = params.sslRetry
   def sslSocketFactoryOpt: Option[SSLSocketFactory] = params.sslSocketFactoryOpt
@@ -100,6 +101,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(retry = retry))
   def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
     withParams(params.copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections))
+  def withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections: Boolean): FileCache[F] =
+    withParams(params.copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections))
   def withMaxRedirections(max: Int): FileCache[F] =
     withParams(params.copy(maxRedirections = Some(max)))
   def withMaxRedirections(maxOpt: Option[Int]): FileCache[F] =
@@ -162,6 +165,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               url,
               artifact.authentication,
               followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+              followHttpsToHttpRedirections = followHttpsToHttpRedirections,
               credentials = allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
@@ -318,6 +322,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   authenticationOpt,
                   alreadyDownloaded,
                   followHttpToHttpsRedirections,
+                  followHttpsToHttpRedirections,
                   allCredentials0
                     .filter(_.matchHost), // just in case
                   sslSocketFactoryOpt,
@@ -374,7 +379,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, followHttpsToHttpRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -385,7 +390,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def done(): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
+                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, followHttpsToHttpRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
                     .right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
@@ -812,6 +817,7 @@ object FileCache {
     ttl: Option[Duration],
     localArtifactsShouldBeCached: Boolean,
     followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
     maxRedirections: Option[Int],
     sslRetry: Int,
     sslSocketFactoryOpt: Option[SSLSocketFactory],
@@ -903,6 +909,7 @@ object FileCache {
     url: String,
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
     credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
@@ -916,6 +923,7 @@ object FileCache {
         url,
         authentication,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        followHttpsToHttpRedirections = followHttpsToHttpRedirections,
         credentials = credentials,
         sslSocketFactoryOpt = sslSocketFactoryOpt,
         hostnameVerifierOpt = hostnameVerifierOpt,
@@ -962,6 +970,7 @@ object FileCache {
         ttl = CacheDefaults.ttl,
         localArtifactsShouldBeCached = false,
         followHttpToHttpsRedirections = false,
+        followHttpsToHttpRedirections = false,
         maxRedirections = CacheDefaults.maxRedirections,
         sslRetry = CacheDefaults.sslRetryCount,
         sslSocketFactoryOpt = None,
