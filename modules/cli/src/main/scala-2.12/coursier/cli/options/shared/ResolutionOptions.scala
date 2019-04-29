@@ -21,6 +21,10 @@ final case class ResolutionOptions(
   @Short("V")
     forceVersion: List[String] = Nil,
 
+  @Help("Set property in POM files, if it's not already set")
+  @Value("name=value")
+    property: List[String] = Nil,
+
   @Help("Force property in POM files")
   @Value("name=value")
     forceProperty: List[String] = Nil,
@@ -76,15 +80,20 @@ final case class ResolutionOptions(
           )
       }
 
-    val forcedPropertiesV = forceProperty
-      .traverse { s =>
-        s.split("=", 2) match {
-          case Array(k, v) =>
-            Validated.validNel(k -> v)
-          case _ =>
-            Validated.invalidNel(s"Malformed forced property argument: $s")
+    def propertiesV(input: List[String], type0: String) =
+      input
+        .traverse { s =>
+          s.split("=", 2) match {
+            case Array(k, v) =>
+              Validated.validNel(k -> v)
+            case _ =>
+              Validated.invalidNel(s"Malformed $type0 argument: $s")
+          }
         }
-      }
+
+    val extraPropertiesV = propertiesV(property, "property")
+
+    val forcedPropertiesV = propertiesV(forceProperty, "forced property")
       // TODO Warn if some properties are forced multiple times?
       .map(_.toMap)
 
@@ -99,12 +108,13 @@ final case class ResolutionOptions(
       }
       .map(_.flatten)
 
-    (maxIterationsV, forceVersionV, forcedPropertiesV, rulesV).mapN {
-      (maxIterations, forceVersion, forcedProperties, rules) =>
+    (maxIterationsV, forceVersionV, extraPropertiesV, forcedPropertiesV, rulesV).mapN {
+      (maxIterations, forceVersion, extraProperties, forcedProperties, rules) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
           .withMaxIterations(maxIterations)
           .withForceVersion(forceVersion)
+          .withProperties(extraProperties)
           .withForcedProperties(forcedProperties)
           .withProfiles(profiles)
           .withScalaVersion(scalaVersion)

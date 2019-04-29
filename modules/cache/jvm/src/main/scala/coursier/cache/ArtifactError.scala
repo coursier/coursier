@@ -69,7 +69,7 @@ object ArtifactError {
     sumFile: String
   ) extends ArtifactError(
     "wrong checksum",
-    file
+    s"$file (expected $sumType $expected in $sumFile, got $got)"
   )
 
   final case class FileTooOldOrNotFound(

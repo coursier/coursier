@@ -75,9 +75,11 @@ final class Fetch[F[_]] private (
             resolveParams
               .resolutionParams
               .withForceVersion(Map())
+              .withProperties(Nil)
               .withForcedProperties(Map())
               .withProfiles(Set()),
             resolveParams.resolutionParams.forceVersion.toVector.sortBy { case (m, v) => s"$m:$v" },
+            resolveParams.resolutionParams.properties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolveParams.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolveParams.resolutionParams.profiles.toVector.sorted,
             f.location.getAbsolutePath,
@@ -127,6 +129,8 @@ final class Fetch[F[_]] private (
 
   def withResolutionParams(resolutionParams: ResolutionParams): Fetch[F] =
     withResolveParams(resolveParams.copy(resolutionParams = resolutionParams))
+  def mapResolutionParams(f: ResolutionParams => ResolutionParams): Fetch[F] =
+    withResolveParams(resolveParams.copy(resolutionParams = f(resolutionParams)))
 
   def withCache(cache: Cache[F]): Fetch[F] =
     withResolveParams(resolveParams.copy(cache = cache))

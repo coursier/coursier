@@ -177,7 +177,7 @@ final case class MavenRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] = {
+  ): EitherT[F, String, (Versions, String)] = {
 
     val listingUrl = urlFor(modulePath(module)) + "/"
 
@@ -214,7 +214,7 @@ final case class MavenRepository(
           }
         }
 
-      EitherT(F.point(res))
+      EitherT(F.point(res.right.map((_, listingUrl))))
     }
   }
 
@@ -223,7 +223,7 @@ final case class MavenRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] =
+  ): EitherT[F, String, (Versions, String)] =
     EitherT(
       versionsArtifact(module) match {
         case None => F.point(Left("Not supported"))
@@ -234,7 +234,7 @@ final case class MavenRepository(
               xml <- compatibility.xmlParseDom(str).right
               _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
               versions <- Pom.versions(xml).right
-            } yield versions
+            } yield (versions, artifact.url)
           }
       }
     )
@@ -349,42 +349,67 @@ final case class MavenRepository(
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
+    val versionsF = {
+      val v = versions(module, fetch)
+      if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
+        versionsFromListing(module, fetch).orElse(v)
+      else
+        v
+    }
+
+    def fromEitherVersion(eitherVersion: Either[String, String], versions0: Versions):  EitherT[F, String, (Artifact.Source, Project)] =
+      eitherVersion match {
+        case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+        case Right(version0) =>
+          findNoInterval(module, version0, fetch)
+            .map(_.copy(versions = Some(versions0)))
+            .map((this, _))
+      }
+
     Parse.versionInterval(version)
       .orElse(Parse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
         case None =>
-          findNoInterval(module, version, fetch).map((this, _))
+          if (version == "LATEST" || version == "latest.integration")
+            versionsF.flatMap {
+              case (versions0, versionsUrl) =>
+                val eitherVersion =
+                  Some(versions0.latest).filter(_.nonEmpty)
+                    .orElse(Some(versions0.release).filter(_.nonEmpty))
+                    .toRight(s"No latest or release version found in $versionsUrl")
+
+                fromEitherVersion(eitherVersion, versions0)
+            }
+          else if (version == "RELEASE" || version == "latest.release")
+            versionsF.flatMap {
+              case (versions0, versionsUrl) =>
+                val eitherVersion =
+                  Some(versions0.release).filter(_.nonEmpty)
+                    .toRight(s"No release version found in $versionsUrl")
+
+                fromEitherVersion(eitherVersion, versions0)
+            }
+          else
+            findNoInterval(module, version, fetch).map((this, _))
         case Some(itv) =>
-          def v = versions(module, fetch)
-          val v0 =
-            if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
-              versionsFromListing(module, fetch).orElse(v)
-            else
-              v
+          versionsF.flatMap {
+            case (versions0, versionsUrl) =>
+              val eitherVersion = {
+                val release = Version(versions0.release)
 
-          v0.flatMap { versions0 =>
-            val eitherVersion = {
-              val release = Version(versions0.release)
+                if (itv.contains(release)) Right(versions0.release)
+                else {
+                  val inInterval = versions0.available
+                    .map(Version(_))
+                    .filter(itv.contains)
 
-              if (itv.contains(release)) Right(versions0.release)
-              else {
-                val inInterval = versions0.available
-                  .map(Version(_))
-                  .filter(itv.contains)
-
-                if (inInterval.isEmpty) Left(s"No version found for $version")
-                else Right(inInterval.max.repr)
+                  if (inInterval.isEmpty) Left(s"No version found for $version in $versionsUrl")
+                  else Right(inInterval.max.repr)
+                }
               }
-            }
 
-            eitherVersion match {
-              case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
-              case Right(version0) =>
-                findNoInterval(module, version0, fetch)
-                  .map(_.copy(versions = Some(versions0)))
-                  .map((this, _))
-            }
+              fromEitherVersion(eitherVersion, versions0)
           }
     }
   }

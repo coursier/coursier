@@ -214,14 +214,19 @@ object Resolution {
    *
    * Returns `None` in case of conflict.
    */
-  def mergeVersions(versions: Seq[String]): Option[String] = {
+  def mergeVersions(versions: Seq[String]): Option[String] =
+    if (versions.isEmpty)
+      None
+    else if (versions.lengthCompare(1) == 0)
+      Some(versions.head)
+    else {
 
-    val parsedConstraints = versions.map(Parse.versionConstraint)
+      val parsedConstraints = versions.map(Parse.versionConstraint)
 
-    VersionConstraint
-      .merge(parsedConstraints: _*)
-      .flatMap(_.repr)
-  }
+      VersionConstraint
+        .merge(parsedConstraints: _*)
+        .flatMap(_.repr)
+    }
 
   /**
    * Merge several dependencies, solving version constraints of duplicated
@@ -545,40 +550,6 @@ object Resolution {
   }
 
   /**
-   * Default function checking whether a profile is active, given
-   * its id, activation conditions, and the properties of its project.
-   */
-  def defaultProfileActivation(
-    id: String,
-    activation: Activation,
-    props: Map[String, String]
-  ): Boolean =
-    activation.properties.nonEmpty &&
-      activation.properties.forall {
-        case (name, valueOpt) =>
-          if (name.startsWith("!")) {
-            props.get(name.drop(1)).isEmpty
-          } else {
-            props.get(name).exists { v =>
-              valueOpt.forall { reqValue =>
-                if (reqValue.startsWith("!"))
-                  v != reqValue.drop(1)
-                else
-                  v == reqValue
-              }
-            }
-          }
-      }
-
-  def userProfileActivation(userProfiles: Set[String])(
-    id: String,
-    activation: Activation,
-    props: Map[String, String]
-  ): Boolean =
-    userProfiles(id) ||
-      defaultProfileActivation(id, activation, props)
-
-  /**
    * Default dependency filter used during resolution.
    *
    * Does not follow optional dependencies.
@@ -656,19 +627,20 @@ final case class Resolution(
   jdkVersion: Option[Version],
   userActivations: Option[Map[String, Boolean]],
   mapDependencies: Option[Dependency => Dependency],
-  forceProperties: Map[String, String]
+  extraProperties: Seq[(String, String)],
+  forceProperties: Map[String, String] // FIXME Make that a seq too?
 ) {
 
-  def copyWithCache(
+  def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
+    copyWithCache(
+      errorCache = errorCache ++ entries
+    )
+
+  private def copyWithCache(
     rootDependencies: Seq[Dependency] = rootDependencies,
     dependencies: Set[Dependency] = dependencies,
-    forceVersions: Map[Module, String] = forceVersions,
     conflicts: Set[Dependency] = conflicts,
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
-    filter: Option[Dependency => Boolean] = filter,
-    osInfo: Activation.Os = osInfo,
-    jdkVersion: Option[Version] = jdkVersion,
-    userActivations: Option[Map[String, Boolean]] = userActivations
+    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache
     // don't allow changing mapDependencies here - that would invalidate finalDependenciesCache
     // don't allow changing projectCache here - use addToProjectCache that takes forceProperties into account
   ): Resolution =
@@ -700,7 +672,7 @@ final case class Resolution(
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
       projectCache = projectCache ++ projects.map {
         case (modVer, (s, p)) =>
-          val p0 = withDependencyManagement(p.copy(properties = p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+          val p0 = withDependencyManagement(p.copy(properties = extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
           (modVer, (s, p0))
       }
     )
