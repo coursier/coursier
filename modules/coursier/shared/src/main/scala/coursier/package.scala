@@ -88,6 +88,7 @@ package object coursier {
       jdkVersion: Option[Version] = sys.props.get("java.version").flatMap(Parse.version),
       userActivations: Option[Map[String, Boolean]] = None,
       mapDependencies: Option[Dependency => Dependency] = None,
+      extraProperties: Seq[(String, String)] = Nil,
       forceProperties: Map[String, String] = Map.empty
     ): Resolution =
       core.Resolution(
@@ -103,6 +104,7 @@ package object coursier {
         jdkVersion,
         userActivations,
         mapDependencies,
+        extraProperties,
         forceProperties
       )
   }

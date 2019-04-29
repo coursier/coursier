@@ -177,6 +177,51 @@ object FetchTests extends TestSuite {
       }
     }
 
+    'properties - {
+
+      val fetch0 = Fetch()
+        .noMirrors
+        .withCache(cache)
+        .withRepositories(Seq(
+          Repositories.central,
+          mvn"http://repository.splicemachine.com/nexus/content/groups/public",
+          mvn"http://repository.mapr.com/maven"
+        ))
+        .addDependencies(
+          dep"com.splicemachine:splice_spark:2.8.0.1915-SNAPSHOT"
+        )
+        .mapResolutionParams(
+          _.addForceVersion(
+            mod"org.apache.hadoop:hadoop-common" -> "2.7.3"
+          )
+        )
+
+      val prop = "env" -> "mapr6.1.0"
+
+      // would be nice to have tests with different results, whether the properties
+      // are forced or not
+
+      * - async {
+        val (res, artifacts) = await {
+          fetch0
+            .mapResolutionParams(_.addForcedProperties(prop))
+            .futureResult()
+        }
+
+        await(validateArtifacts(res, artifacts.map(_._1)))
+      }
+
+      * - async {
+        val (res, artifacts) = await {
+          fetch0
+            .mapResolutionParams(_.addProperties(prop))
+            .futureResult()
+        }
+
+        await(validateArtifacts(res, artifacts.map(_._1)))
+      }
+    }
+
   }
 
 }

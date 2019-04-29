@@ -60,13 +60,14 @@ final case class FetchCache(base: Path) {
 
 object FetchCache {
 
-  final case class Key(
+  private[coursier] final case class Key(
     dependencies: Seq[Dependency],
     repositories: Seq[Repository],
     resolutionParams: ResolutionParams,
 
-    // these 3 come from ResolutionParams, but are ordered here
+    // these 4 come from ResolutionParams, but are ordered here
     forceVersion: Seq[(coursier.core.Module, String)],
+    properties: Seq[(String, String)],
     forcedProperties: Seq[(String, String)],
     profiles: Seq[String],
 

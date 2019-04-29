@@ -11,6 +11,10 @@ abstract class ResolutionParamsHelpers {
   def withForceVersion(fv: Map[Module, String]): ResolutionParams
   def profiles: Set[String]
   def withProfiles(profiles: Set[String]): ResolutionParams
+  def forcedProperties: Map[String, String]
+  def withForcedProperties(props: Map[String, String]): ResolutionParams
+  def properties: Seq[(String, String)]
+  def withProperties(props: Seq[(String, String)]): ResolutionParams
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =
     withForceVersion(forceVersion ++ fv)
@@ -31,4 +35,9 @@ abstract class ResolutionParamsHelpers {
     withRules(Seq(rule -> resolution))
   final def addRule(rule: Rule): coursier.params.ResolutionParams =
     addRule(rule, RuleResolution.TryResolve)
+
+  def addProperties(props: (String, String)*): ResolutionParams =
+    withProperties(properties ++ props)
+  def addForcedProperties(props: (String, String)*): ResolutionParams =
+    withForcedProperties(forcedProperties ++ props)
 }

@@ -384,15 +384,17 @@ class Helper(
 
   val userEnabledProfiles = common.resolutionOptions.profile.toSet
 
-  val forcedProperties = common.resolutionOptions.forceProperty
+  private def parseProperties(input: Seq[String], type0: String) = input
     .map { s =>
       s.split("=", 2) match {
         case Array(k, v) => k -> v
         case _ =>
-          sys.error(s"Malformed forced property argument: $s")
+          sys.error(s"Malformed $type0 property argument: $s")
       }
     }
-    .toMap
+
+  val extraProperties = parseProperties(common.resolutionOptions.property, "extra")
+  val forcedProperties = parseProperties(common.resolutionOptions.forceProperty, "forced")
 
   val startRes = Resolution(
     allDependencies,
@@ -402,7 +404,8 @@ class Helper(
       if (userEnabledProfiles.isEmpty) None
       else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
     mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap) else None,
-    forceProperties = forcedProperties
+    extraProperties = extraProperties,
+    forceProperties = forcedProperties.toMap
   )
 
   val logger =

@@ -656,7 +656,8 @@ final case class Resolution(
   jdkVersion: Option[Version],
   userActivations: Option[Map[String, Boolean]],
   mapDependencies: Option[Dependency => Dependency],
-  forceProperties: Map[String, String]
+  extraProperties: Seq[(String, String)],
+  forceProperties: Map[String, String] // FIXME Make that a seq too?
 ) {
 
   def copyWithCache(
@@ -700,7 +701,7 @@ final case class Resolution(
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
       projectCache = projectCache ++ projects.map {
         case (modVer, (s, p)) =>
-          val p0 = withDependencyManagement(p.copy(properties = p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+          val p0 = withDependencyManagement(p.copy(properties = extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
           (modVer, (s, p0))
       }
     )

@@ -75,9 +75,11 @@ final class Fetch[F[_]] private (
             resolveParams
               .resolutionParams
               .withForceVersion(Map())
+              .withProperties(Nil)
               .withForcedProperties(Map())
               .withProfiles(Set()),
             resolveParams.resolutionParams.forceVersion.toVector.sortBy { case (m, v) => s"$m:$v" },
+            resolveParams.resolutionParams.properties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolveParams.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolveParams.resolutionParams.profiles.toVector.sorted,
             f.location.getAbsolutePath,

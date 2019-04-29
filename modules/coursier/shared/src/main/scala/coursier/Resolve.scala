@@ -295,6 +295,7 @@ object Resolve extends PlatformResolve {
       userActivations =
         if (params.profiles.isEmpty) None
         else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
+      extraProperties = params.properties,
       forceProperties = params.forcedProperties,
       mapDependencies = mapDependencies
     )
