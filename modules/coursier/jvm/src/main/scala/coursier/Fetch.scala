@@ -127,6 +127,8 @@ final class Fetch[F[_]] private (
 
   def withResolutionParams(resolutionParams: ResolutionParams): Fetch[F] =
     withResolveParams(resolveParams.copy(resolutionParams = resolutionParams))
+  def mapResolutionParams(f: ResolutionParams => ResolutionParams): Fetch[F] =
+    withResolveParams(resolveParams.copy(resolutionParams = f(resolutionParams)))
 
   def withCache(cache: Cache[F]): Fetch[F] =
     withResolveParams(resolveParams.copy(cache = cache))
