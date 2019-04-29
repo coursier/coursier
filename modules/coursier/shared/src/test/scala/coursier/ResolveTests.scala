@@ -160,5 +160,47 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
     }
+
+    'ivyLatestSubRevision - {
+
+      val resolve0 = Resolve()
+        .noMirrors
+        .withCache(cache)
+
+      'zero - {
+        * - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"io.circe:circe-core_2.12:0+")
+              .future()
+          }
+
+          await(validateDependencies(res))
+        }
+
+        * - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"io.circe:circe-core_2.12:0.11+")
+              .future()
+          }
+
+          await(validateDependencies(res))
+        }
+      }
+
+      'nonZero - async {
+
+        val res = await {
+          resolve0
+            .addDependencies(dep"com.chuusai:shapeless_2.12:2.3+")
+            .future()
+        }
+
+        await(validateDependencies(res))
+      }
+    }
   }
 }

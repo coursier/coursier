@@ -214,14 +214,19 @@ object Resolution {
    *
    * Returns `None` in case of conflict.
    */
-  def mergeVersions(versions: Seq[String]): Option[String] = {
+  def mergeVersions(versions: Seq[String]): Option[String] =
+    if (versions.isEmpty)
+      None
+    else if (versions.lengthCompare(1) == 0)
+      Some(versions.head)
+    else {
 
-    val parsedConstraints = versions.map(Parse.versionConstraint)
+      val parsedConstraints = versions.map(Parse.versionConstraint)
 
-    VersionConstraint
-      .merge(parsedConstraints: _*)
-      .flatMap(_.repr)
-  }
+      VersionConstraint
+        .merge(parsedConstraints: _*)
+        .flatMap(_.repr)
+    }
 
   /**
    * Merge several dependencies, solving version constraints of duplicated
