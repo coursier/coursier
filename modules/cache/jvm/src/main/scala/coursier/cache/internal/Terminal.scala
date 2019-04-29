@@ -39,7 +39,7 @@ object Terminal {
       throw new Exception("TTY not available")
 
   implicit class Ansi(val output: Writer) extends AnyVal {
-    private def control(n: Int, c: Char) = output.write(s"\033[" + n + c)
+    private def control(n: Int, c: Char) = output.write(s"\u001b[" + n + c)
 
     /**
       * Move up `n` squares
