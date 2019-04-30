@@ -372,10 +372,12 @@ final case class Authentication(
   user: String,
   password: String = "",
   optional: Boolean = false,
-  realmOpt: Option[String] = None
+  realmOpt: Option[String] = None,
+  httpsOnly: Boolean = true,
+  passOnRedirect: Boolean = false
 ) {
   override def toString: String =
-    s"Authentication($user, *******, $optional, $realmOpt)"
+    s"Authentication($user, *******, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
   def userOnly: Boolean =
-    this == Authentication(user, "")
+    this == Authentication(user)
 }

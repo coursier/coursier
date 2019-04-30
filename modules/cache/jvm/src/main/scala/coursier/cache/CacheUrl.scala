@@ -159,7 +159,7 @@ object CacheUrl {
         None
     }
 
-  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean): Option[String] =
+  private def redirect(url: String, conn: URLConnection, followHttpToHttpsRedirections: Boolean, followHttpsToHttpRedirections: Boolean): Option[String] =
     redirectTo(conn)
       .map { loc =>
         new URI(url).resolve(loc).toASCIIString
@@ -173,7 +173,8 @@ object CacheUrl {
 
         (isHttp && redirToHttp) ||
           (isHttps && redirToHttps) ||
-          (followHttpToHttpsRedirections && isHttp && redirToHttps)
+          (followHttpToHttpsRedirections && isHttp && redirToHttps) ||
+          (followHttpsToHttpRedirections && isHttps && redirToHttp)
       }
 
   private def rangeResOpt(conn: URLConnection, alreadyDownloaded: Long): Option[Boolean] =
@@ -210,6 +211,7 @@ object CacheUrl {
     url0: String,
     authentication: Option[Authentication],
     followHttpToHttpsRedirections: Boolean = false,
+    followHttpsToHttpRedirections: Boolean = false,
     credentials: Seq[DirectCredentials] = Nil,
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
@@ -220,6 +222,7 @@ object CacheUrl {
       authentication,
       0L,
       followHttpToHttpsRedirections,
+      followHttpsToHttpRedirections,
       credentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
@@ -235,6 +238,7 @@ object CacheUrl {
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
     autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
@@ -249,6 +253,7 @@ object CacheUrl {
     authentication: Option[Authentication],
     alreadyDownloaded: Long,
     followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
     autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
@@ -262,6 +267,7 @@ object CacheUrl {
       authentication,
       alreadyDownloaded,
       followHttpToHttpsRedirections,
+      followHttpsToHttpRedirections,
       autoCredentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
@@ -295,7 +301,7 @@ object CacheUrl {
             Left(args.copy(alreadyDownloaded = 0L))
           case _ =>
             val partialDownload = rangeResOpt0.nonEmpty
-            val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections)
+            val redirectOpt = redirect(url0, conn, followHttpToHttpsRedirections, followHttpsToHttpRedirections)
 
             redirectOpt match {
               case Some(loc) =>
@@ -304,9 +310,18 @@ object CacheUrl {
                 if (maxRedirectionsOpt.exists(_ <= redirectionCount))
                   throw new Exception(s"Too many redirections for $initialUrl (more than $redirectionCount redirections)")
                 else {
-                  val newAuthOpt = autoCredentials
-                    .find(_.autoMatches(loc, None))
-                    .map(_.authentication)
+                  // should we do the reverse here (keep authentication only if we get nothing from autoCredentials)?
+                  // or make that configurable?
+                  val newAuthOpt = authentication
+                    .filter { auth =>
+                      auth.passOnRedirect &&
+                        (loc.startsWith("https://") || (loc.startsWith("http://") && !auth.httpsOnly))
+                    }
+                    .orElse {
+                      autoCredentials
+                        .find(_.autoMatches(loc, None))
+                        .map(_.authentication)
+                    }
                   Left(
                     args.copy(
                       url0 = loc,
