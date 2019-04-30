@@ -96,7 +96,7 @@ final case class MavenRepository(
   // FIXME Ideally, we should silently drop a '/' suffix from `root`
   // so that
   //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
-  private val root0 = if (root.endsWith("/")) root else root + "/"
+  private[maven] val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
     module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
@@ -104,8 +104,13 @@ final case class MavenRepository(
   private def moduleVersionPath(module: Module, version: String): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
 
-  private def urlFor(path: Seq[String]): String =
-    root0 + path.map(encodeURIComponent).mkString("/")
+  private[maven] def urlFor(path: Seq[String], isDir: Boolean = false): String =
+    root0 + {
+      if (isDir)
+        path.map(encodeURIComponent).map(_ + "/").mkString
+      else
+        path.map(encodeURIComponent).mkString("/")
+    }
 
   def projectArtifact(
     module: Module,
@@ -305,7 +310,7 @@ final case class MavenRepository(
       F.map(res)(_.right.map(proj => proj.copy(actualVersionOpt = Some(version))))
     }
 
-  private def artifactFor(url: String, changing: Boolean) =
+  private[maven] def artifactFor(url: String, changing: Boolean) =
     Artifact(
       url,
       Map.empty,
@@ -556,5 +561,8 @@ final case class MavenRepository(
       Nil
     else
       artifacts0(dependency, project, overrideClassifiers)
+
+  override def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Some[Repository.Complete[F]] =
+    Some(MavenComplete(this, fetch, Monad[F]))
 
 }

@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
 import coursier.bootstrap.util.FileUtil
+import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.options.LauncherOptions
@@ -47,15 +48,17 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     args => {
       case Inl(bootstrapOptions) =>
         Bootstrap.run(bootstrapOptions, args)
-      case Inr(Inl(fetchOptions)) =>
+      case Inr(Inl(completeOptions)) =>
+        Complete.run(completeOptions, args)
+      case Inr(Inr(Inl(fetchOptions))) =>
         Fetch.run(fetchOptions, args)
-      case Inr(Inr(Inl(launchOptions))) =>
+      case Inr(Inr(Inr(Inl(launchOptions)))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inl(resolveOptions)))) =>
+      case Inr(Inr(Inr(Inr(Inl(resolveOptions))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(cnil))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))) =>
         cnil.impossible
     }
 
