@@ -11,36 +11,20 @@ object Native {
     output0: File,
     wd: File,
     log: String => Unit = s => Console.err.println(s),
-    verbosity: Int = 0
+    verbosity: Int = 0,
+    config: sn.Config
   ): Unit = {
     val classpath: Seq[Path] = files.map(_.toPath)
     val workdir: Path        = wd.toPath
     val main: String         = mainClass + "$"
     val outpath              = output0.toPath
 
-    val clang     = sn.Discover.clang()
-    val clangpp   = sn.Discover.clangpp()
-    val linkopts  = linkingOptions()
-    val compopts  = sn.Discover.compileOptions()
-    val triple    = sn.Discover.targetTriple(clang, workdir)
-    val nativelib = sn.Discover.nativelib(classpath).get
+    val config0 = config
+      .withMainClass(main)
+      .withClassPath(classpath)
+      .withWorkdir(workdir)
 
-    val config =
-      sn.Config.empty
-        .withGC(sn.GC.immix)
-        .withMode(sn.Mode.release)
-        .withClang(clang)
-        .withClangPP(clangpp)
-        .withLinkingOptions(linkopts)
-        .withCompileOptions(compopts)
-        .withTargetTriple(triple)
-        .withNativelib(nativelib)
-        .withMainClass(main)
-        .withClassPath(classpath)
-        .withLinkStubs(true)
-        .withWorkdir(workdir)
-
-    sn.Build.build(config, outpath)
+    sn.Build.build(config0, outpath)
   }
 
   private def linkingOptions(): Seq[String] = sn.Discover.linkingOptions() ++

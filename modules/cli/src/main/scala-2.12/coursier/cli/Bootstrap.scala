@@ -9,6 +9,8 @@ import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, Launche
 import coursier.cli.options.BootstrapOptions
 import coursier.cli.util.Native
 
+import scala.scalanative.{build => sn}
+
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
   private def createNativeBootstrap(
@@ -33,6 +35,17 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val tmpDir = new File(options.options.target)
 
+    val config = sn.Config.empty
+      .withGC(options.nativeOptions.gc)
+      .withMode(options.nativeOptions.mode)
+      .withLinkStubs(options.nativeOptions.nativeLinkStubs)
+      .withClang(options.nativeOptions.clang)
+      .withClangPP(options.nativeOptions.clangpp)
+      .withLinkingOptions(options.nativeOptions.linkingOptions)
+      .withCompileOptions(options.nativeOptions.compileOptions)
+      .withTargetTriple(options.nativeOptions.targetTriple(tmpDir.toPath))
+      .withNativelib(options.nativeOptions.nativeLib0(files.map(_.toPath)))
+
     try {
       Native.create(
         mainClass,
@@ -40,7 +53,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         new File(options.options.output),
         tmpDir,
         log,
-        verbosity = options.options.common.verbosityLevel
+        verbosity = options.options.common.verbosityLevel,
+        config = config
       )
     } finally {
       if (!options.options.keepTarget)
