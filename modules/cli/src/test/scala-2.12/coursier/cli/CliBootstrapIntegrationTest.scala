@@ -74,7 +74,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         force = true,
         common = common
       )
-      val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+      val bootstrapOptions = BootstrapOptions(
+        artifactOptions = artifactOptions,
+        options = bootstrapSpecificOptions
+      )
 
       Bootstrap.bootstrap(
         bootstrapOptions,
@@ -127,7 +130,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         force = true,
         common = common
       )
-      val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+      val bootstrapOptions = BootstrapOptions(
+        artifactOptions = artifactOptions,
+        options = bootstrapSpecificOptions
+      )
 
       Bootstrap.bootstrap(
         bootstrapOptions,
@@ -167,7 +173,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           common = common,
           standalone = standalone
         )
-        val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+        val bootstrapOptions = BootstrapOptions(
+          artifactOptions = artifactOptions,
+          options = bootstrapSpecificOptions
+        )
 
         Bootstrap.bootstrap(
           bootstrapOptions,
@@ -227,7 +236,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           common = common,
           deterministic = true
         )
-        val bootstrapOptions = BootstrapOptions(artifactOptions, bootstrapSpecificOptions)
+        val bootstrapOptions = BootstrapOptions(
+          artifactOptions = artifactOptions,
+          options = bootstrapSpecificOptions
+        )
         Bootstrap.bootstrap(
           bootstrapOptions,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
@@ -239,7 +251,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
           output = bootstrapFile2.getPath
         )
-        val bootstrapOptions2 = BootstrapOptions(artifactOptions, bootstrapSpecificOptions2)
+        val bootstrapOptions2 = BootstrapOptions(
+          artifactOptions = artifactOptions,
+          options = bootstrapSpecificOptions2
+        )
         Bootstrap.bootstrap(
           bootstrapOptions2,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())

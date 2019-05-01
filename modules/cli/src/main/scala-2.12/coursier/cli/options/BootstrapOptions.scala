@@ -7,6 +7,8 @@ final case class BootstrapOptions(
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions(),
   @Recurse
+    nativeOptions: NativeBootstrapOptions = NativeBootstrapOptions(),
+  @Recurse
     options: BootstrapSpecificOptions = BootstrapSpecificOptions()
 )
 
