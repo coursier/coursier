@@ -102,23 +102,24 @@ object SparkAssembly {
     val artifacts = helper.artifacts(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
     val jars = helper.fetch(sources = false, javadoc = false, default = true, artifactTypes = artifactTypes, classifier0 = Set.empty)
 
-    val checksums = artifacts.map { a =>
-      val f = a.checksumUrls.get("SHA-1") match {
-        case Some(url) =>
-          FileCache.localFile0(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
-        case None =>
-          throw new Exception(s"SHA-1 file not found for ${a.url}")
-      }
+    val checksums = artifacts.map {
+      case (_, a) =>
+        val f = a.checksumUrls.get("SHA-1") match {
+          case Some(url) =>
+            FileCache.localFile0(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
+          case None =>
+            throw new Exception(s"SHA-1 file not found for ${a.url}")
+        }
 
-      val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(f.toPath))
+        val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(f.toPath))
 
-      sumOpt match {
-        case Some(sum) =>
-          val s = sum.toString(16)
-          "0" * (40 - s.length) + s
-        case None =>
-          throw new Exception(s"Cannot read SHA-1 sum from $f")
-      }
+        sumOpt match {
+          case Some(sum) =>
+            val s = sum.toString(16)
+            "0" * (40 - s.length) + s
+          case None =>
+            throw new Exception(s"Cannot read SHA-1 sum from $f")
+        }
     }
 
 
