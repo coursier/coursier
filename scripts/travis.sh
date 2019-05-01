@@ -159,6 +159,15 @@ testBootstrap() {
     echo -e "Error: unexpected output from assembly props command.\n$OUT" 1>&2
     exit 1
   fi
+
+  # source jar here has a bash preamble, which assembly should ignore
+  modules/cli/target/pack/bin/coursier bootstrap \
+    --intransitive io.get-coursier::coursier-cli:1.1.0-M14-2 \
+    -o coursier-test.jar \
+    --assembly \
+    --classifier standalone \
+    -A jar
+  ./coursier-test.jar --help
 }
 
 testNativeBootstrap() {

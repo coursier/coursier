@@ -1,6 +1,8 @@
 package coursier.bootstrap.util
 
-import java.util.zip.{ZipEntry, ZipInputStream}
+import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
+
+import scala.collection.JavaConverters._
 
 object Zip {
 
@@ -28,6 +30,16 @@ object Zip {
 
         (ent, data)
       }
+    }
+
+  def zipEntries(zipFile: ZipFile): Iterator[(ZipEntry, Array[Byte])] =
+    zipFile.entries().asScala.map { ent =>
+      val data = FileUtil.readFully(zipFile.getInputStream(ent))
+
+      // Doing this like above just in case
+      ent.setCompressedSize(-1L)
+
+      (ent, data)
     }
 
 }

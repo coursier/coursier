@@ -634,7 +634,7 @@ class Helper(
     artifactTypes: Set[Type],
     classifier0: Set[Classifier],
     subset: Seq[Dependency] = null
-  ): Seq[Artifact] = {
+  ): Seq[(Dependency, Artifact)] = {
 
     if (subset == null && common.verbosityLevel >= 1) {
       def isLocal(p: CachePolicy) = p match {
@@ -655,15 +655,13 @@ class Helper(
 
     val res0 = Option(subset).fold(res)(res.subset)
 
-    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0).map(t => (t._2, t._3))
+    val artifacts0 = getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res0)
 
-    if (artifactTypes(Type.all))
-      artifacts0.map(_._2)
-    else
-      artifacts0.collect {
-        case (attr, artifact) if artifactTypes(attr.`type`) =>
-          artifact
-      }
+    val all = artifactTypes(Type.all)
+    artifacts0.collect {
+      case (dep, attr, artifact) if all || artifactTypes(attr.`type`) =>
+        (dep, artifact)
+    }
   }
 
   private def getDepArtifactsForClassifier(
@@ -745,22 +743,23 @@ class Helper(
     if (common.verbosityLevel >= 1 && artifacts0.nonEmpty)
       println(s"  Found ${artifacts0.length} artifacts")
 
-    val tasks = artifacts0.map { artifact =>
-      val file0 = FileCache()
-        .withLocation(cache)
-        .withCachePolicies(cachePolicies)
-        .withChecksums(checksums)
-        .withLogger(logger)
-        .withPool(pool)
-        .withTtl(ttl0)
-        .withRetry(common.cacheOptions.retryCount)
-        .withLocalArtifactsShouldBeCached(common.cacheOptions.cacheFileArtifacts)
-        .withFollowHttpToHttpsRedirections(common.cacheOptions.followHttpToHttpsRedirect)
-        .file(artifact)
+    val tasks = artifacts0.map {
+      case (_, artifact) =>
+        val file0 = FileCache()
+          .withLocation(cache)
+          .withCachePolicies(cachePolicies)
+          .withChecksums(checksums)
+          .withLogger(logger)
+          .withPool(pool)
+          .withTtl(ttl0)
+          .withRetry(common.cacheOptions.retryCount)
+          .withLocalArtifactsShouldBeCached(common.cacheOptions.cacheFileArtifacts)
+          .withFollowHttpToHttpsRedirections(common.cacheOptions.followHttpToHttpsRedirect)
+          .file(artifact)
 
-      file0
-        .run
-        .map(artifact.->)
+        file0
+          .run
+          .map(artifact.->)
     }
 
     logger.init()
@@ -832,15 +831,11 @@ class Helper(
         }
       }).filter(_.isDefined).map(_.get).toMap
 
-      val artifacts: Seq[(Dependency, Artifact)] = res.dependencyArtifacts().map {
-        case (dep, _, artifact) => (dep, artifact)
-      }
-
       val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
       val roots = deps.toVector.map(d =>
         JsonElem(
           d,
-          artifacts,
+          artifacts0,
           Option(jsonReq),
           res,
           printExclusions = common.verbosityLevel >= 1,

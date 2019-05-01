@@ -1,11 +1,11 @@
 package coursier.bootstrap
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream, OutputStream}
+import java.io.{ByteArrayOutputStream, File, OutputStream}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
-import java.util.jar.{Attributes => JarAttributes, JarFile, JarOutputStream, Manifest}
+import java.util.jar.{JarFile, JarOutputStream, Manifest, Attributes => JarAttributes}
 import java.util.regex.Pattern
-import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
 import coursier.bootstrap.util.{FileUtil, Zip}
 
@@ -75,21 +75,19 @@ object Assembly {
       var ignore = Set.empty[String]
 
       for (jar <- jars) {
-        var fis: FileInputStream = null
-        var zis: ZipInputStream = null
+        var zif: ZipFile = null
 
         try {
-          fis = new FileInputStream(jar)
-          zis = new ZipInputStream(fis)
+          zif = new ZipFile(jar)
 
-          for ((ent, content) <- Zip.zipEntries(zis)) {
+          for ((ent, content) <- Zip.zipEntries(zif)) {
 
-            def append() =
+            def append(): Unit =
               concatenedEntries += ent.getName -> ::((ent, content), concatenedEntries.getOrElse(ent.getName, Nil))
 
             rulesMap.get(ent.getName) match {
               case Some(Rule.Exclude(_)) =>
-              // ignored
+                // ignored
 
               case Some(Rule.Append(_)) =>
                 append()
@@ -111,10 +109,8 @@ object Assembly {
           }
 
         } finally {
-          if (zis != null)
-            zis.close()
-          if (fis != null)
-            fis.close()
+          if (zif != null)
+            zif.close()
         }
       }
 
