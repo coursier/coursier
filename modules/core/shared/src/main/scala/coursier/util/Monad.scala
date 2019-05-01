@@ -7,3 +7,7 @@ trait Monad[F[_]] {
   def map[A, B](elem: F[A])(f: A => B): F[B] =
     bind(elem)(a => point(f(a)))
 }
+
+object Monad {
+  def apply[F[_]](implicit M: Monad[F]): Monad[F] = M
+}

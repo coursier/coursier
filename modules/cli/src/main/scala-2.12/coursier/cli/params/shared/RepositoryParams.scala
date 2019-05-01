@@ -11,7 +11,7 @@ import coursier.parse.RepositoryParser
 
 object RepositoryParams {
 
-  def apply(options: RepositoryOptions, hasSbtPlugins: Boolean): ValidatedNel[String, Seq[Repository]] = {
+  def apply(options: RepositoryOptions, hasSbtPlugins: Boolean = false): ValidatedNel[String, Seq[Repository]] = {
 
     val repositoriesV = Validated.fromEither(
       RepositoryParser.repositories(options.repository)
