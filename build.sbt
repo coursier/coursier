@@ -26,7 +26,7 @@ inThisBuild(List(
 lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading,
+    shading("coursier.util.shaded"),
     utest,
     libs ++= Seq(
       Deps.fastParse % "shaded",
@@ -317,7 +317,7 @@ lazy val okhttp = project("okhttp")
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading,
+    shading("coursier.internal.shaded"),
     // TODO shade those
     libs += Deps.fastParse % "shaded"
   )
