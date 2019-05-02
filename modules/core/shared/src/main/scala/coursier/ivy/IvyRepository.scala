@@ -135,69 +135,81 @@ final case class IvyRepository(
     } else
       Nil
 
+  def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Option[Seq[Version]]] =
+    revisionListingPatternOpt match {
+      case None =>
+        EitherT(F.point(Right(None)))
+      case Some(revisionListingPattern) =>
+        val listingUrl = revisionListingPattern
+          .substituteVariables(variables(module, None, Type.ivy, "ivy", Extension("xml"), None))
+          .right
+          .flatMap { s =>
+            if (s.endsWith("/"))
+              Right(s)
+            else
+              Left(s"Don't know how to list revisions of ${metadataPattern.string}")
+          }
+
+        def fromWebPage(url: String, s: String): Seq[Version] =
+          WebPage.listDirectories(url, s)
+            .map(Parse.version)
+            .collect { case Some(v) => v }
+
+        def artifactFor(url: String) =
+          Artifact(
+            url,
+            Map.empty,
+            Map.empty,
+            changing = true,
+            optional = false,
+            authentication
+          )
+
+        for {
+          url <- EitherT(F.point(listingUrl))
+          s <- fetch(artifactFor(url))
+        } yield Some(fromWebPage(url, s))
+    }
+
   def find[F[_]](
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
-    revisionListingPatternOpt match {
+  ): EitherT[F, String, (Artifact.Source, Project)] =
+    Parse.versionInterval(version)
+      .orElse(Parse.multiVersionInterval(version))
+      .orElse(Parse.ivyLatestSubRevisionInterval(version))
+      .filter(_.isValid) match {
       case None =>
         findNoInverval(module, version, fetch)
-      case Some(revisionListingPattern) =>
-        Parse.versionInterval(version)
-          .orElse(Parse.multiVersionInterval(version))
-          .orElse(Parse.ivyLatestSubRevisionInterval(version))
-          .filter(_.isValid) match {
+      case Some(itv) =>
+        def fromVersions(versions: Seq[Version]) = {
+          val versionsInItv = versions.filter(itv.contains)
+
+          if (versionsInItv.isEmpty)
+            EitherT(
+              F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
+            )
+          else {
+            val version0 = versionsInItv.max
+            findNoInverval(module, version0.repr, fetch)
+          }
+        }
+
+        versions(module, fetch).flatMap {
           case None =>
             findNoInverval(module, version, fetch)
-          case Some(itv) =>
-            val listingUrl = revisionListingPattern
-              .substituteVariables(variables(module, None, Type.ivy, "ivy", Extension("xml"), None))
-              .right
-              .flatMap { s =>
-                if (s.endsWith("/"))
-                  Right(s)
-                else
-                  Left(s"Don't know how to list revisions of ${metadataPattern.string}")
-              }
-
-            def fromWebPage(url: String, s: String) = {
-
-              val subDirs = WebPage.listDirectories(url, s)
-              val versions = subDirs.map(Parse.version).collect { case Some(v) => v }
-              val versionsInItv = versions.filter(itv.contains)
-
-              if (versionsInItv.isEmpty)
-                EitherT(
-                  F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
-                )
-              else {
-                val version0 = versionsInItv.max
-                findNoInverval(module, version0.repr, fetch)
-              }
-            }
-
-            def artifactFor(url: String) =
-              Artifact(
-                url,
-                Map.empty,
-                Map.empty,
-                changing = changing.getOrElse(IvyRepository.isSnapshot(version)),
-                optional = false,
-                authentication
-              )
-
-            for {
-              url <- EitherT(F.point(listingUrl))
-              s <- fetch(artifactFor(url))
-              res <- fromWebPage(url, s)
-            } yield res
+          case Some(v) =>
+            fromVersions(v)
         }
     }
-  }
 
   def findNoInverval[F[_]](
     module: Module,
