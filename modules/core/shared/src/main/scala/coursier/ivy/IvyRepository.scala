@@ -17,10 +17,8 @@ final case class IvyRepository(
 
   def metadataPattern: Pattern = metadataPatternOpt.getOrElse(pattern)
 
-  lazy val revisionListingPatternOpt: Option[Pattern] = {
-    val idx = metadataPattern.chunks.indexWhere { chunk =>
-      chunk == Pattern.Chunk.Var("revision")
-    }
+  private[ivy] def patternUpTo(chunk: Pattern.Chunk): Option[Pattern] = {
+    val idx = metadataPattern.chunks.indexWhere(_ == chunk)
 
     if (idx < 0)
       None
@@ -28,7 +26,17 @@ final case class IvyRepository(
       Some(Pattern(metadataPattern.chunks.take(idx)))
   }
 
+  lazy val revisionListingPatternOpt: Option[Pattern] =
+    patternUpTo(Pattern.Chunk.Var("revision"))
+
   import Repository._
+
+  private[ivy] def orgVariables(org: Organization): Map[String, String] =
+    Map(
+      "organization" -> org.value,
+      "organisation" -> org.value,
+      "orgPath" -> org.value.replace('.', '/')
+    )
 
   // See http://ant.apache.org/ivy/history/latest-milestone/concept.html for a
   // list of variables that should be supported.
@@ -41,10 +49,8 @@ final case class IvyRepository(
     ext: Extension,
     classifierOpt: Option[Classifier]
   ): Map[String, String] =
-    Map(
-      "organization" -> module.organization.value,
-      "organisation" -> module.organization.value,
-      "orgPath" -> module.organization.value.replace('.', '/'),
+    orgVariables(module.organization) ++
+    Seq(
       "module" -> module.name.value,
       "type" -> `type`.value,
       "artifact" -> artifact,
@@ -116,13 +122,9 @@ final case class IvyRepository(
       retainedWithUrl.map {
         case (p, url) =>
 
-          var artifact = Artifact(
+          var artifact = artifactFor(
             url,
-            Map.empty,
-            Map.empty,
-            changing = changing.getOrElse(IvyRepository.isSnapshot(project.version)),
-            optional = false,
-            authentication = authentication
+            changing = changing.getOrElse(IvyRepository.isSnapshot(project.version))
           )
 
           if (withChecksums)
@@ -135,46 +137,56 @@ final case class IvyRepository(
     } else
       Nil
 
+  private def artifactFor(url: String, changing: Boolean) =
+    Artifact(
+      url,
+      Map.empty,
+      Map.empty,
+      changing = changing,
+      optional = false,
+      authentication
+    )
+
+  private[ivy] def listing[F[_]](
+    listingPatternOpt: Option[Pattern],
+    listingName: String,
+    variables: Map[String, String],
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Option[Seq[String]]] =
+    listingPatternOpt match {
+      case None =>
+        EitherT(F.point(Right(None)))
+      case Some(listingPattern) =>
+        val listingUrl = listingPattern
+          .substituteVariables(variables)
+          .right
+          .flatMap { s =>
+            if (s.endsWith("/"))
+              Right(s)
+            else
+              Left(s"Don't know how to list $listingName of ${metadataPattern.string}")
+          }
+
+        for {
+          url <- EitherT(F.point(listingUrl))
+          s <- fetch(artifactFor(url, changing = true))
+        } yield Some(WebPage.listDirectories(url, s))
+    }
+
   def versions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Option[Seq[Version]]] =
-    revisionListingPatternOpt match {
-      case None =>
-        EitherT(F.point(Right(None)))
-      case Some(revisionListingPattern) =>
-        val listingUrl = revisionListingPattern
-          .substituteVariables(variables(module, None, Type.ivy, "ivy", Extension("xml"), None))
-          .right
-          .flatMap { s =>
-            if (s.endsWith("/"))
-              Right(s)
-            else
-              Left(s"Don't know how to list revisions of ${metadataPattern.string}")
-          }
-
-        def fromWebPage(url: String, s: String): Seq[Version] =
-          WebPage.listDirectories(url, s)
-            .map(Parse.version)
-            .collect { case Some(v) => v }
-
-        def artifactFor(url: String) =
-          Artifact(
-            url,
-            Map.empty,
-            Map.empty,
-            changing = true,
-            optional = false,
-            authentication
-          )
-
-        for {
-          url <- EitherT(F.point(listingUrl))
-          s <- fetch(artifactFor(url))
-        } yield Some(fromWebPage(url, s))
-    }
+    listing(
+      revisionListingPatternOpt,
+      "revisions",
+      variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
+      fetch
+    ).map(_.map(_.map(Parse.version).collect { case Some(v) => v }))
 
   def find[F[_]](
     module: Module,
@@ -225,13 +237,9 @@ final case class IvyRepository(
           variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
         ).right
       } yield {
-        var artifact = Artifact(
+        var artifact = artifactFor(
           url,
-          Map.empty,
-          Map.empty,
-          changing = changing.getOrElse(IvyRepository.isSnapshot(version)),
-          optional = false,
-          authentication = authentication
+          changing = changing.getOrElse(IvyRepository.isSnapshot(version))
         )
 
         if (withChecksums)
@@ -284,6 +292,9 @@ final case class IvyRepository(
       )
     }
   }
+
+  override def completeOpt[F[_] : Monad](fetch: Fetch[F]): Some[Repository.Complete[F]] =
+    Some(IvyComplete(this, fetch, Monad[F]))
 
 }
 

@@ -1,6 +1,5 @@
 package coursier
 
-import java.io.File
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
@@ -20,12 +19,18 @@ abstract class PlatformTestHelpers {
     dir
   }
 
-  val handmadeMetadataBase =
-    new File("modules/tests/handmade-metadata/data")
-      .getAbsoluteFile
-      .toURI
-      .toASCIIString
-      .stripSuffix("/") + "/"
+  val handmadeMetadataLocation = {
+    val dir = Paths.get("modules/tests/handmade-metadata/data")
+    assert(Files.isDirectory(dir))
+    dir
+  }
+
+  val handmadeMetadataBase = handmadeMetadataLocation
+    .toAbsolutePath
+    .toFile // .toFile.toURI gives file:/ URIs, whereas .toUri gives file:/// (the former appears in some test fixtures now)
+    .toURI
+    .toASCIIString
+    .stripSuffix("/") + "/"
 
   val writeMockData = sys.env
     .get("FETCH_MOCK_DATA")
@@ -34,6 +39,9 @@ abstract class PlatformTestHelpers {
   val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, writeMissing = writeMockData)
       .copy(dummyArtifact = _.url.endsWith(".jar"))
+
+  val handmadeMetadataCache: Cache[Task] =
+    MockCache.create[Task](handmadeMetadataLocation)
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Future {

@@ -1,23 +1,24 @@
 package coursier.complete
 
 import coursier.Repositories
+import coursier.ivy.IvyRepository
 import utest._
 
 import scala.async.Async.{async, await}
 
 object CompleteTests extends TestSuite {
 
-  import coursier.TestHelpers.{ec, cache}
+  import coursier.TestHelpers.{ec, cache, handmadeMetadataCache}
 
   val tests = Tests {
 
-    val complete = Complete(cache)
-      .withRepositories(Seq(
-        Repositories.central
-      ))
-      .withScalaVersion("2.12.8")
-
     'maven - {
+
+      val complete = Complete(cache)
+        .withRepositories(Seq(
+          Repositories.central
+        ))
+        .withScalaVersion("2.12.8")
 
       def simple(input: String, expected: (Int, Seq[String])) =
         async {
@@ -318,6 +319,41 @@ object CompleteTests extends TestSuite {
       }
 
       * - simple("io.get-coursier::coursier-cache:1.1.0-M14-2", 32 -> Seq("1.1.0-M14-2"))
+    }
+
+    'ivy - {
+
+      val repo = IvyRepository.fromPattern(
+        "http://ivy.abc.com/" +: coursier.ivy.Pattern.default,
+        dropInfoAttributes = true
+      )
+
+      val complete = Complete(handmadeMetadataCache)
+        .withRepositories(Seq(repo))
+        .withScalaVersion("2.12.8")
+
+      def simple(input: String, expected: (Int, Seq[String])) =
+        async {
+          val res = await {
+            complete
+              .withInput(input)
+              .complete()
+              .future()
+          }
+
+          assert(res == expected)
+        }
+
+      * - simple("", 0 -> Seq("com.example", "com.thoughtworks"))
+      * - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
+      * - simple("com.ex", 0 -> Seq("com.example"))
+
+      * - simple("com.thoughtworks:", 17 -> Seq("bug_2.12", "common_2.12", "ivy-maven-publish-fetch_2.12", "top_2.12"))
+      * - simple("com.thoughtworks:b", 17 -> Seq("bug_2.12"))
+
+      * - simple("com.example:a_2.11:", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
+      * - simple("com.example:a_2.11:0", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
+      * - simple("com.example:a_2.11:0.1", 19 -> Seq("0.1.0-SNAPSHOT"))
     }
   }
 
