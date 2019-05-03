@@ -1,6 +1,7 @@
 package coursier
 
 import coursier.cache.{Cache, CacheLogger}
+import coursier.core.Exclusions
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
@@ -93,6 +94,8 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   def withResolutionParams(resolutionParams: ResolutionParams): Resolve[F] =
     withParams(params.copy(resolutionParams = resolutionParams))
+  def mapResolutionParams(f: ResolutionParams => ResolutionParams): Resolve[F] =
+    withParams(params.copy(resolutionParams = f(resolutionParams)))
 
   def withCache(cache: Cache[F]): Resolve[F] =
     withParams(params.copy(cache = cache))
@@ -125,7 +128,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
 
-    val initialRes = Resolve.initialResolution(params.dependencies, params.resolutionParams)
+    val initialRes = Resolve.initialResolution(params.finalDependencies, params.resolutionParams)
 
     def run(res: Resolution): F[Resolution] = {
       val t = Resolve.runProcess(res, fetch, params.resolutionParams.maxIterations, params.cache.loggerOpt)(S)
@@ -257,6 +260,21 @@ object Resolve extends PlatformResolve {
       throughOpt.getOrElse(identity[F[Resolution]])
     def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
       transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
+
+    def finalDependencies: Seq[Dependency] = {
+
+      val filter = Exclusions(resolutionParams.exclusions)
+
+      dependencies
+        .filter { dep =>
+          filter(dep.module.organization, dep.module.name)
+        }
+        .map { dep =>
+          dep.copy(
+            exclusions = Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
+          )
+        }
+    }
 
     override def toString: String =
       productIterator.mkString("ResolveParams(", ", ", ")")

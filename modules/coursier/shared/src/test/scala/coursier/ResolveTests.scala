@@ -190,5 +190,36 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
     }
+
+    'exclusions - {
+
+      val resolve0 = resolve
+        .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
+
+      'check - async {
+        val res = await {
+          resolve0
+            .future()
+        }
+
+        val argonaut = res.minDependencies.filter(_.module.organization == org"io.argonaut")
+        assert(argonaut.nonEmpty)
+
+        await(validateDependencies(res))
+      }
+
+      'test - async {
+        val res = await {
+          resolve0
+            .mapResolutionParams(_.addExclusions((org"io.argonaut", name"*")))
+            .future()
+        }
+
+        val argonaut = res.minDependencies.filter(_.module.organization == org"io.argonaut")
+        assert(argonaut.isEmpty)
+
+        await(validateDependencies(res))
+      }
+    }
   }
 }

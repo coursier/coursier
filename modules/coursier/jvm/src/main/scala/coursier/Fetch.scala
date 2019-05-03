@@ -70,10 +70,13 @@ final class Fetch[F[_]] private (
       artifactsParams.cache match {
         case f: FileCache[F] =>
           val key = FetchCache.Key(
-            resolveParams.dependencies,
+            resolveParams.finalDependencies,
             resolveParams.repositories,
             resolveParams
               .resolutionParams
+              // taken into account in resolveParams.finalDependencies
+              .withExclusions(Set())
+              // these are taken into account below
               .withForceVersion(Map())
               .withProperties(Nil)
               .withForcedProperties(Map())

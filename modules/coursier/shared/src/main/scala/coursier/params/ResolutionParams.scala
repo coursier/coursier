@@ -18,11 +18,12 @@ final class ResolutionParams private (
   val forceScalaVersion: Option[Boolean],
   val typelevel: Boolean,
   val rules: Seq[(Rule, RuleResolution)],
-  val properties: Seq[(String, String)]
+  val properties: Seq[(String, String)],
+  val exclusions: Set[(Organization, ModuleName)]
 ) extends coursier.params.ResolutionParamsHelpers with Serializable {
 
   private def this() =
-    this(false, 200, Map.empty, Map.empty, Set.empty, None, None, false, Nil, Nil)
+    this(false, 200, Map.empty, Map.empty, Set.empty, None, None, false, Nil, Nil, Set.empty)
 
   private def this(
     keepOptionalDependencies: Boolean,
@@ -44,7 +45,33 @@ final class ResolutionParams private (
     forceScalaVersion,
     typelevel,
     rules,
-    Nil
+    Nil,
+    Set.empty
+  )
+
+  private def this(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: Option[String],
+    forceScalaVersion: Option[Boolean],
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)]
+  ) = this(
+    keepOptionalDependencies,
+    maxIterations,
+    forceVersion,
+    forcedProperties,
+    profiles,
+    scalaVersion,
+    forceScalaVersion,
+    typelevel,
+    rules,
+    properties,
+    Set.empty
   )
 
   override def equals(o: Any): Boolean = o match {
@@ -58,13 +85,14 @@ final class ResolutionParams private (
         forceScalaVersion == x.forceScalaVersion &&
         typelevel == x.typelevel &&
         rules == x.rules &&
-        properties == x.properties
+        properties == x.properties &&
+        exclusions == x.exclusions
     case _ => false
   }
   override def hashCode: Int =
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.params.ResolutionParams".##) + keepOptionalDependencies.##) + maxIterations.##) + forceVersion.##) + forcedProperties.##) + profiles.##) + scalaVersion.##) + forceScalaVersion.##) + typelevel.##) + rules.##) + properties.##)
+    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.params.ResolutionParams".##) + keepOptionalDependencies.##) + maxIterations.##) + forceVersion.##) + forcedProperties.##) + profiles.##) + scalaVersion.##) + forceScalaVersion.##) + typelevel.##) + rules.##) + properties.##) + exclusions.##)
   override def toString: String =
-    s"ResolutionParams($keepOptionalDependencies, $maxIterations, $forceVersion, $forcedProperties, $profiles, $scalaVersion, $forceScalaVersion, $typelevel, $rules, $properties)"
+    s"ResolutionParams($keepOptionalDependencies, $maxIterations, $forceVersion, $forcedProperties, $profiles, $scalaVersion, $forceScalaVersion, $typelevel, $rules, $properties, $exclusions)"
 
   private[this] def copy(
     keepOptionalDependencies: Boolean = keepOptionalDependencies,
@@ -76,7 +104,8 @@ final class ResolutionParams private (
     forceScalaVersion: Option[Boolean] = forceScalaVersion,
     typelevel: Boolean = typelevel,
     rules: Seq[(Rule, RuleResolution)] = rules,
-    properties: Seq[(String, String)] = properties
+    properties: Seq[(String, String)] = properties,
+    exclusions: Set[(Organization, ModuleName)] = exclusions
   ): ResolutionParams =
     new ResolutionParams(
       keepOptionalDependencies,
@@ -88,7 +117,8 @@ final class ResolutionParams private (
       forceScalaVersion,
       typelevel,
       rules,
-      properties
+      properties,
+      exclusions
     )
 
   def withKeepOptionalDependencies(keepOptionalDependencies: Boolean): ResolutionParams =
@@ -115,6 +145,11 @@ final class ResolutionParams private (
     copy(typelevel = typelevel)
   def withRules(rules: Seq[(Rule, RuleResolution)]): ResolutionParams =
     copy(rules = rules)
+  def withExclusions(exclusions: Set[(Organization, ModuleName)]): ResolutionParams =
+    copy(exclusions = exclusions)
+
+  def addExclusions(exclusions: (Organization, ModuleName)*): ResolutionParams =
+    copy(exclusions = this.exclusions ++ exclusions)
 }
 object ResolutionParams {
 
@@ -215,5 +250,59 @@ object ResolutionParams {
       typelevel,
       rules,
       properties
+    )
+
+  def apply(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: Option[String],
+    forceScalaVersion: Option[Boolean],
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)],
+    exclusions: Set[(Organization, ModuleName)]
+  ): ResolutionParams =
+    new ResolutionParams(
+      keepOptionalDependencies,
+      maxIterations,
+      forceVersion,
+      forcedProperties,
+      profiles,
+      scalaVersion,
+      forceScalaVersion,
+      typelevel,
+      rules,
+      properties,
+      exclusions
+    )
+
+  def apply(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: String,
+    forceScalaVersion: Boolean,
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)],
+    exclusions: Set[(Organization, ModuleName)]
+  ): ResolutionParams =
+    new ResolutionParams(
+      keepOptionalDependencies,
+      maxIterations,
+      forceVersion,
+      forcedProperties,
+      profiles,
+      Option(scalaVersion),
+      Option(forceScalaVersion),
+      typelevel,
+      rules,
+      properties,
+      exclusions
     )
 }
