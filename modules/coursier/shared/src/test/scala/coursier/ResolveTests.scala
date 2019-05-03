@@ -9,13 +9,16 @@ object ResolveTests extends TestSuite {
 
   import TestHelpers.{ec, cache, validateDependencies, versionOf}
 
+  private val resolve = Resolve()
+    .noMirrors
+    .withCache(cache)
+
   val tests = Tests {
+
     'simple - async {
 
       val res = await {
-        Resolve()
-          .noMirrors
-          .withCache(cache)
+        resolve
           .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
           .future()
       }
@@ -29,9 +32,7 @@ object ResolveTests extends TestSuite {
         .withScalaVersion("2.12.7")
 
       val res = await {
-        Resolve()
-          .noMirrors
-          .withCache(cache)
+        resolve
           .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
           .addRepositories(Repositories.jitpack)
           .withResolutionParams(params)
@@ -48,9 +49,7 @@ object ResolveTests extends TestSuite {
         .withTypelevel(true)
 
       val res = await {
-        Resolve()
-          .noMirrors
-          .withCache(cache)
+        resolve
           .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
           .withResolutionParams(params)
           .future()
@@ -67,9 +66,7 @@ object ResolveTests extends TestSuite {
         .addForceVersion(mod"io.get-coursier:coursier_2.12" -> "1.1.0-M6")
 
       val res = await {
-        Resolve()
-          .noMirrors
-          .withCache(cache)
+        resolve
           .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
           .withResolutionParams(params)
           .future()
@@ -90,9 +87,7 @@ object ResolveTests extends TestSuite {
 
       def run(mirror: Mirror) = async {
         val res = await {
-          Resolve()
-            .noMirrors
-            .withCache(cache)
+          resolve
             .addMirrors(mirror)
             .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")
             .future()
@@ -130,9 +125,7 @@ object ResolveTests extends TestSuite {
 
     'latest - {
 
-      val resolve0 = Resolve()
-        .noMirrors
-        .withCache(cache)
+      val resolve0 = resolve
         .withRepositories(Seq(
           Repositories.sonatype("snapshots"),
           Repositories.central
@@ -162,16 +155,11 @@ object ResolveTests extends TestSuite {
     }
 
     'ivyLatestSubRevision - {
-
-      val resolve0 = Resolve()
-        .noMirrors
-        .withCache(cache)
-
       'zero - {
         * - async {
 
           val res = await {
-            resolve0
+            resolve
               .addDependencies(dep"io.circe:circe-core_2.12:0+")
               .future()
           }
@@ -182,7 +170,7 @@ object ResolveTests extends TestSuite {
         * - async {
 
           val res = await {
-            resolve0
+            resolve
               .addDependencies(dep"io.circe:circe-core_2.12:0.11+")
               .future()
           }
@@ -194,7 +182,7 @@ object ResolveTests extends TestSuite {
       'nonZero - async {
 
         val res = await {
-          resolve0
+          resolve
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3+")
             .future()
         }
