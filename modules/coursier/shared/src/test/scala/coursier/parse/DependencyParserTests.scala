@@ -23,7 +23,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "org:name:version:conifg" - {
+    "org:name:version:config" - {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
