@@ -24,8 +24,7 @@ object TestHelpers extends PlatformTestHelpers {
 
     val rootDep = res.rootDependencies.head
 
-    // only simple forms of dependencies are supported for now
-    assert(rootDep == Dependency(rootDep.module, rootDep.version, configuration = rootDep.configuration))
+    val isSimple = rootDep == Dependency(rootDep.module, rootDep.version, configuration = rootDep.configuration)
 
     val attrPathPart =
       if (rootDep.module.attributes.isEmpty)
@@ -34,6 +33,10 @@ object TestHelpers extends PlatformTestHelpers {
         "/" + rootDep.module.attributes.toVector.sorted.map {
           case (k, v) => k + "_" + v
         }.mkString("_")
+
+    val hashPart =
+      if (isSimple) ""
+      else s"_dep" + sha1(rootDep.toString)
 
     val paramsPart =
       if (params == ResolutionParams())
@@ -51,7 +54,7 @@ object TestHelpers extends PlatformTestHelpers {
           ""
         else
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-        ) + paramsPart + extraKeyPart
+        ) + hashPart + paramsPart + extraKeyPart
     ).filter(_.nonEmpty).mkString("/")
 
     def tryRead = textResource(path)
