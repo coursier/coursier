@@ -5,6 +5,7 @@ import cats.implicits._
 import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.resolve.Dependencies
 import coursier.core.{Configuration, Dependency}
+import coursier.parse.DependencyParser
 
 final case class SharedLoaderParams(
   loaderNames: Seq[String],
@@ -34,7 +35,7 @@ object SharedLoaderParams {
       .traverse { d =>
         d.split(":", 2) match {
           case Array(target, dep) =>
-            Dependencies.parseSimpleDependency(dep, scalaVersion, defaultConfiguration) match {
+            DependencyParser.dependencyParams(dep, scalaVersion, defaultConfiguration) match {
               case Left(err) =>
                 Validated.invalidNel(s"$d: $err")
               case Right((dep0, params)) =>

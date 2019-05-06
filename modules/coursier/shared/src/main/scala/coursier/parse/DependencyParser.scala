@@ -136,7 +136,35 @@ object DependencyParser {
     val attrSeparator = ","
     val argSeparator = ":"
 
-    val Array(coords, rawAttrs @ _*) = input.split(attrSeparator)
+    def splitRest(rest: String): (String, Seq[String]) = {
+
+      def split(rest: String) =
+        // match is total
+        rest.split(attrSeparator) match {
+          case Array(coordsEnd, attrs @ _*) => (coordsEnd, attrs)
+        }
+
+      if (rest.startsWith("[") || rest.startsWith("(")) {
+        val idx = rest.indexWhere(c => c == ']' || c == ')')
+        if (idx < 0)
+          split(rest)
+        else {
+          val (ver, attrsPart) = rest.splitAt(idx + 1)
+          val (coodsEnd, attrs) = split(attrsPart)
+          (ver + coodsEnd, attrs)
+        }
+      } else
+        split(rest)
+    }
+
+    val (coords, rawAttrs) = input.split(":", 4) match {
+      case Array(org, "", name, rest) =>
+        val (coordsEnd, attrs) = splitRest(rest)
+        (s"$org::$name:$coordsEnd", attrs)
+      case Array(org, name, rest @ _*) =>
+        val (coordsEnd, attrs) = splitRest(rest.mkString(":"))
+        (s"$org:$name:$coordsEnd", attrs)
+    }
 
     val attrsOrErrors = rawAttrs
       .map { x =>

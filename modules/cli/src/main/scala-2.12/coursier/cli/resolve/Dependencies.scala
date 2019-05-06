@@ -12,20 +12,6 @@ import coursier.util.{InMemoryRepository, Task}
 object Dependencies {
 
   /**
-    * Parses a simple dependency, like "org.typelevel:cats-core_2.12:1.1.0".
-    */
-  def parseSimpleDependency(
-    rawDependency: String,
-    scalaVersion: String,
-    defaultConfiguration: Configuration
-  ): Either[String, (Dependency, Map[String, String])] =
-    DependencyParser.dependencyParams(
-      rawDependency,
-      scalaVersion,
-      defaultConfiguration
-    )
-
-  /**
     * Tries to get a dependency, like "scalafmt", via a Scala Index lookup.
     */
   def handleScaladexDependency(
@@ -78,12 +64,11 @@ object Dependencies {
   ): ValidatedNel[String, List[(Dependency, Map[String, String])]] =
     rawDependencies
       .map { s =>
-        val e = parseSimpleDependency(
+        DependencyParser.dependencyParams(
           s,
           scalaVersion,
           defaultConfiguration
-        )
-        e match {
+        ) match {
           case Left(error) => Validated.invalidNel(error)
           case Right(d) => Validated.validNel(List(d))
         }
