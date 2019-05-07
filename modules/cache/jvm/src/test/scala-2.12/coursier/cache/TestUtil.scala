@@ -130,9 +130,16 @@ object TestUtil {
 
   def withTmpDir[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
+    val shutdownHook: Thread =
+      new Thread {
+        override def run() =
+          deleteRecursive(dir.toFile)
+      }
+    Runtime.getRuntime.addShutdownHook(shutdownHook)
     try f(dir)
     finally {
       deleteRecursive(dir.toFile)
+      Runtime.getRuntime.removeShutdownHook(shutdownHook)
     }
   }
 
