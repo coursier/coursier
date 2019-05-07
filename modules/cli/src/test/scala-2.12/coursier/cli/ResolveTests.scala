@@ -68,6 +68,39 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     assert(output === expectedOutput)
   }
 
+  it should "print what depends on with regex" in {
+    val options = ResolveOptions(
+      whatDependsOn = List("*:htrace-*")
+    )
+    val args = RemainingArgs(Seq("org.apache.spark:spark-sql_2.12:2.4.0"), Nil)
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, "UTF-8")
+    val expectedOutput =
+      """└─ org.htrace:htrace-core:3.0.4
+        |   ├─ org.apache.hadoop:hadoop-common:2.6.5
+        |   │  └─ org.apache.hadoop:hadoop-client:2.6.5
+        |   │     └─ org.apache.spark:spark-core_2.12:2.4.0
+        |   │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+        |   │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+        |   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
+        |   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
+        |      └─ org.apache.hadoop:hadoop-client:2.6.5
+        |         └─ org.apache.spark:spark-core_2.12:2.4.0
+        |            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+        |            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+        |            └─ org.apache.spark:spark-sql_2.12:2.4.0
+        |""".stripMargin
+
+    assert(output === expectedOutput)
+  }
+
   it should "print results anyway" in {
     val options = ResolveOptions(
       outputOptions = OutputOptions(
