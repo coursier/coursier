@@ -19,7 +19,7 @@ final case class ResolveParams(
   benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
-  whatDependsOn: Set[ModuleMatcher],
+  whatDependsOn: Seq[ModuleMatcher],
   conflicts: Boolean
 ) {
   def anyTree: Boolean =
@@ -81,7 +81,7 @@ object ResolveParams {
           benchmarkCache,
           tree,
           reverseTree,
-          whatDependsOn.map(m => ModuleMatcher(m)).toSet,
+          whatDependsOn.map(m => ModuleMatcher(m)),
           conflicts
         )
     }
