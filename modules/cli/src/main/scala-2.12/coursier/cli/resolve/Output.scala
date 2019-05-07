@@ -7,7 +7,7 @@ import coursier.cli.params.shared.OutputParams
 import coursier.core.{Dependency, Resolution}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
-import coursier.util.Print
+import coursier.util.{ModuleMatcher, Print}
 
 object Output {
 
@@ -55,7 +55,7 @@ object Output {
         if (params.whatDependsOn.nonEmpty)
           Print.dependencyTree(
             res,
-            roots = res.minDependencies.filter(f => params.whatDependsOn(f.module)).toSeq,
+            roots = res.minDependencies.filter(f => params.whatDependsOn.exists(m => m.matches(f.module))).toSeq,
             printExclusions = withExclusions,
             reverse = true,
             colors = colors

@@ -7,6 +7,7 @@ import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryPar
 import coursier.core.{Module, Repository}
 import coursier.params.{CacheParams, ResolutionParams}
 import coursier.parse.ModuleParser
+import coursier.util.ModuleMatcher
 
 final case class ResolveParams(
   cache: CacheParams,
@@ -18,7 +19,7 @@ final case class ResolveParams(
   benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
-  whatDependsOn: Set[Module],
+  whatDependsOn: Set[ModuleMatcher],
   conflicts: Boolean
 ) {
   def anyTree: Boolean =
@@ -80,7 +81,7 @@ object ResolveParams {
           benchmarkCache,
           tree,
           reverseTree,
-          whatDependsOn.toSet,
+          whatDependsOn.map(m => ModuleMatcher(m)).toSet,
           conflicts
         )
     }
