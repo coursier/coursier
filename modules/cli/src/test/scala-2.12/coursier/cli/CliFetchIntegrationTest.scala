@@ -1001,6 +1001,39 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     }
   }
 
+  "Bad pom sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+    dir => {
+      def runFetchJunit() = {
+        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+        val options = FetchOptions(resolveOptions = resolveOpt)
+        val params = paramsOrThrow(options)
+        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+          .unsafeRun()(ec)
+        assert(files.map(_._2.getName).toSet
+          .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+        val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+          .head
+        val junitPomFile = Paths.get(junitJarPath.replace(".jar", ".pom"))
+        val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+        assert(Files.isRegularFile(junitPomFile))
+        assert(Files.isRegularFile(junitPomShaFile))
+        junitPomShaFile
+      }
+
+      val junitPomSha1File = runFetchJunit()
+      val originalShaContent = Files.readAllBytes(junitPomSha1File)
+
+      // Corrupt the pom content
+      println(s"Corrupting $junitPomSha1File")
+      Files.write(junitPomSha1File, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
+
+      // Run fetch again and it should pass because of retrying om the bad pom.
+      val sha = runFetchJunit()
+      assert(Files.readAllBytes(sha).sameElements(originalShaContent))
+    }
+  }
+
   "Bad jar resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
@@ -1026,6 +1059,37 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       // Run fetch again and it should pass because of retrying on the bad jar.
       val jar = runFetchJunit()
       assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
+    }
+  }
+
+  "Bad jar sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+    dir => {
+      def runFetchJunit() = {
+        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
+        val options = FetchOptions(resolveOptions = resolveOpt)
+        val params = paramsOrThrow(options)
+        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+          .unsafeRun()(ec)
+        assert(files.map(_._2.getName).toSet
+          .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+        val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+          .head
+        val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
+        assert(Files.isRegularFile(junitJarShaFile))
+        junitJarShaFile
+      }
+
+      val originalJunitJarSha1 = runFetchJunit()
+      val originalJunitJarSha1Content = Files.readAllBytes(originalJunitJarSha1)
+
+      // Corrupt the jar content
+      println(s"Corrupting $originalJunitJarSha1")
+      Files.write(originalJunitJarSha1, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
+
+      // Run fetch again and it should pass because of retrying on the bad jar.
+      val jarSha1 = runFetchJunit()
+      assert(Files.readAllBytes(jarSha1).sameElements(originalJunitJarSha1Content))
     }
   }
 

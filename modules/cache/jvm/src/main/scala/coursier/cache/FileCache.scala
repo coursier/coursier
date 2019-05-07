@@ -579,7 +579,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
   def validateChecksum(
     artifact: Artifact,
-                       sumType: String
+    sumType: String
   ): EitherT[F, ArtifactError, Unit] = {
 
     val localFile0 = localFile(artifact.url, artifact.authentication.map(_.user))
@@ -707,21 +707,21 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
-        if (retry <= 0) {
+        if (retry <= 0)
           EitherT(S.point(Left(err)))
-        }
-        else {
+        else
           EitherT {
             S.schedule[Either[ArtifactError, Unit]](pool) {
               val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
+              val badChecksumFile = new File(err.sumFile)
               badFile.delete()
+              badChecksumFile.delete()
               logger.removedCorruptFile(artifact.url, Some(err.describe))
               Right(())
             }
           }.flatMap { _ =>
             filePerPolicy0(artifact, policy, retry - 1)
           }
-        }
       case err =>
         EitherT(S.point(Left(err)))
     }
