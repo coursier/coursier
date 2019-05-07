@@ -7,7 +7,7 @@ import coursier.cli.params.shared.OutputParams
 import coursier.core.{Dependency, Resolution}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
-import coursier.util.{ModuleMatcher, Print}
+import coursier.util.Print
 
 object Output {
 
