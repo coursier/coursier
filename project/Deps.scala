@@ -17,7 +17,7 @@ object Deps {
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % SharedVersions.argonautShapeless
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.7"
   def junit = "junit" % "junit" % "4.12"
-  def dockerClient = "com.spotify" % "docker-client" % "8.15.2"
+  def dockerClient = "com.spotify" % "docker-client" % "8.15.3"
 
   def sbtPgp = Def.setting {
     val sbtv = CrossVersion.binarySbtVersion(sbtVersion.in(pluginCrossBuild).value)
