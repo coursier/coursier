@@ -111,7 +111,7 @@ object TestUtil {
       )
   }
 
-  implicit def artifact(uri: Uri): Artifact = {
+  def artifact(uri: Uri, changing: Boolean): Artifact = {
     val (uri0, authOpt) = uri.userInfo match {
       case Some(info) =>
         assert(!info.contains(':'))
@@ -119,8 +119,11 @@ object TestUtil {
       case None =>
         (uri, None)
     }
-    Artifact(uri0.renderString, Map(), Map(), changing = false, optional = false, authOpt)
+    Artifact(uri0.renderString, Map(), Map(), changing = changing, optional = false, authOpt)
   }
+
+  implicit def artifact(uri: Uri): Artifact =
+    artifact(uri, changing = false)
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
