@@ -38,16 +38,21 @@ object Print {
   def dependenciesUnknownConfigs(
     deps: Seq[Dependency],
     projects: Map[(Module, String), Project],
-    printExclusions: Boolean
+    printExclusions: Boolean,
+    useFinalVersions: Boolean = true
   ): String = {
 
-    val deps0 = deps.map { dep =>
-      dep.copy(
-        version = projects
-          .get(dep.moduleVersion)
-          .fold(dep.version)(_.version)
-      )
-    }
+    val deps0 =
+      if (useFinalVersions)
+        deps.map { dep =>
+          dep.copy(
+            version = projects
+              .get(dep.moduleVersion)
+              .fold(dep.version)(_.version)
+          )
+        }
+      else
+        deps
 
     val minDeps = Orders.minDependencies(
       deps0.toSet,
