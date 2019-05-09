@@ -2,6 +2,7 @@ package coursier.cache
 
 import java.io.File
 import java.net.URI
+import java.nio.file.Files
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
@@ -854,6 +855,23 @@ object FileCacheTests extends TestSuite {
 
         assert(res.isLeft)
         assert(res == expectedRes)
+      }
+    }
+
+    'lastModifiedEx - {
+      withTmpDir { dir =>
+        val url = "https://foo-does-no-exist-zzzzzzz/a.pom"
+        val cacheFile = dir.resolve(url.replace("://", "/"))
+        Files.createDirectories(cacheFile.getParent)
+        Files.write(cacheFile, Array.emptyByteArray)
+        val c = fileCache0()
+          .withLocation(dir.toFile)
+          .withTtl(None)
+          .withCachePolicies(Seq(
+            CachePolicy.LocalUpdateChanging
+          ))
+        val res = c.fetch(artifact(Uri.unsafeFromString(url), changing = true)).run.unsafeRun()
+        assert(res.left.exists(_.contains("java.net.UnknownHostException")))
       }
     }
   }

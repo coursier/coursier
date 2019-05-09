@@ -371,11 +371,7 @@ object Resolve extends PlatformResolve {
         ValidationNel.failure(
           new ResolutionError.ConflictingDependencies(
             res,
-            res.conflicts.map { dep =>
-              dep.copy(
-                version = res.projectCache.get(dep.moduleVersion).fold(dep.version)(_._2.actualVersion)
-              )
-            }
+            res.conflicts
           )
         )
 

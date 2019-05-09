@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.error.ResolutionError
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import utest._
 
@@ -219,6 +220,37 @@ object ResolveTests extends TestSuite {
         assert(argonaut.isEmpty)
 
         await(validateDependencies(res))
+      }
+    }
+
+    'conflicts - {
+      * - async {
+
+        // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)
+
+        val res = await {
+          resolve
+            .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+            .io
+            .attempt
+            .future()
+        }
+
+        assert(res.isLeft)
+
+        val error = res.left.get
+
+        error match {
+          case c: ResolutionError.ConflictingDependencies =>
+            val expectedModules = Set(mod"io.netty:netty-codec-http2")
+            val modules = c.dependencies.map(_.module)
+            assert(modules == expectedModules)
+            val expectedVersions = Set("[4.1.8.Final]", "[4.1.16.Final]")
+            val versions = c.dependencies.map(_.version)
+            assert(versions == expectedVersions)
+          case _ =>
+            ???
+        }
       }
     }
   }

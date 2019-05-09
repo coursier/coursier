@@ -34,14 +34,15 @@ object ResolutionError {
   // Warning: currently, all conflicts in a resolution end-up in the same ConflictingDependencies instance
   final class ConflictingDependencies(
     resolution: Resolution,
-    dependencies: Set[Dependency]
+    val dependencies: Set[Dependency]
   ) extends Simple(
     resolution,
     "Conflicting dependencies:\n" +
       Print.dependenciesUnknownConfigs(
         dependencies.toVector,
         Map.empty,
-        printExclusions = false
+        printExclusions = false,
+        useFinalVersions = false
       )
   )
 
