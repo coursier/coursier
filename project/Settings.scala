@@ -30,6 +30,7 @@ object Settings {
   }
 
   lazy val javaScalaPluginShared = Seq(
+    test.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := {},
     scalazBintrayRepository,
     sonatypeRepository("releases"),
     crossScalaVersions := ScalaVersion.versions, // defined for all projects to trump sbt-doge

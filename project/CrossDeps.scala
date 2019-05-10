@@ -1,6 +1,5 @@
 
 import sbt._
-import sbt.Keys._
 
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
