@@ -69,12 +69,9 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     withParams(params.copy(extraArtifactsSeq = l))
 
   def io: F[Seq[(Artifact, File)]] =
-    S.map(ioResult) {
-      case (l, l0) =>
-        l.map { case (_, _, a, f) => (a, f) } ++ l0
-    }
+    S.map(ioResult)(_.artifacts)
 
-  def ioResult: F[(Seq[(Dependency, Publication, Artifact, File)], Seq[(Artifact, File)])] = {
+  def ioResult: F[Artifacts.Result] = {
 
     val a = params
       .resolutions
@@ -112,7 +109,7 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
           }
       }
 
-      (l0.flatMap(_._1), l0.flatMap(_._2))
+      Artifacts.Result(l0.flatMap(_._1), l0.flatMap(_._2))
     }
   }
 
@@ -135,6 +132,51 @@ object Artifacts {
       )
     )
 
+
+  final class Result private (
+    val detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+    val extraArtifacts: Seq[(Artifact, File)]
+  ) {
+
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case other: Result =>
+          detailedArtifacts == other.detailedArtifacts &&
+            extraArtifacts == other.extraArtifacts
+        case _ => false
+      }
+
+    override def hashCode(): Int = {
+      var code = 17 + "coursier.Fetch.Result".##
+      code = 37 * code + detailedArtifacts.##
+      code = 37 * code + extraArtifacts.##
+      code
+    }
+
+    override def toString: String =
+      s"Artifacts.Result($detailedArtifacts, $extraArtifacts)"
+
+
+    def artifacts: Seq[(Artifact, File)] =
+      detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+
+    def files: Seq[File] =
+      artifacts.map(_._2)
+
+  }
+
+  object Result {
+    def apply(
+      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+      extraArtifacts: Seq[(Artifact, File)]
+    ): Result =
+      new Result(
+        detailedArtifacts,
+        extraArtifacts
+      )
+  }
+
+
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
 
     def future()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Seq[(Artifact, File)]] =
@@ -156,10 +198,10 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
-    def futureResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[(Seq[(Dependency, Publication, Artifact, File)], Seq[(Artifact, File)])] =
+    def futureResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Result] =
       artifacts.ioResult.future()
 
-    def eitherResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, (Seq[(Dependency, Publication, Artifact, File)], Seq[(Artifact, File)])] = {
+    def eitherResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, Result] = {
 
       val f = artifacts
         .ioResult
@@ -170,7 +212,7 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
-    def runResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): (Seq[(Dependency, Publication, Artifact, File)], Seq[(Artifact, File)]) = {
+    def runResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Result = {
       val f = artifacts.ioResult.future()
       Await.result(f, Duration.Inf)
     }

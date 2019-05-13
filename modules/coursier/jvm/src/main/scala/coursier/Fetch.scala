@@ -197,9 +197,8 @@ final class Fetch[F[_]] private (
       val fetchIO_ = new Artifacts(artifactsParams)
         .withResolution(resolution)
         .ioResult
-      S.map(fetchIO_) {
-        case (artifacts, extraArtifacts) =>
-          Fetch.Result(resolution, artifacts, extraArtifacts)
+      S.map(fetchIO_) { res =>
+        Fetch.Result(resolution, res.detailedArtifacts, res.extraArtifacts)
       }
     }
   }
