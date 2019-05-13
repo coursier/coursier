@@ -83,7 +83,7 @@ final case class Missing(
           elem -> res.dependencyManagementMissing(proj)
       }
 
-      val depMgmtMissing = depMgmtMissing0.map(_._2).fold(Set.empty)(_ ++ _) -- results.map(_._1)
+      val depMgmtMissing = depMgmtMissing0.map(_._2).fold(Set.empty)(_ ++ _)
 
       if (depMgmtMissing.isEmpty) {
 

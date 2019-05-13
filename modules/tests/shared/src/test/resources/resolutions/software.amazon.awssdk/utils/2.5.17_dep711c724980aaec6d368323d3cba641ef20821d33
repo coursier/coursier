@@ -1,0 +1,13 @@
+com.fasterxml.jackson.core:jackson-annotations:2.9.0:compile
+com.fasterxml.jackson.core:jackson-core:2.9.8:compile
+com.fasterxml.jackson.core:jackson-databind:2.9.8:compile
+org.reactivestreams:reactive-streams:1.0.2:compile
+org.slf4j:slf4j-api:1.7.25:compile
+software.amazon:flow:1.7:compile
+software.amazon.awssdk:annotations:2.5.17:compile
+software.amazon.awssdk:auth:2.5.17:compile
+software.amazon.awssdk:http-client-spi:2.5.17:compile
+software.amazon.awssdk:profiles:2.5.17:compile
+software.amazon.awssdk:regions:2.5.17:compile
+software.amazon.awssdk:sdk-core:2.5.17:compile
+software.amazon.awssdk:utils:2.5.17:compile
