@@ -253,5 +253,21 @@ object ResolveTests extends TestSuite {
         }
       }
     }
+
+    "parent / import scope" - {
+      * - async {
+
+        val res = await {
+          resolve
+            .addDependencies(
+              dep"software.amazon.awssdk:utils:2.5.17",
+              dep"software.amazon.awssdk:auth:2.5.17"
+            )
+            .future()
+        }
+
+        await(validateDependencies(res))
+      }
+    }
   }
 }

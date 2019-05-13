@@ -20,11 +20,11 @@ object TestHelpers extends PlatformTestHelpers {
   )(
     result: => Seq[String]
   ): Future[Unit] = async {
-    assert(res.rootDependencies.lengthCompare(1) == 0) // only fine with a single root dependency for now
+    assert(res.rootDependencies.nonEmpty)
 
     val rootDep = res.rootDependencies.head
 
-    val isSimple = rootDep == Dependency(rootDep.module, rootDep.version, configuration = rootDep.configuration)
+    val isSimple = res.rootDependencies == Seq(Dependency(rootDep.module, rootDep.version, configuration = rootDep.configuration))
 
     val attrPathPart =
       if (rootDep.module.attributes.isEmpty)
@@ -36,7 +36,12 @@ object TestHelpers extends PlatformTestHelpers {
 
     val hashPart =
       if (isSimple) ""
-      else s"_dep" + sha1(rootDep.toString)
+      else {
+        val repr =
+          if (res.rootDependencies.lengthCompare(1) == 0) res.rootDependencies.head.toString
+          else res.rootDependencies.toString
+        s"_dep" + sha1(repr)
+      }
 
     val paramsPart =
       if (params == ResolutionParams())
