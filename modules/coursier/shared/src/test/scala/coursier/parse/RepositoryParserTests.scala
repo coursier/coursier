@@ -47,6 +47,20 @@ object RepositoryParserTests extends TestSuite {
       val res = RepositoryParser.repository("jitpack")
       assert(res.right.exists(isMavenRepo))
     }
+
+    "ivy with metadata" - {
+      val mainPattern =
+        "http://repo/cache/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]"
+      val metadataPattern =
+        "http://repo/cache/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]-[revision](-[classifier]).[ext]"
+
+      val repo = s"ivy:$mainPattern|$metadataPattern"
+
+      val expected = IvyRepository.parse(mainPattern, Some(metadataPattern)).right.get
+
+      val res = RepositoryParser.repository(repo)
+      assert(res == Right(expected))
+    }
   }
 
 }
