@@ -7,7 +7,7 @@ object Deps {
 
   def catsCore = "org.typelevel" %% "cats-core" % "1.6.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % SharedVersions.fastParse
-  def jsoup = "org.jsoup" % "jsoup" % "1.11.3"
+  def jsoup = "org.jsoup" % "jsoup" % "1.12.1"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % SharedVersions.scalaz
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M8"
