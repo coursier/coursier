@@ -4,18 +4,19 @@ import java.io.File
 
 import coursier.{Artifact, Attributes, Classifier, Dependency, Resolution}
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.core.Publication
 
 object JsonOutput {
 
   def report(
     resolution: Resolution,
-    artifacts: Seq[(Dependency, Attributes, Artifact)],
+    artifacts: Seq[(Dependency, Publication, Artifact)],
     files: Seq[(Artifact, File)],
     classifiers: Set[Classifier],
     exclusionsInErrors: Boolean // common.verbosityLevel >= 1
   ): String = {
 
-    val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
+    val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
       artifacts
         .groupBy(_._1)
         .mapValues(_.map(t => (t._2, t._3)).toVector)

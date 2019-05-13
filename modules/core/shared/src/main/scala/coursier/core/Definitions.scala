@@ -363,7 +363,7 @@ object Artifact {
       dependency: Dependency,
       project: Project,
       overrideClassifiers: Option[Seq[Classifier]]
-    ): Seq[(Attributes, Artifact)]
+    ): Seq[(Publication, Artifact)]
   }
 
 }

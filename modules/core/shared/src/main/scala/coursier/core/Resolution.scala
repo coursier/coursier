@@ -1121,12 +1121,12 @@ final case class Resolution(
   def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
-        case (_, attr, artifact) if types(attr.`type`) =>
+        case (_, pub, artifact) if types(pub.`type`) =>
           artifact
       }
       .distinct
 
-  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Attributes, Artifact)] =
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Publication, Artifact)] =
     for {
       dep <- minDependencies.toSeq
       (source, proj) <- projectCache
@@ -1139,8 +1139,8 @@ final case class Resolution(
         else
           Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
-      (attributes, artifact) <- source.artifacts(dep, proj, classifiers0)
-    } yield (dep, attributes, artifact)
+      (pub, artifact) <- source.artifacts(dep, proj, classifiers0)
+    } yield (dep, pub, artifact)
 
 
   @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")

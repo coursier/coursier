@@ -424,7 +424,7 @@ final case class MavenRepository(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
-  ): Seq[(Attributes, Artifact)] = {
+  ): Seq[(Publication, Artifact)] = {
 
     val packagingTpeMap = project
       .packagingOpt
@@ -453,7 +453,7 @@ final case class MavenRepository(
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 
-      val artifact = Artifact(
+      Artifact(
         root0 + path.mkString("/"),
         Map.empty,
         Map.empty,
@@ -463,17 +463,16 @@ final case class MavenRepository(
       )
         .withDefaultChecksums
         .withDefaultSignature
-
-      (publication.attributes, artifact)
     }
 
-    val (_, metadataArtifact) = artifactOf(Publication(dependency.module.name.value, Type.pom, Extension.pom, Classifier.empty))
+    val metadataArtifact = artifactOf(Publication(dependency.module.name.value, Type.pom, Extension.pom, Classifier.empty))
 
     def artifactWithExtra(publication: Publication) = {
-      val (attr, artifact) = artifactOf(publication)
-      (attr, artifact.copy(
+      val artifact = artifactOf(publication)
+      val artifact0 = artifact.copy(
         extra = artifact.extra + ("metadata" -> metadataArtifact)
-      ))
+      )
+      (publication, artifact0)
     }
 
     lazy val defaultPublications = {
@@ -556,7 +555,7 @@ final case class MavenRepository(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
-  ): Seq[(Attributes, Artifact)] =
+  ): Seq[(Publication, Artifact)] =
     if (project.relocated)
       Nil
     else

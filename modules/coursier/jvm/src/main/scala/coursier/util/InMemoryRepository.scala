@@ -133,7 +133,7 @@ final case class InMemoryRepository(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
-  ): Seq[(Attributes, Artifact)] =
+  ): Seq[(Publication, Artifact)] =
     fallbacks
       .get(dependency.moduleVersion)
       .toSeq
@@ -141,8 +141,13 @@ final case class InMemoryRepository(
         case (url, changing) =>
           val url0 = url.toString
           val ext = url0.substring(url0.lastIndexOf('.') + 1)
-          val attr = Attributes(Type(ext), Classifier.empty)
-          (attr, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
+          val pub = Publication(
+            dependency.module.name.value, // ???
+            Type(ext),
+            Extension(ext),
+            Classifier.empty
+          )
+          (pub, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
       }
 
 }

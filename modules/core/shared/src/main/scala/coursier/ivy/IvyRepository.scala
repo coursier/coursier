@@ -65,7 +65,7 @@ final case class IvyRepository(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
-  ): Seq[(Attributes, Artifact)] =
+  ): Seq[(Publication, Artifact)] =
     if (withArtifacts) {
 
       val retained =
@@ -132,7 +132,7 @@ final case class IvyRepository(
           if (withSignatures)
             artifact = artifact.withDefaultSignature
 
-          (p.attributes, artifact)
+          (p, artifact)
       }
     } else
       Nil

@@ -427,18 +427,18 @@ abstract class CentralTests extends TestSuite {
           val dependencyArtifacts = res.dependencyArtifacts()
 
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
-            case (dep, attributes, artifact)
+            case (dep, pub, artifact)
               if dep.module == Module(org"org.apache.zookeeper", name"zookeeper") &&
-                 attributes.`type` == Type.testJar =>
-              (attributes, artifact)
+                 pub.`type` == Type.testJar =>
+              (pub, artifact)
           }
 
           assert(zookeeperTestArtifacts.length == 1)
 
-          val (attr, artifact) = zookeeperTestArtifacts.head
+          val (pub, artifact) = zookeeperTestArtifacts.head
 
-          assert(attr.`type` == Type.testJar)
-          assert(attr.classifier == Classifier.tests)
+          assert(pub.`type` == Type.testJar)
+          assert(pub.classifier == Classifier.tests)
           artifact.url.endsWith("-tests.jar")
         }
       }

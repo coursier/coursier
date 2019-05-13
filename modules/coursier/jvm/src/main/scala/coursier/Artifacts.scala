@@ -4,6 +4,7 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{ArtifactError, Cache}
+import coursier.core.Publication
 import coursier.error.FetchError
 import coursier.util.{Sync, Task}
 
@@ -40,8 +41,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     params.cache
   def otherCaches: Seq[Cache[F]] =
     params.otherCaches
-  def transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]] =
-    params.transformArtifactsOpt
+  def extraArtifactsOpt: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
+    params.extraArtifacts
   def S: Sync[F] =
     params.S
 
@@ -60,14 +61,17 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
   def withOtherCaches(caches: Seq[Cache[F]]): Artifacts[F] =
     withParams(params.copy(otherCaches = caches))
 
-  def transformArtifacts(f: Seq[Artifact] => Seq[Artifact]): Artifacts[F] =
-    withParams(params.copy(transformArtifactsOpt = Some(params.transformArtifactsOpt.fold(f)(_ andThen f))))
-  def noTransformArtifacts(): Artifacts[F] =
-    withParams(params.copy(transformArtifactsOpt = None))
-  def withTransformArtifacts(fOpt: Option[Seq[Artifact] => Seq[Artifact]]): Artifacts[F] =
-    withParams(params.copy(transformArtifactsOpt = fOpt))
+  def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Artifacts[F] =
+    withParams(params.copy(extraArtifactsSeq = params.extraArtifactsSeq :+ f))
+  def noExtraArtifacts(): Artifacts[F] =
+    withParams(params.copy(extraArtifactsSeq = Nil))
+  def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
+    withParams(params.copy(extraArtifactsSeq = l))
 
-  def io: F[Seq[(Artifact, File)]] = {
+  def io: F[Seq[(Artifact, File)]] =
+    S.map(ioResult)(_.artifacts)
+
+  def ioResult: F[Artifacts.Result] = {
 
     val a = params
       .resolutions
@@ -77,15 +81,36 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
           params.classifiers,
           params.mainArtifactsOpt,
           params.artifactTypesOpt
-        ).map(_._3)
+        )
       }
-      .distinct
 
-    Artifacts.fetchArtifacts(
-      params.transformArtifacts(a),
+    val byArtifact = a
+      .map {
+        case (d, p, a) => (a, (d, p))
+      }
+      .toMap
+
+    val allArtifacts = (a.map(_._3) ++ params.extraArtifacts(a)).distinct
+
+    val res = Artifacts.fetchArtifacts(
+      allArtifacts,
       params.cache,
       params.otherCaches: _*
     )(S)
+
+    S.map(res) { l =>
+      val l0 = l.map {
+        case (a, f) =>
+          byArtifact.get(a) match {
+            case None =>
+              (Nil, Seq((a, f)))
+            case Some((d, p)) =>
+              (Seq((d, p, a, f)), Nil)
+          }
+      }
+
+      Artifacts.Result(l0.flatMap(_._1), l0.flatMap(_._2))
+    }
   }
 
 }
@@ -102,10 +127,55 @@ object Artifacts {
         None,
         cache,
         Nil,
-        None,
+        Nil,
         S
       )
     )
+
+
+  final class Result private (
+    val detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+    val extraArtifacts: Seq[(Artifact, File)]
+  ) {
+
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case other: Result =>
+          detailedArtifacts == other.detailedArtifacts &&
+            extraArtifacts == other.extraArtifacts
+        case _ => false
+      }
+
+    override def hashCode(): Int = {
+      var code = 17 + "coursier.Fetch.Result".##
+      code = 37 * code + detailedArtifacts.##
+      code = 37 * code + extraArtifacts.##
+      code
+    }
+
+    override def toString: String =
+      s"Artifacts.Result($detailedArtifacts, $extraArtifacts)"
+
+
+    def artifacts: Seq[(Artifact, File)] =
+      detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+
+    def files: Seq[File] =
+      artifacts.map(_._2)
+
+  }
+
+  object Result {
+    def apply(
+      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+      extraArtifacts: Seq[(Artifact, File)]
+    ): Result =
+      new Result(
+        detailedArtifacts,
+        extraArtifacts
+      )
+  }
+
 
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
 
@@ -128,6 +198,25 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
+    def futureResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Result] =
+      artifacts.ioResult.future()
+
+    def eitherResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, Result] = {
+
+      val f = artifacts
+        .ioResult
+        .map(Right(_))
+        .handle { case ex: FetchError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def runResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Result = {
+      val f = artifacts.ioResult.future()
+      Await.result(f, Duration.Inf)
+    }
+
   }
 
   private[coursier] final case class Params[F[_]](
@@ -137,11 +226,11 @@ object Artifacts {
     artifactTypesOpt: Option[Set[Type]],
     cache: Cache[F],
     otherCaches: Seq[Cache[F]],
-    transformArtifactsOpt: Option[Seq[Artifact] => Seq[Artifact]],
+    extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]],
     S: Sync[F]
   ) {
-    def transformArtifacts: Seq[Artifact] => Seq[Artifact] =
-      transformArtifactsOpt.getOrElse(identity[Seq[Artifact]])
+    def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
+      l => extraArtifactsSeq.flatMap(_(l))
 
     override def toString: String =
       productIterator.mkString("ArtifactsParams(", ", ", ")")
@@ -175,7 +264,7 @@ object Artifacts {
     classifiers: Set[Classifier],
     mainArtifactsOpt: Option[Boolean],
     artifactTypesOpt: Option[Set[Type]]
-  ): Seq[(Dependency, Attributes, Artifact)] = {
+  ): Seq[(Dependency, Publication, Artifact)] = {
 
     val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
 
@@ -196,8 +285,8 @@ object Artifacts {
         resolution.dependencyArtifacts(Some(classifiers.toSeq))
 
     val artifacts = (main ++ classifiersArtifacts).map {
-      case (dep, attr, artifact) =>
-        (dep.copy(attributes = dep.attributes.copy(classifier = attr.classifier)), attr, artifact)
+      case (dep, pub, artifact) =>
+        (dep.copy(attributes = dep.attributes.copy(classifier = pub.classifier)), pub, artifact)
     }
 
     if (artifactTypes0(Type.all))
