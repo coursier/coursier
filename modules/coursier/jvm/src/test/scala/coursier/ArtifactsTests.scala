@@ -68,10 +68,10 @@ object ArtifactsTests extends TestSuite {
         Artifacts()
           .withResolution(res)
           .withCache(cache)
-          .transformArtifacts { l =>
-            l.flatMap { a =>
-              val sigOpt = a.extra.get("sig")
-              Seq(a) ++ sigOpt.toSeq
+          .addExtraArtifacts { l =>
+            l.flatMap {
+              case (_, _, a) =>
+                a.extra.get("sig").toSeq
             }
           }
           .future()

@@ -15,7 +15,7 @@ import Argonaut._
 /**
  * Lookup table for files and artifacts to print in the JsonReport.
  */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]])
+final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]])
 
 /**
  * Represents a resolved dependency's artifact in the JsonReport.

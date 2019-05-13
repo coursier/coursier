@@ -70,7 +70,7 @@ object TestHelpers extends PlatformTestHelpers {
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
-      ).split('\n').toSeq
+      ).split('\n').toSeq.filter(_.nonEmpty)
 
     for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
       println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
@@ -117,6 +117,7 @@ object TestHelpers extends PlatformTestHelpers {
     params: ResolutionParams = ResolutionParams(),
     classifiers: Set[Classifier] = Set(),
     mainArtifacts: JBoolean = null,
+    artifactTypes: Set[Type] = Set(),
     extraKeyPart: String = ""
   ): Future[Unit] = {
 
@@ -132,7 +133,13 @@ object TestHelpers extends PlatformTestHelpers {
         case Some(b) => s"_main_$b"
       }
 
-    validate("artifacts", res, params, mainArtifactsPart + classifiersPart + extraKeyPart) {
+    val artifactTypesPart =
+      if (artifactTypes.isEmpty)
+        ""
+      else
+        "_types_" + sha1(artifactTypes.toVector.sorted.mkString("|"))
+
+    validate("artifacts", res, params, mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart) {
       artifacts
         .map(_.url)
         .sorted

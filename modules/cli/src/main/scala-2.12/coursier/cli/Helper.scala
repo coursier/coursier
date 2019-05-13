@@ -11,6 +11,7 @@ import coursier.cli.options.shared.SharedLoaderOptions
 import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.core.Publication
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.parse.{CachePolicyParser, DependencyParser, ModuleParser, RepositoryParser}
@@ -670,7 +671,7 @@ class Helper(
     default: Boolean,
     classifier0: Set[Classifier],
     res0: Resolution
-  ): Seq[(Dependency, Attributes, Artifact)] = {
+  ): Seq[(Dependency, Publication, Artifact)] = {
 
     val raw =
       if (hasOverrideClassifiers(sources, javadoc, classifier0)) {
@@ -690,11 +691,11 @@ class Helper(
         res0.dependencyArtifacts(None)
 
     raw.map {
-      case (dep, attr, artifact) =>
+      case (dep, pub, artifact) =>
         (
           dep.copy(
-            attributes = dep.attributes.copy(classifier = attr.classifier)),
-          attr,
+            attributes = dep.attributes.copy(classifier = pub.classifier)),
+          pub,
           artifact
         )
     }
@@ -810,7 +811,7 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, Vector[(Attributes, Artifact)]] =
+    val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
       getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
 
 

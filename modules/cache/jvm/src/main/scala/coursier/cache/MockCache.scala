@@ -15,6 +15,7 @@ import scala.util.{Failure, Success, Try}
 
 final case class MockCache[F[_]](
   base: Path,
+  extraData: Seq[Path],
   writeMissing: Boolean,
   pool: ExecutorService,
   S: Sync[F],
@@ -47,11 +48,24 @@ final case class MockCache[F[_]](
 
       val path = base.resolve(MockCacheEscape.urlAsPath(artifact.url))
 
-      val init0 = S.bind[Boolean, Either[ArtifactError, Unit]](S.schedule(pool)(Files.exists(path))) {
-        case true => S.point(Right(()))
+      val fromExtraData = extraData.foldLeft(S.point(Option.empty[Path])) {
+        (acc, p) =>
+          S.bind(acc) {
+            case Some(_) => acc
+            case None =>
+              val path = p.resolve(MockCacheEscape.urlAsPath(artifact.url))
+              S.map[Boolean, Option[Path]](S.schedule(pool)(Files.exists(path))) {
+                case true => Some(path)
+                case false => None
+              }
+          }
+      }
+
+      val init0 = S.bind[Boolean, Either[ArtifactError, Path]](S.schedule(pool)(Files.exists(path))) {
+        case true => S.point(Right(path))
         case false =>
           if (writeMissing) {
-            val f = S.schedule[Either[ArtifactError, Unit]](pool) {
+            val f = S.schedule[Either[ArtifactError, Path]](pool) {
               Files.createDirectories(path.getParent)
               def is(): InputStream =
                 if (dummyArtifact(artifact))
@@ -60,7 +74,7 @@ final case class MockCache[F[_]](
                   CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
               val b = MockCache.readFullySync(is())
               Files.write(path, b)
-              Right(())
+              Right(path)
             }
 
             S.handle(f) {
@@ -71,8 +85,12 @@ final case class MockCache[F[_]](
             S.point(Left(ArtifactError.NotFound(path.toString)))
       }
 
-      EitherT[F, ArtifactError, Unit](init0)
-        .map(_ => path.toFile)
+      val e = S.bind[Option[Path], Either[ArtifactError, Path]](fromExtraData) {
+        case None => init0
+        case Some(f) => S.point(Right(f))
+      }
+      EitherT[F, ArtifactError, Path](e)
+        .map(_.toFile)
     }
   }
 
@@ -84,11 +102,13 @@ object MockCache {
 
   def create[F[_]: Sync](
     base: Path,
+    extraData: Seq[Path] = Nil,
     writeMissing: Boolean = false,
     pool: ExecutorService = CacheDefaults.pool
   ): MockCache[F] =
     MockCache(
       base,
+      extraData,
       writeMissing,
       pool,
       Sync[F]

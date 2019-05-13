@@ -2,7 +2,7 @@ package coursier
 
 import java.io.File
 
-import coursier.core.Configuration
+import coursier.core.{Configuration, Extension}
 import coursier.ivy.IvyRepository
 import utest._
 
@@ -10,14 +10,14 @@ import scala.async.Async.{async, await}
 
 object FetchTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, validateArtifacts}
+  import TestHelpers.{ec, cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
 
   val tests = Tests {
 
     'artifactTypes - {
       'default - async {
 
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -25,13 +25,13 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
       }
 
       'sources - async {
 
         val classifiers = Set(Classifier.sources)
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -40,14 +40,14 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
 
       'mainAndSources - async {
 
         val classifiers = Set(Classifier.sources)
         val mainArtifacts = true
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -57,13 +57,13 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
       }
 
       'javadoc - async {
 
         val classifiers = Set(Classifier.javadoc)
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -72,14 +72,14 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
 
       'mainAndJavadoc - async {
 
         val classifiers = Set(Classifier.javadoc)
         val mainArtifacts = true
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -89,13 +89,13 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
       }
 
       'sourcesAndJavadoc - async {
 
         val classifiers = Set(Classifier.javadoc, Classifier.sources)
-        val (res, artifacts) = await {
+        val res = await {
           Fetch()
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
@@ -104,7 +104,7 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1), classifiers = classifiers))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
     }
 
@@ -124,7 +124,7 @@ object FetchTests extends TestSuite {
         .withRepositories(Seq(Repositories.central))
 
       'm2Local - async {
-        val (res, artifacts) = await {
+        val res = await {
           fetch0
             .addRepositories(m2Repo)
             .addDependencies(
@@ -134,7 +134,7 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        val urls = artifacts.map(_._1.url).toSet
+        val urls = res.artifacts.map(_._1.url).toSet
 
         assert(urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT.jar")))
         assert(urls.exists(_.endsWith("/top_2.12-0.1.0-SNAPSHOT.jar")))
@@ -146,11 +146,11 @@ object FetchTests extends TestSuite {
         assert(!urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT-tests.jar")))
         assert(!urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
 
-        await(validateArtifacts(res, artifacts.map(_._1), extraKeyPart = "_m2Local"))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), extraKeyPart = "_m2Local"))
       }
 
       'ivy2Local - async {
-        val (res, artifacts) = await {
+        val res = await {
           fetch0
             .addRepositories(ivy2Repo)
             .addDependencies(
@@ -160,7 +160,7 @@ object FetchTests extends TestSuite {
             .futureResult()
         }
 
-        val urls = artifacts.map(_._1.url).toSet
+        val urls = res.artifacts.map(_._1.url).toSet
 
         assert(urls.exists(_.endsWith("/common_2.12.jar")))
         assert(urls.exists(_.endsWith("/top_2.12.jar")))
@@ -173,7 +173,7 @@ object FetchTests extends TestSuite {
         // brought via a dependency on the test scope of common, via the same test->test dependency
         assert(urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
 
-        await(validateArtifacts(res, artifacts.map(_._1), extraKeyPart = "_ivy2Local"))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), extraKeyPart = "_ivy2Local"))
       }
     }
 
@@ -202,23 +202,47 @@ object FetchTests extends TestSuite {
       // are forced or not
 
       * - async {
-        val (res, artifacts) = await {
+        val res = await {
           fetch0
             .mapResolutionParams(_.addForcedProperties(prop))
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
       }
 
       * - async {
-        val (res, artifacts) = await {
+        val res = await {
           fetch0
             .mapResolutionParams(_.addProperties(prop))
             .futureResult()
         }
 
-        await(validateArtifacts(res, artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+      }
+    }
+
+    'publications - {
+      'ivy - async {
+        val artifactTypes = Seq(Type("info"))
+
+        val res = await {
+          Fetch()
+            .noMirrors
+            .withRepositories(Seq(
+              Repositories.central,
+              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").right.get
+            ))
+            .addDependencies(dep"test:a_2.12:1.0.0")
+            .addArtifactTypes(artifactTypes: _*)
+            .withCache(cacheWithHandmadeMetadata)
+            .futureResult()
+        }
+
+        assert(res.artifacts.nonEmpty)
+        assert(res.detailedArtifacts.count(_._2.ext == Extension("csv")) == 1)
+
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), artifactTypes = artifactTypes.toSet))
       }
     }
 

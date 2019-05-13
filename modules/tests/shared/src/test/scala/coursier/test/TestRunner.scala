@@ -190,7 +190,7 @@ class TestRunner[F[_]: Gather : ToFuture](
       assert(conflicts.isEmpty)
       assert(isDone)
 
-      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_))).map(t => (t._2, t._3))
+      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_))).map(t => (t._2.attributes, t._3))
 
       f(artifacts)
     }
