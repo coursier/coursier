@@ -31,7 +31,6 @@ final case class ResolutionOptions(
 
   @Help("Enable profile")
   @Value("profile")
-  @Short("F")
     profile: List[String] = Nil,
 
   @Help("Default scala version")

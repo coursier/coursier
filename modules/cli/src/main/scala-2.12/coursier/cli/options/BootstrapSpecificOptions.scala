@@ -1,13 +1,8 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.bootstrap.{Assembly, LauncherBat}
-import coursier.cli.options.shared.SharedLoaderOptions
 
 final case class BootstrapSpecificOptions(
-  @Short("M")
-  @Short("main")
-    mainClass: String = "",
   @Short("o")
     output: String = "bootstrap",
   @Short("f")
@@ -29,11 +24,6 @@ final case class BootstrapSpecificOptions(
   @Help("Generate native launcher")
   @Short("S")
     native: Boolean = false,
-  @Help("Native compilation target directory")
-  @Short("d")
-    target: String = "native-target",
-  @Help("Don't wipe native compilation target directory (for debug purposes)")
-    keepTarget: Boolean = false,
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Boolean = false,
@@ -52,33 +42,8 @@ final case class BootstrapSpecificOptions(
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
   @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
-    disableJarChecking: Option[Boolean] = None,
-  @Recurse
-    isolated: SharedLoaderOptions = SharedLoaderOptions(),
-  @Recurse
-    common: CommonOptions = CommonOptions()
-) {
-
-  val rules = {
-
-    val parsedRules = assemblyRule.map { s =>
-      s.split(":", 2) match {
-        case Array("append", v) => Assembly.Rule.Append(v)
-        case Array("append-pattern", v) => Assembly.Rule.AppendPattern(v)
-        case Array("exclude", v) => Assembly.Rule.Exclude(v)
-        case Array("exclude-pattern", v) => Assembly.Rule.ExcludePattern(v)
-        case _ =>
-          sys.error(s"Malformed assembly rule: $s")
-      }
-    }
-
-    (if (defaultAssemblyRules) Assembly.defaultRules else Nil) ++ parsedRules
-  }
-
-  def generateBat: Boolean =
-    bat.getOrElse(LauncherBat.isWindows)
-
-}
+    disableJarChecking: Option[Boolean] = None
+)
 
 object BootstrapSpecificOptions {
   implicit val parser = Parser[BootstrapSpecificOptions]

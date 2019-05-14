@@ -17,8 +17,8 @@ final case class OutputOptions(
     progress: Boolean = false,
 
   @Help("Force printing / generating results, even if errored")
-  @Short("f")
-    force: Boolean = false
+  @Short("F")
+    forcePrint: Boolean = false
 
 ) {
 

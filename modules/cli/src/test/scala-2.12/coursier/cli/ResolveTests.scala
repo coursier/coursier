@@ -104,7 +104,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
   it should "print results anyway" in {
     val options = ResolveOptions(
       outputOptions = OutputOptions(
-        force = true
+        forcePrint = true
       )
     )
     val args = RemainingArgs(

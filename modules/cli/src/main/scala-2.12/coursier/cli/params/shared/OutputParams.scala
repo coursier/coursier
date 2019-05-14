@@ -39,7 +39,7 @@ object OutputParams {
         Validated.validNel(Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet))
 
     val progressBars = options.progress
-    val forcePrint = options.force
+    val forcePrint = options.forcePrint
 
     verbosityV.map { verbosity =>
       OutputParams(
