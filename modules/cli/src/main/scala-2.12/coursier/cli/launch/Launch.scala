@@ -11,8 +11,9 @@ import cats.data.Validated
 import coursier.cli.fetch.Fetch
 import coursier.cli.options.LaunchOptions
 import coursier.cli.params.LaunchParams
+import coursier.cli.params.shared.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.ResolveException
-import coursier.core.Dependency
+import coursier.core.{Artifact, Dependency, Resolution}
 import coursier.util.{Sync, Task}
 
 import scala.annotation.tailrec
@@ -138,6 +139,34 @@ object Launch extends CaseApp[LaunchOptions] {
       mainClassOpt.orElse(sameOrgOnlyMainClassOpt)
     }
 
+  def loader(
+    res: Resolution,
+    files: Seq[(Artifact, File)],
+    sharedLoaderParams: SharedLoaderParams,
+    artifactParams: ArtifactParams,
+    extraJars: Seq[URL]
+  ): URLClassLoader = {
+    val fileMap = files.toMap
+    val alreadyAdded = Set.empty[File]
+    val parent = sharedLoaderParams.loaderNames.foldLeft(baseLoader) {
+      (parent, name) =>
+        val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
+        val subRes = res.subset(deps)
+        val artifacts = coursier.Artifacts.artifacts0(
+          subRes,
+          artifactParams.classifiers,
+          Option(artifactParams.mainArtifacts).map(x => x),
+          Option(artifactParams.artifactTypes)
+        ).map(_._3)
+        val files0 = artifacts
+          .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
+          .filter(!alreadyAdded(_))
+        new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
+    }
+    val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++ extraJars
+    new URLClassLoader(cp, parent)
+  }
+
   def task(
     params: LaunchParams,
     pool: ExecutorService,
@@ -149,34 +178,21 @@ object Launch extends CaseApp[LaunchOptions] {
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
-      fileMap = files.toMap
-      loader <- Task.delay {
-        val alreadyAdded = Set.empty[File]
-        val parent = params.shared.sharedLoader.loaderNames.foldLeft(baseLoader) {
-          (parent, name) =>
-            val deps = params.shared.sharedLoader.loaderDependencies.getOrElse(name, Nil)
-            val subRes = res.subset(deps)
-            val artifacts = coursier.Artifacts.artifacts0(
-              subRes,
-              params.shared.artifact.classifiers,
-              Option(params.shared.artifact.mainArtifacts).map(x => x),
-              Option(params.shared.artifact.artifactTypes)
-            ).map(_._3)
-            val files0 = artifacts
-              .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
-              .filter(!alreadyAdded(_))
-            new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
-        }
-        val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++
+      loader0 <- Task.delay {
+        loader(
+          res,
+          files,
+          params.shared.sharedLoader,
+          params.shared.artifact,
           params.shared.extraJars.map(_.toUri.toURL)
-        new URLClassLoader(cp, parent)
+        )
       }
       mainClass <- {
         params.shared.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(mainClasses(loader)).flatMap { m =>
+            Task.delay(mainClasses(loader0)).flatMap { m =>
               if (params.shared.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
@@ -192,7 +208,7 @@ object Launch extends CaseApp[LaunchOptions] {
             }
         }
       }
-      f <- Task.fromEither(launch(loader, mainClass, userArgs))
+      f <- Task.fromEither(launch(loader0, mainClass, userArgs))
     } yield (mainClass, f)
 
   def run(options: LaunchOptions, args: RemainingArgs): Unit =
