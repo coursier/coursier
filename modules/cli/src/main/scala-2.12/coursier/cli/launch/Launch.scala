@@ -147,20 +147,20 @@ object Launch extends CaseApp[LaunchOptions] {
     stderr: PrintStream = System.err
   ): Task[(String, () => Unit)] =
     for {
-      t <- Fetch.task(params.fetch, pool, dependencyArgs, stdout, stderr)
+      t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
       fileMap = files.toMap
       loader <- Task.delay {
         val alreadyAdded = Set.empty[File]
-        val parent = params.sharedLoader.loaderNames.foldLeft(baseLoader) {
+        val parent = params.shared.sharedLoader.loaderNames.foldLeft(baseLoader) {
           (parent, name) =>
-            val deps = params.sharedLoader.loaderDependencies.getOrElse(name, Nil)
+            val deps = params.shared.sharedLoader.loaderDependencies.getOrElse(name, Nil)
             val subRes = res.subset(deps)
             val artifacts = coursier.Artifacts.artifacts0(
               subRes,
-              params.artifact.classifiers,
-              Option(params.artifact.mainArtifacts).map(x => x),
-              Option(params.artifact.artifactTypes)
+              params.shared.artifact.classifiers,
+              Option(params.shared.artifact.mainArtifacts).map(x => x),
+              Option(params.shared.artifact.artifactTypes)
             ).map(_._3)
             val files0 = artifacts
               .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
@@ -168,16 +168,16 @@ object Launch extends CaseApp[LaunchOptions] {
             new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
         }
         val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++
-          params.extraJars.map(_.toUri.toURL)
+          params.shared.extraJars.map(_.toUri.toURL)
         new URLClassLoader(cp, parent)
       }
       mainClass <- {
-        params.mainClassOpt match {
+        params.shared.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
             Task.delay(mainClasses(loader)).flatMap { m =>
-              if (params.resolve.output.verbosity >= 2)
+              if (params.shared.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
                     m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)\n" }.mkString +
@@ -203,29 +203,29 @@ object Launch extends CaseApp[LaunchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
+        val pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, args.remaining, args.unparsed)
 
         t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
+          case Left(e: ResolveException) if params.shared.resolve.output.verbosity <= 1 =>
             System.err.println(e.message)
             sys.exit(1)
-          case Left(e: coursier.error.FetchError) if params.resolve.output.verbosity <= 1 =>
+          case Left(e: coursier.error.FetchError) if params.shared.resolve.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
             sys.exit(1)
-          case Left(e: LaunchException.NoMainClassFound) if params.resolve.output.verbosity <= 1 =>
+          case Left(e: LaunchException.NoMainClassFound) if params.shared.resolve.output.verbosity <= 1 =>
             System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
             sys.exit(1)
-          case Left(e: LaunchException) if params.resolve.output.verbosity <= 1 =>
+          case Left(e: LaunchException) if params.shared.resolve.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
             sys.exit(1)
           case Left(e) => throw e
           case Right((mainClass, run)) =>
-            if (params.resolve.output.verbosity >= 2)
+            if (params.shared.resolve.output.verbosity >= 2)
               System.err.println(s"Launching $mainClass ${args.unparsed.mkString(" ")}")
-            else if (params.resolve.output.verbosity == 1)
+            else if (params.shared.resolve.output.verbosity == 1)
               System.err.println("Launching")
 
             run()
