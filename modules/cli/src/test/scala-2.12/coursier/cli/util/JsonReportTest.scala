@@ -3,7 +3,7 @@ package coursier.cli.util
 import coursier.cli.CliTestLib
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class JsonReportTest extends FlatSpec with CliTestLib {

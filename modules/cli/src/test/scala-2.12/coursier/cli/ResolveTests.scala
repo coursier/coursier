@@ -12,7 +12,7 @@ import coursier.cli.resolve.Resolve
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 

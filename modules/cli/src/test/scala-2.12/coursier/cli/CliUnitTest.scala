@@ -7,7 +7,7 @@ import coursier.cli.options.CommonOptions
 import coursier.cli.options.shared.DependencyOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])

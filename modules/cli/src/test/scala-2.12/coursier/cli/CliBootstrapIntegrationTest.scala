@@ -12,9 +12,7 @@ import coursier.cli.options._
 import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
-
-import scala.collection.JavaConverters._
+import org.scalatestplus.junit.JUnitRunner
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar

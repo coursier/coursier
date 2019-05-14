@@ -23,7 +23,7 @@ import coursier.cli.resolve.ResolveException
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source
