@@ -20,10 +20,7 @@ final case class LaunchOptions(
     resolveOptions: ResolveOptions = ResolveOptions(),
 
   @Recurse
-    artifactOptions: ArtifactOptions = ArtifactOptions(),
-
-  @Recurse
-    common: CommonOptions = CommonOptions()
+    artifactOptions: ArtifactOptions = ArtifactOptions()
 )
 
 object LaunchOptions {
