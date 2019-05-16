@@ -5,9 +5,14 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 
 final case class SharedLoaderOptions(
 
+  // deprecated, use shared instead
   @Value("target:dependency")
   @Short("I")
-  @Short("isolated") // former deprecated name
+  @Short("isolated")
+  @Help("(deprecated) dependencies to be put in shared class loaders")
+    isolated: List[String] = Nil,
+
+  @Value("dependency[@target]")
   @Help("Dependencies to be put in shared class loaders")
     shared: List[String] = Nil,
 

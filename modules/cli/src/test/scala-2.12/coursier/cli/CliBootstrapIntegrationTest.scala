@@ -65,7 +65,67 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       )
       val sharedLoaderOptions = SharedLoaderOptions(
         sharedTarget = List("foo"),
-        shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        force = true
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions,
+        artifactOptions = artifactOptions,
+        sharedLoaderOptions = sharedLoaderOptions
+      )
+      val bootstrapOptions = BootstrapOptions(
+        sharedLaunchOptions = sharedLaunchOptions,
+        options = bootstrapSpecificOptions
+      )
+
+      Bootstrap.run(
+        bootstrapOptions,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
+
+      def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+
+      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8)).lines.toVector
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
+
+      assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+
+      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+      assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+
+      // checking that there are no sources just in case…
+      assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+      assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+
+      val extensions = fooLines
+        .map { l =>
+          val idx = l.lastIndexOf('.')
+          if (idx < 0)
+            l
+          else
+            l.drop(idx + 1)
+        }
+        .toSet
+
+      assert(extensions == Set("jar"))
+  }
+
+  "bootstrap" should "accept simple modules via --shared" in withFile() {
+
+    (bootstrapFile, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+      val artifactOptions = ArtifactOptions()
+      val resolveOptions = ResolveOptions(
+        repositoryOptions = repositoryOpt
+      )
+      val sharedLoaderOptions = SharedLoaderOptions(
+        shared = List("org.scalameta:trees_2.12")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
@@ -169,7 +229,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
-          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
@@ -235,7 +295,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
-          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
@@ -331,7 +391,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val sharedLoaderOptions = SharedLoaderOptions(
         sharedTarget = List("launcher"),
-        shared = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+        isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
       )
       val sharedLaunchOptions = SharedLaunchOptions(
         sharedLoaderOptions = sharedLoaderOptions

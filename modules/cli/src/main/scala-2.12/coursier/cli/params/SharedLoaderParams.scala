@@ -2,17 +2,15 @@ package coursier.cli.params
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.Dependency
 import coursier.cli.options.SharedLoaderOptions
-import coursier.core.{Configuration, Dependency}
-import coursier.parse.DependencyParser
+import coursier.core.Configuration
+import coursier.parse.{DependencyParser, ModuleParser}
 
 final case class SharedLoaderParams(
   loaderNames: Seq[String],
   loaderDependencies: Map[String, Seq[Dependency]]
-) {
-  def allDependencies: Seq[Dependency] =
-    loaderNames.flatMap(n => loaderDependencies.getOrElse(n, Nil))
-}
+)
 
 object SharedLoaderParams {
   def apply(
@@ -30,7 +28,12 @@ object SharedLoaderParams {
       Some(l).filter(_.nonEmpty)
     }
 
-    val depsV = options.shared
+    val defaultTarget = targetsOpt
+      .flatMap(_.headOption)
+      .getOrElse("default")
+
+    val depsFromDeprecatedArgsV = options
+      .isolated
       .traverse { d =>
         d.split(":", 2) match {
           case Array(target, dep) =>
@@ -48,11 +51,33 @@ object SharedLoaderParams {
         }
       }
 
-    depsV.map { deps =>
-      SharedLoaderParams(
-        targetsOpt.getOrElse(deps.map(_._1).distinct),
-        deps.groupBy(_._1).mapValues(_.map(_._2)).iterator.toMap
-      )
+    val depsV = options
+      .shared
+      .traverse { d =>
+
+        val (target, dep) = d.split("@", 2) match {
+          case Array(dep0, target0) =>
+            (target0, dep0)
+          case Array(dep0) =>
+            (defaultTarget, dep0)
+        }
+
+        ModuleParser.module(dep, scalaVersion) match {
+          case Left(err) =>
+            Validated.invalidNel(s"$d: $err")
+          case Right(m) =>
+            val asDep = Dependency(m, "_") // actual version shouldn't matter
+            Validated.validNel(target -> asDep)
+        }
+      }
+
+    (depsFromDeprecatedArgsV, depsV).mapN {
+      (depsFromDeprecatedArgs, deps) =>
+        val deps0 = depsFromDeprecatedArgs ++ deps
+        SharedLoaderParams(
+          targetsOpt.getOrElse(deps0.map(_._1).distinct),
+          deps0.groupBy(_._1).mapValues(_.map(_._2)).iterator.toMap
+        )
     }
   }
 }
