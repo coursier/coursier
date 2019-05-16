@@ -1,8 +1,7 @@
-package coursier.cli.params
+package coursier.cli.bootstrap
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.options.BootstrapOptions
 import coursier.cli.params.shared.SharedLaunchParams
 
 final case class BootstrapParams(

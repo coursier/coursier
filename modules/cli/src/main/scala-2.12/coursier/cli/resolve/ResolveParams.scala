@@ -1,10 +1,9 @@
-package coursier.cli.params
+package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.options.ResolveOptions
 import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryParams}
-import coursier.core.{Module, Repository}
+import coursier.core.Repository
 import coursier.params.{CacheParams, ResolutionParams}
 import coursier.parse.ModuleParser
 import coursier.util.ModuleMatcher

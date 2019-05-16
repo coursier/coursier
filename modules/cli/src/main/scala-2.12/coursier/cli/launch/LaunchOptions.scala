@@ -1,4 +1,4 @@
-package coursier.cli.options
+package coursier.cli.launch
 
 import caseapp._
 import coursier.cli.options.shared.SharedLaunchOptions

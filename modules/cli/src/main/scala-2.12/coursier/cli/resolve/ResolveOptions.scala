@@ -1,6 +1,7 @@
-package coursier.cli.options
+package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.options.shared.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
 
 final case class ResolveOptions(
 
@@ -25,18 +26,18 @@ final case class ResolveOptions(
     conflicts: Boolean = false,
 
   @Recurse
-    cacheOptions: shared.CacheOptions = shared.CacheOptions(),
+    cacheOptions: CacheOptions = CacheOptions(),
 
   @Recurse
-    repositoryOptions: shared.RepositoryOptions = shared.RepositoryOptions(),
+    repositoryOptions: RepositoryOptions = RepositoryOptions(),
 
   @Recurse
-    resolutionOptions: shared.ResolutionOptions = shared.ResolutionOptions(),
+    resolutionOptions: ResolutionOptions = ResolutionOptions(),
 
   @Recurse
-    dependencyOptions: shared.DependencyOptions = shared.DependencyOptions(),
+    dependencyOptions: DependencyOptions = DependencyOptions(),
 
   @Recurse
-    outputOptions: shared.OutputOptions = shared.OutputOptions()
+    outputOptions: OutputOptions = OutputOptions()
 
 )

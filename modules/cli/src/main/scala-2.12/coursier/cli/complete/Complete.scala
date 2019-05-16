@@ -2,8 +2,6 @@ package coursier.cli.complete
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
-import coursier.cli.options.CompleteOptions
-import coursier.cli.params.CompleteParams
 import coursier.util.Sync
 
 import scala.concurrent.ExecutionContext

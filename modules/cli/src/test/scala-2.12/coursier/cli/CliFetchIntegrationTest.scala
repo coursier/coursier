@@ -16,10 +16,9 @@ import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
 import coursier.cache.CacheDefaults
-import coursier.cli.fetch.Fetch
+import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
-import coursier.cli.params.FetchParams
-import coursier.cli.resolve.ResolveException
+import coursier.cli.resolve.{ResolveException, ResolveOptions}
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}

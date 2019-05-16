@@ -9,8 +9,6 @@ import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.fetch.Fetch
-import coursier.cli.options.LaunchOptions
-import coursier.cli.params.LaunchParams
 import coursier.cli.params.shared.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.ResolveException
 import coursier.core.{Artifact, Dependency, Resolution}

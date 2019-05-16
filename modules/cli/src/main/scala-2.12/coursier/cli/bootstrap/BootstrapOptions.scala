@@ -1,4 +1,4 @@
-package coursier.cli.options
+package coursier.cli.bootstrap
 
 import caseapp.{Parser, Recurse}
 import coursier.cli.options.shared.SharedLaunchOptions

@@ -1,17 +1,18 @@
-package coursier.cli.options
+package coursier.cli.complete
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import coursier.cli.options.shared.{CacheOptions, OutputOptions, RepositoryOptions}
 
 final case class CompleteOptions(
 
   @Recurse
-    cacheOptions: shared.CacheOptions = shared.CacheOptions(),
+    cacheOptions: CacheOptions = CacheOptions(),
 
   @Recurse
-    repositoryOptions: shared.RepositoryOptions = shared.RepositoryOptions(),
+    repositoryOptions: RepositoryOptions = RepositoryOptions(),
 
   @Recurse
-    outputOptions: shared.OutputOptions = shared.OutputOptions(),
+    outputOptions: OutputOptions = OutputOptions(),
 
   @Help("Default scala version")
   @Short("e")

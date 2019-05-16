@@ -1,7 +1,7 @@
 package coursier.cli.options.shared
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
-import coursier.cli.options.ResolveOptions
+import coursier.cli.resolve.ResolveOptions
 
 final case class SharedLaunchOptions(
 

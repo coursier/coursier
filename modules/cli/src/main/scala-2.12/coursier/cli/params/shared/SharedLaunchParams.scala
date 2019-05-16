@@ -4,8 +4,9 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.fetch.FetchParams
 import coursier.cli.options.shared.SharedLaunchOptions
-import coursier.cli.params.{FetchParams, ResolveParams}
+import coursier.cli.resolve.ResolveParams
 
 final case class SharedLaunchParams(
   resolve: ResolveParams,

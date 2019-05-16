@@ -8,8 +8,6 @@ import cats.data.Validated
 import cats.implicits._
 import coursier.Resolution
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.options.ResolveOptions
-import coursier.cli.params.ResolveParams
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, ResolutionProcess}
 import coursier.error.ResolutionError

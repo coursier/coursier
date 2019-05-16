@@ -1,11 +1,10 @@
-package coursier.cli.params
+package coursier.cli.bootstrap
 
 import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.bootstrap.{Assembly, LauncherBat}
-import coursier.cli.options.BootstrapSpecificOptions
 
 final case class BootstrapSpecificParams(
   output: Path,

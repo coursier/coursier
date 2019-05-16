@@ -1,11 +1,10 @@
-package coursier.cli.params
+package coursier.cli.bootstrap
 
 import java.nio.file.{Path, Paths}
 import java.util.Locale
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.options.NativeBootstrapOptions
 
 import scala.scalanative.{build => sn}
 

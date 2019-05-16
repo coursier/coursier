@@ -1,11 +1,11 @@
-package coursier.cli.params
+package coursier.cli.fetch
 
 import java.nio.file.{Path, Paths}
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.options.FetchOptions
 import coursier.cli.params.shared.ArtifactParams
+import coursier.cli.resolve.ResolveParams
 
 final case class FetchParams(
   classpath: Boolean,
