@@ -2,8 +2,7 @@ package coursier.cli.spark
 
 import java.io.File
 
-import coursier.cli.Helper
-import coursier.cli.options.CommonOptions
+import coursier.cli.deprecated.{CommonOptions, Helper}
 import coursier.core.Type
 
 object Submit {

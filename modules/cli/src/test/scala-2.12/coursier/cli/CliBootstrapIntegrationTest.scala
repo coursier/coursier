@@ -7,13 +7,12 @@ import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
 import coursier.bootstrap.Bootstrap.resourceDir
-import coursier.cli.options._
-import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions, SharedLoaderOptions}
+import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
+import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
+import coursier.cli.resolve.ResolveOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
-
-import scala.collection.JavaConverters._
+import org.scalatestplus.junit.JUnitRunner
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
@@ -61,25 +60,88 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
       val artifactOptions = ArtifactOptions()
-      val common = CommonOptions(
+      val resolveOptions = ResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val sharedLoaderOptions = SharedLoaderOptions(
         sharedTarget = List("foo"),
-        shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
-        isolated = sharedLoaderOptions,
-        force = true,
-        common = common
+        force = true
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions,
+        artifactOptions = artifactOptions,
+        sharedLoaderOptions = sharedLoaderOptions
       )
       val bootstrapOptions = BootstrapOptions(
-        artifactOptions = artifactOptions,
+        sharedLaunchOptions = sharedLaunchOptions,
         options = bootstrapSpecificOptions
       )
 
-      Bootstrap.bootstrap(
+      Bootstrap.run(
+        bootstrapOptions,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
+
+      def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+
+      val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8)).lines.toVector
+      val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
+
+      assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+
+      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+      assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+
+      // checking that there are no sources just in case…
+      assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+      assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+      assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+      assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+
+      val extensions = fooLines
+        .map { l =>
+          val idx = l.lastIndexOf('.')
+          if (idx < 0)
+            l
+          else
+            l.drop(idx + 1)
+        }
+        .toSet
+
+      assert(extensions == Set("jar"))
+  }
+
+  "bootstrap" should "accept simple modules via --shared" in withFile() {
+
+    (bootstrapFile, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+      val artifactOptions = ArtifactOptions()
+      val resolveOptions = ResolveOptions(
+        repositoryOptions = repositoryOpt
+      )
+      val sharedLoaderOptions = SharedLoaderOptions(
+        shared = List("org.scalameta:trees_2.12")
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = bootstrapFile.getPath,
+        force = true
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions,
+        artifactOptions = artifactOptions,
+        sharedLoaderOptions = sharedLoaderOptions
+      )
+      val bootstrapOptions = BootstrapOptions(
+        sharedLaunchOptions = sharedLaunchOptions,
+        options = bootstrapSpecificOptions
+      )
+
+      Bootstrap.run(
         bootstrapOptions,
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
@@ -122,20 +184,23 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         sources = true,
         default = Some(true)
       )
-      val common = CommonOptions(
+      val resolveOptions = ResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
-        force = true,
-        common = common
+        force = true
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions,
+        artifactOptions = artifactOptions
       )
       val bootstrapOptions = BootstrapOptions(
-        artifactOptions = artifactOptions,
+        sharedLaunchOptions = sharedLaunchOptions,
         options = bootstrapSpecificOptions
       )
 
-      Bootstrap.bootstrap(
+      Bootstrap.run(
         bootstrapOptions,
         RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
       )
@@ -159,26 +224,29 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           sources = true,
           default = Some(true)
         )
-        val common = CommonOptions(
+        val resolveOptions = ResolveOptions(
           repositoryOptions = repositoryOpt
         )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
-          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
-          isolated = sharedLoaderOptions,
           force = true,
-          common = common,
           standalone = standalone
         )
-        val bootstrapOptions = BootstrapOptions(
+        val sharedLaunchOptions = SharedLaunchOptions(
+          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions,
+          sharedLoaderOptions = sharedLoaderOptions
+        )
+        val bootstrapOptions = BootstrapOptions(
+          sharedLaunchOptions = sharedLaunchOptions,
           options = bootstrapSpecificOptions
         )
 
-        Bootstrap.bootstrap(
+        Bootstrap.run(
           bootstrapOptions,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
         )
@@ -222,25 +290,28 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           sources = true,
           default = Some(true)
         )
-        val common = CommonOptions(
+        val resolveOptions = ResolveOptions(
           repositoryOptions = repositoryOpt
         )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
-          shared = List("foo:org.scalameta:trees_2.12:1.7.0")
+          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = bootstrapFile.getPath,
-          isolated = sharedLoaderOptions,
           force = true,
-          common = common,
           deterministic = true
         )
-        val bootstrapOptions = BootstrapOptions(
+        val sharedLaunchOptions = SharedLaunchOptions(
+          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions,
+          sharedLoaderOptions = sharedLoaderOptions
+        )
+        val bootstrapOptions = BootstrapOptions(
+          sharedLaunchOptions = sharedLaunchOptions,
           options = bootstrapSpecificOptions
         )
-        Bootstrap.bootstrap(
+        Bootstrap.run(
           bootstrapOptions,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
         )
@@ -251,11 +322,10 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
           output = bootstrapFile2.getPath
         )
-        val bootstrapOptions2 = BootstrapOptions(
-          artifactOptions = artifactOptions,
+        val bootstrapOptions2 = bootstrapOptions.copy(
           options = bootstrapSpecificOptions2
         )
-        Bootstrap.bootstrap(
+        Bootstrap.run(
           bootstrapOptions2,
           RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
         )
@@ -280,18 +350,23 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalacenter/releases"))
-      val common = CommonOptions(
+      val resolveOptions = ResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
         force = true,
-        standalone = true,
-        common = common
+        standalone = true
       )
-      val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions
+      )
+      val bootstrapOptions = BootstrapOptions(
+        sharedLaunchOptions = sharedLaunchOptions,
+        options = bootstrapSpecificOptions
+      )
 
-      Bootstrap.bootstrap(
+      Bootstrap.run(
         bootstrapOptions,
         RemainingArgs(Seq("org.scalameta:metals_2.12:0.2.0"), Seq())
       )
@@ -316,18 +391,23 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
       val sharedLoaderOptions = SharedLoaderOptions(
         sharedTarget = List("launcher"),
-        shared = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+        isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        sharedLoaderOptions = sharedLoaderOptions
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
         output = bootstrapFile.getPath,
         force = true,
         standalone = true,
-        property = List("jline.shutdownhook=false"),
-        isolated = sharedLoaderOptions
+        property = List("jline.shutdownhook=false")
       )
-      val bootstrapOptions = BootstrapOptions(options = bootstrapSpecificOptions)
+      val bootstrapOptions = BootstrapOptions(
+        sharedLaunchOptions = sharedLaunchOptions,
+        options = bootstrapSpecificOptions
+      )
 
-      Bootstrap.bootstrap(
+      Bootstrap.run(
         bootstrapOptions,
         RemainingArgs(
           Seq(

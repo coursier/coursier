@@ -3,11 +3,11 @@ package coursier.cli
 import java.io.{File, FileWriter}
 
 import coursier.{moduleNameString, organizationString}
-import coursier.cli.options.CommonOptions
-import coursier.cli.options.shared.DependencyOptions
+import coursier.cli.options.DependencyOptions
+import coursier.cli.params.DependencyParams
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
@@ -28,22 +28,22 @@ class CliUnitTest extends FlatSpec {
   }
 
   "Normal text" should "parse correctly" in withFile(
-    "org1:name1--org2:name2") { (file, writer) =>
-    val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val opt = CommonOptions(dependencyOptions = dependencyOpt)
-    val helper = new Helper(opt, Seq())
-    assert(helper.localExcludeMap.equals(Map("org1:name1" -> Set((org"org2", name"name2")))))
+    "org1:name1--org2:name2") { (file, _) =>
+    val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+    val params = DependencyParams("2.12.8", options)
+      .fold(e => sys.error(e.toString), identity)
+    assert(params.perModuleExclude.equals(Map("org1:name1" -> Set((org"org2", name"name2")))))
   }
 
   "Multiple excludes" should "be combined" in withFile(
     "org1:name1--org2:name2\n" +
       "org1:name1--org3:name3\n" +
-      "org4:name4--org5:name5") { (file, writer) =>
+      "org4:name4--org5:name5") { (file, _) =>
 
-    val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val opt = CommonOptions(dependencyOptions = dependencyOpt)
-    val helper = new Helper(opt, Seq())
-    assert(helper.localExcludeMap.equals(Map(
+    val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+    val params = DependencyParams("2.12.8", options)
+      .fold(e => sys.error(e.toString), identity)
+    assert(params.perModuleExclude.equals(Map(
       "org1:name1" -> Set((org"org2", name"name2"), (org"org3", name"name3")),
       "org4:name4" -> Set((org"org5", name"name5")))))
   }
@@ -51,30 +51,36 @@ class CliUnitTest extends FlatSpec {
   "extra --" should "error" in withFile(
     "org1:name1--org2:name2--xxx\n" +
       "org1:name1--org3:name3\n" +
-      "org4:name4--org5:name5") { (file, writer) =>
-    assertThrows[SoftExcludeParsingException]({
-      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-      val opt = CommonOptions(dependencyOptions = dependencyOpt)
-      new Helper(opt, Seq())
-    })
+      "org4:name4--org5:name5") { (file, _) =>
+    val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+    DependencyParams("2.12.8", options).toEither match {
+      case Left(errors) =>
+        assert(errors.exists(_.startsWith("Failed to parse ")))
+      case Right(p) =>
+        sys.error(s"Should have errored (got $p)")
+    }
   }
 
   "child has no name" should "error" in withFile(
-    "org1:name1--org2:") { (file, writer) =>
-    assertThrows[SoftExcludeParsingException]({
-      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-      val opt = CommonOptions(dependencyOptions = dependencyOpt)
-      new Helper(opt, Seq())
-    })
+    "org1:name1--org2:") { (file, _) =>
+    val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+    DependencyParams("2.12.8", options).toEither match {
+      case Left(errors) =>
+        assert(errors.exists(_.startsWith("Failed to parse ")))
+      case Right(p) =>
+        sys.error(s"Should have errored (got $p)")
+    }
   }
 
   "child has nothing" should "error" in withFile(
-    "org1:name1--:") { (file, writer) =>
-    assertThrows[SoftExcludeParsingException]({
-      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-      val opt = CommonOptions(dependencyOptions = dependencyOpt)
-      new Helper(opt, Seq())
-    })
+    "org1:name1--:") { (file, _) =>
+    val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+    DependencyParams("2.12.8", options).toEither match {
+      case Left(errors) =>
+        assert(errors.exists(_.startsWith("Failed to parse ")))
+      case Right(p) =>
+        sys.error(s"Should have errored (got $p)")
+    }
   }
 
 }

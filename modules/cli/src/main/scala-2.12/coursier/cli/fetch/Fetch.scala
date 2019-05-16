@@ -7,8 +7,6 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
-import coursier.cli.options.FetchOptions
-import coursier.cli.params.FetchParams
 import coursier.cli.resolve.{Output, ResolveException}
 import coursier.core.{Artifact, Resolution}
 import coursier.util.{Sync, Task}

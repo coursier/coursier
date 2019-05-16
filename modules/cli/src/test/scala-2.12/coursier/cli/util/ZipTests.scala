@@ -7,7 +7,7 @@ import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
 import coursier.bootstrap.util.Zip
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ZipTests extends FlatSpec {

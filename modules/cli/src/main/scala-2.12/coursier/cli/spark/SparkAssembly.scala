@@ -9,8 +9,7 @@ import java.util.jar.JarFile
 
 import coursier.bootstrap.Assembly
 import coursier.cache.{CacheChecksum, CacheLocks, FileCache}
-import coursier.cli.Helper
-import coursier.cli.options.CommonOptions
+import coursier.cli.deprecated.{CommonOptions, Helper}
 import coursier.core.Type
 
 object SparkAssembly {

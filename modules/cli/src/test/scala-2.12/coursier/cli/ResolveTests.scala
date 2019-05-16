@@ -5,14 +5,12 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cache.CacheDefaults
-import coursier.cli.options.ResolveOptions
-import coursier.cli.options.shared.{DependencyOptions, OutputOptions}
-import coursier.cli.params.ResolveParams
-import coursier.cli.resolve.Resolve
+import coursier.cli.options.{DependencyOptions, OutputOptions}
+import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams}
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 
@@ -104,7 +102,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
   it should "print results anyway" in {
     val options = ResolveOptions(
       outputOptions = OutputOptions(
-        force = true
+        forcePrint = true
       )
     )
     val args = RemainingArgs(
