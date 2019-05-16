@@ -1,4 +1,4 @@
-package coursier.cli.options
+package coursier.cli
 
 import caseapp.core.help.Help
 import caseapp.{Hidden, Parser}
