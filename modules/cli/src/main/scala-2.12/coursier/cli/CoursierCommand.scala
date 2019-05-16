@@ -7,6 +7,7 @@ import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.Resolve
+import coursier.cli.spark.SparkSubmit
 
 object CoursierCommand {
 

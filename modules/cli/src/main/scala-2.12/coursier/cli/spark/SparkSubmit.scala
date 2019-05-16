@@ -1,13 +1,12 @@
-package coursier.cli
+package coursier.cli.spark
 
 import java.io.File
 import java.net.URLClassLoader
 
 import caseapp._
+import coursier.cli.deprecated.Helper
 import coursier.cli.launch.Launch
 import coursier.{Dependency, moduleNameString, organizationString}
-import coursier.cli.options.SparkSubmitOptions
-import coursier.cli.spark.{SparkAssembly, Submit}
 
 
 /**

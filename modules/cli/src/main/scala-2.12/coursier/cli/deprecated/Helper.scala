@@ -1,19 +1,20 @@
-package coursier
-package cli
+package coursier.cli.deprecated
 
 import java.io.{File, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
+import coursier.{Dependency, LocalRepositories, Repositories, Resolution}
 import coursier.cache._
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.launch.Launch
 import coursier.cli.options.shared.SharedLoaderOptions
-import coursier.cli.options.CommonOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
-import coursier.core.Publication
+import coursier.core
+import coursier.core.{Artifact, Classifier, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepository
 import coursier.parse.{CachePolicyParser, DependencyParser, ModuleParser, RepositoryParser}
 import coursier.util._
 
@@ -38,7 +39,7 @@ class Helper(
   warnBaseLoaderNotFound: Boolean = true
 ) {
   import Helper.errPrintln
-  import Util._
+  import coursier.cli.Util._
   import common._
 
   val ttl0 =

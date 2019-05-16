@@ -1,6 +1,7 @@
-package coursier.cli.options
+package coursier.cli.spark
 
-import caseapp.{ HelpMessage => Help, ValueDescription => Value, ExtraName => Short, _ }
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.deprecated.CommonOptions
 import coursier.cli.options.shared.ArtifactOptions
 
 final case class SparkSubmitOptions(

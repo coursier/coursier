@@ -1,4 +1,4 @@
-package coursier.cli
+package coursier.cli.deprecated
 
 final class SoftExcludeParsingException(
   private val message: String = "",

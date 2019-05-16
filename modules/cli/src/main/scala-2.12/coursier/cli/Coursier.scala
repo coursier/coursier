@@ -12,6 +12,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.options.LauncherOptions
 import coursier.cli.resolve.Resolve
+import coursier.cli.spark.SparkSubmit
 import shapeless._
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {

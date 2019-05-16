@@ -1,4 +1,4 @@
-package coursier.cli
+package coursier.cli.spark
 
 import java.io.{BufferedReader, File, InputStream, InputStreamReader, PipedInputStream, PipedOutputStream, PrintStream}
 import java.nio.charset.StandardCharsets.UTF_8
