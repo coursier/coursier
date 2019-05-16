@@ -8,7 +8,7 @@ import java.util.zip.ZipInputStream
 import caseapp.core.RemainingArgs
 import coursier.bootstrap.Bootstrap.resourceDir
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
-import coursier.cli.options.shared.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
+import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.ResolveOptions
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec

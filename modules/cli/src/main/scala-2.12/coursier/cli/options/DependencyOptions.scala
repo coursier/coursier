@@ -1,4 +1,4 @@
-package coursier.cli.options.shared
+package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.core.Configuration

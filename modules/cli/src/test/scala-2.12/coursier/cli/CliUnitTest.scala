@@ -3,8 +3,8 @@ package coursier.cli
 import java.io.{File, FileWriter}
 
 import coursier.{moduleNameString, organizationString}
-import coursier.cli.options.shared.DependencyOptions
-import coursier.cli.params.shared.DependencyParams
+import coursier.cli.options.DependencyOptions
+import coursier.cli.params.DependencyParams
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatestplus.junit.JUnitRunner

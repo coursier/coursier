@@ -1,8 +1,8 @@
-package coursier.cli.params.shared
+package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import coursier.Repositories
-import coursier.cli.options.shared.RepositoryOptions
+import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository

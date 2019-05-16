@@ -1,7 +1,7 @@
 package coursier.cli.launch
 
 import caseapp._
-import coursier.cli.options.shared.SharedLaunchOptions
+import coursier.cli.options.SharedLaunchOptions
 
 final case class LaunchOptions(
 

@@ -2,7 +2,7 @@ package coursier.cli.spark
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.deprecated.CommonOptions
-import coursier.cli.options.shared.ArtifactOptions
+import coursier.cli.options.ArtifactOptions
 
 final case class SparkSubmitOptions(
   @Short("M")

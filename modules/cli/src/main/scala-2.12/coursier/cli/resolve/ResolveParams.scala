@@ -2,7 +2,7 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.shared.{DependencyParams, OutputParams, RepositoryParams}
+import coursier.cli.params.{DependencyParams, OutputParams, RepositoryParams}
 import coursier.core.Repository
 import coursier.params.{CacheParams, ResolutionParams}
 import coursier.parse.ModuleParser

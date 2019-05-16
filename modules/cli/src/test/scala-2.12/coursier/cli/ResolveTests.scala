@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cache.CacheDefaults
-import coursier.cli.options.shared.{DependencyOptions, OutputOptions}
+import coursier.cli.options.{DependencyOptions, OutputOptions}
 import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams}
 import coursier.util.Sync
 import org.junit.runner.RunWith

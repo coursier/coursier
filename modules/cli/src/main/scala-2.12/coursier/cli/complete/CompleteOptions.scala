@@ -1,7 +1,7 @@
 package coursier.cli.complete
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
-import coursier.cli.options.shared.{CacheOptions, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 final case class CompleteOptions(
 

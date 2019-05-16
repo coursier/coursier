@@ -1,8 +1,8 @@
-package coursier.cli.params.shared
+package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.options.shared.DependencyOptions
+import coursier.cli.options.DependencyOptions
 import coursier.cli.util.DeprecatedModuleRequirements
 import coursier.core._
 import coursier.parse.{DependencyParser, ModuleParser}

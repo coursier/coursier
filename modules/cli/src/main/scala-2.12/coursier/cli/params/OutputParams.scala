@@ -1,10 +1,10 @@
-package coursier.cli.params.shared
+package coursier.cli.params
 
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
 import coursier.cache.CacheLogger
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.options.shared.OutputOptions
+import coursier.cli.options.OutputOptions
 
 final case class OutputParams(
   verbosity: Int,

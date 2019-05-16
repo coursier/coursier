@@ -2,7 +2,7 @@ package coursier.cli.resolve
 
 import java.io.PrintStream
 
-import coursier.cli.params.shared.OutputParams
+import coursier.cli.params.OutputParams
 import coursier.core.{Dependency, Resolution}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams

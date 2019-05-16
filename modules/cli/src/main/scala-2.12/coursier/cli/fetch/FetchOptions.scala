@@ -1,7 +1,7 @@
 package coursier.cli.fetch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
-import coursier.cli.options.shared.ArtifactOptions
+import coursier.cli.options.ArtifactOptions
 import coursier.cli.resolve.ResolveOptions
 
 final case class FetchOptions(

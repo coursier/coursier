@@ -7,7 +7,7 @@ import coursier.{Dependency, LocalRepositories, Repositories, Resolution}
 import coursier.cache._
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.launch.Launch
-import coursier.cli.options.shared.SharedLoaderOptions
+import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core

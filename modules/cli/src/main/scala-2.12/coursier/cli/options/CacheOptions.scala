@@ -1,4 +1,4 @@
-package coursier.cli.options.shared
+package coursier.cli.options
 
 import java.io.File
 

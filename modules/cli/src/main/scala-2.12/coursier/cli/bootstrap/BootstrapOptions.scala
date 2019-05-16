@@ -1,7 +1,7 @@
 package coursier.cli.bootstrap
 
 import caseapp.{Parser, Recurse}
-import coursier.cli.options.shared.SharedLaunchOptions
+import coursier.cli.options.SharedLaunchOptions
 
 final case class BootstrapOptions(
   @Recurse

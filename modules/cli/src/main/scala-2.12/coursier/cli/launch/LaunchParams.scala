@@ -1,7 +1,7 @@
 package coursier.cli.launch
 
 import cats.data.ValidatedNel
-import coursier.cli.params.shared.SharedLaunchParams
+import coursier.cli.params.SharedLaunchParams
 
 final case class LaunchParams(
   shared: SharedLaunchParams

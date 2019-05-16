@@ -1,7 +1,7 @@
-package coursier.cli.params.shared
+package coursier.cli.params
 
 import cats.data.{Validated, ValidatedNel}
-import coursier.cli.options.shared.ArtifactOptions
+import coursier.cli.options.ArtifactOptions
 import coursier.core.{Classifier, Type}
 
 final case class ArtifactParams(

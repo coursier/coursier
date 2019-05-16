@@ -1,4 +1,4 @@
-package coursier.cli.options.shared
+package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.resolve.ResolveOptions
