@@ -3,15 +3,14 @@ package coursier.cli.deprecated
 import java.io.{File, PrintWriter}
 import java.net.{URL, URLClassLoader, URLDecoder}
 
-import coursier.{Dependency, LocalRepositories, Repositories, Resolution}
+import coursier.{Attributes, Dependency, LocalRepositories, Repositories, Resolution, core}
 import coursier.cache._
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.launch.Launch
 import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
-import coursier.core
-import coursier.core.{Artifact, Classifier, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
+import coursier.core.{Artifact, Classifier, Configuration, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
@@ -890,9 +889,70 @@ class Helper(
       (Launch.baseLoader, files0)
     else {
 
-      val isolatedDeps = isolated.isolatedDepsOrExit(common.resolutionOptions.scalaVersionOrDefault)
+      val targets = {
+        val l = isolated.sharedTarget.flatMap(_.split(',')).filter(_.nonEmpty)
+        val (invalid, valid) = l.partition(_.contains(":"))
+        if (invalid.nonEmpty) {
+          Console.err.println(s"Invalid target IDs:")
+          for (t <- invalid)
+            Console.err.println(s"  $t")
+          sys.exit(255)
+        }
+        if (valid.isEmpty && isolated.shared.nonEmpty)
+          Array("default")
+        else
+          valid.toArray
+      }
 
-      val (isolatedLoader, filteredFiles0) = isolated.targetsOrExit.foldLeft((Launch.baseLoader, files0)) {
+      val isolatedDeps = {
+
+        val defaultScalaVersion = common.resolutionOptions.scalaVersionOrDefault
+
+
+        val (validIsolated, unrecognizedIsolated) = isolated
+          .shared
+          .partition(s => targets.exists(t => s.startsWith(t + ":")))
+
+        if (unrecognizedIsolated.nonEmpty) {
+          System.err.println(s"Error parsing shared dependencies:")
+          for (dep <- unrecognizedIsolated)
+            System.err.println(s"  $dep")
+          sys.exit(1)
+        }
+
+        val rawIsolatedOrExit = validIsolated
+          .map { s =>
+            val Array(target, dep) = s.split(":", 2)
+            target -> dep
+          }
+
+        rawIsolatedOrExit
+          .groupBy(_._1)
+          .map {
+            case (t, l) =>
+              DependencyParser.moduleVersions(l.map(_._2), defaultScalaVersion).either match {
+                case Left(errors0) =>
+                  errors0.foreach(System.err.println)
+                  sys.exit(255)
+                case Right(elems) =>
+                  t -> elems
+              }
+          }
+          .map {
+            case (t, l) =>
+              t -> l.map {
+                case (mod, ver) =>
+                  Dependency(
+                    mod,
+                    ver,
+                    configuration = Configuration.runtime,
+                    attributes = Attributes()
+                  )
+              }
+          }
+      }
+
+      val (isolatedLoader, filteredFiles0) = targets.foldLeft((Launch.baseLoader, files0)) {
         case ((parent, files0), target) =>
 
           // FIXME These were already fetched above

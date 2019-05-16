@@ -3,7 +3,6 @@ package coursier.cli.params
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.SharedLoaderOptions
-import coursier.cli.resolve.Dependencies
 import coursier.core.{Configuration, Dependency}
 import coursier.parse.DependencyParser
 

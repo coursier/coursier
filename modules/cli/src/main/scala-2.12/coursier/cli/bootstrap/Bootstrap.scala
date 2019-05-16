@@ -185,7 +185,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         val artifacts = files.toMap
 
-        val (done, isolatedArtifactFiles) =
+        val (done, sharedFiles) =
           params.sharedLaunch.sharedLoader.loaderNames.foldLeft((Set.empty[String], Map.empty[String, (Seq[String], Seq[File])])) {
             case ((done, acc), name) =>
 
@@ -213,8 +213,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
               (done0, updatedAcc)
           }
 
-        val parents = params.sharedLaunch.sharedLoader.loaderNames.toSeq.map { t =>
-          val e = isolatedArtifactFiles.get(t)
+        val parents = params.sharedLaunch.sharedLoader.loaderNames.map { t =>
+          val e = sharedFiles.get(t)
           val urls = e.map(_._1).getOrElse(Nil).map { url =>
             ClasspathEntry.Url(url)
           }
@@ -232,7 +232,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         }
 
         val main = {
-          val doneFiles = isolatedArtifactFiles.toSeq.flatMap(_._2._2).toSet
+          val doneFiles = sharedFiles.toSeq.flatMap(_._2._2).toSet
           val urls0 = urls.filterNot(done).map { url =>
             ClasspathEntry.Url(url)
           }
