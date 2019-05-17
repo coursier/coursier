@@ -22,38 +22,25 @@ class Footer extends React.Component {
     return (
       <footer className="nav-footer" id="footer">
         <section className="sitemap">
-          <a href={this.props.config.baseUrl} className="nav-home">
-            {this.props.config.footerIcon && (
-              <img
-                src={this.props.config.baseUrl + this.props.config.footerIcon}
-                alt={this.props.config.title}
-                width="66"
-                height="58"
-              />
-            )}
-          </a>
+          <h2>
+            <a href={this.props.config.baseUrl} className="nav-home">
+              Coursier
+            </a>
+          </h2>
           <div>
             <h5>Docs</h5>
-            <a href={this.docUrl('overview')}>
-	      Overview
-            </a>
+            <a href={this.docUrl('overview')}>Overview</a>
+            <a href={this.docUrl('cli-overview')}>Install CLI</a>
+            <a href={this.docUrl('sbt-coursier')}>Setup SBT</a>
+            <a href={this.docUrl('api')}>Use the API</a>
           </div>
           <div>
             <h5>Community</h5>
-            <a href="https://gitter.im/coursier/coursier">Gitter room</a>
-          </div>
-          <div>
-            <h5>More</h5>
-            <a href="https://github.com/coursier/coursier">GitHub</a>
-            <a
-              className="github-button"
-              href={this.props.config.repoUrl}
-              data-icon="octicon-star"
-              data-count-href="/coursier/coursier/stargazers"
-              data-show-count="true"
-              data-count-aria-label="# stargazers on GitHub"
-              aria-label="Star this project on GitHub">
-              Star
+            <a href="https://github.com/coursier/coursier" target="_blank">
+              <img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&label=stars&logo=github&style=social" />
+            </a>
+            <a href="https://gitter.im/coursier/coursier" target="_blank">
+              <img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&style=social" />
             </a>
           </div>
         </section>
