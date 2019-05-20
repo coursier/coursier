@@ -58,7 +58,14 @@ package object compatibility {
           .map(l => List.tabulate(l.length)(l.item).map(fromNode))
           .getOrElse(Nil)
 
-      def attributes = ???
+      def attributes = {
+        val attr = node.attributes
+        (0 until attr.length)
+          .map(idx => attr(idx))
+          .map { a =>
+            (Option(a.prefix).getOrElse(""), a.name, a.value)
+          }
+      }
 
       def isText =
         option[Int](node0.nodeType)

@@ -40,9 +40,15 @@ final case class MockCache[F[_]](
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
 
-    if (artifact.url.startsWith("file:/"))
-      EitherT.point(new File(new URI(artifact.url)))
-    else {
+    if (artifact.url.startsWith("file:")) {
+      val url =
+        if (artifact.url.endsWith("/"))
+          artifact.url + ".directory"
+        else
+          artifact.url
+      val f = new File(new URI(url))
+      EitherT.point(f)
+    } else {
 
       assert(artifact.authentication.isEmpty)
 

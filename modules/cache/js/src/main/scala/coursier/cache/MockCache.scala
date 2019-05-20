@@ -15,7 +15,18 @@ final case class MockCache(base: String) extends Cache[Task] {
     EitherT {
       assert(artifact.authentication.isEmpty)
 
-      val path = base + "/" + MockCacheEscape.urlAsPath(artifact.url)
+      val path =
+        if (artifact.url.startsWith("file:")) {
+          val path = artifact
+            .url
+            .stripPrefix("file:")
+            .dropWhile(_ == '/')
+          if (path.endsWith("/"))
+            path + ".directory"
+          else
+            path
+        } else
+          base + "/" + MockCacheEscape.urlAsPath(artifact.url)
 
       Task { implicit ec =>
         Platform.textResource(path)

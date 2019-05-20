@@ -194,34 +194,48 @@ final case class IvyRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] =
+  ): EitherT[F, String, (Artifact.Source, Project)] = {
+
+    def fromVersions(filter: Version => Boolean, versions: Seq[Version]) = {
+      val versionsInItv = versions.filter(filter)
+
+      if (versionsInItv.isEmpty)
+        EitherT(
+          F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
+        )
+      else {
+        val version0 = versionsInItv.max
+        findNoInverval(module, version0.repr, fetch)
+      }
+    }
+
     Parse.versionInterval(version)
       .orElse(Parse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
       case None =>
-        findNoInverval(module, version, fetch)
-      case Some(itv) =>
-        def fromVersions(versions: Seq[Version]) = {
-          val versionsInItv = versions.filter(itv.contains)
-
-          if (versionsInItv.isEmpty)
-            EitherT(
-              F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
-            )
-          else {
-            val version0 = versionsInItv.max
-            findNoInverval(module, version0.repr, fetch)
+        if (version == "latest.integration" || version == "latest.release") {
+          val acceptChanging = version == "latest.integration"
+          val filter: Version => Boolean =
+            if (acceptChanging) _ => true
+            else v => !IvyRepository.isSnapshot(v.repr)
+          versions(module, fetch).flatMap {
+            case None =>
+              findNoInverval(module, version, fetch)
+            case Some(v) =>
+              fromVersions(filter, v)
           }
-        }
-
+        } else
+          findNoInverval(module, version, fetch)
+      case Some(itv) =>
         versions(module, fetch).flatMap {
           case None =>
             findNoInverval(module, version, fetch)
           case Some(v) =>
-            fromVersions(v)
+            fromVersions(itv.contains, v)
         }
     }
+  }
 
   def findNoInverval[F[_]](
     module: Module,

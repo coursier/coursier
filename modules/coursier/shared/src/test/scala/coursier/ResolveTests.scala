@@ -1,6 +1,7 @@
 package coursier
 
 import coursier.error.ResolutionError
+import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import utest._
 
@@ -8,7 +9,7 @@ import scala.async.Async.{async, await}
 
 object ResolveTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, validateDependencies, versionOf}
+  import TestHelpers.{ec, cache, dependenciesWithRetainedVersion, handmadeMetadataBase, validateDependencies, versionOf}
 
   private val resolve = Resolve()
     .noMirrors
@@ -125,33 +126,79 @@ object ResolveTests extends TestSuite {
     }
 
     'latest - {
+      'maven - {
 
-      val resolve0 = resolve
-        .withRepositories(Seq(
-          Repositories.sonatype("snapshots"),
-          Repositories.central
-        ))
+        val resolve0 = resolve
+          .withRepositories(Seq(
+            Repositories.sonatype("snapshots"),
+            Repositories.central
+          ))
 
-      'integration - async {
+        'integration - async {
 
-        val res = await {
-          resolve0
-            .addDependencies(dep"com.chuusai:shapeless_2.12:latest.integration")
-            .future()
+          val res = await {
+            resolve0
+              .addDependencies(dep"com.chuusai:shapeless_2.12:latest.integration")
+              .future()
+          }
+
+          await(validateDependencies(res))
         }
 
-        await(validateDependencies(res))
+        'release - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"com.chuusai:shapeless_2.12:latest.release")
+              .future()
+          }
+
+          await(validateDependencies(res))
+        }
       }
 
-      'release - async {
+      'ivy - {
 
-        val res = await {
-          resolve0
-            .addDependencies(dep"com.chuusai:shapeless_2.12:latest.release")
-            .future()
+        val resolve0 = resolve
+          .withRepositories(Seq(
+            Repositories.central,
+            IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
+              .fold(sys.error, identity)
+          ))
+
+        'integration - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"test:a_2.12:latest.integration")
+              .future()
+          }
+
+          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val expected = Set(
+            mod"org.scala-lang:scala-library" -> "2.12.8",
+            mod"test:a_2.12" -> "1.0.2-SNAPSHOT"
+          )
+
+          assert(found == expected)
         }
 
-        await(validateDependencies(res))
+        'release - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"test:a_2.12:latest.release")
+              .future()
+          }
+
+          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val expected = Set(
+            mod"org.scala-lang:scala-library" -> "2.12.8",
+            mod"test:a_2.12" -> "1.0.1"
+          )
+
+          assert(found == expected)
+        }
       }
     }
 
