@@ -91,6 +91,16 @@ simple() {
   fi
 }
 
+javaClassPathProp() {
+  "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
+  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  GOT="$(./cs-props-0 java.class.path)"
+  if [ "$GOT" != "$EXPECTED" ]; then
+    echo "Error: unexpected java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
 standalone() {
   "$COURSIER" bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
   local OUT="$(./cs-echo-standalone foo)"
@@ -192,6 +202,7 @@ launcherAssemblyPreambleInSource() {
 
 nailgun
 simple
+javaClassPathProp
 standalone
 scalafmtStandalone
 

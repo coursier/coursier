@@ -205,7 +205,8 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
     coursier.cli.launch.Launch.launch(
       submitLoader,
       Submit.mainClassName,
-      sparkSubmitOptions
+      sparkSubmitOptions,
+      Nil
     ) match {
       case Left(e) =>
         throw e
