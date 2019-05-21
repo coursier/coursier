@@ -394,8 +394,8 @@ class Helper(
       }
     }
 
-  val extraProperties = parseProperties(common.resolutionOptions.property, "extra")
-  val forcedProperties = parseProperties(common.resolutionOptions.forceProperty, "forced")
+  val extraProperties = parseProperties(common.resolutionOptions.pomProperty, "extra")
+  val forcedProperties = parseProperties(common.resolutionOptions.forcePomProperty, "forced")
 
   val startRes = Resolution(
     allDependencies,

@@ -34,7 +34,8 @@ object Launch extends CaseApp[LaunchOptions] {
   def launch(
     loader: ClassLoader,
     mainClass: String,
-    args: Seq[String]
+    args: Seq[String],
+    properties: Seq[(String, String)]
   ): Either[LaunchException, () => Unit] =
     for {
       cls <- {
@@ -56,11 +57,24 @@ object Launch extends CaseApp[LaunchOptions] {
       }.right
     } yield {
       () =>
-        Thread.currentThread().setContextClassLoader(loader)
-        try method.invoke(null, args.toArray)
+        val currentThread = Thread.currentThread()
+        val previousLoader = currentThread.getContextClassLoader
+        val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
+        try {
+          currentThread.setContextClassLoader(loader)
+          for ((k, v) <- properties) sys.props(k) = v
+          method.invoke(null, args.toArray)
+        }
         catch {
           case e: java.lang.reflect.InvocationTargetException =>
             throw Option(e.getCause).getOrElse(e)
+        }
+        finally {
+          currentThread.setContextClassLoader(previousLoader)
+          previousProperties.foreach {
+            case (k, None) => System.clearProperty(k)
+            case (k, Some(v)) => System.setProperty(k, v)
+          }
         }
     }
 
@@ -206,7 +220,13 @@ object Launch extends CaseApp[LaunchOptions] {
             }
         }
       }
-      f <- Task.fromEither(launch(loader0, mainClass, userArgs))
+      props = {
+        if (params.shared.sharedLoader.loaderNames.isEmpty)
+          Seq("java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
+        else
+          Nil
+      }
+      f <- Task.fromEither(launch(loader0, mainClass, userArgs, props))
     } yield (mainClass, f)
 
   def run(options: LaunchOptions, args: RemainingArgs): Unit =

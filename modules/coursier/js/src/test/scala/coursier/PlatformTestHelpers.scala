@@ -11,10 +11,10 @@ abstract class PlatformTestHelpers {
   val cache: Cache[Task] =
     MockCache("modules/tests/metadata")
 
-  val handmadeMetadataCache: Cache[Task] =
-    MockCache("modules/tests/handmade-metadata/data")
+  val handmadeMetadataBase = "file:modules/tests/handmade-metadata/data/"
 
-  val handmadeMetadataBase = "???" // no JS test should rely on that anyway
+  val handmadeMetadataCache: Cache[Task] =
+    MockCache(handmadeMetadataBase.stripPrefix("file:"))
 
   val writeMockData = false
 

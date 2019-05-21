@@ -23,11 +23,11 @@ final case class ResolutionOptions(
 
   @Help("Set property in POM files, if it's not already set")
   @Value("name=value")
-    property: List[String] = Nil,
+    pomProperty: List[String] = Nil,
 
   @Help("Force property in POM files")
   @Value("name=value")
-    forceProperty: List[String] = Nil,
+    forcePomProperty: List[String] = Nil,
 
   @Help("Enable profile")
   @Value("profile")
@@ -90,9 +90,9 @@ final case class ResolutionOptions(
           }
         }
 
-    val extraPropertiesV = propertiesV(property, "property")
+    val extraPropertiesV = propertiesV(pomProperty, "property")
 
-    val forcedPropertiesV = propertiesV(forceProperty, "forced property")
+    val forcedPropertiesV = propertiesV(forcePomProperty, "forced property")
       // TODO Warn if some properties are forced multiple times?
       .map(_.toMap)
 

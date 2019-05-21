@@ -1,7 +1,10 @@
 package coursier.bootstrap.launcher;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 public class Bootstrap {
 
@@ -24,6 +27,9 @@ public class Bootstrap {
 
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 
+        boolean isSimpleLoader = classLoader.getParent().equals(contextLoader) && (classLoader instanceof URLClassLoader);
+        String previousJavaClassPath = null;
+
         Class<?> mainClass = null;
         Method mainMethod = null;
 
@@ -42,6 +48,20 @@ public class Bootstrap {
         }
 
         thread.setContextClassLoader(classLoader);
+        if (isSimpleLoader) {
+            URL[] urls = ((URLClassLoader) classLoader).getURLs();
+            StringBuilder b = new StringBuilder();
+            for (URL url : urls) {
+                if (b.length() != 0)
+                    b.append(File.pathSeparatorChar);
+                if (url.getProtocol().equals("file")) {
+                    b.append(url.getPath());
+                } else {
+                    b.append(url.toExternalForm());
+                }
+            }
+            previousJavaClassPath = System.setProperty("java.class.path", b.toString());
+        }
         try {
             Object[] mainArgs = { args };
             mainMethod.invoke(null, mainArgs);
@@ -54,6 +74,13 @@ public class Bootstrap {
         }
         finally {
             thread.setContextClassLoader(contextLoader);
+            if (isSimpleLoader) {
+                if (previousJavaClassPath == null) {
+                    System.clearProperty("java.class.path");
+                } else {
+                    System.setProperty("java.class.path", previousJavaClassPath);
+                }
+            }
         }
     }
 

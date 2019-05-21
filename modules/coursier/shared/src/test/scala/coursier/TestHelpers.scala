@@ -83,19 +83,23 @@ object TestHelpers extends PlatformTestHelpers {
     assert(result0 == expected)
   }
 
+  def dependenciesWithRetainedVersion(res: Resolution): Seq[Dependency] =
+    res
+      .minDependencies
+      .toVector
+      .map { dep =>
+        val version = res.projectCache
+          .get(dep.moduleVersion)
+          .map(_._2.actualVersion)
+          .getOrElse(dep.version)
+        dep.copy(version = version)
+      }
+
   def validateDependencies(res: Resolution, params: ResolutionParams = ResolutionParams()): Future[Unit] =
     validate("resolutions", res, params) {
-      res
-        .minDependencies
-        .toVector
+      dependenciesWithRetainedVersion(res)
         .map { dep =>
-          val projOpt = res.projectCache
-            .get(dep.moduleVersion)
-            .map { case (_, proj) => proj }
-          val dep0 = dep.copy(
-            version = projOpt.fold(dep.version)(_.actualVersion)
-          )
-          (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration.value)
+          (dep.module.organization.value, dep.module.nameWithAttributes, dep.version, dep.configuration.value)
         }
         .sorted
         .distinct
