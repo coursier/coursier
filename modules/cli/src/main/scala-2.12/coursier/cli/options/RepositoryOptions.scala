@@ -16,7 +16,14 @@ final case class RepositoryOptions(
     sbtPluginHack: Boolean = true,
 
   @Help("Drop module attributes starting with 'info.' - these are sometimes used by projects built with SBT")
-    dropInfoAttr: Boolean = false
+    dropInfoAttr: Boolean = false,
+
+  @Help("Channel for apps")
+  @Value("org:name")
+    channel: List[String] = Nil,
+
+  @Help("Do not add default channels")
+    defaultChannels: Boolean = true
 
 )
 

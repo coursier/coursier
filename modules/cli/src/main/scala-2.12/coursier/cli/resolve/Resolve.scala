@@ -1,15 +1,19 @@
 package coursier.cli.resolve
 
 import java.io.PrintStream
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
 import cats.implicits._
 import coursier.Resolution
+import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.app.RawAppDescriptor
+import coursier.cli.install.Install
 import coursier.cli.scaladex.Scaladex
-import coursier.core.{Dependency, Module, ResolutionProcess}
+import coursier.core.{Dependency, Module, Repository, ResolutionProcess}
 import coursier.error.ResolutionError
 import coursier.util._
 
@@ -117,7 +121,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       )
       // Prepend FallbackDependenciesRepository to the repository list
       // so that dependencies with URIs are resolved against this repo
-      repositories = extraRepoOpt.toSeq ++ params.repositories
+      repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
       _ <- {
         val invalidForced = extraRepoOpt
           .map(_.fallbacks.toSeq)
@@ -150,42 +154,42 @@ object Resolve extends CaseApp[ResolveOptions] {
       _ = Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
 
       resAndWarnings <- coursier.Resolve()
-          .withDependencies(deps0)
-          .withRepositories(repositories)
-          .withResolutionParams(params.resolution)
-          .withCache(
-            params.cache.cache(
-              pool,
-              params.output.logger(),
-              inMemoryCache = params.benchmark != 0 && params.benchmarkCache
-            )
+        .withDependencies(deps0)
+        .withRepositories(repositories)
+        .withResolutionParams(params.resolution)
+        .withCache(
+          params.cache.cache(
+            pool,
+            params.output.logger(),
+            inMemoryCache = params.benchmark != 0 && params.benchmarkCache
           )
-          .transformResolution { t =>
-            if (params.benchmark == 0) t
-            else benchmark(math.abs(params.benchmark))(t)
-          }
-          .transformFetcher { f =>
-            if (params.output.verbosity >= 2) {
-              modVers: Seq[(Module, String)] =>
-                val print = Task.delay {
-                  Output.errPrintln(s"Getting ${modVers.length} project definition(s)")
-                }
+        )
+        .transformResolution { t =>
+          if (params.benchmark == 0) t
+          else benchmark(math.abs(params.benchmark))(t)
+        }
+        .transformFetcher { f =>
+          if (params.output.verbosity >= 2) {
+            modVers: Seq[(Module, String)] =>
+              val print = Task.delay {
+                Output.errPrintln(s"Getting ${modVers.length} project definition(s)")
+              }
 
-                print.flatMap(_ => f(modVers))
-            } else
-              f
-          }
-          .ioWithConflicts
-          .attempt
-          .flatMap {
-            case Left(ex: ResolutionError) =>
-              if (force || params.output.forcePrint)
-                Task.point((ex.resolution, Nil, ex.errors))
-              else
-                Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
-            case e =>
-              Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
-          }
+              print.flatMap(_ => f(modVers))
+          } else
+            f
+        }
+        .ioWithConflicts
+        .attempt
+        .flatMap {
+          case Left(ex: ResolutionError) =>
+            if (force || params.output.forcePrint)
+              Task.point((ex.resolution, Nil, ex.errors))
+            else
+              Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
+          case e =>
+            Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
+        }
 
       (res, _, errors) = resAndWarnings // TODO Print warnings
       valid = errors.isEmpty
@@ -211,9 +215,76 @@ object Resolve extends CaseApp[ResolveOptions] {
     } yield res
   }
 
+  // Add options and dependencies from the app to the passed options / dependencies
+  def handleApps[T](
+    options: T,
+    args: Seq[String],
+    channels: Seq[Module],
+    repositories: Seq[Repository],
+    cache: Cache[Task]
+  )(
+    withApp: (T, RawAppDescriptor) => T
+  ): (T, Seq[String]) = {
 
-  def run(options: ResolveOptions, args: RemainingArgs): Unit =
-    ResolveParams(options) match {
+    val (appIds, deps) = args.partition(s => s.count(_ == ':') <= 1)
+
+    if (appIds.lengthCompare(1) > 0) {
+      System.err.println(s"Error: only at most one app can be passed as dependency")
+      sys.exit(1)
+    }
+
+    val descOpt = appIds.headOption.map { id =>
+
+      val (actualId, overrideVersionOpt) = {
+        val idx = id.indexOf(':')
+        if (idx < 0)
+          (id, None)
+        else
+          (id.take(idx), Some(id.drop(idx + 1)))
+      }
+
+      val e = for {
+        b <- Install.appDescriptor(
+          channels,
+          repositories,
+          cache,
+          actualId
+        ).right.map(_._2)
+        desc <- RawAppDescriptor.parse(new String(b, StandardCharsets.UTF_8))
+      } yield overrideVersionOpt.fold(desc)(desc.overrideVersion)
+
+      e match {
+        case Left(err) =>
+          System.err.println(err)
+          sys.exit(1)
+        case Right(res) =>
+          res.copy(
+            name = res.name
+              .orElse(Some(actualId)) // kind of meh - so that the id can be picked as default output name by bootstrap
+          )
+      }
+    }
+
+    descOpt.fold((options, args)) { desc =>
+      // add desc.dependencies in deps at the former app id position? (to retain the order)
+      (withApp(options, desc), desc.dependencies ++ deps)
+    }
+  }
+
+  def run(options: ResolveOptions, args: RemainingArgs): Unit = {
+
+    // get options and dependencies from apps if any
+    val (options0, deps) = ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+      val initialRepositories = initialParams.repositories.repositories
+      val channels = initialParams.repositories.channels
+      val pool = Sync.fixedThreadPool(initialParams.cache.parallel)
+      val cache = initialParams.cache.cache(pool, initialParams.output.logger())
+      val res = handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      pool.shutdown()
+      res
+    }
+
+    ResolveParams(options0) match {
       case Validated.Invalid(errors) =>
         for (err <- errors.toList)
           Output.errPrintln(err)
@@ -223,7 +294,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         val pool = Sync.fixedThreadPool(params.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
-        val t = task(params, pool, System.out, System.err, args.all)
+        val t = task(params, pool, System.out, System.err, deps)
 
         t.attempt.unsafeRun()(ec) match {
           case Left(e: ResolveException) if params.output.verbosity <= 1 =>
@@ -233,5 +304,6 @@ object Resolve extends CaseApp[ResolveOptions] {
           case Right(_) =>
         }
     }
+  }
 
 }

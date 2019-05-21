@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.app.RawAppDescriptor
 import coursier.core.{Classifier, Resolution, Type}
 
 final case class ArtifactOptions(
@@ -58,6 +59,24 @@ final case class ArtifactOptions(
     else
       types0
   }
+
+  def addApp(app: RawAppDescriptor): ArtifactOptions =
+    copy(
+      classifier = {
+        val previous = classifier
+        previous ++ app.classifiers.filterNot(previous.toSet + "_")
+      },
+      default = default.orElse {
+        if (app.classifiers.contains("_"))
+          Some(true)
+        else
+          None
+      },
+      artifactType = {
+        val previous = artifactType
+        previous ++ app.artifactTypes.filterNot(previous.toSet)
+      }
+    )
 }
 
 object ArtifactOptions {

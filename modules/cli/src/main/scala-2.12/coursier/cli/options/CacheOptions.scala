@@ -57,7 +57,10 @@ final case class CacheOptions(
 
 ) {
 
-  def params: ValidatedNel[String, CacheParams] = {
+  def params: ValidatedNel[String, CacheParams] =
+    params(CacheDefaults.ttl)
+
+  def params(defaultTtl: Option[Duration]): ValidatedNel[String, CacheParams] = {
 
     val cache0 = new File(cache)
 
@@ -76,7 +79,7 @@ final case class CacheOptions(
 
     val ttlV =
       if (ttl.isEmpty)
-        Validated.validNel(CacheDefaults.ttl)
+        Validated.validNel(defaultTtl)
       else
         try Validated.validNel(Some(Duration(ttl)))
         catch {

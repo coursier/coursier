@@ -11,7 +11,7 @@ import coursier.util.ModuleMatcher
 final case class ResolveParams(
   cache: CacheParams,
   output: OutputParams,
-  repositories: Seq[Repository],
+  repositories: RepositoryParams,
   dependency: DependencyParams,
   resolution: ResolutionParams,
   benchmark: Int,

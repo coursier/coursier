@@ -9,7 +9,7 @@ import caseapp.core.app.CaseApp
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
-import coursier.cli.resolve.ResolveException
+import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.cli.util.Native
 import coursier.core.{Artifact, Resolution}
 import coursier.util.{Sync, Task}
@@ -109,7 +109,18 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
-    val params = BootstrapParams(options).toEither match {
+    // get options and dependencies from apps if any
+    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+      val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
+      val channels = initialParams.sharedLaunch.resolve.repositories.channels
+      val pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
+      val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
+      val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      pool.shutdown()
+      res
+    }
+
+    val params = BootstrapParams(options0).toEither match {
       case Left(errors) =>
         for (err <- errors.toList)
           System.err.println(err)
@@ -130,7 +141,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val t = task(
       params,
       pool,
-      args.all,
+      deps,
       Nil
     )
 
@@ -263,11 +274,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           deterministic = params.specific.deterministicOutput,
           withPreamble = params.specific.withPreamble,
           proguarded = params.specific.proguarded,
-          disableJarChecking = params.specific.disableJarCheckingOpt.getOrElse {
-            content.exists(_.entries.exists {
-              case _: ClasspathEntry.Resource => true
-              case _ => false
-            })
+          disableJarChecking = params.specific.disableJarCheckingOpt.getOrElse[Boolean] {
+            coursier.bootstrap.Bootstrap.defaultDisableJarChecking(content)
           }
         )
       }

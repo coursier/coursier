@@ -1,6 +1,7 @@
 package coursier.bootstrap
 
 import java.io._
+import java.lang.{Boolean => JBoolean}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
 import java.util.zip.{CRC32, ZipEntry, ZipInputStream, ZipOutputStream}
@@ -20,6 +21,7 @@ object Bootstrap {
     mainClass: String,
     bootstrapResourcePath: String,
     deterministic: Boolean,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])],
     properties: Seq[(String, String)]
   ): Unit = {
 
@@ -35,6 +37,12 @@ object Bootstrap {
 
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
     val outputZip = new ZipOutputStream(output)
+
+    for ((ent, content) <- extraZipEntries) {
+      outputZip.putNextEntry(ent)
+      outputZip.write(content)
+      outputZip.closeEntry()
+    }
 
     for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
       outputZip.putNextEntry(ent)
@@ -119,6 +127,12 @@ object Bootstrap {
   def proguardedResourcesBootstrapResourcePath: String = "bootstrap-resources.jar"
   def resourcesBootstrapResourcePath: String = "bootstrap-resources-orig.jar"
 
+  def defaultDisableJarChecking(content: Seq[ClassLoaderContent]): Boolean =
+    content.exists(_.entries.exists {
+      case _: ClasspathEntry.Resource => true
+      case _ => false
+    })
+
   def create(
     content: Seq[ClassLoaderContent],
     mainClass: String,
@@ -129,8 +143,12 @@ object Bootstrap {
     deterministic: Boolean = false,
     withPreamble: Boolean = true,
     proguarded: Boolean = true,
-    disableJarChecking: Boolean = true
+    disableJarChecking: JBoolean = null,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
+
+    val disableJarChecking0 = Option(disableJarChecking)
+      .fold(defaultDisableJarChecking(content))(x => x)
 
     val bootstrapResourcePath = bootstrapResourcePathOpt.getOrElse {
 
@@ -157,7 +175,7 @@ object Bootstrap {
 
     if (withPreamble)
       buffer.write(
-        Preamble.shellPreamble(javaOpts, disableJarChecking).getBytes(UTF_8)
+        Preamble.shellPreamble(javaOpts, disableJarChecking0).getBytes(UTF_8)
       )
 
     writeZip(
@@ -166,6 +184,7 @@ object Bootstrap {
       mainClass,
       bootstrapResourcePath,
       deterministic,
+      extraZipEntries,
       javaProperties
     )
 

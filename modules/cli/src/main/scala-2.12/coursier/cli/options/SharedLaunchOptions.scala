@@ -1,6 +1,7 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.app.RawAppDescriptor
 import coursier.cli.resolve.ResolveOptions
 
 final case class SharedLaunchOptions(
@@ -25,7 +26,22 @@ final case class SharedLaunchOptions(
 
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()
-)
+) {
+  def addApp(app: RawAppDescriptor): SharedLaunchOptions =
+    copy(
+      // TODO Take app.properties into account
+      sharedLoaderOptions = sharedLoaderOptions.addApp(app),
+      resolveOptions = resolveOptions.addApp(app),
+      artifactOptions = artifactOptions.addApp(app),
+      mainClass = {
+        if (mainClass.isEmpty)
+          app.mainClass.fold("")(_.stripSuffix("?")) // FIXME '?' suffix means optional main class
+        else
+          mainClass
+      },
+      property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property
+    )
+}
 
 object SharedLaunchOptions {
   implicit val parser = Parser[SharedLaunchOptions]

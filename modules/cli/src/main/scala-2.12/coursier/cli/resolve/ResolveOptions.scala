@@ -1,6 +1,7 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
 
 final case class ResolveOptions(
@@ -40,4 +41,21 @@ final case class ResolveOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
 
-)
+) {
+  def addApp(app: RawAppDescriptor): ResolveOptions =
+    copy(
+      // TODO Take app.scalaVersion into account
+      repositoryOptions = repositoryOptions.copy(
+        repository = {
+          val previous = repositoryOptions.repository
+          previous ++ app.repositories.filterNot(previous.toSet)
+        }
+      ),
+      dependencyOptions = dependencyOptions.copy(
+        exclude = {
+          val previous = dependencyOptions.exclude
+          previous ++ app.exclusions.filterNot(previous.toSet)
+        }
+      )
+    )
+}

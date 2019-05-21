@@ -75,4 +75,9 @@ public final class CoursierPaths {
         init();
         return new File(coursierDirectories.configDir);
     }
+
+    public static File dataLocalDirectory() throws IOException {
+        init();
+        return new File(coursierDirectories.dataLocalDir);
+    }
 }
