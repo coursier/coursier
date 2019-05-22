@@ -1,7 +1,7 @@
 package coursier.parse
 
 import coursier.core.{Classifier, Configuration, Type}
-import coursier.{Attributes, moduleNameString, organizationString}
+import coursier.{Attributes, Dependency, moduleNameString, moduleString, organizationString}
 import utest._
 
 object DependencyParserTests extends TestSuite {
@@ -146,6 +146,48 @@ object DependencyParserTests extends TestSuite {
       DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
         case Left(err) => assert(err.contains("The only attributes allowed are:"))
         case Right(dep) => assert(false)
+      }
+    }
+
+    "scala module" - {
+      DependencyParser.javaOrScalaDependencyParams("org::name:ver") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
+            fullCrossVersion = false,
+            withPlatformSuffix = false
+          )
+          assert(dep == expected)
+      }
+    }
+
+    "full cross versioned scala module" - {
+      DependencyParser.javaOrScalaDependencyParams("org:::name:ver") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
+            fullCrossVersion = true,
+            withPlatformSuffix = false
+          )
+          assert(dep == expected)
+      }
+    }
+
+    "full cross versioned scala module with config" - {
+      DependencyParser.javaOrScalaDependencyParams("org:::name:ver:conf") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "ver", configuration = Configuration("conf")),
+            fullCrossVersion = true,
+            withPlatformSuffix = false
+          )
+          assert(dep == expected)
       }
     }
   }
