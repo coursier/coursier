@@ -155,6 +155,22 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
         }
+
+        'stable - async {
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:latest.stable")
+              .future()
+          }
+
+          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
+          val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8")
+          assert(ammVersionOpt.exists(_.split('.').length == 3))
+          assert(ammVersionOpt.exists(!_.contains("-")))
+
+          await(validateDependencies(res))
+        }
       }
 
       'ivy - {

@@ -1,6 +1,6 @@
 language: java
 os: linux
-jdk: oraclejdk8
+jdk: openjdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
 before_install:
@@ -39,7 +39,7 @@ jobs:
       sudo: required
       services: docker
     - env: SCALA_VERSION=2.12
-      jdk: oraclejdk11
+      jdk: openjdk11
       script: sbt scala212 test:compile testsJVM/test
     - env: SCALA_VERSION=2.11
       sudo: required

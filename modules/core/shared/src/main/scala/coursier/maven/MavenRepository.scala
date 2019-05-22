@@ -77,6 +77,27 @@ object MavenRepository {
       proj <- Pom.project(xml).right
     } yield proj
 
+  private def stableVersion(versions: Versions): Option[String] = {
+
+    def isStable(v: Version): Boolean =
+      v.repr
+        .split(Array('.', '-'))
+        .forall(_.lengthCompare(5) <= 0)
+
+    if (isStable(Version(versions.release)))
+      Some(versions.release)
+    else {
+      val available = versions
+        .available
+        .map(Version(_))
+        .filter(isStable)
+      if (available.isEmpty)
+        None
+      else
+        Some(available.max.repr)
+    }
+  }
+
 }
 
 final case class MavenRepository(
@@ -392,6 +413,15 @@ final case class MavenRepository(
                 val eitherVersion =
                   Some(versions0.release).filter(_.nonEmpty)
                     .toRight(s"No release version found in $versionsUrl")
+
+                fromEitherVersion(eitherVersion, versions0)
+            }
+          else if (version == "latest.stable")
+            versionsF.flatMap {
+              case (versions0, versionsUrl) =>
+                val eitherVersion =
+                  stableVersion(versions0)
+                    .toRight(s"No stable version found in $versionsUrl")
 
                 fromEitherVersion(eitherVersion, versions0)
             }
