@@ -154,7 +154,7 @@ object SparkAssembly {
       success
     else
       CacheLocks.withLockFor(helper.cache, dest) {
-        dest.getParentFile.mkdirs()
+        Files.createDirectories(dest.toPath.getParent)
         val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
         // FIXME Acquire lock on tmpDest
         var fos: FileOutputStream = null

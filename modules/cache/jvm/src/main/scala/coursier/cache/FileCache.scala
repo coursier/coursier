@@ -357,7 +357,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   val result =
                     try {
                       val out = CacheLocks.withStructureLock(location) {
-                        tmp.getParentFile.mkdirs()
+                        Files.createDirectories(tmp.toPath.getParent);
                         new FileOutputStream(tmp, partialDownload)
                       }
                       try readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L, bufferSize)
@@ -365,7 +365,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                     } finally in.close()
 
                   CacheLocks.withStructureLock(location) {
-                    file.getParentFile.mkdirs()
+                    Files.createDirectories(file.toPath.getParent)
                     Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
 
