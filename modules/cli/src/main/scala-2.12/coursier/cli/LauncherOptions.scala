@@ -5,7 +5,10 @@ import caseapp.{Hidden, Parser}
 
 final case class LauncherOptions(
   @Hidden
-    completions: Option[String] = None
+    completions: Option[String] = None,
+
+  @Hidden
+    require: Option[String] = None
 )
 
 object LauncherOptions {

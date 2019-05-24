@@ -91,6 +91,18 @@ simple() {
   fi
 }
 
+require() {
+  if ! "$COURSIER" --require 1.0.3; then
+    echo "Error: expected --require 1.0.3 to succeed." 1>&2
+    exit 1
+  fi
+  if "$COURSIER" --require 41.0.3; then
+    echo "Error: expected --require 41.0.3 to fail." 1>&2
+    exit 1
+  fi
+}
+
+
 javaClassPathProp() {
   "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
   EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
@@ -231,6 +243,7 @@ launcherAssemblyPreambleInSource() {
 
 nailgun
 simple
+require
 javaClassPathProp
 javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch

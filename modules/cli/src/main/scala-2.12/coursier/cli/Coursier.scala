@@ -12,6 +12,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.Resolve
 import coursier.cli.spark.SparkSubmit
+import coursier.core.Version
 import shapeless._
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
@@ -35,7 +36,18 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     new String(b, StandardCharsets.UTF_8)
   }
 
-  def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit =
+  def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
+
+    for (requiredVersion <- options.require.map(_.trim).filter(_.nonEmpty)) {
+      val requiredVersion0 = Version(requiredVersion)
+      val currentVersion = coursier.util.Properties.version
+      val currentVersion0 = Version(currentVersion)
+      if (currentVersion0.compare(requiredVersion0) < 0) {
+        System.err.println(s"Required version $requiredVersion > $currentVersion")
+        sys.exit(1)
+      }
+    }
+
     options.completions.foreach {
       case "zsh" =>
         System.out.print(zshCompletions())
@@ -44,6 +56,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         System.err.println(s"Unrecognized or unsupported shell: $other")
         sys.exit(1)
     }
+  }
 
   def runA =
     args => {
