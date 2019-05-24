@@ -20,15 +20,31 @@ public class Bootstrap {
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
 
-        Props.setMainProperties(args);
-        Props.setExtraProperties(contextLoader);
-
-        String mainClass0 = System.getProperty("bootstrap.mainClass");
-
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 
         boolean isSimpleLoader = classLoader.getParent().equals(contextLoader) && (classLoader instanceof URLClassLoader);
         String previousJavaClassPath = null;
+
+        if (isSimpleLoader) {
+            URL[] urls = ((URLClassLoader) classLoader).getURLs();
+            StringBuilder b = new StringBuilder();
+            for (URL url : urls) {
+                if (b.length() != 0)
+                    b.append(File.pathSeparatorChar);
+                if (url.getProtocol().equals("file")) {
+                    b.append(url.getPath());
+                } else {
+                    b.append(url.toExternalForm());
+                }
+            }
+            previousJavaClassPath = System.setProperty("java.class.path", b.toString());
+        }
+
+        // Called after having set java.class.path, for property expansion
+        Props.setMainProperties(args);
+        Props.setExtraProperties(contextLoader);
+
+        String mainClass0 = System.getProperty("bootstrap.mainClass");
 
         Class<?> mainClass = null;
         Method mainMethod = null;
@@ -48,20 +64,6 @@ public class Bootstrap {
         }
 
         thread.setContextClassLoader(classLoader);
-        if (isSimpleLoader) {
-            URL[] urls = ((URLClassLoader) classLoader).getURLs();
-            StringBuilder b = new StringBuilder();
-            for (URL url : urls) {
-                if (b.length() != 0)
-                    b.append(File.pathSeparatorChar);
-                if (url.getProtocol().equals("file")) {
-                    b.append(url.getPath());
-                } else {
-                    b.append(url.toExternalForm());
-                }
-            }
-            previousJavaClassPath = System.setProperty("java.class.path", b.toString());
-        }
         try {
             Object[] mainArgs = { args };
             mainMethod.invoke(null, mainArgs);
