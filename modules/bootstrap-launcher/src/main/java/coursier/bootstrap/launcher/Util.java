@@ -58,29 +58,7 @@ class Util {
         };
         bp.load(s);
 
-        final Pattern propertyRegex = Pattern.compile(Pattern.quote("${") + "[^" + Pattern.quote("{[()]}") + "]*" + Pattern.quote("}"));
-
-        final Map<String, String> resolved = new LinkedHashMap<>(ordered.size());
-
-        for (String k : ordered.keySet()) {
-            String value = ordered.get(k);
-
-            Matcher matcher = propertyRegex.matcher(value);
-
-            // cycles would loop indefinitely here :-|
-            while (matcher.find()) {
-                int start = matcher.start(0);
-                int end = matcher.end(0);
-                String subKey = value.substring(start + 2, end - 1);
-                String subValue = resolved.get(subKey);
-                if (subValue == null)
-                    subValue = System.getProperty(subKey);
-                value = value.substring(0, start) + subValue + value.substring(end);
-            }
-
-            resolved.put(k, value);
-        }
-        return resolved;
+        return coursier.paths.Util.expandProperties(ordered);
     }
 
     static String mainJarPath() throws URISyntaxException {

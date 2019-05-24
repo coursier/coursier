@@ -101,6 +101,15 @@ javaClassPathProp() {
   fi
 }
 
+javaClassPathInExpansionFromLaunch() {
+  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  GOT="$("$COURSIER" launch --property foo='${java.class.path}' io.get-coursier:props:1.0.2 -- foo)"
+  if [ "$GOT" != "$EXPECTED" ]; then
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
 spaceInMainJar() {
   mkdir -p "dir with space"
   "$COURSIER" bootstrap -o "dir with space/cs-props-0" io.get-coursier:props:1.0.2
@@ -213,6 +222,7 @@ launcherAssemblyPreambleInSource() {
 nailgun
 simple
 javaClassPathProp
+javaClassPathInExpansionFromLaunch
 spaceInMainJar
 standalone
 scalafmtStandalone

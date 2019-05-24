@@ -15,6 +15,7 @@ import coursier.core.{Artifact, Dependency, Resolution}
 import coursier.util.{Sync, Task}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 
 object Launch extends CaseApp[LaunchOptions] {
@@ -57,12 +58,27 @@ object Launch extends CaseApp[LaunchOptions] {
       }.right
     } yield {
       () =>
+        val properties0 = {
+          val m = new java.util.LinkedHashMap[String, String]
+          for ((k, v) <- properties)
+            m.put(k, v)
+          val m0 = coursier.paths.Util.expandProperties(m)
+          val b = new ListBuffer[(String, String)]
+          m0.forEach(
+            new java.util.function.BiConsumer[String, String] {
+              def accept(k: String, v: String) =
+                b += k -> v
+            }
+          )
+          b.result()
+        }
         val currentThread = Thread.currentThread()
         val previousLoader = currentThread.getContextClassLoader
-        val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
+        val previousProperties = properties0.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
           currentThread.setContextClassLoader(loader)
-          for ((k, v) <- properties) sys.props(k) = v
+          for ((k, v) <- properties0)
+            sys.props(k) = v
           method.invoke(null, args.toArray)
         }
         catch {
