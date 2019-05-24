@@ -7,12 +7,15 @@ import java.time.Instant
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
 import coursier.cli.app.RawAppDescriptor
+import coursier.cli.util.Guard
 import coursier.util.Sync
 
 import scala.collection.JavaConverters._
 
 object Update extends CaseApp[UpdateOptions] {
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
+
+    Guard()
 
     val params = UpdateParams(options).toEither match {
       case Left(errors) =>

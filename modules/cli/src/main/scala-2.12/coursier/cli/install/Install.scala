@@ -9,6 +9,7 @@ import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
 import coursier.cache.Cache
 import coursier.cli.app.{AppDescriptor, RawAppDescriptor, RawSource, Source}
+import coursier.cli.util.Guard
 import coursier.core.{Module, Repository}
 import coursier.util.{Sync, Task}
 
@@ -51,6 +52,8 @@ object Install extends CaseApp[InstallOptions] {
     } yield (source, descRepr, desc)
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
+
+    Guard()
 
     val params = InstallParams(options).toEither match {
       case Left(errors) =>
