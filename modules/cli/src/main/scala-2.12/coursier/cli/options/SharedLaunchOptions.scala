@@ -12,6 +12,11 @@ final case class SharedLaunchOptions(
   @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 
+  @Help("Set Java properties before launching the app")
+  @Value("key=value")
+  @Short("D")
+    property: List[String] = Nil,
+
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
 
