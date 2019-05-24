@@ -2,6 +2,7 @@ package coursier.cache
 
 import java.io.{File, FileOutputStream}
 import java.nio.channels.{FileLock, OverlappingFileLockException}
+import java.nio.file.Files
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.paths.CachePath
@@ -32,7 +33,7 @@ object CacheLocks {
     var out: FileOutputStream = null
 
     withStructureLock(cache) {
-      lockFile.getParentFile.mkdirs()
+      Files.createDirectories(lockFile.toPath.getParent)
       out = new FileOutputStream(lockFile)
     }
 

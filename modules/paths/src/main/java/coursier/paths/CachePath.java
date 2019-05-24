@@ -2,8 +2,10 @@ package coursier.paths;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,7 +86,7 @@ public class CachePath {
         return new File(file.getParentFile(), file.getName() + ".lock");
     }
 
-    public static File defaultCacheDirectory() {
+    public static File defaultCacheDirectory() throws IOException {
         return CoursierPaths.cacheDirectory();
     }
 
@@ -105,7 +107,7 @@ public class CachePath {
 
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
-            lockFile.getParentFile().mkdirs();
+            Files.createDirectories(lockFile.toPath().getParent());
             FileOutputStream out = null;
 
             try {

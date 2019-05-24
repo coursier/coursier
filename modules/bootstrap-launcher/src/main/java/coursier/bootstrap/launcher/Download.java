@@ -2,6 +2,7 @@ package coursier.bootstrap.launcher;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,7 +29,11 @@ class Download {
             concurrentDownloadCount = 6;
         else
             concurrentDownloadCount = Integer.parseUnsignedInt(prop);
-        cacheDir = CachePath.defaultCacheDirectory();
+        try {
+            cacheDir = CachePath.defaultCacheDirectory();
+        } catch (IOException ex) {
+            throw new RuntimeException("Error creating cache directory", ex);
+        }
     }
 
     static List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
@@ -95,9 +100,9 @@ class Download {
                     try {
 
                         out = CachePath.withStructureLock(cacheDir, () -> {
-                            tmpDest.getParentFile().mkdirs();
-                            lockFile.getParentFile().mkdirs();
-                            dest.getParentFile().mkdirs();
+                            Files.createDirectories(tmpDest.toPath().getParent());
+                            Files.createDirectories(lockFile.toPath().getParent());
+                            Files.createDirectories(dest.toPath().getParent());
 
                             return new FileOutputStream(lockFile);
                         });

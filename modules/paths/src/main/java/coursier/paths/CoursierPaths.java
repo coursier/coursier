@@ -1,6 +1,8 @@
 package coursier.paths;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 import io.github.soc.directories.ProjectDirectories;
 
@@ -24,7 +26,7 @@ public final class CoursierPaths {
 
     // TODO After switching to nio, that logic can be unit tested with mock filesystems.
 
-    private static File computeCacheDirectory() {
+    private static File computeCacheDirectory() throws IOException {
         String path = System.getenv("COURSIER_CACHE");
 
         if (path == null)
@@ -47,13 +49,13 @@ public final class CoursierPaths {
 
         if (path == null) {
             path = xdgPath;
-            xdgDir.mkdirs();
+            Files.createDirectories(xdgDir.toPath());
         }
 
         return new File(path).getAbsoluteFile();
     }
 
-    private static void init() {
+    private static void init() throws IOException {
 
         if (cacheDirectory0 == null)
             synchronized (lock) {
@@ -64,12 +66,12 @@ public final class CoursierPaths {
             }
     }
 
-    public static File cacheDirectory() {
+    public static File cacheDirectory() throws IOException {
         init();
         return cacheDirectory0;
     }
 
-    public static File configDirectory() {
+    public static File configDirectory() throws IOException {
         init();
         return new File(coursierDirectories.configDir);
     }

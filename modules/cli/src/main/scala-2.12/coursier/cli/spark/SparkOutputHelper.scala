@@ -54,7 +54,7 @@ object SparkOutputHelper {
               lock.synchronized {
                 if (!written) {
                   println(s"Detected YARN app ID $id")
-                  Option(yarnAppFile.getParentFile).foreach(_.mkdirs())
+                  Option(yarnAppFile.toPath.getParent).foreach(Files.createDirectories(_))
                   Files.write(yarnAppFile.toPath, id.getBytes(UTF_8))
                   written = true
                 }
