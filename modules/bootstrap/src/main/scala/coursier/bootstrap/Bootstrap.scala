@@ -19,7 +19,8 @@ object Bootstrap {
     content: Seq[ClassLoaderContent],
     mainClass: String,
     bootstrapResourcePath: String,
-    deterministic: Boolean
+    deterministic: Boolean,
+    properties: Seq[(String, String)]
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)
@@ -98,7 +99,15 @@ object Bootstrap {
     for (e <- content0.flatMap(_.entries).collect { case e: ClasspathEntry.Resource => e })
       putBinaryEntry(resourcePath(e.fileName), e.lastModified, e.content, compressed = false)
 
-    putStringEntry(resourceDir + "bootstrap.properties", s"bootstrap.mainClass=$mainClass")
+    val propFileContent =
+      (("bootstrap.mainClass" -> mainClass) +: properties)
+        .map {
+          case (k, v) =>
+            assert(!v.contains("\n"), s"Invalid ${"\\n"} character in property $k")
+            s"$k=$v"
+        }
+        .mkString("\n")
+    putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
     outputZip.closeEntry()
 
@@ -115,6 +124,7 @@ object Bootstrap {
     mainClass: String,
     output: Path,
     javaOpts: Seq[String] = Nil,
+    javaProperties: Seq[(String, String)] = Nil,
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = false,
     withPreamble: Boolean = true,
@@ -155,7 +165,8 @@ object Bootstrap {
       content,
       mainClass,
       bootstrapResourcePath,
-      deterministic
+      deterministic,
+      javaProperties
     )
 
     Files.write(output, buffer.toByteArray)

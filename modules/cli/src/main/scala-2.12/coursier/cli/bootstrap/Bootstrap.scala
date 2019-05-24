@@ -171,10 +171,16 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         sys.exit(1)
       }
 
+      val javaOptions =
+        if (params.specific.assembly)
+          params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
+        else
+          params.specific.javaOptions
+
       if (params.specific.assembly)
         Assembly.create(
           files0,
-          params.specific.javaOptions,
+          javaOptions,
           mainClass,
           output0,
           rules = params.specific.assemblyRules,
@@ -252,7 +258,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           content,
           mainClass,
           output0,
-          params.specific.javaOptions,
+          javaOptions,
+          javaProperties = params.sharedLaunch.properties,
           deterministic = params.specific.deterministicOutput,
           withPreamble = params.specific.withPreamble,
           proguarded = params.specific.proguarded,
@@ -268,7 +275,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       if (params.specific.createBatFile) {
         LauncherBat.create(
           params.specific.batOutput,
-          params.specific.javaOptions
+          javaOptions
         )
         wroteBat = true
       }

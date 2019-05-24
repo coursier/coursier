@@ -101,6 +101,16 @@ javaClassPathProp() {
   fi
 }
 
+javaClassPathInExpansion() {
+  "$COURSIER" bootstrap -o cs-props-1 --property foo='${java.class.path}' io.get-coursier:props:1.0.2
+  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  GOT="$(./cs-props-1 java.class.path)"
+  if [ "$GOT" != "$EXPECTED" ]; then
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
 javaClassPathInExpansionFromLaunch() {
   EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$("$COURSIER" launch --property foo='${java.class.path}' io.get-coursier:props:1.0.2 -- foo)"
@@ -222,6 +232,7 @@ launcherAssemblyPreambleInSource() {
 nailgun
 simple
 javaClassPathProp
+javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch
 spaceInMainJar
 standalone
