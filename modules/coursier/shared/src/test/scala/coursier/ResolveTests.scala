@@ -253,6 +253,30 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
       }
+
+      'plusInVersion - async {
+
+        val resolve0 = resolve
+          .withRepositories(Seq(
+            Repositories.central,
+            IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
+              .fold(sys.error, identity)
+          ))
+
+        val res = await {
+          resolve0
+            .addDependencies(dep"test:b_2.12:latest.release")
+            .future()
+        }
+
+        val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+        val expected = Set(
+          mod"org.scala-lang:scala-library" -> "2.12.8",
+          mod"test:b_2.12" -> "1.0.2+20190524-1"
+        )
+
+        assert(found == expected)
+      }
     }
 
     'exclusions - {
