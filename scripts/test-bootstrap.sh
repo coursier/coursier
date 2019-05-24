@@ -101,6 +101,16 @@ javaClassPathProp() {
   fi
 }
 
+spaceInMainJar() {
+  mkdir -p "dir with space"
+  "$COURSIER" bootstrap -o "dir with space/cs-props-0" io.get-coursier:props:1.0.2
+  OUTPUT="$("./dir with space/cs-props-0" coursier.mainJar)"
+  if ! echo "$OUTPUT" | grep -q "dir with space"; then
+    echo "Error: unexpected coursier.mainJar property (got $CP, expected \"dir with space\" in it)" 1>&2
+    exit 1
+  fi
+}
+
 standalone() {
   "$COURSIER" bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
   local OUT="$(./cs-echo-standalone foo)"
@@ -203,6 +213,7 @@ launcherAssemblyPreambleInSource() {
 nailgun
 simple
 javaClassPathProp
+spaceInMainJar
 standalone
 scalafmtStandalone
 

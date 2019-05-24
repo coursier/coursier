@@ -1,11 +1,12 @@
 package coursier.bootstrap.launcher;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 class Props {
 
-    static void setMainProperties(String[] args) {
+    static void setMainProperties(String[] args) throws URISyntaxException {
         String mainJarPath = Util.mainJarPath();
         System.setProperty("coursier.mainJar", mainJarPath);
 

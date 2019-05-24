@@ -1,6 +1,7 @@
 package coursier.bootstrap.launcher;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
@@ -84,14 +85,14 @@ class Util {
         return resolved;
     }
 
-    static String mainJarPath() {
+    static String mainJarPath() throws URISyntaxException {
         ProtectionDomain protectionDomain = Bootstrap.class.getProtectionDomain();
         if (protectionDomain != null) {
             CodeSource source = protectionDomain.getCodeSource();
             if (source != null) {
                 URL location = source.getLocation();
                 if (location != null && location.getProtocol().equals("file")) {
-                    return location.getPath();
+                    return new File(location.toURI()).getPath();
                 }
             }
         }
