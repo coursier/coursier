@@ -29,14 +29,17 @@ final case class ArtifactOptions(
 
 ) {
 
+  // to deprecate
   lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
 
+  // to deprecate
   def default0: Boolean =
     default.getOrElse {
       (!sources && !javadoc && classifier0.isEmpty) ||
         classifier0(Classifier("_"))
     }
 
+  // deprecated
   def artifactTypes: Set[Type] = {
 
     val types0 = artifactType
