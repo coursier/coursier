@@ -607,9 +607,11 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               case Some(sum) =>
                 val md = MessageDigest.getInstance(sumType)
 
-                val is = new FileInputStream(localFile0)
-                try FileUtil.withContent(is, md.update(_, 0, _))
-                finally is.close()
+                var is: FileInputStream = null
+                try {
+                  is = new FileInputStream(localFile0)
+                  FileUtil.withContent(is, md.update(_, 0, _))
+                } finally is.close()
 
                 val digest = md.digest()
                 val calculatedSum = new BigInteger(1, digest)

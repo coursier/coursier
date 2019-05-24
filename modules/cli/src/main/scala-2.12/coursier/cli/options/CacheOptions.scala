@@ -53,7 +53,7 @@ final case class CacheOptions(
     credentialFile: List[String] = Nil,
 
   @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
-  useEnvCredentials: Boolean = true
+    useEnvCredentials: Boolean = true
 
 ) {
 
