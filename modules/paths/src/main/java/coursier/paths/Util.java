@@ -16,8 +16,22 @@ public class Util {
     public static Map<String, String> expandProperties(Map<String, String> properties) {
 
         final Map<String, String> resolved = new LinkedHashMap<>(properties.size());
+        final Map<String, String> withProps = new LinkedHashMap<>(properties.size());
 
         for (String k : properties.keySet()) {
+            String value = properties.get(k);
+
+            Matcher matcher = propertyRegex.matcher(value);
+            if (matcher.find()) {
+                withProps.put(k, value);
+            } else {
+                resolved.put(k, value);
+            }
+        }
+
+        // we don't go recursive here - dynamic properties can only reference static ones
+
+        for (String k : withProps.keySet()) {
             String value = properties.get(k);
 
             Matcher matcher = propertyRegex.matcher(value);
