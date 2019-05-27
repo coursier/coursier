@@ -1,6 +1,7 @@
 package coursier.bootstrap
 
 import java.io._
+import java.lang.{Boolean => JBoolean}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
 import java.util.zip.{CRC32, ZipEntry, ZipInputStream, ZipOutputStream}
@@ -19,7 +20,9 @@ object Bootstrap {
     content: Seq[ClassLoaderContent],
     mainClass: String,
     bootstrapResourcePath: String,
-    deterministic: Boolean
+    deterministic: Boolean,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])],
+    properties: Seq[(String, String)]
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)
@@ -34,6 +37,12 @@ object Bootstrap {
 
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
     val outputZip = new ZipOutputStream(output)
+
+    for ((ent, content) <- extraZipEntries) {
+      outputZip.putNextEntry(ent)
+      outputZip.write(content)
+      outputZip.closeEntry()
+    }
 
     for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
       outputZip.putNextEntry(ent)
@@ -98,7 +107,15 @@ object Bootstrap {
     for (e <- content0.flatMap(_.entries).collect { case e: ClasspathEntry.Resource => e })
       putBinaryEntry(resourcePath(e.fileName), e.lastModified, e.content, compressed = false)
 
-    putStringEntry(resourceDir + "bootstrap.properties", s"bootstrap.mainClass=$mainClass")
+    val propFileContent =
+      (("bootstrap.mainClass" -> mainClass) +: properties)
+        .map {
+          case (k, v) =>
+            assert(!v.contains("\n"), s"Invalid ${"\\n"} character in property $k")
+            s"$k=$v"
+        }
+        .mkString("\n")
+    putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
     outputZip.closeEntry()
 
@@ -110,17 +127,28 @@ object Bootstrap {
   def proguardedResourcesBootstrapResourcePath: String = "bootstrap-resources.jar"
   def resourcesBootstrapResourcePath: String = "bootstrap-resources-orig.jar"
 
+  def defaultDisableJarChecking(content: Seq[ClassLoaderContent]): Boolean =
+    content.exists(_.entries.exists {
+      case _: ClasspathEntry.Resource => true
+      case _ => false
+    })
+
   def create(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     output: Path,
     javaOpts: Seq[String] = Nil,
+    javaProperties: Seq[(String, String)] = Nil,
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = false,
     withPreamble: Boolean = true,
     proguarded: Boolean = true,
-    disableJarChecking: Boolean = true
+    disableJarChecking: JBoolean = null,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
+
+    val disableJarChecking0 = Option(disableJarChecking)
+      .fold(defaultDisableJarChecking(content))(x => x)
 
     val bootstrapResourcePath = bootstrapResourcePathOpt.getOrElse {
 
@@ -147,7 +175,7 @@ object Bootstrap {
 
     if (withPreamble)
       buffer.write(
-        Preamble.shellPreamble(javaOpts, disableJarChecking).getBytes(UTF_8)
+        Preamble.shellPreamble(javaOpts, disableJarChecking0).getBytes(UTF_8)
       )
 
     writeZip(
@@ -155,7 +183,9 @@ object Bootstrap {
       content,
       mainClass,
       bootstrapResourcePath,
-      deterministic
+      deterministic,
+      extraZipEntries,
+      javaProperties
     )
 
     Files.write(output, buffer.toByteArray)

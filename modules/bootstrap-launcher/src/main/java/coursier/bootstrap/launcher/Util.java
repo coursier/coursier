@@ -1,6 +1,7 @@
 package coursier.bootstrap.launcher;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
@@ -8,8 +9,6 @@ import java.security.ProtectionDomain;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 class Util {
 
@@ -59,39 +58,17 @@ class Util {
         };
         bp.load(s);
 
-        final Pattern propertyRegex = Pattern.compile(Pattern.quote("${") + "[^" + Pattern.quote("{[()]}") + "]*" + Pattern.quote("}"));
-
-        final Map<String, String> resolved = new LinkedHashMap<>(ordered.size());
-
-        for (String k : ordered.keySet()) {
-            String value = ordered.get(k);
-
-            Matcher matcher = propertyRegex.matcher(value);
-
-            // cycles would loop indefinitely here :-|
-            while (matcher.find()) {
-                int start = matcher.start(0);
-                int end = matcher.end(0);
-                String subKey = value.substring(start + 2, end - 1);
-                String subValue = resolved.get(subKey);
-                if (subValue == null)
-                    subValue = System.getProperty(subKey);
-                value = value.substring(0, start) + subValue + value.substring(end);
-            }
-
-            resolved.put(k, value);
-        }
-        return resolved;
+        return coursier.paths.Util.expandProperties(ordered);
     }
 
-    static String mainJarPath() {
+    static String mainJarPath() throws URISyntaxException {
         ProtectionDomain protectionDomain = Bootstrap.class.getProtectionDomain();
         if (protectionDomain != null) {
             CodeSource source = protectionDomain.getCodeSource();
             if (source != null) {
                 URL location = source.getLocation();
                 if (location != null && location.getProtocol().equals("file")) {
-                    return location.getPath();
+                    return new File(location.toURI()).getPath();
                 }
             }
         }

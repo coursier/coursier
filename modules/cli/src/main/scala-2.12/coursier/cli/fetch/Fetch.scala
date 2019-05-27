@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
-import coursier.cli.resolve.{Output, ResolveException}
+import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.{Artifact, Resolution}
 import coursier.util.{Sync, Task}
 
@@ -42,8 +42,8 @@ object Fetch extends CaseApp[FetchOptions] {
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
-        Option(params.artifact.mainArtifacts).map(x => x),
-        Option(params.artifact.artifactTypes)
+        Some(params.artifact.mainArtifacts), // allow to be null?
+        Some(params.artifact.artifactTypes)  // allow to be null?
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
@@ -73,8 +73,20 @@ object Fetch extends CaseApp[FetchOptions] {
     } yield (res, artifactFiles)
   }
 
-  def run(options: FetchOptions, args: RemainingArgs): Unit =
-    FetchParams(options) match {
+  def run(options: FetchOptions, args: RemainingArgs): Unit = {
+
+    // get options and dependencies from apps if any
+    val (options0, deps) = FetchParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+      val initialRepositories = initialParams.resolve.repositories.repositories
+      val channels = initialParams.resolve.repositories.channels
+      val pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
+      val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
+      val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      pool.shutdown()
+      res
+    }
+
+    FetchParams(options0) match {
       case Validated.Invalid(errors) =>
         for (err <- errors.toList)
           Output.errPrintln(err)
@@ -84,7 +96,7 @@ object Fetch extends CaseApp[FetchOptions] {
         val pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
-        val t = task(params, pool, args.all)
+        val t = task(params, pool, deps)
 
         t.attempt.unsafeRun()(ec) match {
           case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
@@ -111,5 +123,6 @@ object Fetch extends CaseApp[FetchOptions] {
             println(out)
         }
     }
+  }
 
 }

@@ -9,9 +9,11 @@ import coursier.bootstrap.util.FileUtil
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
+import coursier.cli.install.{Install, InstallPath, Update}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.Resolve
 import coursier.cli.spark.SparkSubmit
+import coursier.core.Version
 import shapeless._
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
@@ -35,7 +37,18 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     new String(b, StandardCharsets.UTF_8)
   }
 
-  def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit =
+  def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
+
+    for (requiredVersion <- options.require.map(_.trim).filter(_.nonEmpty)) {
+      val requiredVersion0 = Version(requiredVersion)
+      val currentVersion = coursier.util.Properties.version
+      val currentVersion0 = Version(currentVersion)
+      if (currentVersion0.compare(requiredVersion0) < 0) {
+        System.err.println(s"Required version $requiredVersion > $currentVersion")
+        sys.exit(1)
+      }
+    }
+
     options.completions.foreach {
       case "zsh" =>
         System.out.print(zshCompletions())
@@ -44,6 +57,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         System.err.println(s"Unrecognized or unsupported shell: $other")
         sys.exit(1)
     }
+  }
 
   def runA =
     args => {
@@ -53,13 +67,19 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Complete.run(completeOptions, args)
       case Inr(Inr(Inl(fetchOptions))) =>
         Fetch.run(fetchOptions, args)
-      case Inr(Inr(Inr(Inl(launchOptions)))) =>
+      case Inr(Inr(Inr(Inl(installOptions)))) =>
+        Install.run(installOptions, args)
+      case Inr(Inr(Inr(Inr(Inl(installPathOptions))))) =>
+        InstallPath.run(installPathOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(resolveOptions))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))) =>
+        Update.run(updateOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))) =>
         cnil.impossible
     }
 

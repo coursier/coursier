@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -90,15 +93,20 @@ public class CachePath {
         return CoursierPaths.cacheDirectory();
     }
 
-    private static ConcurrentHashMap<File, Object> processStructureLocks = new ConcurrentHashMap<File, Object>();
+    private static ConcurrentHashMap<Path, Object> processStructureLocks = new ConcurrentHashMap<Path, Object>();
 
     public static <V> V withStructureLock(File cache, Callable<V> callable) throws Exception {
 
-        Object intraProcessLock = processStructureLocks.get(cache);
+        // Should really be
+        //   return withStructureLock(cache.toPath(), callable);
+        // Keeping the former java.io based implem for now, as this is some quite sensitive code.
+
+        Path cachePath = cache.toPath();
+        Object intraProcessLock = processStructureLocks.get(cachePath);
 
         if (intraProcessLock == null) {
             Object lock = new Object();
-            Object prev = processStructureLocks.putIfAbsent(cache, lock);
+            Object prev = processStructureLocks.putIfAbsent(cachePath, lock);
             if (prev == null)
                 intraProcessLock = lock;
             else
@@ -133,6 +141,56 @@ public class CachePath {
                 }
             } finally {
                 if (out != null) out.close();
+            }
+        }
+    }
+
+    public static <V> V withStructureLock(Path cache, Callable<V> callable) throws Exception {
+
+        Object intraProcessLock = processStructureLocks.get(cache);
+
+        if (intraProcessLock == null) {
+            Object lock = new Object();
+            Object prev = processStructureLocks.putIfAbsent(cache, lock);
+            if (prev == null)
+                intraProcessLock = lock;
+            else
+                intraProcessLock = prev;
+        }
+
+        synchronized (intraProcessLock) {
+            Path lockFile = cache.resolve(".structure.lock");
+            Files.createDirectories(lockFile.getParent());
+            FileChannel channel = null;
+
+            try {
+
+                channel = FileChannel.open(
+                        lockFile,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.DELETE_ON_CLOSE
+                );
+
+                FileLock lock = null;
+                try {
+                    lock = channel.lock();
+
+                    try {
+                        return callable.call();
+                    }
+                    finally {
+                        lock.release();
+                        lock = null;
+                        channel.close();
+                        channel = null;
+                    }
+                }
+                finally {
+                    if (lock != null) lock.release();
+                }
+            } finally {
+                if (channel != null) channel.close();
             }
         }
     }

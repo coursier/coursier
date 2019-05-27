@@ -53,7 +53,8 @@ object Assembly {
     jars: Seq[File],
     output: OutputStream,
     attributes: Seq[(JarAttributes.Name, String)],
-    rules: Seq[Rule]
+    rules: Seq[Rule],
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
 
     val rulesMap = rules.collect { case r: Rule.PathRule => r.path -> r }.toMap
@@ -69,6 +70,12 @@ object Assembly {
 
     try {
       zos = new JarOutputStream(output, manifest)
+
+      for ((ent, content) <- extraZipEntries) {
+        zos.putNextEntry(ent)
+        zos.write(content)
+        zos.closeEntry()
+      }
 
       val concatenedEntries = new mutable.HashMap[String, ::[(ZipEntry, Array[Byte])]]
 
@@ -141,7 +148,8 @@ object Assembly {
     output: Path,
     rules: Seq[Rule] = defaultRules,
     withPreamble: Boolean = true,
-    disableJarChecking: Boolean = false
+    disableJarChecking: Boolean = false,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
 
     val attrs = Seq(
@@ -155,7 +163,7 @@ object Assembly {
         Preamble.shellPreamble(javaOpts, disableJarChecking).getBytes(UTF_8)
       )
 
-    Assembly.make(files, buffer, attrs, rules)
+    Assembly.make(files, buffer, attrs, rules, extraZipEntries)
 
     Files.write(output, buffer.toByteArray)
     FileUtil.tryMakeExecutable(output)

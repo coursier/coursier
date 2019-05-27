@@ -68,7 +68,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
+        output = Some(bootstrapFile.getPath),
         force = true
       )
       val sharedLaunchOptions = SharedLaunchOptions(
@@ -128,7 +128,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         shared = List("org.scalameta:trees_2.12")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
+        output = Some(bootstrapFile.getPath),
         force = true
       )
       val sharedLaunchOptions = SharedLaunchOptions(
@@ -188,7 +188,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
+        output = Some(bootstrapFile.getPath),
         force = true
       )
       val sharedLaunchOptions = SharedLaunchOptions(
@@ -215,7 +215,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
       assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
   }
 
-  def isolationTest(standalone: Boolean = false): Unit =
+  def isolationTest(standalone: Option[Boolean] = None): Unit =
     withFile() {
 
       (bootstrapFile, _) =>
@@ -232,7 +232,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = bootstrapFile.getPath,
+          output = Some(bootstrapFile.getPath),
           force = true,
           standalone = standalone
         )
@@ -253,7 +253,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        val suffix = if (standalone) "resources" else "urls"
+        val suffix = if (standalone.exists(identity)) "resources" else "urls"
         val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix-1"), UTF_8))
           .lines
           .toVector
@@ -279,7 +279,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
   }
 
   "bootstrap" should "add standard and source JARs to the classpath with classloader isolation in standalone bootstrap" in {
-    isolationTest(standalone = true)
+    isolationTest(standalone = Some(true))
   }
 
   "bootstrap" should "be deterministic when deterministic option is specified" in
@@ -298,7 +298,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = bootstrapFile.getPath,
+          output = Some(bootstrapFile.getPath),
           force = true,
           deterministic = true
         )
@@ -320,7 +320,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         Thread.sleep(2000)
 
         val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
-          output = bootstrapFile2.getPath
+          output = Some(bootstrapFile2.getPath)
         )
         val bootstrapOptions2 = bootstrapOptions.copy(
           options = bootstrapSpecificOptions2
@@ -354,9 +354,9 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
+        output = Some(bootstrapFile.getPath),
         force = true,
-        standalone = true
+        standalone = Some(true)
       )
       val sharedLaunchOptions = SharedLaunchOptions(
         resolveOptions = resolveOptions
@@ -394,13 +394,13 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
       )
       val sharedLaunchOptions = SharedLaunchOptions(
-        sharedLoaderOptions = sharedLoaderOptions
+        sharedLoaderOptions = sharedLoaderOptions,
+        property = List("jline.shutdownhook=false")
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
-        output = bootstrapFile.getPath,
+        output = Some(bootstrapFile.getPath),
         force = true,
-        standalone = true,
-        property = List("jline.shutdownhook=false")
+        standalone = Some(true)
       )
       val bootstrapOptions = BootstrapOptions(
         sharedLaunchOptions = sharedLaunchOptions,

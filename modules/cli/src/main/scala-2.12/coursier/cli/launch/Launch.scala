@@ -10,11 +10,13 @@ import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLoaderParams}
-import coursier.cli.resolve.ResolveException
+import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.{Artifact, Dependency, Resolution}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency}
 import coursier.util.{Sync, Task}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 
 object Launch extends CaseApp[LaunchOptions] {
@@ -57,12 +59,27 @@ object Launch extends CaseApp[LaunchOptions] {
       }.right
     } yield {
       () =>
+        val properties0 = {
+          val m = new java.util.LinkedHashMap[String, String]
+          for ((k, v) <- properties)
+            m.put(k, v)
+          val m0 = coursier.paths.Util.expandProperties(m)
+          val b = new ListBuffer[(String, String)]
+          m0.forEach(
+            new java.util.function.BiConsumer[String, String] {
+              def accept(k: String, v: String) =
+                b += k -> v
+            }
+          )
+          b.result()
+        }
         val currentThread = Thread.currentThread()
         val previousLoader = currentThread.getContextClassLoader
-        val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
+        val previousProperties = properties0.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
           currentThread.setContextClassLoader(loader)
-          for ((k, v) <- properties) sys.props(k) = v
+          for ((k, v) <- properties0)
+            sys.props(k) = v
           method.invoke(null, args.toArray)
         }
         catch {
@@ -221,16 +238,68 @@ object Launch extends CaseApp[LaunchOptions] {
         }
       }
       props = {
-        if (params.shared.sharedLoader.loaderNames.isEmpty)
-          Seq("java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
-        else
-          Nil
+
+        // flaky-ness ahead: the install command passes the retained version of the first app dependency
+        // as a Java property, e.g. sys.props("foo.version") = "0.1.2" for a dependency org::foo:0.1+ (note
+        // that the scala suffix isn't added to the java prop name). That allows properties defined in the
+        // app descriptor to reference that version (via property expansion, like ${foo.version} to get
+        // the version here).
+        // We don't have the actual app descriptor here, so we just pick the first dependency. It'll correspond
+        // to the first app dependency only if the app is specified first.
+        val nameModVerOpt = dependencyArgs
+          .headOption
+          .flatMap(DependencyParser.javaOrScalaDependencyParams(_).right.toOption)
+          .map(_._1)
+          .flatMap {
+            case j: JavaOrScalaDependency.JavaDependency =>
+              Some((j.module.module.name.value, j.dependency.moduleVersion))
+            case s: JavaOrScalaDependency.ScalaDependency =>
+              res.rootDependencies.headOption.filter(dep =>
+                dep.module.organization == s.baseDependency.module.organization &&
+                  dep.module.name.value.startsWith(s.baseDependency.module.name.value) &&
+                  dep.version == s.baseDependency.version
+              ).map { dep =>
+                (s.baseDependency.module.name.value, dep.moduleVersion)
+              }
+          }
+
+        val opt = for {
+          (name, modVer) <- nameModVerOpt
+        } yield {
+          val v = res
+            .projectCache
+            .get(modVer)
+            .map(_._2.actualVersion)
+            .getOrElse(modVer._2)
+          s"$name.version" -> v
+        }
+
+        val jcp =
+          if (params.shared.sharedLoader.loaderNames.isEmpty)
+            Seq("java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
+          else
+            Nil
+
+        // order matters: first set jcp, so that the expansion of subsequent properties can reference it
+        jcp ++ opt.toSeq ++ params.shared.properties
       }
       f <- Task.fromEither(launch(loader0, mainClass, userArgs, props))
     } yield (mainClass, f)
 
-  def run(options: LaunchOptions, args: RemainingArgs): Unit =
-    LaunchParams(options) match {
+  def run(options: LaunchOptions, args: RemainingArgs): Unit = {
+
+    // get options and dependencies from apps if any
+    val (options0, deps) = LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
+      val initialRepositories = initialParams.shared.resolve.repositories.repositories
+      val channels = initialParams.shared.resolve.repositories.channels
+      val pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
+      val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
+      val res = Resolve.handleApps(options, args.remaining, channels, initialRepositories, cache)(_.addApp(_))
+      pool.shutdown()
+      res
+    }
+
+    LaunchParams(options0) match {
       case Validated.Invalid(errors) =>
         for (err <- errors.toList)
           System.err.println(err)
@@ -240,7 +309,7 @@ object Launch extends CaseApp[LaunchOptions] {
         val pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
-        val t = task(params, pool, args.remaining, args.unparsed)
+        val t = task(params, pool, deps, args.unparsed)
 
         t.attempt.unsafeRun()(ec) match {
           case Left(e: ResolveException) if params.shared.resolve.output.verbosity <= 1 =>
@@ -265,5 +334,6 @@ object Launch extends CaseApp[LaunchOptions] {
             run()
         }
     }
+  }
 
 }

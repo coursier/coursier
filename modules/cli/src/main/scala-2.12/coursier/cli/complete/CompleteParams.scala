@@ -37,7 +37,8 @@ object CompleteParams {
         CompleteParams(
           cache,
           output,
-          repositories,
+          // TODO Take repositories.channels into account, then auto-complete apps too?
+          repositories.repositories,
           arg,
           options.scalaVersion.map(_.trim).filter(_.nonEmpty),
           options.scalaBinaryVersion

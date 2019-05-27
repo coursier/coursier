@@ -8,7 +8,7 @@ object Parse {
 
   def version(s: String): Option[Version] = {
     val trimmed = s.trim
-    if (trimmed.isEmpty || trimmed.exists(c => c != '.' && c != '-' && c != '_' && !c.letterOrDigit)) None
+    if (trimmed.isEmpty || trimmed.exists(c => c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit)) None
     else Some(Version(trimmed))
   }
 

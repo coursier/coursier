@@ -13,6 +13,7 @@ final case class SharedLaunchParams(
   artifact: ArtifactParams,
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
+  properties: Seq[(String, String)],
   extraJars: Seq[Path]
 ) {
   def fetch: FetchParams =
@@ -38,18 +39,27 @@ object SharedLaunchParams {
 
     val mainClassOpt = Some(options.mainClass).filter(_.nonEmpty)
 
+    val propertiesV = options.property.traverse { s =>
+      val idx = s.indexOf('=')
+      if (idx < 0)
+        Validated.invalidNel(s"Malformed property argument '$s' (expected name=value)")
+      else
+        Validated.validNel(s.substring(0, idx) -> s.substring(idx + 1))
+    }
+
     // check if those exist?
     val extraJars = options.extraJars.map { p =>
       Paths.get(p)
     }
 
-    (resolveV, artifactV, sharedLoaderV).mapN {
-      (resolve, artifact, sharedLoader) =>
+    (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
+      (resolve, artifact, sharedLoader, properties) =>
         SharedLaunchParams(
           resolve,
           artifact,
           sharedLoader,
           mainClassOpt,
+          properties,
           extraJars
         )
     }

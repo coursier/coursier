@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.app.RawAppDescriptor
 
 
 final case class SharedLoaderOptions(
@@ -21,7 +22,15 @@ final case class SharedLoaderOptions(
   @Short("isolateTarget") // former deprecated name
     sharedTarget: List[String] = Nil
 
-)
+) {
+  def addApp(app: RawAppDescriptor): SharedLoaderOptions =
+    copy(
+      shared = {
+        val previous = shared
+        previous ++ app.sharedLoaderDependencies.filterNot(previous.toSet)
+      }
+    )
+}
 
 object SharedLoaderOptions {
   implicit val parser = Parser[SharedLoaderOptions]

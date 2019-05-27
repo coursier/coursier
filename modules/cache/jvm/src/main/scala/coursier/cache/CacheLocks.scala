@@ -2,7 +2,7 @@ package coursier.cache
 
 import java.io.{File, FileOutputStream}
 import java.nio.channels.{FileLock, OverlappingFileLockException}
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.paths.CachePath
@@ -18,6 +18,9 @@ object CacheLocks {
     * Should hopefully address some transient errors seen on the CI of ensime-server.
     */
   def withStructureLock[T](cache: File)(f: => T): T =
+    CachePath.withStructureLock(cache, new Callable[T] { def call() = f })
+
+  def withStructureLock[T](cache: Path)(f: => T): T =
     CachePath.withStructureLock(cache, new Callable[T] { def call() = f })
 
   def withLockOr[T](

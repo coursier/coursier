@@ -1,0 +1,80 @@
+package coursier.cli.install
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.time.Instant
+
+import caseapp.core.RemainingArgs
+import caseapp.core.app.CaseApp
+import coursier.cli.app.RawAppDescriptor
+import coursier.cli.util.Guard
+import coursier.util.Sync
+
+import scala.collection.JavaConverters._
+
+object Update extends CaseApp[UpdateOptions] {
+  def run(options: UpdateOptions, args: RemainingArgs): Unit = {
+
+    Guard()
+
+    val params = UpdateParams(options).toEither match {
+      case Left(errors) =>
+        for (err <- errors.toList)
+          System.err.println(err)
+        sys.exit(1)
+      case Right(p) => p
+    }
+
+    val launchers = Files.list(params.dir)
+      .iterator()
+      .asScala
+      .filter { p =>
+        !p.getFileName.toString.startsWith(".") &&
+          Files.isRegularFile(p)
+      }
+      .toVector
+      .sortBy(_.getFileName.toString)
+
+    val now = Instant.now()
+
+    val pool = Sync.fixedThreadPool(params.shared.cache.parallel)
+    val cache = params.shared.cache.cache(pool, params.shared.logger())
+
+    for (launcher <- launchers) {
+      if (params.shared.verbosity >= 2)
+        System.err.println(s"Looking at ${params.dir.relativize(launcher)}")
+
+      val updatedDescOpt =
+        for {
+          (s, _) <- AppGenerator.readSource(launcher)
+          (_, path, a) <- Channels.find(Seq(s.channel), s.id, cache, s.repositories)
+        } yield {
+          val e = RawAppDescriptor.parse(new String(a, StandardCharsets.UTF_8))
+            .left.map(err => new AppGenerator.ErrorParsingAppDescription(path, err))
+            .right.flatMap { r =>
+              r.appDescriptor
+                .toEither
+                .left.map { errors =>
+                  new AppGenerator.ErrorProcessingAppDescription(path, errors.toList.mkString(", "))
+                }
+            }
+          val desc = e.fold(throw _, identity)
+          (desc, a)
+        }
+
+      val written = AppGenerator.createOrUpdate(
+        updatedDescOpt,
+        None,
+        cache,
+        params.dir,
+        launcher,
+        now,
+        params.shared.verbosity,
+        params.shared.forceUpdate,
+        params.shared.graalvmParamsOpt
+      )
+      if (!written && params.shared.verbosity >= 1)
+        System.err.println(s"No new update for ${params.dir.relativize(launcher)}\n")
+    }
+  }
+}

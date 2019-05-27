@@ -29,7 +29,7 @@ object BootstrapSpecificParams {
   def apply(options: BootstrapSpecificOptions): ValidatedNel[String, BootstrapSpecificParams] = {
 
     val validateOutputType = {
-      val count = Seq(options.assembly, options.standalone, options.native).count(identity)
+      val count = Seq(options.assembly.exists(identity), options.standalone.exists(identity), options.native).count(identity)
       if (count > 1)
         Validated.invalidNel("Only one of --assembly, --standalone, or --native, can be specified")
       else
@@ -37,19 +37,12 @@ object BootstrapSpecificParams {
     }
 
     val output = Paths.get {
-      Some(options.output)
+      options
+        .output
         .map(_.trim)
         .filter(_.nonEmpty)
         .getOrElse("bootstrap")
     }.toAbsolutePath
-
-    val propertiesV = options.property.traverse { s =>
-      val idx = s.indexOf('=')
-      if (idx < 0)
-        Validated.invalidNel(s"Malformed property argument '$s' (expected name=value)")
-      else
-        Validated.validNel(s.substring(0, idx) -> s.substring(idx + 1))
-    }
 
     val createBatFile = options.bat.getOrElse(LauncherBat.isWindows)
 
@@ -72,17 +65,20 @@ object BootstrapSpecificParams {
 
     val prependRules = if (options.defaultAssemblyRules) Assembly.defaultRules else Nil
 
-    (validateOutputType, propertiesV, rulesV).mapN {
-      (_, properties, rules) =>
-        val javaOptions = options.javaOpt ++ properties.map { case (k, v) => s"-D$k=$v" }
+    val assembly = options.assembly.getOrElse(false)
+    val standalone = options.standalone.getOrElse(false)
+
+    (validateOutputType, rulesV).mapN {
+      (_, rules) =>
+        val javaOptions = options.javaOpt
         BootstrapSpecificParams(
           output,
           options.force,
-          options.standalone,
+          standalone,
           options.embedFiles,
           javaOptions,
           options.native,
-          options.assembly,
+          assembly,
           createBatFile,
           prependRules ++ rules,
           options.preamble,

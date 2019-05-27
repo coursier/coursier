@@ -53,11 +53,14 @@ final case class CacheOptions(
     credentialFile: List[String] = Nil,
 
   @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
-  useEnvCredentials: Boolean = true
+    useEnvCredentials: Boolean = true
 
 ) {
 
-  def params: ValidatedNel[String, CacheParams] = {
+  def params: ValidatedNel[String, CacheParams] =
+    params(CacheDefaults.ttl)
+
+  def params(defaultTtl: Option[Duration]): ValidatedNel[String, CacheParams] = {
 
     val cache0 = new File(cache)
 
@@ -76,7 +79,7 @@ final case class CacheOptions(
 
     val ttlV =
       if (ttl.isEmpty)
-        Validated.validNel(CacheDefaults.ttl)
+        Validated.validNel(defaultTtl)
       else
         try Validated.validNel(Some(Duration(ttl)))
         catch {

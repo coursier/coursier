@@ -91,12 +91,53 @@ simple() {
   fi
 }
 
+require() {
+  if ! "$COURSIER" --require 1.0.3; then
+    echo "Error: expected --require 1.0.3 to succeed." 1>&2
+    exit 1
+  fi
+  if "$COURSIER" --require 41.0.3; then
+    echo "Error: expected --require 41.0.3 to fail." 1>&2
+    exit 1
+  fi
+}
+
+
 javaClassPathProp() {
   "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
   EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-0 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
     echo "Error: unexpected java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
+javaClassPathInExpansion() {
+  "$COURSIER" bootstrap -o cs-props-1 --property foo='${java.class.path}' io.get-coursier:props:1.0.2
+  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  GOT="$(./cs-props-1 java.class.path)"
+  if [ "$GOT" != "$EXPECTED" ]; then
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
+javaClassPathInExpansionFromLaunch() {
+  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  GOT="$("$COURSIER" launch --property foo='${java.class.path}' io.get-coursier:props:1.0.2 -- foo)"
+  if [ "$GOT" != "$EXPECTED" ]; then
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    exit 1
+  fi
+}
+
+spaceInMainJar() {
+  mkdir -p "dir with space"
+  "$COURSIER" bootstrap -o "dir with space/cs-props-0" io.get-coursier:props:1.0.2
+  OUTPUT="$("./dir with space/cs-props-0" coursier.mainJar)"
+  if ! echo "$OUTPUT" | grep -q "dir with space"; then
+    echo "Error: unexpected coursier.mainJar property (got $CP, expected \"dir with space\" in it)" 1>&2
     exit 1
   fi
 }
@@ -202,7 +243,11 @@ launcherAssemblyPreambleInSource() {
 
 nailgun
 simple
+require
 javaClassPathProp
+javaClassPathInExpansion
+javaClassPathInExpansionFromLaunch
+spaceInMainJar
 standalone
 scalafmtStandalone
 

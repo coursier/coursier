@@ -135,6 +135,16 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    "full cross versioned org:::name:version" - {
+      DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7", "2.12.8") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"com.lihaoyi")
+          assert(dep.module.name.value == "ammonite_2.12.8")
+          assert(dep.version == "1.6.7")
+      }
+    }
+
     "illegal 1" - {
       DependencyParser.dependencyParams("junit:junit:4.12,attr", "2.11.11") match {
         case Left(err) => assert(err.contains("Failed to parse attribute"))
