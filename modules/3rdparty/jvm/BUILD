@@ -203,3 +203,21 @@ jar_library(
         scala_jar("org.scalatest", "scalatest", "3.0.5"),
     ],
 )
+
+jar_library(
+    name = "okhttp",
+    jars = [
+        jar(
+            org = "com.squareup.okhttp",
+	    name = "okhttp-urlconnection",
+	    rev = "2.7.5",
+	),
+    ]
+)
+
+jar_library(
+    name = "emoji",
+    jars = [
+        scala_jar("com.lightbend", "emoji", "1.2.1"),
+    ],
+)

@@ -89,7 +89,7 @@ object CacheUrl {
   def url(s: String): URL =
     new URL(null, s, handlerFor(s).orNull)
 
-  private def basicAuthenticationEncode(user: String, password: String): String =
+  private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
     )
@@ -377,7 +377,7 @@ object CacheUrl {
         None
     }
 
-  private val BasicRealm = (
+  private[coursier] val BasicRealm = (
     "^" +
       Pattern.quote("Basic realm=\"") +
       "([^" + Pattern.quote("\"") + "]*)" +

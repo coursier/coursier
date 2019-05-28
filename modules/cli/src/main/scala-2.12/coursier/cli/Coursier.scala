@@ -11,6 +11,8 @@ import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.install.{Install, InstallPath, Update}
 import coursier.cli.launch.Launch
+import coursier.cli.publish.Publish
+import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 import coursier.cli.spark.SparkSubmit
 import coursier.core.Version
@@ -73,13 +75,17 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         InstallPath.run(installPathOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))) =>
+        Publish.run(publishOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))) =>
+        Sonatype.run(sonatypeOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))) =>
         cnil.impossible
     }
 

@@ -8,7 +8,7 @@ import java.util.regex.Pattern.quote
 import javax.xml.parsers.SAXParserFactory
 
 import scala.collection.JavaConverters._
-import scala.xml.{ Attribute, MetaData, Null }
+import scala.xml.{Attribute, Elem, MetaData, Null}
 import org.jsoup.Jsoup
 import org.xml.sax
 import org.xml.sax.InputSource
@@ -73,6 +73,12 @@ package object compatibility {
       try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
+    parse.right
+      .map(xmlFromElem)
+  }
+
+  def xmlFromElem(elem: Elem): Xml.Node = {
+
     def fromNode(node: scala.xml.Node): Xml.Node =
       new Xml.Node {
         lazy val attributes = {
@@ -103,8 +109,26 @@ package object compatibility {
         override def toString = node.toString
       }
 
+    fromNode(elem)
+  }
+
+  def xmlParse(s: String): Either[String, Xml.Node] = {
+
+    val content =
+      if (entityPattern.findFirstIn(s).isEmpty)
+        s
+      else
+        Entities.entities.foldLeft(s) {
+          case (s0, (target, replacement)) =>
+            s0.replace(target, replacement)
+        }
+
+    val parse =
+      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
+      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+
     parse.right
-      .map(fromNode)
+      .map(xmlFromElem)
   }
 
   def encodeURIComponent(s: String): String =
