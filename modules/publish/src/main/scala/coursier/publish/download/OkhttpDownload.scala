@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.concurrent.ExecutorService
 
 import com.squareup.okhttp.internal.http.HttpDate
-import com.squareup.okhttp.{OkHttpClient, Request}
+import com.squareup.okhttp.{OkHttpClient, Request, Response}
 import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.download.logger.DownloadLogger
@@ -37,26 +37,33 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
       logger.downloadingIfExists(url)
 
       val res = Try {
-        val response = client.newCall(request).execute()
+        var response: Response = null
 
-        if (response.isSuccessful) {
-          val lastModifiedOpt = Option(response.header("Last-Modified")).map { s =>
-            HttpDate.parse(s).toInstant
-          }
-          Right(Some((lastModifiedOpt, response.body().bytes())))
-        } else {
-          val code = response.code()
-          if (code == 404)
-            Right(None)
-          else if (code == 401) {
-            val realmOpt = Option(response.header("WWW-Authenticate")).collect {
-              case CacheUrl.BasicRealm(r) => r
+        try {
+          response = client.newCall(request).execute()
+
+          if (response.isSuccessful) {
+            val lastModifiedOpt = Option(response.header("Last-Modified")).map { s =>
+              HttpDate.parse(s).toInstant
             }
-            Left(new Download.Error.Unauthorized(url, realmOpt))
+            Right(Some((lastModifiedOpt, response.body().bytes())))
           } else {
-            val content = Try(response.body().string()).getOrElse("")
-            Left(new Download.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+            val code = response.code()
+            if (code == 404)
+              Right(None)
+            else if (code == 401) {
+              val realmOpt = Option(response.header("WWW-Authenticate")).collect {
+                case CacheUrl.BasicRealm(r) => r
+              }
+              Left(new Download.Error.Unauthorized(url, realmOpt))
+            } else {
+              val content = Try(response.body().string()).getOrElse("")
+              Left(new Download.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+            }
           }
+        } finally {
+          if (response != null)
+            response.body().close()
         }
       }.toEither.right.flatMap(identity)
 
