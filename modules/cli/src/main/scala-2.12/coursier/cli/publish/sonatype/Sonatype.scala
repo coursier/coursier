@@ -42,7 +42,7 @@ object Sonatype extends CaseApp[SonatypeOptions] {
         repositories <- api.listProfileRepositories(profileIdOpt)
         _ <- Task.delay {
           println("Repositories" + profileIdOpt.fold("")(p => s" of profile $p"))
-          for (r <- repositories) {
+          for (r <- repositories if !params.cleanList || !r.id.startsWith("central_bundles-")) {
             val extra = profileIdOpt.fold(s", profile: ${r.profileName}")(_ => "")
             println(s"  ${r.id} (${r.`type`}" + extra + ")")
           }
