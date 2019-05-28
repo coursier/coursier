@@ -97,17 +97,17 @@ object AppGenerator {
 
     try {
       zf = new ZipFile(f.toFile)
-      val entOpt = Option(zf.getEntry(jsonDescFilePath))
+      val entOpt = Option(zf.getEntry(jsonSourceFilePath))
 
       entOpt.map { ent =>
         val content = FileUtil.readFully(zf.getInputStream(ent))
         val e = RawSource.parse(new String(content, StandardCharsets.UTF_8))
-          .left.map(err => new ErrorParsingSource(s"$f!$jsonDescFilePath", err))
+          .left.map(err => new ErrorParsingSource(s"$f!$jsonSourceFilePath", err))
           .right.flatMap { r =>
             r.source
               .toEither
               .left.map { errors =>
-                new ErrorProcessingSource(s"$f!$jsonDescFilePath", errors.toList.mkString(", "))
+                new ErrorProcessingSource(s"$f!$jsonSourceFilePath", errors.toList.mkString(", "))
               }
           }
         val source = e.fold(throw _, identity)
