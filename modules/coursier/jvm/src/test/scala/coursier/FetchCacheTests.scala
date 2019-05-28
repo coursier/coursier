@@ -11,24 +11,36 @@ import scala.collection.JavaConverters._
 object FetchCacheTests extends TestSuite {
 
   private def remove(d: Path)(f: String => Boolean): Int =
-    if (Files.isDirectory(d))
-      Files.list(d)
-        .iterator()
-        .asScala
-        .map(remove(_)(f))
-        .sum
-    else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
+    if (Files.isDirectory(d)) {
+      var s: java.util.stream.Stream[Path] = null
+      try {
+        s = Files.list(d)
+        s.iterator()
+          .asScala
+          .map(remove(_)(f))
+          .sum
+      } finally {
+        if (s != null)
+          s.close()
+      }
+    } else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
       1
     else
       0
 
   private def delete(d: Path): Unit =
-    if (Files.isDirectory(d))
-      Files.list(d)
-        .iterator()
-        .asScala
-        .foreach(delete)
-    else
+    if (Files.isDirectory(d)) {
+      var s: java.util.stream.Stream[Path] = null
+      try {
+        s = Files.list(d)
+        s.iterator()
+          .asScala
+          .foreach(delete)
+      } finally {
+        if (s != null)
+          s.close()
+      }
+    } else
       Files.deleteIfExists(d)
 
   val tests = Tests {

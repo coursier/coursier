@@ -5,10 +5,7 @@ import coursier.internal.PlatformRepositoryParser
 import coursier.util.ValidationNel
 import coursier.util.Traverse.TraverseOps
 
-object RepositoryParser {
-
-  def repository(input: String): Either[String, Repository] =
-    PlatformRepositoryParser.repository(input)
+object RepositoryParser extends PlatformRepositoryParser {
 
   def repositories(inputs: Seq[String]): ValidationNel[String, Seq[Repository]] =
     inputs

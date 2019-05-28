@@ -206,8 +206,22 @@ lazy val benchmark = project("benchmark")
     libraryDependencies += "org.apache.maven" % "maven-model" % "3.6.1"
   )
 
+lazy val publish = project("publish")
+  .dependsOn(coreJvm, cacheJvm, okhttp)
+  .settings(
+    shared,
+    coursierPrefix,
+    libs ++= Seq(
+      Deps.catsCore,
+      Deps.argonautShapeless,
+      "com.lightbend" %% "emoji" % "1.2.1"
+    ),
+    resolvers += Resolver.typesafeIvyRepo("releases"), // for "com.lightbend" %% "emoji"
+    onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
+  )
+
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm)
+  .dependsOn(bootstrap, coursierJvm, okhttp, publish)
   .enablePlugins(ContrabandPlugin, PackPlugin, SbtProguard)
   .settings(
     shared,
@@ -356,6 +370,7 @@ lazy val jvm = project("jvm")
     `resources-bootstrap-launcher`,
     bootstrap,
     benchmark,
+    publish,
     cli,
     okhttp,
     coursierJvm
@@ -398,6 +413,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     `resources-bootstrap-launcher`,
     bootstrap,
     benchmark,
+    publish,
     cli,
     scalazJvm,
     scalazJs,

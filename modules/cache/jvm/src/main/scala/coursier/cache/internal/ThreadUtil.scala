@@ -7,22 +7,26 @@ object ThreadUtil {
 
   private val poolNumber = new AtomicInteger(1)
 
-  def fixedThreadPool(size: Int): ExecutorService = {
+  def daemonThreadFactory(): ThreadFactory = {
 
     val poolNumber0 = poolNumber.getAndIncrement()
 
     val threadNumber = new AtomicInteger(1)
 
-    val factory: ThreadFactory =
-      new ThreadFactory {
-        def newThread(r: Runnable) = {
-          val threadNumber0 = threadNumber.getAndIncrement()
-          val t = new Thread(r, s"coursier-pool-$poolNumber0-thread-$threadNumber0")
-          t.setDaemon(true)
-          t.setPriority(Thread.NORM_PRIORITY)
-          t
-        }
+    new ThreadFactory {
+      def newThread(r: Runnable) = {
+        val threadNumber0 = threadNumber.getAndIncrement()
+        val t = new Thread(r, s"coursier-pool-$poolNumber0-thread-$threadNumber0")
+        t.setDaemon(true)
+        t.setPriority(Thread.NORM_PRIORITY)
+        t
       }
+    }
+  }
+
+  def fixedThreadPool(size: Int): ExecutorService = {
+
+    val factory = daemonThreadFactory()
 
     // 1 min keep alive, so that threads get stopped a bit after resolution / downloading is done
     val executor = new ThreadPoolExecutor(

@@ -1,5 +1,6 @@
 package coursier.internal
 
+import java.io.File
 import java.net.MalformedURLException
 
 import coursier.LocalRepositories
@@ -8,9 +9,12 @@ import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
-object PlatformRepositoryParser {
+abstract class PlatformRepositoryParser {
 
   def repository(input: String): Either[String, Repository] =
+    repository(input, maybeFile = false)
+
+  def repository(input: String, maybeFile: Boolean): Either[String, Repository] =
     if (input == "ivy2local" || input == "ivy2Local")
       Right(LocalRepositories.ivy2Local)
     else if (input == "ivy2cache" || input == "ivy2Cache")
@@ -33,11 +37,22 @@ object PlatformRepositoryParser {
           sys.error(s"Unrecognized repository: $r")
       }
 
-      val validatedUrl = try {
-        url.right.map(CacheUrl.url)
-      } catch {
-        case e: MalformedURLException =>
-          Left("Error parsing URL " + url + Option(e.getMessage).fold("")(" (" + _ + ")"))
+      val validatedUrl = url.right.flatMap { url0 =>
+        try Right(CacheUrl.url(url0))
+        catch {
+          case e: MalformedURLException =>
+
+            val urlErrorMsg = "Error parsing URL " + url0 + Option(e.getMessage).fold("")(" (" + _ + ")")
+
+            if (url0.contains(File.separatorChar)) {
+              val f = new File(url0)
+              if (f.exists() && !f.isDirectory)
+                Left(s"$urlErrorMsg, and $url0 not a directory")
+              else
+                Right(f.toURI.toURL)
+            } else
+              Left(urlErrorMsg)
+        }
       }
 
       validatedUrl.right.flatMap { url =>
