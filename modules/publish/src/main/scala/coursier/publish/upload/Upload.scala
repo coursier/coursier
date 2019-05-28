@@ -59,7 +59,11 @@ trait Upload {
                       upload(url, repository.authentication, b, logger).map(_.map((path, content, _)))
                     ).attempt
                     // FIXME Also failed if a.isLeft …
-                    _ <- Task.delay(logger.uploaded(url, Some(id), a.right.toOption.flatMap(_.map(_._3))))
+                    _ <- {
+                      val err = a.right.toOption.flatMap(_.map(_._3))
+                        .orElse(a.left.toOption.map(t => new Upload.Error.UploadError(url, t)))
+                      Task.delay(logger.uploaded(url, Some(id), err))
+                    }
                     res <- Task.fromEither(a)
                   } yield res
                 }
@@ -96,7 +100,7 @@ object Upload {
   object Error {
     final class HttpError(code: Int, headers: Map[String, Seq[String]], response: String) extends Error(transient = code / 100 == 5, s"HTTP $code\n$response")
     final class Unauthorized(url: String, realm: Option[String]) extends Error(transient = false, s"Unauthorized ($url, ${realm.getOrElse("[no realm]")})")
-    final class UploadError(exception: Throwable) extends Error(transient = false, "Upload error", exception)
+    final class UploadError(url: String, exception: Throwable) extends Error(transient = false, s"Error uploading $url", exception)
     final class FileException(exception: Throwable) extends Error(transient = false, "I/O error", exception) // can some exceptions be transient?
   }
 
