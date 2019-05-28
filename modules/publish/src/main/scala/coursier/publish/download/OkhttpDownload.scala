@@ -58,7 +58,7 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
               Left(new Download.Error.Unauthorized(url, realmOpt))
             } else {
               val content = Try(response.body().string()).getOrElse("")
-              Left(new Download.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+              Left(new Download.Error.HttpError(url, code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
             }
           }
         } finally {
@@ -70,7 +70,7 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
       logger.downloadedIfExists(
         url,
         res.right.toOption.flatMap(_.map(_._2.length)),
-        res.left.toOption.map(e => new Download.Error.DownloadError(e))
+        res.left.toOption.map(e => new Download.Error.DownloadError(url, e))
       )
 
       Task.fromEither(res)

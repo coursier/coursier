@@ -54,7 +54,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
         }
       }
 
-      logger.uploaded(url, res.toEither.fold(e => Some(new Upload.Error.UploadError(e)), x => x))
+      logger.uploaded(url, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
 
       res.get
     }
