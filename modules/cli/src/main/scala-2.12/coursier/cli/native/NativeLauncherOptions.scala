@@ -2,7 +2,7 @@ package coursier.cli.native
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 
-final case class NativeBootstrapOptions(
+final case class NativeLauncherOptions(
 
   @Value("none|boehm|immix|default")
     nativeGc: Option[String] = None,
@@ -27,6 +27,8 @@ final case class NativeBootstrapOptions(
 
   nativeLib: Option[String] = None,
 
+  nativeVersion: Option[String] = None,
+
   @Help("Native compilation target directory")
   @Short("d")
     nativeWorkDir: String = "native-target",
@@ -35,7 +37,7 @@ final case class NativeBootstrapOptions(
 
 )
 
-object NativeBootstrapOptions {
-  implicit val parser = Parser[NativeBootstrapOptions]
-  implicit val help = caseapp.core.help.Help[NativeBootstrapOptions]
+object NativeLauncherOptions {
+  implicit val parser = Parser[NativeLauncherOptions]
+  implicit val help = caseapp.core.help.Help[NativeLauncherOptions]
 }

@@ -25,7 +25,8 @@ object Deps {
     "org.scala-lang.modules" %% "scala-async" % ver
   }
 
-  def scalaNativeTools = "org.scala-native" %% "tools" % "0.3.9"
+  def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
+  def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
 
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.26"
 

@@ -2,12 +2,12 @@ package coursier.cli.bootstrap
 
 import caseapp.{Parser, Recurse}
 import coursier.cli.app.RawAppDescriptor
-import coursier.cli.native.NativeBootstrapOptions
+import coursier.cli.native.NativeLauncherOptions
 import coursier.cli.options.SharedLaunchOptions
 
 final case class BootstrapOptions(
   @Recurse
-    nativeOptions: NativeBootstrapOptions = NativeBootstrapOptions(),
+    nativeOptions: NativeLauncherOptions = NativeLauncherOptions(),
   @Recurse
     sharedLaunchOptions: SharedLaunchOptions = SharedLaunchOptions(),
   @Recurse

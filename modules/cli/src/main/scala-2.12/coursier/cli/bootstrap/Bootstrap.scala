@@ -9,20 +9,20 @@ import caseapp.core.app.CaseApp
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
-import coursier.cli.native.Native
+import coursier.cli.native.NativeBuilder
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.{Artifact, Resolution}
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.ExecutionContext
-import scala.scalanative.{build => sn}
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
   def createNativeBootstrap(
     params: BootstrapParams,
     files: Seq[File],
-    mainClass: String
+    mainClass: String,
+    pool: ExecutorService
   ): Unit = {
 
     val log: String => Unit =
@@ -31,37 +31,25 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       else
         _ => ()
 
-    val tmpDir = params.nativeBootstrap.workDir.toFile
+    val logger = params.sharedLaunch.resolve.output.logger()
+    val cache = params.sharedLaunch.resolve.cache.cache(pool, logger)
+    val repositories = params.sharedLaunch.resolve.repositories.repositories
+    val fetch = coursier.Fetch(cache)
+      .withRepositories(repositories)
 
-    val config = sn.Config.empty
-      .withGC(params.nativeBootstrap.gc)
-      .withMode(params.nativeBootstrap.mode)
-      .withLinkStubs(params.nativeBootstrap.linkStubs)
-      .withClang(params.nativeBootstrap.clang)
-      .withClangPP(params.nativeBootstrap.clangpp)
-      .withLinkingOptions(params.nativeBootstrap.finalLinkingOptions)
-      .withCompileOptions(params.nativeBootstrap.finalCompileOptions)
-      .withTargetTriple(params.nativeBootstrap.targetTripleOpt.getOrElse {
-        sn.Discover.targetTriple(params.nativeBootstrap.clang, tmpDir.toPath)
-      })
-      .withNativelib(params.nativeBootstrap.nativeLibOpt.getOrElse(
-        sn.Discover.nativelib(files.map(_.toPath)).get
-      ))
+    val nativeVersion = params.nativeBootstrap.nativeShortVersionOpt.getOrElse(
+      "0.3" // FIXME Guess from dependencies
+    )
+    val builder = NativeBuilder.load(fetch, nativeVersion)
 
-    try {
-      Native.create(
-        mainClass,
-        files,
-        params.specific.output.toFile,
-        tmpDir,
-        log,
-        verbosity = params.sharedLaunch.resolve.output.verbosity,
-        config = config
-      )
-    } finally {
-      if (!params.nativeBootstrap.keepWorkDir)
-        Native.deleteRecursive(tmpDir)
-    }
+    builder.build(
+      mainClass,
+      files,
+      params.specific.output.toFile,
+      params.nativeBootstrap,
+      log,
+      params.sharedLaunch.resolve.output.verbosity
+    )
   }
 
   def task(
@@ -167,7 +155,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var wroteBat = false
 
     if (params.specific.native)
-      createNativeBootstrap(params, files.map(_._2), mainClass)
+      createNativeBootstrap(params, files.map(_._2), mainClass, pool)
     else {
       val (asFiles, asUrls) = files.partition {
         case (a, _) =>
