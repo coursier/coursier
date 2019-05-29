@@ -18,4 +18,9 @@ package-lock.json
 generated/
 processed-docs/
 
+# Metals / bloop
+.metals/
+.bloop/
+
 bin/
+
