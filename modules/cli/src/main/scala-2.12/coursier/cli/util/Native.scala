@@ -27,9 +27,6 @@ object Native {
     sn.Build.build(config0, outpath)
   }
 
-  private def linkingOptions(): Seq[String] = sn.Discover.linkingOptions() ++
-    sys.env.get("LDFLAGS").toSeq.flatMap(_.split("\\s+"))
-
   def deleteRecursive(f: File): Unit = {
     if (f.isDirectory) {
       f.listFiles().foreach(deleteRecursive)
