@@ -1,4 +1,4 @@
-package coursier.cli.bootstrap
+package coursier.cli.native
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 

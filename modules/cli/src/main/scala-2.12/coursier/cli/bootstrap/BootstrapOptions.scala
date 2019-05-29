@@ -2,6 +2,7 @@ package coursier.cli.bootstrap
 
 import caseapp.{Parser, Recurse}
 import coursier.cli.app.RawAppDescriptor
+import coursier.cli.native.NativeBootstrapOptions
 import coursier.cli.options.SharedLaunchOptions
 
 final case class BootstrapOptions(

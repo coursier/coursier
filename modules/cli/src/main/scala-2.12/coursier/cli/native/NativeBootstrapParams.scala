@@ -1,4 +1,4 @@
-package coursier.cli.bootstrap
+package coursier.cli.native
 
 import java.nio.file.{Path, Paths}
 import java.util.Locale

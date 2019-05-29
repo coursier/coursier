@@ -9,8 +9,8 @@ import caseapp.core.app.CaseApp
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
+import coursier.cli.native.Native
 import coursier.cli.resolve.{Resolve, ResolveException}
-import coursier.cli.util.Native
 import coursier.core.{Artifact, Resolution}
 import coursier.util.{Sync, Task}
 
