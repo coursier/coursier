@@ -38,6 +38,12 @@ final case class DependencyOptions(
   @Short("c")
     defaultConfiguration: String = "default(compile)",
 
+  scalaJs: Boolean = false,
+
+  @Help("Enable scala-native")
+  @Short("S")
+    native: Boolean = false
+
 ) {
 
   def defaultConfiguration0 = Configuration(defaultConfiguration)

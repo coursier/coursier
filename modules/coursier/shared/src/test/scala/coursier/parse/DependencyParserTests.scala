@@ -167,7 +167,8 @@ object DependencyParserTests extends TestSuite {
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
             fullCrossVersion = false,
-            withPlatformSuffix = false
+            withPlatformSuffix = false,
+            exclude = Set.empty
           )
           assert(dep == expected)
       }
@@ -181,7 +182,8 @@ object DependencyParserTests extends TestSuite {
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
             fullCrossVersion = true,
-            withPlatformSuffix = false
+            withPlatformSuffix = false,
+            exclude = Set.empty
           )
           assert(dep == expected)
       }
@@ -195,7 +197,8 @@ object DependencyParserTests extends TestSuite {
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", "ver", configuration = Configuration("conf")),
             fullCrossVersion = true,
-            withPlatformSuffix = false
+            withPlatformSuffix = false,
+            exclude = Set.empty
           )
           assert(dep == expected)
       }

@@ -22,7 +22,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     params: BootstrapParams,
     files: Seq[File],
     mainClass: String,
-    pool: ExecutorService
+    pool: ExecutorService,
+    nativeVersion: String
   ): Unit = {
 
     val log: String => Unit =
@@ -37,10 +38,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val fetch = coursier.Fetch(cache)
       .withRepositories(repositories)
 
-    val nativeVersion = params.nativeBootstrap.nativeShortVersionOpt.getOrElse(
-      "0.3" // FIXME Guess from dependencies
+    val nativeVersion0 = params.nativeBootstrap.nativeShortVersionOpt.getOrElse(
+      nativeVersion
     )
-    val builder = NativeBuilder.load(fetch, nativeVersion)
+    val builder = NativeBuilder.load(fetch, nativeVersion0)
 
     builder.build(
       mainClass,
@@ -151,11 +152,36 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         t0
     }
 
+    val nativeVersion = res
+      .rootDependencies
+      .map(_.module.name.value)
+      .flatMap { name =>
+        val elems = name.split('_')
+        if (elems.length >= 3)
+          Seq(elems(elems.length - 2))
+        else
+          Nil
+      }
+      .filter(_.startsWith("native"))
+      .map(_.stripPrefix("native"))
+      .distinct
+      .map(coursier.core.Version(_))
+      .sorted
+      .lastOption
+      .map(_.repr)
+      .getOrElse {
+        // FIXME Throw here?
+        "0.3"
+      }
+
     // kind of lame, I know
     var wroteBat = false
 
-    if (params.specific.native)
-      createNativeBootstrap(params, files.map(_._2), mainClass, pool)
+    if (params.sharedLaunch.resolve.output.verbosity >= 1)
+      System.err.println(s"Using scala-native version $nativeVersion")
+
+    if (params.sharedLaunch.resolve.dependency.native)
+      createNativeBootstrap(params, files.map(_._2), mainClass, pool, nativeVersion)
     else {
       val (asFiles, asUrls) = files.partition {
         case (a, _) =>

@@ -16,7 +16,7 @@ final case class BootstrapOptions(
   def addApp(app: RawAppDescriptor): BootstrapOptions =
     copy(
       sharedLaunchOptions = sharedLaunchOptions.addApp(app),
-      options = options.addApp(app)
+      options = options.addApp(app, sharedLaunchOptions.resolveOptions.dependencyOptions.native)
     )
 }
 

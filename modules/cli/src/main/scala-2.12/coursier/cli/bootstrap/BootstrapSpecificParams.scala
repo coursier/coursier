@@ -12,7 +12,6 @@ final case class BootstrapSpecificParams(
   standalone: Boolean,
   embedFiles: Boolean,
   javaOptions: Seq[String],
-  native: Boolean,
   assembly: Boolean,
   createBatFile: Boolean,
   assemblyRules: Seq[Assembly.Rule],
@@ -26,10 +25,10 @@ final case class BootstrapSpecificParams(
 }
 
 object BootstrapSpecificParams {
-  def apply(options: BootstrapSpecificOptions): ValidatedNel[String, BootstrapSpecificParams] = {
+  def apply(options: BootstrapSpecificOptions, native: Boolean): ValidatedNel[String, BootstrapSpecificParams] = {
 
     val validateOutputType = {
-      val count = Seq(options.assembly.exists(identity), options.standalone.exists(identity), options.native).count(identity)
+      val count = Seq(options.assembly.exists(identity), options.standalone.exists(identity), native).count(identity)
       if (count > 1)
         Validated.invalidNel("Only one of --assembly, --standalone, or --native, can be specified")
       else
@@ -77,7 +76,6 @@ object BootstrapSpecificParams {
           standalone,
           options.embedFiles,
           javaOptions,
-          options.native,
           assembly,
           createBatFile,
           prependRules ++ rules,

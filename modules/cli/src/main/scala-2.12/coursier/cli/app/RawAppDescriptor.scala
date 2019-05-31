@@ -11,7 +11,7 @@ import scala.language.implicitConversions
 final case class RawAppDescriptor(
   dependencies: List[String],
   repositories: List[String] = Nil,
-  sharedLoaderDependencies: List[String] = Nil,
+  shared: List[String] = Nil,
   exclusions: List[String] = Nil,
   launcherType: String = "bootstrap",
   classifiers: List[String] = Nil,
@@ -20,7 +20,8 @@ final case class RawAppDescriptor(
   javaOptions: List[String] = Nil,
   properties: RawAppDescriptor.Properties = RawAppDescriptor.Properties(Nil),
   scalaVersion: Option[String] = None,
-  name: Option[String] = None
+  name: Option[String] = None,
+  graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None
 ) {
   def isEmpty: Boolean =
     this == RawAppDescriptor(Nil)
@@ -33,7 +34,7 @@ final case class RawAppDescriptor(
     val dependenciesV = validationNelToCats(
       DependencyParser.javaOrScalaDependencies(dependencies, Configuration.defaultCompile)
     )
-    val sharedDependenciesV = validationNelToCats(ModuleParser.javaOrScalaModules(sharedLoaderDependencies))
+    val sharedDependenciesV = validationNelToCats(ModuleParser.javaOrScalaModules(shared))
 
     val exclusionsV = validationNelToCats(ModuleParser.javaOrScalaModules(exclusions)).map(_.map {
       case j: JavaOrScalaModule.JavaModule =>
@@ -109,7 +110,8 @@ final case class RawAppDescriptor(
           javaOptions,
           properties.props.sorted,
           scalaVersion,
-          name
+          name,
+          graalvm.map(_.graalvmOptions)
         )
     }
   }
@@ -164,13 +166,41 @@ object RawAppDescriptor {
       }
   }
 
+  import argonaut.ArgonautShapeless._
+
+  final case class RawGraalvmOptions(
+    options: List[String] = Nil,
+    reflection: Option[List[JsonObject]] = None
+  ) {
+    def graalvmOptions: AppDescriptor.GraalvmOptions =
+      AppDescriptor.GraalvmOptions(
+        options,
+        reflection.map(l => Json.array(l.map(Json.jObject): _*).nospaces)
+      )
+  }
+
+  object RawGraalvmOptions {
+
+    private implicit val encodeObj: EncodeJson[JsonObject] =
+      EncodeJson(Json.jObject)
+    private implicit val decodeObj: DecodeJson[JsonObject] =
+      DecodeJson { c =>
+        c.focus.obj match {
+          case Some(obj) => DecodeResult.ok(obj)
+          case None => DecodeResult.fail("Expected object", c.history)
+        }
+      }
+
+    implicit val encoder = EncodeJson.of[RawGraalvmOptions]
+    implicit val decoder = DecodeJson.of[RawGraalvmOptions]
+
+  }
+
   private[app] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
     v.either match {
       case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
       case Right(r) => Validated.validNel(r)
     }
-
-  import argonaut.ArgonautShapeless._
 
   implicit val encoder = EncodeJson.of[RawAppDescriptor]
   implicit val decoder = DecodeJson.of[RawAppDescriptor]

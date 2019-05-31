@@ -1,6 +1,6 @@
 package coursier.cli.install
 
-import java.io.{File, FileInputStream}
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.math.BigInteger
 import java.net.URLClassLoader
 import java.nio.channels.{FileChannel, FileLock}
@@ -9,7 +9,7 @@ import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, StandardCopyOption, StandardOpenOption}
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.zip.{ZipEntry, ZipFile}
+import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
 import coursier.Fetch
@@ -17,8 +17,11 @@ import coursier.cache.{Cache, CacheLocks}
 import coursier.cache.internal.FileUtil
 import coursier.cli.app.{AppArtifacts, AppDescriptor, LauncherType, RawAppDescriptor, RawSource, Source}
 import coursier.cli.launch.Launch
-import coursier.core.{Artifact, Dependency}
+import coursier.cli.native.{NativeBuilder, NativeLauncherOptions, NativeLauncherParams}
+import coursier.core.{Artifact, Dependency, Repository}
 import coursier.util.Task
+
+import scala.util.control.NonFatal
 
 object AppGenerator {
 
@@ -65,26 +68,37 @@ object AppGenerator {
 
   def readAppDescriptor(f: Path): Option[(AppDescriptor, Array[Byte])] = {
 
+    val from = {
+      val info = f.getParent.resolve(s".${f.getFileName}.info")
+      if (Files.isRegularFile(info))
+        info
+      else
+        f
+    }
+
     var zf: ZipFile = null
 
     try {
-      zf = new ZipFile(f.toFile)
+      zf = new ZipFile(from.toFile)
       val entOpt = Option(zf.getEntry(jsonDescFilePath))
 
       entOpt.map { ent =>
         val content = FileUtil.readFully(zf.getInputStream(ent))
         val e = RawAppDescriptor.parse(new String(content, StandardCharsets.UTF_8))
-          .left.map(err => new ErrorParsingAppDescription(s"$f!$jsonDescFilePath", err))
+          .left.map(err => new ErrorParsingAppDescription(s"$from!$jsonDescFilePath", err))
           .right.flatMap { r =>
             r.appDescriptor
               .toEither
               .left.map { errors =>
-                new ErrorProcessingAppDescription(s"$f!$jsonDescFilePath", errors.toList.mkString(", "))
+                new ErrorProcessingAppDescription(s"$from!$jsonDescFilePath", errors.toList.mkString(", "))
               }
           }
         val desc = e.fold(throw _, identity)
         (desc, content)
       }
+    } catch {
+      case NonFatal(e) =>
+        throw new Exception(s"Reading $from", e)
     } finally {
       if (zf != null)
         zf.close()
@@ -113,13 +127,16 @@ object AppGenerator {
         val source = e.fold(throw _, identity)
         (source, content)
       }
+    } catch {
+      case NonFatal(e) =>
+        throw new Exception(s"Reading $f", e)
     } finally {
       if (zf != null)
         zf.close()
     }
   }
 
-  private def writing[T](baseDir: Path, dest: Path, verbosity: Int)(f: Path => T): T = {
+  private def writing[T](baseDir: Path, dest: Path, verbosity: Int)(f: (Path, Path) => T): T = {
 
     // ensuring we're the only process trying to write dest
     // - acquiring a lock (lockFile) while writing
@@ -128,6 +145,8 @@ object AppGenerator {
 
     val dir = dest.getParent
     val tmpDest = dir.resolve(s".${dest.getFileName}.part")
+    val info = dir.resolve(s".${dest.getFileName}.info")
+    val tmpInfo = dir.resolve(s".${dest.getFileName}.info.part")
     val lockFile = dir.resolve(s".${dest.getFileName}.lock")
     var channel: FileChannel = null
     try {
@@ -143,7 +162,7 @@ object AppGenerator {
       var lock: FileLock = null
       try {
         lock = channel.lock()
-        val res = f(tmpDest)
+        val res = f(tmpDest, tmpInfo)
         if (Files.isRegularFile(tmpDest)) {
           if (verbosity >= 2) {
             System.err.println(s"Wrote $tmpDest")
@@ -158,6 +177,21 @@ object AppGenerator {
           if (verbosity == 1)
             System.err.println(s"Wrote $dest")
         }
+        if (Files.isRegularFile(tmpInfo)) {
+          if (verbosity >= 2) {
+            System.err.println(s"Wrote $tmpInfo")
+            System.err.println(s"Moving $tmpInfo to $info")
+          }
+          Files.deleteIfExists(info) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+          Files.move(
+            tmpInfo,
+            info,
+            StandardCopyOption.ATOMIC_MOVE
+          )
+          if (verbosity == 1)
+            System.err.println(s"Wrote $info")
+        } else
+          Files.deleteIfExists(info)
         res
       } finally {
         if (lock != null)
@@ -210,6 +244,39 @@ object AppGenerator {
     Launch.retainedMainClassOpt(m, mainDependencyOpt) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
   }
 
+  private def writeInfoFile(dest: Path, entries: Seq[(ZipEntry, Array[Byte])]): Unit = {
+    var fos: FileOutputStream = null
+    var zos: ZipOutputStream = null
+    try {
+      fos = new FileOutputStream(dest.toFile)
+      zos = new ZipOutputStream(fos)
+      for ((ent, b) <- entries) {
+        zos.putNextEntry(ent)
+        zos.write(b)
+        zos.closeEntry()
+      }
+    } finally {
+      if (zos != null)
+        zos.close()
+      if (fos != null)
+        fos.close()
+    }
+  }
+
+  private def withTempFile[T](content: Array[Byte])(t: Path => T): T = {
+
+    val path = Files.createTempFile("temp", ".tmp")
+
+    try {
+      println(s"Writing $path\n${new String(content, StandardCharsets.UTF_8)}\n")
+      Files.write(path, content)
+      t(path)
+    }
+    finally {
+      Files.deleteIfExists(path)
+    }
+  }
+
   def createOrUpdate(
     descOpt: Option[(AppDescriptor, Array[Byte])],
     sourceReprOpt: Option[Array[Byte]],
@@ -219,23 +286,32 @@ object AppGenerator {
     currentTime: Instant = Instant.now(),
     verbosity: Int = 0,
     force: Boolean = false,
-    graalvmParamsOpt: Option[GraalvmParams] = None
+    graalvmParamsOpt: Option[GraalvmParams] = None,
+    coursierRepositories: Seq[Repository] = Nil
   ): Boolean =
-    writing(baseDir, dest, verbosity) { tmpDest =>
+    writing(baseDir, dest, verbosity) { (tmpDest, tmpInfo) =>
+
+      val infoFile = {
+        val f = dest.getParent.resolve(s".${dest.getFileName}.info")
+        if (Files.isRegularFile(f))
+          f
+        else
+          dest
+      }
 
       val (desc, descRepr) = descOpt.getOrElse {
-        if (Files.exists(dest))
-          readAppDescriptor(dest) match {
-            case None => throw new CannotReadAppDescriptionInLauncher(dest)
+        if (Files.exists(infoFile))
+          readAppDescriptor(infoFile) match {
+            case None => throw new CannotReadAppDescriptionInLauncher(infoFile)
             case Some(d) => d
           }
         else
-          throw new LauncherNotFound(dest)
+          throw new LauncherNotFound(infoFile)
       }
 
       val sourceReprOpt0 = sourceReprOpt.orElse {
-        if (Files.exists(dest))
-          readSource(dest).map(_._2)
+        if (Files.exists(infoFile))
+          readSource(infoFile).map(_._2)
         else
           None
       }
@@ -253,13 +329,13 @@ object AppGenerator {
         lock(artifacts)
       }
 
-      lazy val upToDate = Files.exists(dest) && {
+      lazy val upToDate = Files.exists(infoFile) && {
 
         // TODO Look for files on the side too (native launchers)
 
         var f: ZipFile = null
         try {
-          f = new ZipFile(dest.toFile)
+          f = new ZipFile(infoFile.toFile)
           val lockEntryOpt = Option(f.getEntry(lockFilePath))
           val sharedLockEntryOpt = Option(f.getEntry(sharedLockFilePath))
           val descFileEntryOpt = Option(f.getEntry(jsonDescFilePath))
@@ -272,7 +348,7 @@ object AppGenerator {
             // FIXME Don't just throw in case of malformed file?
             val s = new String(read(ent), StandardCharsets.UTF_8)
             Lock.read(s) match {
-              case Left(err) => throw new ErrorReadingLockFile(s"$dest!${ent.getName}", err)
+              case Left(err) => throw new ErrorReadingLockFile(s"$infoFile!${ent.getName}", err)
               case Right(l) => l
             }
           }
@@ -287,6 +363,9 @@ object AppGenerator {
             initialSharedLockOpt == sharedLockOpt &&
             initialAppDesc.contains(descRepr.toSeq) &&
             initialSource == sourceReprOpt0.map(_.toSeq)
+        } catch {
+          case NonFatal(e) =>
+            throw new Exception(s"Reading $infoFile", e)
         } finally {
           if (f != null)
             f.close()
@@ -314,37 +393,40 @@ object AppGenerator {
       if (!force && upToDate)
         false
       else {
-        val lockFileEntry = {
-          val e = new ZipEntry(lockFilePath)
-          e.setLastModifiedTime(FileTime.from(currentTime))
-          e.setCompressedSize(-1L)
-          val content = lock0.repr.getBytes(StandardCharsets.UTF_8)
-          e -> content
-        }
+        val extraEntries = {
 
-        val sharedLockFileEntryOpt = sharedLockOpt.map { lock =>
-          val e = new ZipEntry(sharedLockFilePath)
-          e.setLastModifiedTime(FileTime.from(currentTime))
-          e.setCompressedSize(-1L)
-          val content = lock.repr.getBytes(StandardCharsets.UTF_8)
-          e -> content
-        }
+          val lockFileEntry = {
+            val e = new ZipEntry(lockFilePath)
+            e.setLastModifiedTime(FileTime.from(currentTime))
+            e.setCompressedSize(-1L)
+            val content = lock0.repr.getBytes(StandardCharsets.UTF_8)
+            e -> content
+          }
 
-        val destEntry = {
-          val e = new ZipEntry(jsonDescFilePath)
-          e.setLastModifiedTime(FileTime.from(currentTime))
-          e.setCompressedSize(-1L)
-          e -> descRepr
-        }
+          val sharedLockFileEntryOpt = sharedLockOpt.map { lock =>
+            val e = new ZipEntry(sharedLockFilePath)
+            e.setLastModifiedTime(FileTime.from(currentTime))
+            e.setCompressedSize(-1L)
+            val content = lock.repr.getBytes(StandardCharsets.UTF_8)
+            e -> content
+          }
 
-        val sourceEntryOpt = sourceReprOpt0.map { sourceRepr =>
-          val e = new ZipEntry(jsonSourceFilePath)
-          e.setLastModifiedTime(FileTime.from(currentTime))
-          e.setCompressedSize(-1L)
-          e -> sourceRepr
-        }
+          val destEntry = {
+            val e = new ZipEntry(jsonDescFilePath)
+            e.setLastModifiedTime(FileTime.from(currentTime))
+            e.setCompressedSize(-1L)
+            e -> descRepr
+          }
 
-        val extraEntries = Seq(destEntry, lockFileEntry) ++ sourceEntryOpt.toSeq ++ sharedLockFileEntryOpt.toSeq
+          val sourceEntryOpt = sourceReprOpt0.map { sourceRepr =>
+            val e = new ZipEntry(jsonSourceFilePath)
+            e.setLastModifiedTime(FileTime.from(currentTime))
+            e.setCompressedSize(-1L)
+            e -> sourceRepr
+          }
+
+          Seq(destEntry, lockFileEntry) ++ sourceEntryOpt.toSeq ++ sharedLockFileEntryOpt.toSeq
+        }
 
         desc.launcherType match {
           case LauncherType.Bootstrap | LauncherType.Standalone =>
@@ -400,25 +482,41 @@ object AppGenerator {
             try {
               // FIXME Allow to adjust merge rules?
               Assembly.create(
-                appArtifacts.fetchResult.artifacts.map(_._2),
+                appArtifacts.fetchResult.files,
                 desc.javaOptions,
                 mainClass,
                 assemblyDest,
-                extraZipEntries = extraEntries
+                extraZipEntries = if (graalvmParamsOpt0.isEmpty) extraEntries else Nil
               )
 
               for (graalvmParams <- graalvmParamsOpt0) {
-                val cmd = Seq(s"${graalvmParams.home}/bin/native-image", "--no-server") ++
-                  graalvmParams.extraNativeImageOptions ++
-                  Seq("-jar", assemblyDest.toString, tmpDest.toString)
-                val b = new ProcessBuilder(cmd: _*)
-                  .inheritIO()
-                val p = b.start()
-                val retCode = p.waitFor()
-                if (retCode != 0)
-                  throw new ErrorRunningGraalvmNativeImage(retCode)
 
-                // TODO Write app descriptor and lock file in hidden files on the side
+                def generate(extraArgs: String*): Unit = {
+                  val cmd = Seq(s"${graalvmParams.home}/bin/native-image", "--no-server") ++
+                    desc.graalvmOptions.toSeq.flatMap(_.options) ++
+                    graalvmParams.extraNativeImageOptions ++
+                    extraArgs ++
+                    Seq("-jar", assemblyDest.toString, tmpDest.toString)
+                  if (verbosity >= 1)
+                    System.err.println(s"Running $cmd")
+                  val b = new ProcessBuilder(cmd: _*)
+                    .inheritIO()
+                  val p = b.start()
+                  val retCode = p.waitFor()
+                  if (retCode != 0)
+                    throw new ErrorRunningGraalvmNativeImage(retCode)
+                }
+
+                desc.graalvmOptions.flatMap(_.reflectionConf) match {
+                  case None =>
+                    generate()
+                  case Some(conf) =>
+                    withTempFile(conf.getBytes(StandardCharsets.UTF_8)) { confFile =>
+                      generate(s"-H:ReflectionConfigurationFiles=${confFile.toAbsolutePath}")
+                    }
+                }
+
+                writeInfoFile(tmpInfo, extraEntries)
               }
             } finally {
               for (hook <- hookOpt) {
@@ -426,6 +524,28 @@ object AppGenerator {
                 Runtime.getRuntime.removeShutdownHook(hook)
               }
             }
+
+          case LauncherType.ScalaNative =>
+
+            assert(appArtifacts.shared.isEmpty) // just in case
+
+            val fetch  = coursier.Fetch(cache)
+              .withRepositories(coursierRepositories)
+
+            val builder = NativeBuilder.load(fetch, appArtifacts.platformSuffixOpt.fold("")(_.stripPrefix("_native")))
+
+            // FIXME Allow options to be tweaked
+            val params = NativeLauncherParams(NativeLauncherOptions()).toEither.right.get
+
+            builder.build(
+              mainClass,
+              appArtifacts.fetchResult.files,
+              tmpDest.toFile,
+              params,
+              verbosity = verbosity
+            )
+
+            writeInfoFile(tmpInfo, extraEntries)
         }
 
         if (desc.launcherType.needsBatOnWindows && LauncherBat.isWindows) {

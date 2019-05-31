@@ -2,9 +2,10 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
-import coursier.{moduleNameString, organizationString}
+import coursier.moduleString
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
+import coursier.parse.JavaOrScalaModule
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatestplus.junit.JUnitRunner
@@ -30,9 +31,10 @@ class CliUnitTest extends FlatSpec {
   "Normal text" should "parse correctly" in withFile(
     "org1:name1--org2:name2") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val params = DependencyParams("2.12.8", options)
+    val params = DependencyParams(options)
       .fold(e => sys.error(e.toString), identity)
-    assert(params.perModuleExclude.equals(Map("org1:name1" -> Set((org"org2", name"name2")))))
+    val expected = Map(JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(JavaOrScalaModule.JavaModule(mod"org2:name2")))
+    assert(params.perModuleExclude.equals(expected), s"got ${params.perModuleExclude}")
   }
 
   "Multiple excludes" should "be combined" in withFile(
@@ -41,11 +43,13 @@ class CliUnitTest extends FlatSpec {
       "org4:name4--org5:name5") { (file, _) =>
 
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val params = DependencyParams("2.12.8", options)
+    val params = DependencyParams(options)
       .fold(e => sys.error(e.toString), identity)
-    assert(params.perModuleExclude.equals(Map(
-      "org1:name1" -> Set((org"org2", name"name2"), (org"org3", name"name3")),
-      "org4:name4" -> Set((org"org5", name"name5")))))
+    val expected = Map(
+      JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(JavaOrScalaModule.JavaModule(mod"org2:name2"), JavaOrScalaModule.JavaModule(mod"org3:name3")),
+      JavaOrScalaModule.JavaModule(mod"org4:name4") -> Set(JavaOrScalaModule.JavaModule(mod"org5:name5"))
+    )
+    assert(params.perModuleExclude.equals(expected))
   }
 
   "extra --" should "error" in withFile(
@@ -53,7 +57,7 @@ class CliUnitTest extends FlatSpec {
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams("2.12.8", options).toEither match {
+    DependencyParams(options).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>
@@ -64,7 +68,7 @@ class CliUnitTest extends FlatSpec {
   "child has no name" should "error" in withFile(
     "org1:name1--org2:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams("2.12.8", options).toEither match {
+    DependencyParams(options).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>
@@ -75,7 +79,7 @@ class CliUnitTest extends FlatSpec {
   "child has nothing" should "error" in withFile(
     "org1:name1--:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams("2.12.8", options).toEither match {
+    DependencyParams(options).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>

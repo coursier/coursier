@@ -55,7 +55,8 @@ final case class ResolveOptions(
         exclude = {
           val previous = dependencyOptions.exclude
           previous ++ app.exclusions.filterNot(previous.toSet)
-        }
+        },
+        native = app.launcherType == "scala-native"
       )
     )
 }

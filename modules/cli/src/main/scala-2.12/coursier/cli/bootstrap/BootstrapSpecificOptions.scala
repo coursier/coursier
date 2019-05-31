@@ -18,9 +18,6 @@ final case class BootstrapSpecificOptions(
   @Value("option")
   @Short("J")
     javaOpt: List[String] = Nil,
-  @Help("Generate native launcher")
-  @Short("S")
-    native: Boolean = false,
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
@@ -41,7 +38,7 @@ final case class BootstrapSpecificOptions(
   @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
     disableJarChecking: Option[Boolean] = None
 ) {
-  def addApp(app: RawAppDescriptor): BootstrapSpecificOptions = {
+  def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
     val count = Seq(assembly.exists(identity), standalone.exists(identity), native).count(identity)
     copy(
       output = output.orElse(app.name),

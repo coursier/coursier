@@ -84,6 +84,20 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
       }
     }
   }
+
+  def order: Task[FileSet] = {
+
+    val split = Group.split(this)
+
+    // dependencies before dependees
+    // JARs / javadoc / sources before POMs
+    // MD5 / SHA1 before underlying file
+    // sig before signed file
+    // standard files before maven-metadata.xml
+    // POMs at the end of a module
+
+    ???
+  }
 }
 
 object FileSet {

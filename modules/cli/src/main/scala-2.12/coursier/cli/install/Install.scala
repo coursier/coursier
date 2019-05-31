@@ -110,9 +110,7 @@ object Install extends CaseApp[InstallOptions] {
         val descOpt = Some(params.rawAppDescriptor.copy(dependencies = deps.toList))
           .filter(!_.isEmpty)
           .map { desc =>
-            desc.copy(
-              repositories = (if (params.defaultRepositories) List("central") else Nil) ++ desc.repositories
-            ).appDescriptor.toEither match {
+            desc.appDescriptor.toEither match {
               case Left(errors) =>
                 for (err <- errors.toList)
                   System.err.println(err)
@@ -147,7 +145,8 @@ object Install extends CaseApp[InstallOptions] {
       Instant.now(),
       params.shared.verbosity,
       params.shared.forceUpdate,
-      params.shared.graalvmParamsOpt
+      params.shared.graalvmParamsOpt,
+      coursierRepositories = params.repositories
     )
 
     if (wroteSomething)

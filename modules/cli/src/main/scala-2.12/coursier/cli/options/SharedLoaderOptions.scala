@@ -27,7 +27,7 @@ final case class SharedLoaderOptions(
     copy(
       shared = {
         val previous = shared
-        previous ++ app.sharedLoaderDependencies.filterNot(previous.toSet)
+        previous ++ app.shared.filterNot(previous.toSet)
       }
     )
 }

@@ -168,7 +168,16 @@ object DependencyParser {
         split(rest)
     }
 
-    val (coords, rawAttrs) = input.split(":", 4) match {
+    val (coords, rawAttrs) = input.split(":", 6) match {
+      case Array(org, "", "", name, "", rest) =>
+        val (coordsEnd, attrs) = splitRest(rest)
+        (s"$org:::$name::$coordsEnd", attrs)
+      case Array(org, "", name, "", rest) =>
+        val (coordsEnd, attrs) = splitRest(rest)
+        (s"$org::$name::$coordsEnd", attrs)
+      case Array(org, "", "", name, rest) =>
+        val (coordsEnd, attrs) = splitRest(rest)
+        (s"$org:::$name:$coordsEnd", attrs)
       case Array(org, "", name, rest) =>
         val (coordsEnd, attrs) = splitRest(rest)
         (s"$org::$name:$coordsEnd", attrs)
@@ -225,30 +234,42 @@ object DependencyParser {
             val dummyModule = Module(Organization(""), ModuleName(""), Map.empty)
 
             val parts0 = parts match {
+              case Array(org, "", "", rawName, "", version, config) =>
+                Right((org, rawName, version, Configuration(config), ":::", true))
+
+              case Array(org, "", "", rawName, "", version) =>
+                Right((org, rawName, version, defaultConfiguration, ":::", true))
+
+              case Array(org, "", rawName, "", version, config) =>
+                Right((org, rawName, version, Configuration(config), "::", true))
+
+              case Array(org, "", rawName, "", version) =>
+                Right((org, rawName, version, defaultConfiguration, "::", true))
+
               case Array(org, "", "", rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), ":::"))
+                Right((org, rawName, version, Configuration(config), ":::", false))
 
               case Array(org, "", "", rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, ":::"))
+                Right((org, rawName, version, defaultConfiguration, ":::", false))
 
               case Array(org, "", rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), "::"))
+                Right((org, rawName, version, Configuration(config), "::", false))
 
               case Array(org, "", rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, "::"))
+                Right((org, rawName, version, defaultConfiguration, "::", false))
 
               case Array(org, rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), ":"))
+                Right((org, rawName, version, Configuration(config), ":", false))
 
               case Array(org, rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, ":"))
+                Right((org, rawName, version, defaultConfiguration, ":", false))
 
               case _ =>
                 Left(s"Malformed dependency: $input")
             }
 
             parts0.right.flatMap {
-              case (org, rawName, version, config, orgNameSep) =>
+              case (org, rawName, version, config, orgNameSep, withPlatformSuffix) =>
                 ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName")
                   .right
                   .map { mod =>
@@ -261,7 +282,17 @@ object DependencyParser {
                       optional = false,
                       transitive = true
                     )
-                    (JavaOrScalaDependency(mod, dep), extraDependencyParams)
+                    val dep0 = JavaOrScalaDependency(mod, dep)
+                    val dep1 =
+                      if (withPlatformSuffix)
+                        dep0 match {
+                          case j: JavaOrScalaDependency.JavaDependency => j
+                          case s: JavaOrScalaDependency.ScalaDependency =>
+                            s.copy(withPlatformSuffix = true)
+                        }
+                      else
+                        dep0
+                    (dep1, extraDependencyParams)
                   }
             }
         }
