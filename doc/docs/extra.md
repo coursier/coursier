@@ -22,7 +22,7 @@ $ coursier resolve -t io.circe:circe-core_2.11:0.4.1
 ...
 ```
 
-From SBT, with sbt-coursier enabled, the command `coursierDependencyTree` prints the dependency tree of the various sub-projects,
+From sbt, with sbt-coursier enabled, the command `coursierDependencyTree` prints the dependency tree of the various sub-projects,
 ```
 > coursierDependencyTree
 io.get-coursier:coursier_2.11:1.0.1-SNAPSHOT
@@ -60,7 +60,7 @@ To use artifacts from repositories requiring credentials, pass the user and pass
 $ coursier fetch -r https://user:pass@company.com/repo com.company:lib:0.1.0
 ```
 
-From SBT, add the setting `coursierUseSbtCredentials := true` for sbt-coursier to use the credentials set via the `credentials` key. This manual step was added in order for the `credentials` setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.
+From sbt, add the setting `coursierUseSbtCredentials := true` for sbt-coursier to use the credentials set via the `credentials` key. This manual step was added in order for the `credentials` setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.
 
 ## Extra protocols
 

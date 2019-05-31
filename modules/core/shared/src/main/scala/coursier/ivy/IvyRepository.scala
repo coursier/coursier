@@ -10,7 +10,7 @@ final case class IvyRepository(
   withChecksums: Boolean,
   withSignatures: Boolean,
   withArtifacts: Boolean,
-  // hack for SBT putting infos in properties
+  // hack for sbt putting infos in properties
   dropInfoAttributes: Boolean,
   authentication: Option[Authentication]
 ) extends Repository {
@@ -325,7 +325,7 @@ object IvyRepository {
     withChecksums: Boolean = true,
     withSignatures: Boolean = true,
     withArtifacts: Boolean = true,
-    // hack for SBT putting infos in properties
+    // hack for sbt putting infos in properties
     dropInfoAttributes: Boolean = false,
     authentication: Option[Authentication] = None,
     substituteDefault: Boolean = true
@@ -364,7 +364,7 @@ object IvyRepository {
     withChecksums: Boolean = true,
     withSignatures: Boolean = true,
     withArtifacts: Boolean = true,
-    // hack for SBT putting infos in properties
+    // hack for sbt putting infos in properties
     dropInfoAttributes: Boolean = false,
     authentication: Option[Authentication] = None
   ): IvyRepository =

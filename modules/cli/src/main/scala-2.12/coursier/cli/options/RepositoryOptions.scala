@@ -12,10 +12,10 @@ final case class RepositoryOptions(
   @Help("Do not add default repositories (~/.ivy2/local, and Central)")
     noDefault: Boolean = false,
 
-  @Help("Modify names in Maven repository paths for SBT plugins")
+  @Help("Modify names in Maven repository paths for sbt plugins")
     sbtPluginHack: Boolean = true,
 
-  @Help("Drop module attributes starting with 'info.' - these are sometimes used by projects built with SBT")
+  @Help("Drop module attributes starting with 'info.' - these are sometimes used by projects built with sbt")
     dropInfoAttr: Boolean = false,
 
   @Help("Channel for apps")

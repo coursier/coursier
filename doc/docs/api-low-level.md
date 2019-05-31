@@ -67,7 +67,7 @@ val repositories = Seq(
 The first one, `Cache.ivy2Local`, is defined in `coursier.Cache`, itself from the `coursier-cache` module that
 we added above. It is an `IvyRepository`, picking things under `~/.ivy2/local`. An `IvyRepository`
 is related to the [Ivy](http://ant.apache.org/ivy/) build tool. This kind of repository involves a so-called [pattern](http://ant.apache.org/ivy/history/2.4.0/concept.html#patterns), with
-various properties. These are not of very common use in Scala, although SBT uses them a bit.
+various properties. These are not of very common use in Scala, although sbt uses them a bit.
 
 The second repository is a `MavenRepository`. These are simpler than the Ivy repositories. They're the ones
 we're the most used to in Scala. Common ones like [Central](https://repo1.maven.org/maven2) like here, or the repositories

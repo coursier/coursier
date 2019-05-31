@@ -31,9 +31,9 @@ It handles fancy Maven features like
 
 and is able to fetch metadata and artifacts from both Maven and Ivy repositories.
 
-Compared to the default dependency resolution of SBT, it adds:
+Compared to the default dependency resolution of sbt, it adds:
 * downloading of artifacts in parallel,
-* better offline mode - one can safely work with snapshot dependencies if these are in cache (SBT tends to try and fail if it cannot check for updates),
+* better offline mode - one can safely work with snapshot dependencies if these are in cache (sbt tends to try and fail if it cannot check for updates),
 * non obfuscated cache (cache structure just mimics the URL it caches),
 * no global lock (no "Waiting for ~/.ivy2/.sbt.ivy.lock to be available").
 
@@ -46,12 +46,12 @@ Lastly, it can be used programmatically via its [API](#api) and has a Scala JS [
 ## Table of content
 
 1. [Quick start](#quick-start)
-   1. [SBT plugin](#sbt-plugin)
+   1. [sbt plugin](#sbt-plugin)
    2. [Command-line](#command-line)
    3. [API](#api)
 2. [Why](#why)
 3. [Usage](#usage)
-   1. [SBT plugin](#sbt-plugin-1)
+   1. [sbt plugin](#sbt-plugin-1)
    2. [Command-line](#command-line-1)
       1. [launch](#launch)
       2. [fetch](#fetch)
@@ -71,14 +71,14 @@ Lastly, it can be used programmatically via its [API](#api) and has a Scala JS [
 
 ## Quick start
 
-### SBT plugin
+### sbt plugin
 
-Enable the SBT plugin by adding
+Enable the sbt plugin by adding
 ```scala
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.3")
 ```
 to `~/.sbt/0.13/plugins/build.sbt` (enables it globally), or to the `project/plugins.sbt` file
-of an SBT project. Tested with SBT 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13 / 0.13.15 / 0.13.16-M1 / 1.0.1-M5.
+of an sbt project. Tested with sbt 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13 / 0.13.15 / 0.13.16-M1 / 1.0.1-M5.
 
 
 ### Command-line
@@ -201,7 +201,7 @@ The default global cache used by coursier is `~/.coursier/cache/v1`. E.g. the ar
 `https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.11.8/scala-library-2.11.8.jar`
 will land in `~/.coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.11.8/scala-library-2.11.8.jar`.
 
-From the SBT plugin, the default repositories are the ones provided by SBT (typically Central or JFrog, and `~/.ivy2/local`).
+From the sbt plugin, the default repositories are the ones provided by sbt (typically Central or JFrog, and `~/.ivy2/local`).
 From the CLI tools, these are Central (`https://repo1.maven.org/maven2`) and `~/.ivy2/local`.
 From the API, these are specified manually - you are encouraged to use those too.
 
@@ -224,25 +224,25 @@ In most cases, just specifying the corresponding main dependency is enough to la
 
 If all your dependencies are in cache, chances are coursier will not even try to connect to remote repositories. This
 also applies to snapshot dependencies of course - these are only updated on demand, not getting constantly in your way
-like is currently the case by default with SBT.
+like is currently the case by default with sbt.
 
-When using coursier from the command-line or via its SBT plugin, sandboxing is just one command away. Just do
+When using coursier from the command-line or via its sbt plugin, sandboxing is just one command away. Just do
 `export COURSIER_CACHE="$(pwd)/.coursier-cache"`, and the cache will become `.coursier-cache` from the current
 directory instead of the default global `~/.coursier/cache/v1`. This allows for example to quickly inspect the content
 of the cache used by a particular project, in case you have any doubt about what's in it.
 
 ## Usage
 
-### SBT plugin
+### sbt plugin
 
-Enable the SBT plugin globally by adding
+Enable the sbt plugin globally by adding
 ```scala
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.3")
 ```
 to `~/.sbt/0.13/plugins/build.sbt`
 
-To enable it on a per-project basis, add it only to the `project/plugins.sbt` of an SBT project.
-The SBT plugin has been tested only with SBT 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13. It doesn't currently work with the SBT 1.0 milestones.
+To enable it on a per-project basis, add it only to the `project/plugins.sbt` of an sbt project.
+The sbt plugin has been tested only with sbt 0.13.8 / 0.13.9 / 0.13.11 / 0.13.12 / 0.13.13. It doesn't currently work with the sbt 1.0 milestones.
 
 Once enabled, the `update`, `updateClassifiers`, and `updateSbtClassifiers` commands are taken care of by coursier. These
 provide more output about what's going on than their default implementations do.
@@ -499,7 +499,7 @@ repositories: Seq[coursier.core.Repository] = List(IvyRepository(Pattern(List(Co
 The first one, `Cache.ivy2Local`, is defined in `coursier.Cache`, itself from the `coursier-cache` module that
 we added above. As we can see, it is an `IvyRepository`, picking things under `~/.ivy2/local`. An `IvyRepository`
 is related to the [Ivy](http://ant.apache.org/ivy/) build tool. This kind of repository involves a so-called [pattern](http://ant.apache.org/ivy/history/2.4.0/concept.html#patterns), with
-various properties. These are not of very common use in Scala, although SBT uses them a bit.
+various properties. These are not of very common use in Scala, although sbt uses them a bit.
 
 The second repository is a `MavenRepository`. These are simpler than the Ivy repositories. They're the ones
 we're the most used to in Scala. Common ones like [Central](https://repo1.maven.org/maven2) like here, or the repositories
@@ -627,7 +627,7 @@ $ coursier resolve -t io.circe:circe-core_2.11:0.4.1
 ...
 ```
 
-From SBT, with sbt-coursier enabled, the command `coursierDependencyTree` prints the dependency tree of the various sub-projects,
+From sbt, with sbt-coursier enabled, the command `coursierDependencyTree` prints the dependency tree of the various sub-projects,
 ```
 > coursierDependencyTree
 io.get-coursier:coursier_2.11:1.0.1-SNAPSHOT
@@ -665,7 +665,7 @@ To use artifacts from repositories requiring credentials, pass the user and pass
 $ coursier fetch -r https://user:pass@company.com/repo com.company:lib:0.1.0
 ```
 
-From SBT, add the setting `coursierUseSbtCredentials := true` for sbt-coursier to use the credentials set via the `credentials` key. This manual step was added in order for the `credentials` setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.
+From sbt, add the setting `coursierUseSbtCredentials := true` for sbt-coursier to use the credentials set via the `credentials` key. This manual step was added in order for the `credentials` setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.
 
 ### Extra protocols
 
@@ -676,7 +676,7 @@ by protocols supported by `java.net.URL` (not thoroughly tested). Support for ot
 
 #### Ivy support is poorly tested
 
-The minimum was made for SBT plugins to be resolved fine (including dependencies
+The minimum was made for sbt plugins to be resolved fine (including dependencies
 between plugins, the possibility that some of them come from Maven repositories,
 with a peculiarities, classifiers - sources, javadoc - should be fine too).
 So it is likely that projects relying more heavily
@@ -685,12 +685,12 @@ on Ivy features could run into the limitations of the current implementation.
 Any issue report related to that, illustrated with public Ivy repositories
 if possible, would be greatly appreciated.
 
-#### *Important*: SBT plugin might mess with published artifacts
+#### *Important*: sbt plugin might mess with published artifacts
 
-SBT seems to require the `update` command to generate a few metadata files
+sbt seems to require the `update` command to generate a few metadata files
 later used by `publish`. If ever there's an issue with these, this might
 add discrepancies in the artifacts published with `publish` or `publishLocal`.
-Should you want to use the coursier SBT plugin while publishing artifacts at the
+Should you want to use the coursier sbt plugin while publishing artifacts at the
 same time, I'd recommend an extreme caution at first, like manually inspecting
 the metadata files and compare with previous ones, to ensure everything's fine.
 
@@ -708,10 +708,10 @@ Plus the inherent amount of bugs arising in a young project :-)
 
 ## FAQ
 
-#### Even though the coursier SBT plugin is enabled and some `coursier*` keys can be found from the SBT prompt, dependency resolution seems still to be handled by SBT itself. Why?
+#### Even though the coursier sbt plugin is enabled and some `coursier*` keys can be found from the sbt prompt, dependency resolution seems still to be handled by sbt itself. Why?
 
-Check that the default SBT settings (`sbt.Defaults.defaultSettings`) are not manually added to your project.
-These define commands that the coursier SBT plugin overrides. Adding them again erases these overrides,
+Check that the default sbt settings (`sbt.Defaults.defaultSettings`) are not manually added to your project.
+These define commands that the coursier sbt plugin overrides. Adding them again erases these overrides,
 effectively disabling coursier.
 
 #### With spark >= 1.5, I get some `NoVerifyError` exceptions related to jboss/netty. Why?
@@ -750,7 +750,7 @@ The `-noverify` option seems to be required after the proguarding step of the ma
 
 #### How to enable sandboxing?
 
-Set the `COURSIER_CACHE` prior to running `coursier` or SBT, like
+Set the `COURSIER_CACHE` prior to running `coursier` or sbt, like
 ```
 $ COURSIER_CACHE=$(pwd)/.coursier-cache coursier
 ```

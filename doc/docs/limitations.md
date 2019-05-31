@@ -6,7 +6,7 @@ title: Limitations
 
 #### Ivy support is poorly tested
 
-The minimum was made for SBT plugins to be resolved fine (including dependencies
+The minimum was made for sbt plugins to be resolved fine (including dependencies
 between plugins, the possibility that some of them come from Maven repositories,
 with a peculiarities, classifiers - sources, javadoc - should be fine too).
 So it is likely that projects relying more heavily
@@ -15,12 +15,12 @@ on Ivy features could run into the limitations of the current implementation.
 Any issue report related to that, illustrated with public Ivy repositories
 if possible, would be greatly appreciated.
 
-#### *Important*: SBT plugin might mess with published artifacts
+#### *Important*: sbt plugin might mess with published artifacts
 
-SBT seems to require the `update` command to generate a few metadata files
+sbt seems to require the `update` command to generate a few metadata files
 later used by `publish`. If ever there's an issue with these, this might
 add discrepancies in the artifacts published with `publish` or `publishLocal`.
-Should you want to use the coursier SBT plugin while publishing artifacts at the
+Should you want to use the coursier sbt plugin while publishing artifacts at the
 same time, I'd recommend an extreme caution at first, like manually inspecting
 the metadata files and compare with previous ones, to ensure everything's fine.
 
