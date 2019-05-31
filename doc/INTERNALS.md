@@ -8,7 +8,7 @@ Mainly in [Definitions.scala](https://github.com/coursier/coursier/blob/master/c
 
 [definition](https://github.com/coursier/coursier/blob/462c16d6db98d35e180a25b0f87aa47083ad98aa/core/shared/src/main/scala/coursier/core/Definitions.scala#L12-L16)
 
-Uniquely designates a... module. Typically, just an organisation (`org.scala-lang`) and a name (`scala-library`). At times, can also contains so called attributes: (unordered) key-value pairs. E.g. the SBT plugins usually have some, like `scalaVersion` with value `2.10` and `sbtVersion` with value `0.13`.
+Uniquely designates a... module. Typically, just an organisation (`org.scala-lang`) and a name (`scala-library`). At times, can also contains so called attributes: (unordered) key-value pairs. E.g. the sbt plugins usually have some, like `scalaVersion` with value `2.10` and `sbtVersion` with value `0.13`.
 
 Two modules having different organisation / name / attributes are simply considered different.
 

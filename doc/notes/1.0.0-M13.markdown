@@ -5,7 +5,7 @@
 * Better --intransitive option from the command-line tools ([#264])
 * Take into account scalaOrganization setting ([#267])
 * Add support for TTL ([#269], [#306])
-* Better error messages from the SBT plugin ([#270])
+* Better error messages from the sbt plugin ([#270])
 * Allow to specify Maven profiles to use ([#293], [#306])
 
 [#262]: https://github.com/alexarchambault/coursier/pull/262

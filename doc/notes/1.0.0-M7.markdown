@@ -4,7 +4,7 @@
   ([#135])
 * Various optimizations, run proguard via sbt-proguard ([#129])
 * Drop info attributes more consistently, fixes an incompatibility of the
-  coursier SBT plugin with SBT scala-js 0.6.6 ([#132])
+  coursier sbt plugin with sbt scala-js 0.6.6 ([#132])
 * Print version in the CLI app help messages ([#130])
 
 [#135]: https://github.com/alexarchambault/coursier/pull/135

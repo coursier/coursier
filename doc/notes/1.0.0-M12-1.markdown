@@ -1,11 +1,11 @@
 ### Changes
 
-* Read credentials from the `credentials` key from the SBT plugin ([#257])
+* Read credentials from the `credentials` key from the sbt plugin ([#257])
 
 This is enabled by default, but isn't fully satisfying as is. `credentials`
-is handled by SBT, and seems to acquire a global lock when queried. If a
-SBT is starting up elsewhere (initial resolution necessarily not handled by coursier)
-or a `publish` command is running in another SBT, these acquire the lock and make the
+is handled by sbt, and seems to acquire a global lock when queried. If a
+sbt is starting up elsewhere (initial resolution necessarily not handled by coursier)
+or a `publish` command is running in another sbt, these acquire the lock and make the
 `credentials` setting, so the update, wait for it. The `coursierUseSbtCredentials` setting
 controls whether coursier checks the `credentials` key. It is set to true by
 default for now, but may not be so in the future because of this lock issue.

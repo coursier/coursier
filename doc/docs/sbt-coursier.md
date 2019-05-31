@@ -50,7 +50,7 @@ Add the following to `~/.sbt/1.0/plugins/build.sbt`,
 @PLUGIN_EXTRA_SBT@addSbtPlugin("io.get-coursier" % "sbt-coursier" % "@PLUGIN_VERSION@")
 ```
 
-#### SBT Native Packager conflict
+#### sbt Native Packager conflict
 
 If you use `sbt-native-packager` and encounter a compile error `java.lang.NoClassDefFoundError: org/vafer/jdeb/Console`,
 there is a work around described in: [#450](https://github.com/coursier/coursier/issues/450).

@@ -11,16 +11,16 @@
 * Cache now designated via a single directory, from the API ([#189])
 * Fix `update-changing` cache mode ([#190])
 * Report update checks in the terminal (like downloads, [#190])
-* Important fix in SBT plugin - it should not mess with publish anymore (that is still handled by SBT / Ivy - [#192])
+* Important fix in sbt plugin - it should not mess with publish anymore (that is still handled by sbt / Ivy - [#192])
 * Don't wrongly consider previous partial download as instantaneously downloaded when starting a download, for bitrate calculations ([#193])
 * Add back support for partial downloads ([#193])
 * Switch to scala 2.11.8, scala JS 0.6.7 ([#197])
 * Change conf mapping separator in output (use semi-colon like Ivy - [#197])
 * Fix verbose option of CLI tools ([#197])
-* CLI tools and SBT plugin less verbose by default ([#197])
+* CLI tools and sbt plugin less verbose by default ([#197])
 * Disable progress bars in non-interactive mode ([#197])
 * Acquire cache-wide lock when creating new directories / file locks in cache ([#197])
-* Add support for `dependencyOverrides` in SBT plugin ([#197])
+* Add support for `dependencyOverrides` in sbt plugin ([#197])
 
 [#171]: https://github.com/alexarchambault/coursier/pull/171
 [#179]: https://github.com/alexarchambault/coursier/pull/179

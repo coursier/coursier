@@ -7,10 +7,10 @@
 * Use system classloader as base classloader when launching apps ([#366])
 * Add support for scala 2.12 ([#368], [#374], with contributions from [@larsrh])
 * Take into account `sbt.log.noformat` property ([#373])
-* Ignore fallback dependencies in SBT plugin if the corresponding URL cannot be found ("`from "url"`", [#373])
+* Ignore fallback dependencies in sbt plugin if the corresponding URL cannot be found ("`from "url"`", [#373])
 * Handle cycles when printing trees ([#376], thanks to [@kzys])
 * Handle OS / JDK conditions in profile activation ([#381])
-* Limit messages in SBT plugin (nothing should be printed if nothing is downloaded, [#381], [#393])
+* Limit messages in sbt plugin (nothing should be printed if nothing is downloaded, [#381], [#393])
 * Add option to swap Scala mainline JARs with Typelevel ones ([#392])
 * Java 6 compatibility ([#401])
 

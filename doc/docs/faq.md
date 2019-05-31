@@ -4,10 +4,10 @@ title: FAQ
 
 *Direct former README import (possibly not up-to-date)*
 
-#### Even though the coursier SBT plugin is enabled and some `coursier*` keys can be found from the SBT prompt, dependency resolution seems still to be handled by SBT itself. Why?
+#### Even though the coursier sbt plugin is enabled and some `coursier*` keys can be found from the sbt prompt, dependency resolution seems still to be handled by sbt itself. Why?
 
-Check that the default SBT settings (`sbt.Defaults.defaultSettings`) are not manually added to your project.
-These define commands that the coursier SBT plugin overrides. Adding them again erases these overrides,
+Check that the default sbt settings (`sbt.Defaults.defaultSettings`) are not manually added to your project.
+These define commands that the coursier sbt plugin overrides. Adding them again erases these overrides,
 effectively disabling coursier.
 
 #### With spark >= 1.5, I get some `NoVerifyError` exceptions related to jboss/netty. Why?
@@ -46,7 +46,7 @@ The `-noverify` option seems to be required after the proguarding step of the ma
 
 #### How to enable sandboxing?
 
-Set the `COURSIER_CACHE` prior to running `coursier` or SBT, like
+Set the `COURSIER_CACHE` prior to running `coursier` or sbt, like
 ```
 $ COURSIER_CACHE=$(pwd)/.coursier-cache coursier
 ```
