@@ -617,12 +617,12 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        val credFilePath = Option(getClass.getResource("/credentials.properties"))
-          .map(_.getPath)
+        val credFileUri = Option(getClass.getResource("/credentials.properties"))
+          .map(_.toURI)
           .getOrElse {
             throw new Exception("credentials.properties resource not found")
           }
-        val credFile = new File(credFilePath)
+        val credFile = new File(credFileUri)
         assert(credFile.exists())
 
         * - {

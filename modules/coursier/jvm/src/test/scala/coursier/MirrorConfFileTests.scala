@@ -1,5 +1,7 @@
 package coursier
 
+import java.io.File
+
 import coursier.params.MirrorConfFile
 import utest._
 
@@ -12,7 +14,7 @@ object MirrorConfFileTests extends TestSuite {
   val tests = Tests {
     'read - {
       val path = Option(getClass.getResource("/empty-mirror.properties"))
-        .map(_.getPath)
+        .map(u => new File(u.toURI).getAbsolutePath)
         .getOrElse {
           throw new Exception("empty-mirror.properties resource not found")
         }
@@ -43,7 +45,7 @@ object MirrorConfFileTests extends TestSuite {
 
       * - {
         val mirrorFilePath = Option(getClass.getResource("/test-mirror.properties"))
-          .map(_.getPath)
+          .map(u => new File(u.toURI).getAbsolutePath)
           .getOrElse {
             throw new Exception("test-mirror.properties resource not found")
           }

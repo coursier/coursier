@@ -154,13 +154,17 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
       else
         options.mainClass
 
-    val mainJar = helper
-      .loader
-      .loadClass(mainClass) // FIXME Check for errors, provide a nicer error message in that case
-      .getProtectionDomain
-      .getCodeSource
-      .getLocation
-      .getPath              // TODO Safety check: protocol must be file
+    val mainJar = {
+      val uri = helper
+        .loader
+        .loadClass(mainClass) // FIXME Check for errors, provide a nicer error message in that case
+        .getProtectionDomain
+        .getCodeSource
+        .getLocation
+        .toURI
+      // TODO Safety check: protocol must be file
+      new File(uri).getAbsolutePath
+    }
 
     val (check, extraJars0) = jars.partition(_.getAbsolutePath == mainJar)
 
