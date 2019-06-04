@@ -16,7 +16,8 @@ final case class AppDescriptor(
   javaOptions: Seq[String],
   javaProperties: Seq[(String, String)],
   scalaVersionOpt: Option[String],
-  nameOpt: Option[String]
+  nameOpt: Option[String],
+  graalvmOptions: Option[AppDescriptor.GraalvmOptions]
 ) {
   def overrideVersion(ver: String): AppDescriptor =
     copy(
@@ -29,4 +30,13 @@ final case class AppDescriptor(
         }
       }
     )
+}
+
+object AppDescriptor {
+
+  final case class GraalvmOptions(
+    options: Seq[String],
+    reflectionConf: Option[String]
+  )
+
 }

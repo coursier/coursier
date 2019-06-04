@@ -34,10 +34,7 @@ object ResolveParams {
     val outputV = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
-    val dependencyV = DependencyParams(
-      resolutionV.toOption.fold(options.resolutionOptions.scalaVersionOrDefault)(_.selectedScalaVersion),
-      options.dependencyOptions
-    )
+    val dependencyV = DependencyParams(options.dependencyOptions)
 
     val benchmark = options.benchmark
     val tree = options.tree

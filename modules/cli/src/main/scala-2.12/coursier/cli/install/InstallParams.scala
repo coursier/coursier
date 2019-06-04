@@ -12,7 +12,6 @@ final case class InstallParams(
   rawAppDescriptor: RawAppDescriptor,
   channels: Seq[Module],
   repositories: Seq[Repository],
-  defaultRepositories: Boolean,
   nameOpt: Option[String]
 )
 
@@ -22,7 +21,7 @@ object InstallParams {
     coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
   }
 
-  private implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
+  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
     v.either match {
       case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
       case Right(r) => Validated.validNel(r)
@@ -58,7 +57,11 @@ object InstallParams {
 
     val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.appOptions.repository))
 
-    val defaultRepositories = options.defaultRepositories
+    val defaultRepositories =
+      if (options.defaultRepositories)
+        coursier.Resolve.defaultRepositories
+      else
+        Nil
 
     val nameOpt = options.name.map(_.trim).filter(_.nonEmpty)
 
@@ -68,8 +71,7 @@ object InstallParams {
           shared,
           rawAppDescriptor,
           channels ++ defaultChannels,
-          repositories,
-          defaultRepositories,
+          defaultRepositories ++ repositories,
           nameOpt
         )
     }

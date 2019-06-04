@@ -264,7 +264,6 @@ lazy val cli = project("cli")
           Deps.argonautShapeless,
           Deps.caseApp,
           Deps.catsCore,
-          Deps.scalaNativeTools,
           Deps.junit % Test, // to be able to run tests with pants
           Deps.scalatest % Test
         )
@@ -278,6 +277,38 @@ lazy val cli = project("cli")
         None
     },
     proguardedCli
+  )
+
+lazy val `cli-native_03` = project("cli-native_03")
+  .dependsOn(cli)
+  .settings(
+    shared,
+    name := "cli-native_0.3",
+    moduleName := name.value,
+    onlyPublishIn("2.12"),
+    coursierPrefix,
+    libs ++= {
+      if (scalaBinaryVersion.value == "2.12")
+        Seq(Deps.scalaNativeTools03)
+      else
+        Seq()
+    }
+  )
+
+lazy val `cli-native_040M2` = project("cli-native_040M2")
+  .dependsOn(cli)
+  .settings(
+    shared,
+    name := "cli-native_0.4.0-M2",
+    moduleName := name.value,
+    onlyPublishIn("2.12"),
+    coursierPrefix,
+    libs ++= {
+      if (scalaBinaryVersion.value == "2.12")
+        Seq(Deps.scalaNativeTools040M2)
+      else
+        Seq()
+    }
   )
 
 lazy val web = project("web")
@@ -373,7 +404,9 @@ lazy val jvm = project("jvm")
     publish,
     cli,
     okhttp,
-    coursierJvm
+    coursierJvm,
+    `cli-native_03`,
+    `cli-native_040M2`
   )
   .settings(
     shared,
@@ -420,7 +453,9 @@ lazy val `coursier-repo` = project("coursier-repo")
     web,
     okhttp,
     coursierJvm,
-    coursierJs
+    coursierJs,
+    `cli-native_03`,
+    `cli-native_040M2`
   )
   .settings(
     shared,

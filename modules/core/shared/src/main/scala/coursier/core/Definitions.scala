@@ -48,8 +48,11 @@ final case class Module(
   def nameWithAttributes: String =
     name.value + (if (attributes.nonEmpty) s";$attributesStr" else "")
 
-  override def toString: String =
+  def repr: String =
     s"${organization.value}:$nameWithAttributes"
+
+  override def toString: String =
+    repr
 
   def orgName: String =
     s"${organization.value}:${name.value}"

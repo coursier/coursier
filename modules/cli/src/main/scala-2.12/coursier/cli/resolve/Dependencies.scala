@@ -5,8 +5,8 @@ import java.net.{URL, URLDecoder}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.scaladex.Scaladex
-import coursier.core.{Configuration, Dependency, ModuleName, Organization}
-import coursier.parse.DependencyParser
+import coursier.core.{Configuration, Dependency, Module, ModuleName, Organization}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{InMemoryRepository, Task}
 
 object Dependencies {
@@ -59,14 +59,12 @@ object Dependencies {
     */
   def handleDependencies(
     rawDependencies: Seq[String],
-    scalaVersion: String,
     defaultConfiguration: Configuration
-  ): ValidatedNel[String, List[(Dependency, Map[String, String])]] =
+  ): ValidatedNel[String, List[(JavaOrScalaDependency, Map[String, String])]] =
     rawDependencies
       .map { s =>
-        DependencyParser.dependencyParams(
+        DependencyParser.javaOrScalaDependencyParams(
           s,
-          scalaVersion,
           defaultConfiguration
         ) match {
           case Left(error) => Validated.invalidNel(error)
@@ -78,12 +76,10 @@ object Dependencies {
 
   def withExtraRepo(
     rawDependencies: Seq[String],
-    scalaVersion: String,
     defaultConfiguration: Configuration,
-    cacheLocalArtifacts: Boolean,
-    extraDependencies: Seq[(Dependency, Map[String, String])]
-  ): Either[Throwable, (List[Dependency], Option[InMemoryRepository])] =
-    handleDependencies(rawDependencies, scalaVersion, defaultConfiguration) match {
+    extraDependencies: Seq[(JavaOrScalaDependency, Map[String, String])]
+  ): Either[Throwable, (List[JavaOrScalaDependency], Option[Map[(JavaOrScalaModule, String), URL]])] =
+    handleDependencies(rawDependencies, defaultConfiguration) match {
       case Validated.Valid(l) =>
 
         val l0 = l ++ extraDependencies
@@ -98,19 +94,11 @@ object Dependencies {
           val m = l0.flatMap {
             case (dep, extraParams) =>
               extraParams.get("url").map { url =>
-                dep.moduleVersion -> new URL(URLDecoder.decode(url, "UTF-8"))
+                (dep.module, dep.version) -> new URL(URLDecoder.decode(url, "UTF-8"))
               }
           }.toMap
 
-          if (m.isEmpty)
-            None
-          else
-            Some(
-              InMemoryRepository(
-                m.mapValues((_, true)),
-                cacheLocalArtifacts
-              )
-            )
+          Some(m).filter(_.nonEmpty)
         }
 
         Right((deps, extraRepoOpt))
@@ -125,18 +113,18 @@ object Dependencies {
   def addExclusions(
     dep: Dependency,
     exclude: Set[(Organization, ModuleName)],
-    perModuleExclude: Map[String, Set[(Organization, ModuleName)]],
+    perModuleExclude: Map[Module, Set[Module]],
   ): Dependency =
     dep.copy(
       exclusions = dep.exclusions |
-        perModuleExclude.getOrElse(dep.module.orgName, Set()) |
+        perModuleExclude.getOrElse(dep.module, Set()).map { m => (m.organization, m.name) } |
         exclude
     )
 
   def addExclusions(
     deps: Seq[Dependency],
     exclude: Set[(Organization, ModuleName)],
-    perModuleExclude: Map[String, Set[(Organization, ModuleName)]],
+    perModuleExclude: Map[Module, Set[Module]],
   ): Seq[Dependency] =
     deps.map { dep =>
       addExclusions(dep, exclude, perModuleExclude)

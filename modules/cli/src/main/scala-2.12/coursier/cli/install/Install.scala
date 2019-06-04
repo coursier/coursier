@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Instant
+import java.util.Locale
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
@@ -110,9 +111,7 @@ object Install extends CaseApp[InstallOptions] {
         val descOpt = Some(params.rawAppDescriptor.copy(dependencies = deps.toList))
           .filter(!_.isEmpty)
           .map { desc =>
-            desc.copy(
-              repositories = (if (params.defaultRepositories) List("central") else Nil) ++ desc.repositories
-            ).appDescriptor.toEither match {
+            desc.appDescriptor.toEither match {
               case Left(errors) =>
                 for (err <- errors.toList)
                   System.err.println(err)
@@ -147,7 +146,8 @@ object Install extends CaseApp[InstallOptions] {
       Instant.now(),
       params.shared.verbosity,
       params.shared.forceUpdate,
-      params.shared.graalvmParamsOpt
+      params.shared.graalvmParamsOpt,
+      coursierRepositories = params.repositories
     )
 
     if (wroteSomething)
@@ -156,8 +156,8 @@ object Install extends CaseApp[InstallOptions] {
       System.err.println(s"$dest doesn't need updating")
 
     if (params.shared.verbosity >= 0) {
-      val path = sys.env
-        .get("PATH")
+      val path = sys.env.get("PATH")
+        .orElse(sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").map(_._2)) // Windows
         .toSeq
         .flatMap(_.split(File.pathSeparatorChar).toSeq)
         .toSet

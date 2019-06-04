@@ -2,27 +2,35 @@ package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.app.Platform
 import coursier.cli.options.DependencyOptions
-import coursier.cli.util.DeprecatedModuleRequirements
+import coursier.cli.util.DeprecatedModuleRequirements0
 import coursier.core._
-import coursier.parse.{DependencyParser, ModuleParser}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
 import scala.io.Source
 
 final case class DependencyParams(
-  exclude: Set[(Organization, ModuleName)],
-  perModuleExclude: Map[String, Set[(Organization, ModuleName)]], // FIXME key should be Module
-  intransitiveDependencies: Seq[(Dependency, Map[String, String])],
-  sbtPluginDependencies: Seq[(Dependency, Map[String, String])],
+  exclude: Set[JavaOrScalaModule],
+  perModuleExclude: Map[JavaOrScalaModule, Set[JavaOrScalaModule]], // FIXME key should be Module
+  intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
+  sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   scaladexLookups: Seq[String],
-  defaultConfiguration: Configuration
-)
+  defaultConfiguration: Configuration,
+  platformOpt: Option[Platform]
+) {
+  def native: Boolean =
+    platformOpt match {
+      case Some(Platform.Native) => true
+      case _ => false
+    }
+}
 
 object DependencyParams {
-  def apply(scalaVersion: String, options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
+  def apply(options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
 
     val excludeV =
-      ModuleParser.modules(options.exclude, scalaVersion).either match {
+      ModuleParser.javaOrScalaModules(options.exclude).either match {
         case Left(errors) =>
           Validated.invalidNel(
             s"Cannot parse excluded modules:\n" +
@@ -37,7 +45,6 @@ object DependencyParams {
           if (excludesWithAttr.isEmpty)
             Validated.validNel(
               excludesNoAttr
-                .map(mod => (mod.organization, mod.name))
                 .toSet
             )
           else
@@ -49,9 +56,9 @@ object DependencyParams {
             )
       }
 
-    val perModuleExcludeV =
+    val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =
       if (options.localExcludeFile.isEmpty)
-        Validated.validNel(Map.empty[String, Set[(Organization, ModuleName)]])
+        Validated.validNel(Map.empty[JavaOrScalaModule, Set[JavaOrScalaModule]])
       else {
 
         // meh, I/O
@@ -69,8 +76,15 @@ object DependencyParams {
               val child_org_name = parent_and_child(1).split(":")
               if (child_org_name.length != 2)
                 Validated.invalidNel(s"Failed to parse $child_org_name")
-              else
-                Validated.validNel((parent_and_child(0), (Organization(child_org_name(0)), ModuleName(child_org_name(1)))))
+              else {
+                Validated.fromEither(
+                  ModuleParser.javaOrScalaModule(parent_and_child(0)).left.map(NonEmptyList.one)
+                ).map { from =>
+                    // accept scala modules too?
+                    val mod: JavaOrScalaModule = JavaOrScalaModule.JavaModule(Module(Organization(child_org_name(0)), ModuleName(child_org_name(1)), Map()))
+                    (from, mod)
+                  }
+              }
             }
           }
           .map { list =>
@@ -84,16 +98,15 @@ object DependencyParams {
 
     val moduleReqV = (excludeV, perModuleExcludeV).mapN {
       (exclude, perModuleExclude) =>
-        DeprecatedModuleRequirements(exclude, perModuleExclude)
+        DeprecatedModuleRequirements0(exclude, perModuleExclude)
     }
 
     val intransitiveDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-        DependencyParser.dependenciesParams(
+        DependencyParser.javaOrScalaDependenciesParams(
           options.intransitive,
-          options.defaultConfiguration0,
-          scalaVersion
+          options.defaultConfiguration0
         ).either match {
           case Left(e) =>
             Left(
@@ -104,7 +117,7 @@ object DependencyParams {
             )
           case Right(l) =>
             Right(
-              moduleReq(l.map { case (d, p) => (d.copy(transitive = false), p) })
+              moduleReq(l.map { case (d, p) => (d.withUnderlyingDependency(_.copy(transitive = false)), p) })
             )
         }
       }
@@ -113,10 +126,9 @@ object DependencyParams {
     val sbtPluginDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-        DependencyParser.dependenciesParams(
+        DependencyParser.javaOrScalaDependenciesParams(
           options.sbtPlugin,
-          options.defaultConfiguration0,
-          scalaVersion
+          options.defaultConfiguration0
         ).either match {
           case Left(e) =>
             Left(
@@ -138,17 +150,19 @@ object DependencyParams {
                 case arr => arr.take(2).mkString(".")
               }
               Map(
-                "scalaVersion" -> scalaVersion.split('.').take(2).mkString("."),
+                "scalaVersion" -> "2.12", // FIXME Apply later when we know the selected scala version
                 "sbtVersion" -> sbtVer
               )
             }
             val l = l0.map {
               case (dep, params) =>
-                val dep0 = dep.copy(
-                  module = dep.module.copy(
-                    attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+                val dep0 = dep.withUnderlyingDependency { dep =>
+                  dep.copy(
+                    module = dep.module.copy(
+                      attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+                    )
                   )
-                )
+                }
                 (dep0, params)
             }
             Right(l)
@@ -163,15 +177,23 @@ object DependencyParams {
       .map(_.trim)
       .filter(_.nonEmpty)
 
-    (excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV).mapN {
-      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies) =>
+    val platformOptV = (options.scalaJs, options.native) match {
+      case (false, false) => Validated.validNel(None)
+      case (true, false) => Validated.validNel(Some(Platform.JS))
+      case (false, true) => Validated.validNel(Some(Platform.Native))
+      case (true, true) => Validated.invalidNel("Cannot specify both --scala-js and --native")
+    }
+
+    (excludeV, perModuleExcludeV, intransitiveDependenciesV, sbtPluginDependenciesV, platformOptV).mapN {
+      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies, platformOpt) =>
         DependencyParams(
           exclude,
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
           scaladexLookups,
-          defaultConfiguration
+          defaultConfiguration,
+          platformOpt
         )
     }
   }

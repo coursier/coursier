@@ -25,15 +25,19 @@ object Update extends CaseApp[UpdateOptions] {
       case Right(p) => p
     }
 
-    val launchers = Files.list(params.dir)
-      .iterator()
-      .asScala
-      .filter { p =>
-        !p.getFileName.toString.startsWith(".") &&
-          Files.isRegularFile(p)
-      }
-      .toVector
-      .sortBy(_.getFileName.toString)
+    val launchers =
+      if (args.all.isEmpty)
+        Files.list(params.dir)
+          .iterator()
+          .asScala
+          .filter { p =>
+            !p.getFileName.toString.startsWith(".") &&
+              Files.isRegularFile(p)
+          }
+          .toVector
+          .sortBy(_.getFileName.toString)
+      else
+        args.all.map(params.dir.resolve)
 
     val now = Instant.now()
 
@@ -44,10 +48,19 @@ object Update extends CaseApp[UpdateOptions] {
       if (params.shared.verbosity >= 2)
         System.err.println(s"Looking at ${params.dir.relativize(launcher)}")
 
+      val infoFile = {
+        val f = launcher.getParent.resolve(s".${launcher.getFileName}.info")
+        if (Files.isRegularFile(f))
+          f
+        else
+          launcher
+      }
+
       val updatedDescOpt =
         for {
-          (s, _) <- AppGenerator.readSource(launcher)
-          (_, path, a) <- Channels.find(Seq(s.channel), s.id, cache, s.repositories)
+          (s, _) <- AppGenerator.readSource(infoFile)
+          repositories = if (params.overrideRepositories) params.repositories else s.repositories
+          (_, path, a) <- Channels.find(Seq(s.channel), s.id, cache, repositories)
         } yield {
           val e = RawAppDescriptor.parse(new String(a, StandardCharsets.UTF_8))
             .left.map(err => new AppGenerator.ErrorParsingAppDescription(path, err))
@@ -71,7 +84,8 @@ object Update extends CaseApp[UpdateOptions] {
         now,
         params.shared.verbosity,
         params.shared.forceUpdate,
-        params.shared.graalvmParamsOpt
+        params.shared.graalvmParamsOpt,
+        coursierRepositories = params.repositories
       )
       if (!written && params.shared.verbosity >= 1)
         System.err.println(s"No new update for ${params.dir.relativize(launcher)}\n")

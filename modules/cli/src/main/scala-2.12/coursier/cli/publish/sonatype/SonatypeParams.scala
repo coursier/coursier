@@ -9,6 +9,7 @@ final case class SonatypeParams(
   raw: Boolean,
   listProfiles: Boolean,
   list: Boolean,
+  cleanList: Boolean,
   profileIdOpt: Option[String],
   profileNameOpt: Option[String],
   repositoryIdOpt: Option[String],
@@ -32,13 +33,15 @@ object SonatypeParams {
 
     val description = Some(options.description).filter(_.nonEmpty)
 
+    val list = options.list.orElse(options.cleanList).getOrElse(false)
+
     val checkActionsV =
-      if (!options.listProfiles && !options.list && !options.create && !options.close && !options.promote && !options.drop)
-        Validated.invalidNel("No action specified (pass either one of --list-profiles, --list, --create, --close, or --promote)")
+      if (!options.listProfiles && !list && !options.create && !options.close && !options.promote && !options.drop)
+        Validated.invalidNel("No action specified (pass either one of --list-profiles, --list, --create, --close, --drop, or --promote)")
       else if (options.create && options.profileId.isEmpty && options.profile.isEmpty)
         Validated.invalidNel("Profile id or name required to create a repository")
       else if ((options.close || options.promote || options.drop) && options.repository.isEmpty)
-        Validated.invalidNel("Profile id or name or repository id required to close, promote, or drop")
+        Validated.invalidNel("Repository required to close, promote, or drop")
       else
         Validated.validNel(())
 
@@ -66,7 +69,8 @@ object SonatypeParams {
         SonatypeParams(
           options.raw,
           options.listProfiles,
-          options.list,
+          list,
+          options.cleanList.getOrElse(!options.raw),
           options.profileId,
           options.profile,
           options.repository,

@@ -10,11 +10,12 @@ import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.RawAppDescriptor
-import coursier.cli.install.Install
+import coursier.cli.app.{AppArtifacts, RawAppDescriptor}
+import coursier.cli.install.{AppGenerator, Install}
 import coursier.cli.scaladex.Scaladex
-import coursier.core.{Dependency, Module, Repository, ResolutionProcess}
+import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
+import coursier.parse.JavaOrScalaDependency
 import coursier.util._
 
 import scala.concurrent.ExecutionContext
@@ -105,19 +106,47 @@ object Resolve extends CaseApp[ResolveOptions] {
     force: Boolean = false
   ): Task[Resolution] = {
 
+    val cache = params.cache.cache(
+      pool,
+      params.output.logger(),
+      inMemoryCache = params.benchmark != 0 && params.benchmarkCache
+    )
+
     val depsAndReposOrError = for {
       depsExtraRepoOpt <- Dependencies.withExtraRepo(
         args,
-        params.resolution.selectedScalaVersion,
         params.dependency.defaultConfiguration,
-        params.cache.cacheLocalArtifacts,
         params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
       )
-      (deps, extraRepoOpt) = depsExtraRepoOpt
+      (javaOrScalaDeps, urlDepsOpt) = depsExtraRepoOpt
+      t <- AppArtifacts.dependencies(
+        cache,
+        params.repositories.repositories,
+        params.dependency.platformOpt,
+        params.output.verbosity,
+        javaOrScalaDeps
+      ).left.map(err => new Exception(err))
+      (scalaVersion, _, deps) = t
+      extraRepoOpt = urlDepsOpt.map { m =>
+        val m0 = m.map {
+          case ((mod, v), url) =>
+            ((mod.module(scalaVersion), v), (url, true))
+        }
+        InMemoryRepository(
+          m0,
+          params.cache.cacheLocalArtifacts
+        )
+      }
       deps0 = Dependencies.addExclusions(
         deps,
-        params.dependency.exclude,
-        params.dependency.perModuleExclude
+        params.dependency.exclude.map { m =>
+          val m0 = m.module(scalaVersion)
+          (m0.organization, m0.name)
+        },
+        params.dependency.perModuleExclude.map {
+          case (k, s) =>
+            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+        }
       )
       // Prepend FallbackDependenciesRepository to the repository list
       // so that dependencies with URIs are resolved against this repo
@@ -158,11 +187,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         .withRepositories(repositories)
         .withResolutionParams(params.resolution)
         .withCache(
-          params.cache.cache(
-            pool,
-            params.output.logger(),
-            inMemoryCache = params.benchmark != 0 && params.benchmarkCache
-          )
+          cache
         )
         .transformResolution { t =>
           if (params.benchmark == 0) t
@@ -284,25 +309,26 @@ object Resolve extends CaseApp[ResolveOptions] {
       res
     }
 
-    ResolveParams(options0) match {
-      case Validated.Invalid(errors) =>
+    val params = ResolveParams(options0).toEither match {
+      case Left(errors) =>
         for (err <- errors.toList)
           Output.errPrintln(err)
         sys.exit(1)
-      case Validated.Valid(params) =>
+      case Right(params0) =>
+        params0
+    }
 
-        val pool = Sync.fixedThreadPool(params.cache.parallel)
-        val ec = ExecutionContext.fromExecutorService(pool)
+    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val ec = ExecutionContext.fromExecutorService(pool)
 
-        val t = task(params, pool, System.out, System.err, deps)
+    val t = task(params, pool, System.out, System.err, deps)
 
-        t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) if params.output.verbosity <= 1 =>
-            Output.errPrintln(e.message)
-            sys.exit(1)
-          case Left(e) => throw e
-          case Right(_) =>
-        }
+    t.attempt.unsafeRun()(ec) match {
+      case Left(e: ResolveException) if params.output.verbosity <= 1 =>
+        Output.errPrintln(e.message)
+        sys.exit(1)
+      case Left(e) => throw e
+      case Right(_) =>
     }
   }
 
