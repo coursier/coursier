@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Instant
+import java.util.Locale
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
@@ -155,8 +156,8 @@ object Install extends CaseApp[InstallOptions] {
       System.err.println(s"$dest doesn't need updating")
 
     if (params.shared.verbosity >= 0) {
-      val path = sys.env
-        .get("PATH")
+      val path = sys.env.get("PATH")
+        .orElse(sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").map(_._2)) // Windows
         .toSeq
         .flatMap(_.split(File.pathSeparatorChar).toSeq)
         .toSet

@@ -53,7 +53,7 @@ object RefreshLogger {
 
     val env = env0.fold(compatibilityEnv)(!_)
 
-    env || nonInteractive || insideEmacs || ci
+    env || nonInteractive || insideEmacs || ci || !Terminal.ttyAvailable
   }
 
 
