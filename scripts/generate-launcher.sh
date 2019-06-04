@@ -14,7 +14,7 @@ if [ ! -f "$SBTPACK_LAUNCHER" ]; then
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
-  --intransitive "io.get-coursier::coursier-cli:$VERSION" \
+  --intransitive "io.get-coursier:coursier-cli_2.12:$VERSION" \
   --classifier standalone \
   -A jar \
   -J "-noverify" \
