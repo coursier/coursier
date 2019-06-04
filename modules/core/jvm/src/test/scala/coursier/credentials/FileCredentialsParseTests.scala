@@ -11,7 +11,7 @@ object FileCredentialsParseTests extends TestSuite {
     * - {
 
       val credFilePath = Option(getClass.getResource("/simple-credentials.properties"))
-        .map(_.getPath)
+        .map(u => new File(u.toURI).getAbsolutePath)
         .getOrElse {
           throw new Exception("simple-credentials.properties resource not found")
         }

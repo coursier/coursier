@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 
 public class Bootstrap {
 
@@ -32,7 +33,7 @@ public class Bootstrap {
                 if (b.length() != 0)
                     b.append(File.pathSeparatorChar);
                 if (url.getProtocol().equals("file")) {
-                    b.append(url.getPath());
+                    b.append(Paths.get(url.toURI()).toString());
                 } else {
                     b.append(url.toExternalForm());
                 }

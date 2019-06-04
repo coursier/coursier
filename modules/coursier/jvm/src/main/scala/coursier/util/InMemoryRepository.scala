@@ -17,12 +17,12 @@ object InMemoryRepository {
     val protocolSpecificAttemptOpt = {
 
       def ifFile: Option[Boolean] = {
-        if (localArtifactsShouldBeCached && !new File(url.getPath).exists()) {
+        if (localArtifactsShouldBeCached && !new File(url.toURI).exists()) {
           val cachePath = coursier.cache.CacheDefaults.location
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
           Some(new File(cachePath, s"file/${url.getPath}").exists())
         } else {
-          Some(new File(url.getPath).exists()) // FIXME Escaping / de-escaping needed here?
+          Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
         }
       }
 
