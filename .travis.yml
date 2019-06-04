@@ -1,6 +1,6 @@
 language: scala
 jdk: openjdk8
-env: REPO=coursier/coursier SONATYPE_PROJECT=io.get-coursier
+env: REPO=coursier/coursier SONATYPE_PROJECT=io.get-coursier GH_PAGES_DEST=stats.html
 script: scripts/update.sh
 cache:
   directories:
