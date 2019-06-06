@@ -5,7 +5,7 @@ import cats.implicits._
 import coursier.cli.install.Channel
 import coursier.{Repositories, moduleString}
 import coursier.cli.options.RepositoryOptions
-import coursier.core.{Module, Repository}
+import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
@@ -28,20 +28,21 @@ object RepositoryParams {
         }
     )
 
-    val channelsV = Validated.fromEither {
-      ModuleParser.javaOrScalaModules(options.channel)
-        .either
-        .left.map { case h :: t => NonEmptyList.of(h, t: _*) }
-        .right.flatMap { modules =>
-          modules
-            .toList
-            .traverse {
-              case j: JavaOrScalaModule.JavaModule => Validated.validNel(Channel.module(j.module))
-              case s: JavaOrScalaModule.ScalaModule => Validated.invalidNel(s"Scala dependencies ($s) not accepted as channels")
+    val channelsV = options
+      .channel
+      .traverse { s =>
+        if (s.contains("://"))
+          Validated.validNel(Channel.url(s))
+        else {
+          val e = ModuleParser.javaOrScalaModule(s)
+            .right.flatMap {
+              case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
+              case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
             }
-            .toEither
+            .left.map(NonEmptyList.one)
+          Validated.fromEither(e)
+        }
       }
-    }
 
     val defaultChannels =
       if (options.defaultChannels)

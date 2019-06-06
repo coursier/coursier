@@ -26,7 +26,7 @@ object Install extends CaseApp[InstallOptions] {
     for {
 
       t0 <- Channels.find(channels, id, cache, repositories).toRight {
-        s"Cannot find app $id in channels ${channels.mkString(", ")}"
+        s"Cannot find app $id in channels ${channels.map(_.repr).mkString(", ")}"
       }
       (channel, _, descRepr) = t0
 

@@ -1,11 +1,15 @@
 package coursier.cli.install
 
+import java.io.FileInputStream
+import java.nio.charset.StandardCharsets
 import java.util.zip.ZipFile
 
+import argonaut.{DecodeJson, Parse}
 import coursier.{Dependency, Fetch}
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
-import coursier.core.Repository
+import coursier.cli.app.Codecs.{decodeObj, encodeObj}
+import coursier.core.{Artifact, Repository}
 import coursier.util.Task
 
 object Channels {
@@ -45,11 +49,52 @@ object Channels {
         .headOption
     }
 
+    def fromUrl(channel: Channel.FromUrl): Option[(Channel, String, Array[Byte])] = {
+
+      val loggerOpt = cache.loggerOpt
+
+      val a = Artifact(channel.url, Map.empty, Map.empty, changing = true, optional = false, authentication = None)
+
+      val fetch = cache.file(a).run
+
+      val task = loggerOpt match {
+        case None => fetch
+        case Some(logger) =>
+          Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
+            fetch.attempt.flatMap { a =>
+              Task.delay(logger.stop()).flatMap { _ =>
+                Task.fromEither(a)
+              }
+            }
+          }
+      }
+
+      val e = task.unsafeRun()(cache.ec)
+
+      e match {
+        case Left(err) =>
+          throw new Exception(s"Error getting ${channel.url}: ${err.describe}")
+        case Right(f) =>
+          val b = FileUtil.readFully(new FileInputStream(f))
+          val s = new String(b, StandardCharsets.UTF_8)
+          Parse.decodeEither(s)(DecodeJson.MapDecodeJson(decodeObj)) match {
+            case Left(err) =>
+              throw new Exception(s"Error decoding $f (${channel.url}): $err")
+            case Right(m) =>
+              m.get(id).map { obj =>
+                (channel, s"$f#$id", encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8))
+              }
+          }
+      }
+    }
+
     channels
       .toStream
       .flatMap {
         case m: Channel.FromModule =>
           fromModule(m).toStream
+        case u: Channel.FromUrl =>
+          fromUrl(u).toStream
       }
       .headOption
   }
