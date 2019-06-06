@@ -3,6 +3,7 @@ package coursier.cli.install
 import java.util.regex.Pattern.quote
 
 import coursier.core.Module
+import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
 abstract class Channel extends Product with Serializable {
   def repr: String
@@ -45,5 +46,15 @@ object Channel {
 
     FromUrl(url0)
   }
+
+  def parse(s: String): Either[String, Channel] =
+    if (s.contains("://"))
+      Right(Channel.url(s))
+    else
+      ModuleParser.javaOrScalaModule(s)
+        .right.flatMap {
+          case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
+          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
+        }
 
 }

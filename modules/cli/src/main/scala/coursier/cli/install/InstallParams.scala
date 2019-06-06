@@ -5,7 +5,7 @@ import cats.implicits._
 import coursier.cli.app.RawAppDescriptor
 import coursier.moduleString
 import coursier.core.Repository
-import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
+import coursier.parse.RepositoryParser
 
 final case class InstallParams(
   shared: SharedInstallParams,
@@ -36,17 +36,9 @@ object InstallParams {
     val channelsV = options
       .channel
       .traverse { s =>
-        if (s.contains("://"))
-          Validated.validNel(Channel.url(s))
-        else {
-          val e = ModuleParser.javaOrScalaModule(s)
-            .right.flatMap {
-              case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
-              case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
-            }
-            .left.map(NonEmptyList.one)
-          Validated.fromEither(e)
-        }
+        val e = Channel.parse(s)
+          .left.map(NonEmptyList.one)
+        Validated.fromEither(e)
       }
 
     val defaultChannels =
