@@ -181,15 +181,7 @@ object RawAppDescriptor {
 
   object RawGraalvmOptions {
 
-    private implicit val encodeObj: EncodeJson[JsonObject] =
-      EncodeJson(Json.jObject)
-    private implicit val decodeObj: DecodeJson[JsonObject] =
-      DecodeJson { c =>
-        c.focus.obj match {
-          case Some(obj) => DecodeResult.ok(obj)
-          case None => DecodeResult.fail("Expected object", c.history)
-        }
-      }
+    import Codecs.{decodeObj, encodeObj}
 
     implicit val encoder = EncodeJson.of[RawGraalvmOptions]
     implicit val decoder = DecodeJson.of[RawGraalvmOptions]

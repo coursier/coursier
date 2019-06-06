@@ -1,9 +1,10 @@
 package coursier.cli.app
 
-import coursier.core.{Module, Repository}
+import coursier.cli.install.Channel
+import coursier.core.Repository
 
 final case class Source(
   repositories: Seq[Repository],
-  channel: Module,
+  channel: Channel,
   id: String
 )

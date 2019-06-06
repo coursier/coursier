@@ -2,16 +2,17 @@ package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.install.Channel
 import coursier.{Repositories, moduleString}
 import coursier.cli.options.RepositoryOptions
-import coursier.core.{Module, Repository}
+import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
-import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
+import coursier.parse.RepositoryParser
 
 final case class RepositoryParams(
   repositories: Seq[Repository],
-  channels: Seq[Module]
+  channels: Seq[Channel]
 )
 
 object RepositoryParams {
@@ -27,25 +28,18 @@ object RepositoryParams {
         }
     )
 
-    val channelsV = Validated.fromEither {
-      ModuleParser.javaOrScalaModules(options.channel)
-        .either
-        .left.map { case h :: t => NonEmptyList.of(h, t: _*) }
-        .right.flatMap { modules =>
-          modules
-            .toList
-            .traverse {
-              case j: JavaOrScalaModule.JavaModule => Validated.validNel(j.module)
-              case s: JavaOrScalaModule.ScalaModule => Validated.invalidNel(s"Scala dependencies ($s) not accepted as channels")
-            }
-            .toEither
+    val channelsV = options
+      .channel
+      .traverse { s =>
+        val e = Channel.parse(s)
+          .left.map(NonEmptyList.one)
+        Validated.fromEither(e)
       }
-    }
 
     val defaultChannels =
       if (options.defaultChannels)
         Seq(
-          mod"io.get-coursier:apps"
+          Channel.module(mod"io.get-coursier:apps")
         )
       else Nil
 

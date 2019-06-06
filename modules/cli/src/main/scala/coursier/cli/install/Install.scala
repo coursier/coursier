@@ -17,7 +17,7 @@ import coursier.util.{Sync, Task}
 object Install extends CaseApp[InstallOptions] {
 
   def appDescriptor(
-    channels: Seq[Module],
+    channels: Seq[Channel],
     repositories: Seq[Repository],
     cache: Cache[Task],
     id: String,
@@ -26,7 +26,7 @@ object Install extends CaseApp[InstallOptions] {
     for {
 
       t0 <- Channels.find(channels, id, cache, repositories).toRight {
-        s"Cannot find app $id in channels ${channels.mkString(", ")}"
+        s"Cannot find app $id in channels ${channels.map(_.repr).mkString(", ")}"
       }
       (channel, _, descRepr) = t0
 

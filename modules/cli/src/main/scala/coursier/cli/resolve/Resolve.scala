@@ -11,7 +11,7 @@ import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.app.{AppArtifacts, RawAppDescriptor}
-import coursier.cli.install.{AppGenerator, Install}
+import coursier.cli.install.{AppGenerator, Channel, Install}
 import coursier.cli.scaladex.Scaladex
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
@@ -244,7 +244,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   def handleApps[T](
     options: T,
     args: Seq[String],
-    channels: Seq[Module],
+    channels: Seq[Channel],
     repositories: Seq[Repository],
     cache: Cache[Task]
   )(
