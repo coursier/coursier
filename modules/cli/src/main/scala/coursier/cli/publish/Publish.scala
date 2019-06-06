@@ -163,6 +163,16 @@ object Publish extends CaseApp[PublishOptions] {
           ).map(withSignatures ++ _)
       }
 
+      sortedFinalFileSet <- finalFileSet.order
+
+      _ = {
+        if (params.verbosity >= 2) {
+          System.err.println(s"Writing / pushing ${sortedFinalFileSet.elements.length} elements:")
+          for ((f, _) <- sortedFinalFileSet.elements)
+            System.err.println(s"  ${f.repr}")
+        }
+      }
+
       hooksData <- hooks.beforeUpload(fileSet0, isSnapshot0)
 
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
@@ -175,7 +185,7 @@ object Publish extends CaseApp[PublishOptions] {
         )
       }
 
-      res <- upload.uploadFileSet(repo, finalFileSet, params.uploadLogger(out, isLocal))
+      res <- upload.uploadFileSet(repo, sortedFinalFileSet, params.uploadLogger(out, isLocal))
       _ <- {
         if (res.isEmpty)
           Task.point(())
@@ -187,7 +197,7 @@ object Publish extends CaseApp[PublishOptions] {
     } yield {
       if (params.verbosity >= 0) {
         val actualReadRepo = params.repository.repository.readRepo(isSnapshot0)
-        val modules = Group.split(finalFileSet)
+        val modules = Group.split(sortedFinalFileSet)
           .collect { case m: Group.Module => m }
           .sortBy(m => (m.organization.value, m.name.value, m.version))
         out.println(s"\n ${emoji("eyes").mkString} Check results at")
