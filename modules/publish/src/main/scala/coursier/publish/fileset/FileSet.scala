@@ -45,6 +45,7 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
     licenses: Option[Seq[License]],
     developers: Option[Seq[Developer]],
     homePage: Option[String],
+    gitDomainPath: Option[(String, String)],
     now: Instant
   ): Task[FileSet] = {
 
@@ -72,7 +73,7 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
       Task.gather.gather {
         l.map {
           case m: Group.Module =>
-            m.updateMetadata(org, name, version, licenses, developers, homePage, now)
+            m.updateMetadata(org, name, version, licenses, developers, homePage, gitDomainPath, now)
           case m: Group.MavenMetadata =>
             m.updateContent(org, name, version, version.filter(!_.endsWith("SNAPSHOT")), version.toSeq, now)
         }

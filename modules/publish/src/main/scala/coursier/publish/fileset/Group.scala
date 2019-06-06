@@ -148,13 +148,14 @@ object Group {
       licenses: Option[Seq[License]],
       developers: Option[Seq[Developer]],
       homePage: Option[String],
+      gitDomainPath: Option[(String, String)],
       now: Instant
     ): Task[Module] =
-      if (org.isEmpty && name.isEmpty && version.isEmpty)
+      if (org.isEmpty && name.isEmpty && version.isEmpty && licenses.isEmpty && developers.isEmpty && homePage.isEmpty && gitDomainPath.isEmpty)
         Task.point(this)
       else
         updateOrgNameVer(org, name, version)
-          .updatePom(now, licenses, developers, homePage)
+          .updatePom(now, licenses, developers, homePage, gitDomainPath)
           .flatMap(_.updateMavenMetadata(now))
 
     def removeMavenMetadata: Module =
@@ -178,7 +179,7 @@ object Group {
 
       val base = map.get((organization, name)) match {
         case None => Task.point(this)
-        case Some(to) => updateMetadata(Some(to._1), Some(to._2), None, None, None, None, now)
+        case Some(to) => updateMetadata(Some(to._1), Some(to._2), None, None, None, None, None, now)
       }
 
       base.flatMap { m =>
@@ -235,7 +236,8 @@ object Group {
       now: Instant,
       licenses: Option[Seq[License]],
       developers: Option[Seq[Developer]],
-      homePage: Option[String]
+      homePage: Option[String],
+      gitDomainPath: Option[(String, String)]
     ): Task[Module] =
       transformPom(now) { elem =>
         var elem0 = elem
@@ -248,6 +250,8 @@ object Group {
           elem0 = Pom.overrideDevelopers(l, elem0)
         for (h <- homePage)
           elem0 = Pom.overrideHomepage(h, elem0)
+        for ((domain, path) <- gitDomainPath)
+          elem0 = Pom.overrideScm(domain, path, elem0)
         elem0
       }
 

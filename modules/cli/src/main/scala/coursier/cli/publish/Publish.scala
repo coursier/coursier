@@ -2,19 +2,17 @@ package coursier.cli.publish
 
 import java.io.{File, PrintStream}
 import java.net.URI
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 import java.time.Instant
 
 import caseapp._
 import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.publish.checksum.{ChecksumType, Checksums}
-import coursier.publish.dir.Dir
-import coursier.publish.dir.logger.DirLogger
 import coursier.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
-import coursier.cli.publish.params.{MetadataParams, PublishParams}
+import coursier.cli.publish.params.PublishParams
 import coursier.publish.upload._
-import coursier.cli.publish.util.DeleteOnExit
+import coursier.cli.publish.util.{DeleteOnExit, Git}
 import coursier.cli.util.Guard
 import coursier.maven.MavenRepository
 import coursier.publish.download.{Download, FileDownload, OkhttpDownload}
@@ -59,26 +57,6 @@ object Publish extends CaseApp[PublishOptions] {
       Task.point(!snapshotMap.contains(false))
   }
 
-  // Move to Input?
-  def readAndUpdateDir(
-    metadata: MetadataParams,
-    now: Instant,
-    verbosity: Int,
-    logger: => DirLogger,
-    dir: Path
-  ): Task[FileSet] =
-    Dir.read(dir, logger).flatMap { fs =>
-      fs.updateMetadata(
-        metadata.organization,
-        metadata.name,
-        metadata.version,
-        metadata.licenses,
-        metadata.developersOpt,
-        metadata.homePage,
-        now
-      )
-    }
-
   def publish(params: PublishParams, out: PrintStream): Task[Unit] = {
 
     val deleteOnExit = new DeleteOnExit(params.verbosity)
@@ -94,7 +72,7 @@ object Publish extends CaseApp[PublishOptions] {
       _ <- params.initSigner
 
       manualPackageFileSetOpt <- Input.manualPackageFileSetOpt(params, now)
-      dirFileSet0 <- Input.dirFileSet(params, now, out)
+      dirFileSet0 <- Input.dirFileSet(params, out)
       sbtFileSet0 <- Input.sbtFileSet(
         params,
         now,
@@ -118,13 +96,36 @@ object Publish extends CaseApp[PublishOptions] {
           Task.point(())
       }
 
-      isSnapshot0 <- isSnapshot(fileSet0)
+      updateFileSet0 <- {
+        val scmDomainPath = {
+          val dir = params.directory.directories.headOption
+            .orElse(params.directory.sbtDirectories.headOption)
+            .map(_.toFile)
+            .getOrElse(new File("."))
+          if (params.metadata.git.getOrElse(false))
+            Git(dir)
+          else
+            None
+        }
+        fileSet0.updateMetadata(
+          params.metadata.organization,
+          params.metadata.name,
+          params.metadata.version,
+          params.metadata.licenses,
+          params.metadata.developersOpt,
+          params.metadata.homePage,
+          scmDomainPath,
+          now
+        )
+      }
+
+      isSnapshot0 <- isSnapshot(updateFileSet0)
 
       (_, readDownload, readRepo, _) =
         repoParams(params.repository.repository.readRepo(isSnapshot0))
 
       fileSet1 <- PublishTasks.updateMavenMetadata(
-        fileSet0,
+        updateFileSet0,
         now,
         readDownload,
         readRepo,
@@ -173,7 +174,7 @@ object Publish extends CaseApp[PublishOptions] {
         }
       }
 
-      hooksData <- hooks.beforeUpload(fileSet0, isSnapshot0)
+      hooksData <- hooks.beforeUpload(sortedFinalFileSet, isSnapshot0)
 
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
         .getOrElse(params.repository.repository.repo(isSnapshot0))
