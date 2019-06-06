@@ -14,11 +14,10 @@ if [ ! -f "$SBTPACK_LAUNCHER" ]; then
 fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
-  --intransitive "io.get-coursier:coursier-cli_2.12:$VERSION" \
-  --classifier standalone \
-  -A jar \
+  "io.get-coursier:coursier-cli_2.12:$VERSION" \
   -J "-noverify" \
   --no-default \
   -r central \
+  -r typesafe:ivy-releases \
   -f -o "$OUTPUT" \
   "$@"

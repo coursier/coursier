@@ -233,15 +233,6 @@ object Settings {
         PgpKeys.publishLocalSigned := PgpKeys.publishLocalSigned.in(Shading).value
       )
   
-  lazy val proguardedArtifact = Def.setting {
-    Artifact(
-      moduleName.value,
-      "jar",
-      "jar",
-      "standalone"
-    )
-  }
-
   // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
   lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {
     SbtProguard.writeConfiguration(proguardConfiguration.in(Proguard).value, proguardOptions.in(Proguard).value)
