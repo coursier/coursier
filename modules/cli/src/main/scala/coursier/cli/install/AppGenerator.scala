@@ -268,7 +268,6 @@ object AppGenerator {
     val path = Files.createTempFile("temp", ".tmp")
 
     try {
-      println(s"Writing $path\n${new String(content, StandardCharsets.UTF_8)}\n")
       Files.write(path, content)
       t(path)
     }

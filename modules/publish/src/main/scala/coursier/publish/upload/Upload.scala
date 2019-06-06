@@ -23,7 +23,10 @@ trait Upload {
     * @param logger
     * @return an optional [[Upload.Error]], non-empty in case of error
     */
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]]
+  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]]
+
+  final def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]] =
+    upload(url, authentication, content, logger, None)
 
   /**
     * Uploads a whole [[FileSet]].
@@ -33,7 +36,12 @@ trait Upload {
     * @param logger
     * @return
     */
-  final def uploadFileSet(repository: MavenRepository, fileSet: FileSet, logger: UploadLogger): Task[Seq[(Path, Content, Upload.Error)]] = {
+  final def uploadFileSet(
+    repository: MavenRepository,
+    fileSet: FileSet,
+    logger: UploadLogger,
+    parallel: Boolean
+  ): Task[Seq[(Path, Content, Upload.Error)]] = {
 
     val baseUrl0 = repository.root.stripSuffix("/")
 
@@ -41,36 +49,33 @@ trait Upload {
 
     // uploading stuff sequentially for now
     // stops at first error
-    def doUpload(id: Object) = fileSet
-      .elements
-      .foldLeft(Task.point(Option.empty[(Path, Content, Upload.Error)])) {
-        case (acc, (path, content)) =>
-          val url = s"$baseUrl0/${path.elements.mkString("/")}"
+    def doUpload(id: Object): Task[Seq[(Path, Content, Upload.Error)]] = {
 
-          for {
-            previousErrorOpt <- acc
-            errorOpt <- {
-              previousErrorOpt
-                .map(e => Task.point(Some(e)))
-                .getOrElse {
-                  for {
-                    _ <- Task.delay(logger.uploading(url, Some(id)))
-                    a <- content.contentTask.flatMap(b =>
-                      upload(url, repository.authentication, b, logger).map(_.map((path, content, _)))
-                    ).attempt
-                    // FIXME Also failed if a.isLeft …
-                    _ <- {
-                      val err = a.right.toOption.flatMap(_.map(_._3))
-                        .orElse(a.left.toOption.map(t => new Upload.Error.UploadError(url, t)))
-                      Task.delay(logger.uploaded(url, Some(id), err))
-                    }
-                    res <- Task.fromEither(a)
-                  } yield res
-                }
-            }
-          } yield errorOpt
-      }
-      .map(_.toSeq)
+      val tasks = fileSet
+        .elements
+        .map {
+          case (path, content) =>
+            val url = s"$baseUrl0/${path.elements.mkString("/")}"
+            content.contentTask.flatMap(b =>
+              upload(url, repository.authentication, b, logger, Some(id)).map(_.map((path, content, _)))
+            )
+        }
+
+      if (parallel)
+        Task.gather.gather(tasks).map { l =>
+          l.flatten
+        }
+      else
+        tasks
+          .foldLeft(Task.point(Option.empty[(Path, Content, Upload.Error)])) {
+            case (acc, task) =>
+              for {
+                previousErrorOpt <- acc
+                errorOpt <- previousErrorOpt.fold(task)(e => Task.point(Some(e)))
+              } yield errorOpt
+          }
+          .map(_.toSeq)
+    }
 
     val before = Task.delay {
       val id = new Object

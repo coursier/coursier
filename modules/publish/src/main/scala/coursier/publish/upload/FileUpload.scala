@@ -18,13 +18,14 @@ final case class FileUpload(base: Path) extends Upload {
     url: String,
     authentication: Option[Authentication],
     content: Array[Byte],
-    logger: UploadLogger
+    logger: UploadLogger,
+    loggingId: Option[Object]
   ): Task[Option[Upload.Error]] = {
 
     val p = base0.resolve(url).normalize()
     if (p.startsWith(base0))
       Task.delay {
-        logger.uploading(url)
+        logger.uploading(url, loggingId, Some(content.length))
         val errorOpt = try {
           Files.createDirectories(p.getParent)
           Files.write(p, content)
@@ -33,7 +34,7 @@ final case class FileUpload(base: Path) extends Upload {
           case NonFatal(e) =>
             Some(e)
         }
-        logger.uploaded(url, errorOpt.map(e => new Upload.Error.FileException(e)))
+        logger.uploaded(url, loggingId, errorOpt.map(e => new Upload.Error.FileException(e)))
 
         None
       }

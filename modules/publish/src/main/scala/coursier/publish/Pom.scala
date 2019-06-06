@@ -215,6 +215,26 @@ object Pom {
     }
   }
 
+  def overrideScm(domain: String, path: String, content: Elem): Elem =
+    addOrUpdate(content, "scm") {
+      case Some(elem0: Elem) =>
+        var elem1 = addOrUpdate(elem0, "url") { _ =>
+          <url>https://{domain}/{path}</url>
+        }
+        elem1 = addOrUpdate(elem1, "connection") { _ =>
+          <connection>scm:git:https://{domain}/{path}.git</connection>
+        }
+        addOrUpdate(elem1, "developerConnection") { _ =>
+          <developerConnection>scm:git:git@{domain}:{path}.git</developerConnection>
+        }
+      case _ =>
+        <scm>
+          <url>https://{domain}/{path}</url>
+          <connection>scm:git:https://{domain}/{path}.git</connection>
+          <developerConnection>scm:git:git@{domain}:{path}.git</developerConnection>
+        </scm>
+    }
+
   def overrideLicenses(licenses: Seq[License], content: Elem): Elem =
     addOrUpdate(content, "licenses") { _ =>
       <licenses>{

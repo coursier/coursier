@@ -3,12 +3,12 @@ package coursier.publish.download
 import java.time.Instant
 import java.util.concurrent.ExecutorService
 
-import com.squareup.okhttp.internal.http.HttpDate
-import com.squareup.okhttp.{OkHttpClient, Request, Response}
 import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.download.logger.DownloadLogger
 import coursier.util.Task
+import okhttp3.internal.http.HttpDate
+import okhttp3.{OkHttpClient, Request, Response}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
@@ -49,14 +49,9 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
             Right(Some((lastModifiedOpt, response.body().bytes())))
           } else {
             val code = response.code()
-            if (code == 404)
+            if (code / 100 == 4)
               Right(None)
-            else if (code == 401) {
-              val realmOpt = Option(response.header("WWW-Authenticate")).collect {
-                case CacheUrl.BasicRealm(r) => r
-              }
-              Left(new Download.Error.Unauthorized(url, realmOpt))
-            } else {
+            else {
               val content = Try(response.body().string()).getOrElse("")
               Left(new Download.Error.HttpError(url, code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
             }

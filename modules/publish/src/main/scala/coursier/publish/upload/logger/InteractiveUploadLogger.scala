@@ -32,9 +32,13 @@ final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolea
   override def uploadedSet(id: Object, fileSet: FileSet): Unit =
     underlying.processedSet(id)
 
-  override def uploading(url: String, idOpt: Option[Object]): Unit =
+  override def uploading(url: String, idOpt: Option[Object], totalOpt: Option[Long]): Unit =
     for (id <- idOpt)
       underlying.processing(url, id)
+
+  override def progress(url: String, idOpt: Option[Object], uploaded: Long, total: Long): Unit =
+    for (id <- idOpt)
+      underlying.progress(url, id, uploaded, total)
   override def uploaded(url: String, idOpt: Option[Object], errorOpt: Option[Upload.Error]): Unit =
     for (id <- idOpt)
       underlying.processed(url, id, errorOpt.nonEmpty)

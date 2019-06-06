@@ -2,19 +2,17 @@ package coursier.cli.publish
 
 import java.io.{File, PrintStream}
 import java.net.URI
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 import java.time.Instant
 
 import caseapp._
 import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.publish.checksum.{ChecksumType, Checksums}
-import coursier.publish.dir.Dir
-import coursier.publish.dir.logger.DirLogger
 import coursier.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
-import coursier.cli.publish.params.{MetadataParams, PublishParams}
+import coursier.cli.publish.params.PublishParams
 import coursier.publish.upload._
-import coursier.cli.publish.util.DeleteOnExit
+import coursier.cli.publish.util.{DeleteOnExit, Git}
 import coursier.cli.util.Guard
 import coursier.maven.MavenRepository
 import coursier.publish.download.{Download, FileDownload, OkhttpDownload}
@@ -25,7 +23,14 @@ import scala.concurrent.{Await, ExecutionContext}
 
 object Publish extends CaseApp[PublishOptions] {
 
-  private def repoParams(repo: MavenRepository, dummyUpload: Boolean = false): (Upload, Download, MavenRepository, Boolean) = {
+  val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
+
+  private def repoParams(
+    repo: MavenRepository,
+    expect100Continue: Boolean = false,
+    dummyUpload: Boolean = false,
+    urlSuffix: String = ""
+  ): (Upload, Download, MavenRepository, Boolean) = {
 
     val (upload, download, repo0, isLocal) =
       // TODO Accept .\ too on Windows?
@@ -36,8 +41,9 @@ object Publish extends CaseApp[PublishOptions] {
         val p = Paths.get(new URI(repo.root)).toAbsolutePath
         (FileUpload(p), FileDownload(p), repo.copy(root = "."), true)
       } else if (repo.root.startsWith("http://") || repo.root.startsWith("https://")) {
-        val pool = Sync.fixedThreadPool(4) // sizing, shutdown, …
-        (OkhttpUpload.create(pool), OkhttpDownload.create(pool), repo, false)
+        val pool = Sync.fixedThreadPool(if (expect100Continue) 1 else 4) // sizing, shutdown, …
+        val upload = OkhttpUpload.create(pool, expect100Continue, urlSuffix)
+        (upload, OkhttpDownload.create(pool), repo, false)
       } else
         throw new PublishError.UnrecognizedRepositoryFormat(repo.root)
 
@@ -59,26 +65,6 @@ object Publish extends CaseApp[PublishOptions] {
       Task.point(!snapshotMap.contains(false))
   }
 
-  // Move to Input?
-  def readAndUpdateDir(
-    metadata: MetadataParams,
-    now: Instant,
-    verbosity: Int,
-    logger: => DirLogger,
-    dir: Path
-  ): Task[FileSet] =
-    Dir.read(dir, logger).flatMap { fs =>
-      fs.updateMetadata(
-        metadata.organization,
-        metadata.name,
-        metadata.version,
-        metadata.licenses,
-        metadata.developersOpt,
-        metadata.homePage,
-        now
-      )
-    }
-
   def publish(params: PublishParams, out: PrintStream): Task[Unit] = {
 
     val deleteOnExit = new DeleteOnExit(params.verbosity)
@@ -94,7 +80,7 @@ object Publish extends CaseApp[PublishOptions] {
       _ <- params.initSigner
 
       manualPackageFileSetOpt <- Input.manualPackageFileSetOpt(params, now)
-      dirFileSet0 <- Input.dirFileSet(params, now, out)
+      dirFileSet0 <- Input.dirFileSet(params, out)
       sbtFileSet0 <- Input.sbtFileSet(
         params,
         now,
@@ -118,19 +104,49 @@ object Publish extends CaseApp[PublishOptions] {
           Task.point(())
       }
 
-      isSnapshot0 <- isSnapshot(fileSet0)
+      updateFileSet0 <- {
+        val scmDomainPath = {
+          val dir = params.directory.directories.headOption
+            .orElse(params.directory.sbtDirectories.headOption)
+            .map(_.toFile)
+            .getOrElse(new File("."))
+          if (params.metadata.git.getOrElse(params.repository.gitHub))
+            Git(dir)
+          else
+            None
+        }
+        fileSet0.updateMetadata(
+          params.metadata.organization,
+          params.metadata.name,
+          params.metadata.version,
+          params.metadata.licenses,
+          params.metadata.developersOpt,
+          params.metadata.homePage,
+          scmDomainPath,
+          now
+        )
+      }
+
+      isSnapshot0 <- isSnapshot(updateFileSet0)
 
       (_, readDownload, readRepo, _) =
         repoParams(params.repository.repository.readRepo(isSnapshot0))
 
-      fileSet1 <- PublishTasks.updateMavenMetadata(
-        fileSet0,
-        now,
-        readDownload,
-        readRepo,
-        params.downloadLogger(out),
-        params.repository.snapshotVersioning
-      )
+      fileSet1 <- {
+        if (params.metadata.mavenMetadata.getOrElse(!params.repository.gitHub))
+          PublishTasks.updateMavenMetadata(
+            updateFileSet0,
+            now,
+            readDownload,
+            readRepo,
+            params.downloadLogger(out),
+            params.repository.snapshotVersioning
+          )
+        else
+          Task.point {
+            PublishTasks.clearMavenMetadata(updateFileSet0)
+          }
+      }
 
       _ <- params.initSigner // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
       withSignatures <- {
@@ -152,30 +168,58 @@ object Publish extends CaseApp[PublishOptions] {
       }
 
       finalFileSet <- {
-        if (params.checksum.checksums.isEmpty)
-          Task.point(withSignatures)
+        val checksums = params.checksum.checksumsOpt.getOrElse {
+          if (params.repository.gitHub || params.repository.bintray)
+            Nil
+          else
+            defaultChecksums
+        }
+        if (checksums.isEmpty)
+          Task.point(
+            Checksums.clear(ChecksumType.all, withSignatures)
+          )
         else
           Checksums(
-            params.checksum.checksums,
+            checksums,
             withSignatures,
             now,
             params.checksumLogger(out)
           ).map(withSignatures ++ _)
       }
 
-      hooksData <- hooks.beforeUpload(fileSet0, isSnapshot0)
+      sortedFinalFileSet <- finalFileSet.order
+
+      _ = {
+        if (params.verbosity >= 2) {
+          System.err.println(s"Writing / pushing ${sortedFinalFileSet.elements.length} elements:")
+          for ((f, _) <- sortedFinalFileSet.elements)
+            System.err.println(s"  ${f.repr}")
+        }
+      }
+
+      hooksData <- hooks.beforeUpload(sortedFinalFileSet, isSnapshot0)
 
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
         .getOrElse(params.repository.repository.repo(isSnapshot0))
 
+      parallel = params.parallel.getOrElse(params.repository.gitHub)
+      urlSuffix = params.urlSuffixOpt.getOrElse(if (params.repository.bintray) ";publish=1" else "")
+
       (upload, _, repo, isLocal) = {
         repoParams(
           retainedRepo,
-          dummyUpload = params.dummy
+          dummyUpload = params.dummy,
+          expect100Continue = parallel,
+          urlSuffix = urlSuffix
         )
       }
 
-      res <- upload.uploadFileSet(repo, finalFileSet, params.uploadLogger(out, isLocal))
+      res <- upload.uploadFileSet(
+        repo,
+        sortedFinalFileSet,
+        params.uploadLogger(out, isLocal),
+        parallel = parallel
+      )
       _ <- {
         if (res.isEmpty)
           Task.point(())
@@ -187,7 +231,7 @@ object Publish extends CaseApp[PublishOptions] {
     } yield {
       if (params.verbosity >= 0) {
         val actualReadRepo = params.repository.repository.readRepo(isSnapshot0)
-        val modules = Group.split(finalFileSet)
+        val modules = Group.split(sortedFinalFileSet)
           .collect { case m: Group.Module => m }
           .sortBy(m => (m.organization.value, m.name.value, m.version))
         out.println(s"\n ${emoji("eyes").mkString} Check results at")

@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit
 import caseapp.Tag
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import com.squareup.okhttp.OkHttpClient
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.publish.PublishRepository
 import coursier.cli.publish.conf.Conf
@@ -23,6 +22,7 @@ import coursier.publish.signing.logger.{BatchSignerLogger, InteractiveSignerLogg
 import coursier.publish.sonatype.SonatypeApi
 import coursier.publish.upload.logger.{BatchUploadLogger, InteractiveUploadLogger, UploadLogger}
 import coursier.util.Task
+import okhttp3.OkHttpClient
 
 final case class PublishParams(
   repository: RepositoryParams,
@@ -35,7 +35,9 @@ final case class PublishParams(
   verbosity: Int,
   dummy: Boolean,
   batch: Boolean,
-  sbtOutputFrame: Option[Int]
+  sbtOutputFrame: Option[Int],
+  parallel: Option[Boolean],
+  urlSuffixOpt: Option[String]
 ) {
   def withConf(conf: Conf): PublishParams = {
 
@@ -112,9 +114,10 @@ final case class PublishParams(
     repository.repository match {
       case s: PublishRepository.Sonatype =>
         // this can't be shutdown anyway
-        val client = new OkHttpClient
-        // Sonatype can be quite slow
-        client.setReadTimeout(60L, TimeUnit.SECONDS)
+        val client = new OkHttpClient.Builder()
+          // Sonatype can be quite slow
+          .readTimeout(60L, TimeUnit.SECONDS)
+          .build()
         val authentication = repository.repository.snapshotRepo.authentication
         if (authentication.isEmpty && verbosity >= 0)
           out.println("Warning: no Sonatype credentials passed, trying to proceed anyway")
@@ -192,7 +195,9 @@ object PublishParams {
           verbosity,
           dummy,
           batch,
-          sbtOutputFrame
+          sbtOutputFrame,
+          options.parallelUpload,
+          options.urlSuffix
         )
     }
 

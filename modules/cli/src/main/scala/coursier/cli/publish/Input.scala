@@ -6,9 +6,9 @@ import java.time.Instant
 
 import coursier.{Repositories, dependencyString}
 import coursier.cache.Cache
-import coursier.cli.publish.Publish.readAndUpdateDir
 import coursier.cli.publish.params.PublishParams
 import coursier.cli.publish.util.DeleteOnExit
+import coursier.publish.dir.Dir
 import coursier.publish.dir.logger.{BatchDirLogger, InteractiveDirLogger}
 import coursier.publish.fileset.FileSet
 import coursier.publish.sbt.Sbt
@@ -30,23 +30,18 @@ object Input {
 
   def dirFileSet(
     params: PublishParams,
-    now: Instant,
     out: PrintStream
   ): Task[FileSet] =
     params
       .directory
       .directories
       .map { d =>
-        readAndUpdateDir(
-          params.metadata,
-          now,
-          params.verbosity,
+        val logger =
           if (params.batch)
             new BatchDirLogger(out, params.dirName(d), params.verbosity)
           else
-            InteractiveDirLogger.create(out, params.dirName(d), params.verbosity),
-          d
-        )
+            InteractiveDirLogger.create(out, params.dirName(d), params.verbosity)
+        Dir.read(d, logger)
       }
       // the logger will have to be shared if this is to be parallelized
       .foldLeft(Task.point(FileSet.empty)) { (acc, t) =>
@@ -111,16 +106,12 @@ object Input {
               val f = sbt.publishTo(tmpDir.toFile)
               // meh, blocking from a task…
               Await.result(f, Duration.Inf)
-              readAndUpdateDir(
-                params.metadata,
-                now,
-                params.verbosity,
+              val dirLogger =
                 if (params.batch)
                   new BatchDirLogger(out, params.dirName(tmpDir, Some("temporary directory")), params.verbosity)
                 else
-                  InteractiveDirLogger.create(out, params.dirName(tmpDir, Some("temporary directory")), params.verbosity),
-                tmpDir
-              )
+                  InteractiveDirLogger.create(out, params.dirName(tmpDir, Some("temporary directory")), params.verbosity)
+              Dir.read(tmpDir, dirLogger)
             }
             fs <- t
           } yield fs

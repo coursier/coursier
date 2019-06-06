@@ -25,7 +25,7 @@ if [ $# -ge 2 ]; then
 else
   LOCAL_VERSION="0.1.0-test-SNAPSHOT"
   if [ ! -e "$HOME/.ivy2/local/io.get-coursier/coursier-cli_2.12/$LOCAL_VERSION/jars/coursier-cli_2.12-standalone.jar" ]; then
-    sbt "set version in ThisBuild := \"$LOCAL_VERSION\"" cli/publishLocal
+    sbt "set version in ThisBuild := \"$LOCAL_VERSION\"" publishLocal
   fi
 fi
 

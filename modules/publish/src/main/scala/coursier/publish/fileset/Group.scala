@@ -36,6 +36,9 @@ sealed abstract class Group extends Product with Serializable {
     map: Map[(Organization, ModuleName), (Organization, ModuleName)],
     now: Instant
   ): Task[Group]
+
+  /** Ensure the files of this [[Group]] are ordered (POMs last for [[Group.Module]], etc.) */
+  def ordered: Group
 }
 
 object Group {
@@ -52,6 +55,9 @@ object Group {
     snapshotVersioning: Option[String],
     files: DirContent
   ) extends Group {
+
+    def module: coursier.core.Module =
+      coursier.core.Module(organization, name, Map.empty)
 
     def baseDir: Seq[String] =
       organization.value.split('.').toSeq ++ Seq(name.value, version)
@@ -142,13 +148,14 @@ object Group {
       licenses: Option[Seq[License]],
       developers: Option[Seq[Developer]],
       homePage: Option[String],
+      gitDomainPath: Option[(String, String)],
       now: Instant
     ): Task[Module] =
-      if (org.isEmpty && name.isEmpty && version.isEmpty)
+      if (org.isEmpty && name.isEmpty && version.isEmpty && licenses.isEmpty && developers.isEmpty && homePage.isEmpty && gitDomainPath.isEmpty)
         Task.point(this)
       else
         updateOrgNameVer(org, name, version)
-          .updatePom(now, licenses, developers, homePage)
+          .updatePom(now, licenses, developers, homePage, gitDomainPath)
           .flatMap(_.updateMavenMetadata(now))
 
     def removeMavenMetadata: Module =
@@ -172,7 +179,7 @@ object Group {
 
       val base = map.get((organization, name)) match {
         case None => Task.point(this)
-        case Some(to) => updateMetadata(Some(to._1), Some(to._2), None, None, None, None, now)
+        case Some(to) => updateMetadata(Some(to._1), Some(to._2), None, None, None, None, None, now)
       }
 
       base.flatMap { m =>
@@ -185,11 +192,14 @@ object Group {
       }
     }
 
+    private def pomFileName: String =
+      s"${name.value}-${snapshotVersioning.getOrElse(version)}.pom"
+
     /**
       * The POM file of this [[Module]], if any.
       */
     def pomOpt: Option[(String, Content)] = {
-      val fileName = s"${name.value}-${snapshotVersioning.getOrElse(version)}.pom"
+      val fileName = pomFileName
       files
         .elements
         .collectFirst {
@@ -197,6 +207,21 @@ object Group {
             (fileName, c)
         }
     }
+
+    def dependenciesOpt: Task[Seq[coursier.core.Module]] =
+      pomOpt match {
+        case None => Task.point(Nil)
+        case Some((_, content)) =>
+          content.contentTask.flatMap { b =>
+            val s = new String(b, StandardCharsets.UTF_8)
+            coursier.maven.MavenRepository.parseRawPomSax(s) match {
+              case Left(e) =>
+                Task.fail(new Exception(s"Error parsing POM: $e"))
+              case Right(proj) =>
+                Task.point(proj.dependencies.map(_._2.module))
+            }
+          }
+      }
 
     /**
       * Adjust the POM of this [[Module]], so that it contains the same org / name / version as this [[Module]].
@@ -211,7 +236,8 @@ object Group {
       now: Instant,
       licenses: Option[Seq[License]],
       developers: Option[Seq[Developer]],
-      homePage: Option[String]
+      homePage: Option[String],
+      gitDomainPath: Option[(String, String)]
     ): Task[Module] =
       transformPom(now) { elem =>
         var elem0 = elem
@@ -224,6 +250,8 @@ object Group {
           elem0 = Pom.overrideDevelopers(l, elem0)
         for (h <- homePage)
           elem0 = Pom.overrideHomepage(h, elem0)
+        for ((domain, path) <- gitDomainPath)
+          elem0 = Pom.overrideScm(domain, path, elem0)
         elem0
       }
 
@@ -413,6 +441,21 @@ object Group {
       }
     }
 
+    def ordered: Module = {
+
+      // POM file last
+      // checksum before underlying file
+      // signatures before underlying file
+
+      val pomFileName0 = pomFileName
+      val (pomFiles, other) = files.elements.partition {
+        case (n, _) =>
+          n == pomFileName0 || n.startsWith(pomFileName0 + ".")
+      }
+      val sortedFiles = DirContent((pomFiles.sortBy(_._1) ++ other.sortBy(_._1)).reverse)
+      copy(files = sortedFiles)
+    }
+
   }
 
   /**
@@ -426,6 +469,9 @@ object Group {
     name: ModuleName,
     files: DirContent
   ) extends Group {
+
+    def module: coursier.core.Module =
+      coursier.core.Module(organization, name, Map.empty)
 
     def fileSet: FileSet = {
       val dirPath = Path(organization.value.split('.').toSeq ++ Seq(name.value))
@@ -501,6 +547,13 @@ object Group {
         case _ =>
           Task.point(this)
       }
+
+    def ordered: MavenMetadata = {
+      // reverse alphabetical order should be enough here (will put checksums and signatures before underlying files)
+      val sortedFiles = DirContent(files.elements.sortBy(_._1).reverse)
+      copy(files = sortedFiles)
+    }
+
   }
 
 
@@ -603,6 +656,9 @@ object Group {
       ???
     }
   }
+
+  private[coursier] def mergeUnsafe(groups: Seq[Group]): FileSet =
+    FileSet(groups.flatMap(_.fileSet.elements))
 
   /**
     * Ensure all [[Module]]s in the passed `groups` have a corresponding [[MavenMetadata]] group.

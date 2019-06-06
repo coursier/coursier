@@ -6,29 +6,32 @@ import coursier.publish.checksum.ChecksumType
 import coursier.cli.publish.options.ChecksumOptions
 
 final case class ChecksumParams(
-  checksums: Seq[ChecksumType]
+  checksumsOpt: Option[Seq[ChecksumType]]
 )
 
 object ChecksumParams {
 
-  val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
-
   def apply(options: ChecksumOptions): ValidatedNel[String, ChecksumParams] = {
 
-    val checksumsV =
+    val checksumsOptV =
       options.checksums match {
         case None =>
-          Validated.validNel(defaultChecksums)
+          Validated.validNel(None)
         case Some(list) =>
-          list.flatMap(_.split(',')).map(_.trim).filter(_.nonEmpty).traverse { s =>
-            Validated.fromEither(ChecksumType.parse(s))
-              .toValidatedNel
-          }
+          list
+            .flatMap(_.split(','))
+            .map(_.trim)
+            .filter(_.nonEmpty)
+            .traverse { s =>
+              Validated.fromEither(ChecksumType.parse(s))
+                .toValidatedNel
+            }
+            .map(Some(_))
       }
 
-    checksumsV.map { checksums =>
+    checksumsOptV.map { checksumsOpt =>
       ChecksumParams(
-        checksums
+        checksumsOpt
       )
     }
   }

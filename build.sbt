@@ -222,10 +222,9 @@ lazy val publish = project("publish")
 
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, okhttp, publish)
-  .enablePlugins(ContrabandPlugin, PackPlugin, SbtProguard)
+  .enablePlugins(ContrabandPlugin, PackPlugin)
   .settings(
     shared,
-    onlyPublishIn("2.12"),
     // does this really work?
     skipGeneration in generateContrabands := {
       !isSbv("2.12").value
@@ -270,13 +269,8 @@ lazy val cli = project("cli")
       else
         Seq()
     },
-    mainClass.in(Compile) := {
-      if (scalaBinaryVersion.value == "2.12")
-        Some("coursier.cli.Coursier")
-      else
-        None
-    },
-    proguardedCli
+    mainClass.in(Compile) := Some("coursier.cli.Coursier"),
+    onlyIn("2.12")
   )
 
 lazy val `cli-native_03` = project("cli-native_03")
@@ -487,31 +481,6 @@ lazy val addBootstrapJarAsResource = {
   }
 }
 
-lazy val proguardedJarWithBootstrap = Def.task {
-
-  import java.nio.file.Files
-
-  val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
-  val origBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
-  val resourcesBootstrapJar = proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
-  val origResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
-  val source = proguardedJar.value
-
-  val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
-  val dest0 = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap-and-prelude.jar")
-
-  ZipUtil.addToZip(source, dest, Seq(
-    "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-    "bootstrap-orig.jar" -> Files.readAllBytes(origBootstrapJar.toPath),
-    "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath),
-    "bootstrap-resources-orig.jar" -> Files.readAllBytes(origResourcesBootstrapJar.toPath)
-  ))
-
-  ZipUtil.addPrelude(dest, dest0)
-
-  dest0
-}
-
 def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
   val extra =
@@ -538,55 +507,6 @@ def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[
     javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
     artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
   )
-}
-
-lazy val proguardedCli = Seq(
-  proguardedJar := Def.taskDyn {
-    val dummy = sys.env.get("DUMMY_PROGUARD").filter(_ != "0") match {
-      case Some("1") => true
-      case Some(s) => sys.error(s"Invalid DUMMY_PROGUARD value: '$s'")
-      case None => false
-    }
-    if (dummy)
-      Def.task {
-        java.nio.file.Files.createTempFile("dummy-proguard-cli", ".jar")
-          .toFile
-      }
-    else
-      proguardedJarTask
-  }.value,
-  proguardVersion.in(Proguard) := SharedVersions.proguard,
-  proguardOptions.in(Proguard) ++= Seq(
-    "-dontwarn",
-    "-dontnote",
-    "-dontoptimize", // required since the switch to scala 2.12
-    "-keep class coursier.cli.Coursier {\n  public static void main(java.lang.String[]);\n}",
-    "-keep class coursier.cli.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}",
-    "-adaptresourcefilenames **.properties",
-    // keeping only scala.Symbol doesn't seem to be enough since the switch to proguard 6.0.x
-    """-keep class scala.** { *; }"""
-  ),
-  javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
-  artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / "coursier-standalone.jar",
-  artifacts ++= {
-    if (scalaBinaryVersion.value == "2.12")
-      Seq(proguardedArtifact.value)
-    else
-      Nil
-  },
-  addProguardedJar
-)
-
-lazy val addProguardedJar = {
-
-  val extra = Def.taskDyn[Map[Artifact, File]] {
-    if (scalaBinaryVersion.value == "2.12")
-      Def.task(Map(proguardedArtifact.value -> proguardedJarWithBootstrap.value))
-    else
-      Def.task(Map())
-  }
-
-  packagedArtifacts ++= extra.value
 }
 
 lazy val sharedTestResources = {

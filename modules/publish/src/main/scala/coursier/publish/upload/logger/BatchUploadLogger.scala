@@ -10,20 +10,20 @@ final class BatchUploadLogger(out: PrintStream, dummy: Boolean, isLocal: Boolean
   private val processing =
     if (isLocal) {
       if (dummy)
-        "Would have written"
+        "Would have tried to write"
       else
-        "Wrote"
+        "Writing"
     } else {
       if (dummy)
-        "Would have uploaded"
+        "Would have tried to upload"
       else
-        "Uploaded"
+        "Uploading"
     }
 
   override def uploadingSet(id: Object, fileSet: FileSet): Unit =
     out.println(s"$processing ${fileSet.elements.length} files")
 
-  override def uploading(url: String, idOpt: Option[Object]): Unit =
+  override def uploading(url: String, idOpt: Option[Object], totalOpt: Option[Long]): Unit =
     out.println(s"Uploading $url")
   override def uploaded(url: String, idOpt: Option[Object], errorOpt: Option[Upload.Error]): Unit =
     errorOpt match {

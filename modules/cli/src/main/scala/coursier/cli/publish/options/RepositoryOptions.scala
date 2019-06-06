@@ -16,15 +16,18 @@ final case class RepositoryOptions(
 
   sonatype: Option[Boolean] = None,
 
+  github: Option[String] = None,
+
+  bintray: Option[String] = None,
+  bintrayApiKey: Option[String] = None,
+
   snapshotVersioning: Boolean = true
 
 ) {
   override def toString: String =
-    Seq(
-      repository,
-      "****",
-      sonatype
-    ).mkString("RepositoryOptions(", ", ", ")")
+    copy(auth = auth.map(_ => "****"))
+      .productIterator
+      .mkString("RepositoryOptions(", ", ", ")")
 }
 
 object RepositoryOptions {

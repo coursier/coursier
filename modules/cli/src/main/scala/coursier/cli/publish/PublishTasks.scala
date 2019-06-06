@@ -50,6 +50,18 @@ object PublishTasks {
     } yield res
   }
 
+  def clearMavenMetadata(fs: FileSet): FileSet = {
+
+    val groups = Group.split(fs)
+
+    val updatedGroups = groups.flatMap {
+      case _: Group.MavenMetadata => Nil
+      case other => Seq(other)
+    }
+
+    Group.mergeUnsafe(updatedGroups)
+  }
+
   def sonatypeProfile(fs: FileSet, api: SonatypeApi, logger: SonatypeLogger): Task[SonatypeApi.Profile] = {
 
     val groups = Group.split(fs)

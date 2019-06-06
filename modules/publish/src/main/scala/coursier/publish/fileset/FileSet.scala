@@ -45,6 +45,7 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
     licenses: Option[Seq[License]],
     developers: Option[Seq[Developer]],
     homePage: Option[String],
+    gitDomainPath: Option[(String, String)],
     now: Instant
   ): Task[FileSet] = {
 
@@ -72,7 +73,7 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
       Task.gather.gather {
         l.map {
           case m: Group.Module =>
-            m.updateMetadata(org, name, version, licenses, developers, homePage, now)
+            m.updateMetadata(org, name, version, licenses, developers, homePage, gitDomainPath, now)
           case m: Group.MavenMetadata =>
             m.updateContent(org, name, version, version.filter(!_.endsWith("SNAPSHOT")), version.toSeq, now)
         }
@@ -89,14 +90,69 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
 
     val split = Group.split(this)
 
-    // dependencies before dependees
-    // JARs / javadoc / sources before POMs
-    // MD5 / SHA1 before underlying file
-    // sig before signed file
-    // standard files before maven-metadata.xml
-    // POMs at the end of a module
+    def order(m: Map[Group.Module, Seq[coursier.core.Module]]): Stream[Group.Module] =
+      if (m.isEmpty)
+        Stream.empty
+      else {
 
-    ???
+        val (now, later) = m.partition(_._2.isEmpty)
+
+        if (now.isEmpty)
+          // FIXME Report that properly
+          throw new Exception(s"Found cycle in input modules\n$m")
+
+        val prefix = now
+          .keys
+          .toVector
+          .sortBy(_.module.toString) // sort to make output deterministic
+          .toStream
+
+        val done = now.keySet.map(_.module)
+
+        val later0 = later.mapValues(_.filterNot(done)).iterator.toMap
+
+        prefix #::: order(later0)
+      }
+
+    val sortedModulesTask = Task.gather
+      .gather {
+        split.collect {
+          case m: Group.Module =>
+            m.dependenciesOpt.map((m, _))
+        }
+      }
+      .map { l =>
+        val m = l.toMap
+        val current = m.keySet.map(_.module)
+        val interDependencies = m.mapValues(_.filter(current)).iterator.toMap
+        order(interDependencies).toVector
+      }
+
+    val mavenMetadataMap = split
+      .collect {
+        case m: Group.MavenMetadata =>
+          m.module -> m
+      }
+      .toMap // shouldn't discard values… assert it?
+
+    sortedModulesTask.map { sortedModules =>
+
+      val modules = sortedModules.map(_.module).toSet
+
+      val unknownMavenMetadata = mavenMetadataMap
+        .filterKeys(!modules(_))
+        .values
+        .toVector
+        .sortBy(_.module.toString) // sort to make output deterministic
+
+      val modulesWithMavenMetadata = sortedModules.flatMap { m =>
+        m +: mavenMetadataMap.get(m.module).toSeq
+      }
+
+      val sortedGroups = (modulesWithMavenMetadata ++ unknownMavenMetadata)
+        .map(_.ordered)
+      Group.mergeUnsafe(sortedGroups)
+    }
   }
 }
 

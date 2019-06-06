@@ -11,7 +11,8 @@ object Deps {
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % SharedVersions.scalaz
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M8"
-  def okhttpUrlConnection = "com.squareup.okhttp" % "okhttp-urlconnection" % "2.7.5"
+  // staying before 3.14.0 to the URLStreamHandlerFactory implementation
+  def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % "3.13.1"
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % SharedVersions.argonautShapeless
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.7"
   def junit = "junit" % "junit" % "4.12"

@@ -40,7 +40,11 @@ final case class PublishOptions(
 
   conf: Option[String] = None,
 
-  sbtOutputFrame: Int = 10
+  sbtOutputFrame: Int = 10,
+
+  parallelUpload: Option[Boolean] = None,
+
+  urlSuffix: Option[String] = None
 
 )
 

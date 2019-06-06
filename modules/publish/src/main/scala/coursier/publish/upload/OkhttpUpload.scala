@@ -1,29 +1,53 @@
 package coursier.publish.upload
 
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{ExecutorService, TimeUnit}
 
-import com.squareup.okhttp.{MediaType, OkHttpClient, Request, RequestBody}
 import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.upload.logger.UploadLogger
 import coursier.util.Task
+import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
+import okio.BufferedSink
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) extends Upload {
+final case class OkhttpUpload(
+  client: OkHttpClient,
+  pool: ExecutorService,
+  expect100Continue: Boolean,
+  urlSuffix: String
+) extends Upload {
 
   import OkhttpUpload.mediaType
   import coursier.publish.download.OkhttpDownload.TryOps
 
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]] = {
+  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]] = {
 
-    val body = RequestBody.create(mediaType, content)
+    val body: RequestBody =
+      new RequestBody {
+        def contentType(): MediaType =
+          mediaType
+        def writeTo(sink: BufferedSink): Unit = {
+          var n = 0
+          logger.progress(url, loggingIdOpt, n, content.length)
+          while (n < content.length) {
+            val len = Math.min(16384, content.length - n)
+            sink.write(content, n, len)
+            n += len
+            logger.progress(url, loggingIdOpt, n, content.length)
+          }
+        }
+      }
 
     val request = {
       val b = new Request.Builder()
-        .url(url)
-        .put(body)
+        .url(url + urlSuffix)
+
+      if (expect100Continue)
+        b.addHeader("Expect", "100-continue")
+
+      b.put(body)
 
       // Handling this ourselves rather than via client.setAuthenticator / com.squareup.okhttp.Authenticator
       for (auth <- authentication)
@@ -33,7 +57,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
     }
 
     Task.schedule(pool) {
-      logger.uploading(url)
+      logger.uploading(url, loggingIdOpt, Some(content.length))
 
       val res = Try {
         val response = client.newCall(request).execute()
@@ -54,7 +78,7 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
         }
       }
 
-      logger.uploaded(url, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
+      logger.uploaded(url, loggingIdOpt, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
 
       res.get
     }
@@ -64,8 +88,21 @@ final case class OkhttpUpload(client: OkHttpClient, pool: ExecutorService) exten
 object OkhttpUpload {
   private val mediaType = MediaType.parse("application/octet-stream")
 
+  private def client(): OkHttpClient =
+    new OkHttpClient.Builder()
+      .readTimeout(60L, TimeUnit.SECONDS)
+      .build()
+
   def create(pool: ExecutorService): Upload = {
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
-    OkhttpUpload(new OkHttpClient, pool)
+    OkhttpUpload(client(), pool, expect100Continue = false, "")
+  }
+  def create(pool: ExecutorService, expect100Continue: Boolean): Upload = {
+    // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
+    OkhttpUpload(client(), pool, expect100Continue, "")
+  }
+  def create(pool: ExecutorService, expect100Continue: Boolean, urlSuffix: String): Upload = {
+    // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
+    OkhttpUpload(client(), pool, expect100Continue, urlSuffix)
   }
 }

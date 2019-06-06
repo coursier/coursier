@@ -31,7 +31,7 @@ object IvyLocalTests extends TestSuite {
           extraRepos = extraRepos
         ))
 
-        val artifacts = res.dependencyArtifacts(classifiers = Some(Seq(Classifier("standalone"))))
+        val artifacts = res.dependencyArtifacts()
           .filter(t => t._2.`type` == Type.jar && !t._3.optional)
           .map(_._3)
           .map(_.url)
