@@ -54,13 +54,19 @@ final class ProgressLogger[T](
 
         for ((_, s) <- states.asScala.toVector.sortBy(_._2.totalOpt.sum)) {
           val m = s.processed.asScala.iterator.toMap
-          val ongoing = m.count(!_._2)
+          val ongoing = m.count(_._2.isLeft)
           val extra =
-            if (ongoing > 0)
-              s" ($ongoing on-going)"
-            else
+            if (ongoing > 0) {
+              val total = m.iterator.flatMap(_._2.left.toOption.iterator.map(_._2)).sum
+              if (total > 0L) {
+                val done = m.iterator.flatMap(_._2.left.toOption.iterator.filter(_._2 > 0L).map(_._1)).sum
+                val pct = f"${100L * done.toDouble / total}%.2f %%"
+                s" ($pct of $ongoing on-going)"
+              } else
+                s" ($ongoing on-going)"
+            } else
               ""
-          val doneCount = m.count(_._2)
+          val doneCount = m.count(_._2.isRight)
           val done = s.done.get()
           val em =
             if (done)
@@ -104,15 +110,22 @@ final class ProgressLogger[T](
   def processing(url: String, id: T): Unit = {
     val s = states.get(id)
     assert(s ne null, s"$id not started")
-    val previous = s.processed.putIfAbsent(url, false: JBoolean)
+    val previous = s.processed.putIfAbsent(url, Left((0, 0)))
     assert(previous eq null)
+    onChange()
+  }
+  def progress(url: String, id: T, done: Long, total: Long): Unit = {
+    val s = states.get(id)
+    assert(s ne null, s"Found ${states.asScala.iterator.map(_._1).toList}, not $id")
+    val b = s.processed.put(url, Left((done, total)))
+    assert(b.isLeft)
     onChange()
   }
   def processed(url: String, id: T, errored: Boolean): Unit = {
     val s = states.get(id)
     assert(s ne null, s"Found ${states.asScala.iterator.map(_._1).toList}, not $id")
-    val b = s.processed.put(url, true: JBoolean)
-    assert(!b)
+    val b = s.processed.put(url, Right(()))
+    assert(b.isLeft)
     onChange()
   }
 
@@ -145,7 +158,7 @@ object ProgressLogger {
 
   private final class State(val totalOpt: Option[Int]) {
     val done = new AtomicBoolean(false)
-    val processed = new ConcurrentHashMap[String, JBoolean]
+    val processed = new ConcurrentHashMap[String, Either[(Long, Long), Unit]]
   }
 
 }

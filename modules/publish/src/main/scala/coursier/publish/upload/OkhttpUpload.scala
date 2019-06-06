@@ -7,6 +7,7 @@ import coursier.core.Authentication
 import coursier.publish.upload.logger.UploadLogger
 import coursier.util.Task
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
+import okio.BufferedSink
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -21,9 +22,23 @@ final case class OkhttpUpload(
   import OkhttpUpload.mediaType
   import coursier.publish.download.OkhttpDownload.TryOps
 
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]] = {
+  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]] = {
 
-    val body = RequestBody.create(mediaType, content)
+    val body: RequestBody =
+      new RequestBody {
+        def contentType(): MediaType =
+          mediaType
+        def writeTo(sink: BufferedSink): Unit = {
+          var n = 0
+          logger.progress(url, loggingIdOpt, n, content.length)
+          while (n < content.length) {
+            val len = Math.min(16384, content.length - n)
+            sink.write(content, n, len)
+            n += len
+            logger.progress(url, loggingIdOpt, n, content.length)
+          }
+        }
+      }
 
     val request = {
       val b = new Request.Builder()
@@ -31,8 +46,6 @@ final case class OkhttpUpload(
 
       if (expect100Continue)
         b.addHeader("Expect", "100-continue")
-
-      b.addHeader("User-Agent","Apache-Maven/3.6.0 (Java 1.8.0_121; Mac OS X 10.14.5)")
 
       b.put(body)
 
@@ -44,7 +57,7 @@ final case class OkhttpUpload(
     }
 
     Task.schedule(pool) {
-      logger.uploading(url)
+      logger.uploading(url, loggingIdOpt, Some(content.length))
 
       val res = Try {
         val response = client.newCall(request).execute()
@@ -65,7 +78,7 @@ final case class OkhttpUpload(
         }
       }
 
-      logger.uploaded(url, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
+      logger.uploaded(url, loggingIdOpt, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
 
       res.get
     }

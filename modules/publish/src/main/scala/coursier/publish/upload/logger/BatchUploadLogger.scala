@@ -23,7 +23,7 @@ final class BatchUploadLogger(out: PrintStream, dummy: Boolean, isLocal: Boolean
   override def uploadingSet(id: Object, fileSet: FileSet): Unit =
     out.println(s"$processing ${fileSet.elements.length} files")
 
-  override def uploading(url: String, idOpt: Option[Object]): Unit =
+  override def uploading(url: String, idOpt: Option[Object], totalOpt: Option[Long]): Unit =
     out.println(s"Uploading $url")
   override def uploaded(url: String, idOpt: Option[Object], errorOpt: Option[Upload.Error]): Unit =
     errorOpt match {

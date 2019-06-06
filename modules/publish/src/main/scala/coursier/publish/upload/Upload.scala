@@ -23,7 +23,10 @@ trait Upload {
     * @param logger
     * @return an optional [[Upload.Error]], non-empty in case of error
     */
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]]
+  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]]
+
+  final def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger): Task[Option[Upload.Error]] =
+    upload(url, authentication, content, logger, None)
 
   /**
     * Uploads a whole [[FileSet]].
@@ -53,19 +56,9 @@ trait Upload {
         .map {
           case (path, content) =>
             val url = s"$baseUrl0/${path.elements.mkString("/")}"
-
-            for {
-              _ <- Task.delay(logger.uploading(url, Some(id)))
-              a <- content.contentTask.flatMap(b =>
-                upload(url, repository.authentication, b, logger).map(_.map((path, content, _)))
-              ).attempt
-              _ <- {
-                val err = a.right.toOption.flatMap(_.map(_._3))
-                  .orElse(a.left.toOption.map(t => new Upload.Error.UploadError(url, t)))
-                Task.delay(logger.uploaded(url, Some(id), err))
-              }
-              res <- Task.fromEither(a)
-            } yield res
+            content.contentTask.flatMap(b =>
+              upload(url, repository.authentication, b, logger, Some(id)).map(_.map((path, content, _)))
+            )
         }
 
       if (parallel)
