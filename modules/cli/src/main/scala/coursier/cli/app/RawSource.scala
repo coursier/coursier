@@ -3,6 +3,7 @@ package coursier.cli.app
 import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.install.Channel
 import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
 
 final case class RawSource(
@@ -20,7 +21,7 @@ final case class RawSource(
       ModuleParser.javaOrScalaModule(channel)
         .right.flatMap {
           case _: JavaOrScalaModule.ScalaModule => Left("Scala modules not accepted for channels")
-          case m: JavaOrScalaModule.JavaModule => Right(m.module)
+          case m: JavaOrScalaModule.JavaModule => Right(Channel.module(m.module))
         }
         .left.map(NonEmptyList.one)
     )

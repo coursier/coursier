@@ -10,7 +10,7 @@ import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
 final case class InstallParams(
   shared: SharedInstallParams,
   rawAppDescriptor: RawAppDescriptor,
-  channels: Seq[Module],
+  channels: Seq[Channel],
   repositories: Seq[Repository],
   nameOpt: Option[String]
 )
@@ -41,7 +41,7 @@ object InstallParams {
           modules
             .toList
             .traverse {
-              case j: JavaOrScalaModule.JavaModule => Validated.validNel(j.module)
+              case j: JavaOrScalaModule.JavaModule => Validated.validNel(Channel.module(j.module))
               case s: JavaOrScalaModule.ScalaModule => Validated.invalidNel(s"Scala dependencies ($s) not accepted as channels")
             }
             .toEither
@@ -51,7 +51,7 @@ object InstallParams {
     val defaultChannels =
       if (options.defaultChannels)
         Seq(
-          mod"io.get-coursier:apps"
+          Channel.module(mod"io.get-coursier:apps")
         )
       else Nil
 

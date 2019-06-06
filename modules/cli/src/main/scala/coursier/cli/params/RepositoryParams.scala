@@ -2,6 +2,7 @@ package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.install.Channel
 import coursier.{Repositories, moduleString}
 import coursier.cli.options.RepositoryOptions
 import coursier.core.{Module, Repository}
@@ -11,7 +12,7 @@ import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
 
 final case class RepositoryParams(
   repositories: Seq[Repository],
-  channels: Seq[Module]
+  channels: Seq[Channel]
 )
 
 object RepositoryParams {
@@ -35,7 +36,7 @@ object RepositoryParams {
           modules
             .toList
             .traverse {
-              case j: JavaOrScalaModule.JavaModule => Validated.validNel(j.module)
+              case j: JavaOrScalaModule.JavaModule => Validated.validNel(Channel.module(j.module))
               case s: JavaOrScalaModule.ScalaModule => Validated.invalidNel(s"Scala dependencies ($s) not accepted as channels")
             }
             .toEither
@@ -45,7 +46,7 @@ object RepositoryParams {
     val defaultChannels =
       if (options.defaultChannels)
         Seq(
-          mod"io.get-coursier:apps"
+          Channel.module(mod"io.get-coursier:apps")
         )
       else Nil
 

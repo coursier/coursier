@@ -17,7 +17,7 @@ import coursier.util.{Sync, Task}
 object Install extends CaseApp[InstallOptions] {
 
   def appDescriptor(
-    channels: Seq[Module],
+    channels: Seq[Channel],
     repositories: Seq[Repository],
     cache: Cache[Task],
     id: String,
