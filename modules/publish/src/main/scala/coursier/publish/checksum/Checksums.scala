@@ -10,6 +10,18 @@ import coursier.util.Task
 
 object Checksums {
 
+  def clear(types: Seq[ChecksumType], fs: FileSet): FileSet = {
+    val extensions = types.map("." + _.extension)
+    FileSet(
+      fs.elements.filter {
+        case (p, _) =>
+          p.elements
+            .lastOption
+            .forall(n => !extensions.exists(n.endsWith))
+      }
+    )
+  }
+
   /**
     * Compute the missing checksums in a [[FileSet]].
     *

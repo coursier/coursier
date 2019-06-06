@@ -10,7 +10,9 @@ import coursier.parse.RepositoryParser
 
 final case class RepositoryParams(
   repository: PublishRepository,
-  snapshotVersioning: Boolean
+  snapshotVersioning: Boolean,
+  gitHub: Boolean,
+  bintray: Boolean
 )
 
 object RepositoryParams {
@@ -20,53 +22,106 @@ object RepositoryParams {
   def apply(options: RepositoryOptions): ValidatedNel[String, RepositoryParams] = {
 
     // FIXME Take repo from conf file into account here
-    val sonatype = options.sonatype.getOrElse(options.repository.isEmpty)
+    val sonatype = options.sonatype
+      .getOrElse(options.repository.isEmpty && options.github.isEmpty && options.bintray.isEmpty) // or .getOrElse(false)?
+
+    def defaultRepositoryV= {
+      val repositoryV =
+        options.repository match {
+          case None =>
+            Validated.invalidNel("No repository specified, and --sonatype option not specified")
+          case Some(repoUrl) =>
+            RepositoryParser.repository(repoUrl, maybeFile = true) match {
+              case Left(err) =>
+                Validated.invalidNel(err)
+              case Right(m: MavenRepository) =>
+                Validated.validNel(m)
+              case Right(_) =>
+                Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+            }
+        }
+
+      val readRepositoryOptV =
+        options.readFrom match {
+          case None =>
+            Validated.validNel(None)
+          case Some(repoUrl) =>
+            RepositoryParser.repository(repoUrl, maybeFile = true) match {
+              case Left(err) =>
+                Validated.invalidNel(err)
+              case Right(m: MavenRepository) =>
+                Validated.validNel(Some(m))
+              case Right(_) =>
+                Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
+            }
+        }
+
+      (repositoryV, readRepositoryOptV).mapN {
+        (repo, readRepoOpt) =>
+          PublishRepository.Simple(repo, readRepoOpt)
+      }
+    }
+
+    def fromGitHub(ghCredentials: String): ValidatedNel[String, PublishRepository] = {
+
+      val (ghUser, ghTokenOpt) =
+        ghCredentials.split(":", 2) match {
+          case Array(user) => (user, None)
+          case Array(user, token) => (user, Some(token))
+        }
+
+      val ghTokenV =
+        ghTokenOpt match {
+          case Some(token) => Validated.validNel(token)
+          case None =>
+            sys.env.get("GH_TOKEN") match {
+              case Some(token) => Validated.validNel(token)
+              case None => Validated.invalidNel("No GitHub token specified")
+            }
+        }
+
+      ghTokenV.map { token =>
+        PublishRepository.gitHub(ghUser, token)
+      }
+    }
+
+    def fromBintray(repo: String, apiKey: Option[String]): ValidatedNel[String, PublishRepository] = {
+
+      val paramsV = repo.split("/", 3) match {
+        case Array(user, repo0, package0) =>
+          Validated.validNel((user, repo0, package0))
+        case _ =>
+          Validated.invalidNel(s"Invalid bintray repository: '$repo' (expected 'user/repository/package')")
+      }
+
+      val apiKeyV = apiKey match {
+        case None => Validated.invalidNel("No Bintray API key specified (--bintray-api-key or BINTRAY_API_KEY in the environment)")
+        case Some(key) => Validated.validNel(key)
+      }
+
+      (paramsV, apiKeyV).mapN {
+        case ((user, repo0, package0), key) =>
+          PublishRepository.bintray(user, repo0, package0, key)
+      }
+    }
+
+    def fromSonatype =
+      if (options.repository.nonEmpty || options.readFrom.nonEmpty)
+        Validated.invalidNel("Cannot specify --repository or --read-fron along with --sonatype")
+      else
+        Validated.validNel(
+          PublishRepository.Sonatype(MavenRepository(sonatypeBase))
+        )
 
     val repositoryV =
-      if (sonatype) {
-        if (options.repository.nonEmpty || options.readFrom.nonEmpty)
-          Validated.invalidNel("Cannot specify --repository or --read-fron along with --sonatype")
-        else
-          Validated.validNel(
-            PublishRepository.Sonatype(MavenRepository(sonatypeBase))
-          )
-      } else {
-
-        val repositoryV =
-          options.repository match {
-            case None =>
-              Validated.invalidNel("No repository specified, and --sonatype option not specified")
-            case Some(repoUrl) =>
-              RepositoryParser.repository(repoUrl, maybeFile = true) match {
-                case Left(err) =>
-                  Validated.invalidNel(err)
-                case Right(m: MavenRepository) =>
-                  Validated.validNel(m)
-                case Right(_) =>
-                  Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
-              }
-          }
-
-        val readRepositoryOptV =
-          options.readFrom match {
-            case None =>
-              Validated.validNel(None)
-            case Some(repoUrl) =>
-              RepositoryParser.repository(repoUrl, maybeFile = true) match {
-                case Left(err) =>
-                  Validated.invalidNel(err)
-                case Right(m: MavenRepository) =>
-                  Validated.validNel(Some(m))
-                case Right(_) =>
-                  Validated.invalidNel(s"$repoUrl: non-maven repositories not supported")
-              }
-          }
-
-        (repositoryV, readRepositoryOptV).mapN {
-          (repo, readRepoOpt) =>
-            PublishRepository.Simple(repo, readRepoOpt)
+      options.github.map(fromGitHub)
+        .orElse(options.bintray.map(fromBintray(_, options.bintrayApiKey.orElse(sys.env.get("BINTRAY_API_KEY")))))
+        .getOrElse {
+          if (sonatype)
+            fromSonatype
+          else
+            defaultRepositoryV
         }
-      }
 
 
     def authFromEnv(userVar: String, passVar: String) = {
@@ -132,7 +187,9 @@ object RepositoryParams {
         val repo = credentials.fold(repository)(repository.withAuthentication)
         RepositoryParams(
           repo,
-          snapshotVersioning
+          snapshotVersioning,
+          options.github.nonEmpty,
+          options.bintray.nonEmpty
         )
     }
   }

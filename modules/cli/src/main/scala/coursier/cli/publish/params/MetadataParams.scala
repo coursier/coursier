@@ -16,7 +16,8 @@ final case class MetadataParams(
   // TODO Support full-fledged coursier.Dependency?
   dependencies: Option[Seq[(Organization, ModuleName, String)]],
   developersOpt: Option[Seq[Developer]],
-  git: Option[Boolean]
+  git: Option[Boolean],
+  mavenMetadata: Option[Boolean]
 ) {
   def isEmpty: Boolean =
     organization.isEmpty &&
@@ -90,7 +91,8 @@ object MetadataParams {
           homePageOpt,
           dependencies,
           None, // developer not accepted from the command-line for now
-          options.git
+          options.git,
+          options.mavenMetadata
         )
     }
   }

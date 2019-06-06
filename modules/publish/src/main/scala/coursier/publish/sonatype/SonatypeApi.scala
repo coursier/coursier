@@ -4,11 +4,11 @@ import java.nio.charset.StandardCharsets
 
 import argonaut._
 import argonaut.Argonaut._
-import com.squareup.okhttp.{MediaType, OkHttpClient, Request, RequestBody}
 import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.sonatype.logger.SonatypeLogger
 import coursier.util.Task
+import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
 
 import scala.util.Try
 

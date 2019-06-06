@@ -27,7 +27,8 @@ object PublishError {
           case (p, _, err) =>
             s"Error uploading ${p.repr} to ${repo.root}: ${err.getMessage}"
         }
-        .mkString("\n")
+        .mkString("\n"),
+      errors.headOption.map(_._3).orNull
     )
 
 }

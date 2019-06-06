@@ -2,7 +2,7 @@ package coursier.cache.protocol
 
 import java.net.{URLStreamHandler, URLStreamHandlerFactory}
 
-import com.squareup.okhttp.{OkHttpClient, OkUrlFactory}
+import okhttp3.{OkHttpClient, OkUrlFactory}
 
 object HttpHandler {
   lazy val okHttpClient = new OkHttpClient

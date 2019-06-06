@@ -75,4 +75,21 @@ object PublishRepository {
       )
   }
 
+  def gitHub(username: String, token: String): PublishRepository = {
+    val repo = MavenRepository(
+      s"https://maven.pkg.github.com/$username",
+      authentication = Some(Authentication(username, token))
+    )
+    Simple(repo)
+  }
+
+  def bintray(user: String, repository: String, package0: String, apiKey: String): PublishRepository = {
+    val repo = MavenRepository(
+      s"https://api.bintray.com/maven/$user/$repository/$package0",
+      authentication = Some(Authentication(user, apiKey))
+    )
+    val readRepo = MavenRepository(s"https://dl.bintray.com/$user/$repository") // allow to pass auth here?
+    Simple(repo, Some(readRepo))
+  }
+
 }

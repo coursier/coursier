@@ -23,7 +23,9 @@ final case class MetadataOptions(
   home: Option[String] = None,
 
   @HelpMessage("Read metadata from git")
-    git: Option[Boolean] = None
+    git: Option[Boolean] = None,
+
+  mavenMetadata: Option[Boolean] = None
 
 )
 

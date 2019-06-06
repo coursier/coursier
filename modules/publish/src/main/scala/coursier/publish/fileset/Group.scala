@@ -657,7 +657,7 @@ object Group {
     }
   }
 
-  private[publish] def mergeUnsafe(groups: Seq[Group]): FileSet =
+  private[coursier] def mergeUnsafe(groups: Seq[Group]): FileSet =
     FileSet(groups.flatMap(_.fileSet.elements))
 
   /**

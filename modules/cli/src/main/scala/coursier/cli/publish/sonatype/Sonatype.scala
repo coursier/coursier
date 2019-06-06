@@ -3,9 +3,9 @@ package coursier.cli.publish.sonatype
 import java.util.concurrent.TimeUnit
 
 import caseapp._
-import com.squareup.okhttp.OkHttpClient
 import coursier.publish.sonatype.SonatypeApi
 import coursier.util.Task
+import okhttp3.OkHttpClient
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
@@ -133,9 +133,10 @@ object Sonatype extends CaseApp[SonatypeOptions] {
       case Right(p) => p
     }
 
-    val client = new OkHttpClient
-    // Sonatype can be quite slow…
-    client.setReadTimeout(60L, TimeUnit.SECONDS)
+    val client = new OkHttpClient.Builder()
+      // Sonatype can be quite slow…
+      .readTimeout(60L, TimeUnit.SECONDS)
+      .build()
 
     val api = SonatypeApi(client, params.base, params.authentication, verbosity = params.verbosity)
 
