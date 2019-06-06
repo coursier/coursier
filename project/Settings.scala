@@ -421,7 +421,14 @@ object Settings {
         else
           Nil
       },
-      publishArtifact := ok.value
+      publishArtifact := ok.value,
+      mainClass.in(Compile) := {
+        val previous = mainClass.in(Compile).value
+        if (ok.value)
+          previous
+        else
+          None
+      }
     )
   }
 

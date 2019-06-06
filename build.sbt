@@ -225,7 +225,6 @@ lazy val cli = project("cli")
   .enablePlugins(ContrabandPlugin, PackPlugin)
   .settings(
     shared,
-    onlyPublishIn("2.12"),
     // does this really work?
     skipGeneration in generateContrabands := {
       !isSbv("2.12").value
@@ -270,12 +269,8 @@ lazy val cli = project("cli")
       else
         Seq()
     },
-    mainClass.in(Compile) := {
-      if (scalaBinaryVersion.value == "2.12")
-        Some("coursier.cli.Coursier")
-      else
-        None
-    }
+    mainClass.in(Compile) := Some("coursier.cli.Coursier"),
+    onlyIn("2.12")
   )
 
 lazy val `cli-native_03` = project("cli-native_03")
