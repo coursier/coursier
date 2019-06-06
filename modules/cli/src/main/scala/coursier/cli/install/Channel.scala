@@ -27,6 +27,13 @@ object Channel {
   private lazy val ghUrlMatcher =
     (quote("https://github.com/") + "([^/]*)/([^/]*)" + quote("/blob/") + "([^/]*)" + quote("/") + "(.*)").r.pattern
 
+  private def defaultGhFileName = "apps.json"
+  private def defaultGhPath = defaultGhFileName
+  private def defaultGhBranch = "master"
+
+  private def ghUrl(org: String, name: String, branch: String, path: String): String =
+    s"https://raw.githubusercontent.com/$org/$name/$branch/$path"
+
   def url(url: String): FromUrl = {
 
     val m = ghUrlMatcher.matcher(url)
@@ -37,7 +44,7 @@ object Channel {
         val name = m.group(2)
         val branch = m.group(3)
         val path = m.group(4)
-        s"https://raw.githubusercontent.com/$org/$name/$branch/$path"
+        ghUrl(org, name, branch, path)
       } else
         url
 
@@ -50,7 +57,36 @@ object Channel {
   def parse(s: String): Either[String, Channel] =
     if (s.contains("://"))
       Right(Channel.url(s))
-    else
+    else if ((s.startsWith("gh:") || s.startsWith("github:")) && s.contains("/")) {
+
+      val s0 =
+        if (s.startsWith("gh:")) s.stripPrefix("gh:")
+        else s.stripPrefix("github:")
+
+      val (orgName, path) = s0.split(":", 2) match {
+        case Array(orgName0, path0) =>
+          (orgName0, path0)
+        case Array(orgName0) =>
+          (orgName0, defaultGhPath)
+      }
+
+      val orgNameBranchOrError = orgName.split("/", 3) match {
+        case Array(org0, name0) => Right((org0, name0, defaultGhBranch))
+        case Array(org0, name0, branch0) => Right((org0, name0, branch0))
+        case _ => Left(s"Malformed github channel '$s'")
+      }
+
+      orgNameBranchOrError.right.map {
+        case (org, name, branch) =>
+          val path0 =
+            if (path.endsWith("/"))
+              path + defaultGhFileName
+            else
+              path
+          val url = ghUrl(org, name, branch, path0)
+          FromUrl(url)
+      }
+    } else
       ModuleParser.javaOrScalaModule(s)
         .right.flatMap {
           case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
