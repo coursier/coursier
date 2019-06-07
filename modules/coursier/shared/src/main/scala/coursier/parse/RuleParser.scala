@@ -29,6 +29,11 @@ object RuleParser {
         case (org, name) =>
           Module(Organization(org), ModuleName(name), Map.empty)
       }
+    def moduleOrExcludedModule =
+      P(("!".? ~ identifier).! ~ ":" ~ identifier).map {
+        case (org, name) =>
+          Module(Organization(org), ModuleName(name), Map.empty)
+      }
     def moduleMatcher = module.map(ModuleMatcher(_))
 
     def excludes =
@@ -57,7 +62,16 @@ object RuleParser {
         DontBumpRootDependencies(matchers)
       }
 
-    def strict = P("Strict").map(_ => Strict)
+    def strict =
+      P("Strict" ~ ("(" ~ moduleOrExcludedModule.rep(sep = P("," ~ " ".rep)) ~ ")").?).map { modulesOpt =>
+        val (exclude, include) = modulesOpt.getOrElse(Nil).partition(_.organization.value.startsWith("!"))
+        val include0 = if (include.isEmpty) Set(ModuleMatcher.all) else include.map(ModuleMatcher(_)).toSet
+        val exclude0 = exclude.map(m => m.copy(organization = Organization(m.organization.value.stripPrefix("!"))))
+        Strict(
+          include0,
+          exclude0.map(ModuleMatcher(_)).toSet
+        )
+      }
 
     def rule =
       P((resolution ~ ":").? ~ (alwaysFail | sameVersion | dontBumpRootDependencies | strict)).map {

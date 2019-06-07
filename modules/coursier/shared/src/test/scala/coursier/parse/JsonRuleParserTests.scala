@@ -130,14 +130,50 @@ object JsonRuleParserTests extends TestSuite {
       'strict - {
 
         'simple - {
-          val rule =
-            """{
-              |  "rule": "strict"
-              |}
-            """.stripMargin
-          val res = JsonRuleParser.parseRule(rule, "2.12.8")
-          val expectedRes = Right((Strict, RuleResolution.TryResolve))
-          assert(res == expectedRes)
+          * - {
+            val rule =
+              """{
+                |  "rule": "strict"
+                |}
+              """.stripMargin
+            val res = JsonRuleParser.parseRule(rule, "2.12.8")
+            val expectedRes = Right((Strict(), RuleResolution.TryResolve))
+            assert(res == expectedRes)
+          }
+
+          * - {
+            val rule =
+              """{
+                |  "rule": "strict",
+                |  "include": [
+                |    "org:*"
+                |  ]
+                |}
+              """.stripMargin
+            val res = JsonRuleParser.parseRule(rule, "2.12.8")
+            val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:*"))), RuleResolution.TryResolve))
+            assert(res == expectedRes)
+          }
+        }
+
+        'exclude - {
+          * - {
+            val rule =
+              """{
+                |  "rule": "strict",
+                |  "include": [
+                |    "org:*"
+                |  ],
+                |  "exclude": [
+                |    "org:name",
+                |    "org:foo"
+                |  ]
+                |}
+              """.stripMargin
+            val res = JsonRuleParser.parseRule(rule, "2.12.8")
+            val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:*")), Set(ModuleMatcher(mod"org:name"), ModuleMatcher(mod"org:foo"))), RuleResolution.TryResolve))
+            assert(res == expectedRes)
+          }
         }
 
         'defaultAction - {
@@ -148,7 +184,7 @@ object JsonRuleParserTests extends TestSuite {
             """.stripMargin
           val action = RuleResolution.Warn
           val res = JsonRuleParser.parseRule(rule, "2.12.8", action)
-          val expectedRes = Right((Strict, action))
+          val expectedRes = Right((Strict(), action))
           assert(res == expectedRes)
         }
 

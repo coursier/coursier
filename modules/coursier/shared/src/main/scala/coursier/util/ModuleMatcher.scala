@@ -35,6 +35,9 @@ object ModuleMatcher {
   def apply(org: Organization, name: ModuleName, attributes: Map[String, String] = Map.empty): ModuleMatcher =
     ModuleMatcher(Module(org, name, attributes))
 
+  def all: ModuleMatcher =
+    ModuleMatcher(Module(Organization("*"), ModuleName("*"), Map.empty))
+
   @tailrec
   private def blobToPattern(s: String, b: StringBuilder = new StringBuilder): Regex =
     if (s.isEmpty)
