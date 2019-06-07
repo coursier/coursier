@@ -8,7 +8,11 @@ object Deps {
 
   private object versions {
     def argonautShapeless = "1.2.0-M11"
-    def fastParse = "2.1.2"
+    def fastParse = setting {
+      val sv = scalaVersion.value
+      if (sv.startsWith("2.11.")) "2.1.2"
+      else "2.1.3"
+    }
     def http4s = "0.18.17"
     def scalaz = "7.2.27"
   }
@@ -18,7 +22,9 @@ object Deps {
   def catsCore = "org.typelevel" %% "cats-core" % "1.6.0"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def emoji = "com.lightbend" %% "emoji" % "1.2.1"
-  def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
+  def fastParse = setting {
+    "com.lihaoyi" %% "fastparse" % versions.fastParse.value
+  }
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def jsoup = "org.jsoup" % "jsoup" % "1.12.1"
@@ -48,12 +54,20 @@ object Deps {
 
     def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % versions.argonautShapeless)
     def catsEffect = setting("org.typelevel" %%% "cats-effect" % "1.2.0")
-    def fastParse = setting("com.lihaoyi" %%% "fastparse" % versions.fastParse)
+    def fastParse = setting {
+      "com.lihaoyi" %%% "fastparse" % versions.fastParse.value
+    }
     def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.7")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "0.9.5")
     def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.3.1")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
-    def utest = setting("com.lihaoyi" %%% "utest" % "0.6.7")
+    def utest = setting {
+      val sv = scalaVersion.value
+      val ver =
+        if (sv.startsWith("2.11.")) "0.6.7"
+        else "0.6.9"
+      "com.lihaoyi" %%% "utest" % ver
+    }
   }
 
   def proguardVersion = "6.0.3"

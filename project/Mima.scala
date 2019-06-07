@@ -42,7 +42,12 @@ object Mima {
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      binaryCompatibilityVersions.map { ver =>
+      val sv = scalaVersion.value
+      val versions = binaryCompatibilityVersions
+      val versions0 =
+        if (sv.startsWith("2.13.")) versions.filter(_ != "2.0.0-RC1")
+        else versions
+      versions0.map { ver =>
         organization.value %%% moduleName.value % ver
       }
     }
@@ -55,6 +60,7 @@ object Mima {
       Seq(
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded.")),
         // was private, now removed
         ProblemFilters.exclude[MissingClassProblem]("coursier.ivy.PropertiesPattern$Parser$"),
         // made private so that the shaded fastparse stuff doesn't leak

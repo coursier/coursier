@@ -29,7 +29,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shading("coursier.util.shaded"),
     utest,
     libs ++= Seq(
-      Deps.fastParse % "shaded",
+      Deps.fastParse.value % "shaded",
       Deps.jsoup % "shaded",
       Deps.scalaXml
     ),
@@ -358,7 +358,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmSettings(
     shading("coursier.internal.shaded"),
     // TODO shade those
-    libs += Deps.fastParse % "shaded"
+    libs += Deps.fastParse.value % "shaded"
   )
   .jsSettings(
     libs += Deps.cross.fastParse.value
