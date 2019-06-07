@@ -69,13 +69,18 @@ class JsonRuleParser(
         DecodeResult.fail[DontBumpRootDependencies]("Expected JSON object for AlwaysFail rule", c.history)
     }
 
-  private val decodeStrict: DecodeJson[Strict.type] =
-    DecodeJson { c =>
-      if (c.focus.isObject)
-        DecodeResult.ok(Strict)
-      else
-        DecodeResult.fail[Strict.type]("Expected JSON object for Strict rule", c.history)
+  private val decodeStrict: DecodeJson[Strict] = {
+
+    final case class Repr(include: List[Module] = Nil, exclude: List[Module] = Nil)
+
+    DecodeJson.of[Repr].map { r =>
+      val include = if (r.include.isEmpty) Set(ModuleMatcher.all) else r.include.map(ModuleMatcher(_)).toSet
+      Strict(
+        include,
+        r.exclude.map(ModuleMatcher(_)).toSet
+      )
     }
+  }
 
   private val ruleDecoders = Map[String, DecodeJson[Rule]](
     "always-fail" -> decodeAlwaysFail.map(x => x),

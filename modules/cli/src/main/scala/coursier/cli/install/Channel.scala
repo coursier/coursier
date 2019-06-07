@@ -5,7 +5,7 @@ import java.util.regex.Pattern.quote
 import coursier.core.Module
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
-abstract class Channel extends Product with Serializable {
+sealed abstract class Channel extends Product with Serializable {
   def repr: String
 }
 

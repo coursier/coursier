@@ -5,7 +5,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
 import coursier.params.ResolutionParams
-import coursier.parse.{DependencyParser, RuleParser}
+import coursier.parse.{DependencyParser, ModuleParser, RuleParser}
 
 final case class ResolutionOptions(
 
@@ -45,7 +45,12 @@ final case class ResolutionOptions(
 
   @Help("Enforce resolution rules")
   @Short("rule")
-    rules: List[String] = Nil
+    rules: List[String] = Nil,
+
+  strict: Option[Boolean] = None,
+
+  strictInclude: List[String] = Nil,
+  strictExclude: List[String] = Nil
 
 ) {
 
@@ -98,7 +103,16 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
-    val rulesV = rules
+    val extraStrictRule = {
+      if (strict.getOrElse(strictExclude.nonEmpty || strictInclude.nonEmpty)) {
+        val modules = (strictInclude.map(_.trim).filter(_.nonEmpty) ++ strictExclude.map(_.trim).filter(_.nonEmpty).map("!" + _))
+          .mkString(", ")
+        List(s"Strict($modules)")
+      } else
+        Nil
+    }
+
+    val rulesV = (extraStrictRule ::: rules)
       .traverse { s =>
         RuleParser.rules(s) match {
           case Left(err) => Validated.invalidNel(s"Malformed rules '$s': $err")

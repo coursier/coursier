@@ -69,10 +69,35 @@ object RuleParserTests extends TestSuite {
       'strict - {
 
         'simple - {
-          val s = "Strict"
-          val expectedRes = Right((Strict, RuleResolution.TryResolve))
-          val res = RuleParser.rule(s)
-          assert(res == expectedRes)
+          * - {
+            val s = "Strict"
+            val expectedRes = Right((Strict(), RuleResolution.TryResolve))
+            val res = RuleParser.rule(s)
+            assert(res == expectedRes)
+          }
+
+          * - {
+            val s = "Strict()"
+            val expectedRes = Right((Strict(), RuleResolution.TryResolve))
+            val res = RuleParser.rule(s)
+            assert(res == expectedRes)
+          }
+
+          * - {
+            val s = "Strict(org:name)"
+            val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:name"))), RuleResolution.TryResolve))
+            val res = RuleParser.rule(s)
+            assert(res == expectedRes)
+          }
+        }
+
+        'excludes - {
+          * - {
+            val s = "Strict(org:*, !org:name, !org:foo)"
+            val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:*")), Set(ModuleMatcher(mod"org:name"), ModuleMatcher(mod"org:foo"))), RuleResolution.TryResolve))
+            val res = RuleParser.rule(s)
+            assert(res == expectedRes)
+          }
         }
 
       }

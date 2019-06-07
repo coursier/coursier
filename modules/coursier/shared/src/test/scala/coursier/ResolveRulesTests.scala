@@ -151,7 +151,7 @@ object ResolveRulesTests extends TestSuite {
     'strict - {
       'fail - async {
 
-        val rule = Strict
+        val rule = Strict()
         val ruleRes = RuleResolution.Fail
 
         val params = ResolutionParams()

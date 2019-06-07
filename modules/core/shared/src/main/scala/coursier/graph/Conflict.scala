@@ -9,7 +9,11 @@ final case class Conflict(
   wasExcluded: Boolean,
   dependeeModule: Module,
   dependeeVersion: String
-)
+) {
+  def repr: String =
+    // FIXME Say something about wasExcluded?
+    s"$module:$version selected, but $dependeeModule:$dependeeVersion wanted $wantedVersion"
+}
 
 object Conflict {
 
