@@ -126,7 +126,7 @@ object Settings {
   )
 
   lazy val utest = Seq(
-    libs += CrossDeps.utest.value % Test,
+    libs += Deps.cross.utest.value % Test,
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
 

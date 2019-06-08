@@ -42,8 +42,8 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libs ++= Seq(
-      CrossDeps.fastParse.value,
-      CrossDeps.scalaJsDom.value
+      Deps.cross.fastParse.value,
+      Deps.cross.scalaJsDom.value
     )
   )
   .settings(
@@ -116,9 +116,9 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
         case Some((2, 12)) =>
           Seq(
-            "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
-            "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
-            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
+            Deps.http4sBlazeServer % Test,
+            Deps.http4sDsl % Test,
+            Deps.logbackClassic % Test,
             Deps.scalaAsync.value % Test
           )
         case _ =>
@@ -140,7 +140,7 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
     libs += Deps.scalazConcurrent
   )
   .jsSettings(
-    libs += CrossDeps.scalazCore.value
+    libs += Deps.cross.scalazCore.value
   )
   .settings(
     name := "scalaz-interop",
@@ -163,7 +163,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     utest,
     Mima.previousArtifacts,
     coursierPrefix,
-    libs += CrossDeps.catsEffect.value,
+    libs += Deps.cross.catsEffect.value,
     onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
   )
 
@@ -203,7 +203,7 @@ lazy val benchmark = project("benchmark")
   .settings(
     shared,
     dontPublish,
-    libraryDependencies += "org.apache.maven" % "maven-model" % "3.6.1"
+    libraryDependencies += Deps.mavenModel
   )
 
 lazy val publish = project("publish")
@@ -212,9 +212,9 @@ lazy val publish = project("publish")
     shared,
     coursierPrefix,
     libs ++= Seq(
-      Deps.catsCore,
       Deps.argonautShapeless,
-      "com.lightbend" %% "emoji" % "1.2.1"
+      Deps.catsCore,
+      Deps.emoji
     ),
     resolvers += Resolver.typesafeIvyRepo("releases"), // for "com.lightbend" %% "emoji"
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
@@ -314,8 +314,8 @@ lazy val web = project("web")
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
-          CrossDeps.scalaJsJquery.value,
-          CrossDeps.scalaJsReact.value
+          Deps.cross.scalaJsJquery.value,
+          Deps.cross.scalaJsReact.value
         )
       else
         Seq()
@@ -361,7 +361,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     libs += Deps.fastParse % "shaded"
   )
   .jsSettings(
-    libs += CrossDeps.fastParse.value
+    libs += Deps.cross.fastParse.value
   )
   .dependsOn(core, cache)
   .configs(Integration)
@@ -374,7 +374,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     utest,
     libs ++= Seq(
       Deps.scalaAsync.value % Test,
-      CrossDeps.argonautShapeless.value
+      Deps.cross.argonautShapeless.value
     )
   )
 
@@ -497,7 +497,7 @@ def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[
 
   Seq(
     proguardedJar := proguardedJarTask.value,
-    proguardVersion.in(Proguard) := SharedVersions.proguard,
+    proguardVersion.in(Proguard) := Deps.proguardVersion,
     proguardOptions.in(Proguard) ++= Seq(
       "-dontwarn",
       "-repackageclasses coursier.bootstrap.launcher",
