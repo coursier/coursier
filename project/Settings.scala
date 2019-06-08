@@ -432,4 +432,74 @@ object Settings {
     )
   }
 
+  lazy val sharedTestResources = {
+    unmanagedResourceDirectories.in(Test) ++= {
+      val baseDir = baseDirectory.in(LocalRootProject).value
+      val testsMetadataDir = baseDir / "modules" / "tests" / "metadata" / "https"
+      if (!testsMetadataDir.exists())
+        gitLock.synchronized {
+          if (!testsMetadataDir.exists()) {
+            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/metadata")
+            runCommand(cmd, baseDir)
+          }
+        }
+      val testsHandmadeMetadataDir = baseDir / "modules" / "tests" / "handmade-metadata" / "data"
+      if (!testsHandmadeMetadataDir.exists())
+        gitLock.synchronized {
+          if (!testsHandmadeMetadataDir.exists()) {
+            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/handmade-metadata")
+            runCommand(cmd, baseDir)
+          }
+        }
+      Nil
+    }
+  }
+
+  // Using directly the sources of directories, rather than depending on it.
+  // This is required to use it from the bootstrap module, whose jar is launched as is (so shouldn't require dependencies).
+  // This is done for the other use of it too, from the cache module, not to have to manage two ways of depending on it.
+  lazy val addDirectoriesSources = {
+    unmanagedSourceDirectories.in(Compile) += {
+      val baseDir = baseDirectory.in(LocalRootProject).value
+      val directoriesDir = baseDir / "modules" / "directories" / "src" / "main" / "java"
+      if (!directoriesDir.exists())
+        gitLock.synchronized {
+          if (!directoriesDir.exists()) {
+            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/directories")
+            runCommand(cmd, baseDir)
+          }
+        }
+
+      directoriesDir
+    }
+  }
+
+  def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
+
+    val extra =
+      if (resourceBased)
+        Seq("-keep class coursier.bootstrap.launcher.jar.Handler {\n}")
+      else
+        Nil
+
+    val fileName =
+      if (resourceBased)
+        "bootstrap-resources.jar"
+      else
+        "bootstrap.jar"
+
+    Seq(
+      proguardedJar := proguardedJarTask.value,
+      proguardVersion.in(Proguard) := Deps.proguardVersion,
+      proguardOptions.in(Proguard) ++= Seq(
+        "-dontwarn",
+        "-repackageclasses coursier.bootstrap.launcher",
+        s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",
+        "-keep class coursier.bootstrap.launcher.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+      ) ++ extra,
+      javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
+      artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
+    )
+  }
+
 }
