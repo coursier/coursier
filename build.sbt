@@ -29,7 +29,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shading("coursier.util.shaded"),
     utest,
     libs ++= Seq(
-      Deps.fastParse % "shaded",
+      Deps.fastParse.value % "shaded",
       Deps.jsoup % "shaded",
       Deps.scalaXml
     ),
@@ -42,8 +42,8 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libs ++= Seq(
-      CrossDeps.fastParse.value,
-      CrossDeps.scalaJsDom.value
+      Deps.cross.fastParse.value,
+      Deps.cross.scalaJsDom.value
     )
   )
   .settings(
@@ -116,9 +116,9 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
         case Some((2, 12)) =>
           Seq(
-            "org.http4s" %% "http4s-blaze-server" % "0.18.17" % Test,
-            "org.http4s" %% "http4s-dsl" % "0.18.17" % Test,
-            "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
+            Deps.http4sBlazeServer % Test,
+            Deps.http4sDsl % Test,
+            Deps.logbackClassic % Test,
             Deps.scalaAsync.value % Test
           )
         case _ =>
@@ -140,7 +140,7 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
     libs += Deps.scalazConcurrent
   )
   .jsSettings(
-    libs += CrossDeps.scalazCore.value
+    libs += Deps.cross.scalazCore.value
   )
   .settings(
     name := "scalaz-interop",
@@ -163,7 +163,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     utest,
     Mima.previousArtifacts,
     coursierPrefix,
-    libs += CrossDeps.catsEffect.value,
+    libs += Deps.cross.catsEffect.value,
     onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
   )
 
@@ -203,7 +203,7 @@ lazy val benchmark = project("benchmark")
   .settings(
     shared,
     dontPublish,
-    libraryDependencies += "org.apache.maven" % "maven-model" % "3.6.1"
+    libraryDependencies += Deps.mavenModel
   )
 
 lazy val publish = project("publish")
@@ -212,9 +212,9 @@ lazy val publish = project("publish")
     shared,
     coursierPrefix,
     libs ++= Seq(
-      Deps.catsCore,
       Deps.argonautShapeless,
-      "com.lightbend" %% "emoji" % "1.2.1"
+      Deps.catsCore,
+      Deps.emoji
     ),
     resolvers += Resolver.typesafeIvyRepo("releases"), // for "com.lightbend" %% "emoji"
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
@@ -314,8 +314,8 @@ lazy val web = project("web")
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
-          CrossDeps.scalaJsJquery.value,
-          CrossDeps.scalaJsReact.value
+          Deps.cross.scalaJsJquery.value,
+          Deps.cross.scalaJsReact.value
         )
       else
         Seq()
@@ -358,10 +358,10 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmSettings(
     shading("coursier.internal.shaded"),
     // TODO shade those
-    libs += Deps.fastParse % "shaded"
+    libs += Deps.fastParse.value % "shaded"
   )
   .jsSettings(
-    libs += CrossDeps.fastParse.value
+    libs += Deps.cross.fastParse.value
   )
   .dependsOn(core, cache)
   .configs(Integration)
@@ -374,7 +374,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     utest,
     libs ++= Seq(
       Deps.scalaAsync.value % Test,
-      CrossDeps.argonautShapeless.value
+      Deps.cross.argonautShapeless.value
     )
   )
 
@@ -478,76 +478,6 @@ lazy val addBootstrapJarAsResource = {
     ))
 
     dest
-  }
-}
-
-def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
-
-  val extra =
-    if (resourceBased)
-      Seq("-keep class coursier.bootstrap.launcher.jar.Handler {\n}")
-    else
-      Nil
-
-  val fileName =
-    if (resourceBased)
-      "bootstrap-resources.jar"
-    else
-      "bootstrap.jar"
-
-  Seq(
-    proguardedJar := proguardedJarTask.value,
-    proguardVersion.in(Proguard) := SharedVersions.proguard,
-    proguardOptions.in(Proguard) ++= Seq(
-      "-dontwarn",
-      "-repackageclasses coursier.bootstrap.launcher",
-      s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",
-      "-keep class coursier.bootstrap.launcher.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
-    ) ++ extra,
-    javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
-    artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
-  )
-}
-
-lazy val sharedTestResources = {
-  unmanagedResourceDirectories.in(Test) ++= {
-    val baseDir = baseDirectory.in(LocalRootProject).value
-    val testsMetadataDir = baseDir / "modules" / "tests" / "metadata" / "https"
-    if (!testsMetadataDir.exists())
-      gitLock.synchronized {
-        if (!testsMetadataDir.exists()) {
-          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/metadata")
-          runCommand(cmd, baseDir)
-        }
-      }
-    val testsHandmadeMetadataDir = baseDir / "modules" / "tests" / "handmade-metadata" / "data"
-    if (!testsHandmadeMetadataDir.exists())
-      gitLock.synchronized {
-        if (!testsHandmadeMetadataDir.exists()) {
-          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/handmade-metadata")
-          runCommand(cmd, baseDir)
-        }
-      }
-    Nil
-  }
-}
-
-// Using directly the sources of directories, rather than depending on it.
-// This is required to use it from the bootstrap module, whose jar is launched as is (so shouldn't require dependencies).
-// This is done for the other use of it too, from the cache module, not to have to manage two ways of depending on it.
-lazy val addDirectoriesSources = {
-  unmanagedSourceDirectories.in(Compile) += {
-    val baseDir = baseDirectory.in(LocalRootProject).value
-    val directoriesDir = baseDir / "modules" / "directories" / "src" / "main" / "java"
-    if (!directoriesDir.exists())
-      gitLock.synchronized {
-        if (!directoriesDir.exists()) {
-          val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/directories")
-          runCommand(cmd, baseDir)
-        }
-      }
-
-    directoriesDir
   }
 }
 
