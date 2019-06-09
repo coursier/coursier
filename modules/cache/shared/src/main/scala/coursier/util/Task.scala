@@ -1,5 +1,8 @@
 package coursier.util
 
+import java.util.concurrent.ScheduledExecutorService
+
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
 
@@ -21,6 +24,18 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
     .handle {
       case t: Throwable => Left(t)
     }
+
+  def schedule(duration: Duration, es: ScheduledExecutorService): Task[T] = {
+    Task { implicit ec =>
+      val p = Promise[T]()
+      val r: Runnable =
+        new Runnable {
+          def run() = value(ec).onComplete(p.complete)
+        }
+      es.schedule(r, duration.length, duration.unit)
+      p.future
+    }
+  }
 }
 
 object Task extends PlatformTaskCompanion {

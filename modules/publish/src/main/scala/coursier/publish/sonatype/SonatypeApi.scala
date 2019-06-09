@@ -1,6 +1,7 @@
 package coursier.publish.sonatype
 
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.ScheduledExecutorService
 
 import argonaut._
 import argonaut.Argonaut._
@@ -10,6 +11,7 @@ import coursier.publish.sonatype.logger.SonatypeLogger
 import coursier.util.Task
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
 
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 final case class SonatypeApi(
@@ -188,6 +190,43 @@ final case class SonatypeApi(
         json.field("name").flatMap(_.string).contains(action)
       }.lastOption
     }
+
+  def waitForStatus(
+    profileId: String,
+    repositoryId: String,
+    status: String,
+    maxAttempt: Int,
+    initialDelay: Duration,
+    backoffFactor: Double,
+    es: ScheduledExecutorService
+  ): Task[Unit] = {
+
+    // TODO Stop early in case of error (which statuses exactly???)
+
+    def task(attempt: Int, nextDelay: Duration, totalDelay: Duration): Task[Unit] =
+      listProfileRepositories(Some(profileId)).flatMap { l =>
+        l.find(_.id == repositoryId) match {
+          case None =>
+            Task.fail(new Exception(s"Repository $repositoryId not found"))
+          case Some(repo) =>
+            // TODO Use logger for that
+            System.err.println(s"Repository $repositoryId has status ${repo.`type`}")
+            repo.`type` match {
+              case `status` =>
+                Task.point(())
+              case other =>
+                if (attempt < maxAttempt)
+                  task(attempt + 1, backoffFactor * nextDelay, totalDelay + nextDelay)
+                    .schedule(nextDelay, es)
+                else
+                  // FIXME totalDelay doesn't include the duration of the requests themselves (only the time between)
+                  Task.fail(new Exception(s"Repository $repositoryId in state $other after $totalDelay"))
+            }
+        }
+      }
+
+    task(1, initialDelay, Duration.Zero)
+  }
 
 }
 
