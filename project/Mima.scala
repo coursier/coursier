@@ -25,6 +25,13 @@ object Mima {
     if (stable(latest)) {
       val prefix = latest.split('.').take(2).map(_ + ".").mkString
 
+      val head = Seq("git", "tag", "--list", "v" + prefix + "*", "--contains", "HEAD")
+        .!!
+        .linesIterator
+        .map(_.trim.stripPrefix("v"))
+        .filter(stable)
+        .toSet
+
       val previous = Seq("git", "tag", "--list", "v" + prefix + "*")
         .!!
         .linesIterator
@@ -34,7 +41,7 @@ object Mima {
 
       assert(previous.contains(latest), "Something went wrong")
 
-      previous
+      previous -- head
     } else
       Set()
   }
