@@ -19,6 +19,8 @@ sealed abstract class PublishRepository extends Product with Serializable {
       readSnapshotRepo
     else
       readReleaseRepo
+  def checkResultsRepo(isSnapshot: Boolean): MavenRepository =
+    readRepo(isSnapshot)
 
   def withAuthentication(auth: Authentication): PublishRepository
 }
@@ -63,6 +65,14 @@ object PublishRepository {
       base.copy(
         root = s"${base.root}/content/repositories/releases"
       )
+
+    override def checkResultsRepo(isSnapshot: Boolean): MavenRepository =
+      if (isSnapshot)
+        super.checkResultsRepo(isSnapshot)
+      else
+        base.copy(
+          root = s"${base.root}/content/repositories/public"
+        )
 
     def restBase: String =
       s"${base.root}/service/local"

@@ -12,6 +12,8 @@ import coursier.cache.Cache
 import coursier.cli.app.{AppDescriptor, RawAppDescriptor, RawSource, Source}
 import coursier.cli.util.Guard
 import coursier.core.{Module, Repository}
+import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepository
 import coursier.util.{Sync, Task}
 
 object Install extends CaseApp[InstallOptions] {
@@ -96,7 +98,18 @@ object Install extends CaseApp[InstallOptions] {
               System.err.println(err)
               sys.exit(1)
             case Right((source, repr, desc)) =>
-              val rawSource = RawSource(options.appOptions.repository, source.channel.toString, id)
+              val repositories = params.repositories.toList.flatMap {
+                case m: MavenRepository =>
+                  // FIXME This discard authentication, …
+                  List(m.root)
+                case i: IvyRepository =>
+                  // FIXME This discard authentication, metadataPattern, …
+                  List(s"ivy:${i.pattern.string}")
+                case _ =>
+                  // ???
+                  Nil
+              }
+              val rawSource = RawSource(repositories, source.channel.repr, id)
               (Some((rawSource, source.copy(id = id))), Some((repr, overrideVersionOpt.fold(desc)(desc.overrideVersion))))
           }
         } else {

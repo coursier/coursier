@@ -1,12 +1,15 @@
 package coursier.cli.publish
 
 import java.io.PrintStream
+import java.util.concurrent.ScheduledExecutorService
 
 import coursier.maven.MavenRepository
 import coursier.publish.fileset.FileSet
 import coursier.publish.sonatype.SonatypeApi
 import coursier.publish.sonatype.logger.{BatchSonatypeLogger, InteractiveSonatypeLogger}
 import coursier.util.Task
+
+import scala.concurrent.duration.DurationInt
 
 trait Hooks {
 
@@ -25,7 +28,8 @@ object Hooks {
     apiOpt: Option[(PublishRepository.Sonatype, SonatypeApi)],
     out: PrintStream,
     verbosity: Int,
-    batch: Boolean
+    batch: Boolean,
+    es: ScheduledExecutorService
   ) extends Hooks {
 
     val logger =
@@ -84,7 +88,10 @@ object Hooks {
           // TODO Print sensible error messages if anything goes wrong here (commands to finish promoting, etc.)
           for {
             _ <- api.sendCloseStagingRepositoryRequest(profile, repoId, "closing repository")
+            _ <- api.waitForStatus(profile.id, repoId, "closed", 20, 3.seconds, 1.5, es)
             _ <- api.sendPromoteStagingRepositoryRequest(profile, repoId, "promoting repository")
+            _ <- api.waitForStatus(profile.id, repoId, "released", 20, 3.seconds, 1.5, es)
+            _ <- api.sendDropStagingRepositoryRequest(profile, repoId, "dropping repository")
           } yield ()
       }
     }
@@ -93,8 +100,9 @@ object Hooks {
     apiOpt: Option[(PublishRepository.Sonatype, SonatypeApi)],
     out: PrintStream,
     verbosity: Int,
-    batch: Boolean
+    batch: Boolean,
+    es: ScheduledExecutorService
   ): Hooks =
-    new Sonatype(apiOpt, out, verbosity, batch)
+    new Sonatype(apiOpt, out, verbosity, batch, es)
 
 }

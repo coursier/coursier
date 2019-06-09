@@ -1,6 +1,6 @@
 package coursier.cache.internal
 
-import java.util.concurrent.{ExecutorService, LinkedBlockingQueue, ThreadFactory, ThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ExecutorService, LinkedBlockingQueue, ScheduledExecutorService, ScheduledThreadPoolExecutor, ThreadFactory, ThreadPoolExecutor, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
 
 object ThreadUtil {
@@ -35,6 +35,16 @@ object ThreadUtil {
       new LinkedBlockingQueue[Runnable],
       factory
     )
+    executor.allowCoreThreadTimeOut(true)
+    executor
+  }
+
+  def fixedScheduledThreadPool(size: Int): ScheduledExecutorService = {
+
+    val factory = daemonThreadFactory()
+
+    val executor = new ScheduledThreadPoolExecutor(size, factory)
+    executor.setKeepAliveTime(1L, TimeUnit.MINUTES)
     executor.allowCoreThreadTimeOut(true)
     executor
   }

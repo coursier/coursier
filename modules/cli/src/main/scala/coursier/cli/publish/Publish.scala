@@ -4,9 +4,11 @@ import java.io.{File, PrintStream}
 import java.net.URI
 import java.nio.file.Paths
 import java.time.Instant
+import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import caseapp._
 import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
+import coursier.cache.internal.ThreadUtil
 import coursier.publish.checksum.{ChecksumType, Checksums}
 import coursier.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
@@ -65,7 +67,7 @@ object Publish extends CaseApp[PublishOptions] {
       Task.point(!snapshotMap.contains(false))
   }
 
-  def publish(params: PublishParams, out: PrintStream): Task[Unit] = {
+  def publish(params: PublishParams, out: PrintStream, es: ScheduledExecutorService): Task[Unit] = {
 
     val deleteOnExit = new DeleteOnExit(params.verbosity)
 
@@ -73,7 +75,7 @@ object Publish extends CaseApp[PublishOptions] {
 
     params.maybeWarnSigner(out)
 
-    val hooks = Hooks.sonatype(params.sonatypeApiOpt(out), out, params.verbosity, params.batch)
+    val hooks = Hooks.sonatype(params.sonatypeApiOpt(out), out, params.verbosity, params.batch, es)
 
     for {
 
@@ -230,7 +232,7 @@ object Publish extends CaseApp[PublishOptions] {
       _ <- hooks.afterUpload(hooksData)
     } yield {
       if (params.verbosity >= 0) {
-        val actualReadRepo = params.repository.repository.readRepo(isSnapshot0)
+        val actualReadRepo = params.repository.repository.checkResultsRepo(isSnapshot0)
         val modules = Group.split(sortedFinalFileSet)
           .collect { case m: Group.Module => m }
           .sortBy(m => (m.organization.value, m.name.value, m.version))
@@ -257,8 +259,11 @@ object Publish extends CaseApp[PublishOptions] {
       case Right(p) => p
     }
 
-    val task = publish(params, System.err)
-    val f = task.attempt.future()(ExecutionContext.global)
+    val es = ThreadUtil.fixedScheduledThreadPool(params.cache.parallel)
+    val ec = ExecutionContext.fromExecutorService(es)
+
+    val task = publish(params, System.err, es)
+    val f = task.attempt.future()(ec)
     val res = Await.result(f, Duration.Inf)
 
     res match {
