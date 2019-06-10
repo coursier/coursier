@@ -11,7 +11,7 @@ import caseapp.core.app.CaseApp
 import coursier.cache.Cache
 import coursier.cli.app.{AppDescriptor, RawAppDescriptor, RawSource, Source}
 import coursier.cli.util.Guard
-import coursier.core.{Module, Repository}
+import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.util.{Sync, Task}
@@ -78,95 +78,103 @@ object Install extends CaseApp[InstallOptions] {
     val pool = Sync.fixedThreadPool(params.shared.cache.parallel)
     val cache = params.shared.cache.cache(pool, params.shared.logger())
 
-    val (sourceOpt, appDescriptorOpt) = args.all match {
-      case Seq(id) if id.count(_ == ':') <= 1 =>
-        if (params.channels.isEmpty) {
-          System.err.println(s"Error: app id specified, but no channels passed")
-          sys.exit(1)
-        } else if (params.rawAppDescriptor.copy(repositories = Nil).isEmpty) {
-
-          val (actualId, overrideVersionOpt) = {
-            val idx = id.indexOf(':')
-            if (idx < 0)
-              (id, None)
-            else
-              (id.take(idx), Some(id.drop(idx + 1)))
-          }
-
-          appDescriptor(params.channels, params.repositories, cache, actualId, params.shared.verbosity) match {
-            case Left(err) =>
-              System.err.println(err)
+    val fromArgs =
+      Some(params.rawAppDescriptor)
+        .filter(!_.isEmpty)
+        .map { desc =>
+          desc.appDescriptor.toEither match {
+            case Left(errors) =>
+              for (err <- errors.toList)
+                System.err.println(err)
               sys.exit(1)
-            case Right((source, repr, desc)) =>
-              val repositories = params.repositories.toList.flatMap {
-                case m: MavenRepository =>
-                  // FIXME This discard authentication, …
-                  List(m.root)
-                case i: IvyRepository =>
-                  // FIXME This discard authentication, metadataPattern, …
-                  List(s"ivy:${i.pattern.string}")
-                case _ =>
-                  // ???
-                  Nil
-              }
-              val rawSource = RawSource(repositories, source.channel.repr, id)
-              (Some((rawSource, source.copy(id = id))), Some((repr, overrideVersionOpt.fold(desc)(desc.overrideVersion))))
+            case Right(d) => (None, (desc.repr.getBytes(StandardCharsets.UTF_8), d))
           }
-        } else {
-          import caseapp.core.util.NameOps._
-          val argNames = InstallAppOptions.help.args.filter(_.name.name != "repository").map(_.name.option)
-          System.err.println(
-            s"App description arguments (${argNames.mkString(", ")}) can only be specified along with standard dependencies, not with app ids"
-          )
-          sys.exit(1)
         }
-      case deps =>
-        val descOpt = Some(params.rawAppDescriptor.copy(dependencies = deps.toList))
-          .filter(!_.isEmpty)
-          .map { desc =>
-            desc.appDescriptor.toEither match {
-              case Left(errors) =>
-                for (err <- errors.toList)
-                  System.err.println(err)
-                sys.exit(1)
-              case Right(d) => (desc.repr.getBytes(StandardCharsets.UTF_8), d)
+
+    val fromIds = args.all.map { id =>
+
+      if (params.channels.isEmpty) {
+        System.err.println(s"Error: app id specified, but no channels passed")
+        sys.exit(1)
+      } else if (params.rawAppDescriptor.copy(repositories = Nil).isEmpty) {
+
+        val (actualId, overrideVersionOpt) = {
+          val idx = id.indexOf(':')
+          if (idx < 0)
+            (id, None)
+          else
+            (id.take(idx), Some(id.drop(idx + 1)))
+        }
+
+        appDescriptor(params.channels, params.repositories, cache, actualId, params.shared.verbosity) match {
+          case Left(err) =>
+            System.err.println(err)
+            sys.exit(1)
+          case Right((source, repr, desc)) =>
+            val repositories = params.repositories.toList.flatMap {
+              case m: MavenRepository =>
+                // FIXME This discard authentication, …
+                List(m.root)
+              case i: IvyRepository =>
+                // FIXME This discard authentication, metadataPattern, …
+                List(s"ivy:${i.pattern.string}")
+              case _ =>
+                // ???
+                Nil
             }
-          }
-
-        (None, descOpt)
-    }
-
-    val name = params.nameOpt
-      .orElse(appDescriptorOpt.flatMap(_._2.nameOpt))
-      .orElse(sourceOpt.map(_._2.id.takeWhile(_ != ':')))
-      .getOrElse {
-        System.err.println(s"No name specified. Pass one with the --name option.")
+            val rawSource = RawSource(repositories, source.channel.repr, id)
+            (Some((rawSource, source.copy(id = id))), (repr, overrideVersionOpt.fold(desc)(desc.overrideVersion)))
+        }
+      } else {
+        import caseapp.core.util.NameOps._
+        val argNames = InstallAppOptions.help.args.filter(_.name.name != "repository").map(_.name.option)
+        System.err.println(
+          s"App description arguments (${argNames.mkString(", ")}) can only be specified along with standard dependencies, not with app ids"
+        )
         sys.exit(1)
       }
-    val dest = params.shared.dir.resolve(name)
-
-    if (args.all.isEmpty && !Files.exists(dest)) {
-      System.err.println(s"$dest not found and no dependency specified")
-      sys.exit(1)
     }
 
-    val wroteSomething = AppGenerator.createOrUpdate(
-      appDescriptorOpt.map(t => (t._2, t._1)),
-      sourceOpt.map(_._1.repr.getBytes(StandardCharsets.UTF_8)),
-      cache,
-      params.shared.dir,
-      dest,
-      Instant.now(),
-      params.shared.verbosity,
-      params.shared.forceUpdate,
-      params.shared.graalvmParamsOpt,
-      coursierRepositories = params.repositories
-    )
+    if (fromArgs.isEmpty && fromIds.isEmpty) {
+      if (params.shared.verbosity >= 0)
+        System.err.println("Nothing to install")
+      sys.exit(0)
+    }
 
-    if (wroteSomething)
-      System.err.println(s"Wrote $dest")
-    else if (params.shared.verbosity >= 1)
-      System.err.println(s"$dest doesn't need updating")
+    for ((sourceOpt, (b, appDescriptor)) <- fromArgs.iterator ++ fromIds) {
+
+      val name = params.nameOpt
+        .orElse(appDescriptor.nameOpt)
+        .orElse(sourceOpt.map(_._2.id.takeWhile(_ != ':')))
+        .getOrElse {
+          System.err.println(s"No name specified. Pass one with the --name option.")
+          sys.exit(1)
+        }
+      val dest = params.shared.dir.resolve(name)
+
+      if (args.all.isEmpty && !Files.exists(dest)) {
+        System.err.println(s"$dest not found and no dependency specified")
+        sys.exit(1)
+      }
+
+      val wroteSomething = AppGenerator.createOrUpdate(
+        Some((appDescriptor, b)),
+        sourceOpt.map(_._1.repr.getBytes(StandardCharsets.UTF_8)),
+        cache,
+        params.shared.dir,
+        dest,
+        Instant.now(),
+        params.shared.verbosity,
+        params.shared.forceUpdate,
+        params.shared.graalvmParamsOpt,
+        coursierRepositories = params.repositories
+      )
+
+      if (wroteSomething)
+        System.err.println(s"Wrote $dest")
+      else if (params.shared.verbosity >= 1)
+        System.err.println(s"$dest doesn't need updating")
+    }
 
     if (params.shared.verbosity >= 0) {
       val path = sys.env.get("PATH")

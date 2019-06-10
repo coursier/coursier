@@ -10,6 +10,9 @@ final case class InstallAppOptions(
   @Short("r")
     repository: List[String] = Nil,
 
+  @Help("Extra dependencies to add alongside the installed application")
+    dependency: List[String] = Nil,
+
   shared: List[String] = Nil,
   @Name("E")
     exclude: List[String] = Nil,
@@ -24,7 +27,7 @@ final case class InstallAppOptions(
 ) {
   def rawAppDescriptor: RawAppDescriptor =
     RawAppDescriptor(
-      Nil,
+      dependency,
       repository,
       shared,
       exclude,
