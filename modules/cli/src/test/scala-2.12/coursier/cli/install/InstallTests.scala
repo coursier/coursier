@@ -35,12 +35,18 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     MockCache.create[Task](mockDataLocation, writeMissing = writeMockData, pool = pool)
 
   private def delete(d: Path): Unit =
-    if (Files.isDirectory(d))
-      Files.list(d)
-        .iterator()
-        .asScala
-        .foreach(delete)
-    else
+    if (Files.isDirectory(d)) {
+      var s: java.util.stream.Stream[Path] = null
+      try {
+        s = Files.list(d)
+        s.iterator()
+          .asScala
+          .foreach(delete)
+      } finally {
+        if (s != null)
+          s.close()
+      }
+    } else
       Files.deleteIfExists(d)
 
   private def withTempDir[T](f: Path => T): T = {
