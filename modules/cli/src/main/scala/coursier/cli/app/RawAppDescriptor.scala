@@ -170,12 +170,14 @@ object RawAppDescriptor {
 
   final case class RawGraalvmOptions(
     options: List[String] = Nil,
-    reflection: Option[List[JsonObject]] = None
+    reflection: Option[List[JsonObject]] = None,
+    shellPrependOptions: List[String] = Nil
   ) {
     def graalvmOptions: AppDescriptor.GraalvmOptions =
       AppDescriptor.GraalvmOptions(
         options,
-        reflection.map(l => Json.array(l.map(Json.jObject): _*).nospaces)
+        reflection.map(l => Json.array(l.map(Json.jObject): _*).nospaces),
+        shellPrependOptions
       )
   }
 

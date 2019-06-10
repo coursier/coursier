@@ -36,7 +36,8 @@ object AppDescriptor {
 
   final case class GraalvmOptions(
     options: Seq[String],
-    reflectionConf: Option[String]
+    reflectionConf: Option[String],
+    shellPrependOptions: Seq[String]
   )
 
 }

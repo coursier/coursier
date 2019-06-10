@@ -490,12 +490,20 @@ object AppGenerator {
 
               for (graalvmParams <- graalvmParamsOpt0) {
 
+                val shellPrependOptions = desc.graalvmOptions.toSeq.flatMap(_.shellPrependOptions)
+
+                val imageDest =
+                  if (shellPrependOptions.isEmpty || LauncherBat.isWindows)
+                    tmpDest
+                  else
+                    dest.getParent.resolve(s".${dest.getFileName}.binary")
+
                 def generate(extraArgs: String*): Unit = {
                   val cmd = Seq(s"${graalvmParams.home}/bin/native-image", "--no-server") ++
                     desc.graalvmOptions.toSeq.flatMap(_.options) ++
                     graalvmParams.extraNativeImageOptions ++
                     extraArgs ++
-                    Seq("-jar", assemblyDest.toString, tmpDest.toString)
+                    Seq("-jar", assemblyDest.toString, imageDest.toString)
                   if (verbosity >= 1)
                     System.err.println(s"Running $cmd")
                   val b = new ProcessBuilder(cmd: _*)
@@ -513,6 +521,18 @@ object AppGenerator {
                     withTempFile(conf.getBytes(StandardCharsets.UTF_8)) { confFile =>
                       generate(s"-H:ReflectionConfigurationFiles=${confFile.toAbsolutePath}")
                     }
+                }
+
+                if (shellPrependOptions.nonEmpty) {
+                  // https://stackoverflow.com/a/246128/3714539
+                  val launcher =
+                    s"""#!/usr/bin/env bash
+                       |set -u
+                       |DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+                       |exec "$$DIR/${imageDest.getFileName}" ${shellPrependOptions.mkString(" ")} "$$@"
+                       |""".stripMargin
+                  Files.write(tmpDest, launcher.getBytes(StandardCharsets.UTF_8))
+                  coursier.bootstrap.util.FileUtil.tryMakeExecutable(tmpDest)
                 }
 
                 writeInfoFile(tmpInfo, extraEntries)

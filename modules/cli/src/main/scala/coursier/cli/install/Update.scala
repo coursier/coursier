@@ -1,7 +1,7 @@
 package coursier.cli.install
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 import java.time.Instant
 
 import caseapp.core.RemainingArgs
@@ -26,17 +26,23 @@ object Update extends CaseApp[UpdateOptions] {
     }
 
     val launchers =
-      if (args.all.isEmpty)
-        Files.list(params.dir)
-          .iterator()
-          .asScala
-          .filter { p =>
-            !p.getFileName.toString.startsWith(".") &&
-              Files.isRegularFile(p)
-          }
-          .toVector
-          .sortBy(_.getFileName.toString)
-      else
+      if (args.all.isEmpty) {
+        var s: java.util.stream.Stream[Path] = null
+        s = Files.list(params.dir)
+        try {
+          s.iterator()
+            .asScala
+            .filter { p =>
+              !p.getFileName.toString.startsWith(".") &&
+                Files.isRegularFile(p)
+            }
+            .toVector
+            .sortBy(_.getFileName.toString)
+        } finally {
+          if (s != null)
+            s.close()
+        }
+      } else
         args.all.map(params.dir.resolve)
 
     val now = Instant.now()
