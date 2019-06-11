@@ -6,12 +6,19 @@ import java.util.regex.Pattern
 
 object CacheChecksum {
 
-  // matches md5 or sha1 or sha-256
-  private val checksumPattern = Pattern.compile("^[0-9a-f]{32}([0-9a-f]{8})?([0-9a-f]{24})?")
+  private val checksumLength = Set(
+    32, // md5
+    40, // sha-1
+    64, // sha-256
+    128 // sha-512
+  )
+
+  private def ifHexString(s: String) =
+    s.forall(c => c.isDigit || c >= 'a' && c <= 'z')
 
   private def findChecksum(elems: Seq[String]): Option[BigInteger] =
     elems.collectFirst {
-      case rawSum if checksumPattern.matcher(rawSum).matches() =>
+      case rawSum if ifHexString(rawSum) && checksumLength.contains(rawSum.length) =>
         new BigInteger(rawSum, 16)
     }
 
@@ -25,7 +32,7 @@ object CacheChecksum {
           line
             .toLowerCase
             .split("\\s+")
-            .filter(_.matches("[0-9a-f]+"))
+            .filter(ifHexString)
             .mkString
         }
       )
