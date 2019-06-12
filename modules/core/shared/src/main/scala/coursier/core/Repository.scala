@@ -129,7 +129,14 @@ object Repository {
 
       input match {
         case orgInput: Complete.Input.Org =>
-          org(orgInput)
+          val idx = orgInput.input.lastIndexOf('.')
+          if (idx < 0)
+            org(orgInput)
+          else
+            F.bind(hasOrg(Complete.Input.Org(orgInput.input.take(idx)), partial = true)) {
+              case false => empty
+              case true => org(orgInput)
+            }
         case nameInput: Complete.Input.Name =>
           F.bind(hasOrg(nameInput.orgInput, partial = false)) {
             case false => empty
