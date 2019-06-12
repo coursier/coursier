@@ -4,7 +4,7 @@ import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.install.Channel
-import coursier.parse.{JavaOrScalaModule, ModuleParser, RepositoryParser}
+import coursier.parse.RepositoryParser
 
 final case class RawSource(
   repositories: List[String],
@@ -18,11 +18,7 @@ final case class RawSource(
     val repositoriesV = validationNelToCats(RepositoryParser.repositories(repositories))
 
     val channelV = Validated.fromEither(
-      ModuleParser.javaOrScalaModule(channel)
-        .right.flatMap {
-          case _: JavaOrScalaModule.ScalaModule => Left("Scala modules not accepted for channels")
-          case m: JavaOrScalaModule.JavaModule => Right(Channel.module(m.module))
-        }
+      Channel.parse(channel)
         .left.map(NonEmptyList.one)
     )
 
