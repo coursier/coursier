@@ -9,7 +9,7 @@ import coursier.paths.CachePath
 import coursier.util.Sync
 
 import scala.concurrent.duration.{Duration, DurationInt}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object CacheDefaults {
 
@@ -27,12 +27,18 @@ object CacheDefaults {
 
   lazy val pool = Sync.fixedThreadPool(concurrentDownloadCount)
 
-  lazy val ttl: Option[Duration] = {
-    def fromString(s: String) =
-      Try(Duration(s)).toOption
+  def parseDuration(s: String): Either[Throwable, Duration] =
+    if (s.nonEmpty && s.forall(_ == '0'))
+      Right(Duration.Zero)
+    else
+      Try(Duration(s)) match {
+        case Success(s) => Right(s)
+        case Failure(t) => Left(t)
+      }
 
-    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(fromString)
-    def fromProps = sys.props.get("coursier.ttl").flatMap(fromString)
+  lazy val ttl: Option[Duration] = {
+    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(parseDuration(_).right.toOption)
+    def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).right.toOption)
     def default = 24.hours
 
     fromEnv

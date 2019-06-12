@@ -79,7 +79,7 @@ final class Complete[F[_]] private (
   def result(): F[Complete.Result] = {
 
     val completers: Seq[(Repository, Repository.Complete[F])] =
-      repositories.flatMap(r => r.completeOpt(cache.fetch).map((r, _)).toSeq)
+      repositories.distinct.flatMap(r => r.completeOpt(cache.fetch).map((r, _)).toSeq)
 
     val inputF = F.fromAttempt(
       Repository.Complete.parse(input, scalaVersion.getOrElse(""), scalaBinaryVersion.getOrElse(""))
