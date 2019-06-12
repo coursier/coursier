@@ -81,10 +81,9 @@ final case class CacheOptions(
       if (ttl.isEmpty)
         Validated.validNel(defaultTtl)
       else
-        try Validated.validNel(Some(Duration(ttl)))
-        catch {
-          case e: NumberFormatException =>
-            Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
+        CacheDefaults.parseDuration(ttl) match {
+          case Left(e) => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
+          case Right(d) => Validated.validNel(Some(d))
         }
 
     val parallelV =
