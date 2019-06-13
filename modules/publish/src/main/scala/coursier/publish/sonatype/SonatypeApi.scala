@@ -1,18 +1,15 @@
 package coursier.publish.sonatype
 
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ScheduledExecutorService
 
 import argonaut._
 import argonaut.Argonaut._
-import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.sonatype.logger.SonatypeLogger
 import coursier.util.Task
-import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
+import okhttp3.{MediaType, OkHttpClient, RequestBody}
 
 import scala.concurrent.duration.Duration
-import scala.util.Try
 
 final case class SonatypeApi(
   client: OkHttpClient,
@@ -27,74 +24,13 @@ final case class SonatypeApi(
 
   import SonatypeApi._
 
-  private def request(url: String, post: Option[RequestBody] = None) = {
-    val b = new Request.Builder().url(url)
-    for (body <- post)
-      b.post(body)
-
-    // Handling this ourselves rather than via client.setAuthenticator / com.squareup.okhttp.Authenticator
-    for (auth <- authentication)
-      b.addHeader("Authorization", "Basic " + CacheUrl.basicAuthenticationEncode(auth.user, auth.password))
-
-    b.addHeader("Accept", "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json")
-
-    b.build()
-  }
-
   private def postBody[B: EncodeJson](content: B): RequestBody =
-    RequestBody.create(
-      SonatypeApi.mediaType,
-      Json.obj("data" -> EncodeJson.of[B].apply(content)).nospaces.getBytes(StandardCharsets.UTF_8)
-    )
+    clientUtil.postBody(content)
 
-  private def create(url: String, post: Option[RequestBody] = None): Task[Unit] = {
+  private def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] =
+    clientUtil.get(url, post, nested)(Response.decode[T]).map(_.data)
 
-    val t = Task.delay {
-      if (verbosity >= 1)
-        Console.err.println(s"Getting $url")
-      val resp = client.newCall(request(url, post)).execute()
-      if (verbosity >= 1)
-        Console.err.println(s"Done: $url")
-
-      if (resp.code() == 201)
-        Task.point(())
-      else
-        Task.fail(new Exception(s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"))
-    }
-
-    t.flatMap(identity)
-  }
-
-  private def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] = {
-
-    val t = Task.delay {
-      if (verbosity >= 1)
-        Console.err.println(s"Getting $url")
-      val resp = client.newCall(request(url, post)).execute()
-      if (verbosity >= 1)
-        Console.err.println(s"Done: $url")
-
-      if (resp.isSuccessful) {
-        if (nested)
-          resp.body().string().decodeEither(Response.decode[T]) match {
-            case Left(e) =>
-              Task.fail(new Exception(s"Received invalid response from $url: $e"))
-            case Right(t) =>
-              Task.point(t.data)
-          }
-        else
-          resp.body().string().decodeEither[T] match {
-            case Left(e) =>
-              Task.fail(new Exception(s"Received invalid response from $url: $e"))
-            case Right(t) =>
-              Task.point(t)
-          }
-      } else
-        Task.fail(new Exception(s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"))
-    }
-
-    t.flatMap(identity)
-  }
+  private val clientUtil = OkHttpClientUtil(client, authentication, verbosity)
 
   private def withRetry[T](task: Int => Task[T]): Task[T] = {
 
@@ -170,7 +106,7 @@ final case class SonatypeApi(
     )
 
   private def stagedRepoAction(action: String, profile: Profile, repositoryId: String, description: String): Task[Unit] =
-    create(
+    clientUtil.create(
       s"${profile.uri}/$action",
       post = Some(postBody(StagedRepositoryRequest(description, repositoryId))(StagedRepositoryRequest.encoder))
     )

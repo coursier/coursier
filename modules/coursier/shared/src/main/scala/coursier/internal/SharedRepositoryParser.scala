@@ -12,9 +12,14 @@ object SharedRepositoryParser {
       Right(Repositories.central)
     else if (s.startsWith("sonatype:"))
       Right(Repositories.sonatype(s.stripPrefix("sonatype:")))
-    else if (s.startsWith("bintray:"))
-      Right(Repositories.bintray(s.stripPrefix("bintray:")))
-    else if (s.startsWith("bintray-ivy:"))
+    else if (s.startsWith("bintray:")) {
+      val s0 = s.stripPrefix("bintray:")
+      val id =
+        if (s.contains("/")) s0
+        else s0 + "/maven"
+
+      Right(Repositories.bintray(id))
+    } else if (s.startsWith("bintray-ivy:"))
       Right(Repositories.bintrayIvy(s.stripPrefix("bintray-ivy:")))
     else if (s.startsWith("typesafe:ivy-"))
       Right(Repositories.typesafeIvy(s.stripPrefix("typesafe:ivy-")))

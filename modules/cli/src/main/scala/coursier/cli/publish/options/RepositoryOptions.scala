@@ -20,6 +20,8 @@ final case class RepositoryOptions(
 
   bintray: Option[String] = None,
   bintrayApiKey: Option[String] = None,
+  bintrayLicense: List[String] = Nil,
+  bintrayVcsUrl: Option[String] = None,
 
   snapshotVersioning: Boolean = true
 
