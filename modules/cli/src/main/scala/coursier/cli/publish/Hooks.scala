@@ -4,6 +4,7 @@ import java.io.PrintStream
 import java.util.concurrent.ScheduledExecutorService
 
 import coursier.maven.MavenRepository
+import coursier.publish.bintray.BintrayApi
 import coursier.publish.fileset.FileSet
 import coursier.publish.sonatype.SonatypeApi
 import coursier.publish.sonatype.logger.{BatchSonatypeLogger, InteractiveSonatypeLogger}
@@ -13,19 +14,22 @@ import scala.concurrent.duration.DurationInt
 
 trait Hooks {
 
-  type T
+  type T >: Null
 
-  def beforeUpload(fileSet: FileSet, isSnapshot: Boolean): Task[T]
+  def beforeUpload(fileSet: FileSet, isSnapshot: Boolean): Task[T] =
+    Task.point(null)
   def repository(t: T, repo: PublishRepository, isSnapshot: Boolean): Option[MavenRepository] =
     None
-  def afterUpload(t: T): Task[Unit]
+  def afterUpload(t: T): Task[Unit] =
+    Task.point(())
 
 }
 
 object Hooks {
 
   private final class Sonatype(
-    apiOpt: Option[(PublishRepository.Sonatype, SonatypeApi)],
+    repo: PublishRepository.Sonatype,
+    api: SonatypeApi,
     out: PrintStream,
     verbosity: Int,
     batch: Boolean,
@@ -38,53 +42,39 @@ object Hooks {
       else
         InteractiveSonatypeLogger.create(out, verbosity)
 
-    type T = Option[(PublishRepository.Sonatype, SonatypeApi, SonatypeApi.Profile, String)]
-    def beforeUpload(fileSet0: FileSet, isSnapshot: Boolean): Task[T] =
-      for {
+    type T = Option[(SonatypeApi.Profile, String)]
 
-        sonatypeApiProfileOpt <- {
-          // params.sonatypeApiOpt(out)
-          apiOpt match {
-            case None =>
-              Task.point(None)
-            case Some((repo, api)) =>
-              PublishTasks.sonatypeProfile(fileSet0, api, logger)
-                .map(p => Some((repo, api, p)))
-          }
-        }
-        _ = {
-          for ((_, _, p) <- sonatypeApiProfileOpt)
+    override def beforeUpload(fileSet0: FileSet, isSnapshot: Boolean): Task[T] =
+      if (isSnapshot)
+        Task.point(None)
+      else
+        for {
+
+          p <- PublishTasks.sonatypeProfile(fileSet0, api, logger)
+
+          _ = {
             if (verbosity >= 2)
               out.println(s"Selected Sonatype profile ${p.name} (id: ${p.id}, uri: ${p.uri})")
             else if (verbosity >= 1)
               out.println(s"Selected Sonatype profile ${p.name} (id: ${p.id})")
             else if (verbosity >= 0)
               out.println(s"Selected Sonatype profile ${p.name}")
-        }
+          }
 
-        sonatypeApiProfileRepoIdOpt <- sonatypeApiProfileOpt match {
-          case Some((repo, api, p)) if !isSnapshot =>
-            api
-              .createStagingRepository(p, "create staging repository")
-              .map(id => Some((repo, api, p, id)))
-          case _ =>
-            Task.point(None)
-        }
+          id <- api.createStagingRepository(p, "create staging repository")
 
-      } yield sonatypeApiProfileRepoIdOpt
+        } yield Some((p, id))
 
-    override def repository(t: T, repo: PublishRepository, isSnapshot: Boolean): Option[MavenRepository] =
-      t match {
-        case Some((sonatypeRepo, _, _, repoId)) if !isSnapshot =>
-          Some(sonatypeRepo.releaseRepoOf(repoId))
-        case _ =>
-          None
+    override def repository(t: T, repo0: PublishRepository, isSnapshot: Boolean): Option[MavenRepository] =
+      t.map {
+        case (_, repoId) =>
+          repo.releaseRepoOf(repoId)
       }
 
-    def afterUpload(sonatypeApiProfileRepoIdOpt: T): Task[Unit] =
-      sonatypeApiProfileRepoIdOpt match {
+    override def afterUpload(profileRepoIdOpt: T): Task[Unit] =
+      profileRepoIdOpt match {
         case None => Task.point(())
-        case Some((_, api, profile, repoId)) =>
+        case Some((profile, repoId)) =>
           // TODO Print sensible error messages if anything goes wrong here (commands to finish promoting, etc.)
           for {
             _ <- api.sendCloseStagingRepositoryRequest(profile, repoId, "closing repository")
@@ -94,15 +84,50 @@ object Hooks {
             _ <- api.sendDropStagingRepositoryRequest(profile, repoId, "dropping repository")
           } yield ()
       }
+  }
+
+  private final class Bintray(
+    api: BintrayApi,
+    subject: String,
+    repo: String,
+    package0: String,
+    licenses: Seq[String],
+    vcsUrl: String
+  ) extends Hooks {
+
+    type T = Object
+
+    override def beforeUpload(fileSet: FileSet, isSnapshot: Boolean): Task[Object] =
+      for {
+        _ <- api.createRepositoryIfNeeded(subject, repo)
+        _ <- api.createPackageIfNeeded(subject, repo, package0, licenses, vcsUrl)
+      } yield null
+
+  }
+
+  def dummy: Hooks =
+    new Hooks {
+      type T = Object
     }
 
   def sonatype(
-    apiOpt: Option[(PublishRepository.Sonatype, SonatypeApi)],
+    repo: PublishRepository.Sonatype,
+    api: SonatypeApi,
     out: PrintStream,
     verbosity: Int,
     batch: Boolean,
     es: ScheduledExecutorService
   ): Hooks =
-    new Sonatype(apiOpt, out, verbosity, batch, es)
+    new Sonatype(repo, api, out, verbosity, batch, es)
+
+  def bintray(
+    api: BintrayApi,
+    subject: String,
+    repo: String,
+    package0: String,
+    licenses: Seq[String],
+    vcsUrl: String
+  ): Hooks =
+    new Bintray(api, subject, repo, package0, licenses, vcsUrl)
 
 }

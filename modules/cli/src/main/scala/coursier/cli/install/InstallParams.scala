@@ -1,5 +1,9 @@
 package coursier.cli.install
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.app.RawAppDescriptor
@@ -12,7 +16,8 @@ final case class InstallParams(
   rawAppDescriptor: RawAppDescriptor,
   channels: Seq[Channel],
   repositories: Seq[Repository],
-  nameOpt: Option[String]
+  nameOpt: Option[String],
+  installChannels: Seq[String]
 )
 
 object InstallParams {
@@ -58,14 +63,42 @@ object InstallParams {
 
     val nameOpt = options.name.map(_.trim).filter(_.nonEmpty)
 
-    (sharedV, channelsV, repositoriesV).mapN {
-      (shared, channels, repositories) =>
+    val fileChannelsV =
+      if (options.fileChannels) {
+        val configDir = coursier.paths.CoursierPaths.configDirectory()
+        val channelDir = new File(configDir, "channels")
+        val files = Option(channelDir.listFiles())
+          .getOrElse(Array.empty[File])
+          .filter(f => !f.getName.startsWith("."))
+        val rawChannels = files.toList.flatMap { f =>
+          val b = Files.readAllBytes(f.toPath)
+          val s = new String(b, StandardCharsets.UTF_8)
+          s.linesIterator.map(_.trim).filter(_.nonEmpty).toSeq
+        }
+        rawChannels.traverse { s =>
+          val e = Channel.parse(s)
+            .left.map(NonEmptyList.one)
+          Validated.fromEither(e)
+        }
+      } else
+        Validated.validNel(Nil)
+
+    val addChannelsV = options.addChannel.traverse { s =>
+      val e = Channel.parse(s)
+        .left.map(NonEmptyList.one)
+        .right.map(c => (s, c))
+      Validated.fromEither(e)
+    }
+
+    (sharedV, channelsV, fileChannelsV, addChannelsV, repositoriesV).mapN {
+      (shared, channels, fileChannels, addChannels, repositories) =>
         InstallParams(
           shared,
           rawAppDescriptor,
-          channels ++ defaultChannels,
+          (channels ++ fileChannels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
           defaultRepositories ++ repositories,
-          nameOpt
+          nameOpt,
+          addChannels.map(_._1)
         )
     }
   }

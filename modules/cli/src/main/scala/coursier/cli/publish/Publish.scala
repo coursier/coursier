@@ -75,7 +75,7 @@ object Publish extends CaseApp[PublishOptions] {
 
     params.maybeWarnSigner(out)
 
-    val hooks = Hooks.sonatype(params.sonatypeApiOpt(out), out, params.verbosity, params.batch, es)
+    val hooks = params.hooks(out, es)
 
     for {
 

@@ -45,6 +45,59 @@ object PublishRepository {
       )
   }
 
+  final case class Bintray(
+    user: String,
+    repository: String,
+    package0: String,
+    apiKey: String,
+    overrideAuthOpt: Option[Authentication]
+  ) extends PublishRepository {
+
+    def authentication: Authentication =
+      overrideAuthOpt.getOrElse(Authentication(user, apiKey))
+
+    def releaseRepo: MavenRepository =
+      MavenRepository(
+        s"https://api.bintray.com/maven/$user/$repository/$package0",
+        authentication = Some(authentication)
+      )
+    def snapshotRepo: MavenRepository =
+      releaseRepo
+
+    def readReleaseRepo: MavenRepository =
+      MavenRepository(s"https://dl.bintray.com/$user/$repository")
+    def readSnapshotRepo: MavenRepository =
+      readReleaseRepo
+
+    def withAuthentication(auth: Authentication): Bintray =
+      copy(overrideAuthOpt = Some(auth))
+
+  }
+
+  final case class GitHub(
+    username: String,
+    token: String,
+    overrideAuthOpt: Option[Authentication]
+  ) extends PublishRepository {
+
+    def releaseRepo: MavenRepository =
+      MavenRepository(
+        s"https://maven.pkg.github.com/$username",
+        authentication = overrideAuthOpt.orElse(Some(Authentication(username, token)))
+      )
+    def snapshotRepo: MavenRepository =
+      releaseRepo
+
+    def readReleaseRepo: MavenRepository =
+      releaseRepo
+    def readSnapshotRepo: MavenRepository =
+      releaseRepo
+
+    def withAuthentication(auth: Authentication): GitHub =
+      copy(overrideAuthOpt = Some(auth))
+
+  }
+
   final case class Sonatype(base: MavenRepository) extends PublishRepository {
 
     def snapshotRepo: MavenRepository =
@@ -85,21 +138,10 @@ object PublishRepository {
       )
   }
 
-  def gitHub(username: String, token: String): PublishRepository = {
-    val repo = MavenRepository(
-      s"https://maven.pkg.github.com/$username",
-      authentication = Some(Authentication(username, token))
-    )
-    Simple(repo)
-  }
+  def gitHub(username: String, token: String): PublishRepository =
+    GitHub(username, token, None)
 
-  def bintray(user: String, repository: String, package0: String, apiKey: String): PublishRepository = {
-    val repo = MavenRepository(
-      s"https://api.bintray.com/maven/$user/$repository/$package0",
-      authentication = Some(Authentication(user, apiKey))
-    )
-    val readRepo = MavenRepository(s"https://dl.bintray.com/$user/$repository") // allow to pass auth here?
-    Simple(repo, Some(readRepo))
-  }
+  def bintray(user: String, repository: String, package0: String, apiKey: String): PublishRepository =
+    Bintray(user, repository, package0, apiKey, None)
 
 }

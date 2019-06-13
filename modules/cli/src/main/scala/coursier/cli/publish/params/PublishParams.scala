@@ -4,17 +4,18 @@ import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.time.Instant
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{ScheduledExecutorService, TimeUnit}
 
 import caseapp.Tag
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.publish.PublishRepository
+import coursier.cli.publish.{Hooks, PublishRepository}
 import coursier.cli.publish.conf.Conf
 import coursier.cli.publish.options.PublishOptions
 import coursier.params.CacheParams
 import coursier.publish.Content
+import coursier.publish.bintray.BintrayApi
 import coursier.publish.checksum.logger.{BatchChecksumLogger, ChecksumLogger, InteractiveChecksumLogger}
 import coursier.publish.download.logger.{DownloadLogger, SimpleDownloadLogger}
 import coursier.publish.signing.{GpgSigner, NopSigner, Signer}
@@ -110,9 +111,9 @@ final case class PublishParams(
         case Right(_) => Task.point(())
       }
 
-  def sonatypeApiOpt(out: PrintStream): Option[(PublishRepository.Sonatype, SonatypeApi)] =
+  def hooks(out: PrintStream, es: ScheduledExecutorService): Hooks =
     repository.repository match {
-      case s: PublishRepository.Sonatype =>
+      case repo: PublishRepository.Sonatype =>
         // this can't be shutdown anyway
         val client = new OkHttpClient.Builder()
           // Sonatype can be quite slow
@@ -121,10 +122,32 @@ final case class PublishParams(
         val authentication = repository.repository.snapshotRepo.authentication
         if (authentication.isEmpty && verbosity >= 0)
           out.println("Warning: no Sonatype credentials passed, trying to proceed anyway")
-        Some((s, SonatypeApi(client, s.restBase, repository.repository.snapshotRepo.authentication, verbosity)))
+        val api = SonatypeApi(client, repo.restBase, repository.repository.snapshotRepo.authentication, verbosity)
+        Hooks.sonatype(repo, api, out, verbosity, batch, es)
+
+      case repo: PublishRepository.Bintray =>
+        // this can't be shutdown anyway
+        val client = new OkHttpClient.Builder()
+          // just in case
+          .readTimeout(60L, TimeUnit.SECONDS)
+          .build()
+        val authentication = repository.repository.snapshotRepo.authentication
+        if (authentication.isEmpty && verbosity >= 0)
+          out.println("Warning: no Bintray credentials passed, trying to proceed anyway") // ???
+        val api = BintrayApi(client, "https://api.bintray.com", Some(repo.authentication), verbosity)
+        Hooks.bintray(
+          api,
+          repo.user,
+          repo.repository,
+          repo.package0,
+          if (repository.bintrayLicenses.isEmpty) Seq("Apache-2.0") /* FIXME */ else repository.bintrayLicenses,
+          repository.bintrayVcsUrlOpt.getOrElse(s"https://bintray.com/${repo.user}/${repo.repository}/${repo.package0}")
+        )
+
       case _ =>
-        None
+        Hooks.dummy
     }
+
 
   def downloadLogger(out: PrintStream): DownloadLogger =
     new SimpleDownloadLogger(out, verbosity)

@@ -12,7 +12,9 @@ final case class RepositoryParams(
   repository: PublishRepository,
   snapshotVersioning: Boolean,
   gitHub: Boolean,
-  bintray: Boolean
+  bintray: Boolean,
+  bintrayLicenses: Seq[String],
+  bintrayVcsUrlOpt: Option[String]
 )
 
 object RepositoryParams {
@@ -90,6 +92,10 @@ object RepositoryParams {
       val paramsV = repo.split("/", 3) match {
         case Array(user, repo0, package0) =>
           Validated.validNel((user, repo0, package0))
+        case Array(user, repo0) =>
+          Validated.validNel((user, repo0, "default"))
+        case Array(user) =>
+          Validated.validNel((user, "maven", "default"))
         case _ =>
           Validated.invalidNel(s"Invalid bintray repository: '$repo' (expected 'user/repository/package')")
       }
@@ -189,7 +195,9 @@ object RepositoryParams {
           repo,
           snapshotVersioning,
           options.github.nonEmpty,
-          options.bintray.nonEmpty
+          options.bintray.nonEmpty,
+          options.bintrayLicense,
+          options.bintrayVcsUrl
         )
     }
   }
