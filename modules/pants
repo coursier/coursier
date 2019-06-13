@@ -86,6 +86,7 @@ function bootstrap_pants {
       staging_dir=$(tempdir "${PANTS_BOOTSTRAP}") && \
       "${PYTHON}" "${venv_path}/virtualenv.py" --no-setuptools --no-download \
         "${staging_dir}/install" && \
+      curl https://bootstrap.pypa.io/get-pip.py | "${staging_dir}/install/bin/python" && \
       "${staging_dir}/install/bin/python" \
         "${staging_dir}/install/bin/pip" install \
           "${SETUPTOOLS_REQUIREMENT}" && \
