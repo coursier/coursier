@@ -8,6 +8,7 @@ import java.util.jar.{Manifest => JManifest}
 import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cli.app.RawAppDescriptor
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
@@ -296,6 +297,16 @@ object Launch extends CaseApp[LaunchOptions] {
       val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
       val res = Resolve.handleApps(options, args.remaining, channels, initialRepositories, cache)(_.addApp(_))
       pool.shutdown()
+
+      if (options.json) {
+        val app = res._1.app
+        val app0 = app.copy(
+          dependencies = (res._2 ++ app.dependencies).toList
+        )
+        println(RawAppDescriptor.encoder(app0).spaces2)
+        sys.exit(0)
+      }
+
       res
     }
 

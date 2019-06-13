@@ -7,12 +7,17 @@ import coursier.cli.options.SharedLaunchOptions
 final case class LaunchOptions(
 
   @Recurse
-    sharedOptions: SharedLaunchOptions = SharedLaunchOptions()
+    sharedOptions: SharedLaunchOptions = SharedLaunchOptions(),
+
+  json: Boolean = false // move to SharedLaunchOptions? (and handle it from the other commands too)
 ) {
   def addApp(app: RawAppDescriptor): LaunchOptions =
     copy(
       sharedOptions = sharedOptions.addApp(app)
     )
+
+  def app: RawAppDescriptor =
+    sharedOptions.app
 }
 
 object LaunchOptions {
