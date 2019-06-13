@@ -13,6 +13,7 @@ final case class InstallOptions(
   channel: List[String] = Nil,
 
   defaultChannels: Boolean = true,
+  fileChannels: Boolean = true,
 
   defaultRepositories: Boolean = true,
 

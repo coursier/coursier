@@ -1,5 +1,9 @@
 package coursier.cli.install
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.app.RawAppDescriptor
@@ -59,6 +63,26 @@ object InstallParams {
 
     val nameOpt = options.name.map(_.trim).filter(_.nonEmpty)
 
+    val fileChannelsV =
+      if (options.fileChannels) {
+        val configDir = coursier.paths.CoursierPaths.configDirectory()
+        val channelDir = new File(configDir, "channels")
+        val files = Option(channelDir.listFiles())
+          .getOrElse(Array.empty[File])
+          .filter(f => !f.getName.startsWith("."))
+        val rawChannels = files.toList.flatMap { f =>
+          val b = Files.readAllBytes(f.toPath)
+          val s = new String(b, StandardCharsets.UTF_8)
+          s.linesIterator.map(_.trim).filter(_.nonEmpty).toSeq
+        }
+        rawChannels.traverse { s =>
+          val e = Channel.parse(s)
+            .left.map(NonEmptyList.one)
+          Validated.fromEither(e)
+        }
+      } else
+        Validated.validNel(Nil)
+
     val addChannelsV = options.addChannel.traverse { s =>
       val e = Channel.parse(s)
         .left.map(NonEmptyList.one)
@@ -66,12 +90,12 @@ object InstallParams {
       Validated.fromEither(e)
     }
 
-    (sharedV, channelsV, addChannelsV, repositoriesV).mapN {
-      (shared, channels, addChannels, repositories) =>
+    (sharedV, channelsV, fileChannelsV, addChannelsV, repositoriesV).mapN {
+      (shared, channels, fileChannels, addChannels, repositories) =>
         InstallParams(
           shared,
           rawAppDescriptor,
-          (channels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
+          (channels ++ fileChannels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
           defaultRepositories ++ repositories,
           nameOpt,
           addChannels.map(_._1)

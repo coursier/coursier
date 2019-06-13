@@ -1,5 +1,9 @@
 package coursier.cli.params
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.install.Channel
@@ -43,8 +47,27 @@ object RepositoryParams {
         )
       else Nil
 
-    (repositoriesV, channelsV).mapN {
-      (repos0, channels) =>
+    val fileChannelsV =
+      if (options.fileChannels) {
+        val configDir = coursier.paths.CoursierPaths.configDirectory()
+        val channelDir = new File(configDir, "channels")
+        val files = Option(channelDir.listFiles()).getOrElse(Array.empty[File])
+          .filter(f => !f.getName.startsWith("."))
+        val rawChannels = files.toList.flatMap { f =>
+          val b = Files.readAllBytes(f.toPath)
+          val s = new String(b, StandardCharsets.UTF_8)
+          s.linesIterator.map(_.trim).filter(_.nonEmpty).toSeq
+        }
+        rawChannels.traverse { s =>
+          val e = Channel.parse(s)
+            .left.map(NonEmptyList.one)
+          Validated.fromEither(e)
+        }
+      } else
+        Validated.validNel(Nil)
+
+    (repositoriesV, channelsV, fileChannelsV).mapN {
+      (repos0, channels, fileChannels) =>
 
         // preprend defaults
         val defaults =
@@ -72,7 +95,7 @@ object RepositoryParams {
 
         RepositoryParams(
           repos,
-          channels ++ defaultChannels
+          (channels ++ fileChannels ++ defaultChannels).distinct
         )
     }
   }

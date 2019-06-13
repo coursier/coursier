@@ -23,7 +23,10 @@ final case class RepositoryOptions(
     channel: List[String] = Nil,
 
   @Help("Add default channels")
-    defaultChannels: Boolean = true
+    defaultChannels: Boolean = true,
+
+  @Help("Add channels read from the configuration directory")
+    fileChannels: Boolean = true
 
 )
 
