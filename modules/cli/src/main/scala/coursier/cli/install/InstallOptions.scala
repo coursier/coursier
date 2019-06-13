@@ -17,7 +17,9 @@ final case class InstallOptions(
   defaultRepositories: Boolean = true,
 
   @Help("Name of the binary of the app to be installed")
-    name: Option[String] = None
+    name: Option[String] = None,
+
+  addChannel: List[String] = Nil
 )
 
 object InstallOptions {

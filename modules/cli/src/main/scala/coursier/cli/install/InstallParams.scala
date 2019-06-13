@@ -12,7 +12,8 @@ final case class InstallParams(
   rawAppDescriptor: RawAppDescriptor,
   channels: Seq[Channel],
   repositories: Seq[Repository],
-  nameOpt: Option[String]
+  nameOpt: Option[String],
+  installChannels: Seq[String]
 )
 
 object InstallParams {
@@ -58,14 +59,22 @@ object InstallParams {
 
     val nameOpt = options.name.map(_.trim).filter(_.nonEmpty)
 
-    (sharedV, channelsV, repositoriesV).mapN {
-      (shared, channels, repositories) =>
+    val addChannelsV = options.addChannel.traverse { s =>
+      val e = Channel.parse(s)
+        .left.map(NonEmptyList.one)
+        .right.map(c => (s, c))
+      Validated.fromEither(e)
+    }
+
+    (sharedV, channelsV, addChannelsV, repositoriesV).mapN {
+      (shared, channels, addChannels, repositories) =>
         InstallParams(
           shared,
           rawAppDescriptor,
-          channels ++ defaultChannels,
+          (channels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
           defaultRepositories ++ repositories,
-          nameOpt
+          nameOpt,
+          addChannels.map(_._1)
         )
     }
   }

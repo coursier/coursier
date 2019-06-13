@@ -22,7 +22,7 @@ final case class RepositoryOptions(
   @Value("org:name")
     channel: List[String] = Nil,
 
-  @Help("Do not add default channels")
+  @Help("Add default channels")
     defaultChannels: Boolean = true
 
 )

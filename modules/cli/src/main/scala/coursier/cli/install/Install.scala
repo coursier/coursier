@@ -135,8 +135,26 @@ object Install extends CaseApp[InstallOptions] {
       }
     }
 
+    if (params.installChannels.nonEmpty) {
+      val configDir = coursier.paths.CoursierPaths.configDirectory()
+      val channelDir = new File(configDir, "channels")
+
+      // FIXME May not be fine with concurrency (two process doing this in parallel)
+      val f = Stream.from(1)
+        .map { n =>
+          new File(channelDir, s"channels-$n")
+        }
+        .filter(!_.exists())
+        .head
+
+      if (params.shared.verbosity >= 1)
+        System.err.println(s"Writing $f")
+      Files.createDirectories(f.toPath.getParent)
+      Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
+    }
+
     if (fromArgs.isEmpty && fromIds.isEmpty) {
-      if (params.shared.verbosity >= 0)
+      if (params.shared.verbosity >= 0 && params.installChannels.isEmpty)
         System.err.println("Nothing to install")
       sys.exit(0)
     }
