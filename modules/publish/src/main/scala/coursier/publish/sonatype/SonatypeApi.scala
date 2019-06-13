@@ -25,7 +25,7 @@ final case class SonatypeApi(
   import SonatypeApi._
 
   private def postBody[B: EncodeJson](content: B): RequestBody =
-    clientUtil.postBody(content)
+    clientUtil.postBody(Json.obj("data" -> EncodeJson.of[B].apply(content)))
 
   private def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] =
     clientUtil.get(url, post, nested)(Response.decode[T]).map(_.data)

@@ -3,13 +3,14 @@ package coursier.publish.sonatype
 import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
 
-import argonaut.{DecodeJson, EncodeJson, Json}
+import argonaut.{DecodeJson, EncodeJson}
 import argonaut.Argonaut._
 import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.util.Task
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
 
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 final case class OkHttpClientUtil(
@@ -30,13 +31,22 @@ final case class OkHttpClientUtil(
     // ???
     b.addHeader("Accept", "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json")
 
-    b.build()
+    val r = b.build()
+
+    if (verbosity >= 2) {
+      val m = r.headers().toMultimap.asScala.mapValues(_.asScala.toVector)
+      for ((k, l) <- m; v <- l) {
+        System.err.println(s"$k: $v")
+      }
+    }
+
+    r
   }
 
   def postBody[B: EncodeJson](content: B): RequestBody =
     RequestBody.create(
       OkHttpClientUtil.mediaType,
-      Json.obj("data" -> EncodeJson.of[B].apply(content)).nospaces.getBytes(StandardCharsets.UTF_8)
+      EncodeJson.of[B].apply(content).nospaces.getBytes(StandardCharsets.UTF_8)
     )
 
   def create(url: String, post: Option[RequestBody] = None): Task[Unit] = {
@@ -62,6 +72,13 @@ final case class OkHttpClientUtil(
     val t = Task.delay {
       if (verbosity >= 1)
         Console.err.println(s"Getting $url")
+      if (verbosity >= 2) {
+        post.foreach { b =>
+          val buf = new okio.Buffer
+          b.writeTo(buf)
+          System.err.println("Sending " + buf)
+        }
+      }
       val resp = client.newCall(request(url, post)).execute()
       if (verbosity >= 1)
         Console.err.println(s"Done: $url")
