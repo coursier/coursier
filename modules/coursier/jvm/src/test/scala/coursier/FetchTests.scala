@@ -106,6 +106,26 @@ object FetchTests extends TestSuite {
 
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
+
+      'exotic - {
+        'orbit - async {
+          // should be in the default artifact types
+          //
+
+          val res = await {
+            Fetch()
+              .noMirrors
+              .addDependencies(dep"org.eclipse.jetty.orbit:javax.servlet:3.0.0.v201112011016")
+              .withCache(cache)
+              .futureResult()
+          }
+
+          val urls = res.artifacts.map(_._1.url)
+          assert(urls.contains("https://repo1.maven.org/maven2/org/eclipse/jetty/orbit/javax.servlet/3.0.0.v201112011016/javax.servlet-3.0.0.v201112011016.jar"))
+
+          await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        }
+      }
     }
 
     'testScope - {

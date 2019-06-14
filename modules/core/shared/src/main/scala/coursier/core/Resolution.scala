@@ -557,7 +557,19 @@ object Resolution {
   def defaultFilter(dep: Dependency): Boolean =
     !dep.optional
 
-  val defaultTypes = Set[Type](Type.jar, Type.testJar, Type.bundle)
+  // Same types as sbt, see
+  // https://github.com/sbt/sbt/blob/47cd001eea8ef42b7c1db9ffdf48bec16b8f733b/main/src/main/scala/sbt/Defaults.scala#L227
+  // https://github.com/sbt/librarymanagement/blob/bb2c73e183fa52e2fb4b9ae7aca55799f3ff6624/ivy/src/main/scala/sbt/internal/librarymanagement/CustomPomParser.scala#L79
+  val defaultTypes = Set[Type](
+    Type.jar,
+    Type.testJar,
+    Type.bundle,
+    Type.Exotic.mavenPlugin,
+    Type.Exotic.eclipsePlugin,
+    Type.Exotic.hk2,
+    Type.Exotic.orbit,
+    Type.Exotic.scalaJar
+  )
 
   def forceScalaVersion(sv: String): Dependency => Dependency = {
 
