@@ -1,7 +1,6 @@
 package coursier.core
 
 import java.util.concurrent.ConcurrentHashMap
-import java.util.regex.Pattern.quote
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -22,10 +21,8 @@ object Resolution {
       case Some(activations) =>
         activations.get(profile.id)
       case None =>
-        if (profile.activeByDefault.toSeq.contains(true))
-          Some(true)
-        else
-          None
+        profile.activeByDefault
+          .filter(identity)
     }
 
     def fromActivation = profile.activation.isActive(properties, osInfo, jdkVersion)
