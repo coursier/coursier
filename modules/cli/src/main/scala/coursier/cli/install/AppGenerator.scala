@@ -176,22 +176,23 @@ object AppGenerator {
           )
           if (verbosity == 1)
             System.err.println(s"Wrote $dest")
+
+          if (Files.isRegularFile(tmpInfo)) {
+            if (verbosity >= 2) {
+              System.err.println(s"Wrote $tmpInfo")
+              System.err.println(s"Moving $tmpInfo to $info")
+            }
+            Files.deleteIfExists(info) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+            Files.move(
+              tmpInfo,
+              info,
+              StandardCopyOption.ATOMIC_MOVE
+            )
+            if (verbosity == 1)
+              System.err.println(s"Wrote $info")
+          } else
+            Files.deleteIfExists(info)
         }
-        if (Files.isRegularFile(tmpInfo)) {
-          if (verbosity >= 2) {
-            System.err.println(s"Wrote $tmpInfo")
-            System.err.println(s"Moving $tmpInfo to $info")
-          }
-          Files.deleteIfExists(info) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
-          Files.move(
-            tmpInfo,
-            info,
-            StandardCopyOption.ATOMIC_MOVE
-          )
-          if (verbosity == 1)
-            System.err.println(s"Wrote $info")
-        } else
-          Files.deleteIfExists(info)
         res
       } finally {
         if (lock != null)

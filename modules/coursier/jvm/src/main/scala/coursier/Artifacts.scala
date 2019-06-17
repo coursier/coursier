@@ -245,7 +245,7 @@ object Artifacts {
 
     val fromMainArtifacts =
       if (mainArtifacts0)
-        Set[Type](Type.jar, Type.testJar, Type.bundle)
+        coursier.core.Resolution.defaultTypes
       else
         Set.empty[Type]
 

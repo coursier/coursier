@@ -122,6 +122,17 @@ object Type {
 
   val empty = Type("")
   val all = Type("*")
+
+  object Exotic {
+    // https://github.com/sbt/sbt/blob/47cd001eea8ef42b7c1db9ffdf48bec16b8f733b/main/src/main/scala/sbt/Defaults.scala#L227
+    val mavenPlugin = Type("maven-plugin")
+
+    // https://github.com/sbt/librarymanagement/blob/bb2c73e183fa52e2fb4b9ae7aca55799f3ff6624/ivy/src/main/scala/sbt/internal/librarymanagement/CustomPomParser.scala#L79
+    val eclipsePlugin = Type("eclipse-plugin")
+    val hk2 = Type("hk2-jar")
+    val orbit = Type("orbit")
+    val scalaJar = Type("scala-jar")
+  }
 }
 
 final case class Classifier(value: String) extends AnyVal {
