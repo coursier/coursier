@@ -263,6 +263,8 @@ lazy val cli = project("cli")
           Deps.argonautShapeless,
           Deps.caseApp,
           Deps.catsCore,
+          Deps.monadlessCats,
+          Deps.monadlessStdlib,
           Deps.junit % Test, // to be able to run tests with pants
           Deps.scalatest % Test
         )

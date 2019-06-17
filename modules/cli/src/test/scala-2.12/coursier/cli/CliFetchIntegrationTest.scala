@@ -11,6 +11,7 @@ import coursier.cli.util.{DepNode, ReportNode}
 import java.io._
 import java.net.URLClassLoader
 import java.net.URLEncoder.encode
+import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
@@ -1261,5 +1262,61 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
     val urls = l.map(_._1.url).sorted
     assert(urls == expectedUrls)
+  }
+
+  it should "not delete file in local Maven repo" in withTempDir("tmp_dir") { tmpDir =>
+
+    val pomPath = new File(tmpDir, "org/name/0.1/name-0.1.pom")
+    val pomSha1Path = new File(pomPath.getParentFile, pomPath.getName + ".sha1")
+    val pomContent =
+      """<?xml version='1.0' encoding='UTF-8'?>
+        |<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+        |    <modelVersion>4.0.0</modelVersion>
+        |    <groupId>org</groupId>
+        |    <artifactId>name</artifactId>
+        |    <version>0.1</version>
+        |    <organization>
+        |        <name>org</name>
+        |        <url>https://github.com/org/name</url>
+        |    </organization>
+        |    <dependencies>
+        |      <dependency>
+        |        <groupId>org.scala-lang</groupId>
+        |        <artifactId>scala-library</artifactId>
+        |        <version>2.13.0</version>
+        |      </dependency>
+        |    </dependencies>
+        |</project>
+        |""".stripMargin
+
+    pomPath.getParentFile.mkdirs()
+    Files.write(pomPath.toPath, pomContent.getBytes(StandardCharsets.UTF_8))
+    // wrong sha-1
+    Files.write(pomSha1Path.toPath, "da39a3ee5e6b4b0d3255bfef95601890afd80709".getBytes(StandardCharsets.UTF_8))
+
+    assert(pomPath.exists())
+    assert(pomSha1Path.exists())
+
+    val repositoryOptions = RepositoryOptions(
+      repository = List(tmpDir.toURI.toASCIIString)
+    )
+    val resolveOptions = ResolveOptions(repositoryOptions = repositoryOptions)
+    val options = FetchOptions(resolveOptions = resolveOptions)
+    val params = paramsOrThrow(options)
+    val a = Fetch.task(params, pool, Seq("org:name:0.1"))
+      .attempt
+      .unsafeRun()(ec)
+
+    assert(a.isLeft)
+
+    a.left.toOption.map(_.getCause).foreach {
+      case _: coursier.error.ResolutionError.CantDownloadModule =>
+        // expected
+      case _ =>
+        throw new Exception(s"Unexpected exception type", a.left.toOption.get)
+    }
+
+    assert(pomPath.exists())
+    assert(pomSha1Path.exists())
   }
 }

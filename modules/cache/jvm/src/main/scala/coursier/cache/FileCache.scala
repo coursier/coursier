@@ -717,13 +717,19 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
-        if (retry <= 0)
+        val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
+        val badChecksumFile = new File(err.sumFile)
+        val foundBadFileInCache = {
+          val location0 = location.getCanonicalPath.stripSuffix("/") + "/"
+          badFile.getCanonicalPath.startsWith(location0) &&
+            badChecksumFile.getCanonicalPath.startsWith(location0)
+        }
+        if (retry <= 0 || !foundBadFileInCache)
           EitherT(S.point(Left(err)))
         else
           EitherT {
             S.schedule[Either[ArtifactError, Unit]](pool) {
-              val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
-              val badChecksumFile = new File(err.sumFile)
+              assert(foundBadFileInCache)
               badFile.delete()
               badChecksumFile.delete()
               logger.removedCorruptFile(artifact.url, Some(err.describe))

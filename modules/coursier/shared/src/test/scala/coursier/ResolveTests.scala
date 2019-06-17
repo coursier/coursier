@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.core.Configuration
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
@@ -305,6 +306,17 @@ object ResolveTests extends TestSuite {
 
         val argonaut = res.minDependencies.filter(_.module.organization == org"io.argonaut")
         assert(argonaut.isEmpty)
+
+        await(validateDependencies(res))
+      }
+
+      "no org" - async {
+
+        val res = await {
+          resolve
+            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".copy(configuration = Configuration.defaultCompile))
+            .future()
+        }
 
         await(validateDependencies(res))
       }
