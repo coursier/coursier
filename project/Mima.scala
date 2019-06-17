@@ -65,15 +65,18 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // things made private, that had no reason to be public
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.dependencyExclusionGroupIdOpt"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.dependencyExclusionGroupIdOpt_="),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.dependencyHandlers"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.handlerMap"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.handlers"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.content"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.propertyHandlers"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.profileHandlers"),
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded.")),
-        // was private, now removed
-        ProblemFilters.exclude[MissingClassProblem]("coursier.ivy.PropertiesPattern$Parser$"),
-        // made private so that the shaded fastparse stuff doesn't leak
-        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.ivy.PropertiesPattern.parser"),
-        // corresponds to a default value of a private method, not sure why this error is raised
-        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.maven.Pom.coursier$maven$Pom$$module$default$2")
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
       )
     }
   }

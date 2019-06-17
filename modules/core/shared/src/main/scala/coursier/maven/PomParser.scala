@@ -62,13 +62,13 @@ final class PomParser extends SaxHandler {
 
 object PomParser {
 
-  sealed abstract class CustomList[+T] {
+  private sealed abstract class CustomList[+T] {
     def ::[U >: T](elem: U): CustomList[U] =
       CustomList.Cons(elem, this)
     def tail: CustomList[T]
   }
 
-  object CustomList {
+  private object CustomList {
     case object Nil extends CustomList[Nothing] {
       def tail: CustomList[Nothing] =
         throw new NoSuchElementException("tail of empty list")
@@ -84,7 +84,7 @@ object PomParser {
       }
   }
 
-  final class State {
+  private final class State {
     var groupId = ""
     var artifactIdOpt = Option.empty[String]
     var version = ""
@@ -116,7 +116,7 @@ object PomParser {
     var dependencyClassifier = Classifier.empty
     var dependencyExclusions = Set.empty[(Organization, ModuleName)]
 
-    var dependencyExclusionGroupIdOpt = Option.empty[Organization]
+    var dependencyExclusionGroupId = Organization("*")
     var dependencyExclusionArtifactId = ModuleName("*")
 
     var propertyNameOpt = Option.empty[String]
@@ -244,29 +244,29 @@ object PomParser {
     }
   }
 
-  sealed abstract class Handler(val path: List[String])
+  private sealed abstract class Handler(val path: List[String])
 
-  abstract class SectionHandler(path: List[String]) extends Handler(path) {
+  private abstract class SectionHandler(path: List[String]) extends Handler(path) {
     def start(state: State): Unit
     def end(state: State): Unit
   }
 
-  abstract class ContentHandler(path: List[String]) extends Handler(path) {
+  private abstract class ContentHandler(path: List[String]) extends Handler(path) {
     def content(state: State, content: String): Unit
   }
 
-  abstract class PropertyHandler(path: List[String]) extends Handler("*" :: path) {
+  private abstract class PropertyHandler(path: List[String]) extends Handler("*" :: path) {
     def name(state: State, name: String): Unit
     def content(state: State, content: String): Unit
   }
 
-  def content(path: List[String])(f: (State, String) => Unit): Handler =
+  private def content(path: List[String])(f: (State, String) => Unit): Handler =
     new ContentHandler(path) {
       def content(state: State, content: String) =
         f(state, content)
     }
 
-  val handlers = Seq[Handler](
+  private val handlers = Seq[Handler](
 
     content("groupId" :: "project" :: Nil) {
       (state, content) =>
@@ -343,7 +343,7 @@ object PomParser {
     }
   )
 
-  def profileHandlers(prefix: List[String], add: (State, Profile) => Unit) =
+  private def profileHandlers(prefix: List[String], add: (State, Profile) => Unit) =
     Seq(
       new SectionHandler(prefix) {
         def start(state: State) = {
@@ -452,7 +452,7 @@ object PomParser {
       }
     )
 
-  def dependencyHandlers(prefix: List[String], add: (State, Configuration, Dependency) => Unit) =
+  private def dependencyHandlers(prefix: List[String], add: (State, Configuration, Dependency) => Unit) =
     Seq(
 
       new SectionHandler(prefix) {
@@ -510,17 +510,17 @@ object PomParser {
 
       new SectionHandler("exclusion" :: "exclusions" :: prefix) {
         def start(state: State) = {
-          state.dependencyExclusionGroupIdOpt = None
+          state.dependencyExclusionGroupId = Organization("*")
           state.dependencyExclusionArtifactId = ModuleName("*")
         }
         def end(state: State) = {
-          val r = (state.dependencyExclusionGroupIdOpt.get, state.dependencyExclusionArtifactId)
+          val r = (state.dependencyExclusionGroupId, state.dependencyExclusionArtifactId)
           state.dependencyExclusions = state.dependencyExclusions + r
         }
       },
       content("groupId" :: "exclusion" :: "exclusions" :: prefix) {
         (state, content) =>
-          state.dependencyExclusionGroupIdOpt = Some(Organization(content))
+          state.dependencyExclusionGroupId = Organization(content)
       },
       content("artifactId" :: "exclusion" :: "exclusions" :: prefix) {
         (state, content) =>
@@ -528,7 +528,7 @@ object PomParser {
       }
     )
 
-  def propertyHandlers(prefix: List[String], add: (State, String, String) => Unit) =
+  private def propertyHandlers(prefix: List[String], add: (State, String, String) => Unit) =
     Seq(
       new PropertyHandler(prefix) {
         override def name(state: State, name: String) = {
@@ -541,7 +541,7 @@ object PomParser {
       }
     )
 
-  val handlerMap = handlers
+  private val handlerMap = handlers
     .map { h =>
       CustomList(h.path) -> h
     }
