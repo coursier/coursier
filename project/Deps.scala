@@ -14,6 +14,7 @@ object Deps {
       else "2.1.3"
     }
     def http4s = "0.18.17"
+    def monadless = "0.0.13"
     def scalaz = "7.2.27"
   }
 
@@ -34,6 +35,9 @@ object Deps {
   // staying before 3.14.0 to the URLStreamHandlerFactory implementation
   def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % "3.13.1"
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.26"
+  def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
+  def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
+
   def scalaAsync = Def.setting {
     val sv = scalaVersion.value
     val ver =
