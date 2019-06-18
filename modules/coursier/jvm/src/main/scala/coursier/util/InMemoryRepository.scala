@@ -3,12 +3,22 @@ package coursier.util
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{URL, URLConnection}
 
-import coursier.cache.CacheUrl
+import coursier.cache.{CacheUrl, FileCache}
 import coursier.core._
 
 object InMemoryRepository {
 
-  def exists(url: URL, localArtifactsShouldBeCached: Boolean): Boolean = {
+  def exists(
+    url: URL,
+    localArtifactsShouldBeCached: Boolean
+  ): Boolean =
+    exists(url, localArtifactsShouldBeCached, None)
+
+  def exists(
+    url: URL,
+    localArtifactsShouldBeCached: Boolean,
+    cacheOpt: Option[FileCache[Nothing]]
+  ): Boolean = {
 
     // Sometimes HEAD attempts fail even though standard GETs are fine.
     // E.g. https://github.com/NetLogo/NetLogo/releases/download/5.3.1/NetLogo.jar
@@ -31,8 +41,15 @@ object InMemoryRepository {
 
         var conn: URLConnection = null
         try {
-          conn = CacheUrl.urlConnection(url.toString, None, method = "HEAD")
-          conn.getInputStream.close()
+          conn = CacheUrl.urlConnection(
+            url.toString,
+            None,
+            followHttpToHttpsRedirections = cacheOpt.fold(false)(_.followHttpToHttpsRedirections),
+            followHttpsToHttpRedirections = cacheOpt.fold(false)(_.followHttpsToHttpRedirections),
+            sslSocketFactoryOpt = cacheOpt.flatMap(_.sslSocketFactoryOpt),
+            hostnameVerifierOpt = cacheOpt.flatMap(_.hostnameVerifierOpt),
+            method = "HEAD"
+          )
           Some(true)
         }
         catch {
@@ -73,11 +90,33 @@ object InMemoryRepository {
       .getOrElse(genericAttempt)
   }
 
+  def apply(
+    fallbacks: Map[(Module, String), (URL, Boolean)]
+  ): InMemoryRepository =
+    new InMemoryRepository(fallbacks, localArtifactsShouldBeCached = false, None)
+
+  def apply(
+    fallbacks: Map[(Module, String), (URL, Boolean)],
+    localArtifactsShouldBeCached: Boolean
+  ): InMemoryRepository =
+    new InMemoryRepository(fallbacks, localArtifactsShouldBeCached, None)
+
+  def apply[F[_]](
+    fallbacks: Map[(Module, String), (URL, Boolean)],
+    cache: FileCache[F]
+  ): InMemoryRepository =
+    new InMemoryRepository(
+      fallbacks,
+      localArtifactsShouldBeCached = cache.localArtifactsShouldBeCached,
+      Some(cache.asInstanceOf[FileCache[Nothing]])
+    )
+
 }
 
-final case class InMemoryRepository(
-  fallbacks: Map[(Module, String), (URL, Boolean)],
-  localArtifactsShouldBeCached: Boolean = false
+final class InMemoryRepository private (
+  val fallbacks: Map[(Module, String), (URL, Boolean)],
+  val localArtifactsShouldBeCached: Boolean,
+  val cacheOpt: Option[FileCache[Nothing]]
 ) extends Repository {
 
   def find[F[_]](
@@ -101,7 +140,7 @@ final case class InMemoryRepository(
           else {
             val (dirUrlStr, fileName) = urlStr.splitAt(idx + 1)
 
-            if (InMemoryRepository.exists(url, localArtifactsShouldBeCached)) {
+            if (InMemoryRepository.exists(url, localArtifactsShouldBeCached, cacheOpt)) {
               val proj = Project(
                 module,
                 version,
