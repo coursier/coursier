@@ -1083,6 +1083,7 @@ final case class Resolution(
     val depsSet = deps.toSet
 
     project0.copy(
+      packagingOpt = project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))),
       version = substituteProps(project0.version, propertiesMap0),
       dependencies =
         dependencies0
