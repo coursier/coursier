@@ -12,8 +12,9 @@ final class Dependency private (
   val configuration: Configuration,
   val exclusions: Set[(Organization, ModuleName)],
 
+  val publication: Publication,
+
   // Maven-specific
-  val attributes: Attributes,
   val optional: Boolean,
 
   val transitive: Boolean
@@ -25,7 +26,7 @@ final class Dependency private (
     version: String = version,
     configuration: Configuration = configuration,
     exclusions: Set[(Organization, ModuleName)] = exclusions,
-    attributes: Attributes = attributes,
+    publication: Publication = publication,
     optional: Boolean = optional,
     transitive: Boolean = transitive
   ): Dependency =
@@ -34,7 +35,7 @@ final class Dependency private (
       version,
       configuration,
       exclusions,
-      attributes,
+      publication,
       optional,
       transitive
     )
@@ -54,7 +55,10 @@ final class Dependency private (
       version = version,
       configuration = configuration,
       exclusions = exclusions,
-      attributes = attributes,
+      publication = publication.copy(
+        `type` = attributes.`type`,
+        classifier = attributes.classifier
+      ),
       optional = optional,
       transitive = transitive
     )
@@ -66,7 +70,7 @@ final class Dependency private (
           version == other.version &&
           configuration == other.configuration &&
           exclusions == other.exclusions &&
-          attributes == other.attributes &&
+          publication == other.publication &&
           optional == other.optional &&
           transitive == other.transitive
       case _ => false
@@ -78,37 +82,51 @@ final class Dependency private (
     code = 37 * code + version.##
     code = 37 * code + configuration.##
     code = 37 * code + exclusions.##
-    code = 37 * code + attributes.##
+    code = 37 * code + publication.##
     code = 37 * code + optional.##
     code = 37 * code + transitive.##
     code
   }
 
   override def toString: String =
-    s"Dependency($module, $version, $configuration, $exclusions, $attributes, $optional, $transitive)"
+    s"Dependency($module, $version, $configuration, $exclusions, $publication, $optional, $transitive)"
 
-  def mavenPrefix: String = {
+  def mavenPrefix: String =
     if (attributes.isEmpty)
       module.orgName
-    else {
+    else
       s"${module.orgName}:${attributes.packagingAndClassifier}"
-    }
-  }
+
+  def attributes: Attributes =
+    publication.attributes
 
   def withModule(module: Module): Dependency =
-    copy(module = module)
+    copy0(module = module)
   def withVersion(version: String): Dependency =
-    copy(version = version)
+    copy0(version = version)
   def withConfiguration(configuration: Configuration): Dependency =
-    copy(configuration = configuration)
+    copy0(configuration = configuration)
   def withExclusions(exclusions: Set[(Organization, ModuleName)]): Dependency =
-    copy(exclusions = exclusions)
+    copy0(exclusions = exclusions)
   def withAttributes(attributes: Attributes): Dependency =
-    copy(attributes = attributes)
+    copy0(publication = publication.copy(
+      `type` = attributes.`type`,
+      classifier = attributes.classifier
+    ))
+  def withPublication(publication: Publication): Dependency =
+    copy0(publication = publication)
+  def withPublication(name: String): Dependency =
+    copy0(publication = Publication(name, Type.empty, Extension.empty, Classifier.empty))
+  def withPublication(name: String, `type`: Type): Dependency =
+    copy0(publication = Publication(name, `type`, Extension.empty, Classifier.empty))
+  def withPublication(name: String, `type`: Type, ext: Extension): Dependency =
+    copy0(publication = Publication(name, `type`, ext, Classifier.empty))
+  def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
+    copy0(publication = Publication(name, `type`, ext, classifier))
   def withOptional(optional: Boolean): Dependency =
-    copy(optional = optional)
+    copy0(optional = optional)
   def withTransitive(transitive: Boolean): Dependency =
-    copy(transitive = transitive)
+    copy0(transitive = transitive)
 }
 
 object Dependency {
@@ -132,6 +150,25 @@ object Dependency {
     version: String,
     configuration: Configuration,
     exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    new Dependency(
+      module,
+      version,
+      configuration,
+      exclusions,
+      publication,
+      optional,
+      transitive
+    )
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
     attributes: Attributes,
     optional: Boolean,
     transitive: Boolean
@@ -141,7 +178,7 @@ object Dependency {
       version,
       configuration,
       exclusions,
-      attributes,
+      Publication("", attributes.`type`, Extension.empty, attributes.classifier),
       optional,
       transitive
     )

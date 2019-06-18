@@ -1,6 +1,7 @@
 package coursier.ivy
 
 import coursier.core._
+import coursier.maven.MavenAttributes
 import coursier.util.{EitherT, Monad, WebPage}
 
 final case class IvyRepository(
@@ -72,9 +73,17 @@ final case class IvyRepository(
         overrideClassifiers match {
           case None =>
 
-            // FIXME Some duplication with what's done in MavenSource
-
-            if (dependency.attributes.classifier.nonEmpty)
+            if (dependency.publication.name.nonEmpty) {
+              val tpe =
+                if (dependency.publication.`type`.isEmpty) Type.jar
+                else dependency.publication.`type`
+              val ext =
+                if (dependency.publication.ext.isEmpty) MavenAttributes.typeExtension(tpe)
+                else dependency.publication.ext
+              Seq(
+                dependency.publication.copy(`type` = tpe, ext = ext)
+              )
+            } else if (dependency.attributes.classifier.nonEmpty)
               // FIXME We're ignoring dependency.attributes.`type` in this case
               project.publications.collect {
                 case (_, p) if p.classifier == dependency.attributes.classifier =>

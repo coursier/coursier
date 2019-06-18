@@ -507,12 +507,19 @@ final case class MavenRepository(
 
     lazy val defaultPublications = {
 
+      val name =
+        if (dependency.publication.name.isEmpty)
+          dependency.module.name.value
+        else
+          // no unit tests for that branch for now
+          dependency.publication.name
+
       val packagingPublicationOpt = project
         .packagingOpt
         .filter(_ => dependency.attributes.isEmpty)
         .map { packaging =>
           Publication(
-            dependency.module.name.value,
+            name,
             packaging,
             MavenAttributes.typeExtension(packaging),
             MavenAttributes.typeDefaultClassifier(packaging)
@@ -520,35 +527,37 @@ final case class MavenRepository(
         }
 
       val types =
-        if (dependency.attributes.`type`.isEmpty) {
+        // this ignore publication.ext if publication.`type` is empty… should we?
+        if (dependency.publication.`type`.isEmpty) {
           if (dependency.configuration == Configuration.test)
-            Seq(Type.jar, Type.testJar)
+            Seq((Type.jar, Extension.empty), (Type.testJar, Extension.empty))
           else
-            Seq(Type.jar)
+            Seq((Type.jar, Extension.empty))
         } else
-          Seq(dependency.attributes.`type`)
+          Seq((dependency.publication.`type`, dependency.publication.ext))
 
-      val extraPubs = types.map { type0 =>
+      val extraPubs = types.map {
+        case (type0, ext0) =>
 
-        val ext = MavenAttributes.typeExtension(type0)
+          val ext = if (ext0.isEmpty) MavenAttributes.typeExtension(type0) else ext0
 
-        val classifier =
-          if (dependency.attributes.classifier.isEmpty)
-            MavenAttributes.typeDefaultClassifier(type0)
-          else
-            dependency.attributes.classifier
+          val classifier =
+            if (dependency.attributes.classifier.isEmpty)
+              MavenAttributes.typeDefaultClassifier(type0)
+            else
+              dependency.attributes.classifier
 
-        val tpe = packagingTpeMap.getOrElse(
-          (classifier, ext),
-          MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
-        )
+          val tpe = packagingTpeMap.getOrElse(
+            (classifier, ext),
+            MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+          )
 
-        Publication(
-          dependency.module.name.value,
-          tpe,
-          ext,
-          classifier
-        )
+          Publication(
+            name,
+            tpe,
+            ext,
+            classifier
+          )
       }
 
       (packagingPublicationOpt.toSeq ++ extraPubs)

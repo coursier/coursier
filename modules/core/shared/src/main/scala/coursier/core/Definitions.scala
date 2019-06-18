@@ -126,6 +126,8 @@ object Classifier {
 }
 
 final case class Extension(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
   def map(f: String => String): Extension =
     Extension(f(value))
 

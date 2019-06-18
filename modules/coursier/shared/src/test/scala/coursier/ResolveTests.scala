@@ -385,5 +385,54 @@ object ResolveTests extends TestSuite {
         assert(urls == expectedUrls)
       }
     }
+
+    "ivy" - {
+      "publication name" - async {
+
+        val resolve0 = resolve
+          .withRepositories(Seq(
+            Repositories.central,
+            IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
+              .fold(sys.error, identity)
+          ))
+
+        val deps = Seq(
+          dep"test:b_2.12:1.0.1".withPublication("foo"),
+          dep"test:b_2.12:1.0.1".withPublication("bzz", Type("zip"))
+        )
+
+        val res = await {
+          resolve0
+            .addDependencies(deps: _*)
+            .future()
+        }
+
+        val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+        val expected = Set(
+          mod"org.scala-lang:scala-library" -> "2.12.8",
+          mod"test:b_2.12" -> "1.0.1"
+        )
+
+        assert(found == expected)
+
+        val urls = res.dependencyArtifacts()
+          .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
+          .toSet
+        val expectedUrls = Set(
+          "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
+          "file:///handmade-metadata/http/ivy.abc.com/test/b_2.12/1.0.1/jars/foo.jar",
+          "file:///handmade-metadata/http/ivy.abc.com/test/b_2.12/1.0.1/zips/bzz.zip"
+        )
+
+        assert(urls == expectedUrls)
+
+        val handmadeArtifacts = res.dependencyArtifacts()
+          .map(_._3)
+          .filter(_.url.startsWith(handmadeMetadataBase))
+
+        assert(handmadeArtifacts.nonEmpty)
+        assert(handmadeArtifacts.forall(!_.optional))
+      }
+    }
   }
 }
