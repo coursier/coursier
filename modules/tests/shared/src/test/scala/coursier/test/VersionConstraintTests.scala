@@ -21,8 +21,18 @@ object VersionConstraintTests extends TestSuite {
         assert(c0 == VersionConstraint.interval(VersionInterval(None, Some(Version("1.2")), false, true)))
       }
       'latestSubRevision{
-        val c0 = Parse.versionConstraint("1.2.3-+")
-        assert(c0 == VersionConstraint.interval(VersionInterval(Some(Version("1.2.3")), Some(Version("1.2.4-a1")), true, false)))
+        val c0 = Parse.versionConstraint("1.2.3-rc+")
+        assert(c0 == VersionConstraint.interval(VersionInterval(Some(Version("1.2.3-rc")), Some(Version("1.2.3-rc-max")), true, false)))
+      }
+    }
+
+    'interval{
+      'same{
+        val v = Version("1.2.3-rc")
+        val c0 = VersionInterval(Some(v),  Some(Version("1.2.3-rc-max")), true, false)
+        assert(c0.contains(v))
+        assert(c0.contains(Version("1.2.3-rc-500")))
+        assert(!c0.contains(Version("1.2.3-final")))
       }
     }
 

@@ -188,7 +188,7 @@ object Version {
 
       if (isNumeric(item)) {
         val nextNonDotZero = _tokens.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
-        if (nextNonDotZero.forall(t => t._1 == Tokenizer.Hyphen || ((t._1 == Tokenizer.Dot || t._1 == Tokenizer.None) && !isNumeric(t._2)))) { // Dot && isNumeric(t._2)
+        if (nextNonDotZero.forall(t => !isMinMax(t._2) && (t._1 == Tokenizer.Hyphen || ((t._1 == Tokenizer.Dot || t._1 == Tokenizer.None) && !isNumeric(t._2))))) { // Dot && isNumeric(t._2)
           _tokens = nextNonDotZero
         }
       }
@@ -223,6 +223,10 @@ object Version {
   }
 
   def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
+
+  def isMinMax(item: Item) = {
+    (item eq Min) || (item eq Max) || item == Literal("min") || item == Literal("max")
+  }
 
   def items(repr: String): List[Item] = {
     val (first, tokens) = Tokenizer(repr)
