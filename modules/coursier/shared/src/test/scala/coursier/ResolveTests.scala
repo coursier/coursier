@@ -368,5 +368,22 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
     }
+
+    "properties" - {
+      "in packaging" - async {
+        val res = await {
+          resolve
+            .addDependencies(dep"javax.ws.rs:javax.ws.rs-api:2.1.1")
+            .future()
+        }
+
+        await(validateDependencies(res))
+
+        val urls = res.dependencyArtifacts().map(_._3.url).toSet
+        val expectedUrls = Set("https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar")
+
+        assert(urls == expectedUrls)
+      }
+    }
   }
 }
