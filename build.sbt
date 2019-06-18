@@ -359,8 +359,9 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.internal.shaded"),
-    // TODO shade those
-    libs += Deps.fastParse.value % "shaded"
+    libs += Deps.fastParse.value % "shaded",
+    Mima.previousArtifacts,
+    Mima.coursierFilters
   )
   .jsSettings(
     libs += Deps.cross.fastParse.value

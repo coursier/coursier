@@ -98,4 +98,28 @@ object Mima {
     }
   }
 
+  lazy val coursierFilters = {
+    mimaBinaryIssueFilters ++= {
+      import com.typesafe.tools.mima.core._
+
+      Seq(
+        // InMemoryRepository changed a bit (for easier bin compat in the future)
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.unapply"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.<init>$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.apply$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.productElement"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.productArity"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.copy$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.canEqual"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.copy"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.copy$default$1"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.this"),
+        // ignore shaded-stuff related errors
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded.")),
+      )
+    }
+  }
+
 }
