@@ -343,12 +343,16 @@ object CacheUrl {
                   else {
                     closeConn(conn)
 
-                    Left(
-                      args.copy(
-                        authentication = authentication0,
-                        authRealm = realmOpt
+                    if (maxRedirectionsOpt.exists(_ <= redirectionCount))
+                      throw new Exception(s"Too many redirections for $initialUrl (more than $redirectionCount redirections)")
+                    else
+                      Left(
+                        args.copy(
+                          authentication = authentication0,
+                          authRealm = realmOpt,
+                          redirectionCount = redirectionCount + 1
+                        )
                       )
-                    )
                   }
                 } else
                   Right((conn, partialDownload))
