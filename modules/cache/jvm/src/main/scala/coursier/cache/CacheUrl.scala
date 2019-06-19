@@ -340,7 +340,7 @@ object CacheUrl {
                   val authentication0 = authentication
                     .map(_.copy(optional = false))
                     .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
-                  if (authentication0 == authentication && realmOpt == authRealm)
+                  if (authentication0 == authentication && realmOpt.forall(authRealm.contains))
                     Right((conn, partialDownload))
                   else {
                     closeConn(conn)

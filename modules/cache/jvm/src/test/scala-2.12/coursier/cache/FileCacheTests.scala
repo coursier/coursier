@@ -782,6 +782,31 @@ object FileCacheTests extends TestSuite {
         }
       }
 
+      'authThenNotFound - {
+
+        val realm = "secure realm"
+        val userPass = ("secure", "sEcUrE")
+
+        val routes = HttpService[IO] {
+          case req @ GET -> Root / "hello" =>
+            if (authorized(req, userPass))
+              NotFound("not found")
+            else
+              unauth(realm)
+        }
+
+        withHttpServer(routes, withSsl = true) { base =>
+          error(
+            base / "hello",
+            _.startsWith("not found: "),
+            _.addCredentials(
+              credentials(base, userPass)
+                .withRealm(realm)
+                .withMatchHost(true)
+            )
+          )
+        }
+      }
     }
 
     'checksums - {
