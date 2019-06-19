@@ -88,6 +88,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // Added an optional argument to that one…
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnection"),
         // these are private, don't know why they end-up appearing here
         // (probably related to https://github.com/typesafehub/migration-manager/issues/34)
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.TermDisplay#DownloadInfo")),

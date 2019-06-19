@@ -169,7 +169,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               credentials = allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
-              method = "HEAD"
+              method = "HEAD",
+              maxRedirectionsOpt = maxRedirections
             )
 
             conn match {
@@ -387,8 +388,17 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def progress(currentLen: Long): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, followHttpsToHttpRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
-                    .right.toOption.flatten
+                  contentLength(
+                    url,
+                    artifact.authentication,
+                    followHttpToHttpsRedirections,
+                    followHttpsToHttpRedirections,
+                    allCredentials0,
+                    sslSocketFactoryOpt,
+                    hostnameVerifierOpt,
+                    logger,
+                    maxRedirections
+                  ).right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, currentLen, watching = true)
@@ -398,8 +408,17 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             def done(): Unit =
               if (lenOpt.isEmpty) {
                 lenOpt = Some(
-                  contentLength(url, artifact.authentication, followHttpToHttpsRedirections, followHttpsToHttpRedirections, allCredentials0, sslSocketFactoryOpt, hostnameVerifierOpt, logger)
-                    .right.toOption.flatten
+                  contentLength(
+                    url,
+                    artifact.authentication,
+                    followHttpToHttpsRedirections,
+                    followHttpsToHttpRedirections,
+                    allCredentials0,
+                    sslSocketFactoryOpt,
+                    hostnameVerifierOpt,
+                    logger,
+                    maxRedirections
+                  ).right.toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, len, watching = true)
@@ -929,7 +948,8 @@ object FileCache {
     credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
-    logger: CacheLogger
+    logger: CacheLogger,
+    maxRedirectionsOpt: Option[Int]
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
@@ -943,7 +963,8 @@ object FileCache {
         credentials = credentials,
         sslSocketFactoryOpt = sslSocketFactoryOpt,
         hostnameVerifierOpt = hostnameVerifierOpt,
-        method = "HEAD"
+        method = "HEAD",
+        maxRedirectionsOpt = maxRedirectionsOpt
       )
 
       conn match {
