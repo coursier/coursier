@@ -277,7 +277,7 @@ object DependencyParser {
                       dummyModule,
                       version,
                       config,
-                      Set(),
+                      Set.empty[(Organization, ModuleName)],
                       attributes,
                       optional = false,
                       transitive = true

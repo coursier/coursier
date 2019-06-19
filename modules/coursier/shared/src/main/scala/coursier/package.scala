@@ -18,6 +18,16 @@ package object coursier {
 
   type Dependency = core.Dependency
   object Dependency extends Serializable {
+    def of(
+      module: Module,
+      version: String
+    ): Dependency =
+      core.Dependency(
+        module,
+        version
+      )
+
+    @deprecated("2.0.0-RC3", "Use of instead, then the with* methods on Dependency")
     def apply(
       module: Module,
       version: String,

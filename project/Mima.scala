@@ -65,6 +65,18 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // was changed from case class to non case class (for easier bin compat in the future)
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Dependency$"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.unapply"),
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Dependency"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productElement"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productArity"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.canEqual"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productElementNames"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.productElementName"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Dependency.this"),
         // things made private, that had no reason to be public
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.dependencyExclusionGroupIdOpt"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.dependencyExclusionGroupIdOpt_="),

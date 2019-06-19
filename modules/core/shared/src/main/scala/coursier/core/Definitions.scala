@@ -60,36 +60,6 @@ final case class Module(
   override final lazy val hashCode = Module.unapply(this).get.hashCode()
 }
 
-/**
- * Dependencies with the same @module will typically see their @version-s merged.
- *
- * The remaining fields are left untouched, some being transitively
- * propagated (exclusions, optional, in particular).
- */
-final case class Dependency(
-  module: Module,
-  version: String,
-  configuration: Configuration,
-  exclusions: Set[(Organization, ModuleName)],
-
-  // Maven-specific
-  attributes: Attributes,
-  optional: Boolean,
-
-  transitive: Boolean
-) {
-  lazy val moduleVersion = (module, version)
-
-  override lazy val hashCode = Dependency.unapply(this).get.hashCode()
-
-  def mavenPrefix: String = {
-    if (attributes.isEmpty)
-      module.orgName
-    else {
-      s"${module.orgName}:${attributes.packagingAndClassifier}"
-    }
-  }
-}
 
 final case class Type(value: String) extends AnyVal {
   def isEmpty: Boolean =
@@ -156,6 +126,8 @@ object Classifier {
 }
 
 final case class Extension(value: String) extends AnyVal {
+  def isEmpty: Boolean =
+    value.isEmpty
   def map(f: String => String): Extension =
     Extension(f(value))
 

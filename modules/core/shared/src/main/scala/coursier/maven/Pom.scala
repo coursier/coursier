@@ -306,7 +306,7 @@ object Pom {
             ),
             relocatedVersion,
             Configuration.empty,
-            Set(),
+            Set.empty[(Organization, ModuleName)],
             Attributes.empty,
             optional = false,
             transitive = true
