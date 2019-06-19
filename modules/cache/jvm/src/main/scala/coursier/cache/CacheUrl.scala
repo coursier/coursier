@@ -215,7 +215,8 @@ object CacheUrl {
     credentials: Seq[DirectCredentials] = Nil,
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
-    method: String = "GET"
+    method: String = "GET",
+    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
   ): URLConnection = {
     val (c, partial) = urlConnectionMaybePartial(
       url0,
@@ -226,7 +227,8 @@ object CacheUrl {
       credentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
-      method
+      method,
+      maxRedirectionsOpt = maxRedirectionsOpt
     )
     assert(!partial)
     c
@@ -259,7 +261,7 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
     authRealm: Option[String] = None,
-    maxRedirectionsOpt: Option[Int] = None
+    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
   ): (URLConnection, Boolean) =
     urlConnectionMaybePartial(Args(
       url0,
@@ -338,17 +340,21 @@ object CacheUrl {
                   val authentication0 = authentication
                     .map(_.copy(optional = false))
                     .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
-                  if (authentication0 == authentication && realmOpt == authRealm)
+                  if (authentication0 == authentication && realmOpt.forall(authRealm.contains))
                     Right((conn, partialDownload))
                   else {
                     closeConn(conn)
 
-                    Left(
-                      args.copy(
-                        authentication = authentication0,
-                        authRealm = realmOpt
+                    if (maxRedirectionsOpt.exists(_ <= redirectionCount))
+                      throw new Exception(s"Too many redirections for $initialUrl (more than $redirectionCount redirections)")
+                    else
+                      Left(
+                        args.copy(
+                          authentication = authentication0,
+                          authRealm = realmOpt,
+                          redirectionCount = redirectionCount + 1
+                        )
                       )
-                    )
                   }
                 } else
                   Right((conn, partialDownload))
