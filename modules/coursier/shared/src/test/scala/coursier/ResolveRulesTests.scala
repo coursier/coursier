@@ -1,6 +1,7 @@
 package coursier
 
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
+import coursier.graph.Conflict
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
 import utest._
@@ -175,6 +176,45 @@ object ResolveRulesTests extends TestSuite {
           case _ =>
             throw new Exception("Unexpected exception type", ex)
         }
+      }
+
+      "for roots" - async {
+
+        val rule = Strict()
+        val ruleRes = RuleResolution.Fail
+
+        val params = ResolutionParams()
+          .addRule(rule, ruleRes)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(
+              dep"org.typelevel:cats-effect_2.11:1.3.1",
+              dep"org.typelevel:cats-core_2.11:1.5.0"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        val expectedEvicted = Seq(
+          Conflict(mod"org.typelevel:cats-core_2.11", "1.6.0", "1.5.0", wasExcluded = false, mod"org.typelevel:cats-core_2.11", "1.5.0")
+        )
+        val evicted = ex match {
+          case f: StrictRule =>
+            assert(f.rule == rule)
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+            f.conflict match {
+              case e: Strict.EvictedDependencies => e.evicted
+              case _ => ???
+            }
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
+        }
+
+        assert(evicted == expectedEvicted)
       }
     }
 
