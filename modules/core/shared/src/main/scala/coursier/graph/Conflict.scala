@@ -33,12 +33,35 @@ object Conflict {
 
     val tree = ReverseModuleTree(resolution, withExclusions = withExclusions)
 
-    tree.flatMap { t =>
+    val transitive = tree.flatMap { t =>
       t.dependees.collect {
         case d  if !d.excludedDependsOn && d.dependsOnReconciledVersion != d.dependsOnVersion =>
           Conflicted(d)
       }
     }
+
+    val fromRoots = resolution.rootDependencies.flatMap { dep =>
+      val version = resolution
+        .reconciledVersions
+        .getOrElse(dep.module, dep.version)
+      if (version == dep.version)
+        Nil
+      else {
+        val node = ReverseModuleTree.Node(
+          dep.module,
+          dep.version,
+          dep.module,
+          dep.version,
+          version,
+          excludedDependsOn = false,
+          Map.empty,
+          Map.empty
+        )
+        Seq(Conflicted(node))
+      }
+    }
+
+    fromRoots ++ transitive
   }
 
   def apply(resolution: Resolution, withExclusions: Boolean = false): Seq[Conflict] =

@@ -138,7 +138,7 @@ object ReverseModuleTree {
   }
 
 
-  private final case class Node(
+  private[graph] final case class Node(
     module: Module,
     reconciledVersion: String,
     dependsOnModule: Module,
