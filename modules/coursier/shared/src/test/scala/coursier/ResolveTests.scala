@@ -434,5 +434,18 @@ object ResolveTests extends TestSuite {
         assert(handmadeArtifacts.forall(!_.optional))
       }
     }
+
+    "version intervals" - {
+      "0 lower bound" - async {
+
+        val res = await {
+          resolve
+            .addDependencies(dep"org.webjars.npm:dom-serializer:[0,1)")
+            .future()
+        }
+
+        await(validateDependencies(res))
+      }
+    }
   }
 }
