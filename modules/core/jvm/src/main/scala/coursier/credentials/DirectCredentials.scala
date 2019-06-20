@@ -103,7 +103,7 @@ final class DirectCredentials private(
   def authentication: Authentication =
     Authentication(
       username,
-      password,
+      passwordOpt,
       realmOpt = realm,
       optional = optional,
       httpsOnly = httpsOnly,

@@ -2,7 +2,7 @@ package coursier.core
 
 final class Authentication private (
   val user: String,
-  val password: String,
+  val passwordOpt: Option[String],
   val optional: Boolean,
   val realmOpt: Option[String],
   val httpsOnly: Boolean,
@@ -13,7 +13,7 @@ final class Authentication private (
     obj match {
       case other: Authentication =>
         user == other.user &&
-          password == other.password &&
+          passwordOpt == other.passwordOpt &&
           optional == other.optional &&
           realmOpt == other.realmOpt &&
           httpsOnly == other.httpsOnly &&
@@ -24,7 +24,7 @@ final class Authentication private (
   override def hashCode(): Int = {
     var code = 17 + "coursier.core.Authentication".##
     code = 37 * code + user.##
-    code = 37 * code + password.##
+    code = 37 * code + passwordOpt.##
     code = 37 * code + optional.##
     code = 37 * code + realmOpt.##
     code = 37 * code + httpsOnly.##
@@ -38,18 +38,20 @@ final class Authentication private (
 
   private def copy(
     user: String = user,
-    password: String = password,
+    passwordOpt: Option[String] = passwordOpt,
     optional: Boolean = optional,
     realmOpt: Option[String] = realmOpt,
     httpsOnly: Boolean = httpsOnly,
     passOnRedirect: Boolean = passOnRedirect
   ): Authentication =
-    new Authentication(user, password, optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(user, passwordOpt, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def withUser(user: String): Authentication =
     copy(user = user)
   def withPassword(password: String): Authentication =
-    copy(password = password)
+    copy(passwordOpt = Some(password))
+  def withPassword(passwordOpt: Option[String]): Authentication =
+    copy(passwordOpt = passwordOpt)
   def withOptional(optional: Boolean): Authentication =
     copy(optional = optional)
   def withRealm(realm: String): Authentication =
@@ -69,9 +71,19 @@ final class Authentication private (
 object Authentication {
 
   def apply(user: String): Authentication =
-    new Authentication(user, "", optional = false, None, httpsOnly = true, passOnRedirect = false)
+    new Authentication(user, None, optional = false, None, httpsOnly = true, passOnRedirect = false)
   def apply(user: String, password: String): Authentication =
-    new Authentication(user, password, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    new Authentication(user, Some(password), optional = false, None, httpsOnly = true, passOnRedirect = false)
+
+  def apply(
+    user: String,
+    passwordOpt: Option[String],
+    optional: Boolean,
+    realmOpt: Option[String],
+    httpsOnly: Boolean,
+    passOnRedirect: Boolean
+  ): Authentication =
+    new Authentication(user, passwordOpt, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def apply(
     user: String,
@@ -81,6 +93,6 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    new Authentication(user, password, optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(user, Some(password), optional, realmOpt, httpsOnly, passOnRedirect)
 
 }

@@ -138,10 +138,11 @@ object CacheUrl {
         case authenticated: AuthenticatedURLConnection =>
           authenticated.authenticate(auth)
         case conn0: HttpURLConnection =>
-          conn0.setRequestProperty(
-            "Authorization",
-            "Basic " + basicAuthenticationEncode(auth.user, auth.password)
-          )
+          for (p <- auth.passwordOpt)
+            conn0.setRequestProperty(
+              "Authorization",
+              "Basic " + basicAuthenticationEncode(auth.user, p)
+            )
         case _ =>
         // FIXME Authentication is ignored
       }

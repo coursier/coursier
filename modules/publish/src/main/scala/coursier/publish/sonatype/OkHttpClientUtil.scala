@@ -25,8 +25,8 @@ final case class OkHttpClientUtil(
       b.post(body)
 
     // Handling this ourselves rather than via client.setAuthenticator / com.squareup.okhttp.Authenticator
-    for (auth <- authentication)
-      b.addHeader("Authorization", "Basic " + CacheUrl.basicAuthenticationEncode(auth.user, auth.password))
+    for (auth <- authentication; p <- auth.passwordOpt)
+      b.addHeader("Authorization", "Basic " + CacheUrl.basicAuthenticationEncode(auth.user, p))
 
     // ???
     b.addHeader("Accept", "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json")

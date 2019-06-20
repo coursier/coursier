@@ -50,8 +50,8 @@ final case class OkhttpUpload(
       b.put(body)
 
       // Handling this ourselves rather than via client.setAuthenticator / com.squareup.okhttp.Authenticator
-      for (auth <- authentication)
-        b.addHeader("Authorization", "Basic " + CacheUrl.basicAuthenticationEncode(auth.user, auth.password))
+      for (auth <- authentication; p <- auth.passwordOpt)
+        b.addHeader("Authorization", "Basic " + CacheUrl.basicAuthenticationEncode(auth.user, p))
 
       b.build()
     }
