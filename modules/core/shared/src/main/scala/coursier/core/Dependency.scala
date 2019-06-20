@@ -40,7 +40,7 @@ final class Dependency private (
       transitive
     )
 
-  @deprecated("2.0.0-RC3", "Use the with* methods instead")
+  @deprecated("Use the with* methods instead", "2.0.0-RC3")
   def copy(
     module: Module = module,
     version: String = version,

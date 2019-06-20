@@ -27,7 +27,7 @@ package object coursier {
         version
       )
 
-    @deprecated("2.0.0-RC3", "Use of instead, then the with* methods on Dependency")
+    @deprecated("Use of instead, then the with* methods on Dependency", "2.0.0-RC3")
     def apply(
       module: Module,
       version: String,
