@@ -320,7 +320,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                     allCredentials0
                       .find(_.matches(url, auth.user))
                       .map(_.authentication)
-                      .orElse(artifact.authentication)
+                      .orElse(artifact.authentication) // Default to None instead?
                   case _ =>
                     artifact.authentication
                 }

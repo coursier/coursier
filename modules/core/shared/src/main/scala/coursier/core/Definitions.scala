@@ -363,7 +363,10 @@ final case class Authentication(
   passOnRedirect: Boolean = false
 ) {
   override def toString: String =
-    s"Authentication($user, *******, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+    copy(password = "*******")
+      .productIterator
+      .mkString("Authentication(", ", ", ")")
+
   def userOnly: Boolean =
     this == Authentication(user)
 }
