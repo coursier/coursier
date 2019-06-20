@@ -1,8 +1,12 @@
 package coursier.core
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
 final class Authentication private (
   val user: String,
   val passwordOpt: Option[String],
+  val httpHeaders: Seq[(String, String)],
   val optional: Boolean,
   val realmOpt: Option[String],
   val httpsOnly: Boolean,
@@ -14,6 +18,7 @@ final class Authentication private (
       case other: Authentication =>
         user == other.user &&
           passwordOpt == other.passwordOpt &&
+          httpHeaders == other.httpHeaders &&
           optional == other.optional &&
           realmOpt == other.realmOpt &&
           httpsOnly == other.httpsOnly &&
@@ -25,6 +30,7 @@ final class Authentication private (
     var code = 17 + "coursier.core.Authentication".##
     code = 37 * code + user.##
     code = 37 * code + passwordOpt.##
+    code = 37 * code + httpHeaders.##
     code = 37 * code + optional.##
     code = 37 * code + realmOpt.##
     code = 37 * code + httpsOnly.##
@@ -33,18 +39,19 @@ final class Authentication private (
   }
 
   override def toString: String =
-    s"Authentication($user, ****, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+    s"Authentication($user, ****, ${httpHeaders.map { case (k, v) => (k, "****") }}, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
 
 
   private def copy(
     user: String = user,
     passwordOpt: Option[String] = passwordOpt,
+    httpHeaders: Seq[(String, String)] = httpHeaders,
     optional: Boolean = optional,
     realmOpt: Option[String] = realmOpt,
     httpsOnly: Boolean = httpsOnly,
     passOnRedirect: Boolean = passOnRedirect
   ): Authentication =
-    new Authentication(user, passwordOpt, optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(user, passwordOpt, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def withUser(user: String): Authentication =
     copy(user = user)
@@ -52,6 +59,8 @@ final class Authentication private (
     copy(passwordOpt = Some(password))
   def withPassword(passwordOpt: Option[String]): Authentication =
     copy(passwordOpt = passwordOpt)
+  def withHttpHeaders(httpHeaders: Seq[(String, String)]): Authentication =
+    copy(httpHeaders = httpHeaders)
   def withOptional(optional: Boolean): Authentication =
     copy(optional = optional)
   def withRealm(realm: String): Authentication =
@@ -66,14 +75,21 @@ final class Authentication private (
   def userOnly: Boolean =
     this == Authentication(user)
 
+  def allHttpHeaders: Seq[(String, String)] = {
+    val basicAuthHeader = passwordOpt.toSeq.map { p =>
+      ("Authorization", "Basic " + Authentication.basicAuthenticationEncode(user, p))
+    }
+    basicAuthHeader ++ httpHeaders
+  }
+
 }
 
 object Authentication {
 
   def apply(user: String): Authentication =
-    new Authentication(user, None, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    new Authentication(user, None, Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
   def apply(user: String, password: String): Authentication =
-    new Authentication(user, Some(password), optional = false, None, httpsOnly = true, passOnRedirect = false)
+    new Authentication(user, Some(password), Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
 
   def apply(
     user: String,
@@ -83,7 +99,7 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    new Authentication(user, passwordOpt, optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(user, passwordOpt, Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def apply(
     user: String,
@@ -93,6 +109,24 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    new Authentication(user, Some(password), optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(user, Some(password), Nil, optional, realmOpt, httpsOnly, passOnRedirect)
+
+  def apply(httpHeaders: Seq[(String, String)]): Authentication =
+    new Authentication("", None, httpHeaders, optional = false, None, httpsOnly = true, passOnRedirect = false)
+
+  def apply(
+    httpHeaders: Seq[(String, String)],
+    optional: Boolean,
+    realmOpt: Option[String],
+    httpsOnly: Boolean,
+    passOnRedirect: Boolean
+  ): Authentication =
+    new Authentication("", None, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
+
+
+  private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
+    Base64.getEncoder.encodeToString(
+      s"$user:$password".getBytes(StandardCharsets.UTF_8)
+    )
 
 }

@@ -89,6 +89,7 @@ object CacheUrl {
   def url(s: String): URL =
     new URL(null, s, handlerFor(s).orNull)
 
+  @deprecated("Use coursier.core.Authentication.basicAuthenticationEncode", "2.0.0-RC3")
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
@@ -138,11 +139,8 @@ object CacheUrl {
         case authenticated: AuthenticatedURLConnection =>
           authenticated.authenticate(auth)
         case conn0: HttpURLConnection =>
-          for (p <- auth.passwordOpt)
-            conn0.setRequestProperty(
-              "Authorization",
-              "Basic " + basicAuthenticationEncode(auth.user, p)
-            )
+          for ((k, v) <- auth.allHttpHeaders)
+            conn0.setRequestProperty(k, v)
         case _ =>
         // FIXME Authentication is ignored
       }
