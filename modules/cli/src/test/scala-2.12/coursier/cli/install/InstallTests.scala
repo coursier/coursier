@@ -7,7 +7,7 @@ import java.util.Locale
 import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
-import coursier.cache.{Cache, CacheDefaults, MockCache}
+import coursier.cache.{Cache, MockCache}
 import coursier.cli.app.RawAppDescriptor
 import coursier.util.{Sync, Task}
 import org.junit.runner.RunWith
@@ -19,7 +19,7 @@ import scala.collection.JavaConverters._
 @RunWith(classOf[JUnitRunner])
 class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
-  private val pool = Sync.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  private val pool = Sync.fixedThreadPool(6)
 
   private val mockDataLocation = {
     val dir = Paths.get("modules/tests/metadata")

@@ -100,6 +100,17 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // Tweaked more or less internal things
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.MockCache.create$default$2"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.cache.MockCache.create$default$4"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.cache.MockCache.create$default$3"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.cache.MockCache.create"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial$default$10"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial$default$8"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial$default$7"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial$default$11"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnectionMaybePartial$default$9"),
         // Added an optional argument to that one…
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.CacheUrl.urlConnection"),
         // these are private, don't know why they end-up appearing here
@@ -117,6 +128,9 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // removed some unused default values
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$1"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$2"),
         // InMemoryRepository changed a bit (for easier bin compat in the future)
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.unapply"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.InMemoryRepository.<init>$default$2"),

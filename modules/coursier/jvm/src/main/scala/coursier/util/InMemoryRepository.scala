@@ -8,6 +8,7 @@ import coursier.core._
 
 object InMemoryRepository {
 
+  @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def exists(
     url: URL,
     localArtifactsShouldBeCached: Boolean
@@ -28,7 +29,7 @@ object InMemoryRepository {
 
       def ifFile: Option[Boolean] = {
         if (localArtifactsShouldBeCached && !new File(url.toURI).exists()) {
-          val cachePath = coursier.cache.CacheDefaults.location
+          val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location)(_.location)
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
           Some(new File(cachePath, s"file/${url.getPath}").exists())
         } else {
@@ -91,11 +92,13 @@ object InMemoryRepository {
       .getOrElse(genericAttempt)
   }
 
+  @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def apply(
     fallbacks: Map[(Module, String), (URL, Boolean)]
   ): InMemoryRepository =
     new InMemoryRepository(fallbacks, localArtifactsShouldBeCached = false, None)
 
+  @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def apply(
     fallbacks: Map[(Module, String), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean

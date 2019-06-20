@@ -15,8 +15,7 @@ final class CacheParams private (
   val followHttpToHttpsRedirections: Boolean,
   val credentials: Seq[coursier.credentials.Credentials],
   val useEnvCredentials: Boolean) extends coursier.params.CacheParamsHelpers with Serializable {
-  
-  private def this() = this(coursier.cache.CacheDefaults.location, coursier.cache.CacheDefaults.cachePolicies, coursier.cache.CacheDefaults.ttl, coursier.cache.CacheDefaults.concurrentDownloadCount, coursier.cache.CacheDefaults.checksums, 1, false, true, Nil, true)
+
   private def this(cacheLocation: java.io.File, cachePolicies: Seq[coursier.cache.CachePolicy], ttl: Option[scala.concurrent.duration.Duration], parallel: Int, checksum: Seq[Option[String]], retryCount: Int, cacheLocalArtifacts: Boolean, followHttpToHttpsRedirections: Boolean) = this(cacheLocation, cachePolicies, ttl, parallel, checksum, retryCount, cacheLocalArtifacts, followHttpToHttpsRedirections, Nil, true)
   
   override def equals(o: Any): Boolean = o match {
@@ -67,8 +66,7 @@ final class CacheParams private (
   }
 }
 object CacheParams {
-  
-  def apply(): CacheParams = new CacheParams()
+
   def apply(cacheLocation: java.io.File, cachePolicies: Seq[coursier.cache.CachePolicy], ttl: Option[scala.concurrent.duration.Duration], parallel: Int, checksum: Seq[Option[String]], retryCount: Int, cacheLocalArtifacts: Boolean, followHttpToHttpsRedirections: Boolean): CacheParams = new CacheParams(cacheLocation, cachePolicies, ttl, parallel, checksum, retryCount, cacheLocalArtifacts, followHttpToHttpsRedirections)
   def apply(cacheLocation: java.io.File, cachePolicies: Seq[coursier.cache.CachePolicy], ttl: scala.concurrent.duration.Duration, parallel: Int, checksum: Seq[Option[String]], retryCount: Int, cacheLocalArtifacts: Boolean, followHttpToHttpsRedirections: Boolean): CacheParams = new CacheParams(cacheLocation, cachePolicies, Option(ttl), parallel, checksum, retryCount, cacheLocalArtifacts, followHttpToHttpsRedirections)
   def apply(cacheLocation: java.io.File, cachePolicies: Seq[coursier.cache.CachePolicy], ttl: Option[scala.concurrent.duration.Duration], parallel: Int, checksum: Seq[Option[String]], retryCount: Int, cacheLocalArtifacts: Boolean, followHttpToHttpsRedirections: Boolean, credentials: Seq[coursier.credentials.Credentials], useEnvCredentials: Boolean): CacheParams = new CacheParams(cacheLocation, cachePolicies, ttl, parallel, checksum, retryCount, cacheLocalArtifacts, followHttpToHttpsRedirections, credentials, useEnvCredentials)

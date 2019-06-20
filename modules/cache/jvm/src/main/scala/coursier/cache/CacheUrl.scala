@@ -216,7 +216,7 @@ object CacheUrl {
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
-    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
+    maxRedirectionsOpt: Option[Int] = Some(20)
   ): URLConnection = {
     val (c, partial) = urlConnectionMaybePartial(
       url0,
@@ -257,11 +257,10 @@ object CacheUrl {
     followHttpToHttpsRedirections: Boolean,
     followHttpsToHttpRedirections: Boolean,
     autoCredentials: Seq[DirectCredentials],
-    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
-    hostnameVerifierOpt: Option[HostnameVerifier] = None,
-    method: String = "GET",
-    authRealm: Option[String] = None,
-    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    method: String,
+    maxRedirectionsOpt: Option[Int]
   ): (URLConnection, Boolean) =
     urlConnectionMaybePartial(Args(
       url0,
@@ -274,7 +273,7 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      authRealm,
+      None,
       redirectionCount = 0,
       maxRedirectionsOpt
     ))

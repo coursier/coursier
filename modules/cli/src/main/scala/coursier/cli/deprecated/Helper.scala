@@ -63,7 +63,10 @@ class Helper(
           )
       }
 
-  val cache = new File(common.cacheOptions.cache)
+  val cache = common.cacheOptions.cache match {
+    case Some(path) => new File(path)
+    case None => CacheDefaults.location
+  }
 
   val pool = Sync.fixedThreadPool(common.cacheOptions.parallel)
   val ec = ExecutionContext.fromExecutorService(pool)

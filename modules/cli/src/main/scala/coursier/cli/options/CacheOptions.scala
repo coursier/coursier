@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
 final case class CacheOptions(
 
   @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
-    cache: String = CacheDefaults.location.toString,
+    cache: Option[String] = None,
 
   @Help("Download mode (default: missing, that is fetch things missing from cache)")
   @Value("offline|update-changing|update|missing|force")
@@ -62,7 +62,10 @@ final case class CacheOptions(
 
   def params(defaultTtl: Option[Duration]): ValidatedNel[String, CacheParams] = {
 
-    val cache0 = new File(cache)
+    val cache0 = cache match {
+      case Some(path) => new File(path)
+      case None => CacheDefaults.location
+    }
 
     val cachePoliciesV =
       if (mode.isEmpty)
@@ -135,15 +138,7 @@ final case class CacheOptions(
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
       (cachePolicy, ttl, parallel, checksum, retryCount, credentials0) =>
-        CacheParams()
-          .withCacheLocation(cache0)
-          .withCachePolicies(cachePolicy)
-          .withTtl(ttl)
-          .withParallel(parallel)
-          .withChecksum(checksum)
-          .withRetryCount(retryCount)
-          .withCacheLocalArtifacts(cacheFileArtifacts)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirect)
+        CacheParams(cache0, cachePolicy, ttl, parallel, checksum, retryCount, cacheFileArtifacts, followHttpToHttpsRedirect)
           .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
     }

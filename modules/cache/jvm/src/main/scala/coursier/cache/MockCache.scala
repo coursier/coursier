@@ -108,9 +108,9 @@ object MockCache {
 
   def create[F[_]: Sync](
     base: Path,
+    pool: ExecutorService,
     extraData: Seq[Path] = Nil,
-    writeMissing: Boolean = false,
-    pool: ExecutorService = CacheDefaults.pool
+    writeMissing: Boolean = false
   ): MockCache[F] =
     MockCache(
       base,

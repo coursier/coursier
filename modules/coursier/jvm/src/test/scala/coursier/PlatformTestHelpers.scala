@@ -7,11 +7,13 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import coursier.cache.{Cache, MockCache}
-import coursier.util.Task
+import coursier.util.{Sync, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class PlatformTestHelpers {
+
+  private lazy val pool = Sync.fixedThreadPool(6)
 
   private val mockDataLocation = {
     val dir = Paths.get("modules/tests/metadata")
@@ -37,14 +39,14 @@ abstract class PlatformTestHelpers {
     .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
 
   val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, writeMissing = writeMockData)
+    MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = writeMockData)
       .copy(dummyArtifact = _.url.endsWith(".jar"))
 
   val handmadeMetadataCache: Cache[Task] =
-    MockCache.create[Task](handmadeMetadataLocation)
+    MockCache.create[Task](handmadeMetadataLocation, pool = pool)
 
   val cacheWithHandmadeMetadata: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, Seq(handmadeMetadataLocation), writeMissing = writeMockData)
+    MockCache.create[Task](mockDataLocation, pool = pool, Seq(handmadeMetadataLocation), writeMissing = writeMockData)
       .copy(dummyArtifact = _.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =

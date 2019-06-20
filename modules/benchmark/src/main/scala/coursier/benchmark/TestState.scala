@@ -1,10 +1,11 @@
 package coursier.benchmark
 
-import coursier.cache.{Cache, CacheDefaults}
+import coursier.cache.Cache
 import coursier.core.{Configuration, ResolutionProcess}
 import coursier.{Repositories, Resolve, dependencyString, moduleString}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
+import coursier.util.Sync
 import org.openjdk.jmh.annotations.{Scope, State}
 
 import scala.concurrent.{Await, ExecutionContext}
@@ -34,7 +35,8 @@ class TestState {
     l
   }
 
-  val ec = ExecutionContext.fromExecutorService(CacheDefaults.pool)
+  val pool = Sync.fixedThreadPool(6)
+  val ec = ExecutionContext.fromExecutorService(pool)
 
   val inMemoryCache = {
     val c = new InMemoryCachingFetcher(Cache.default.fetch)
