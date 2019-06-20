@@ -9,7 +9,7 @@ plugins_(
   "org.xerial.sbt"     % "sbt-pack"                 % "0.11",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
   "org.scala-js"       % "sbt-scalajs"              % "0.6.28",
-  "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.13.1",
+  "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.15.0",
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0",
   "io.get-coursier"    % "sbt-shading"              % sbtCoursierVersion
 )
