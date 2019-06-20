@@ -18,7 +18,7 @@ object FileCredentialsParseTests extends TestSuite {
       val credFile = new File(credFilePath)
       assert(credFile.exists())
 
-      val parsed = FileCredentials(credFilePath).get().sortBy(_.username)
+      val parsed = FileCredentials(credFilePath).get().sortBy(_.usernameOpt.getOrElse(""))
       val expected = Seq(
         DirectCredentials("127.0.0.1", "secure", "sEcUrE", Some("secure realm"))
           .withOptional(true)

@@ -526,7 +526,7 @@ object FileCacheTests extends TestSuite {
                 .withHttpsOnly(false)
               expect(
                 (httpBaseUri / "redirect")
-                  .withUser(cred.username),
+                  .withUser(cred.usernameOpt),
                 "hello",
                 _
                   .addCredentials(
