@@ -66,6 +66,8 @@ object Mima {
 
       Seq(
         // was changed from case class to non case class (for easier bin compat in the future)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Authentication")),
+        // was changed from case class to non case class (for easier bin compat in the future)
         ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Dependency$"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Dependency.unapply"),
         ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Dependency"),

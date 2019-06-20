@@ -353,20 +353,3 @@ object Artifact {
   }
 
 }
-
-final case class Authentication(
-  user: String,
-  password: String = "",
-  optional: Boolean = false,
-  realmOpt: Option[String] = None,
-  httpsOnly: Boolean = true,
-  passOnRedirect: Boolean = false
-) {
-  override def toString: String =
-    copy(password = "*******")
-      .productIterator
-      .mkString("Authentication(", ", ", ")")
-
-  def userOnly: Boolean =
-    this == Authentication(user)
-}
