@@ -1,7 +1,7 @@
 
 plugins_(
   "com.eed3si9n"       % "sbt-assembly"             % "0.14.9",
-  "com.geirsson"       % "sbt-ci-release"           % "1.2.1",
+  "com.geirsson"       % "sbt-ci-release"           % "1.2.6",
   "org.scala-sbt"      % "sbt-contraband"           % "0.4.3",
   "io.get-coursier"    % "sbt-coursier"             % sbtCoursierVersion,
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
