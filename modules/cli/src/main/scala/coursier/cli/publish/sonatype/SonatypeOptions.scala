@@ -22,3 +22,8 @@ final case class SonatypeOptions(
   @Name("v")
     verbose: Int @@ Counter = Tag.of(0)
 )
+
+object SonatypeOptions {
+  implicit val parser = Parser[SonatypeOptions]
+  implicit val help = caseapp.core.help.Help[SonatypeOptions]
+}

@@ -19,3 +19,8 @@ final case class UpdateOptions(
   dir: Option[String]
 
 )
+
+object UpdateOptions {
+  implicit val parser = Parser[UpdateOptions]
+  implicit val help = caseapp.core.help.Help[UpdateOptions]
+}

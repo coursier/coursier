@@ -60,3 +60,8 @@ final case class ResolveOptions(
       )
     )
 }
+
+object ResolveOptions {
+  implicit val parser = Parser[ResolveOptions]
+  implicit val help = caseapp.core.help.Help[ResolveOptions]
+}
