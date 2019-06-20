@@ -8,3 +8,8 @@ final case class Options(
   @Name("q") // hmm, doesn't work
     quiet: Boolean = false
 )
+
+object Options {
+  implicit val parser = Parser[Options]
+  implicit val help = caseapp.core.help.Help[Options]
+}

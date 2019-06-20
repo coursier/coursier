@@ -5,6 +5,7 @@ import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.ArtifactOptions
 import coursier.cli.resolve.ResolveOptions
 
+@ArgsName("org:name:version|app-name[:version]*")
 final case class FetchOptions(
 
   @Help("Print java -cp compatible output")

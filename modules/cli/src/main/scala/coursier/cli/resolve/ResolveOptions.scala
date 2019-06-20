@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
 
+@ArgsName("org:name:version|app-name[:version]*")
 final case class ResolveOptions(
 
   @Help("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
@@ -59,4 +60,9 @@ final case class ResolveOptions(
         native = app.launcherType == "scala-native"
       )
     )
+}
+
+object ResolveOptions {
+  implicit val parser = Parser[ResolveOptions]
+  implicit val help = caseapp.core.help.Help[ResolveOptions]
 }

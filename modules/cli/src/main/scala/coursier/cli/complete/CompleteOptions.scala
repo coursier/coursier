@@ -24,3 +24,8 @@ final case class CompleteOptions(
       .filter(_.nonEmpty)
       .map(coursier.complete.Complete.scalaBinaryVersion)
 }
+
+object CompleteOptions {
+  implicit val parser = Parser[CompleteOptions]
+  implicit val help = caseapp.core.help.Help[CompleteOptions]
+}
