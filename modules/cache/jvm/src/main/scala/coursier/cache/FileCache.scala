@@ -1006,7 +1006,7 @@ object FileCache {
         pool = CacheDefaults.pool,
         ttl = CacheDefaults.ttl,
         localArtifactsShouldBeCached = false,
-        followHttpToHttpsRedirections = false,
+        followHttpToHttpsRedirections = true,
         followHttpsToHttpRedirections = false,
         maxRedirections = CacheDefaults.maxRedirections,
         sslRetry = CacheDefaults.sslRetryCount,

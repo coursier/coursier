@@ -133,8 +133,7 @@ object FileCacheTests extends TestSuite {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "redirect",
-              "hello secure",
-              _.withFollowHttpToHttpsRedirections(true)
+              "hello secure"
             )
           }
         }
@@ -143,7 +142,8 @@ object FileCacheTests extends TestSuite {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "redirect",
-              "redirecting"
+              "redirecting",
+              _.withFollowHttpToHttpsRedirections(false)
             )
           }
         }
@@ -184,12 +184,11 @@ object FileCacheTests extends TestSuite {
             expect(
               httpBaseUri / "auth-redirect",
               "hello auth secure",
-              _.withFollowHttpToHttpsRedirections(true)
-                .addCredentials(
-                  credentials(httpsBaseUri, userPass)
-                    .withRealm(realm)
-                    .withMatchHost(true)
-                )
+              _.addCredentials(
+                credentials(httpsBaseUri, userPass)
+                  .withRealm(realm)
+                  .withMatchHost(true)
+              )
             )
           }
         }
@@ -198,7 +197,8 @@ object FileCacheTests extends TestSuite {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth-redirect",
-              "redirecting"
+              "redirecting",
+              _.withFollowHttpToHttpsRedirections(false)
             )
           }
         }
