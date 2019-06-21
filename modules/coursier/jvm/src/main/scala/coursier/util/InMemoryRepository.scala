@@ -52,6 +52,9 @@ object InMemoryRepository {
             method = "HEAD",
             maxRedirectionsOpt = cacheOpt.flatMap(_.maxRedirections)
           )
+          // Even though the finally clause handles this too, this has to be run here, so that we return Some(true)
+          // iff this doesn't throw.
+          conn.getInputStream.close()
           Some(true)
         }
         catch {

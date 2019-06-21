@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.util.InMemoryRepository
 import utest._
 
 import scala.async.Async.{async, await}
@@ -119,6 +120,42 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
+    "in memory repo" - async {
+
+      val inMemoryRepo = InMemoryRepository(Map(
+        (mod"com.chuusai:shapeless_2.11", "2.3.3") ->
+          (new java.net.URL("https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.242/shapeless_2.11-2.3.242.jar"), false)
+      ))
+
+      val res = await {
+        Resolve()
+          .noMirrors
+          .addDependencies(dep"com.chuusai:shapeless_2.11:2.3.3")
+          .withRepositories(Seq(
+            inMemoryRepo,
+            Repositories.central
+          ))
+          .withCache(cache)
+          .future()
+      }
+
+      val artifacts = await {
+        Artifacts()
+          .withResolutions(Seq(res))
+          .withCache(cache)
+          .future()
+      }
+
+      val urls = artifacts.map(_._1.url).sorted
+
+      val expectedUrls = Seq(
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.3/shapeless_2.11-2.3.3.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.11.12/scala-library-2.11.12.jar",
+        "https://repo1.maven.org/maven2/org/typelevel/macro-compat_2.11/1.1.1/macro-compat_2.11-1.1.1.jar"
+      )
+
+      assert(urls == expectedUrls)
+    }
   }
 
 }
