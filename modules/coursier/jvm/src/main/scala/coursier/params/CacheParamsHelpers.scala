@@ -23,8 +23,8 @@ abstract class CacheParamsHelpers {
   def useEnvCredentials: Boolean
 
   def cache[F[_]](
-    pool: ExecutorService = CacheDefaults.pool,
-    logger: CacheLogger = CacheLogger.nop,
+    pool: ExecutorService,
+    logger: CacheLogger,
     inMemoryCache: Boolean = false
   )(implicit S: Sync[F] = Task.sync): Cache[F] = {
 

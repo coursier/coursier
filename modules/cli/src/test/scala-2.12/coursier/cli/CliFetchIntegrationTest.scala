@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
-import coursier.cache.CacheDefaults
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, ResolveOptions}
@@ -31,7 +30,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
 
-  val pool = Sync.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   def paramsOrThrow(options: FetchOptions): FetchParams =
@@ -972,7 +971,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad pom resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
@@ -1004,7 +1003,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad pom sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
@@ -1037,7 +1036,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad jar resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
@@ -1065,7 +1064,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Bad jar sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val cacheOpt = CacheOptions(cache = dir.getAbsolutePath)
+        val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
@@ -1096,7 +1095,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Wrong range partial artifact resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
-        val cacheOpt = CacheOptions(mode = "force", cache = dir.getAbsolutePath)
+        val cacheOpt = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)

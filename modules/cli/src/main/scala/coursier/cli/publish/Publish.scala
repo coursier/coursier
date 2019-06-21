@@ -88,7 +88,8 @@ object Publish extends CaseApp[PublishOptions] {
         now,
         out,
         deleteOnExit,
-        manualPackageFileSetOpt.isEmpty
+        manualPackageFileSetOpt.isEmpty,
+        es
       )
       fileSet0 = (manualPackageFileSetOpt.toSeq ++ Seq(dirFileSet0, sbtFileSet0)).foldLeft(FileSet.empty)(_ ++ _)
       _ = {

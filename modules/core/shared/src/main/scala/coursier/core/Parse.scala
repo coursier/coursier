@@ -48,7 +48,7 @@ object Parse {
         for {
           from <- if (strFrom.isEmpty) Some(None) else version(strFrom).map(Some(_))
           to <- if (strTo.isEmpty) Some(None) else version(strTo).map(Some(_))
-        } yield VersionInterval(from.filterNot(_.isEmpty), to.filterNot(_.isEmpty), fromIncluded, toIncluded)
+        } yield VersionInterval(from.filterNot(_.isEmpty), to.filterNot(_.isEmpty), from.forall(!_.isEmpty) && fromIncluded, toIncluded)
       } else if (s.nonEmpty && fromIncluded && toIncluded)
         for (v <- version(s) if !v.isEmpty)
           yield VersionInterval(Some(v), Some(v), fromIncluded, toIncluded)

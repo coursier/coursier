@@ -4,7 +4,6 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 
 import caseapp.core.RemainingArgs
 import cats.data.Validated
-import coursier.cache.CacheDefaults
 import coursier.cli.options.{DependencyOptions, OutputOptions}
 import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams}
 import coursier.util.Sync
@@ -17,7 +16,7 @@ import scala.concurrent.ExecutionContext
 @RunWith(classOf[JUnitRunner])
 class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
-  val pool = Sync.fixedThreadPool(CacheDefaults.concurrentDownloadCount)
+  val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
 
   override protected def afterAll(): Unit = {

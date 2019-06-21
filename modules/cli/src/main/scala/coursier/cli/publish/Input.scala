@@ -3,9 +3,10 @@ package coursier.cli.publish
 import java.io.{File, PrintStream}
 import java.nio.file.{Files, Paths}
 import java.time.Instant
+import java.util.concurrent.ExecutorService
 
 import coursier.{Repositories, dependencyString}
-import coursier.cache.Cache
+import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.publish.params.PublishParams
 import coursier.cli.publish.util.DeleteOnExit
 import coursier.publish.dir.Dir
@@ -72,7 +73,8 @@ object Input {
     now: Instant,
     out: PrintStream,
     deleteOnExit: DeleteOnExit,
-    maybeReadCurrentDir: Boolean
+    maybeReadCurrentDir: Boolean,
+    pool: ExecutorService
   ): Task[FileSet] = {
 
     val actualSbtDirectoriesTask =
@@ -91,7 +93,7 @@ object Input {
       actualSbtDirectories
         .map { sbtDir =>
           for {
-            sbtStructureJar <- sbtCsPublishJarTask(params.cache.cache())
+            sbtStructureJar <- sbtCsPublishJarTask(params.cache.cache(pool, CacheLogger.nop))
             t <- Task.delay {
               val sbt = new Sbt(
                 sbtDir.toFile,

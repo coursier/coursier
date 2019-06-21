@@ -89,6 +89,7 @@ object CacheUrl {
   def url(s: String): URL =
     new URL(null, s, handlerFor(s).orNull)
 
+  @deprecated("Use coursier.core.Authentication.basicAuthenticationEncode", "2.0.0-RC3")
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
@@ -138,10 +139,8 @@ object CacheUrl {
         case authenticated: AuthenticatedURLConnection =>
           authenticated.authenticate(auth)
         case conn0: HttpURLConnection =>
-          conn0.setRequestProperty(
-            "Authorization",
-            "Basic " + basicAuthenticationEncode(auth.user, auth.password)
-          )
+          for ((k, v) <- auth.allHttpHeaders)
+            conn0.setRequestProperty(k, v)
         case _ =>
         // FIXME Authentication is ignored
       }
@@ -216,7 +215,7 @@ object CacheUrl {
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
-    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
+    maxRedirectionsOpt: Option[Int] = Some(20)
   ): URLConnection = {
     val (c, partial) = urlConnectionMaybePartial(
       url0,
@@ -257,11 +256,10 @@ object CacheUrl {
     followHttpToHttpsRedirections: Boolean,
     followHttpsToHttpRedirections: Boolean,
     autoCredentials: Seq[DirectCredentials],
-    sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
-    hostnameVerifierOpt: Option[HostnameVerifier] = None,
-    method: String = "GET",
-    authRealm: Option[String] = None,
-    maxRedirectionsOpt: Option[Int] = CacheDefaults.maxRedirections
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    method: String,
+    maxRedirectionsOpt: Option[Int]
   ): (URLConnection, Boolean) =
     urlConnectionMaybePartial(Args(
       url0,
@@ -274,7 +272,7 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      authRealm,
+      None,
       redirectionCount = 0,
       maxRedirectionsOpt
     ))
@@ -338,7 +336,7 @@ object CacheUrl {
                 if (is4xx(conn)) {
                   val realmOpt = realm(conn)
                   val authentication0 = authentication
-                    .map(_.copy(optional = false))
+                    .map(_.withOptional(false))
                     .orElse(autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication))
                   if (authentication0 == authentication && realmOpt.forall(authRealm.contains))
                     Right((conn, partialDownload))

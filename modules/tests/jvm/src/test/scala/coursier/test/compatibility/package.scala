@@ -13,7 +13,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object compatibility {
 
-  implicit val executionContext = scala.concurrent.ExecutionContext.global
+  private val pool = Sync.fixedThreadPool(6)
+  implicit val executionContext = scala.concurrent.ExecutionContext.fromExecutorService(pool)
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
     val f = new File("modules/tests/shared/src/test/resources/" + path)
@@ -36,7 +37,7 @@ package object compatibility {
   private val fillChunks = sys.env.get("FETCH_MOCK_DATA").exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks).fetch
+    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
 
   val taskArtifact = artifact[Task]
 

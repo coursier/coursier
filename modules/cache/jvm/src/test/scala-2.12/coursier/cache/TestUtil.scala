@@ -101,11 +101,11 @@ object TestUtil {
     Unauthorized(`WWW-Authenticate`(NonEmptyList.one(Challenge("Basic", realm))))
 
   implicit class UserUriOps(private val uri: Uri) extends AnyVal {
-    def withUser(user: String): Uri =
+    def withUser(userOpt: Option[String]): Uri =
       uri.copy(
         authority = uri.authority.map { authority =>
           authority.copy(
-            userInfo = Some(user)
+            userInfo = userOpt
           )
         }
       )
