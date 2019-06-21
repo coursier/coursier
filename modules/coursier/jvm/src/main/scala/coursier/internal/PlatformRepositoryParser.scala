@@ -69,11 +69,14 @@ abstract class PlatformRepositoryParser {
                   url.getFile
                 ).toString
 
+                val auth = Authentication(user, password)
+                  .withHttpsOnly(url.getProtocol != "http")
+
                 repo.right.map {
                   case m: MavenRepository =>
                     m.copy(
                       root = baseUrl,
-                      authentication = Some(Authentication(user, password))
+                      authentication = Some(auth)
                     )
                   case i: IvyRepository =>
                     i.copy(
@@ -83,7 +86,7 @@ abstract class PlatformRepositoryParser {
                           case _ => false
                         }
                       ),
-                      authentication = Some(Authentication(user, password))
+                      authentication = Some(auth)
                     )
                   case r =>
                     sys.error(s"Unrecognized repository: $r")
