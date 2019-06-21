@@ -4,6 +4,8 @@ import java.net.URI
 
 import coursier.core.Authentication
 
+import scala.util.Try
+
 final class DirectCredentials private(
   val host: String,
   val usernameOpt: Option[String],
@@ -78,9 +80,9 @@ final class DirectCredentials private(
   // Can be called during redirections, to check whether these credentials apply to the redirection target
   def autoMatches(url: String, realm0: Option[String]): Boolean =
     nonEmpty && matchHost && {
-      val uri = new URI(url)
-      val schemeOpt = Option(uri.getScheme)
-      val hostOpt = Option(uri.getHost)
+      val uriOpt = Try(new URI(url)).toOption
+      val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
+      val hostOpt = uriOpt.flatMap(uri => Option(uri.getHost))
       ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
         hostOpt.contains(host) &&
         realm.forall(realm0.contains)
@@ -89,10 +91,10 @@ final class DirectCredentials private(
   // Only called on initial artifact URLs, no on the ones originating from redirections
   def matches(url: String, user: String): Boolean =
     nonEmpty && {
-      val uri = new URI(url)
-      val schemeOpt = Option(uri.getScheme)
-      val hostOpt = Option(uri.getHost)
-      val userInfoOpt = Option(uri.getUserInfo)
+      val uriOpt = Try(new URI(url)).toOption
+      val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
+      val hostOpt = uriOpt.flatMap(uri => Option(uri.getHost))
+      val userInfoOpt = uriOpt.flatMap(uri => Option(uri.getUserInfo))
       // !matchHost && // ?
       userInfoOpt.isEmpty &&
         ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
