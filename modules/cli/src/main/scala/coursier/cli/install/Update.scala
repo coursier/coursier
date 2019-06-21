@@ -33,7 +33,9 @@ object Update extends CaseApp[UpdateOptions] {
           s.iterator()
             .asScala
             .filter { p =>
-              !p.getFileName.toString.startsWith(".") &&
+              val name = p.getFileName.toString
+              !name.startsWith(".") &&
+                !name.endsWith(".bat") &&
                 Files.isRegularFile(p)
             }
             .toVector
