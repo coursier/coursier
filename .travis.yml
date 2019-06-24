@@ -49,10 +49,10 @@ jobs:
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
       script: amm scripts/site.sc --publishLocal true
-    # Disabled for now, need to add the Typesafe releases Ivy repo to the publish module in the pants build
-    # - name: "Pants"
-    # - # Sanity check for Pants build path.
-    # - script: cd modules && ./pants run cli:coursier-cli -- fetch --help
+    - name: "Pants"
+      before_script: pyenv global system 3.6.7
+      # Sanity check for Pants build path.
+      script: cd modules && ./pants run cli:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
       script: sbt ci-release
