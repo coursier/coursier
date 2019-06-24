@@ -28,7 +28,7 @@ stages:
 jobs:
   include:
     - name: "Pants"
-      before_script: pyenv global system 3.6
+      before_script: pyenv global system 3.6.7
       # Sanity check for Pants build path.
       script: cd modules && ./pants run cli:coursier-cli -- fetch --help
     - env: SCALA_VERSION=2.12 BOOTSTRAP=1
