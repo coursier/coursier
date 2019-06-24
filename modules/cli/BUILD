@@ -3,31 +3,20 @@ scala_library(
     dependencies = [
         "3rdparty/jvm:argonaut-shapeless",
         "3rdparty/jvm:caseapp",
+        "3rdparty/jvm:cats-core",
+        "3rdparty/jvm:monadless-cats",
+        "3rdparty/jvm:monadless-stdlib",
         "bootstrap:bootstrap",
         "cache:cache",
         "core:core",
         "interop/scalaz:scalaz-interop",
         "coursier:coursier",
         "publish:publish",
-        ":util",
     ],
     sources = rglobs(
-        "src/main/scala-2.12/coursier/cli/*.scala",
+        "src/main/scala/coursier/cli/*.scala",
         "src/main/contraband-scala/*.scala",
     ),
-)
-
-scala_library(
-    name = "util",
-    dependencies = [
-        "3rdparty/jvm:argonaut-shapeless",
-        "3rdparty/jvm:cats-core",
-        "3rdparty/jvm:scala-native",
-        "cache:cache",
-        "core:core",
-        "coursier:coursier",
-    ],
-    sources = globs("src/main/scala-2.12/coursier/cli/util/*.scala"),
 )
 
 jvm_binary(

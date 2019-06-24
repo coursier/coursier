@@ -208,9 +208,9 @@ jar_library(
     name = "okhttp",
     jars = [
         jar(
-            org = "com.squareup.okhttp",
+            org = "com.squareup.okhttp3",
 	    name = "okhttp-urlconnection",
-	    rev = "2.7.5",
+	    rev = "3.13.1",
 	),
     ]
 )
@@ -219,5 +219,19 @@ jar_library(
     name = "emoji",
     jars = [
         scala_jar("com.lightbend", "emoji", "1.2.1"),
+    ],
+)
+
+jar_library(
+    name = "monadless-cats",
+    jars = [
+        scala_jar("io.monadless", "monadless-cats", "0.0.13"),
+    ],
+)
+
+jar_library(
+    name = "monadless-stdlib",
+    jars = [
+        scala_jar("io.monadless", "monadless-stdlib", "0.0.13"),
     ],
 )
