@@ -18,6 +18,7 @@ final case class BootstrapSpecificParams(
   withPreamble: Boolean,
   deterministicOutput: Boolean,
   proguarded: Boolean,
+  hybrid: Boolean,
   disableJarCheckingOpt: Option[Boolean]
 ) {
   def batOutput: Path =
@@ -28,9 +29,14 @@ object BootstrapSpecificParams {
   def apply(options: BootstrapSpecificOptions, native: Boolean): ValidatedNel[String, BootstrapSpecificParams] = {
 
     val validateOutputType = {
-      val count = Seq(options.assembly.exists(identity), options.standalone.exists(identity), native).count(identity)
+      val count = Seq(
+        options.assembly.exists(identity),
+        options.standalone.exists(identity),
+        options.hybrid.exists(identity),
+        native
+      ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly, --standalone, or --native, can be specified")
+        Validated.invalidNel("Only one of --assembly, --standalone, --hybrid, or --native, can be specified")
       else
         Validated.validNel(())
     }
@@ -66,6 +72,7 @@ object BootstrapSpecificParams {
 
     val assembly = options.assembly.getOrElse(false)
     val standalone = options.standalone.getOrElse(false)
+    val hybrid = options.hybrid.getOrElse(false)
 
     (validateOutputType, rulesV).mapN {
       (_, rules) =>
@@ -82,6 +89,7 @@ object BootstrapSpecificParams {
           options.preamble,
           options.deterministic,
           options.proguarded,
+          hybrid,
           options.disableJarChecking
         )
     }

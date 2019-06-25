@@ -11,8 +11,9 @@ final case class BootstrapSpecificOptions(
   @Help("Generate a standalone launcher, with all JARs included, instead of one downloading its dependencies on startup.")
   @Short("s")
     standalone: Option[Boolean] = None,
+  @Help("Generate an hybrid assembly / standalone launcher")
+    hybrid: Option[Boolean] = None,
   @Help("Include files in generated launcher even in non-standalone mode.")
-  @Short("s")
     embedFiles: Boolean = true,
   @Help("Set Java command-line options in the generated launcher.")
   @Value("option")

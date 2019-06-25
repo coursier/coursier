@@ -429,8 +429,8 @@ object AppGenerator {
         }
 
         desc.launcherType match {
-          case LauncherType.Bootstrap | LauncherType.Standalone =>
-            val isStandalone = desc.launcherType == LauncherType.Standalone
+          case LauncherType.Bootstrap | LauncherType.Hybrid | LauncherType.Standalone =>
+            val isStandalone = desc.launcherType != LauncherType.Bootstrap
             val sharedContentOpt =
               if (appArtifacts.shared.isEmpty) None
               else {
@@ -454,6 +454,7 @@ object AppGenerator {
               desc.javaOptions,
               javaProperties = desc.javaProperties ++ appArtifacts.extraProperties,
               deterministic = true,
+              hybridAssembly = desc.launcherType == LauncherType.Hybrid,
               extraZipEntries = extraEntries
             )
 

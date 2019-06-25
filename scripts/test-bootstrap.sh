@@ -142,6 +142,16 @@ spaceInMainJar() {
   fi
 }
 
+hybrid() {
+  # FIXME We should also inspect the generated launcher to check that it's indeed an hybrid one
+  "$COURSIER" bootstrap -o cs-echo-hybrid io.get-coursier:echo:1.0.1 --hybrid
+  local OUT="$(./cs-echo-hybrid foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from echo command hybrid launcher." 1>&2
+    exit 1
+  fi
+}
+
 standalone() {
   "$COURSIER" bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
   local OUT="$(./cs-echo-standalone foo)"
@@ -248,6 +258,7 @@ javaClassPathProp
 javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch
 spaceInMainJar
+hybrid
 standalone
 scalafmtStandalone
 

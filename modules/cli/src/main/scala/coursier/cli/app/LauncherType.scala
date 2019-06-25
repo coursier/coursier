@@ -12,6 +12,9 @@ object LauncherType {
   case object Assembly extends LauncherType {
     override def needsBatOnWindows = true
   }
+  case object Hybrid extends LauncherType {
+    override def needsBatOnWindows = true
+  }
   case object Standalone extends LauncherType {
     override def needsBatOnWindows = true
   }
@@ -22,6 +25,7 @@ object LauncherType {
     input match {
       case "bootstrap" => Right(Bootstrap)
       case "assembly" => Right(Assembly)
+      case "hybrid" => Right(Hybrid)
       case "standalone" => Right(Standalone)
       case "scala-native" => Right(ScalaNative)
       case "graalvm-native-image" => Right(GraalvmNativeImage)
