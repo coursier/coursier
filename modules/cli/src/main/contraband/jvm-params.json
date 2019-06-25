@@ -10,50 +10,42 @@
         {
           "name": "cacheLocation",
           "type": "java.io.File",
-          "default": "coursier.cache.CacheDefaults.location",
-          "since": "1.0.0"
+          "default": "coursier.cache.CacheDefaults.location"
         },
         {
           "name": "cachePolicies",
           "type": "Seq[coursier.cache.CachePolicy]",
-          "default": "coursier.cache.CacheDefaults.cachePolicies",
-          "since": "1.0.0"
+          "default": "coursier.cache.CacheDefaults.cachePolicies"
         },
         {
           "name": "ttl",
           "type": "scala.concurrent.duration.Duration?",
-          "default": "coursier.cache.CacheDefaults.ttl",
-          "since": "1.0.0"
+          "default": "coursier.cache.CacheDefaults.ttl"
         },
         {
           "name": "parallel",
           "type": "Int",
-          "default": "coursier.cache.CacheDefaults.concurrentDownloadCount",
-          "since": "1.0.0"
+          "default": "coursier.cache.CacheDefaults.concurrentDownloadCount"
         },
         {
           "name": "checksum",
           "type": "Seq[Option[String]]",
-          "default": "coursier.cache.CacheDefaults.checksums",
-          "since": "1.0.0"
+          "default": "coursier.cache.CacheDefaults.checksums"
         },
         {
           "name": "retryCount",
           "type": "Int",
-          "default": "1",
-          "since": "1.0.0"
+          "default": "1"
         },
         {
           "name": "cacheLocalArtifacts",
           "type": "Boolean",
-          "default": "false",
-          "since": "1.0.0"
+          "default": "false"
         },
         {
           "name": "followHttpToHttpsRedirections",
           "type": "Boolean",
-          "default": "true",
-          "since": "1.0.0"
+          "default": "true"
         },
         {
           "name": "credentials",
