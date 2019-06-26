@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
 import java.util.jar.{JarFile, JarOutputStream, Manifest, Attributes => JarAttributes}
 import java.util.regex.Pattern
-import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
+import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
 
 import coursier.bootstrap.util.{FileUtil, Zip}
 
@@ -49,10 +49,9 @@ object Assembly {
     Assembly.Rule.ExcludePattern("META-INF/.*\\.[rR][sS][aA]")
   )
 
-  def make(
-    jars: Seq[File],
-    output: OutputStream,
-    attributes: Seq[(JarAttributes.Name, String)],
+  def writeTo(
+    jars: Seq[Either[() => ZipInputStream, File]],
+    zos: ZipOutputStream,
     rules: Seq[Rule],
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
@@ -60,6 +59,91 @@ object Assembly {
     val rulesMap = rules.collect { case r: Rule.PathRule => r.path -> r }.toMap
     val excludePatterns = rules.collect { case Rule.ExcludePattern(p) => p }
     val appendPatterns = rules.collect { case Rule.AppendPattern(p) => p }
+
+    for ((ent, content) <- extraZipEntries) {
+      zos.putNextEntry(ent)
+      zos.write(content)
+      zos.closeEntry()
+    }
+
+    val concatenedEntries = new mutable.HashMap[String, ::[(ZipEntry, Array[Byte])]]
+
+    var ignore = Set.empty[String]
+
+    for (jar <- jars) {
+      var zif: ZipFile = null
+      var zis: ZipInputStream = null
+
+      try {
+        val entries =
+          jar match {
+            case Left(f) =>
+              zis = f()
+              Zip.zipEntries(zis)
+            case Right(f) =>
+              zif = new ZipFile(f)
+              Zip.zipEntries(zif)
+          }
+
+        for ((ent, content) <- entries) {
+
+          def append(): Unit =
+            concatenedEntries += ent.getName -> ::((ent, content), concatenedEntries.getOrElse(ent.getName, Nil))
+
+          rulesMap.get(ent.getName) match {
+            case Some(Rule.Exclude(_)) =>
+              // ignored
+
+            case Some(Rule.Append(_)) =>
+              append()
+
+            case None =>
+              if (!excludePatterns.exists(_.matcher(ent.getName).matches())) {
+                if (appendPatterns.exists(_.matcher(ent.getName).matches()))
+                  append()
+                else if (!ignore(ent.getName)) {
+                  ent.setCompressedSize(-1L)
+                  zos.putNextEntry(ent)
+                  zos.write(content)
+                  zos.closeEntry()
+
+                  ignore += ent.getName
+                }
+              }
+          }
+        }
+
+      } finally {
+        if (zif != null)
+          zif.close()
+        if (zis != null)
+          zis.close()
+      }
+    }
+
+    for ((_, entries) <- concatenedEntries) {
+      val (ent, _) = entries.head
+
+      ent.setCompressedSize(-1L)
+
+      if (entries.tail.nonEmpty)
+        ent.setSize(entries.map(_._2.length).sum)
+
+      zos.putNextEntry(ent)
+      // for ((_, b) <- entries.reverse)
+      //  zos.write(b)
+      zos.write(entries.reverse.toArray.flatMap(_._2))
+      zos.closeEntry()
+    }
+  }
+
+  def make(
+    jars: Seq[File],
+    output: OutputStream,
+    attributes: Seq[(JarAttributes.Name, String)],
+    rules: Seq[Rule],
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
+  ): Unit = {
 
     val manifest = new Manifest
     manifest.getMainAttributes.put(JarAttributes.Name.MANIFEST_VERSION, "1.0")
@@ -70,71 +154,7 @@ object Assembly {
 
     try {
       zos = new JarOutputStream(output, manifest)
-
-      for ((ent, content) <- extraZipEntries) {
-        zos.putNextEntry(ent)
-        zos.write(content)
-        zos.closeEntry()
-      }
-
-      val concatenedEntries = new mutable.HashMap[String, ::[(ZipEntry, Array[Byte])]]
-
-      var ignore = Set.empty[String]
-
-      for (jar <- jars) {
-        var zif: ZipFile = null
-
-        try {
-          zif = new ZipFile(jar)
-
-          for ((ent, content) <- Zip.zipEntries(zif)) {
-
-            def append(): Unit =
-              concatenedEntries += ent.getName -> ::((ent, content), concatenedEntries.getOrElse(ent.getName, Nil))
-
-            rulesMap.get(ent.getName) match {
-              case Some(Rule.Exclude(_)) =>
-                // ignored
-
-              case Some(Rule.Append(_)) =>
-                append()
-
-              case None =>
-                if (!excludePatterns.exists(_.matcher(ent.getName).matches())) {
-                  if (appendPatterns.exists(_.matcher(ent.getName).matches()))
-                    append()
-                  else if (!ignore(ent.getName)) {
-                    ent.setCompressedSize(-1L)
-                    zos.putNextEntry(ent)
-                    zos.write(content)
-                    zos.closeEntry()
-
-                    ignore += ent.getName
-                  }
-                }
-            }
-          }
-
-        } finally {
-          if (zif != null)
-            zif.close()
-        }
-      }
-
-      for ((_, entries) <- concatenedEntries) {
-        val (ent, _) = entries.head
-
-        ent.setCompressedSize(-1L)
-
-        if (entries.tail.nonEmpty)
-          ent.setSize(entries.map(_._2.length).sum)
-
-        zos.putNextEntry(ent)
-        // for ((_, b) <- entries.reverse)
-        //  zos.write(b)
-        zos.write(entries.reverse.toArray.flatMap(_._2))
-        zos.closeEntry()
-      }
+      writeTo(jars.map(Right(_)), zos, rules, extraZipEntries)
     } finally {
       if (zos != null)
         zos.close()

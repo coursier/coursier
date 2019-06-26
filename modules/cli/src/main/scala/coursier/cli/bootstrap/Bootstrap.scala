@@ -185,7 +185,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     else {
       val (asFiles, asUrls) = files.partition {
         case (a, _) =>
-          params.specific.assembly || params.specific.standalone || (params.specific.embedFiles && a.url.startsWith("file:"))
+          params.specific.assembly || params.specific.standalone || params.specific.hybrid || (params.specific.embedFiles && a.url.startsWith("file:"))
       }
 
       val files0 = asFiles.map(_._2)
@@ -234,7 +234,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
               val done0 = done ++ m0.map(_._1)
 
               val (subUrls, subFiles) =
-                if (params.specific.standalone)
+                if (params.specific.standalone || params.specific.hybrid)
                   (Nil, m0.map(_._2))
                 else
                   (m0.map(_._1), Nil)
@@ -288,6 +288,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           deterministic = params.specific.deterministicOutput,
           withPreamble = params.specific.withPreamble,
           proguarded = params.specific.proguarded,
+          hybridAssembly = params.specific.hybrid,
           disableJarChecking = params.specific.disableJarCheckingOpt.getOrElse[Boolean] {
             coursier.bootstrap.Bootstrap.defaultDisableJarChecking(content)
           }

@@ -15,8 +15,34 @@ object Bootstrap {
   def resourcePath(name: String): String =
     s"${resourceDir}jars/$name"
 
+  // only there for bin compat…
   def writeZip(
     output: OutputStream,
+    content: Seq[ClassLoaderContent],
+    mainClass: String,
+    bootstrapResourcePath: String,
+    deterministic: Boolean,
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])],
+    properties: Seq[(String, String)]
+  ): Unit = {
+
+    val outputZip = new ZipOutputStream(output)
+
+    writeZip(
+      outputZip,
+      content,
+      mainClass,
+      bootstrapResourcePath,
+      deterministic,
+      extraZipEntries,
+      properties
+    )
+
+    outputZip.close()
+  }
+
+  def writeZip(
+    outputZip: ZipOutputStream,
     content: Seq[ClassLoaderContent],
     mainClass: String,
     bootstrapResourcePath: String,
@@ -36,7 +62,6 @@ object Bootstrap {
       }
 
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
-    val outputZip = new ZipOutputStream(output)
 
     for ((ent, content) <- extraZipEntries) {
       outputZip.putNextEntry(ent)
@@ -118,8 +143,6 @@ object Bootstrap {
     putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
     outputZip.closeEntry()
-
-    outputZip.close()
   }
 
   def proguardedBootstrapResourcePath: String = "bootstrap.jar"
@@ -144,6 +167,7 @@ object Bootstrap {
     withPreamble: Boolean = true,
     proguarded: Boolean = true,
     disableJarChecking: JBoolean = null,
+    hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
   ): Unit = {
 
@@ -178,9 +202,44 @@ object Bootstrap {
         Preamble.shellPreamble(javaOpts, disableJarChecking0).getBytes(UTF_8)
       )
 
+    val zos = new ZipOutputStream(buffer)
+
+    val content0 =
+      if (hybridAssembly)
+        content.headOption match {
+          case None =>
+            // shouldn't happen
+            content
+          case Some(c) =>
+            val resources = c.entries.collect { case r: ClasspathEntry.Resource => r }
+
+            if (resources.isEmpty)
+              content
+            else {
+              val files = resources.map(r => () => new ZipInputStream(new ByteArrayInputStream(r.content)))
+
+              Assembly.writeTo(
+                files.map(Left(_)),
+                zos,
+                Assembly.defaultRules,
+                Nil
+              )
+
+              val remaining = c.entries.collect { case u: ClasspathEntry.Url => u }
+              if (remaining.isEmpty)
+                content.drop(1)
+              else {
+                val c0 = c.copy(entries = remaining)
+                c0 +: content.drop(1)
+              }
+            }
+        }
+      else
+        content
+
     writeZip(
-      buffer,
-      content,
+      zos,
+      content0,
       mainClass,
       bootstrapResourcePath,
       deterministic,
@@ -188,6 +247,7 @@ object Bootstrap {
       javaProperties
     )
 
+    zos.close()
     Files.write(output, buffer.toByteArray)
     FileUtil.tryMakeExecutable(output)
   }
