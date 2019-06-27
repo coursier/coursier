@@ -27,18 +27,25 @@ public class Bootstrap {
         String previousJavaClassPath = null;
 
         if (isSimpleLoader) {
+            boolean urlsInJavaClassPath = Boolean.getBoolean("coursier.bootstrap.urls-in-jcp");
             URL[] urls = ((URLClassLoader) classLoader).getURLs();
             StringBuilder b = new StringBuilder();
+            previousJavaClassPath = System.getProperty("java.class.path");
+            if (previousJavaClassPath != null) {
+                b.append(previousJavaClassPath);
+            }
             for (URL url : urls) {
-                if (b.length() != 0)
-                    b.append(File.pathSeparatorChar);
                 if (url.getProtocol().equals("file")) {
+                    if (b.length() != 0)
+                        b.append(File.pathSeparatorChar);
                     b.append(Paths.get(url.toURI()).toString());
-                } else {
+                } else if (urlsInJavaClassPath) {
+                    if (b.length() != 0)
+                        b.append(File.pathSeparatorChar);
                     b.append(url.toExternalForm());
                 }
             }
-            previousJavaClassPath = System.setProperty("java.class.path", b.toString());
+            System.setProperty("java.class.path", b.toString());
         }
 
         // Called after having set java.class.path, for property expansion

@@ -24,7 +24,7 @@ if [ $# -ge 2 ]; then
   LOCAL_VERSION="$2"
 else
   LOCAL_VERSION="0.1.0-test-SNAPSHOT"
-  if [ ! -e "$HOME/.ivy2/local/io.get-coursier/coursier-cli_2.12/$LOCAL_VERSION/jars/coursier-cli_2.12-standalone.jar" ]; then
+  if [ ! -e "$HOME/.ivy2/local/io.get-coursier/coursier-cli_2.12/$LOCAL_VERSION/jars/coursier-cli_2.12.jar" ]; then
     sbt "set version in ThisBuild := \"$LOCAL_VERSION\"" publishLocal
   fi
 fi
@@ -105,7 +105,7 @@ require() {
 
 javaClassPathProp() {
   "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
-  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  EXPECTED="./cs-props-0:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-0 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
     echo "Error: unexpected java.class.path property (expected $EXPECTED, got $CP)" 1>&2
@@ -115,10 +115,10 @@ javaClassPathProp() {
 
 javaClassPathInExpansion() {
   "$COURSIER" bootstrap -o cs-props-1 --property foo='${java.class.path}' io.get-coursier:props:1.0.2
-  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  EXPECTED="./cs-props-1:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-1 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
-    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $GOT)" 1>&2
     exit 1
   fi
 }
@@ -148,6 +148,30 @@ hybrid() {
   local OUT="$(./cs-echo-hybrid foo)"
   if [ "$OUT" != foo ]; then
     echo "Error: unexpected output from echo command hybrid launcher." 1>&2
+    exit 1
+  fi
+}
+
+hybridJavaClassPath() {
+  "$COURSIER" bootstrap -o cs-props-hybrid io.get-coursier:props:1.0.2 --hybrid
+  local OUT="$(./cs-props-hybrid java.class.path)"
+  if [ "$OUT" != "./cs-props-hybrid" ]; then
+    echo "Error: unexpected java.class.path from cs-props-hybrid command:" 1>&2
+    ./cs-props-hybrid java.class.path 1>&2
+    exit 1
+  fi
+}
+
+hybridNoUrlInJavaClassPath() {
+  "$COURSIER" bootstrap -o cs-props-hybrid-shared \
+    io.get-coursier:props:1.0.2 \
+    io.get-coursier:echo:1.0.2 \
+    --shared io.get-coursier:echo \
+    --hybrid
+  local OUT="$(./cs-props-hybrid-shared java.class.path)"
+  if [ "$OUT" != "./cs-props-hybrid-shared" ]; then
+    echo "Error: unexpected java.class.path from cs-props-hybrid-shared command:" 1>&2
+    ./cs-props-hybrid-shared java.class.path 1>&2
     exit 1
   fi
 }
@@ -259,6 +283,8 @@ javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch
 spaceInMainJar
 hybrid
+hybridJavaClassPath
+hybridNoUrlInJavaClassPath
 standalone
 scalafmtStandalone
 
