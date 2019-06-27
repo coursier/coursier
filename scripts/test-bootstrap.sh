@@ -24,7 +24,7 @@ if [ $# -ge 2 ]; then
   LOCAL_VERSION="$2"
 else
   LOCAL_VERSION="0.1.0-test-SNAPSHOT"
-  if [ ! -e "$HOME/.ivy2/local/io.get-coursier/coursier-cli_2.12/$LOCAL_VERSION/jars/coursier-cli_2.12-standalone.jar" ]; then
+  if [ ! -e "$HOME/.ivy2/local/io.get-coursier/coursier-cli_2.12/$LOCAL_VERSION/jars/coursier-cli_2.12.jar" ]; then
     sbt "set version in ThisBuild := \"$LOCAL_VERSION\"" publishLocal
   fi
 fi
@@ -118,7 +118,7 @@ javaClassPathInExpansion() {
   EXPECTED="./cs-props-1:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-1 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
-    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
+    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $GOT)" 1>&2
     exit 1
   fi
 }
