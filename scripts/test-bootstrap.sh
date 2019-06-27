@@ -162,6 +162,20 @@ hybridJavaClassPath() {
   fi
 }
 
+hybridNoUrlInJavaClassPath() {
+  "$COURSIER" bootstrap -o cs-props-hybrid-shared \
+    io.get-coursier:props:1.0.2 \
+    io.get-coursier:echo:1.0.2 \
+    --shared io.get-coursier:echo \
+    --hybrid
+  local OUT="$(./cs-props-hybrid-shared java.class.path)"
+  if [ "$OUT" != "./cs-props-hybrid-shared" ]; then
+    echo "Error: unexpected java.class.path from cs-props-hybrid-shared command:" 1>&2
+    ./cs-props-hybrid-shared java.class.path 1>&2
+    exit 1
+  fi
+}
+
 standalone() {
   "$COURSIER" bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
   local OUT="$(./cs-echo-standalone foo)"
@@ -270,6 +284,7 @@ javaClassPathInExpansionFromLaunch
 spaceInMainJar
 hybrid
 hybridJavaClassPath
+hybridNoUrlInJavaClassPath
 standalone
 scalafmtStandalone
 
