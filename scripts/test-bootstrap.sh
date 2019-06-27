@@ -105,7 +105,7 @@ require() {
 
 javaClassPathProp() {
   "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
-  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  EXPECTED="./cs-props-0:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-0 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
     echo "Error: unexpected java.class.path property (expected $EXPECTED, got $CP)" 1>&2
@@ -115,7 +115,7 @@ javaClassPathProp() {
 
 javaClassPathInExpansion() {
   "$COURSIER" bootstrap -o cs-props-1 --property foo='${java.class.path}' io.get-coursier:props:1.0.2
-  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
+  EXPECTED="./cs-props-1:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
   GOT="$(./cs-props-1 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
     echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
@@ -148,6 +148,16 @@ hybrid() {
   local OUT="$(./cs-echo-hybrid foo)"
   if [ "$OUT" != foo ]; then
     echo "Error: unexpected output from echo command hybrid launcher." 1>&2
+    exit 1
+  fi
+}
+
+hybridJavaClassPath() {
+  "$COURSIER" bootstrap -o cs-props-hybrid io.get-coursier:props:1.0.2 --hybrid
+  local OUT="$(./cs-props-hybrid java.class.path)"
+  if [ "$OUT" != "./cs-props-hybrid" ]; then
+    echo "Error: unexpected java.class.path from cs-props-hybrid command:" 1>&2
+    ./cs-props-hybrid java.class.path 1>&2
     exit 1
   fi
 }
@@ -259,6 +269,7 @@ javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch
 spaceInMainJar
 hybrid
+hybridJavaClassPath
 standalone
 scalafmtStandalone
 

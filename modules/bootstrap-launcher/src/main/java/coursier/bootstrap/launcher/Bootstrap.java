@@ -29,6 +29,10 @@ public class Bootstrap {
         if (isSimpleLoader) {
             URL[] urls = ((URLClassLoader) classLoader).getURLs();
             StringBuilder b = new StringBuilder();
+            previousJavaClassPath = System.getProperty("java.class.path");
+            if (previousJavaClassPath != null) {
+                b.append(previousJavaClassPath);
+            }
             for (URL url : urls) {
                 if (b.length() != 0)
                     b.append(File.pathSeparatorChar);
@@ -38,7 +42,7 @@ public class Bootstrap {
                     b.append(url.toExternalForm());
                 }
             }
-            previousJavaClassPath = System.setProperty("java.class.path", b.toString());
+            System.setProperty("java.class.path", b.toString());
         }
 
         // Called after having set java.class.path, for property expansion
