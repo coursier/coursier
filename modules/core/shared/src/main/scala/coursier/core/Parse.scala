@@ -13,18 +13,19 @@ object Parse {
   }
 
   // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
-  private val latestSubRevision = "(.*[^.-])[.-]?[+]".r
+  private val latestSubRevision = "(.*[^.-])([.-]?)[+]".r
 
   def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
     s match {
-      case latestSubRevision(prefix) =>
+      case latestSubRevision(prefix, delim) =>
         for {
           from <- version(prefix)
           if from.rawItems.nonEmpty
-          to <- version(prefix + "-max")
+          max = (if (delim.isEmpty) "." else delim) + "max"
+          to <- version(prefix + max)
           // the contrary would mean something went wrong in the loose substitution above
           if from.rawItems.init == to.rawItems.dropRight(1).init
-        } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = false)
+        } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = true)
       case _ =>
         None
     }
