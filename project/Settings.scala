@@ -84,7 +84,7 @@ object Settings {
   }
 
   lazy val shared = javaScalaPluginShared ++ Seq(
-    scalaVersion := scala212
+    scalaVersion := scala213
   )
 
   lazy val pureJava = javaScalaPluginShared ++ Seq(
