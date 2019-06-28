@@ -74,9 +74,9 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val res = lift {
 
-      val start = System.currentTimeMillis()
+      val start = unlift(Task.delay(System.currentTimeMillis()))
       val res0 = unlift(run)
-      val end = System.currentTimeMillis()
+      val end = unlift(Task.delay(System.currentTimeMillis()))
       Console.err.println(s"${end - start} ms")
 
       res0

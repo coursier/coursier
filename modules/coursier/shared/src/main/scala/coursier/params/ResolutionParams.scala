@@ -5,8 +5,9 @@
 // DO EDIT MANUALLY from now on
 package coursier.params
 
-import coursier.core.{Module, ModuleName, Organization}
+import coursier.core.{Activation, Module, ModuleName, Organization}
 import coursier.params.rule.{Rule, RuleResolution}
+import coursier.core.Version
 
 final class ResolutionParams private (
   val keepOptionalDependencies: Boolean,
@@ -19,8 +20,43 @@ final class ResolutionParams private (
   val typelevel: Boolean,
   val rules: Seq[(Rule, RuleResolution)],
   val properties: Seq[(String, String)],
-  val exclusions: Set[(Organization, ModuleName)]
+  val exclusions: Set[(Organization, ModuleName)],
+  val osInfoOpt: Option[Activation.Os],
+  val jdkVersionOpt: Option[Version],
+  val useSystemOsInfo: Boolean,
+  val useSystemJdkVersion: Boolean
 ) extends coursier.params.ResolutionParamsHelpers with Serializable {
+
+  private def this(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: Option[String],
+    forceScalaVersion: Option[Boolean],
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)],
+    exclusions: Set[(Organization, ModuleName)]
+  ) = this(
+    keepOptionalDependencies,
+    maxIterations,
+    forceVersion,
+    forcedProperties,
+    profiles,
+    scalaVersion,
+    forceScalaVersion,
+    typelevel,
+    rules,
+    properties,
+    exclusions,
+    None,
+    None,
+    // set these to false by default?
+    useSystemOsInfo = true,
+    useSystemJdkVersion = true
+  )
 
   private def this() =
     this(false, 200, Map.empty, Map.empty, Set.empty, None, None, false, Nil, Nil, Set.empty)
@@ -86,13 +122,34 @@ final class ResolutionParams private (
         typelevel == x.typelevel &&
         rules == x.rules &&
         properties == x.properties &&
-        exclusions == x.exclusions
+        exclusions == x.exclusions &&
+        osInfoOpt == x.osInfoOpt &&
+        jdkVersionOpt == x.jdkVersionOpt &&
+        useSystemOsInfo == x.useSystemOsInfo &&
+        useSystemJdkVersion == x.useSystemJdkVersion
     case _ => false
   }
-  override def hashCode: Int =
-    37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.params.ResolutionParams".##) + keepOptionalDependencies.##) + maxIterations.##) + forceVersion.##) + forcedProperties.##) + profiles.##) + scalaVersion.##) + forceScalaVersion.##) + typelevel.##) + rules.##) + properties.##) + exclusions.##)
+  override def hashCode: Int = {
+    var code = 37 * (17 + "coursier.params.ResolutionParams".##)
+    code = 37 * (code + keepOptionalDependencies.##)
+    code = 37 * (code + maxIterations.##)
+    code = 37 * (code + forceVersion.##)
+    code = 37 * (code + forcedProperties.##)
+    code = 37 * (code + profiles.##)
+    code = 37 * (code + scalaVersion.##)
+    code = 37 * (code + forceScalaVersion.##)
+    code = 37 * (code + typelevel.##)
+    code = 37 * (code + rules.##)
+    code = 37 * (code + properties.##)
+    code = 37 * (code + exclusions.##)
+    code = 37 * (code + osInfoOpt.##)
+    code = 37 * (code + jdkVersionOpt.##)
+    code = 37 * (code + useSystemOsInfo.##)
+    code = 37 * (code + useSystemJdkVersion.##)
+    code
+  }
   override def toString: String =
-    s"ResolutionParams($keepOptionalDependencies, $maxIterations, $forceVersion, $forcedProperties, $profiles, $scalaVersion, $forceScalaVersion, $typelevel, $rules, $properties, $exclusions)"
+    s"ResolutionParams($keepOptionalDependencies, $maxIterations, $forceVersion, $forcedProperties, $profiles, $scalaVersion, $forceScalaVersion, $typelevel, $rules, $properties, $exclusions, $osInfoOpt, $jdkVersionOpt, $useSystemOsInfo, $useSystemJdkVersion)"
 
   private[this] def copy(
     keepOptionalDependencies: Boolean = keepOptionalDependencies,
@@ -105,7 +162,11 @@ final class ResolutionParams private (
     typelevel: Boolean = typelevel,
     rules: Seq[(Rule, RuleResolution)] = rules,
     properties: Seq[(String, String)] = properties,
-    exclusions: Set[(Organization, ModuleName)] = exclusions
+    exclusions: Set[(Organization, ModuleName)] = exclusions,
+    osInfoOpt: Option[Activation.Os] = osInfoOpt,
+    jdkVersionOpt: Option[Version] = jdkVersionOpt,
+    useSystemOsInfo: Boolean = useSystemOsInfo,
+    useSystemJdkVersion: Boolean = useSystemJdkVersion
   ): ResolutionParams =
     new ResolutionParams(
       keepOptionalDependencies,
@@ -118,7 +179,11 @@ final class ResolutionParams private (
       typelevel,
       rules,
       properties,
-      exclusions
+      exclusions,
+      osInfoOpt,
+      jdkVersionOpt,
+      useSystemOsInfo,
+      useSystemJdkVersion
     )
 
   def withKeepOptionalDependencies(keepOptionalDependencies: Boolean): ResolutionParams =
@@ -147,6 +212,20 @@ final class ResolutionParams private (
     copy(rules = rules)
   def withExclusions(exclusions: Set[(Organization, ModuleName)]): ResolutionParams =
     copy(exclusions = exclusions)
+  def withOsInfo(osInfo: Activation.Os): ResolutionParams =
+    copy(osInfoOpt = Some(osInfo))
+  def withOsInfo(osInfoOpt: Option[Activation.Os]): ResolutionParams =
+    copy(osInfoOpt = osInfoOpt)
+  def withJdkVersion(version: String): ResolutionParams =
+    copy(jdkVersionOpt = Some(Version(version)))
+  def withJdkVersion(version: Version): ResolutionParams =
+    copy(jdkVersionOpt = Some(version))
+  def withJdkVersion(versionOpt: Option[Version]): ResolutionParams =
+    copy(jdkVersionOpt = versionOpt)
+  def withUseSystemOsInfo(useSystemOsInfo: Boolean): ResolutionParams =
+    copy(useSystemOsInfo = useSystemOsInfo)
+  def withUseSystemJdkVersion(useSystemJdkVersion: Boolean): ResolutionParams =
+    copy(useSystemJdkVersion = useSystemJdkVersion)
 
   def addExclusions(exclusions: (Organization, ModuleName)*): ResolutionParams =
     copy(exclusions = this.exclusions ++ exclusions)
@@ -304,5 +383,75 @@ object ResolutionParams {
       rules,
       properties,
       exclusions
+    )
+
+  def apply(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: Option[String],
+    forceScalaVersion: Option[Boolean],
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)],
+    exclusions: Set[(Organization, ModuleName)],
+    osInfoOpt: Option[Activation.Os],
+    jdkVersionOpt: Option[Version],
+    useSystemOsInfo: Boolean,
+    useSystemJdkVersion: Boolean
+  ): ResolutionParams =
+    new ResolutionParams(
+      keepOptionalDependencies,
+      maxIterations,
+      forceVersion,
+      forcedProperties,
+      profiles,
+      scalaVersion,
+      forceScalaVersion,
+      typelevel,
+      rules,
+      properties,
+      exclusions,
+      osInfoOpt,
+      jdkVersionOpt,
+      useSystemOsInfo,
+      useSystemJdkVersion
+    )
+
+  def apply(
+    keepOptionalDependencies: Boolean,
+    maxIterations: Int,
+    forceVersion: Map[Module, String],
+    forcedProperties: Map[String, String],
+    profiles: Set[String],
+    scalaVersion: String,
+    forceScalaVersion: Boolean,
+    typelevel: Boolean,
+    rules: Seq[(Rule, RuleResolution)],
+    properties: Seq[(String, String)],
+    exclusions: Set[(Organization, ModuleName)],
+    osInfoOpt: Option[Activation.Os],
+    jdkVersionOpt: Option[Version],
+    useSystemOsInfo: Boolean,
+    useSystemJdkVersion: Boolean
+  ): ResolutionParams =
+    new ResolutionParams(
+      keepOptionalDependencies,
+      maxIterations,
+      forceVersion,
+      forcedProperties,
+      profiles,
+      Option(scalaVersion),
+      Option(forceScalaVersion),
+      typelevel,
+      rules,
+      properties,
+      exclusions,
+      osInfoOpt,
+      jdkVersionOpt,
+      useSystemOsInfo,
+      useSystemJdkVersion
     )
 }

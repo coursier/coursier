@@ -65,6 +65,9 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // things that were supposed to be private
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution#DepMgmt.key"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution#DepMgmt.key"),
         // was changed from case class to non case class (for easier bin compat in the future)
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Authentication")),
         // was changed from case class to non case class (for easier bin compat in the future)

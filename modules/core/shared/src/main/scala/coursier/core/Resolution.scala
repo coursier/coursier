@@ -51,11 +51,11 @@ object Resolution {
       )
     }
 
-  object DepMgmt {
-    type Key = (Organization, ModuleName, Type)
+  private object DepMgmt {
+    type Key = (Organization, ModuleName, Type, Classifier)
 
     def key(dep: Dependency): Key =
-      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`)
+      (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`, dep.attributes.classifier)
 
     def add(
       dict: Map[Key, (Configuration, Dependency)],

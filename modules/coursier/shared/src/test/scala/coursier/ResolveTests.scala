@@ -447,5 +447,80 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
     }
+
+    "override dependency from profile" - {
+
+      * - async {
+
+        val resolve0 = resolve
+          .mapResolutionParams(_
+            .withUseSystemOsInfo(false)
+            .withUseSystemJdkVersion(false)
+          )
+          .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
+
+        val res = await {
+          resolve0
+            .future()
+        }
+
+        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        assert(unixCommonDepOpt.exists(!_.optional))
+
+        await(validateDependencies(res, resolve0.resolutionParams))
+      }
+
+      * - async {
+
+        val resolve0 = resolve
+          .mapResolutionParams(_
+            .withUseSystemOsInfo(false)
+            .withUseSystemJdkVersion(false)
+            .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
+              "os.name" -> "Linux",
+              "os.arch" -> "amd64",
+              "os.version" -> "4.9.125",
+              "path.separator" -> ":"
+            )))
+          )
+          .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
+
+        val res = await {
+          resolve0
+            .future()
+        }
+
+        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        assert(unixCommonDepOpt.exists(!_.optional))
+
+        await(validateDependencies(res, resolve0.resolutionParams))
+      }
+
+      * - async {
+
+        val resolve0 = resolve
+          .mapResolutionParams(_
+            .withUseSystemOsInfo(false)
+            .withUseSystemJdkVersion(false)
+            .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
+              "os.name" -> "Mac OS X",
+              "os.arch" -> "x86_64",
+              "os.version" -> "10.14.5",
+              "path.separator" -> ":"
+            )))
+          )
+          .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
+
+        val res = await {
+          resolve0
+            .future()
+        }
+
+        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        assert(unixCommonDepOpt.exists(!_.optional))
+
+        await(validateDependencies(res, resolve0.resolutionParams))
+      }
+    }
   }
 }
