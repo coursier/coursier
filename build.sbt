@@ -227,11 +227,11 @@ lazy val cli = project("cli")
     shared,
     // does this really work?
     skipGeneration in generateContrabands := {
-      !isSbv("2.12").value
+      !isSbv("2.13").value
     },
     managedSourceDirectories.in(Compile) ++= {
       val baseDir = baseDirectory.value
-      if (isSbv("2.12").value)
+      if (isSbv("2.13").value)
         Seq(baseDir / "src" / "main" / "contraband-scala")
       else
         Nil
@@ -239,14 +239,14 @@ lazy val cli = project("cli")
     sourceManaged.in(Compile, generateContrabands) := {
       val baseDir = baseDirectory.value
       val previous = sourceManaged.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
+      if (isSbv("2.13").value)
         baseDir / "src" / "main" / "contraband-scala"
       else
         previous
     },
     contrabandSource.in(Compile, generateContrabands) := {
       val current = contrabandSource.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
+      if (isSbv("2.13").value)
         current
       else
         current / "foo"
@@ -258,11 +258,11 @@ lazy val cli = project("cli")
     ),
     scalacOptions += "-Ypartial-unification",
     libs ++= {
-      if (scalaBinaryVersion.value == "2.12")
+      if (scalaBinaryVersion.value == "2.13")
         Seq(
           Deps.argonautShapeless,
           Deps.caseApp,
-          Deps.catsCore,
+          Deps.catsCore2,
           Deps.monadlessCats,
           Deps.monadlessStdlib,
           Deps.junit % Test, // to be able to run tests with pants
@@ -272,7 +272,7 @@ lazy val cli = project("cli")
         Seq()
     },
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    onlyIn("2.12")
+    onlyIn("2.13")
   )
 
 lazy val `cli-native_03` = project("cli-native_03")
