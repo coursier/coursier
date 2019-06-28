@@ -15,7 +15,7 @@ object Deps {
     }
     def http4s = "0.18.17"
     def monadless = "0.0.13"
-    def scalaz = "7.2.27"
+    def scalaz = "7.2.28"
   }
 
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % versions.argonautShapeless
