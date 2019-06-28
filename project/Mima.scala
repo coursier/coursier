@@ -65,6 +65,17 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // made non-case class, for easier preserving of bin compat later
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Resolution"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElement"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productArity"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.canEqual"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElementName"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElementNames"),
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Resolution$"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.unapply"),
         // mmmhh (2.11 only)
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versions"),
         // should have been private
@@ -145,6 +156,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // deprecated method, one default value was removed
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.package#Resolution.apply$default$1"),
         // removed some unused default values
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$1"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$2"),

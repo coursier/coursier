@@ -160,7 +160,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
             case Right(Right(None)) =>
               recurseOnRules(res, t)
             case Right(Right(Some(newRes))) =>
-              S.bind(S.bind(run(newRes.copy(dependencySet = DependencySet.empty)))(validate0)) { res0 =>
+              S.bind(S.bind(run(newRes.withDependencySet(DependencySet.empty)))(validate0)) { res0 =>
                 // FIXME check that the rule passes after it tried to address itself
                 recurseOnRules(res0, t)
               }

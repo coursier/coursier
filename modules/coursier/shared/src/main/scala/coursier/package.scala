@@ -83,11 +83,15 @@ package object coursier {
   val MavenRepository = maven.MavenRepository
 
   type Resolution = core.Resolution
-  // ought to be removed
+  // ought to be replaced by just  val Resolution = core.Resolution
   object Resolution extends Serializable {
     val empty = apply()
+    def apply(): Resolution =
+      core.Resolution()
+
+    @deprecated("Call Resolution(), then call with* on it", "2.0.0-RC3")
     def apply(
-      rootDependencies: Seq[Dependency] = Nil,
+      rootDependencies: Seq[Dependency],
       dependencies: Set[Dependency] = Set.empty,
       forceVersions: Map[Module, String] = Map.empty,
       conflicts: Set[Dependency] = Set.empty,

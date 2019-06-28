@@ -50,11 +50,7 @@ final case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
       .toMap
 
     if (cantForce.isEmpty) {
-
-      val res0 = res.copy(
-        forceVersions = res.forceVersions ++ conflict.modules.toSeq.map(m => m -> selectedVersion)
-      )
-
+      val res0 = res.withForceVersions(res.forceVersions ++ conflict.modules.toSeq.map(m => m -> selectedVersion))
       Right(res0)
     } else {
       val c = new CantForceSameVersion(

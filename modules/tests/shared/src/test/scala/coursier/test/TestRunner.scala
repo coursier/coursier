@@ -32,13 +32,12 @@ class TestRunner[F[_]: Gather : ToFuture](
 
     val fetch0 = fetch(repositories0)
 
-    val r = Resolution(
-      deps,
-      filter = filter,
-      userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-      mapDependencies = mapDependencies,
-      forceVersions = forceVersions
-    )
+    val r = Resolution()
+      .withRootDependencies(deps)
+      .withFilter(filter)
+      .withUserActivations(profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap))
+      .withMapDependencies(mapDependencies)
+      .withForceVersions(forceVersions)
       .process
       .run(fetch0)
 

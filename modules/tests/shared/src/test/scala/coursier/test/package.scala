@@ -34,18 +34,17 @@ package object test {
     // to an expected value.
 
     def clearFinalDependenciesCache: Resolution =
-      underlying.copy(finalDependenciesCache = Map.empty)
+      underlying.withFinalDependenciesCache(Map.empty)
     def clearCaches: Resolution =
-      underlying.copy(
-        projectCache = Map.empty,
-        errorCache = Map.empty,
-        finalDependenciesCache = Map.empty
-      )
+      underlying
+        .withProjectCache(Map.empty)
+        .withErrorCache(Map.empty)
+        .withFinalDependenciesCache(Map.empty)
     def clearFilter: Resolution =
-      underlying.copy(filter = None)
+      underlying.withFilter(None)
     def clearProjectProperties: Resolution =
-      underlying.copy(
-        projectCache = underlying
+      underlying.withProjectCache(
+        underlying
           .projectCache
           .mapValues {
             case (s, p) =>

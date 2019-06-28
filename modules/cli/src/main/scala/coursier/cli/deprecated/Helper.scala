@@ -400,17 +400,17 @@ class Helper(
   val extraProperties = parseProperties(common.resolutionOptions.pomProperty, "extra")
   val forcedProperties = parseProperties(common.resolutionOptions.forcePomProperty, "forced")
 
-  val startRes = Resolution(
-    allDependencies,
-    forceVersions = forceVersions,
-    filter = Some(dep => common.resolutionOptions.keepOptional || !dep.optional),
-    userActivations =
+  val startRes = Resolution()
+    .withRootDependencies(allDependencies)
+    .withForceVersions(forceVersions)
+    .withFilter(Some(dep => common.resolutionOptions.keepOptional || !dep.optional))
+    .withUserActivations {
       if (userEnabledProfiles.isEmpty) None
-      else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-    mapDependencies = if (common.resolutionOptions.typelevel) Some(Typelevel.swap) else None,
-    extraProperties = extraProperties,
-    forceProperties = forcedProperties.toMap
-  )
+      else Some(userEnabledProfiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
+    }
+    .withMapDependencies(if (common.resolutionOptions.typelevel) Some(Typelevel.swap) else None)
+    .withExtraProperties(extraProperties)
+    .withForceProperties(forcedProperties.toMap)
 
   val logger =
     if (common.verbosityLevel >= 0)

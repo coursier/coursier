@@ -28,12 +28,15 @@ abstract class CentralTests extends TestSuite {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
         val res = await(runner.resolve(Seq(dep))).clearCaches
 
-        val expected = Resolution(
-          rootDependencies = Seq(dep),
-          dependencies = Set(
-            dep.withCompileScope,
-            dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
-            dep"org.slf4j:slf4j-api:1.7.7".withCompileScope))
+        val expected = Resolution()
+          .withRootDependencies(Seq(dep))
+          .withDependencies(
+            Set(
+              dep.withCompileScope,
+              dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
+              dep"org.slf4j:slf4j-api:1.7.7".withCompileScope
+            )
+          )
 
         assert(res == expected)
       }
@@ -44,12 +47,15 @@ abstract class CentralTests extends TestSuite {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
         val res = await(runner.resolve(Seq(dep))).clearCaches
 
-        val expected = Resolution(
-          rootDependencies = Seq(dep),
-          dependencies = Set(
-            dep.withCompileScope,
-            dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
-            dep"org.ow2.asm:asm:5.0.2".withCompileScope))
+        val expected = Resolution()
+          .withRootDependencies(Seq(dep))
+          .withDependencies(
+            Set(
+              dep.withCompileScope,
+              dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
+              dep"org.ow2.asm:asm:5.0.2".withCompileScope
+            )
+          )
 
         assert(res == expected)
       }
@@ -61,10 +67,9 @@ abstract class CentralTests extends TestSuite {
         val res0 = await(runner.resolve(Seq(dep)))
         val res = res0.clearCaches
 
-        val expected = Resolution(
-          rootDependencies = Seq(dep),
-          dependencies = Set(
-            dep.withCompileScope))
+        val expected = Resolution()
+          .withRootDependencies(Seq(dep))
+          .withDependencies(Set(dep.withCompileScope))
 
         assert(res == expected)
         assert(res0.projectCache.contains(dep.moduleVersion))
