@@ -12,6 +12,7 @@ import coursier.util._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
+import coursier.core.Activation
 
 final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[F]) {
 
@@ -306,16 +307,35 @@ object Resolve extends PlatformResolve {
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
 
-    Resolution(
-      dependencies,
+    coursier.core.Resolution(
+      rootDependencies = dependencies,
+      dependencies = Set.empty,
       forceVersions = params.forceVersion ++ forceScalaVersions,
+      conflicts = Set.empty,
+      projectCache = Map.empty,
+      errorCache = Map.empty,
+      finalDependenciesCache = Map.empty,
       filter = Some(dep => params.keepOptionalDependencies || !dep.optional),
+      osInfo = params.osInfoOpt.getOrElse {
+        if (params.useSystemOsInfo)
+          // call from Sync[F].delay?
+          Activation.Os.fromProperties(sys.props.toMap)
+        else
+          Activation.Os.empty
+      },
+      jdkVersion = params.jdkVersionOpt.orElse {
+        if (params.useSystemJdkVersion)
+          // call from Sync[F].delay?
+          sys.props.get("java.version").flatMap(coursier.core.Parse.version)
+        else
+          None
+      },
       userActivations =
         if (params.profiles.isEmpty) None
         else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
+      mapDependencies = mapDependencies,
       extraProperties = params.properties,
-      forceProperties = params.forcedProperties,
-      mapDependencies = mapDependencies
+      forceProperties = params.forcedProperties
     )
   }
 

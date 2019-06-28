@@ -83,6 +83,7 @@ package object coursier {
   val MavenRepository = maven.MavenRepository
 
   type Resolution = core.Resolution
+  // ought to be removed
   object Resolution extends Serializable {
     val empty = apply()
     def apply(
