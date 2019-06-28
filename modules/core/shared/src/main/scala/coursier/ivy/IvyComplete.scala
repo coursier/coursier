@@ -42,7 +42,7 @@ final case class IvyComplete[F[_]](
     }
 
   def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
-    F.map(repo.versions(module, fetch).run) {
+    F.map(repo.availableVersions(module, fetch).run) {
       case Left(e) => Left(new Exception(e))
       case Right(None) => Left(new Exception("Version listing not available on this repository"))
       case Right(Some(l)) => Right(l.map(_.repr).filter(_.startsWith(prefix)))

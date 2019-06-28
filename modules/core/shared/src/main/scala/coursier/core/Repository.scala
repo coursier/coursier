@@ -14,6 +14,14 @@ trait Repository extends Serializable with Artifact.Source {
 
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
+
+  def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Versions] =
+    EitherT(F.point(Right(Versions.empty)))
 }
 
 object Repository {

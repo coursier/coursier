@@ -166,7 +166,7 @@ final case class MavenRepository(
     .withDefaultSignature
   }
 
-  def versionsArtifact(module: Module): Option[Artifact] = {
+  private def versionsArtifact(module: Module): Artifact = {
 
     val path = module.organization.value.split('.').toSeq ++ Seq(
       dirModuleName(module, sbtAttrStub),
@@ -185,7 +185,7 @@ final case class MavenRepository(
       .withDefaultChecksums
       .withDefaultSignature
 
-    Some(artifact)
+    artifact
   }
 
   def snapshotVersioningArtifact(
@@ -256,26 +256,32 @@ final case class MavenRepository(
     }
   }
 
-  def versions[F[_]](
+  private def versionsWithUrl[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Versions, String)] =
-    EitherT(
-      versionsArtifact(module) match {
-        case None => F.point(Left("Not supported"))
-        case Some(artifact) =>
-          F.map(fetch(artifact).run) { eitherStr =>
-            for {
-              str <- eitherStr.right
-              xml <- compatibility.xmlParseDom(str).right
-              _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
-              versions <- Pom.versions(xml).right
-            } yield (versions, artifact.url)
-          }
+    EitherT {
+      val artifact = versionsArtifact(module)
+      F.map(fetch(artifact).run) { eitherStr =>
+        for {
+          str <- eitherStr.right
+          xml <- compatibility.xmlParseDom(str).right
+          _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
+          versions <- Pom.versions(xml).right
+        } yield (versions, artifact.url)
       }
-    )
+    }
+
+  override def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Versions] =
+    versionsWithUrl(module, fetch)
+      .map(_._1)
 
   def snapshotVersioning[F[_]](
     module: Module,
@@ -283,8 +289,7 @@ final case class MavenRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, SnapshotVersioning] = {
-
+  ): EitherT[F, String, SnapshotVersioning] =
     EitherT(
       snapshotVersioningArtifact(module, version) match {
         case None => F.point(Left("Not supported"))
@@ -299,7 +304,6 @@ final case class MavenRepository(
           }
       }
     )
-  }
 
   def findNoInterval[F[_]](
     module: Module,
@@ -388,7 +392,7 @@ final case class MavenRepository(
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
     val versionsF = {
-      val v = versions(module, fetch)
+      val v = versionsWithUrl(module, fetch)
       if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
         versionsFromListing(module, fetch).orElse(v)
       else

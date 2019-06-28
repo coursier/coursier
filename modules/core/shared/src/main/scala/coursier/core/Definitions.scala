@@ -297,6 +297,8 @@ object Versions {
     minute: Int,
     second: Int
   )
+
+  val empty = Versions("", "", Nil, None)
 }
 
 // Maven-specific

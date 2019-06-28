@@ -65,6 +65,11 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // mmmhh (2.11 only)
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versions"),
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.versionsArtifact"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.versionsArtifact"),
         // things that are going to change more before 2.0 final
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution.copy$default$2"),
         ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Resolution.copy"),
