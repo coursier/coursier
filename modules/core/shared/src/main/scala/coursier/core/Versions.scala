@@ -88,8 +88,14 @@ final case class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
 ) {
+  def isValid: Boolean =
+    interval.isValid && preferred.forall { v =>
+      interval.contains(v) ||
+        interval.to.forall(v.compare(_) <= 0)
+    }
+
   def blend: Option[Either[VersionInterval, Version]] =
-    if (interval.isValid) {
+    if (isValid) {
       val preferredInInterval = preferred.filter(interval.contains)
 
       if (preferredInInterval.isEmpty)

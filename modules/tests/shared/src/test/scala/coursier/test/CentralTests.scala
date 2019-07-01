@@ -129,7 +129,8 @@ abstract class CentralTests extends TestSuite {
         * - runner.resolutionCheck(
           mod,
           version,
-          extraRepos = extraRepos
+          extraRepos = extraRepos,
+          forceVersions = Map(mod"commons-codec:commons-codec" -> "1.6")
         )
       }
     }
