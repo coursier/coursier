@@ -15,7 +15,6 @@ fi
 
 "$SBTPACK_LAUNCHER" bootstrap \
   "io.get-coursier:coursier-cli_2.12:$VERSION" \
-  -J "-noverify" \
   --no-default \
   -r central \
   -r typesafe:ivy-releases \
