@@ -1,10 +1,6 @@
 
 import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
-import java.io.{ByteArrayOutputStream, FileInputStream, FileOutputStream, InputStream}
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-
-import sbt.File
+import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, InputStream}
 
 object ZipUtil {
 
@@ -70,23 +66,6 @@ object ZipUtil {
     is.close()
     os.close()
 
-  }
-
-  // seems the -noverify may not be needed anymore (to launch the proguarded JAR)
-  // not sure why
-  private val prelude =
-    """#!/usr/bin/env bash
-      |exec java -noverify -jar "$0" "$@"
-      |""".stripMargin
-
-  def addPrelude(source: File, dest: File): dest.type = {
-
-    val rawContent = Files.readAllBytes(source.toPath)
-    val content = prelude.getBytes(StandardCharsets.UTF_8) ++ rawContent
-
-    Files.write(dest.toPath, content)
-
-    dest
   }
 
 }
