@@ -100,8 +100,8 @@ $ coursier-graalvm resolve \
 org.scala-lang:scala-library:2.12.4:default
 ```
 
-That's provided the specific version lies in or below the interval.
-If it doesn't, we get a conflict.
+That's provided the specific version lies in the interval.
+If it's below, it's ignored. If it's above, we get a conflict.
 
 If we depend on `[1.0,2.0)` and `2.1`, we get a conflict.
 
