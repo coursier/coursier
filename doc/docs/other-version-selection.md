@@ -94,7 +94,7 @@ If we depend on `[1.0,2.0)` and `1.2`, version `1.2` gets selected.
 
 For example:
 ```bash
-$ coursier-graalvm resolve \
+$ coursier resolve \
     'org.scala-lang:scala-library:2.12+' \
     org.scala-lang:scala-library:2.12.4
 org.scala-lang:scala-library:2.12.4:default
