@@ -6,7 +6,7 @@ This page aims at describing how versions are reconciled in coursier,
 in particular when version intervals are involved.
 
 First section details the general algorithm, the ones below illustrate
-what happen in more specific examples.
+what happens in more specific examples.
 
 ## Principle
 
