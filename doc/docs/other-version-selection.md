@@ -11,7 +11,7 @@ what happens in more specific examples.
 ## Principle
 
 When we depend on several intervals and specific versions of a dependency,
-we take the intersection of the intervals. If it's empty, there's a conflict
+we first take the intersection of the intervals. If it's empty, there's a conflict
 (non overlapping intervals). If no intervals are passed, it's equivalent
 to have interval `(,)` (matches all versions).
 
