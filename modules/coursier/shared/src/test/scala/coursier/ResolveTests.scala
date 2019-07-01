@@ -341,11 +341,14 @@ object ResolveTests extends TestSuite {
 
         error match {
           case c: ResolutionError.ConflictingDependencies =>
-            val expectedModules = Set(mod"io.netty:netty-codec-http2")
+            val expectedModules = Set(mod"io.netty:netty-codec-http2", mod"io.grpc:grpc-core")
             val modules = c.dependencies.map(_.module)
             assert(modules == expectedModules)
-            val expectedVersions = Set("[4.1.8.Final]", "[4.1.16.Final]")
-            val versions = c.dependencies.map(_.version)
+            val expectedVersions = Map(
+              mod"io.netty:netty-codec-http2" -> Set("[4.1.8.Final]", "[4.1.16.Final]"),
+              mod"io.grpc:grpc-core" -> Set("1.2.0", "1.5.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
+            )
+            val versions = c.dependencies.groupBy(_.module).mapValues(_.map(_.version)).iterator.toMap
             assert(versions == expectedVersions)
           case _ =>
             ???
@@ -445,6 +448,36 @@ object ResolveTests extends TestSuite {
         }
 
         await(validateDependencies(res))
+      }
+
+      "conflict with specific version" - async {
+
+        val res = await {
+          resolve
+            .addDependencies(
+              dep"org.scala-lang:scala-library:2.12+",
+              dep"org.scala-lang:scala-library:2.13.0"
+            )
+            .io
+            .attempt
+            .future()
+        }
+
+        assert(res.isLeft)
+
+        val error = res.left.get
+
+        error match {
+          case c: ResolutionError.ConflictingDependencies =>
+            val expectedModules = Set(mod"org.scala-lang:scala-library")
+            val modules = c.dependencies.map(_.module)
+            assert(modules == expectedModules)
+            val expectedVersions = Set("2.12+", "2.13.0")
+            val versions = c.dependencies.map(_.version)
+            assert(versions == expectedVersions)
+          case _ =>
+            ???
+        }
       }
     }
 

@@ -24,7 +24,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     filter: Option[Dependency => Boolean] = None,
     extraRepos: Seq[Repository] = Nil,
     profiles: Option[Set[String]] = None,
-    mapDependencies: Option[Dependency => Dependency] = None
+    mapDependencies: Option[Dependency => Dependency] = None,
+    forceVersions: Map[Module, String] = Map.empty
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -35,7 +36,8 @@ class TestRunner[F[_]: Gather : ToFuture](
       deps,
       filter = filter,
       userActivations = profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-      mapDependencies = mapDependencies
+      mapDependencies = mapDependencies,
+      forceVersions = forceVersions
     )
       .process
       .run(fetch0)
@@ -60,7 +62,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     version: String,
     extraRepos: Seq[Repository] = Nil,
     configuration: Configuration = Configuration.empty,
-    profiles: Option[Set[String]] = None
+    profiles: Option[Set[String]] = None,
+    forceVersions: Map[Module, String] = Map.empty
   ): Future[Resolution] =
     async {
       val attrPathPart =
@@ -82,12 +85,13 @@ class TestRunner[F[_]: Gather : ToFuture](
           else
             "_" + configuration.value.replace('(', '_').replace(')', '_')
         )
+        // FIXME Take forceVersions into account too
       ).filter(_.nonEmpty).mkString("/")
 
       def tryRead = textResource(path)
 
       val dep = Dependency(module, version, configuration = configuration)
-      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles))
+      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions))
 
       // making that lazy makes scalac crash in 2.10 with scalajs
       val result = res
@@ -131,14 +135,16 @@ class TestRunner[F[_]: Gather : ToFuture](
     version: String,
     extraRepos: Seq[Repository] = Nil,
     configuration: Configuration = Configuration.empty,
-    profiles: Option[Set[String]] = None
+    profiles: Option[Set[String]] = None,
+    forceVersions: Map[Module, String] = Map.empty
   ): Future[Unit] =
     resolution(
       module,
       version,
       extraRepos,
       configuration,
-      profiles
+      profiles,
+      forceVersions
     ).map(_ => ())
 
   def withArtifacts[T](
