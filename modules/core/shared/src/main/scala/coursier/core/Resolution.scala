@@ -640,6 +640,12 @@ final case class Resolution(
   forceProperties: Map[String, String] // FIXME Make that a seq too?
 ) {
 
+  override lazy val hashCode: Int = {
+    var code = 17 + "coursier.core.Resolution".##
+    code = 37 * code + Resolution.unapply(this).get.##
+    37 * code
+  }
+
   def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
     copyWithCache(
       errorCache = errorCache ++ entries
