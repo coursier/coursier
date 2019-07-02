@@ -77,7 +77,7 @@ final class Dependency private (
     }
 
   override lazy val hashCode: Int = {
-    var code = 17 + "coursier.code.Dependency".##
+    var code = 17 + "coursier.core.Dependency".##
     code = 37 * code + module.##
     code = 37 * code + version.##
     code = 37 * code + configuration.##
