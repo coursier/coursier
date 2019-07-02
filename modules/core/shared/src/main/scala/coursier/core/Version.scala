@@ -86,10 +86,14 @@ object Version {
 
   val empty = Number(0)
 
+  private val alphaQualifier = Qualifier("alpha", -5)
+  private val betaQualifier = Qualifier("beta", -4)
+  private val milestoneQualifier = Qualifier("milestone", -3)
+
   val qualifiers = Seq[Qualifier](
-    Qualifier("alpha", -5),
-    Qualifier("beta", -4),
-    Qualifier("milestone", -3),
+    alphaQualifier,
+    betaQualifier,
+    milestoneQualifier,
     Qualifier("cr", -2),
     Qualifier("rc", -2),
     Qualifier("snapshot", -1),
@@ -183,18 +187,22 @@ object Version {
   }
 
   def postProcess(prevIsNumeric: Option[Boolean], item: Item, tokens0: Stream[(Tokenizer.Separator, Item)]): Stream[Item] = {
-    val tokens = {
-      var _tokens = tokens0
 
+    val tokens =
+      // drop some '.0' under some conditions ???
       if (isNumeric(item)) {
-        val nextNonDotZero = _tokens.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
-        if (nextNonDotZero.forall(t => !isMinMax(t._2) && (t._1 == Tokenizer.Hyphen || ((t._1 == Tokenizer.Dot || t._1 == Tokenizer.None) && !isNumeric(t._2))))) { // Dot && isNumeric(t._2)
-          _tokens = nextNonDotZero
-        }
-      }
-
-      _tokens
-    }
+        val nextNonDotZero = tokens0.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
+        def cond(t: (Tokenizer.Separator, Item)): Boolean =
+          !isMinMax(t._2) && {
+            t._1 == Tokenizer.Hyphen ||
+              ((t._1 == Tokenizer.Dot || t._1 == Tokenizer.None) && !isNumeric(t._2))
+          }
+        if (nextNonDotZero.forall(cond)) // Dot && isNumeric(t._2)
+          nextNonDotZero
+        else
+          tokens0
+      } else
+        tokens0
 
     def ifFollowedByNumberElse(ifFollowedByNumber: Item, default: Item) = {
       val followedByNumber = tokens.headOption
@@ -204,22 +212,20 @@ object Version {
       else default
     }
 
+    val nextItem = item match {
+      case Literal("min") => Min
+      case Literal("max") => Max
+      case Literal("a") => ifFollowedByNumberElse(alphaQualifier, item)
+      case Literal("b") => ifFollowedByNumberElse(betaQualifier, item)
+      case Literal("m") => ifFollowedByNumberElse(milestoneQualifier, item)
+      case _ => item
+    }
+
     def next =
       if (tokens.isEmpty) Stream()
-      else postProcess(Some(isNumeric(item)), tokens.head._2, tokens.tail)
+      else postProcess(Some(isNumeric(nextItem)), tokens.head._2, tokens.tail)
 
-    item match {
-      case Literal("min") => Min #:: next
-      case Literal("max") => Max #:: next
-      case Literal("a") =>
-        ifFollowedByNumberElse(qualifiersMap("alpha"), item) #:: next
-      case Literal("b") =>
-        ifFollowedByNumberElse(qualifiersMap("beta"), item) #:: next
-      case Literal("m") =>
-        ifFollowedByNumberElse(qualifiersMap("milestone"), item) #:: next
-      case _ =>
-        item #:: next
-    }
+    nextItem #:: next
   }
 
   def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
