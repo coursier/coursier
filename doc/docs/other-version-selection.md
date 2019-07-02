@@ -1,190 +1,88 @@
 ---
-title: Version selection
+title: Version reconciliation
 ---
 
 This page aims at describing how versions are reconciled in coursier,
 in particular when version intervals are involved.
 
-First section details the general algorithm, the ones below illustrate
-what happens in more specific examples.
 
-## Principle
+Version reconciliation happens when two or more of your direct or
+transitive dependencies depend on different versions of the same module.
+Version reconciliation then either chooses one version for that module, or
+reports a conflict if it can't reconcile those versions.
 
-When we depend on several intervals and specific versions of a dependency,
-we first take the intersection of the intervals. If it's empty, there's a conflict
-(non overlapping intervals). If no intervals are passed, it's equivalent
-to have interval `(,)` (matches all versions).
+## Algorithm
 
-Then specific versions are compared to the resulting interval. Versions
-below are ignored. Versions above the interval, if any, result in a conflict.
-If there are versions in the interval, the highest takes over the interval.
+Version reconciliation is handed several:
+- specific versions, like `1.2.3` or `2.0.0-M2`, and / or
+- version intervals, like `[1.0,2.0)` or `2.0+`.
 
-This results in either an interval, or a specific version.
+Here, we're going to ignore:
+- `latest.*` versions like `latest.release` or `latest.integration`, that are
+handled via different mechansims, and
+- unions of intervals, like `[1.0,1.2),[1.3,1.4)`, that are currently
+unsupported in coursier (only the last interval is retained, all the others
+are discarded).
 
-In the latter case, that resulting version is selected. In the case of a
-resulting interval, the available versions are listed, and the highest
-in the interval is selected.
+From several specific versions and / or version intervals, version reconciliation
+results in either:
+- a conflict if the input versions can't be reconciled, or
+- a single resulting specific version, or
+- a single resulting version interval.
 
-## Latest wins
+That output is calculated the following way:
+- Take the intersection of the input intervals. If it's empty (the intervals
+don't overlap), there's a conflict. If there are no input intervals, assume
+the intersection is `(,)` (interval matching all versions).
+- Then look at specific versions:
+  - Ignore the specific versions below the interval.
+  - If there are specific versions above the interval, there's a conflict.
+  - If there are specific versions in the interval, take the highest as result.
+  - If there are no specific versions in or above the interval, take the
+    interval as result.
 
-If we depend on several versions of a dependency,
-the latest version is selected. It doesn't matter whether
-that version was depended on directly, or only via transitive dependencies.
+Note that if the result is in interval, and no other reconciliation happens
+down the line, the highest version in the interval ends up being selected.
 
-If we depend on version `1.0`, `1.1`, and `1.2`, version `1.2` gets selected.
+On the other hand, if the result is a specific version, that version ends up
+being selected. In a way, a specific version like `1.2` is loosely equivalent
+to an interval `[1.2,)`, except that depending on `1.2` will result in `1.2`
+being selected, whereas depending on `[1.2,)` will result in the highest
+available version >= `1.2` being selected.
 
-For example, argonaut-shapeless `1.2.0-M11` depends on shapeless `2.3.3`.
-If we depend on both argonaut-shapeless `1.2.0-M11` and shapeless `2.3.2`,
-shapeless `2.3.3` gets selected:
-```bash
-$ coursier resolve \
-    com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11 \
-    com.chuusai:shapeless_2.12:2.3.2
-com.chuusai:shapeless_2.12:2.3.3:default
-com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11:default
-io.argonaut:argonaut_2.12:6.2.3:default
-org.scala-lang:scala-library:2.12.8:default
-org.scala-lang:scala-reflect:2.12.8:default
-org.typelevel:macro-compat_2.12:1.1.1:default
-```
+To clarify, the examples below illustrate what happens in a number of cases.
 
-This goes the other way around too: argonaut-shapeless `1.2.0-M7` depends on
-shapeless `2.3.2`. If we depend on both argonaut-shapeless `1.2.0-M7` and
-shapeless `2.3.3`, shapeless `2.3.3` gets selected:
-```bash
-$ coursier resolve \
-    com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M7 \
-    com.chuusai:shapeless_2.12:2.3.3
-com.chuusai:shapeless_2.12:2.3.3:default
-com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M7:default
-io.argonaut:argonaut_2.12:6.2:default
-org.scala-lang:scala-library:2.12.4:default
-org.scala-lang:scala-reflect:2.12.1:default
-org.typelevel:macro-compat_2.12:1.1.1:default
-```
+## Examples
 
-## Latest version in interval
+### Non-overlapping intervals
 
-If we depend on a dependency only via an interval, highest version in the
-interval gets selected.
+If you depend on both `[1.0,2.0)` and `[3.0,4.0)`, there's a conflict.
 
-If we depend on `[1.0,2.0)` and versions `1.0`, `1.1`, and `1.2`, are available,
-then version `1.2` gets selected.
+If you depend on `[1.0,2.0)`, `[1.5,2.5)`, and `[2.0,3.0)`, there's a conflict
+(no intersection shared by all three intervals).
 
-For example, as of writing this, `2.13.0` is the latest scala version. It gets selected
-if we depend on scala-library `[2.12,)`:
-```bash
-$ coursier resolve 'org.scala-lang:scala-library:[2.12,)'
-org.scala-lang:scala-library:2.13.0:default
-```
+### Specific versions below interval are ignored
 
-`2.12+` corresponds to all `2.12.x` versions, starting from `2.12.0`. As of
-writing this, this selects version `2.12.8`, the latest `2.12` scala version:
-```bash
-$ coursier resolve 'org.scala-lang:scala-library:2.12+'
-org.scala-lang:scala-library:2.12.8:default
-```
+If you depend on `[1.0,2.0)` and `0.9`, `0.9` is ignored. It is assumed
+a version in the `[1.0,2.0)` range will be fine where `0.9` is needed.
 
-## Specific version over intervals
+If you depend no `[1.0,3.0)`, `[2.0,4.0)`, and `1.3`, the intersection
+of the intervals is `[2.0,3.0)`, and `1.3` is ignored.
 
-If we depend on both a version interval and a specific version, the specific
-version gets selected.
+### Specific versions above the intervals result in a conflict
 
-If we depend on `[1.0,2.0)` and `1.2`, version `1.2` gets selected.
+If you depend on `[1.0,2.0)` and `2.2`, there's a conflict. Versions in
+`[1.0,2.0)` are below `2.2`, and it is assumed a version below `2.2` cannot
+be fine where `2.2` is needed.
 
-For example:
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:2.12+' \
-    org.scala-lang:scala-library:2.12.4
-org.scala-lang:scala-library:2.12.4:default
-```
+If you depend on `[1.0,2.0)`, `[1.4,3.0)`, and `2.1`, there's a conflict.
+The intersection of the intervals is `[1.4,2.0)`, and `2.1` is above it,
+which results in a conflict.
 
-That's provided the specific version lies in the interval.
-If it's below, it's ignored. If it's above, we get a conflict.
+### Specific versions in interval are preferred
 
-If we depend on `[1.0,2.0)` and `2.1`, we get a conflict.
+If you depend on `[1.0,2.0)` and `1.4`, version reconciliation results in `1.4`.
+As there's a dependency on `1.4`, it is preferred over other versions in `[1.0,2.0)`.
 
-For example:
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:2.12+' \
-    org.scala-lang:scala-library:2.13.0
-Resolution error: Conflicting dependencies:
-org.scala-lang:scala-library:2.12+:default(compile)
-org.scala-lang:scala-library:2.13.0:default(compile)
-```
-
-If the specific version lies below the interval, it is ignored.
-
-If we depend on `[1.0,2.0)` and `0.9`, and `1.0` / `1.1` / `1.2` are available,
-then `0.9` is ignored, and `1.2` is selected.
-
-For example,
-shapeless `2.3.2` depends on scala-library `2.12.0`. If we also depend
-on scala-library `[2.12.1,2.12.8]`, the interval takes over, even though
-`2.12.0` isn't in it:
-```bash
-$ coursier resolve \
-    com.chuusai:shapeless_2.12:2.3.2 \
-    'org.scala-lang:scala-library:[2.12.1,2.12.8]'
-com.chuusai:shapeless_2.12:2.3.2:default
-org.scala-lang:scala-library:2.12.8:default
-org.typelevel:macro-compat_2.12:1.1.1:default
-```
-
-If we have both a version in the interval and one below it, the one below
-is ignored, and the one in the interval gets selected:
-```bash
-$ coursier resolve \
-    com.chuusai:shapeless_2.12:2.3.2 \
-    'org.scala-lang:scala-library:[2.12.1,2.12.8]' \
-    org.scala-lang:scala-library:2.12.7
-com.chuusai:shapeless_2.12:2.3.2:default
-org.scala-lang:scala-library:2.12.7:default
-org.typelevel:macro-compat_2.12:1.1.1:default
-```
-
-## Several intervals
-
-If we depend on several intervals for a dependency, their intersection is
-used.
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:[2.12.1,2.12.7]' \
-    'org.scala-lang:scala-library:[2.12.2,2.12.8]'
-org.scala-lang:scala-library:2.12.7:default
-```
-Here, `[2.12.1,2.12.7]` and `[2.12.2,2.12.8]` is equivalent to just
-`[2.12.2,2.12.7]`, which gives version `2.12.7` at the end.
-
-If the intersection of the intervals is empty, we get a conflict:
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:[2.12.1,2.12.8]' \
-    'org.scala-lang:scala-library:2.13+'
-Resolution error: Conflicting dependencies:
-org.scala-lang:scala-library:2.13+:default(compile)
-org.scala-lang:scala-library:[2.12.1,2.12.8]:default(compile)
-```
-
-If several intervals and several specific versions are passed, the intervals
-are replaced by their intersection. Then the rules above apply.
-
-For example,
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:[2.12.1,2.12.7]' \
-    'org.scala-lang:scala-library:[2.12.2,2.12.8]' \
-    org.scala-lang:scala-library:2.12.0
-org.scala-lang:scala-library:2.12.7:default
-```
-
-```bash
-$ coursier resolve \
-    'org.scala-lang:scala-library:[2.12.1,2.12.7]' \
-    'org.scala-lang:scala-library:[2.12.2,2.12.8]' \
-    org.scala-lang:scala-library:2.12.0 \
-    org.scala-lang:scala-library:2.12.6
-org.scala-lang:scala-library:2.12.6:default
-```
+If you depend on `[1.0,2.0)`, `1.4`, and `1.6`, version reconciliation chooses `1.6`.
+It is assumed `1.6` is fine where `1.4` is needed, and `1.6` is in `[1.0,2.0)`.
