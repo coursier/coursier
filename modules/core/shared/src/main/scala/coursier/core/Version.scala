@@ -192,12 +192,7 @@ object Version {
       // drop some '.0' under some conditions ???
       if (isNumeric(item)) {
         val nextNonDotZero = tokens0.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
-        def cond(t: (Tokenizer.Separator, Item)): Boolean =
-          !isMinMax(t._2) && {
-            t._1 == Tokenizer.Hyphen ||
-              ((t._1 == Tokenizer.Dot || t._1 == Tokenizer.None) && !isNumeric(t._2))
-          }
-        if (nextNonDotZero.forall(cond)) // Dot && isNumeric(t._2)
+        if (nextNonDotZero.headOption.forall { case (sep, t) => sep != Tokenizer.Plus && !isMinMax(t) && !isNumeric(t) })
           nextNonDotZero
         else
           tokens0

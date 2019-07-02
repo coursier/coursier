@@ -1245,7 +1245,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       "org/typelevel/machinist_2.12/0.6.2/machinist_2.12-0.6.2.jar",
       "org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar",
       "org/wildfly/client/wildfly-client-config/1.0.0.Final/wildfly-client-config-1.0.0.Final.jar",
-      "org/wildfly/common/wildfly-common/1.3.0.Beta1/wildfly-common-1.3.0.Beta1.jar",
+      "org/wildfly/common/wildfly-common/1.3.0.Final/wildfly-common-1.3.0.Final.jar",
       "org/zeromq/jeromq/0.4.3/jeromq-0.4.3.jar",
       "org/zeromq/jnacl/0.1.0/jnacl-0.1.0.jar",
       "sh/almond/channels_2.12/0.2.2/channels_2.12-0.2.2.jar",

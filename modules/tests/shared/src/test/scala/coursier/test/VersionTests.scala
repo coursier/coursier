@@ -134,6 +134,10 @@ object VersionTests extends TestSuite {
       assert(compare("1.x.0.alpha", "1.x.0.0.alpha" ) == 0)
       assert(compare("1.x.0-alpha-snapshot", "1.x.0.0-alpha-snapshot" ) == 0)
       assert(compare("1.x.0.alpha.snapshot", "1.x.0.0.alpha.snapshot" ) == 0)
+
+      assert(compare("1.1.0.0-alpha-1", "1.1.0-beta") < 0)
+      assert(compare("1.1.0.0-alpha.1", "1.1.0-beta") < 0)
+      assert(compare("1.3.0.Beta1", "1.3.0.Final") < 0)
     }
 
 
