@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object Resolution {
 
@@ -57,24 +58,26 @@ object Resolution {
     def key(dep: Dependency): Key =
       (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`, dep.attributes.classifier)
 
-    def add(
-      dict: Map[Key, (Configuration, Dependency)],
-      item: (Configuration, Dependency)
-    ): Map[Key, (Configuration, Dependency)] = {
-
-      val key0 = key(item._2)
-
-      if (dict.contains(key0))
-        dict
-      else
-        dict + (key0 -> item)
-    }
-
     def addSeq(
       dict: Map[Key, (Configuration, Dependency)],
       deps: Seq[(Configuration, Dependency)]
     ): Map[Key, (Configuration, Dependency)] =
-      (dict /: deps)(add)
+      if (deps.isEmpty)
+        dict
+      else {
+        val b = new mutable.HashMap[Key, (Configuration, Dependency)]()
+        b.sizeHint(dict.size + deps.length)
+        b ++= dict
+        val it = deps.iterator
+        while (it.hasNext) {
+          val elem = it.next()
+          val key0 = key(elem._2)
+          if (!b.contains(key0))
+            b += ((key0, elem))
+        }
+        b.result
+          .toMap // meh
+      }
   }
 
   def addDependencies(deps: Seq[Seq[(Configuration, Dependency)]]): Seq[(Configuration, Dependency)] = {

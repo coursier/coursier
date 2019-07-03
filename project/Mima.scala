@@ -65,6 +65,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution#DepMgmt.add"),
         // things that were supposed to be private
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution#DepMgmt.key"),
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution#DepMgmt.key"),
