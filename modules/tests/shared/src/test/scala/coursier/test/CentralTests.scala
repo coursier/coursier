@@ -1118,7 +1118,7 @@ abstract class CentralTests extends TestSuite {
         "org.typelevel:machinist_2.12:0.6.2",
         "org.typelevel:macro-compat_2.12:1.1.1",
         "org.wildfly.client:wildfly-client-config:1.0.0.Final",
-        "org.wildfly.common:wildfly-common:1.3.0.Beta1",
+        "org.wildfly.common:wildfly-common:1.3.0.Final",
         "org.zeromq:jeromq:0.4.3",
         "org.zeromq:jnacl:0.1.0",
         "sh.almond:channels_2.12:0.2.2",
