@@ -39,7 +39,7 @@ object RefreshLogger {
     new RefreshLogger(writer, display)
 
 
-  def defaultFallbackMode: Boolean = {
+  lazy val defaultFallbackMode: Boolean = {
     val env0 = sys.env.get("COURSIER_PROGRESS").map(_.toLowerCase).collect {
       case "true"  | "enable"  | "1" => true
       case "false" | "disable" | "0" => false
