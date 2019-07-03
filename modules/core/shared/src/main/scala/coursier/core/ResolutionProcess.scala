@@ -19,13 +19,13 @@ sealed abstract class ResolutionProcess {
         if (maxIterations > 0) maxIterations - 1 else maxIterations
 
       this match {
-        case Done(res) =>
-          F.point(res)
-        case missing0 @ Missing(missing, _, _) =>
-          F.bind(ResolutionProcess.fetchAll[F](missing, fetch))(result =>
+        case done: Done =>
+          F.point(done.resolution)
+        case missing0: Missing =>
+          F.bind(ResolutionProcess.fetchAll[F](missing0.missing, fetch))(result =>
             missing0.next0(result).run[F](fetch, maxIterations0)
           )
-        case cont @ Continue(_, _) =>
+        case cont: Continue =>
           cont
             .nextNoCont
             .run(fetch, maxIterations0)
@@ -40,11 +40,11 @@ sealed abstract class ResolutionProcess {
     F: Monad[F]
   ): F[ResolutionProcess] =
     this match {
-      case Done(_) =>
+      case _: Done =>
         F.point(this)
-      case missing0 @ Missing(missing, _, _) =>
-        F.map(ResolutionProcess.fetchAll(missing, fetch))(result => missing0.next0(result))
-      case cont @ Continue(_, _) =>
+      case missing0: Missing =>
+        F.map(ResolutionProcess.fetchAll(missing0.missing, fetch))(result => missing0.next0(result))
+      case cont: Continue =>
         if (fastForward)
           cont.nextNoCont.next(fetch, fastForward = fastForward)
         else
@@ -54,11 +54,32 @@ sealed abstract class ResolutionProcess {
   def current: Resolution
 }
 
-final case class Missing(
-  missing: Seq[(Module, String)],
-  current: Resolution,
-  cont: Resolution => ResolutionProcess
+final class Missing private (
+  val missing: Seq[(Module, String)],
+  val current: Resolution,
+  val cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: Missing =>
+        missing == other.missing &&
+          current == other.current &&
+          cont == other.cont
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.core.Missing".##
+    code = 37 * code + missing.##
+    code = 37 * code + current.##
+    code = 37 * code + cont.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"Missing($missing, $current, $cont)"
+
 
   def next0(results: ResolutionProcess.MD): ResolutionProcess = {
 
@@ -129,10 +150,38 @@ final case class Missing(
 
 }
 
-final case class Continue(
-  current: Resolution,
-  cont: Resolution => ResolutionProcess
+object Missing {
+  def apply(
+    missing: Seq[(Module, String)],
+    current: Resolution,
+    cont: Resolution => ResolutionProcess
+  ): Missing =
+    new Missing(missing, current, cont)
+}
+
+final class Continue private (
+  val current: Resolution,
+  val cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: Continue =>
+        current == other.current &&
+          cont == other.cont
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.core.Continue".##
+    code = 37 * code + current.##
+    code = 37 * code + cont.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"Continue($current, $cont)"
+
 
   def next: ResolutionProcess = cont(current)
 
@@ -144,8 +193,39 @@ final case class Continue(
 
 }
 
-final case class Done(resolution: Resolution) extends ResolutionProcess {
+object Continue {
+  def apply(
+    current: Resolution,
+    cont: Resolution => ResolutionProcess
+  ): Continue =
+    new Continue(current, cont)
+}
+
+final class Done private (val resolution: Resolution) extends ResolutionProcess {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: Done =>
+        resolution == other.resolution
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.core.Done".##
+    code = 37 * code + resolution.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"Done($resolution)"
+
+
   def current: Resolution = resolution
+}
+
+object Done {
+  def apply(resolution: Resolution): Done =
+    new Done(resolution)
 }
 
 object ResolutionProcess {

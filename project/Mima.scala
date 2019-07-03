@@ -65,6 +65,10 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // was changed from case class to non case class (for easier bin compat in the future)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Done")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Continue")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Missing")),
         // made non-case class, for easier preserving of bin compat later
         ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Resolution"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElement"),
