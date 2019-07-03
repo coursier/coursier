@@ -846,7 +846,7 @@ final case class Resolution(
               broughtBy
                 .filter(x => remaining.contains(x) || rootDependencies0(x))
             )
-            .toVector
+            .iterator
             .toMap
         )
     }
