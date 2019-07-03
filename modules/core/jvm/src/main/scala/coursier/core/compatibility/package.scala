@@ -3,7 +3,6 @@ package coursier.core
 import java.io.CharArrayReader
 
 import coursier.util.{SaxHandler, Xml}
-import java.util.regex.Pattern.quote
 
 import javax.xml.parsers.SAXParserFactory
 
@@ -21,23 +20,77 @@ package object compatibility {
     def letter = c.isLetter
   }
 
-  private val entityPattern = (quote("&") + "[a-zA-Z]+" + quote(";")).r
-
   private val utf8Bom = "\ufeff"
 
-  def xmlPreprocess(s: String): String = {
+  private def entityIdx(s: String, fromIdx: Int = 0): Option[(Int, Int)] = {
 
-    val content =
-      if (entityPattern.findFirstIn(s).isEmpty)
-        s
-      else
-        Entities.entities.foldLeft(s) {
-          case (s0, (target, replacement)) =>
-            s0.replace(target, replacement)
+    var i = fromIdx
+    var found = Option.empty[(Int, Int)]
+    while (found.isEmpty && i < s.length) {
+      if (s.charAt(i) == '&') {
+        val start = i
+        i += 1
+        var isAlpha = true
+        while (isAlpha && i < s.length) {
+          val c = s.charAt(i)
+          if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z'))
+            isAlpha = false
+          else
+            i += 1
         }
+        if (start + 1 < i && i < s.length) {
+          assert(!isAlpha)
+          if (s.charAt(i) == ';') {
+            i += 1
+            found = Some((start, i))
+          }
+        }
+      } else
+        i += 1
+    }
 
-    content.stripPrefix(utf8Bom)
+    found
   }
+
+  private def substituteEntities(s: String): String = {
+
+    val b = new StringBuilder
+    lazy val a = s.toCharArray
+
+    var i = 0
+
+    var j = 0
+    while (j < s.length && j < utf8Bom.length && s.charAt(i) == utf8Bom.charAt(j))
+      j += 1
+
+    if (j == utf8Bom.length)
+      i = j
+
+    var found = Option.empty[(Int, Int)]
+    while ({
+      found = entityIdx(s, i)
+      found.nonEmpty
+    }) {
+      val from = found.get._1
+      val to = found.get._2
+
+      b.appendAll(a, i, from - i)
+
+      val name = s.substring(from, to)
+      val replacement = Entities.map.getOrElse(name, name)
+      b.appendAll(replacement)
+
+      i = to
+    }
+
+    if (i == 0)
+      s
+    else
+      b.appendAll(a, i, s.length - i).result()
+  }
+
+  def xmlPreprocess(s: String): String =
+    substituteEntities(s)
 
   private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
     override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit =
@@ -114,17 +167,10 @@ package object compatibility {
 
   def xmlParse(s: String): Either[String, Xml.Node] = {
 
-    val content =
-      if (entityPattern.findFirstIn(s).isEmpty)
-        s
-      else
-        Entities.entities.foldLeft(s) {
-          case (s0, (target, replacement)) =>
-            s0.replace(target, replacement)
-        }
+    val content = substituteEntities(s)
 
     val parse =
-      try Right(scala.xml.XML.loadString(content.stripPrefix(utf8Bom)))
+      try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
     parse.right
