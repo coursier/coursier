@@ -65,6 +65,11 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // things that are going to change more before 2.0 final
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution.copy$default$2"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Resolution.copy"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Resolution.this"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Resolution.apply"),
         // should have been private
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution#DepMgmt.add"),
         // things that were supposed to be private
