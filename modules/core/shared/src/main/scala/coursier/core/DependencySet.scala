@@ -5,10 +5,26 @@ import coursier.core.DependencySet.Sets
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable
 
-final case class DependencySet(
-  set: Set[Dependency],
+final class DependencySet private (
+  val set: Set[Dependency],
   grouped: Map[Dependency, Sets[Dependency]]
 ) {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: DependencySet =>
+        set == other.set
+      case _ => false
+    }
+
+  override lazy val hashCode: Int = {
+    var code = 17 + "coursier.core.DependencySet".##
+    code = 37 * code + set.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"DependencySet($set, ${grouped.size} groups)"
 
   assert(grouped.iterator.map(_._2.size).sum == set.size, s"${grouped.iterator.map(_._2.size).sum} != ${set.size}")
   assert(grouped.forall { case (dep, l) => l.forall(_.moduleVersion == dep.moduleVersion) })
@@ -33,7 +49,7 @@ final case class DependencySet(
         val l = m.getOrElse(dep0, Sets.empty[Dependency]).add(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
         m(dep0) = l
       }
-      DependencySet(set ++ dependencies, m.toMap)
+      new DependencySet(set ++ dependencies, m.toMap)
     }
 
   def remove(dependencies: Iterable[Dependency]): DependencySet =
@@ -49,16 +65,16 @@ final case class DependencySet(
         val dep0 = dep.clearExclusions
         val prev = m.getOrElse(dep0, Sets.empty) // getOrElse useful if we're passed duplicated stuff in dependencies
         if (prev.contains(dep)) {
-          if (prev.size <= 1) {
+          if (prev.size <= 1)
             m -= dep0
-          } else {
+          else {
             val l = prev.remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
             m += ((dep0, l))
           }
         }
       }
 
-      DependencySet(set -- dependencies, m.toMap)
+      new DependencySet(set -- dependencies, m.toMap)
     }
 
   def setValues(newSet: Set[Dependency]): DependencySet = {
@@ -71,14 +87,14 @@ final case class DependencySet(
 }
 
 object DependencySet {
-  val empty = DependencySet(Set.empty, Map.empty)
+  val empty = new DependencySet(Set.empty, Map.empty)
 
 
-  object Sets {
+  private object Sets {
     def empty[T]: Sets[T] = Sets(TreeMap.empty, Map.empty, Map.empty)
   }
 
-  final case class Sets[T](
+  private final case class Sets[T] private (
     required: TreeMap[Int, Set[T]],
     children: Map[T, Set[T]],
     parents: Map[T, T]
@@ -129,19 +145,15 @@ object DependencySet {
             else
               required + (size(s) -> elem)
           }
-          val before = this.size
           val parents0 = parents -- children0
           val sets0 = Sets(required0, children - s, parents0)
-          val r = children0.foldLeft(sets0)(_.forceAdd(_, size, subsetOf))
-          val after = r.size
-          assert(before - after == 1, s"after: $after, before: $before, right before: ${sets0.size}, removing $s, adding back $children0")
-          r
+          children0.foldLeft(sets0)(_.forceAdd(_, size, subsetOf))
         case None =>
           parents.get(s) match {
             case Some(parent) =>
               Sets(required, children + (parent -> (children.getOrElse(parent, Set.empty) - s)), parents - s)
             case None =>
-              sys.error(s"Couldn't remove $s")
+              this
           }
       }
   }

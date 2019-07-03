@@ -700,7 +700,7 @@ final class Resolution private (
     obj match {
       case other: Resolution =>
         rootDependencies == other.rootDependencies &&
-          dependencySet.set == other.dependencySet.set &&
+          dependencySet == other.dependencySet &&
           forceVersions == other.forceVersions &&
           conflicts == other.conflicts &&
           projectCache == other.projectCache &&
