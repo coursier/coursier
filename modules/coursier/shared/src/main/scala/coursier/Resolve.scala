@@ -1,7 +1,7 @@
 package coursier
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.Exclusions
+import coursier.core.{Activation, DependencySet, Exclusions}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
@@ -12,7 +12,6 @@ import coursier.util._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
-import coursier.core.Activation
 
 final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[F]) {
 
@@ -161,7 +160,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
             case Right(Right(None)) =>
               recurseOnRules(res, t)
             case Right(Right(Some(newRes))) =>
-              S.bind(S.bind(run(newRes.copy(dependencies = Set.empty)))(validate0)) { res0 =>
+              S.bind(S.bind(run(newRes.copy(dependencySet = DependencySet.empty)))(validate0)) { res0 =>
                 // FIXME check that the rule passes after it tried to address itself
                 recurseOnRules(res0, t)
               }
@@ -309,7 +308,7 @@ object Resolve extends PlatformResolve {
 
     coursier.core.Resolution(
       rootDependencies = dependencies,
-      dependencies = Set.empty,
+      dependencySet = DependencySet.empty,
       forceVersions = params.forceVersion ++ forceScalaVersions,
       conflicts = Set.empty,
       projectCache = Map.empty,

@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 object Resolution {
 
@@ -57,24 +58,26 @@ object Resolution {
     def key(dep: Dependency): Key =
       (dep.module.organization, dep.module.name, if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`, dep.attributes.classifier)
 
-    def add(
-      dict: Map[Key, (Configuration, Dependency)],
-      item: (Configuration, Dependency)
-    ): Map[Key, (Configuration, Dependency)] = {
-
-      val key0 = key(item._2)
-
-      if (dict.contains(key0))
-        dict
-      else
-        dict + (key0 -> item)
-    }
-
     def addSeq(
       dict: Map[Key, (Configuration, Dependency)],
       deps: Seq[(Configuration, Dependency)]
     ): Map[Key, (Configuration, Dependency)] =
-      (dict /: deps)(add)
+      if (deps.isEmpty)
+        dict
+      else {
+        val b = new mutable.HashMap[Key, (Configuration, Dependency)]()
+        b.sizeHint(dict.size + deps.length)
+        b ++= dict
+        val it = deps.iterator
+        while (it.hasNext) {
+          val elem = it.next()
+          val key0 = key(elem._2)
+          if (!b.contains(key0))
+            b += ((key0, elem))
+        }
+        b.result
+          .toMap // meh
+      }
   }
 
   def addDependencies(deps: Seq[Seq[(Configuration, Dependency)]]): Seq[(Configuration, Dependency)] = {
@@ -618,14 +621,13 @@ object Resolution {
  *
  * Done if method `isDone` returns `true`.
  *
- * @param dependencies: current set of dependencies
  * @param conflicts: conflicting dependencies
  * @param projectCache: cache of known projects
  * @param errorCache: keeps track of the modules whose project definition could not be found
  */
 final case class Resolution(
   rootDependencies: Seq[Dependency],
-  dependencies: Set[Dependency],
+  dependencySet: DependencySet,
   forceVersions: Map[Module, String],
   conflicts: Set[Dependency],
   projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)],
@@ -640,6 +642,9 @@ final case class Resolution(
   forceProperties: Map[String, String] // FIXME Make that a seq too?
 ) {
 
+  lazy val dependencies: Set[Dependency] =
+    dependencySet.set
+
   override lazy val hashCode: Int = {
     var code = 17 + "coursier.core.Resolution".##
     code = 37 * code + Resolution.unapply(this).get.##
@@ -653,7 +658,7 @@ final case class Resolution(
 
   private def copyWithCache(
     rootDependencies: Seq[Dependency] = rootDependencies,
-    dependencies: Set[Dependency] = dependencies,
+    dependencySet: DependencySet = dependencySet,
     conflicts: Set[Dependency] = conflicts,
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache
     // don't allow changing mapDependencies here - that would invalidate finalDependenciesCache
@@ -661,7 +666,7 @@ final case class Resolution(
   ): Resolution =
     copy(
       rootDependencies,
-      dependencies,
+      dependencySet,
       forceVersions,
       conflicts,
       projectCache,
@@ -732,7 +737,7 @@ final case class Resolution(
    * No attempt is made to solve version conflicts here.
    */
   lazy val transitiveDependencies: Seq[Dependency] =
-    (dependencies -- conflicts)
+    (dependencySet.minimizedSet -- conflicts)
       .toVector
       .flatMap(finalDependencies0)
 
@@ -750,7 +755,7 @@ final case class Resolution(
   lazy val nextDependenciesAndConflicts: (Seq[Dependency], Seq[Dependency], Map[Module, String]) =
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
-      rootDependencies.map(withDefaultConfig) ++ dependencies ++ transitiveDependencies,
+      rootDependencies.map(withDefaultConfig) ++ dependencySet.minimizedSet ++ transitiveDependencies,
       forceVersions
     )
 
@@ -843,7 +848,7 @@ final case class Resolution(
               broughtBy
                 .filter(x => remaining.contains(x) || rootDependencies0(x))
             )
-            .toVector
+            .iterator
             .toMap
         )
     }
@@ -868,7 +873,7 @@ final case class Resolution(
     val (newConflicts, _, _) = nextDependenciesAndConflicts
 
     copyWithCache(
-      dependencies = newDependencies ++ newConflicts,
+      dependencySet = dependencySet.setValues(newDependencies ++ newConflicts),
       conflicts = newConflicts.toSet
     )
   }
@@ -1229,7 +1234,7 @@ final case class Resolution(
 
     copyWithCache(
       rootDependencies = dependencies,
-      dependencies = helper(dependencies.map(updateVersion).toSet)
+      dependencySet = dependencySet.setValues(helper(dependencies.map(updateVersion).toSet))
       // don't know if something should be done about conflicts
     )
   }

@@ -127,6 +127,9 @@ final class Dependency private (
     copy0(optional = optional)
   def withTransitive(transitive: Boolean): Dependency =
     copy0(transitive = transitive)
+
+  lazy val clearExclusions: Dependency =
+    withExclusions(Set.empty)
 }
 
 object Dependency {

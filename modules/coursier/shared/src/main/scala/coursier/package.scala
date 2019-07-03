@@ -104,7 +104,7 @@ package object coursier {
     ): Resolution =
       core.Resolution(
         rootDependencies,
-        dependencies,
+        DependencySet.empty.add(dependencies),
         forceVersions,
         conflicts,
         projectCache,

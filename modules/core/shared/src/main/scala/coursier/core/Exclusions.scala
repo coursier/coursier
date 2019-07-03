@@ -4,18 +4,26 @@ object Exclusions {
 
   def partition(exclusions: Set[(Organization, ModuleName)]): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
 
-    val (wildCards, remaining) = exclusions
-      .partition{case (org, name) => org == allOrganizations || name == allNames }
+    var all0 = false
+    val excludeByOrg0 = Set.newBuilder[Organization]
+    val excludeByName0 = Set.newBuilder[ModuleName]
+    val remaining0 = Set.newBuilder[(Organization, ModuleName)]
 
-    val all = wildCards
-      .contains(one.head)
+    val it = exclusions.iterator
+    while (it.hasNext) {
+      val excl = it.next()
+      if (excl._1 == allOrganizations) {
+        if (excl._2 == allNames)
+          all0 = true
+        else
+          excludeByName0 += excl._2
+      } else if (excl._2 == allNames)
+        excludeByOrg0 += excl._1
+      else
+        remaining0 += excl
+    }
 
-    val excludeByOrg = wildCards
-      .collect{case (org, `allNames`) if org != allOrganizations => org }
-    val excludeByName = wildCards
-      .collect{case (`allOrganizations`, name) if name != allNames => name }
-
-    (all, excludeByOrg, excludeByName, remaining)
+    (all0, excludeByOrg0.result(), excludeByName0.result(), remaining0.result())
   }
 
   def apply(exclusions: Set[(Organization, ModuleName)]): (Organization, ModuleName) => Boolean = {
@@ -37,15 +45,26 @@ object Exclusions {
 
     if (all) one
     else {
-      val filteredRemaining = remaining
-        .filter{case (org, name) =>
-          !excludeByOrg(org) &&
-          !excludeByName(name)
-        }
 
-      excludeByOrg.map((_, allNames)) ++
-        excludeByName.map((allOrganizations, _)) ++
-        filteredRemaining
+      val b = Set.newBuilder[(Organization, ModuleName)]
+      b.sizeHint(excludeByOrg.size + excludeByName.size + remaining.size)
+
+      val orgIt = excludeByOrg.iterator
+      while (orgIt.hasNext)
+        b += ((orgIt.next(), allNames))
+
+      val nameIt = excludeByName.iterator
+      while (nameIt.hasNext)
+        b += ((allOrganizations, nameIt.next()))
+
+      val remIt = remaining.iterator
+      while (remIt.hasNext) {
+        val elem = remIt.next()
+        if (!excludeByOrg(elem._1) && !excludeByName(elem._2))
+          b += elem
+      }
+
+      b.result()
     }
   }
 
@@ -77,9 +96,8 @@ object Exclusions {
         else xExcludeByName intersect yExcludeByName
 
       val remaining =
-        xRemaining.filter{case (org, name) => yAll || yExcludeByOrg(org) || yExcludeByName(name)} ++
-        yRemaining.filter{case (org, name) => xAll || xExcludeByOrg(org) || xExcludeByName(name)} ++
-          (xRemaining intersect yRemaining)
+        xRemaining.filter { case e @ (org, name) => yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e) } ++
+          yRemaining.filter { case e @ (org, name) => xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e) }
 
       excludeByOrg.map((_, allNames)) ++
         excludeByName.map((allOrganizations, _)) ++

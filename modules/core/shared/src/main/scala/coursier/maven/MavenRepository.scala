@@ -125,13 +125,25 @@ final case class MavenRepository(
   private def moduleVersionPath(module: Module, version: String): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
 
-  private[maven] def urlFor(path: Seq[String], isDir: Boolean = false): String =
-    root0 + {
+  private[maven] def urlFor(path: Seq[String], isDir: Boolean = false): String = {
+    val b = new StringBuilder(root0)
+
+    val it = path.iterator
+    var isFirst = true
+    while (it.hasNext) {
+      if (!isDir) {
+        if (isFirst)
+          isFirst = false
+        else
+          b += '/'
+      }
+      b ++= it.next()
       if (isDir)
-        path.map(encodeURIComponent).map(_ + "/").mkString
-      else
-        path.map(encodeURIComponent).mkString("/")
+        b += '/'
     }
+
+    b.result()
+  }
 
   def projectArtifact(
     module: Module,

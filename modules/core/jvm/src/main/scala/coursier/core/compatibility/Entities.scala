@@ -96,4 +96,6 @@ object Entities {
     ("&thorn;", "&#254;"),
     ("&yuml;", "&#255;")
   )
+
+  lazy val map = entities.toMap
 }
