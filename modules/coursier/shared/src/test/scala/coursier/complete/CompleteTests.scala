@@ -344,7 +344,7 @@ object CompleteTests extends TestSuite {
           assert(res == expected)
         }
 
-      * - simple("", 0 -> Seq("com.example", "com.thoughtworks"))
+      * - simple("", 0 -> Seq("com.example", "com.thoughtworks", "test"))
       * - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
       * - simple("com.ex", 0 -> Seq("com.example"))
 

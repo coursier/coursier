@@ -53,10 +53,11 @@ object CacheFetchTests extends TestSuite {
           Nil
       },
       fetchs.head,
-      fetchs.tail: _*
+      fetchs.tail
     )
 
-    val startRes = Resolution(deps)
+    val startRes = Resolution()
+      .withRootDependencies(deps)
 
     val f = startRes
       .process

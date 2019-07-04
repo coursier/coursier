@@ -2,6 +2,7 @@ package coursier
 
 import java.io.File
 
+import coursier.cache.{Cache, CachePolicy, FileCache}
 import coursier.params.MirrorConfFile
 import coursier.parse.RepositoryParser
 
@@ -54,5 +55,14 @@ abstract class PlatformResolve {
       .orElse(fromPropsOpt)
       .getOrElse(default)
   }
+
+  def defaultListVersionCache[F[_]](cache: Cache[F]): Cache[F] =
+    cache match {
+      case f: FileCache[F] =>
+        val current = f.cachePolicies
+        val updated = CachePolicy.UpdateChanging +: current.filter(_ != CachePolicy.UpdateChanging)
+        f.withCachePolicies(updated)
+      case other => other
+    }
 
 }

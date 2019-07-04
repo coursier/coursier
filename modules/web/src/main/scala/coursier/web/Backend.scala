@@ -29,7 +29,7 @@ final class Backend($: BackendScope[_, State]) {
 
     modVers => Gather[Task].gather(
       modVers.map { case (module, version) =>
-        ResolutionProcess.fetchOne(repositories, module, version, fetch)
+        ResolutionProcess.fetchOne(repositories, module, version, fetch, Nil)
           .run
           .map((module, version) -> _)
       }
@@ -158,18 +158,12 @@ final class Backend($: BackendScope[_, State]) {
 
     $.state.map { s =>
 
-      def task = {
-        val res = coursier.Resolution(
-          s.modules,
-          filter = Some(dep =>
-            s.options.followOptional || !dep.optional
-          )
-        )
-
-        res
+      def task =
+        coursier.Resolution()
+          .withRootDependencies(s.modules)
+          .withFilter(Some(dep => s.options.followOptional || !dep.optional))
           .process
           .run(fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch), 100)
-      }
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 

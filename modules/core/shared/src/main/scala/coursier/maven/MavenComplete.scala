@@ -42,7 +42,7 @@ final case class MavenComplete[F[_]](
     F.map(repo.versions(module, fetch)(F).run) {
       case Left(e) =>
         Left(new Exception(e))
-      case Right((v, _)) =>
+      case Right(v) =>
         Right(v.available.filter(_.startsWith(prefix)))
     }
 }

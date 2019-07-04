@@ -55,11 +55,7 @@ final case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule
       }
 
     if (cantForce.isEmpty) {
-
-      val res0 = res.copy(
-        forceVersions = res.forceVersions ++ modules
-      )
-
+      val res0 = res.withForceVersions(res.forceVersions ++ modules)
       Right(res0)
     } else {
       val c = new CantForceRootDependencyVersions(res, cantForce, conflict, this)

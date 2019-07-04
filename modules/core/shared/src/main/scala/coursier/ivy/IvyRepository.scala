@@ -184,7 +184,7 @@ final case class IvyRepository(
         } yield Some(WebPage.listDirectories(url, s))
     }
 
-  def versions[F[_]](
+  def availableVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
@@ -196,6 +196,32 @@ final case class IvyRepository(
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch
     ).map(_.map(_.map(Parse.version).collect { case Some(v) => v }))
+
+  override def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Versions] =
+    availableVersions(module, fetch).map {
+      case Some(l) if l.nonEmpty =>
+        val latest = l.max.repr
+        val release = {
+          val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
+          if (l0.isEmpty)
+            ""
+          else
+            l0.max.repr
+        }
+        Versions(
+          latest,
+          release,
+          l.map(_.repr).toList,
+          None
+        )
+      case _ =>
+        Versions.empty
+    }
 
   def find[F[_]](
     module: Module,
@@ -223,21 +249,9 @@ final case class IvyRepository(
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
       case None =>
-        if (version == "latest.integration" || version == "latest.release") {
-          val acceptChanging = version == "latest.integration"
-          val filter: Version => Boolean =
-            if (acceptChanging) _ => true
-            else v => !IvyRepository.isSnapshot(v.repr)
-          versions(module, fetch).flatMap {
-            case None =>
-              findNoInverval(module, version, fetch)
-            case Some(v) =>
-              fromVersions(filter, v)
-          }
-        } else
-          findNoInverval(module, version, fetch)
+        findNoInverval(module, version, fetch)
       case Some(itv) =>
-        versions(module, fetch).flatMap {
+        availableVersions(module, fetch).flatMap {
           case None =>
             findNoInverval(module, version, fetch)
           case Some(v) =>

@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.cache.Cache
 import coursier.params.MirrorConfFile
 
 abstract class PlatformResolve {
@@ -11,5 +12,8 @@ abstract class PlatformResolve {
     Seq(
       Repositories.central
     )
+
+  def defaultListVersionCache[F[_]](cache: Cache[F]): Cache[F] =
+    cache
 
 }

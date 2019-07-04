@@ -65,6 +65,30 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule"),
+        // more or less internal stuff now
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetch"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetchOne"),
+        // was changed from case class to non case class (for easier bin compat in the future)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Done")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Continue")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Missing")),
+        // made non-case class, for easier preserving of bin compat later
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Resolution"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElement"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productArity"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.canEqual"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElementName"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.productElementNames"),
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Resolution$"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.unapply"),
+        // mmmhh (2.11 only)
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versions"),
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.versionsArtifact"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.versionsArtifact"),
         // things that are going to change more before 2.0 final
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution.copy$default$2"),
         ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.Resolution.copy"),
@@ -140,6 +164,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // deprecated method, one default value was removed
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.package#Resolution.apply$default$1"),
         // removed some unused default values
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$1"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.params.CacheParamsHelpers.cache$default$2"),
