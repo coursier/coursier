@@ -55,7 +55,7 @@ object MavenRepository {
     Configuration.test -> Seq(Configuration.runtime)
   )
 
-  private def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
+  private[coursier] def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
     if (sbtAttrStub) {
       var name = module.name.value
       for (scalaVersion <- module.attributes.get("scalaVersion"))

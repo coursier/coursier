@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
+import coursier.maven.MavenRepository
 import coursier.util.{EitherT, Monad}
 
 trait Repository extends Serializable with Artifact.Source {
@@ -141,13 +142,17 @@ object Repository {
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
 
-    // ignores attributes for now
-    def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
+    def hasModule(module: Module, sbtAttrStub: Boolean = false)(implicit F: Monad[F]): F[Boolean] =
       F.bind(hasOrg(Complete.Input.Org(module.organization.value), partial = false)) {
         case false => F.point(false)
         case true =>
           val prefix = s"${module.organization.value}:"
-          hasName(Complete.Input.Name(module.organization, prefix + module.name.value, prefix.length, ""))
+          val actualModuleName =
+            if (sbtAttrStub)
+              MavenRepository.dirModuleName(module, sbtAttrStub = true) // wish that hack didn't need to exist
+            else
+              module.name.value
+          hasName(Complete.Input.Name(module.organization, prefix + actualModuleName, prefix.length, ""))
       }
 
     final def complete(input: Complete.Input)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] = {
