@@ -59,6 +59,20 @@ final case class Versions(
       case Latest.Stable => latestStableOpt
     }
 
+  def inInterval(itv: VersionInterval): Option[String] = {
+    val release0 = Version(release)
+
+    if (itv.contains(release0))
+      Some(release)
+    else {
+      val inInterval = available
+        .map(Version(_))
+        .filter(itv.contains)
+
+      if (inInterval.isEmpty) None
+      else Some(inInterval.max.repr)
+    }
+  }
 }
 
 object Versions {

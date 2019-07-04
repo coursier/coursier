@@ -378,26 +378,13 @@ final case class MavenRepository(
           findNoInterval(module, version, fetch)
             .map((this, _))
         case Some(itv) =>
-
           versions(module, fetch).flatMap {
             case (versions0, versionsUrl) =>
-              val eitherVersion = {
-                val release = Version(versions0.release)
-
-                if (itv.contains(release)) Right(versions0.release)
-                else {
-                  val inInterval = versions0.available
-                    .map(Version(_))
-                    .filter(itv.contains)
-
-                  if (inInterval.isEmpty) Left(s"No version found for $version in $versionsUrl")
-                  else Right(inInterval.max.repr)
-                }
-              }
-
-              eitherVersion match {
-                case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
-                case Right(version0) =>
+              versions0.inInterval(itv) match {
+                case None =>
+                  val reason = s"No version found for $version in $versionsUrl"
+                  EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+                case Some(version0) =>
                   findNoInterval(module, version0, fetch)
                     .map(_.copy(versions = Some(versions0)))
                     .map((this, _))
