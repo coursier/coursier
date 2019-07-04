@@ -65,6 +65,7 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.repr"),
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule"),
         // more or less internal stuff now
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetch"),

@@ -260,20 +260,14 @@ object ResolutionProcess {
     F: Gather[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
-    val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
-    val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
-      if (listVersionFetch == null) fetchs
-      else Nil
-    }
-
-    def getLatest(kind: Latest, fetch: Repository.Fetch[F]) = {
+    def getLatest(kind: Latest, fetch: Repository.Fetch[F], intervalOpt: Option[VersionInterval]) = {
 
       val lookups = repositories.map { repo =>
         val run = repo.versions(module, fetch).run
         repo.completeOpt(fetch) match {
           case None => run
           case Some(c) => F.bind(c.hasModule(module)) {
-            case false => F.point[Either[String, Versions]](Left(s"${module.organization.value}:${module.name.value} not found on $repo"))
+            case false => F.point[Either[String, Versions]](Left(s"${module.organization.value}:${module.name.value} not found on ${repo.repr}"))
             case true => run
           }
         }
@@ -295,11 +289,35 @@ object ResolutionProcess {
             Left(
               results.map {
                 case Left(e) => e
-                case Right(_) => s"No latest $kind version found"
+                case Right(_) => s"No latest ${kind.name} version found"
               }
             )
-          else
-            Right(found.maxBy(_._1))
+          else {
+            val selected = found.maxBy(_._1)
+            intervalOpt match {
+              case None =>
+                Right(selected)
+              case Some(itv) =>
+                if (itv.contains(selected._1))
+                  Right(selected)
+                else
+                  Left(
+                    results.map {
+                      case Left(e) => e
+                      case Right(v) =>
+                        v.latest(kind) match {
+                          case None =>
+                            s"No latest ${kind.name} version found"
+                          case Some(v0) =>
+                            if (v0 == selected._1.repr)
+                              s"Latest ${kind.name} $v0 not in ${itv.repr}"
+                            else
+                              s"Latest ${kind.name} $v0 not retained"
+                        }
+                    }
+                  )
+            }
+          }
         }
 
       EitherT(versionOrError).flatMap {
@@ -329,19 +347,37 @@ object ResolutionProcess {
       EitherT(task)
     }
 
-    val latestKindOpt = version match {
-      case "latest.integration" => Some(Latest.Integration)
-      case "latest.release" => Some(Latest.Release)
-      case "latest.stable" => Some(Latest.Stable)
-      case _ => None
+    def getLatest0(kind: Latest, intervalOpt: Option[VersionInterval] = None) = {
+      val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
+      val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
+        if (listVersionFetch == null) fetchs
+        else Nil
+      }
+      (getLatest(kind, listVersionFetch0, intervalOpt) /: listVersionFetchs0) (_ orElse getLatest(kind, _, intervalOpt))
     }
 
-    latestKindOpt match {
-      case Some(kind) =>
-        (getLatest(kind, listVersionFetch0) /: listVersionFetchs0)(_ orElse getLatest(kind, _))
-      case None =>
-        (get(fetch) /: fetchs)(_ orElse get(_))
-    }
+    if (version.contains("&")) {
+      val versions = version.split('&').toSeq.distinct
+      assert(versions.length == 2)
+
+      val parsed = versions.map(s => Latest(s).toRight(s))
+      val latest = parsed.collect { case Right(l) => l }
+      val other = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
+      assert(latest.length == 1)
+      assert(other.length == 1)
+
+      val latest0 = latest.head
+      assert(other.head.preferred.isEmpty)
+      val itv = other.head.interval
+
+      getLatest0(latest0, Some(itv))
+    } else
+      Latest(version) match {
+        case Some(kind) =>
+          getLatest0(kind)
+        case None =>
+          (get(fetch) /: fetchs)(_ orElse get(_))
+      }
   }
 
   def fetch[F[_]](

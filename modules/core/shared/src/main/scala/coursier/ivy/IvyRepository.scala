@@ -16,6 +16,9 @@ final case class IvyRepository(
   authentication: Option[Authentication]
 ) extends Repository {
 
+  override def repr: String =
+    "ivy:" + pattern.string + metadataPatternOpt.fold("")("|" + _.string)
+
   def metadataPattern: Pattern = metadataPatternOpt.getOrElse(pattern)
 
   private[ivy] def patternUpTo(chunk: Pattern.Chunk): Option[Pattern] = {

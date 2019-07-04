@@ -172,6 +172,48 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
         }
+
+        'withInterval - {
+          'in - async {
+
+            val res = await {
+              resolve0
+                .addDependencies(
+                  dep"com.chuusai:shapeless_2.12:latest.release",
+                  dep"com.chuusai:shapeless_2.12:2.3+"
+                )
+                .future()
+            }
+
+            await(validateDependencies(res))
+          }
+
+          'out - async {
+
+            val res = await {
+              resolve0
+                .addDependencies(
+                  dep"com.chuusai:shapeless_2.12:latest.release",
+                  dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
+                )
+                .io
+                .attempt
+                .future()
+            }
+
+
+            assert(res.isLeft)
+
+            val error = res.left.get
+
+            error match {
+              case e: ResolutionError.CantDownloadModule =>
+                assert(e.module == mod"com.chuusai:shapeless_2.12")
+              case _ =>
+                throw error
+            }
+          }
+        }
       }
 
       'ivy - {

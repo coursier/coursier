@@ -111,6 +111,9 @@ final case class MavenRepository(
   import Repository._
   import MavenRepository._
 
+  override def repr: String =
+    root
+
   // only used during benchmarks
   private[coursier] var useSaxParser = true
 
