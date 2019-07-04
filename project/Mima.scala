@@ -65,6 +65,10 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule"),
+        // more or less internal stuff now
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetch"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetchOne"),
         // was changed from case class to non case class (for easier bin compat in the future)
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Done")),
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.Continue")),

@@ -253,12 +253,65 @@ object ResolutionProcess {
     module: Module,
     version: String,
     fetch: Repository.Fetch[F],
-    fetchs: Repository.Fetch[F]*
+    fetchs: Seq[Repository.Fetch[F]],
+    listVersionFetch: Repository.Fetch[F] = null,
+    listVersionFetchs: Seq[Repository.Fetch[F]] = null
   )(implicit
-    F: Monad[F]
+    F: Gather[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
+    val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
+    val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
+      if (listVersionFetch == null) fetchs
+      else Nil
+    }
+
+    def getLatest(kind: Latest, fetch: Repository.Fetch[F]) = {
+
+      val lookups = repositories.map { repo =>
+        val run = repo.versions(module, fetch).run
+        repo.completeOpt(fetch) match {
+          case None => run
+          case Some(c) => F.bind(c.hasModule(module)) {
+            case false => F.point[Either[String, Versions]](Left(s"${module.organization.value}:${module.name.value} not found on $repo"))
+            case true => run
+          }
+        }
+      }
+
+      val versionOrError: F[Either[Seq[String], (Version, Repository)]] =
+        F.map(F.gather(lookups)) { results =>
+          // FIXME We're sometimes trapping errors here (left elements in results)
+          val found = results.zip(repositories)
+            .collect {
+              case (Right(v), repo) =>
+                (v.latest(kind), repo)
+            }
+            .collect {
+              case (Some(v), repo) =>
+                (Version(v), repo)
+            }
+          if (found.isEmpty)
+            Left(
+              results.map {
+                case Left(e) => e
+                case Right(_) => s"No latest $kind version found"
+              }
+            )
+          else
+            Right(found.maxBy(_._1))
+        }
+
+      EitherT(versionOrError).flatMap {
+        case (v, repo) =>
+          repo
+            .find(module, v.repr, fetch)
+            .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
+      }
+    }
+
     def get(fetch: Repository.Fetch[F]) = {
+
       val lookups = repositories
         .map(repo => repo -> repo.find(module, version, fetch).run)
 
@@ -276,13 +329,27 @@ object ResolutionProcess {
       EitherT(task)
     }
 
-    (get(fetch) /: fetchs)(_ orElse get(_))
+    val latestKindOpt = version match {
+      case "latest.integration" => Some(Latest.Integration)
+      case "latest.release" => Some(Latest.Release)
+      case "latest.stable" => Some(Latest.Stable)
+      case _ => None
+    }
+
+    latestKindOpt match {
+      case Some(kind) =>
+        (getLatest(kind, listVersionFetch0) /: listVersionFetchs0)(_ orElse getLatest(kind, _))
+      case None =>
+        (get(fetch) /: fetchs)(_ orElse get(_))
+    }
   }
 
   def fetch[F[_]](
     repositories: Seq[core.Repository],
     fetch: Repository.Fetch[F],
-    fetchs: Repository.Fetch[F]*
+    fetchs: Seq[Repository.Fetch[F]] = Nil,
+    listVersionFetch: Repository.Fetch[F] = null,
+    listVersionFetchs: Seq[Repository.Fetch[F]] = null
   )(implicit
     F: Gather[F]
   ): Fetch[F] =
@@ -291,7 +358,7 @@ object ResolutionProcess {
         F.gather {
           modVers.map {
             case (module, version) =>
-              F.map(fetchOne(repositories, module, version, fetch, fetchs: _*).run)(d => (module, version) -> d)
+              F.map(fetchOne(repositories, module, version, fetch, fetchs, listVersionFetch, listVersionFetchs).run)(d => (module, version) -> d)
           }
         }
       )(_.toSeq)

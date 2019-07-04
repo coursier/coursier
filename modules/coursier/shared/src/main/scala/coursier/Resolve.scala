@@ -123,7 +123,9 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
     val fetchs = params.cache.fetchs
-    S.map(finalRepositories)(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail: _*)(S))
+    val listVersionsCache = Resolve.defaultListVersionCache(params.cache)
+    val listVersionFetchs = listVersionsCache.fetchs
+    S.map(finalRepositories)(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail, listVersionFetchs.head, listVersionFetchs.tail)(S))
   }
 
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {

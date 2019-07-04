@@ -413,36 +413,8 @@ final case class MavenRepository(
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
         case None =>
-          if (version == "LATEST" || version == "latest.integration")
-            versionsF.flatMap {
-              case (versions0, versionsUrl) =>
-                val eitherVersion =
-                  Some(versions0.latest).filter(_.nonEmpty)
-                    .orElse(Some(versions0.release).filter(_.nonEmpty))
-                    .toRight(s"No latest or release version found in $versionsUrl")
-
-                fromEitherVersion(eitherVersion, versions0)
-            }
-          else if (version == "RELEASE" || version == "latest.release")
-            versionsF.flatMap {
-              case (versions0, versionsUrl) =>
-                val eitherVersion =
-                  Some(versions0.release).filter(_.nonEmpty)
-                    .toRight(s"No release version found in $versionsUrl")
-
-                fromEitherVersion(eitherVersion, versions0)
-            }
-          else if (version == "latest.stable")
-            versionsF.flatMap {
-              case (versions0, versionsUrl) =>
-                val eitherVersion =
-                  stableVersion(versions0)
-                    .toRight(s"No stable version found in $versionsUrl")
-
-                fromEitherVersion(eitherVersion, versions0)
-            }
-          else
-            findNoInterval(module, version, fetch).map((this, _))
+          findNoInterval(module, version, fetch)
+            .map((this, _))
         case Some(itv) =>
           versionsF.flatMap {
             case (versions0, versionsUrl) =>

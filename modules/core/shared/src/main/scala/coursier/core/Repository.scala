@@ -56,6 +56,69 @@ object Repository {
     def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]]
     def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]]
 
+    private def org(orgInput: Complete.Input.Org)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] =
+      F.map(organization(orgInput.input)) {
+        case Left(e) =>
+          Left(new Complete.CompletingOrgException(orgInput.input, e))
+        case Right(l) =>
+          Right(Complete.Result(orgInput, l))
+      }
+
+    private def name(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] = {
+      val Complete.Input.Name(org, input1, from, requiredSuffix) = nameInput
+
+      F.map(moduleName(org, input1.drop(from))) {
+        case Left(e) =>
+          Left(new Complete.CompletingNameException(org, input1, from, e))
+        case Right(l) =>
+          val l0 = l.filter(_.endsWith(requiredSuffix)).map(_.stripSuffix(requiredSuffix))
+          Right(Complete.Result(nameInput, l0))
+      }
+    }
+
+    private def hasOrg(orgInput: Complete.Input.Org, partial: Boolean)(implicit F: Monad[F]): F[Boolean] = {
+
+      val check =
+        F.map(org(orgInput)) { res =>
+          res
+            .right
+            .toOption
+            .exists { res =>
+              res.completions.contains(orgInput.input) ||
+                (partial && res.completions.exists(_.startsWith(orgInput.input + ".")))
+            }
+        }
+
+      val idx = orgInput.input.lastIndexOf('.')
+      if (idx > 0) {
+        val truncatedInput = Complete.Input.Org(orgInput.input.take(idx))
+        F.bind(hasOrg(truncatedInput, partial = true)) {
+          case false =>
+            F.point(false)
+          case true =>
+            check
+        }
+      } else // idx < 0 || idx == 0 (idx == 0 shouldn't happen often though)
+        check
+    }
+
+    private def hasName(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Boolean] =
+      F.map(name(nameInput)) { res =>
+        res
+          .right
+          .toOption
+          .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
+      }
+
+    // ignores attributes for now
+    def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
+      F.bind(hasOrg(Complete.Input.Org(module.organization.value), partial = false)) {
+        case false => F.point(false)
+        case true =>
+          val prefix = s"${module.organization.value}:"
+          hasName(Complete.Input.Name(module.organization, prefix + module.name.value, prefix.length, ""))
+      }
+
     final def complete(input: Complete.Input)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] = {
 
       // When completing names, we check if the org is there first.
@@ -68,26 +131,6 @@ object Repository {
       // - now that we know that 'org.scala-lang:scala-library' is a thing, we try to list its versions.
       // Each time we request something, we know that the parent ~element exists.
 
-      def org(orgInput: Complete.Input.Org): F[Either[Throwable, Complete.Result]] =
-        F.map(organization(orgInput.input)) {
-          case Left(e) =>
-            Left(new Complete.CompletingOrgException(orgInput.input, e))
-          case Right(l) =>
-            Right(Complete.Result(orgInput, l))
-        }
-
-      def name(nameInput: Complete.Input.Name): F[Either[Throwable, Complete.Result]] = {
-        val Complete.Input.Name(org, input1, from, requiredSuffix) = nameInput
-
-        F.map(moduleName(org, input1.drop(from))) {
-          case Left(e) =>
-            Left(new Complete.CompletingNameException(org, input1, from, e))
-          case Right(l) =>
-            val l0 = l.filter(_.endsWith(requiredSuffix)).map(_.stripSuffix(requiredSuffix))
-            Right(Complete.Result(input, l0))
-        }
-      }
-
       def ver(versionInput: Complete.Input.Ver): F[Either[Throwable, Complete.Result]] = {
         val Complete.Input.Ver(mod, input1, from) = versionInput
 
@@ -98,40 +141,6 @@ object Repository {
             Right(Complete.Result(input, l))
         }
       }
-
-      def hasOrg(orgInput: Complete.Input.Org, partial: Boolean): F[Boolean] = {
-
-        val check =
-          F.map(org(orgInput)) { res =>
-            res
-              .right
-              .toOption
-              .exists { res =>
-                res.completions.contains(orgInput.input) ||
-                  (partial && res.completions.exists(_.startsWith(orgInput.input + ".")))
-              }
-          }
-
-        val idx = orgInput.input.lastIndexOf('.')
-        if (idx > 0) {
-          val truncatedInput = Complete.Input.Org(orgInput.input.take(idx))
-          F.bind(hasOrg(truncatedInput, partial = true)) {
-            case false =>
-              F.point(false)
-            case true =>
-              check
-          }
-        } else // idx < 0 || idx == 0 (idx == 0 shouldn't happen often though)
-          check
-      }
-
-      def hasName(nameInput: Complete.Input.Name): F[Boolean] =
-        F.map(name(nameInput)) { res =>
-          res
-            .right
-            .toOption
-            .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
-        }
 
       def empty: F[Either[Throwable, Complete.Result]] = F.point(Right(Complete.Result(input, Nil)))
 

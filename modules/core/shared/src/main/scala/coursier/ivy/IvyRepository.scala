@@ -249,19 +249,7 @@ final case class IvyRepository(
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
       case None =>
-        if (version == "latest.integration" || version == "latest.release") {
-          val acceptChanging = version == "latest.integration"
-          val filter: Version => Boolean =
-            if (acceptChanging) _ => true
-            else v => !IvyRepository.isSnapshot(v.repr)
-          availableVersions(module, fetch).flatMap {
-            case None =>
-              findNoInverval(module, version, fetch)
-            case Some(v) =>
-              fromVersions(filter, v)
-          }
-        } else
-          findNoInverval(module, version, fetch)
+        findNoInverval(module, version, fetch)
       case Some(itv) =>
         availableVersions(module, fetch).flatMap {
           case None =>

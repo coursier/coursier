@@ -53,7 +53,7 @@ object CacheFetchTests extends TestSuite {
           Nil
       },
       fetchs.head,
-      fetchs.tail: _*
+      fetchs.tail
     )
 
     val startRes = Resolution()
