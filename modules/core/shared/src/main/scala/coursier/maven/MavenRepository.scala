@@ -77,27 +77,6 @@ object MavenRepository {
       proj <- Pom.project(xml).right
     } yield proj
 
-  private def stableVersion(versions: Versions): Option[String] = {
-
-    def isStable(v: Version): Boolean =
-      v.repr
-        .split(Array('.', '-'))
-        .forall(_.lengthCompare(5) <= 0)
-
-    if (isStable(Version(versions.release)))
-      Some(versions.release)
-    else {
-      val available = versions
-        .available
-        .map(Version(_))
-        .filter(isStable)
-      if (available.isEmpty)
-        None
-      else
-        Some(available.max.repr)
-    }
-  }
-
 }
 
 final case class MavenRepository(
