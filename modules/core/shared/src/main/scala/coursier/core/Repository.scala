@@ -24,8 +24,8 @@ trait Repository extends Serializable with Artifact.Source {
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] =
-    EitherT(F.point(Right(Versions.empty)))
+  ): EitherT[F, String, (Versions, String)] =
+    EitherT(F.point(Right((Versions.empty, ""))))
 }
 
 object Repository {

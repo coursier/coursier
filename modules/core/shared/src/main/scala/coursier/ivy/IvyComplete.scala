@@ -26,7 +26,7 @@ final case class IvyComplete[F[_]](
     ).run) {
       case Left(e) => Left(new Exception(e))
       case Right(None) => Left(new Exception(s"Can't list organizations of ${repo.metadataPattern.string}"))
-      case Right(Some(l)) => Right(l.filter(_.startsWith(prefix)))
+      case Right(Some((_, l))) => Right(l.filter(_.startsWith(prefix)))
     }
 
   def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]] =
@@ -38,13 +38,13 @@ final case class IvyComplete[F[_]](
     ).run) {
       case Left(e) => Left(new Exception(e))
       case Right(None) => Left(new Exception(s"Can't list module names of ${repo.metadataPattern.string}"))
-      case Right(Some(l)) => Right(l.filter(_.startsWith(prefix)))
+      case Right(Some((_, l))) => Right(l.filter(_.startsWith(prefix)))
     }
 
   def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
     F.map(repo.availableVersions(module, fetch).run) {
       case Left(e) => Left(new Exception(e))
       case Right(None) => Left(new Exception("Version listing not available on this repository"))
-      case Right(Some(l)) => Right(l.map(_.repr).filter(_.startsWith(prefix)))
+      case Right(Some((_, l))) => Right(l.map(_.repr).filter(_.startsWith(prefix)))
     }
 }

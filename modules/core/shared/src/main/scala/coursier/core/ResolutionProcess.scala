@@ -267,7 +267,7 @@ object ResolutionProcess {
         repo.completeOpt(fetch) match {
           case None => run
           case Some(c) => F.bind(c.hasModule(module)) {
-            case false => F.point[Either[String, Versions]](Left(s"${module.organization.value}:${module.name.value} not found on ${repo.repr}"))
+            case false => F.point[Either[String, (Versions, String)]](Left(s"${module.organization.value}:${module.name.value} not found on ${repo.repr}"))
             case true => run
           }
         }
@@ -278,7 +278,7 @@ object ResolutionProcess {
           // FIXME We're sometimes trapping errors here (left elements in results)
           val found = results.zip(repositories)
             .collect {
-              case (Right(v), repo) =>
+              case (Right((v, _)), repo) =>
                 (v.latest(kind), repo)
             }
             .collect {
@@ -304,7 +304,7 @@ object ResolutionProcess {
                   Left(
                     results.map {
                       case Left(e) => e
-                      case Right(v) =>
+                      case Right((v, _)) =>
                         v.latest(kind) match {
                           case None =>
                             s"No latest ${kind.name} version found"

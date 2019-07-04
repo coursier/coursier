@@ -166,7 +166,7 @@ final case class IvyRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Option[Seq[String]]] =
+  ): EitherT[F, String, Option[(String, Seq[String])]] =
     listingPatternOpt match {
       case None =>
         EitherT(F.point(Right(None)))
@@ -184,7 +184,7 @@ final case class IvyRepository(
         for {
           url <- EitherT(F.point(listingUrl))
           s <- fetch(artifactFor(url, changing = true))
-        } yield Some(WebPage.listDirectories(url, s))
+        } yield Some((url, WebPage.listDirectories(url, s)))
     }
 
   def availableVersions[F[_]](
@@ -192,22 +192,22 @@ final case class IvyRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Option[Seq[Version]]] =
+  ): EitherT[F, String, Option[(String, Seq[Version])]] =
     listing(
       revisionListingPatternOpt,
       "revisions",
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch
-    ).map(_.map(_.map(Parse.version).collect { case Some(v) => v }))
+    ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
 
   override def versions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] =
+  ): EitherT[F, String, (Versions, String)] =
     availableVersions(module, fetch).map {
-      case Some(l) if l.nonEmpty =>
+      case Some((listingUrl, l)) if l.nonEmpty =>
         val latest = l.max.repr
         val release = {
           val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
@@ -216,14 +216,17 @@ final case class IvyRepository(
           else
             l0.max.repr
         }
-        Versions(
+        val v = Versions(
           latest,
           release,
           l.map(_.repr).toList,
           None
         )
-      case _ =>
-        Versions.empty
+        (v, listingUrl)
+      case Some((listingUrl, _)) =>
+        (Versions.empty, listingUrl)
+      case None =>
+        (Versions.empty, "")
     }
 
   def find[F[_]](
@@ -257,7 +260,7 @@ final case class IvyRepository(
         availableVersions(module, fetch).flatMap {
           case None =>
             findNoInverval(module, version, fetch)
-          case Some(v) =>
+          case Some((_, v)) =>
             fromVersions(itv.contains, v)
         }
     }

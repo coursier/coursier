@@ -238,13 +238,14 @@ final case class MavenRepository(
     }
   }
 
-  private def versionsWithUrl[F[_]](
+  override def versions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Versions, String)] =
-    EitherT {
+  ): EitherT[F, String, (Versions, String)] = {
+
+    val viaMetadata = EitherT[F, String, (Versions, String)] {
       val artifact = versionsArtifact(module)
       F.map(fetch(artifact).run) { eitherStr =>
         for {
@@ -256,14 +257,11 @@ final case class MavenRepository(
       }
     }
 
-  override def versions[F[_]](
-    module: Module,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, Versions] =
-    versionsWithUrl(module, fetch)
-      .map(_._1)
+    if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
+      versionsFromListing(module, fetch).orElse(viaMetadata)
+    else
+      viaMetadata
+  }
 
   def snapshotVersioning[F[_]](
     module: Module,
@@ -371,25 +369,7 @@ final case class MavenRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
-    val versionsF = {
-      val v = versionsWithUrl(module, fetch)
-      if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
-        versionsFromListing(module, fetch).orElse(v)
-      else
-        v
-    }
-
-    def fromEitherVersion(eitherVersion: Either[String, String], versions0: Versions):  EitherT[F, String, (Artifact.Source, Project)] =
-      eitherVersion match {
-        case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
-        case Right(version0) =>
-          findNoInterval(module, version0, fetch)
-            .map(_.copy(versions = Some(versions0)))
-            .map((this, _))
-      }
-
+  ): EitherT[F, String, (Artifact.Source, Project)] =
     Parse.versionInterval(version)
       .orElse(Parse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
@@ -398,7 +378,8 @@ final case class MavenRepository(
           findNoInterval(module, version, fetch)
             .map((this, _))
         case Some(itv) =>
-          versionsF.flatMap {
+
+          versions(module, fetch).flatMap {
             case (versions0, versionsUrl) =>
               val eitherVersion = {
                 val release = Version(versions0.release)
@@ -414,10 +395,15 @@ final case class MavenRepository(
                 }
               }
 
-              fromEitherVersion(eitherVersion, versions0)
+              eitherVersion match {
+                case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+                case Right(version0) =>
+                  findNoInterval(module, version0, fetch)
+                    .map(_.copy(versions = Some(versions0)))
+                    .map((this, _))
+              }
           }
     }
-  }
 
 
   private def artifacts0(
