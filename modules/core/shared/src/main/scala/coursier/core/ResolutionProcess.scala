@@ -267,7 +267,7 @@ object ResolutionProcess {
         repo.completeOpt(fetch) match {
           case None => run
           case Some(c) => F.bind(c.hasModule(module)) {
-            case false => F.point[Either[String, (Versions, String)]](Left(s"${module.organization.value}:${module.name.value} not found on ${repo.repr}"))
+            case false => F.point[Either[String, (Versions, String)]](Left(s"${module.repr} not found on ${repo.repr}"))
             case true => run
           }
         }
