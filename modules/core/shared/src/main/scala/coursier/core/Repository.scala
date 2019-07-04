@@ -16,6 +16,33 @@ trait Repository extends Serializable with Artifact.Source {
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)]
 
+  def findMaybeInterval[F[_]](
+    module: Module,
+    version: String,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (Artifact.Source, Project)] =
+    Parse.versionInterval(version)
+      .orElse(Parse.multiVersionInterval(version))
+      .orElse(Parse.ivyLatestSubRevisionInterval(version))
+      .filter(_.isValid) match {
+        case None =>
+          find(module, version, fetch)
+        case Some(itv) =>
+          versions(module, fetch).flatMap {
+            case (versions0, versionsUrl) =>
+              versions0.inInterval(itv) match {
+                case None =>
+                  val reason = s"No version found for $version in $versionsUrl"
+                  EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+                case Some(version0) =>
+                  find(module, version0, fetch)
+                    .map(t => t._1 -> t._2.copy(versions = Some(versions0)))
+              }
+          }
+    }
+
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
 

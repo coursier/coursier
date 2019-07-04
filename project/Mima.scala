@@ -65,6 +65,12 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.ivy.IvyRepository.findNoInverval"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.findNoInterval"),
+        // for 2.11
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.findMaybeInterval"),
+        // added methods (filters for 2.11)
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.repr"),
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule"),
         // more or less internal stuff now

@@ -323,7 +323,7 @@ object ResolutionProcess {
       EitherT(versionOrError).flatMap {
         case (v, repo) =>
           repo
-            .find(module, v.repr, fetch)
+            .findMaybeInterval(module, v.repr, fetch)
             .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
       }
     }
@@ -331,7 +331,7 @@ object ResolutionProcess {
     def get(fetch: Repository.Fetch[F]) = {
 
       val lookups = repositories
-        .map(repo => repo -> repo.find(module, version, fetch).run)
+        .map(repo => repo -> repo.findMaybeInterval(module, version, fetch).run)
 
       val task0 = lookups.foldLeft[F[Either[Seq[String], (Artifact.Source, Project)]]](F.point(Left(Nil))) {
         case (acc, (_, eitherProjTask)) =>

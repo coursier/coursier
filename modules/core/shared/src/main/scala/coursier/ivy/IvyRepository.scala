@@ -237,43 +237,6 @@ final case class IvyRepository(
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)] = {
 
-    def fromVersions(filter: Version => Boolean, versions: Seq[Version]) = {
-      val versionsInItv = versions.filter(filter)
-
-      if (versionsInItv.isEmpty)
-        EitherT(
-          F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
-        )
-      else {
-        val version0 = versionsInItv.max
-        findNoInverval(module, version0.repr, fetch)
-      }
-    }
-
-    Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
-      .filter(_.isValid) match {
-      case None =>
-        findNoInverval(module, version, fetch)
-      case Some(itv) =>
-        availableVersions(module, fetch).flatMap {
-          case None =>
-            findNoInverval(module, version, fetch)
-          case Some((_, v)) =>
-            fromVersions(itv.contains, v)
-        }
-    }
-  }
-
-  def findNoInverval[F[_]](
-    module: Module,
-    version: String,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
     val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(

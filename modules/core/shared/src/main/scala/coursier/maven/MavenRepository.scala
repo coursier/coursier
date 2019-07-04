@@ -285,13 +285,13 @@ final case class MavenRepository(
       }
     )
 
-  def findNoInterval[F[_]](
+  def find[F[_]](
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Project] =
+  ): EitherT[F, String, (Artifact.Source, Project)] =
     EitherT {
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
@@ -324,7 +324,7 @@ final case class MavenRepository(
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.right.map(proj => proj.copy(actualVersionOpt = Some(version))))
+      F.map(res)(_.right.map(proj => (this, proj.copy(actualVersionOpt = Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =
@@ -362,36 +362,6 @@ final case class MavenRepository(
         Configuration.optional
       )
   }
-
-  def find[F[_]](
-    module: Module,
-    version: String,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] =
-    Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
-      .filter(_.isValid) match {
-        case None =>
-          findNoInterval(module, version, fetch)
-            .map((this, _))
-        case Some(itv) =>
-          versions(module, fetch).flatMap {
-            case (versions0, versionsUrl) =>
-              versions0.inInterval(itv) match {
-                case None =>
-                  val reason = s"No version found for $version in $versionsUrl"
-                  EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
-                case Some(version0) =>
-                  findNoInterval(module, version0, fetch)
-                    .map(_.copy(versions = Some(versions0)))
-                    .map((this, _))
-              }
-          }
-    }
-
 
   private def artifacts0(
     dependency: Dependency,
