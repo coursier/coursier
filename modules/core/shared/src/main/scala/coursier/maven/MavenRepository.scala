@@ -84,7 +84,13 @@ object MavenRepository {
     sbtAttrStub: Boolean = true,
     authentication: Option[Authentication] = None
   ): MavenRepository =
-    new MavenRepository(actualRoot(root), changing, sbtAttrStub, authentication)
+    new MavenRepository(
+      actualRoot(root),
+      changing,
+      sbtAttrStub,
+      authentication,
+      versionsCheckHasModule = true
+    )
 
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
@@ -94,9 +100,10 @@ object MavenRepository {
 final class MavenRepository private (
   val root: String,
   val changing: Option[Boolean],
-  /** Hackish hack for sbt plugins mainly - what this does really sucks */
+  /** Hackish hack for sbt plugins mainly - that's some totally ad hoc stuff… */
   val sbtAttrStub: Boolean,
-  val authentication: Option[Authentication]
+  val authentication: Option[Authentication],
+  override val versionsCheckHasModule: Boolean
 ) extends Repository {
 
   override def equals(obj: Any): Boolean =
@@ -105,7 +112,8 @@ final class MavenRepository private (
         root == other.root &&
           changing == other.changing &&
           sbtAttrStub == other.sbtAttrStub &&
-          authentication == other.authentication
+          authentication == other.authentication &&
+          versionsCheckHasModule == other.versionsCheckHasModule
       case _ => false
     }
 
@@ -115,19 +123,27 @@ final class MavenRepository private (
     code = 37 * code + changing.##
     code = 37 * code + sbtAttrStub.##
     code = 37 * code + authentication.##
+    code = 37 * code + versionsCheckHasModule.##
     37 * code
   }
 
   override def toString: String =
-    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication)"
+    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication, $versionsCheckHasModule)"
 
   private def copy0(
     root: String = root,
     changing: Option[Boolean] = changing,
     sbtAttrStub: Boolean = sbtAttrStub,
-    authentication: Option[Authentication] = authentication
+    authentication: Option[Authentication] = authentication,
+    versionsCheckHasModule: Boolean = versionsCheckHasModule
   ): MavenRepository =
-    new MavenRepository(MavenRepository.actualRoot(root), changing, sbtAttrStub, authentication)
+    new MavenRepository(
+      MavenRepository.actualRoot(root),
+      changing,
+      sbtAttrStub,
+      authentication,
+      versionsCheckHasModule
+    )
 
   @deprecated("Use the with* methods instead", "2.0.0-RC3")
   def copy(
@@ -148,6 +164,8 @@ final class MavenRepository private (
     copy0(sbtAttrStub = sbtAttrStub)
   def withAuthentication(authentication: Option[Authentication]): MavenRepository =
     copy0(authentication = authentication)
+  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): MavenRepository =
+    copy0(versionsCheckHasModule = versionsCheckHasModule)
 
 
   import Repository._

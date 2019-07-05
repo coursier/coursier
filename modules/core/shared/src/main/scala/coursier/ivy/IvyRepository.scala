@@ -13,7 +13,8 @@ final class IvyRepository private (
   val withArtifacts: Boolean,
   // hack for sbt putting infos in properties
   val dropInfoAttributes: Boolean,
-  val authentication: Option[Authentication]
+  val authentication: Option[Authentication],
+  override val versionsCheckHasModule: Boolean
 ) extends Repository {
 
   override def equals(obj: Any): Boolean =
@@ -26,7 +27,8 @@ final class IvyRepository private (
           withSignatures == other.withSignatures &&
           withArtifacts == other.withArtifacts &&
           dropInfoAttributes == other.dropInfoAttributes &&
-          authentication == other.authentication
+          authentication == other.authentication &&
+          versionsCheckHasModule == other.versionsCheckHasModule
       case _ => false
     }
 
@@ -40,11 +42,12 @@ final class IvyRepository private (
     code = 37 * code + withArtifacts.##
     code = 37 * code + dropInfoAttributes.##
     code = 37 * code + authentication.##
+    code = 37 * code + versionsCheckHasModule.##
     37 * code
   }
 
   override def toString: String =
-    s"IvyRepository($pattern, $metadataPatternOpt, $changing, $withChecksums, $withSignatures, $withArtifacts, $dropInfoAttributes, $authentication)"
+    s"IvyRepository($pattern, $metadataPatternOpt, $changing, $withChecksums, $withSignatures, $withArtifacts, $dropInfoAttributes, $authentication, $versionsCheckHasModule)"
 
   private def copy0(
     pattern: Pattern = pattern,
@@ -55,6 +58,7 @@ final class IvyRepository private (
     withArtifacts: Boolean = withArtifacts,
     dropInfoAttributes: Boolean = dropInfoAttributes,
     authentication: Option[Authentication] = authentication,
+    versionsCheckHasModule: Boolean = versionsCheckHasModule
   ): IvyRepository =
     new IvyRepository(
       pattern,
@@ -64,7 +68,8 @@ final class IvyRepository private (
       withSignatures,
       withArtifacts,
       dropInfoAttributes,
-      authentication
+      authentication,
+      versionsCheckHasModule
     )
 
   @deprecated("Use the with* methods instead", "2.0.0-RC3")
@@ -109,6 +114,8 @@ final class IvyRepository private (
     copy0(dropInfoAttributes = dropInfoAttributes)
   def withAuthentication(authentication: Option[Authentication]): IvyRepository =
     copy0(authentication = authentication)
+  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): IvyRepository =
+    copy0(versionsCheckHasModule = versionsCheckHasModule)
 
 
   override def repr: String =
@@ -419,7 +426,8 @@ object IvyRepository {
       withSignatures,
       withArtifacts,
       dropInfoAttributes,
-      authentication
+      authentication,
+      versionsCheckHasModule = true
     )
 
   def apply(pattern: Pattern): IvyRepository =
@@ -431,7 +439,8 @@ object IvyRepository {
       withSignatures = true,
       withArtifacts = true,
       dropInfoAttributes = false,
-      None
+      None,
+      versionsCheckHasModule = true
     )
 
   def isSnapshot(version: String): Boolean =
