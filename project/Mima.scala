@@ -67,6 +67,7 @@ object Mima {
       Seq(
         // made non-case classes, for easier preserving of bin compat later
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.maven.MavenRepository")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.ivy.IvyRepository")),
         // for 2.11
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versionsCheckHasModule"),
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.fetchVersions"),

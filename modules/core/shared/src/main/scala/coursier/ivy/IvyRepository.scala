@@ -4,17 +4,112 @@ import coursier.core._
 import coursier.maven.MavenAttributes
 import coursier.util.{EitherT, Monad, WebPage}
 
-final case class IvyRepository(
-  pattern: Pattern,
-  metadataPatternOpt: Option[Pattern],
-  changing: Option[Boolean],
-  withChecksums: Boolean,
-  withSignatures: Boolean,
-  withArtifacts: Boolean,
+final class IvyRepository private (
+  val pattern: Pattern,
+  val metadataPatternOpt: Option[Pattern],
+  val changing: Option[Boolean],
+  val withChecksums: Boolean,
+  val withSignatures: Boolean,
+  val withArtifacts: Boolean,
   // hack for sbt putting infos in properties
-  dropInfoAttributes: Boolean,
-  authentication: Option[Authentication]
+  val dropInfoAttributes: Boolean,
+  val authentication: Option[Authentication]
 ) extends Repository {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: IvyRepository =>
+        pattern == other.pattern &&
+          metadataPatternOpt == other.metadataPatternOpt &&
+          changing == other.changing &&
+          withChecksums == other.withChecksums &&
+          withSignatures == other.withSignatures &&
+          withArtifacts == other.withArtifacts &&
+          dropInfoAttributes == other.dropInfoAttributes &&
+          authentication == other.authentication
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.ivy.IvyRepository".##
+    code = 37 * code + pattern.##
+    code = 37 * code + metadataPatternOpt.##
+    code = 37 * code + changing.##
+    code = 37 * code + withChecksums.##
+    code = 37 * code + withSignatures.##
+    code = 37 * code + withArtifacts.##
+    code = 37 * code + dropInfoAttributes.##
+    code = 37 * code + authentication.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"IvyRepository($pattern, $metadataPatternOpt, $changing, $withChecksums, $withSignatures, $withArtifacts, $dropInfoAttributes, $authentication)"
+
+  private def copy0(
+    pattern: Pattern = pattern,
+    metadataPatternOpt: Option[Pattern] = metadataPatternOpt,
+    changing: Option[Boolean] = changing,
+    withChecksums: Boolean = withChecksums,
+    withSignatures: Boolean = withSignatures,
+    withArtifacts: Boolean = withArtifacts,
+    dropInfoAttributes: Boolean = dropInfoAttributes,
+    authentication: Option[Authentication] = authentication,
+  ): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication
+    )
+
+  @deprecated("Use the with* methods instead", "2.0.0-RC3")
+  def copy(
+    pattern: Pattern = pattern,
+    metadataPatternOpt: Option[Pattern] = metadataPatternOpt,
+    changing: Option[Boolean] = changing,
+    withChecksums: Boolean = withChecksums,
+    withSignatures: Boolean = withSignatures,
+    withArtifacts: Boolean = withArtifacts,
+    dropInfoAttributes: Boolean = dropInfoAttributes,
+    authentication: Option[Authentication] = authentication
+  ): IvyRepository =
+    copy0(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication
+    )
+
+  def withPattern(pattern: Pattern): IvyRepository =
+    copy0(pattern = pattern)
+  def withMetadataPattern(metadataPatternOpt: Option[Pattern]): IvyRepository =
+    copy0(metadataPatternOpt = metadataPatternOpt)
+  def withMetadataPattern(metadataPattern: Pattern): IvyRepository =
+    copy0(metadataPatternOpt = Some(metadataPattern))
+  def withChanging(changingOpt: Option[Boolean]): IvyRepository =
+    copy0(changing = changingOpt)
+  def withChanging(changing: Boolean): IvyRepository =
+    copy0(changing = Some(changing))
+  def withWithChecksums(withChecksums: Boolean): IvyRepository =
+    copy0(withChecksums = withChecksums)
+  def withWithSignatures(withSignatures: Boolean): IvyRepository =
+    copy0(withSignatures = withSignatures)
+  def withWithArtifacts(withArtifacts: Boolean): IvyRepository =
+    copy0(withArtifacts = withArtifacts)
+  def withDropInfoAttributes(dropInfoAttributes: Boolean): IvyRepository =
+    copy0(dropInfoAttributes = dropInfoAttributes)
+  def withAuthentication(authentication: Option[Authentication]): IvyRepository =
+    copy0(authentication = authentication)
+
 
   override def repr: String =
     "ivy:" + pattern.string + metadataPatternOpt.fold("")("|" + _.string)
@@ -305,6 +400,39 @@ final case class IvyRepository(
 }
 
 object IvyRepository {
+
+  def apply(
+    pattern: Pattern,
+    metadataPatternOpt: Option[Pattern],
+    changing: Option[Boolean],
+    withChecksums: Boolean,
+    withSignatures: Boolean,
+    withArtifacts: Boolean,
+    dropInfoAttributes: Boolean,
+    authentication: Option[Authentication]
+  ): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication
+    )
+
+  def apply(pattern: Pattern): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt = None,
+      changing = None,
+      withChecksums = true,
+      withSignatures = true,
+      withArtifacts = true,
+      dropInfoAttributes = false,
+      None
+    )
 
   def isSnapshot(version: String): Boolean =
     version.endsWith("SNAPSHOT")
