@@ -40,7 +40,7 @@ final class MavenMirror private(
   def matches(repo: Repository): Option[Repository] =
     repo match {
       case m: MavenRepository =>
-        val url = m.root.stripSuffix("/")
+        val url = m.root
         val matches = matchesAll || from.contains(url)
         if (matches)
           Some(m.copy(root = to, authentication = None))

@@ -77,15 +77,78 @@ object MavenRepository {
       proj <- Pom.project(xml).right
     } yield proj
 
+
+  def apply(
+    root: String,
+    changing: Option[Boolean] = None,
+    sbtAttrStub: Boolean = true,
+    authentication: Option[Authentication] = None
+  ): MavenRepository =
+    new MavenRepository(actualRoot(root), changing, sbtAttrStub, authentication)
+
+  private def actualRoot(root: String): String =
+    root.stripSuffix("/")
+
 }
 
-final case class MavenRepository(
-  root: String,
-  changing: Option[Boolean] = None,
+final class MavenRepository private (
+  val root: String,
+  val changing: Option[Boolean],
   /** Hackish hack for sbt plugins mainly - what this does really sucks */
-  sbtAttrStub: Boolean = true,
-  authentication: Option[Authentication] = None
+  val sbtAttrStub: Boolean,
+  val authentication: Option[Authentication]
 ) extends Repository {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: MavenRepository =>
+        root == other.root &&
+          changing == other.changing &&
+          sbtAttrStub == other.sbtAttrStub &&
+          authentication == other.authentication
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.maven.MavenRepository".##
+    code = 37 * code + root.##
+    code = 37 * code + changing.##
+    code = 37 * code + sbtAttrStub.##
+    code = 37 * code + authentication.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication)"
+
+  private def copy0(
+    root: String = root,
+    changing: Option[Boolean] = changing,
+    sbtAttrStub: Boolean = sbtAttrStub,
+    authentication: Option[Authentication] = authentication
+  ): MavenRepository =
+    new MavenRepository(MavenRepository.actualRoot(root), changing, sbtAttrStub, authentication)
+
+  @deprecated("Use the with* methods instead", "2.0.0-RC3")
+  def copy(
+    root: String = root,
+    changing: Option[Boolean] = changing,
+    sbtAttrStub: Boolean = sbtAttrStub,
+    authentication: Option[Authentication] = authentication
+  ): MavenRepository =
+    copy0(root, changing, sbtAttrStub, authentication)
+
+  def withRoot(root: String): MavenRepository =
+    copy0(root = root)
+  def withChanging(changingOpt: Option[Boolean]): MavenRepository =
+    copy0(changing = changingOpt)
+  def withChanging(changing: Boolean): MavenRepository =
+    copy0(changing = Some(changing))
+  def withSbtAttrStub(sbtAttrStub: Boolean): MavenRepository =
+    copy0(sbtAttrStub = sbtAttrStub)
+  def withAuthentication(authentication: Option[Authentication]): MavenRepository =
+    copy0(authentication = authentication)
+
 
   import Repository._
   import MavenRepository._
@@ -96,11 +159,6 @@ final case class MavenRepository(
   // only used during benchmarks
   private[coursier] var useSaxParser = true
 
-  // FIXME Ideally, we should silently drop a '/' suffix from `root`
-  // so that
-  //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
-  private[maven] val root0 = if (root.endsWith("/")) root else root + "/"
-
   private def modulePath(module: Module): Seq[String] =
     module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
 
@@ -108,7 +166,8 @@ final case class MavenRepository(
     modulePath(module) :+ toBaseVersion(version)
 
   private[maven] def urlFor(path: Seq[String], isDir: Boolean = false): String = {
-    val b = new StringBuilder(root0)
+    val b = new StringBuilder(root)
+    b += '/'
 
     val it = path.iterator
     var isFirst = true
@@ -397,7 +456,7 @@ final case class MavenRepository(
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 
       Artifact(
-        root0 + path.mkString("/"),
+        root + path.mkString("/", "/", ""),
         Map.empty,
         Map.empty,
         changing = changing0,

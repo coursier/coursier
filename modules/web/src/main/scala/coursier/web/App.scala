@@ -60,7 +60,7 @@ object App {
                      s"${dep.module.name.value}-$version0"
                    )
 
-                 val root = source.root.stripSuffix("/") + "/"
+                 val root = source.root + "/"
 
                  TagMod(
                    <.a(^.href := s"$root${relPath.mkString("/")}.pom",

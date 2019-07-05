@@ -239,7 +239,7 @@ object Publish extends CaseApp[PublishOptions] {
           .sortBy(m => (m.organization.value, m.name.value, m.version))
         out.println(s"\n ${emoji("eyes").mkString} Check results at")
         for (m <- modules) {
-          val base = actualReadRepo.root.stripSuffix("/") + m.baseDir.map("/" + _).mkString
+          val base = actualReadRepo.root + m.baseDir.map("/" + _).mkString
           out.println(s"  $base")
         }
         // TODO If publishing releases to Sonatype and not promoting, print message about how to promote things.

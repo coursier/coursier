@@ -43,7 +43,7 @@ trait Upload {
     parallel: Boolean
   ): Task[Seq[(Path, Content, Upload.Error)]] = {
 
-    val baseUrl0 = repository.root.stripSuffix("/")
+    val baseUrl0 = repository.root
 
     // TODO Add exponential back off for transient errors
 
