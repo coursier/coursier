@@ -1,5 +1,7 @@
 package coursier.test
 
+import coursier.maven.MavenRepository
+
 object CentralNexus3ProxyTests extends CentralTests {
 
   val repo = NexusDocker(
@@ -11,5 +13,7 @@ object CentralNexus3ProxyTests extends CentralTests {
   override def utestAfterAll(): Unit =
     repo.shutdown()
 
-  override def centralBase = repo.base.stripSuffix("/")
+  override def central =
+    MavenRepository(repo.base.stripSuffix("/"))
+      .withVersionsCheckHasModule(false)
 }
