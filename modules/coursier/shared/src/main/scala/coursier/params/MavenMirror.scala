@@ -43,7 +43,7 @@ final class MavenMirror private(
         val url = m.root
         val matches = matchesAll || from.contains(url)
         if (matches)
-          Some(m.copy(root = to, authentication = None))
+          Some(m.withRoot(to).withAuthentication(None).withVersionsCheckHasModule(false))
         else
           None
       case _ =>
