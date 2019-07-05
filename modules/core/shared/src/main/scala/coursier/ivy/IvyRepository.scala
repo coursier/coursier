@@ -4,17 +4,122 @@ import coursier.core._
 import coursier.maven.MavenAttributes
 import coursier.util.{EitherT, Monad, WebPage}
 
-final case class IvyRepository(
-  pattern: Pattern,
-  metadataPatternOpt: Option[Pattern],
-  changing: Option[Boolean],
-  withChecksums: Boolean,
-  withSignatures: Boolean,
-  withArtifacts: Boolean,
+final class IvyRepository private (
+  val pattern: Pattern,
+  val metadataPatternOpt: Option[Pattern],
+  val changing: Option[Boolean],
+  val withChecksums: Boolean,
+  val withSignatures: Boolean,
+  val withArtifacts: Boolean,
   // hack for sbt putting infos in properties
-  dropInfoAttributes: Boolean,
-  authentication: Option[Authentication]
+  val dropInfoAttributes: Boolean,
+  val authentication: Option[Authentication],
+  override val versionsCheckHasModule: Boolean
 ) extends Repository {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: IvyRepository =>
+        pattern == other.pattern &&
+          metadataPatternOpt == other.metadataPatternOpt &&
+          changing == other.changing &&
+          withChecksums == other.withChecksums &&
+          withSignatures == other.withSignatures &&
+          withArtifacts == other.withArtifacts &&
+          dropInfoAttributes == other.dropInfoAttributes &&
+          authentication == other.authentication &&
+          versionsCheckHasModule == other.versionsCheckHasModule
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.ivy.IvyRepository".##
+    code = 37 * code + pattern.##
+    code = 37 * code + metadataPatternOpt.##
+    code = 37 * code + changing.##
+    code = 37 * code + withChecksums.##
+    code = 37 * code + withSignatures.##
+    code = 37 * code + withArtifacts.##
+    code = 37 * code + dropInfoAttributes.##
+    code = 37 * code + authentication.##
+    code = 37 * code + versionsCheckHasModule.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"IvyRepository($pattern, $metadataPatternOpt, $changing, $withChecksums, $withSignatures, $withArtifacts, $dropInfoAttributes, $authentication, $versionsCheckHasModule)"
+
+  private def copy0(
+    pattern: Pattern = pattern,
+    metadataPatternOpt: Option[Pattern] = metadataPatternOpt,
+    changing: Option[Boolean] = changing,
+    withChecksums: Boolean = withChecksums,
+    withSignatures: Boolean = withSignatures,
+    withArtifacts: Boolean = withArtifacts,
+    dropInfoAttributes: Boolean = dropInfoAttributes,
+    authentication: Option[Authentication] = authentication,
+    versionsCheckHasModule: Boolean = versionsCheckHasModule
+  ): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication,
+      versionsCheckHasModule
+    )
+
+  @deprecated("Use the with* methods instead", "2.0.0-RC3")
+  def copy(
+    pattern: Pattern = pattern,
+    metadataPatternOpt: Option[Pattern] = metadataPatternOpt,
+    changing: Option[Boolean] = changing,
+    withChecksums: Boolean = withChecksums,
+    withSignatures: Boolean = withSignatures,
+    withArtifacts: Boolean = withArtifacts,
+    dropInfoAttributes: Boolean = dropInfoAttributes,
+    authentication: Option[Authentication] = authentication
+  ): IvyRepository =
+    copy0(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication
+    )
+
+  def withPattern(pattern: Pattern): IvyRepository =
+    copy0(pattern = pattern)
+  def withMetadataPattern(metadataPatternOpt: Option[Pattern]): IvyRepository =
+    copy0(metadataPatternOpt = metadataPatternOpt)
+  def withMetadataPattern(metadataPattern: Pattern): IvyRepository =
+    copy0(metadataPatternOpt = Some(metadataPattern))
+  def withChanging(changingOpt: Option[Boolean]): IvyRepository =
+    copy0(changing = changingOpt)
+  def withChanging(changing: Boolean): IvyRepository =
+    copy0(changing = Some(changing))
+  def withWithChecksums(withChecksums: Boolean): IvyRepository =
+    copy0(withChecksums = withChecksums)
+  def withWithSignatures(withSignatures: Boolean): IvyRepository =
+    copy0(withSignatures = withSignatures)
+  def withWithArtifacts(withArtifacts: Boolean): IvyRepository =
+    copy0(withArtifacts = withArtifacts)
+  def withDropInfoAttributes(dropInfoAttributes: Boolean): IvyRepository =
+    copy0(dropInfoAttributes = dropInfoAttributes)
+  def withAuthentication(authentication: Option[Authentication]): IvyRepository =
+    copy0(authentication = authentication)
+  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): IvyRepository =
+    copy0(versionsCheckHasModule = versionsCheckHasModule)
+
+
+  override def repr: String =
+    "ivy:" + pattern.string + metadataPatternOpt.fold("")("|" + _.string)
 
   def metadataPattern: Pattern = metadataPatternOpt.getOrElse(pattern)
 
@@ -163,7 +268,7 @@ final case class IvyRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Option[Seq[String]]] =
+  ): EitherT[F, String, Option[(String, Seq[String])]] =
     listingPatternOpt match {
       case None =>
         EitherT(F.point(Right(None)))
@@ -181,7 +286,7 @@ final case class IvyRepository(
         for {
           url <- EitherT(F.point(listingUrl))
           s <- fetch(artifactFor(url, changing = true))
-        } yield Some(WebPage.listDirectories(url, s))
+        } yield Some((url, WebPage.listDirectories(url, s)))
     }
 
   def availableVersions[F[_]](
@@ -189,22 +294,22 @@ final case class IvyRepository(
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Option[Seq[Version]]] =
+  ): EitherT[F, String, Option[(String, Seq[Version])]] =
     listing(
       revisionListingPatternOpt,
       "revisions",
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch
-    ).map(_.map(_.map(Parse.version).collect { case Some(v) => v }))
+    ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
 
-  override def versions[F[_]](
+  override protected def fetchVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] =
+  ): EitherT[F, String, (Versions, String)] =
     availableVersions(module, fetch).map {
-      case Some(l) if l.nonEmpty =>
+      case Some((listingUrl, l)) if l.nonEmpty =>
         val latest = l.max.repr
         val release = {
           val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
@@ -213,54 +318,20 @@ final case class IvyRepository(
           else
             l0.max.repr
         }
-        Versions(
+        val v = Versions(
           latest,
           release,
           l.map(_.repr).toList,
           None
         )
-      case _ =>
-        Versions.empty
+        (v, listingUrl)
+      case Some((listingUrl, _)) =>
+        (Versions.empty, listingUrl)
+      case None =>
+        (Versions.empty, "")
     }
 
   def find[F[_]](
-    module: Module,
-    version: String,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
-    def fromVersions(filter: Version => Boolean, versions: Seq[Version]) = {
-      val versionsInItv = versions.filter(filter)
-
-      if (versionsInItv.isEmpty)
-        EitherT(
-          F.point[Either[String, (Artifact.Source, Project)]](Left(s"No version found for $version"))
-        )
-      else {
-        val version0 = versionsInItv.max
-        findNoInverval(module, version0.repr, fetch)
-      }
-    }
-
-    Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
-      .filter(_.isValid) match {
-      case None =>
-        findNoInverval(module, version, fetch)
-      case Some(itv) =>
-        availableVersions(module, fetch).flatMap {
-          case None =>
-            findNoInverval(module, version, fetch)
-          case Some(v) =>
-            fromVersions(itv.contains, v)
-        }
-    }
-  }
-
-  def findNoInverval[F[_]](
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
@@ -336,6 +407,41 @@ final case class IvyRepository(
 }
 
 object IvyRepository {
+
+  def apply(
+    pattern: Pattern,
+    metadataPatternOpt: Option[Pattern],
+    changing: Option[Boolean],
+    withChecksums: Boolean,
+    withSignatures: Boolean,
+    withArtifacts: Boolean,
+    dropInfoAttributes: Boolean,
+    authentication: Option[Authentication]
+  ): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt,
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication,
+      versionsCheckHasModule = true
+    )
+
+  def apply(pattern: Pattern): IvyRepository =
+    new IvyRepository(
+      pattern,
+      metadataPatternOpt = None,
+      changing = None,
+      withChecksums = true,
+      withSignatures = true,
+      withArtifacts = true,
+      dropInfoAttributes = false,
+      None,
+      versionsCheckHasModule = true
+    )
 
   def isSnapshot(version: String): Boolean =
     version.endsWith("SNAPSHOT")

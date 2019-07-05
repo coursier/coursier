@@ -55,7 +55,7 @@ object MavenRepository {
     Configuration.test -> Seq(Configuration.runtime)
   )
 
-  private def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
+  private[coursier] def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
     if (sbtAttrStub) {
       var name = module.name.value
       for (scalaVersion <- module.attributes.get("scalaVersion"))
@@ -77,47 +77,105 @@ object MavenRepository {
       proj <- Pom.project(xml).right
     } yield proj
 
-  private def stableVersion(versions: Versions): Option[String] = {
 
-    def isStable(v: Version): Boolean =
-      v.repr
-        .split(Array('.', '-'))
-        .forall(_.lengthCompare(5) <= 0)
+  def apply(
+    root: String,
+    changing: Option[Boolean] = None,
+    sbtAttrStub: Boolean = true,
+    authentication: Option[Authentication] = None
+  ): MavenRepository =
+    new MavenRepository(
+      actualRoot(root),
+      changing,
+      sbtAttrStub,
+      authentication,
+      versionsCheckHasModule = true
+    )
 
-    if (isStable(Version(versions.release)))
-      Some(versions.release)
-    else {
-      val available = versions
-        .available
-        .map(Version(_))
-        .filter(isStable)
-      if (available.isEmpty)
-        None
-      else
-        Some(available.max.repr)
-    }
-  }
+  private def actualRoot(root: String): String =
+    root.stripSuffix("/")
 
 }
 
-final case class MavenRepository(
-  root: String,
-  changing: Option[Boolean] = None,
-  /** Hackish hack for sbt plugins mainly - what this does really sucks */
-  sbtAttrStub: Boolean = true,
-  authentication: Option[Authentication] = None
+final class MavenRepository private (
+  val root: String,
+  val changing: Option[Boolean],
+  /** Hackish hack for sbt plugins mainly - that's some totally ad hoc stuff… */
+  val sbtAttrStub: Boolean,
+  val authentication: Option[Authentication],
+  override val versionsCheckHasModule: Boolean
 ) extends Repository {
+
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case other: MavenRepository =>
+        root == other.root &&
+          changing == other.changing &&
+          sbtAttrStub == other.sbtAttrStub &&
+          authentication == other.authentication &&
+          versionsCheckHasModule == other.versionsCheckHasModule
+      case _ => false
+    }
+
+  override def hashCode(): Int = {
+    var code = 17 + "coursier.maven.MavenRepository".##
+    code = 37 * code + root.##
+    code = 37 * code + changing.##
+    code = 37 * code + sbtAttrStub.##
+    code = 37 * code + authentication.##
+    code = 37 * code + versionsCheckHasModule.##
+    37 * code
+  }
+
+  override def toString: String =
+    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication, $versionsCheckHasModule)"
+
+  private def copy0(
+    root: String = root,
+    changing: Option[Boolean] = changing,
+    sbtAttrStub: Boolean = sbtAttrStub,
+    authentication: Option[Authentication] = authentication,
+    versionsCheckHasModule: Boolean = versionsCheckHasModule
+  ): MavenRepository =
+    new MavenRepository(
+      MavenRepository.actualRoot(root),
+      changing,
+      sbtAttrStub,
+      authentication,
+      versionsCheckHasModule
+    )
+
+  @deprecated("Use the with* methods instead", "2.0.0-RC3")
+  def copy(
+    root: String = root,
+    changing: Option[Boolean] = changing,
+    sbtAttrStub: Boolean = sbtAttrStub,
+    authentication: Option[Authentication] = authentication
+  ): MavenRepository =
+    copy0(root, changing, sbtAttrStub, authentication)
+
+  def withRoot(root: String): MavenRepository =
+    copy0(root = root)
+  def withChanging(changingOpt: Option[Boolean]): MavenRepository =
+    copy0(changing = changingOpt)
+  def withChanging(changing: Boolean): MavenRepository =
+    copy0(changing = Some(changing))
+  def withSbtAttrStub(sbtAttrStub: Boolean): MavenRepository =
+    copy0(sbtAttrStub = sbtAttrStub)
+  def withAuthentication(authentication: Option[Authentication]): MavenRepository =
+    copy0(authentication = authentication)
+  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): MavenRepository =
+    copy0(versionsCheckHasModule = versionsCheckHasModule)
+
 
   import Repository._
   import MavenRepository._
 
+  override def repr: String =
+    root
+
   // only used during benchmarks
   private[coursier] var useSaxParser = true
-
-  // FIXME Ideally, we should silently drop a '/' suffix from `root`
-  // so that
-  //   MavenRepository("http://foo.com/repo") == MavenRepository("http://foo.com/repo/")
-  private[maven] val root0 = if (root.endsWith("/")) root else root + "/"
 
   private def modulePath(module: Module): Seq[String] =
     module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
@@ -126,7 +184,8 @@ final case class MavenRepository(
     modulePath(module) :+ toBaseVersion(version)
 
   private[maven] def urlFor(path: Seq[String], isDir: Boolean = false): String = {
-    val b = new StringBuilder(root0)
+    val b = new StringBuilder(root)
+    b += '/'
 
     val it = path.iterator
     var isFirst = true
@@ -256,13 +315,14 @@ final case class MavenRepository(
     }
   }
 
-  private def versionsWithUrl[F[_]](
+  override protected def fetchVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Versions, String)] =
-    EitherT {
+  ): EitherT[F, String, (Versions, String)] = {
+
+    val viaMetadata = EitherT[F, String, (Versions, String)] {
       val artifact = versionsArtifact(module)
       F.map(fetch(artifact).run) { eitherStr =>
         for {
@@ -274,14 +334,11 @@ final case class MavenRepository(
       }
     }
 
-  override def versions[F[_]](
-    module: Module,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, Versions] =
-    versionsWithUrl(module, fetch)
-      .map(_._1)
+    if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
+      versionsFromListing(module, fetch).orElse(viaMetadata)
+    else
+      viaMetadata
+  }
 
   def snapshotVersioning[F[_]](
     module: Module,
@@ -305,13 +362,13 @@ final case class MavenRepository(
       }
     )
 
-  def findNoInterval[F[_]](
+  def find[F[_]](
     module: Module,
     version: String,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Project] =
+  ): EitherT[F, String, (Artifact.Source, Project)] =
     EitherT {
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
@@ -344,7 +401,7 @@ final case class MavenRepository(
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.right.map(proj => proj.copy(actualVersionOpt = Some(version))))
+      F.map(res)(_.right.map(proj => (this, proj.copy(actualVersionOpt = Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =
@@ -383,61 +440,6 @@ final case class MavenRepository(
       )
   }
 
-  def find[F[_]](
-    module: Module,
-    version: String,
-    fetch: Repository.Fetch[F]
-  )(implicit
-    F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
-
-    val versionsF = {
-      val v = versionsWithUrl(module, fetch)
-      if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
-        versionsFromListing(module, fetch).orElse(v)
-      else
-        v
-    }
-
-    def fromEitherVersion(eitherVersion: Either[String, String], versions0: Versions):  EitherT[F, String, (Artifact.Source, Project)] =
-      eitherVersion match {
-        case Left(reason) => EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
-        case Right(version0) =>
-          findNoInterval(module, version0, fetch)
-            .map(_.copy(versions = Some(versions0)))
-            .map((this, _))
-      }
-
-    Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
-      .filter(_.isValid) match {
-        case None =>
-          findNoInterval(module, version, fetch)
-            .map((this, _))
-        case Some(itv) =>
-          versionsF.flatMap {
-            case (versions0, versionsUrl) =>
-              val eitherVersion = {
-                val release = Version(versions0.release)
-
-                if (itv.contains(release)) Right(versions0.release)
-                else {
-                  val inInterval = versions0.available
-                    .map(Version(_))
-                    .filter(itv.contains)
-
-                  if (inInterval.isEmpty) Left(s"No version found for $version in $versionsUrl")
-                  else Right(inInterval.max.repr)
-                }
-              }
-
-              fromEitherVersion(eitherVersion, versions0)
-          }
-    }
-  }
-
-
   private def artifacts0(
     dependency: Dependency,
     project: Project,
@@ -472,7 +474,7 @@ final case class MavenRepository(
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 
       Artifact(
-        root0 + path.mkString("/"),
+        root + path.mkString("/", "/", ""),
         Map.empty,
         Map.empty,
         changing = changing0,

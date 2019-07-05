@@ -1,9 +1,14 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
+import coursier.maven.MavenRepository
 import coursier.util.{EitherT, Monad}
 
 trait Repository extends Serializable with Artifact.Source {
+
+  def repr: String =
+    toString
+
   def find[F[_]](
     module: Module,
     version: String,
@@ -12,16 +17,66 @@ trait Repository extends Serializable with Artifact.Source {
     F: Monad[F]
   ): EitherT[F, String, (Artifact.Source, Project)]
 
+  def findMaybeInterval[F[_]](
+    module: Module,
+    version: String,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (Artifact.Source, Project)] =
+    Parse.versionInterval(version)
+      .orElse(Parse.multiVersionInterval(version))
+      .orElse(Parse.ivyLatestSubRevisionInterval(version))
+      .filter(_.isValid) match {
+        case None =>
+          find(module, version, fetch)
+        case Some(itv) =>
+          versions(module, fetch).flatMap {
+            case (versions0, versionsUrl) =>
+              versions0.inInterval(itv) match {
+                case None =>
+                  val reason = s"No version found for $version in $versionsUrl"
+                  EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+                case Some(version0) =>
+                  find(module, version0, fetch)
+                    .map(t => t._1 -> t._2.copy(versions = Some(versions0)))
+              }
+          }
+    }
+
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
+
+  def versionsCheckHasModule: Boolean =
+    true
 
   def versions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, Versions] =
-    EitherT(F.point(Right(Versions.empty)))
+  ): EitherT[F, String, (Versions, String)] =
+    if (versionsCheckHasModule)
+      completeOpt(fetch) match {
+        case None => fetchVersions(module, fetch)
+        case Some(c) =>
+          EitherT[F, String, Boolean](F.map(c.hasModule(module))(Right(_))).flatMap {
+            case false =>
+              EitherT(F.point[Either[String, (Versions, String)]](Left(s"${module.repr} not found on $repr")))
+            case true =>
+              fetchVersions(module, fetch)
+          }
+      }
+    else
+      fetchVersions(module, fetch)
+
+  protected def fetchVersions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (Versions, String)] =
+    EitherT(F.point(Right((Versions.empty, ""))))
 }
 
 object Repository {
@@ -110,13 +165,19 @@ object Repository {
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
 
-    // ignores attributes for now
-    def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
+    def sbtAttrStub: Boolean = false
+
+    def hasModule(module: Module, sbtAttrStub: Boolean = sbtAttrStub)(implicit F: Monad[F]): F[Boolean] =
       F.bind(hasOrg(Complete.Input.Org(module.organization.value), partial = false)) {
         case false => F.point(false)
         case true =>
           val prefix = s"${module.organization.value}:"
-          hasName(Complete.Input.Name(module.organization, prefix + module.name.value, prefix.length, ""))
+          val actualModuleName =
+            if (sbtAttrStub)
+              MavenRepository.dirModuleName(module, sbtAttrStub = true) // wish that hack didn't need to exist
+            else
+              module.name.value
+          hasName(Complete.Input.Name(module.organization, prefix + actualModuleName, prefix.length, ""))
       }
 
     final def complete(input: Complete.Input)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] = {

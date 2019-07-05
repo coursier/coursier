@@ -65,6 +65,21 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // made non-case classes, for easier preserving of bin compat later
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.maven.MavenRepository")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.ivy.IvyRepository")),
+        // for 2.11
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versionsCheckHasModule"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.fetchVersions"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.sbtAttrStub"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule$default$2"),
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.ivy.IvyRepository.findNoInverval"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.findNoInterval"),
+        // for 2.11
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.findMaybeInterval"),
+        // added methods (filters for 2.11)
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.repr"),
         ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule"),
         // more or less internal stuff now
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.ResolutionProcess.fetch"),

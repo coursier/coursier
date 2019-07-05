@@ -15,11 +15,12 @@ object CentralTests extends CentralTests
 
 abstract class CentralTests extends TestSuite {
 
-  def centralBase = "https://repo1.maven.org/maven2"
+  def central = MavenRepository("https://repo1.maven.org/maven2")
+  private def centralBase = central.root
 
   private final def isActualCentral = centralBase == "https://repo1.maven.org/maven2"
 
-  private lazy val runner = new TestRunner(repositories = Seq(MavenRepository(centralBase)))
+  private lazy val runner = new TestRunner(repositories = Seq(central))
 
   val tests = Tests {
 

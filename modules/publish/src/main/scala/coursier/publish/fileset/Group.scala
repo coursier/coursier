@@ -721,7 +721,7 @@ object Group {
     logger: DownloadLogger
   ): Task[Seq[MavenMetadata]] = {
 
-    val root = repository.root.stripSuffix("/") + "/"
+    val root = repository.root + "/"
 
     Task.gather.gather {
       orgNames.map {
@@ -753,7 +753,7 @@ object Group {
 
     // assert(m.snapshotVersioning.isEmpty)
 
-    val root = repository.root.stripSuffix("/") + "/"
+    val root = repository.root + "/"
     val url = root + s"${m.baseDir.mkString("/")}/maven-metadata.xml"
 
     download.downloadIfExists(url, repository.authentication, logger).map {

@@ -40,7 +40,7 @@ final class TreeMirror private(
   def matches(repo: Repository): Option[Repository] =
     repo match {
       case m: MavenRepository =>
-        val url = m.root.stripSuffix("/")
+        val url = m.root
         from
           .find(f => url == f || url.startsWith(f + "/"))
           .map { f =>

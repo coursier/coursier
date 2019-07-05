@@ -260,46 +260,72 @@ object ResolutionProcess {
     F: Gather[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
-    val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
-    val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
-      if (listVersionFetch == null) fetchs
-      else Nil
-    }
+    def getLatest(ver: Either[VersionInterval, (Latest, Option[VersionInterval])], fetch: Repository.Fetch[F]) = {
 
-    def getLatest(kind: Latest, fetch: Repository.Fetch[F]) = {
-
-      val lookups = repositories.map { repo =>
-        val run = repo.versions(module, fetch).run
-        repo.completeOpt(fetch) match {
-          case None => run
-          case Some(c) => F.bind(c.hasModule(module)) {
-            case false => F.point[Either[String, Versions]](Left(s"${module.organization.value}:${module.name.value} not found on $repo"))
-            case true => run
-          }
-        }
-      }
+      val lookups = repositories.map(_.versions(module, fetch).run)
 
       val versionOrError: F[Either[Seq[String], (Version, Repository)]] =
         F.map(F.gather(lookups)) { results =>
           // FIXME We're sometimes trapping errors here (left elements in results)
           val found = results.zip(repositories)
             .collect {
-              case (Right(v), repo) =>
-                (v.latest(kind), repo)
+              case (Right((v, listingUrl)), repo) =>
+                val selectedOpt = ver match {
+                  case Left(itv) =>
+                    v.inInterval(itv)
+                  case Right((kind, _)) =>
+                    v.latest(kind)
+                }
+                (selectedOpt, repo, listingUrl)
             }
             .collect {
-              case (Some(v), repo) =>
-                (Version(v), repo)
+              case (Some(v), repo, listingUrl) =>
+                (Version(v), repo, listingUrl)
             }
           if (found.isEmpty)
             Left(
               results.map {
                 case Left(e) => e
-                case Right(_) => s"No latest $kind version found"
+                case Right((_, listingUrl)) =>
+                  ver match {
+                    case Left(itv) =>
+                      s"No version found for $itv in $listingUrl"
+                    case Right((kind, _)) =>
+                      s"No latest ${kind.name} version found in $listingUrl"
+                  }
               }
             )
-          else
-            Right(found.maxBy(_._1))
+          else {
+            val (selectedVer, repo, _) = found.maxBy(_._1)
+            ver match {
+              case Left(_) =>
+                Right((selectedVer, repo))
+              case Right((kind, intervalOpt)) =>
+                intervalOpt match {
+                  case None =>
+                    Right((selectedVer, repo))
+                  case Some(itv) =>
+                    if (itv.contains(selectedVer))
+                      Right((selectedVer, repo))
+                    else
+                      Left(
+                        results.map {
+                          case Left(e) => e
+                          case Right((v, listingUrl)) =>
+                            v.latest(kind) match {
+                              case None =>
+                                s"No latest ${kind.name} version found in $listingUrl"
+                              case Some(v0) =>
+                                if (v0 == selectedVer.repr)
+                                  s"Latest ${kind.name} $v0 from $listingUrl not in ${itv.repr}"
+                                else
+                                  s"Latest ${kind.name} $v0 from $listingUrl not retained"
+                            }
+                        }
+                      )
+                }
+            }
+          }
         }
 
       EitherT(versionOrError).flatMap {
@@ -329,19 +355,41 @@ object ResolutionProcess {
       EitherT(task)
     }
 
-    val latestKindOpt = version match {
-      case "latest.integration" => Some(Latest.Integration)
-      case "latest.release" => Some(Latest.Release)
-      case "latest.stable" => Some(Latest.Stable)
-      case _ => None
+    def getLatest0(ver: Either[VersionInterval, (Latest, Option[VersionInterval])]) = {
+      val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
+      val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
+        if (listVersionFetch == null) fetchs
+        else Nil
+      }
+      (getLatest(ver, listVersionFetch0) /: listVersionFetchs0) (_ orElse getLatest(ver, _))
     }
 
-    latestKindOpt match {
-      case Some(kind) =>
-        (getLatest(kind, listVersionFetch0) /: listVersionFetchs0)(_ orElse getLatest(kind, _))
-      case None =>
-        (get(fetch) /: fetchs)(_ orElse get(_))
-    }
+    if (version.contains("&")) {
+      val versions = version.split('&').toSeq.distinct
+      assert(versions.length == 2)
+
+      val parsed = versions.map(s => Latest(s).toRight(s))
+      val latest = parsed.collect { case Right(l) => l }
+      val other = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
+      assert(latest.length == 1)
+      assert(other.length == 1)
+
+      val latest0 = latest.head
+      assert(other.head.preferred.isEmpty)
+      val itv = other.head.interval
+
+      getLatest0(Right((latest0, Some(itv))))
+    } else
+      Latest(version) match {
+        case Some(kind) =>
+          getLatest0(Right((kind, None)))
+        case None =>
+          val c = Parse.versionConstraint(version)
+          if (c.interval == VersionInterval.zero)
+            (get(fetch) /: fetchs)(_ orElse get(_))
+          else
+            getLatest0(Left(c.interval))
+      }
   }
 
   def fetch[F[_]](
