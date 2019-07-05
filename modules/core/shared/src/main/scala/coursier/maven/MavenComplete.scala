@@ -9,6 +9,9 @@ final case class MavenComplete[F[_]](
   F: Monad[F]
 ) extends Repository.Complete[F] {
 
+  override def sbtAttrStub: Boolean =
+    repo.sbtAttrStub
+
   private def fromDirListing(dirUrl: String, prefix: String): F[Either[Throwable, Seq[String]]] =
     F.map(fetch(repo.artifactFor(dirUrl, changing = true)).run) {
       case Left(e) =>

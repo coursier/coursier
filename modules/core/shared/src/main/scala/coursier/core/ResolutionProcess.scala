@@ -1,7 +1,6 @@
 package coursier
 package core
 
-import coursier.maven.MavenRepository
 import coursier.util.{EitherT, Gather, Monad}
 
 import scala.annotation.tailrec
@@ -263,21 +262,7 @@ object ResolutionProcess {
 
     def getLatest(ver: Either[VersionInterval, (Latest, Option[VersionInterval])], fetch: Repository.Fetch[F]) = {
 
-      val lookups = repositories.map { repo =>
-        val run = repo.versions(module, fetch).run
-        repo.completeOpt(fetch) match {
-          case None => run
-          case Some(c) =>
-            val sbtAttrStub = repo match {
-              case m: MavenRepository => m.sbtAttrStub // I hate that hack…
-              case _ => false
-            }
-            F.bind(c.hasModule(module, sbtAttrStub)) {
-            case false => F.point[Either[String, (Versions, String)]](Left(s"${module.repr} not found on ${repo.repr}"))
-            case true => run
-          }
-        }
-      }
+      val lookups = repositories.map(_.versions(module, fetch).run)
 
       val versionOrError: F[Either[Seq[String], (Version, Repository)]] =
         F.map(F.gather(lookups)) { results =>

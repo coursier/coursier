@@ -200,7 +200,7 @@ final case class IvyRepository(
       fetch
     ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
 
-  override def versions[F[_]](
+  override protected def fetchVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit

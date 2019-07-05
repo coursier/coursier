@@ -238,7 +238,7 @@ final case class MavenRepository(
     }
   }
 
-  override def versions[F[_]](
+  override protected def fetchVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit

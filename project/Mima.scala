@@ -65,6 +65,11 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // for 2.11
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.versionsCheckHasModule"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository.fetchVersions"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.sbtAttrStub"),
+        ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.core.Repository#Complete.hasModule$default$2"),
         // should have been private
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.ivy.IvyRepository.findNoInverval"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.MavenRepository.findNoInterval"),

@@ -47,7 +47,30 @@ trait Repository extends Serializable with Artifact.Source {
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
 
+  def versionsCheckHasModule: Boolean =
+    true
+
   def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (Versions, String)] =
+    if (versionsCheckHasModule)
+      completeOpt(fetch) match {
+        case None => fetchVersions(module, fetch)
+        case Some(c) =>
+          EitherT[F, String, Boolean](F.map(c.hasModule(module))(Right(_))).flatMap {
+            case false =>
+              EitherT(F.point[Either[String, (Versions, String)]](Left(s"${module.repr} not found on $repr")))
+            case true =>
+              fetchVersions(module, fetch)
+          }
+      }
+    else
+      fetchVersions(module, fetch)
+
+  protected def fetchVersions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
   )(implicit
@@ -142,7 +165,9 @@ object Repository {
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
 
-    def hasModule(module: Module, sbtAttrStub: Boolean = false)(implicit F: Monad[F]): F[Boolean] =
+    def sbtAttrStub: Boolean = false
+
+    def hasModule(module: Module, sbtAttrStub: Boolean = sbtAttrStub)(implicit F: Monad[F]): F[Boolean] =
       F.bind(hasOrg(Complete.Input.Org(module.organization.value), partial = false)) {
         case false => F.point(false)
         case true =>
