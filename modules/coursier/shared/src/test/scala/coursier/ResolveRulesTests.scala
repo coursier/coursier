@@ -260,6 +260,81 @@ object ResolveRulesTests extends TestSuite {
 
         assert(evicted == expectedEvicted)
       }
+
+      "ignore if forced version" - {
+        "do ignore" - async {
+
+          val rule = Strict(
+            exclude = Set(
+              ModuleMatcher(mod"org.scala-lang:*")
+            )
+          )
+          val ruleRes = RuleResolution.Fail
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+            .addForceVersion(mod"com.chuusai:shapeless_2.12" -> "2.3.3")
+
+          val res = await {
+            Resolve()
+              .noMirrors
+              .addDependencies(
+                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
+                dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
+              )
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+          }
+
+          await(validateDependencies(res, params))
+        }
+
+        "do not ignore" - async {
+
+          val rule = Strict(
+            exclude = Set(
+              ModuleMatcher(mod"org.scala-lang:*")
+            ),
+            ignoreIfForcedVersion = false
+          )
+          val ruleRes = RuleResolution.Fail
+
+          val params = ResolutionParams()
+            .addRule(rule, ruleRes)
+            .addForceVersion(mod"com.chuusai:shapeless_2.12" -> "2.3.3")
+
+          val ex = await {
+            Resolve()
+              .noMirrors
+              .addDependencies(
+                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
+                dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
+              )
+              .withResolutionParams(params)
+              .withCache(cache)
+              .future()
+              .failed
+          }
+
+          val expectedEvicted = Seq(
+            Conflict(mod"com.chuusai:shapeless_2.12", "2.3.3", "2.3.2", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M4")
+          )
+          val evicted = ex match {
+            case f: StrictRule =>
+              assert(f.rule == rule)
+              assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+              f.conflict match {
+                case e: Strict.EvictedDependencies => e.evicted
+                case _ => ???
+              }
+            case _ =>
+              throw new Exception("Unexpected exception type", ex)
+          }
+
+          assert(evicted == expectedEvicted)
+        }
+      }
     }
 
     'dontBumpRootDependencies - {
