@@ -492,33 +492,65 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      "conflict with specific version" - async {
+      "conflict with specific version" - {
+        * - async {
 
-        val res = await {
-          resolve
-            .addDependencies(
-              dep"org.scala-lang:scala-library:2.12+",
-              dep"org.scala-lang:scala-library:2.13.0"
-            )
-            .io
-            .attempt
-            .future()
+          val res = await {
+            resolve
+              .addDependencies(
+                dep"org.scala-lang:scala-library:2.12+",
+                dep"org.scala-lang:scala-library:2.13.0"
+              )
+              .io
+              .attempt
+              .future()
+          }
+
+          assert(res.isLeft)
+
+          val error = res.left.get
+
+          error match {
+            case c: ResolutionError.ConflictingDependencies =>
+              val expectedModules = Set(mod"org.scala-lang:scala-library")
+              val modules = c.dependencies.map(_.module)
+              assert(modules == expectedModules)
+              val expectedVersions = Set("2.12+", "2.13.0")
+              val versions = c.dependencies.map(_.version)
+              assert(versions == expectedVersions)
+            case _ =>
+              ???
+          }
         }
 
-        assert(res.isLeft)
+        * - async {
 
-        val error = res.left.get
+          val res = await {
+            resolve
+              .addDependencies(
+                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11",
+                dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
+              )
+              .io
+              .attempt
+              .future()
+          }
 
-        error match {
-          case c: ResolutionError.ConflictingDependencies =>
-            val expectedModules = Set(mod"org.scala-lang:scala-library")
-            val modules = c.dependencies.map(_.module)
-            assert(modules == expectedModules)
-            val expectedVersions = Set("2.12+", "2.13.0")
-            val versions = c.dependencies.map(_.version)
-            assert(versions == expectedVersions)
-          case _ =>
-            ???
+          assert(res.isLeft)
+
+          val error = res.left.get
+
+          error match {
+            case c: ResolutionError.ConflictingDependencies =>
+              val expectedModules = Set(mod"com.chuusai:shapeless_2.12")
+              val modules = c.dependencies.map(_.module)
+              assert(modules == expectedModules)
+              val expectedVersions = Set("[2.3.0,2.3.3)", "2.3.3")
+              val versions = c.dependencies.map(_.version)
+              assert(versions == expectedVersions)
+            case _ =>
+              throw error
+          }
         }
       }
     }
