@@ -1011,7 +1011,10 @@ final class Resolution private (
     )
 
   def reconciledVersions: Map[Module, String] =
-    nextDependenciesAndConflicts._3
+    nextDependenciesAndConflicts._3.map {
+      case k @ (m, v) =>
+        m -> projectCache.get(k).fold(v)(_._2.version)
+    }
 
   /**
    * The modules we miss some info about.

@@ -1,6 +1,6 @@
 package coursier.graph
 
-import coursier.core.{Module, Resolution}
+import coursier.core.{Module, Parse, Resolution, Version, VersionConstraint, VersionInterval}
 
 final case class Conflict(
   module: Module,
@@ -44,7 +44,14 @@ object Conflict {
       val version = resolution
         .reconciledVersions
         .getOrElse(dep.module, dep.version)
-      if (version == dep.version)
+      val c = Parse.versionConstraint(dep.version)
+      val v = Version(version)
+      val matches =
+        if (c.interval == VersionInterval.zero)
+          c.preferred.contains(v)
+        else
+          c.interval.contains(v)
+      if (matches)
         Nil
       else {
         val node = ReverseModuleTree.Node(

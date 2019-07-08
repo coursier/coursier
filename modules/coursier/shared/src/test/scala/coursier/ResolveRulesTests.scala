@@ -4,6 +4,7 @@ import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
+import coursier.util.ModuleMatcher
 import utest._
 
 import scala.async.Async.{async, await}
@@ -201,6 +202,49 @@ object ResolveRulesTests extends TestSuite {
 
         val expectedEvicted = Seq(
           Conflict(mod"org.typelevel:cats-core_2.11", "1.6.0", "1.5.0", wasExcluded = false, mod"org.typelevel:cats-core_2.11", "1.5.0")
+        )
+        val evicted = ex match {
+          case f: StrictRule =>
+            assert(f.rule == rule)
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+            f.conflict match {
+              case e: Strict.EvictedDependencies => e.evicted
+              case _ => ???
+            }
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
+        }
+
+        assert(evicted == expectedEvicted)
+      }
+
+      "with intervals" - async {
+
+        val rule = Strict(
+          exclude = Set(
+            ModuleMatcher(mod"org.scala-lang:*")
+          )
+        )
+        val ruleRes = RuleResolution.Fail
+
+        val params = ResolutionParams()
+          .addRule(rule, ruleRes)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
+              dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        val expectedEvicted = Seq(
+          Conflict(mod"com.chuusai:shapeless_2.12", "2.3.3", "2.3.2", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M4")
         )
         val evicted = ex match {
           case f: StrictRule =>
