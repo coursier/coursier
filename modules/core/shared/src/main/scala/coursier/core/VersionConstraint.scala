@@ -7,7 +7,10 @@ final case class VersionConstraint(
   def isValid: Boolean =
     interval.isValid && preferred.forall { v =>
       interval.contains(v) ||
-        interval.to.forall(v.compare(_) <= 0)
+        interval.to.forall { to =>
+          val cmp = v.compare(to)
+          cmp < 0 || (cmp == 0 && interval.toIncluded)
+        }
     }
 
   def blend: Option[Either[VersionInterval, Version]] =
@@ -51,9 +54,11 @@ object VersionConstraint {
           acc.flatMap(_.merge(itv))
       }
 
-    for (interval <- intervalOpt) yield {
+    val constraintOpt = intervalOpt.map { interval =>
       val preferreds = constraints.flatMap(_.preferred).distinct
       VersionConstraint(interval, preferreds)
     }
+
+    constraintOpt.filter(_.isValid)
   }
 }
