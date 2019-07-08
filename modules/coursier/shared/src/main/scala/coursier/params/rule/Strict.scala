@@ -7,7 +7,8 @@ import coursier.util.ModuleMatcher
 
 final case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
-  exclude: Set[ModuleMatcher] = Set.empty
+  exclude: Set[ModuleMatcher] = Set.empty,
+  ignoreIfForcedVersion: Boolean = true
 ) extends Rule {
 
   import Strict._
@@ -17,7 +18,9 @@ final case class Strict(
   def check(res: Resolution): Option[EvictedDependencies] = {
 
     val conflicts = coursier.graph.Conflict(res).filter { c =>
-      include.exists(_.matches(c.module)) &&
+      val ignore = ignoreIfForcedVersion && res.forceVersions.get(c.module).contains(c.version)
+      !ignore &&
+        include.exists(_.matches(c.module)) &&
         !exclude.exists(_.matches(c.module))
     }
 
