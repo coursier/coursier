@@ -64,7 +64,7 @@ final class Complete[F[_]] private (
   def withScalaVersion(version: String): Complete[F] =
     withScalaVersion(version, adjustBinaryVersion = true)
   def withScalaVersion(versionOpt: Option[String]): Complete[F] =
-    withScalaVersion(versionOpt, adjustBinaryVersion = true)
+    withScalaVersion(versionOpt, adjustBinaryVersion = versionOpt.nonEmpty)
   def withScalaBinaryVersion(version: String): Complete[F] =
     copy(scalaBinaryVersion = Some(version))
   def withScalaBinaryVersion(versionOpt: Option[String]): Complete[F] =
