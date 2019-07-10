@@ -74,6 +74,6 @@ object Deps {
     }
   }
 
-  def proguardVersion = "6.0.3"
+  def proguardVersion = "6.1.1"
 
 }
