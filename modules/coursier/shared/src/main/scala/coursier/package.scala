@@ -122,6 +122,8 @@ package object coursier {
         extraProperties,
         forceProperties
       )
+
+    def defaultTypes: Set[Type] = coursier.core.Resolution.defaultTypes
   }
 
   type Artifact = core.Artifact
