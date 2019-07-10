@@ -10,7 +10,7 @@ object DependencyParser {
     input: String,
     defaultScalaVersion: String
   ): Either[String, Dependency] =
-    dependency(input, defaultScalaVersion, Configuration.defaultCompile)
+    dependency(input, defaultScalaVersion, Configuration.empty)
 
   def dependency(
     input: String,
@@ -25,7 +25,7 @@ object DependencyParser {
     inputs: Seq[String],
     defaultScalaVersion: String
   ): ValidationNel[String, Seq[Dependency]] =
-    dependencies(inputs, defaultScalaVersion, Configuration.defaultCompile)
+    dependencies(inputs, defaultScalaVersion, Configuration.empty)
 
   def dependencies(
     inputs: Seq[String],
@@ -38,7 +38,7 @@ object DependencyParser {
   def javaOrScalaDependencies(
     inputs: Seq[String]
   ): ValidationNel[String, Seq[JavaOrScalaDependency]] =
-    javaOrScalaDependencies(inputs, Configuration.defaultCompile)
+    javaOrScalaDependencies(inputs, Configuration.empty)
 
   def javaOrScalaDependencies(
     inputs: Seq[String],
@@ -117,8 +117,13 @@ object DependencyParser {
     dependencyParams(
       input,
       defaultScalaVersion,
-      Configuration.defaultCompile
+      Configuration.empty
     )
+
+  def javaOrScalaDependencyParams(
+    input: String
+  ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
+    javaOrScalaDependencyParams(input, Configuration.empty)
 
   /**
     * Parses coordinates like
@@ -299,14 +304,6 @@ object DependencyParser {
     }
   }
 
-  def javaOrScalaDependencyParams(
-    input: String
-  ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
-    javaOrScalaDependencyParams(
-      input,
-      Configuration.defaultCompile
-    )
-
   /**
     * Parses coordinates like
     *   org:name:version
@@ -340,6 +337,11 @@ object DependencyParser {
       val e = dependencyParams(input, defaultScalaVersion, defaultConfiguration)
       ValidationNel.fromEither(e)
     }
+
+  def javaOrScalaDependenciesParams(
+    inputs: Seq[String]
+  ): ValidationNel[String, Seq[(JavaOrScalaDependency, Map[String, String])]] =
+    javaOrScalaDependenciesParams(inputs, Configuration.empty)
 
   def javaOrScalaDependenciesParams(
     inputs: Seq[String],

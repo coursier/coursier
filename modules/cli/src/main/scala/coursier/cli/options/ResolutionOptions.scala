@@ -50,7 +50,12 @@ final case class ResolutionOptions(
   strict: Option[Boolean] = None,
 
   strictInclude: List[String] = Nil,
-  strictExclude: List[String] = Nil
+  strictExclude: List[String] = Nil,
+
+  @Help("Default configuration (default(compile) by default)")
+  @Value("configuration")
+  @Short("c")
+    defaultConfiguration: String = "default(compile)"
 
 ) {
 
@@ -134,6 +139,7 @@ final case class ResolutionOptions(
           .withForceScalaVersion(forceScalaVersion)
           .withTypelevel(typelevel)
           .withRules(rules)
+          .withDefaultConfiguration(Configuration(defaultConfiguration))
     }
   }
 }

@@ -16,7 +16,6 @@ final case class DependencyParams(
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   scaladexLookups: Seq[String],
-  defaultConfiguration: Configuration,
   platformOpt: Option[Platform]
 ) {
   def native: Boolean =
@@ -104,10 +103,7 @@ object DependencyParams {
     val intransitiveDependenciesV = moduleReqV
       .toEither
       .flatMap { moduleReq =>
-        DependencyParser.javaOrScalaDependenciesParams(
-          options.intransitive,
-          options.defaultConfiguration0
-        ).either match {
+        DependencyParser.javaOrScalaDependenciesParams(options.intransitive).either match {
           case Left(e) =>
             Left(
               NonEmptyList.one(
@@ -123,54 +119,42 @@ object DependencyParams {
       }
       .toValidated
 
-    val sbtPluginDependenciesV = moduleReqV
-      .toEither
-      .flatMap { moduleReq =>
-        DependencyParser.javaOrScalaDependenciesParams(
-          options.sbtPlugin,
-          options.defaultConfiguration0
-        ).either match {
-          case Left(e) =>
-            Left(
-              NonEmptyList.one(
-                s"Cannot parse sbt plugin dependencies:\n" +
-                  e.map("  " + _).mkString("\n")
-              )
-            )
+    val sbtPluginDependenciesV = DependencyParser.javaOrScalaDependenciesParams(options.sbtPlugin).either match {
+      case Left(e) =>
+        Validated.invalidNel(
+          s"Cannot parse sbt plugin dependencies:\n" +
+            e.map("  " + _).mkString("\n")
+        )
 
-          case Right(Seq()) =>
-            Right(Nil)
+      case Right(Seq()) =>
+        Validated.validNel(Nil)
 
-          case Right(l0) =>
-            val defaults = {
-              val sbtVer = options.sbtVersion.split('.') match {
-                case Array("1", _, _) =>
-                  // all sbt 1.x versions use 1.0 as short version
-                  "1.0"
-                case arr => arr.take(2).mkString(".")
-              }
-              Map(
-                "scalaVersion" -> "2.12", // FIXME Apply later when we know the selected scala version
-                "sbtVersion" -> sbtVer
-              )
-            }
-            val l = l0.map {
-              case (dep, params) =>
-                val dep0 = dep.withUnderlyingDependency { dep =>
-                  dep.copy(
-                    module = dep.module.copy(
-                      attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
-                    )
-                  )
-                }
-                (dep0, params)
-            }
-            Right(l)
+      case Right(l0) =>
+        val defaults = {
+          val sbtVer = options.sbtVersion.split('.') match {
+            case Array("1", _, _) =>
+              // all sbt 1.x versions use 1.0 as short version
+              "1.0"
+            case arr => arr.take(2).mkString(".")
+          }
+          Map(
+            "scalaVersion" -> "2.12", // FIXME Apply later when we know the selected scala version
+            "sbtVersion" -> sbtVer
+          )
         }
-      }
-      .toValidated
-
-    val defaultConfiguration = Configuration(options.defaultConfiguration)
+        val l = l0.map {
+          case (dep, params) =>
+            val dep0 = dep.withUnderlyingDependency { dep =>
+              dep.copy(
+                module = dep.module.copy(
+                  attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
+                )
+              )
+            }
+            (dep0, params)
+        }
+        Validated.validNel(l)
+    }
 
     val scaladexLookups = options
       .scaladex
@@ -192,7 +176,6 @@ object DependencyParams {
           intransitiveDependencies,
           sbtPluginDependencies,
           scaladexLookups,
-          defaultConfiguration,
           platformOpt
         )
     }
