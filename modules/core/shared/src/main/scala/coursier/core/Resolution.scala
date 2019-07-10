@@ -383,11 +383,9 @@ object Resolution {
   }
 
 
-  val defaultConfiguration = Configuration.compile
-
-  def withDefaultConfig(dep: Dependency): Dependency =
+  private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
     if (dep.configuration.isEmpty)
-      dep.copy(configuration = defaultConfiguration)
+      dep.withConfiguration(defaultConfiguration)
     else
       dep
 
@@ -532,21 +530,24 @@ object Resolution {
    * Substitute properties, update scopes, apply exclusions, and get extra
    * parameters from dependency management along the way.
    */
-  def finalDependencies(
+  private def finalDependencies(
     from: Dependency,
-    project: Project
+    project: Project,
+    defaultConfiguration: Configuration
   ): Seq[Dependency] = {
 
     // section numbers in the comments refer to withDependencyManagement
 
     val properties = project.properties.toMap
 
-    val (actualConfig, configurations) = withParentConfigurations(from.configuration, project.configurations)
+    val (actualConfig, configurations) = withParentConfigurations(
+      if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
+      project.configurations
+    )
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
 
-    val config = if (actualConfig.isEmpty) defaultConfiguration else actualConfig
-    val keepOpt = mavenScopes.get(config)
+    val keepOpt = mavenScopes.get(actualConfig)
 
     withExclusions(
       // 2.1 & 2.2
@@ -569,7 +570,7 @@ object Resolution {
           else
             dep0
 
-        val config = if (config0.isEmpty) defaultConfiguration else config0
+        val config = if (config0.isEmpty) Configuration.compile else config0
 
         def default =
           if (configurations(config))
@@ -676,6 +677,41 @@ object Resolution {
     userActivations: Option[Map[String, Boolean]],
     mapDependencies: Option[Dependency => Dependency],
     extraProperties: Seq[(String, String)],
+    forceProperties: Map[String, String], // FIXME Make that a seq too?
+    defaultConfiguration: Configuration
+  ): Resolution =
+    new Resolution(
+      rootDependencies,
+      dependencySet,
+      forceVersions,
+      conflicts,
+      projectCache,
+      errorCache,
+      finalDependenciesCache,
+      filter,
+      osInfo,
+      jdkVersion,
+      userActivations,
+      mapDependencies,
+      extraProperties,
+      forceProperties,
+      defaultConfiguration
+    )
+
+  def apply(
+    rootDependencies: Seq[Dependency],
+    dependencySet: DependencySet,
+    forceVersions: Map[Module, String],
+    conflicts: Set[Dependency],
+    projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)],
+    errorCache: Map[Resolution.ModuleVersion, Seq[String]],
+    finalDependenciesCache: Map[Dependency, Seq[Dependency]],
+    filter: Option[Dependency => Boolean],
+    osInfo: Activation.Os,
+    jdkVersion: Option[Version],
+    userActivations: Option[Map[String, Boolean]],
+    mapDependencies: Option[Dependency => Dependency],
+    extraProperties: Seq[(String, String)],
     forceProperties: Map[String, String] // FIXME Make that a seq too?
   ): Resolution =
     new Resolution(
@@ -692,7 +728,8 @@ object Resolution {
       userActivations,
       mapDependencies,
       extraProperties,
-      forceProperties
+      forceProperties,
+      Configuration.compile
     )
 
   def apply(): Resolution =
@@ -710,7 +747,8 @@ object Resolution {
       None,
       None,
       Nil,
-      Map.empty
+      Map.empty,
+      Configuration.compile
     )
 
 }
@@ -739,7 +777,8 @@ final class Resolution private (
   val userActivations: Option[Map[String, Boolean]],
   val mapDependencies: Option[Dependency => Dependency],
   val extraProperties: Seq[(String, String)],
-  val forceProperties: Map[String, String] // FIXME Make that a seq too?
+  val forceProperties: Map[String, String], // FIXME Make that a seq too?
+  val defaultConfiguration: Configuration
 ) extends Serializable {
 
   lazy val dependencies: Set[Dependency] =
@@ -761,7 +800,8 @@ final class Resolution private (
           userActivations == other.userActivations &&
           mapDependencies == other.mapDependencies &&
           extraProperties == other.extraProperties &&
-          forceProperties == other.forceProperties
+          forceProperties == other.forceProperties &&
+          defaultConfiguration == other.defaultConfiguration
       case _ => false
     }
 
@@ -781,6 +821,7 @@ final class Resolution private (
     code = 37 * code + mapDependencies.##
     code = 37 * code + extraProperties.##
     code = 37 * code + forceProperties.##
+    code = 37 * code + defaultConfiguration.##
     code
   }
 
@@ -799,7 +840,8 @@ final class Resolution private (
     b ++= userActivations.toString; b ++= ", "
     b ++= mapDependencies.toString; b ++= ", "
     b ++= extraProperties.toString; b ++= ", "
-    b ++= forceProperties.toString
+    b ++= forceProperties.toString; b ++= ", "
+    b ++= defaultConfiguration.toString
     b += ')'
     b.result()
   }
@@ -818,7 +860,8 @@ final class Resolution private (
     userActivations: Option[Map[String, Boolean]] = userActivations,
     mapDependencies: Option[Dependency => Dependency] = mapDependencies,
     extraProperties: Seq[(String, String)] = extraProperties,
-    forceProperties: Map[String, String] = forceProperties
+    forceProperties: Map[String, String] = forceProperties,
+    defaultConfiguration: Configuration = defaultConfiguration
   ): Resolution =
     new Resolution(
       rootDependencies,
@@ -834,7 +877,8 @@ final class Resolution private (
       userActivations,
       mapDependencies,
       extraProperties,
-      forceProperties
+      forceProperties,
+      defaultConfiguration
     )
 
   @deprecated("Use the with* method instead", "2.0.0-RC3")
@@ -868,7 +912,8 @@ final class Resolution private (
       userActivations,
       mapDependencies,
       extraProperties,
-      forceProperties
+      forceProperties,
+      defaultConfiguration
     )
 
   def withRootDependencies(rootDependencies: Seq[Dependency]): Resolution =
@@ -906,6 +951,9 @@ final class Resolution private (
     copy0(extraProperties = extraProperties)
   def withForceProperties(forceProperties: Map[String, String]): Resolution =
     copy0(forceProperties = forceProperties)
+
+  def withDefaultConfiguration(configuration: Configuration): Resolution =
+    copy0(defaultConfiguration = configuration)
 
 
   def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
@@ -960,7 +1008,7 @@ final class Resolution private (
       if (deps == null)
         projectCache.get(dep.moduleVersion) match {
           case Some((_, proj)) =>
-            val res0 = finalDependencies(dep, proj).filter(filter getOrElse defaultFilter)
+            val res0 = finalDependencies(dep, proj, defaultConfiguration).filter(filter getOrElse defaultFilter)
             val res = mapDependencies.fold(res0)(res0.map(_))
             finalDependenciesCache0.put(dep, res)
             res
@@ -1006,7 +1054,7 @@ final class Resolution private (
   lazy val nextDependenciesAndConflicts: (Seq[Dependency], Seq[Dependency], Map[Module, String]) =
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
-      rootDependencies.map(withDefaultConfig) ++ dependencySet.minimizedSet ++ transitiveDependencies,
+      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ dependencySet.minimizedSet ++ transitiveDependencies,
       forceVersions
     )
 
@@ -1081,7 +1129,7 @@ final class Resolution private (
    */
   lazy val remainingDependencies: Set[Dependency] = {
     val rootDependencies0 = rootDependencies
-      .map(withDefaultConfig)
+      .map(withDefaultConfig(_, defaultConfiguration))
       .map(eraseVersion)
       .toSet
 

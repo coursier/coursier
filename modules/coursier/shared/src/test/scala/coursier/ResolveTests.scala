@@ -31,51 +31,57 @@ object ResolveTests extends TestSuite {
 
     'forceScalaVersion - async {
 
-      val params = ResolutionParams()
-        .withScalaVersion("2.12.7")
+      val resolve0 = resolve
+        .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
+        .addRepositories(Repositories.jitpack)
+        .mapResolutionParams { params =>
+          params
+            .withScalaVersion("2.12.7")
+        }
 
       val res = await {
-        resolve
-          .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
-          .addRepositories(Repositories.jitpack)
-          .withResolutionParams(params)
+        resolve0
           .future()
       }
 
-      await(validateDependencies(res, params))
+      await(validateDependencies(res, resolve0.resolutionParams))
     }
 
     'typelevel - async {
 
-      val params = ResolutionParams()
-        .withScalaVersion("2.11.8")
-        .withTypelevel(true)
+      val resolve0 = resolve
+        .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
+        .mapResolutionParams { params =>
+          params
+            .withScalaVersion("2.11.8")
+            .withTypelevel(true)
+        }
 
       val res = await {
-        resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
-          .withResolutionParams(params)
+        resolve0
           .future()
       }
 
-      await(validateDependencies(res, params))
+      await(validateDependencies(res, resolve0.resolutionParams))
     }
 
     'addForceVersion - async {
 
-      val params = ResolutionParams()
-        .withScalaVersion("2.12.8")
-        .addForceVersion(mod"com.lihaoyi:upickle_2.12" -> "0.7.0")
-        .addForceVersion(mod"io.get-coursier:coursier_2.12" -> "1.1.0-M6")
+      val resolve0 = resolve
+        .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
+        .mapResolutionParams { params =>
+          params
+            .withScalaVersion("2.12.8")
+            .addForceVersion(mod"com.lihaoyi:upickle_2.12" -> "0.7.0")
+            .addForceVersion(mod"io.get-coursier:coursier_2.12" -> "1.1.0-M6")
+        }
 
       val res = await {
-        resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
-          .withResolutionParams(params)
+        resolve0
           .future()
       }
 
-      await(validateDependencies(res, params))
+      await(validateDependencies(res, resolve0.resolutionParams))
 
       val upickleVersionOpt = versionOf(res, mod"com.lihaoyi:upickle_2.12")
       val expectedUpickleVersion = "0.7.0"

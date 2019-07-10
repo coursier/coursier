@@ -46,8 +46,18 @@ object TestHelpers extends PlatformTestHelpers {
     val paramsPart =
       if (params == ResolutionParams())
         ""
-      else
-        "_params" + sha1(params.toString)
+      else {
+        import coursier.core.Configuration
+        // hack not to have to edit / review lots of test fixtures
+        val params0 =
+          if (params.defaultConfiguration == Configuration.defaultCompile)
+            params.withDefaultConfiguration(Configuration.compile)
+          else if (params.defaultConfiguration == Configuration.compile)
+            params.withDefaultConfiguration(Configuration("really-compile"))
+          else
+            params
+        "_params" + sha1(params0.toString)
+      }
 
     val path = Seq(
       s"modules/tests/shared/src/test/resources/$name",
@@ -75,7 +85,13 @@ object TestHelpers extends PlatformTestHelpers {
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
-      ).split('\n').toSeq.filter(_.nonEmpty)
+      ).split('\n').toSeq.map { s =>
+        // hack not to have to edit / review lots of test fixtures
+        if (s.endsWith(":compile"))
+          s.stripSuffix(":compile") + ":default"
+        else
+          s
+      }.filter(_.nonEmpty)
 
     for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
       println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")

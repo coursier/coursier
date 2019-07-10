@@ -96,14 +96,6 @@ final class Backend($: BackendScope[_, State]) {
   }
 
   def updateTree(resolution: Resolution, target: String, reverse: Boolean) = {
-    def depsOf(dep: Dependency) =
-      resolution.projectCache
-        .get(dep.moduleVersion)
-        .toSeq
-        .flatMap{case (_, proj) =>
-          coursier.core.Resolution.finalDependencies(dep, proj)
-            .filter(resolution.filter getOrElse coursier.core.Resolution.defaultFilter)
-        }
 
     val minDependencies = resolution.minDependencies
 
@@ -112,7 +104,7 @@ final class Backend($: BackendScope[_, State]) {
 
       for {
         dep <- minDependencies
-        trDep <- depsOf(dep)
+        trDep <- resolution.dependenciesOf(dep)
       } {
         m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
       }
@@ -124,7 +116,7 @@ final class Backend($: BackendScope[_, State]) {
       js.Dictionary(Seq(
         "text" -> (s"${dep.module}": js.Any)
       ) ++ {
-        val deps = if (reverse) reverseDeps.getOrElse(dep.module, Nil) else depsOf(dep)
+        val deps = if (reverse) reverseDeps.getOrElse(dep.module, Nil) else resolution.dependenciesOf(dep)
         if (deps.isEmpty) Seq()
         else Seq("nodes" -> js.Array(deps.map(tree): _*))
       }: _*)
