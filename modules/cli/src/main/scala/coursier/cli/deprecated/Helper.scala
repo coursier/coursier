@@ -271,7 +271,7 @@ class Helper(
   val (modVerCfgErrors: Seq[String], normalDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     DependencyParser.dependenciesParams(
       rawDependencies,
-      common.dependencyOptions.defaultConfiguration0,
+      Configuration(common.resolutionOptions.defaultConfiguration),
       common.resolutionOptions.scalaVersionOrDefault
     ).either match {
       case Left(e) =>
@@ -283,7 +283,7 @@ class Helper(
   val (intransitiveModVerCfgErrors: Seq[String], intransitiveDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) =
     DependencyParser.dependenciesParams(
       common.dependencyOptions.intransitive,
-      common.dependencyOptions.defaultConfiguration0,
+      Configuration(common.resolutionOptions.defaultConfiguration),
       common.resolutionOptions.scalaVersionOrDefault
     ).either match {
       case Left(e) =>
@@ -309,7 +309,7 @@ class Helper(
     val (errors, ok) =
       DependencyParser.dependenciesParams(
         common.dependencyOptions.sbtPlugin,
-        common.dependencyOptions.defaultConfiguration0,
+        Configuration(common.resolutionOptions.defaultConfiguration),
         common.resolutionOptions.scalaVersionOrDefault
       ).either match {
         case Left(e) =>

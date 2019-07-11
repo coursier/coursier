@@ -336,7 +336,8 @@ object Resolve extends PlatformResolve {
         else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
       mapDependencies = mapDependencies,
       extraProperties = params.properties,
-      forceProperties = params.forcedProperties
+      forceProperties = params.forcedProperties,
+      defaultConfiguration = params.defaultConfiguration
     )
   }
 

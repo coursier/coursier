@@ -1,7 +1,6 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.core.Configuration
 
 final case class DependencyOptions(
 
@@ -33,22 +32,13 @@ final case class DependencyOptions(
   @Help("Add dependencies via Scaladex lookups")
     scaladex: List[String] = Nil,
 
-  @Help("Default configuration (default(compile) by default)")
-  @Value("configuration")
-  @Short("c")
-    defaultConfiguration: String = "default(compile)",
-
   scalaJs: Boolean = false,
 
   @Help("Enable scala-native")
   @Short("S")
     native: Boolean = false
 
-) {
-
-  def defaultConfiguration0 = Configuration(defaultConfiguration)
-
-}
+)
 
 object DependencyOptions {
   implicit val parser = Parser[DependencyOptions]

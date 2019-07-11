@@ -18,7 +18,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
-          assert(dep.configuration == Configuration.defaultCompile)
+          assert(dep.configuration == Configuration.empty)
           assert(dep.attributes == Attributes())
       }
     }
@@ -165,7 +165,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
+            Dependency(mod"org:name", "ver", configuration = Configuration.empty),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -180,7 +180,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver", configuration = Configuration.defaultCompile),
+            Dependency(mod"org:name", "ver", configuration = Configuration.empty),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty

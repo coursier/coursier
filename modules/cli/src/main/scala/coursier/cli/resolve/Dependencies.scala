@@ -58,15 +58,11 @@ object Dependencies {
     * Tries to parse dependencies as a simple dependencies.
     */
   def handleDependencies(
-    rawDependencies: Seq[String],
-    defaultConfiguration: Configuration
+    rawDependencies: Seq[String]
   ): ValidatedNel[String, List[(JavaOrScalaDependency, Map[String, String])]] =
     rawDependencies
       .map { s =>
-        DependencyParser.javaOrScalaDependencyParams(
-          s,
-          defaultConfiguration
-        ) match {
+        DependencyParser.javaOrScalaDependencyParams(s) match {
           case Left(error) => Validated.invalidNel(error)
           case Right(d) => Validated.validNel(List(d))
         }
@@ -76,10 +72,9 @@ object Dependencies {
 
   def withExtraRepo(
     rawDependencies: Seq[String],
-    defaultConfiguration: Configuration,
     extraDependencies: Seq[(JavaOrScalaDependency, Map[String, String])]
   ): Either[Throwable, (List[JavaOrScalaDependency], Option[Map[(JavaOrScalaModule, String), URL]])] =
-    handleDependencies(rawDependencies, defaultConfiguration) match {
+    handleDependencies(rawDependencies) match {
       case Validated.Valid(l) =>
 
         val l0 = l ++ extraDependencies

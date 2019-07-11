@@ -60,11 +60,18 @@ object Mima {
     }
   )
 
+  // until 2.0 final, mima is just there to check that we don't break too many things or unexpected stuff
   lazy val coreFilters = {
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // should have been private
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.defaultConfiguration"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.withDefaultConfig"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.finalDependencies"),
+        // better constructor for later bin compat
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.this"),
         // made non-case classes, for easier preserving of bin compat later
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.maven.MavenRepository")),
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.ivy.IvyRepository")),

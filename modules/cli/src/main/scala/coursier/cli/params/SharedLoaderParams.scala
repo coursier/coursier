@@ -13,10 +13,9 @@ final case class SharedLoaderParams(
 )
 
 object SharedLoaderParams {
-  def apply(
+  def from(
     options: SharedLoaderOptions,
-    scalaVersion: String,
-    defaultConfiguration: Configuration
+    scalaVersion: String
   ): ValidatedNel[String, SharedLoaderParams] = {
 
     val targetsOpt = {
@@ -37,7 +36,7 @@ object SharedLoaderParams {
       .traverse { d =>
         d.split(":", 2) match {
           case Array(target, dep) =>
-            DependencyParser.dependencyParams(dep, scalaVersion, defaultConfiguration) match {
+            DependencyParser.dependencyParams(dep, scalaVersion) match {
               case Left(err) =>
                 Validated.invalidNel(s"$d: $err")
               case Right((dep0, params)) =>

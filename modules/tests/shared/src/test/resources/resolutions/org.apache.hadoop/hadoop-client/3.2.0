@@ -34,6 +34,7 @@ commons-net:commons-net:3.6:compile
 dnsjava:dnsjava:2.1.7:compile
 javax.inject:javax.inject:1:compile
 javax.servlet:javax.servlet-api:3.1.0:compile
+javax.servlet.jsp:jsp-api:2.1:default
 javax.ws.rs:jsr311-api:1.1.1:compile
 javax.xml.bind:jaxb-api:2.2.11:compile
 jline:jline:0.9.94:compile

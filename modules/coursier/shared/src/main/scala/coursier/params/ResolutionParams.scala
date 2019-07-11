@@ -5,9 +5,8 @@
 // DO EDIT MANUALLY from now on
 package coursier.params
 
-import coursier.core.{Activation, Module, ModuleName, Organization}
+import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Version}
 import coursier.params.rule.{Rule, RuleResolution}
-import coursier.core.Version
 
 final class ResolutionParams private (
   val keepOptionalDependencies: Boolean,
@@ -24,7 +23,8 @@ final class ResolutionParams private (
   val osInfoOpt: Option[Activation.Os],
   val jdkVersionOpt: Option[Version],
   val useSystemOsInfo: Boolean,
-  val useSystemJdkVersion: Boolean
+  val useSystemJdkVersion: Boolean,
+  val defaultConfiguration: Configuration
 ) extends coursier.params.ResolutionParamsHelpers with Serializable {
 
   private def this(
@@ -55,7 +55,8 @@ final class ResolutionParams private (
     None,
     // set these to false by default?
     useSystemOsInfo = true,
-    useSystemJdkVersion = true
+    useSystemJdkVersion = true,
+    Configuration.defaultCompile
   )
 
   private def this() =
@@ -126,7 +127,8 @@ final class ResolutionParams private (
         osInfoOpt == x.osInfoOpt &&
         jdkVersionOpt == x.jdkVersionOpt &&
         useSystemOsInfo == x.useSystemOsInfo &&
-        useSystemJdkVersion == x.useSystemJdkVersion
+        useSystemJdkVersion == x.useSystemJdkVersion &&
+        defaultConfiguration == x.defaultConfiguration
     case _ => false
   }
   override def hashCode: Int = {
@@ -146,10 +148,32 @@ final class ResolutionParams private (
     code = 37 * (code + jdkVersionOpt.##)
     code = 37 * (code + useSystemOsInfo.##)
     code = 37 * (code + useSystemJdkVersion.##)
+    code = 37 * (code + defaultConfiguration.##)
     code
   }
-  override def toString: String =
-    s"ResolutionParams($keepOptionalDependencies, $maxIterations, $forceVersion, $forcedProperties, $profiles, $scalaVersion, $forceScalaVersion, $typelevel, $rules, $properties, $exclusions, $osInfoOpt, $jdkVersionOpt, $useSystemOsInfo, $useSystemJdkVersion)"
+  override def toString: String = {
+    val b = List.newBuilder[Any]
+    b ++= Seq(
+      keepOptionalDependencies,
+      maxIterations,
+      forceVersion,
+      forcedProperties,
+      profiles,
+      scalaVersion,
+      forceScalaVersion,
+      typelevel,
+      rules,
+      properties,
+      exclusions,
+      osInfoOpt,
+      jdkVersionOpt,
+      useSystemOsInfo,
+      useSystemJdkVersion
+    )
+    if (defaultConfiguration != Configuration.compile)
+      b += defaultConfiguration
+    b.result().mkString("ResolutionParams(", ", ", ")")
+  }
 
   private[this] def copy(
     keepOptionalDependencies: Boolean = keepOptionalDependencies,
@@ -166,7 +190,8 @@ final class ResolutionParams private (
     osInfoOpt: Option[Activation.Os] = osInfoOpt,
     jdkVersionOpt: Option[Version] = jdkVersionOpt,
     useSystemOsInfo: Boolean = useSystemOsInfo,
-    useSystemJdkVersion: Boolean = useSystemJdkVersion
+    useSystemJdkVersion: Boolean = useSystemJdkVersion,
+    defaultConfiguration: Configuration = defaultConfiguration
   ): ResolutionParams =
     new ResolutionParams(
       keepOptionalDependencies,
@@ -183,7 +208,8 @@ final class ResolutionParams private (
       osInfoOpt,
       jdkVersionOpt,
       useSystemOsInfo,
-      useSystemJdkVersion
+      useSystemJdkVersion,
+      defaultConfiguration
     )
 
   def withKeepOptionalDependencies(keepOptionalDependencies: Boolean): ResolutionParams =
@@ -226,6 +252,8 @@ final class ResolutionParams private (
     copy(useSystemOsInfo = useSystemOsInfo)
   def withUseSystemJdkVersion(useSystemJdkVersion: Boolean): ResolutionParams =
     copy(useSystemJdkVersion = useSystemJdkVersion)
+  def withDefaultConfiguration(defaultConfiguration: Configuration): ResolutionParams =
+    copy(defaultConfiguration = defaultConfiguration)
 
   def addExclusions(exclusions: (Organization, ModuleName)*): ResolutionParams =
     copy(exclusions = this.exclusions ++ exclusions)
@@ -417,7 +445,8 @@ object ResolutionParams {
       osInfoOpt,
       jdkVersionOpt,
       useSystemOsInfo,
-      useSystemJdkVersion
+      useSystemJdkVersion,
+      Configuration.defaultCompile
     )
 
   def apply(
@@ -452,6 +481,7 @@ object ResolutionParams {
       osInfoOpt,
       jdkVersionOpt,
       useSystemOsInfo,
-      useSystemJdkVersion
+      useSystemJdkVersion,
+      Configuration.defaultCompile
     )
 }

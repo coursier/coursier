@@ -124,7 +124,6 @@ object Resolve extends CaseApp[ResolveOptions] {
         val (javaOrScalaDeps, urlDepsOpt) = unlift {
           Dependencies.withExtraRepo(
             args,
-            params.dependency.defaultConfiguration,
             params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
           )
         }
