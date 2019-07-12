@@ -2,8 +2,8 @@
 title: Version handling
 ---
 
-This page aims at describing how versions are reconciled in coursier,
-in particular when version intervals are involved.
+This page aims at describing how versions are reconciled and compared
+in coursier, in particular when version intervals are involved.
 
 ## Reconciliation
 
@@ -11,6 +11,12 @@ Version reconciliation happens when two or more of your direct or
 transitive dependencies depend on different versions of the same module.
 Version reconciliation then either chooses one version for that module, or
 reports a conflict if it can't reconcile those versions.
+
+Note that the depth of a dependency in the dependency graph doesn't matter
+here. All versions of a module, wherever they come from in the dependency
+graph, are handled and compared on an equal footing. coursier somehow
+follows a "latest win" strategy, [like Ivy](https://github.com/coursier/coursier/issues/418#issuecomment-487800709), where the highest of two versions
+usually ends up being selected, whatever its origin in the dependency graph.
 
 ### Algorithm
 
