@@ -65,19 +65,11 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
       mainClass <- {
-        lazy val loader0 = Launch.loader(
-          res,
-          files,
-          params.sharedLaunch.sharedLoader,
-          params.sharedLaunch.artifact,
-          params.sharedLaunch.extraJars.map(_.toUri.toURL)
-        )
-
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(Launch.mainClasses(loader0)).flatMap { m =>
+            Task.delay(Launch.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +

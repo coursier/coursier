@@ -999,7 +999,7 @@ class Helper(
 
   lazy val retainedMainClass = {
 
-    val mainClasses = Launch.mainClasses(loader)
+    val mainClasses = Launch.mainClasses(filteredFiles ++ extraJars)
 
     if (common.verbosityLevel >= 2) {
       Console.err.println("Found main classes:")

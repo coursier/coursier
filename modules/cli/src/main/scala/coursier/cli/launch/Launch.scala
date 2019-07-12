@@ -4,6 +4,7 @@ import java.io.{File, InputStream, PrintStream}
 import java.net.{URL, URLClassLoader}
 import java.util.concurrent.ExecutorService
 import java.util.jar.{Manifest => JManifest}
+import java.util.zip.ZipFile
 
 import caseapp.CaseApp
 import caseapp.core.RemainingArgs
@@ -98,21 +99,19 @@ object Launch extends CaseApp[LaunchOptions] {
 
   private def manifestPath = "META-INF/MANIFEST.MF"
 
-  def mainClasses(cl: ClassLoader): Map[(String, String), String] = {
-    import scala.collection.JavaConverters._
+  def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
 
-    val parentMetaInfs = Option(cl.getParent).fold(Set.empty[URL]) { parent =>
-      parent.getResources(manifestPath).asScala.toSet
+    val metaInfs = jars.flatMap { f =>
+      val zf = new ZipFile(f)
+      val entryOpt = Option(zf.getEntry(manifestPath))
+      entryOpt.map(e => () => zf.getInputStream(e)).toSeq
     }
-    val allMetaInfs = cl.getResources(manifestPath).asScala.toVector
 
-    val metaInfs = allMetaInfs.filterNot(parentMetaInfs)
-
-    val mainClasses = metaInfs.flatMap { url =>
+    val mainClasses = metaInfs.flatMap { f =>
       var is: InputStream = null
       val attributes =
         try {
-          is = url.openStream()
+          is = f()
           new JManifest(is).getMainAttributes
         } finally {
           if (is != null)
@@ -177,7 +176,7 @@ object Launch extends CaseApp[LaunchOptions] {
     extraJars: Seq[URL]
   ): URLClassLoader = {
     val fileMap = files.toMap
-    val alreadyAdded = Set.empty[File]
+    val alreadyAdded = Set.empty[File] // unused???
     val parent = sharedLoaderParams.loaderNames.foldLeft(baseLoader) {
       (parent, name) =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
@@ -222,7 +221,7 @@ object Launch extends CaseApp[LaunchOptions] {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(mainClasses(loader0)).flatMap { m =>
+            Task.delay(mainClasses(files.map(_._2))).flatMap { m =>
               if (params.shared.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
