@@ -2,7 +2,7 @@
 plugins_(
   "com.eed3si9n"       % "sbt-assembly"             % "0.14.10",
   "com.geirsson"       % "sbt-ci-release"           % "1.2.6",
-  "org.scala-sbt"      % "sbt-contraband"           % "0.4.3",
+  "org.scala-sbt"      % "sbt-contraband"           % "0.4.4",
   "io.get-coursier"    % "sbt-coursier"             % sbtCoursierVersion,
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.3.0",
