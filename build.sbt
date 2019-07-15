@@ -221,7 +221,7 @@ lazy val publish = project("publish")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, okhttp, publish)
+  .dependsOn(bootstrap, coursierJvm, publish)
   .enablePlugins(ContrabandPlugin, PackPlugin)
   .settings(
     shared,
