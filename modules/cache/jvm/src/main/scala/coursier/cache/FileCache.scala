@@ -428,7 +428,17 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             if (file.exists()) {
               done()
-              Some(Right(()))
+              val res = lenOpt.flatten match {
+                case None =>
+                  Right(())
+                case Some(len) =>
+                  val fileLen = file.length()
+                  if (len == fileLen)
+                    Right(())
+                  else
+                    Left(ArtifactError.WrongLength(fileLen, len, file.getAbsolutePath))
+              }
+              Some(res)
             } else {
               // yes, Thread.sleep. 'tis our thread pool anyway.
               // (And the various resources make it not straightforward to switch to a more Task-based internal API here.)

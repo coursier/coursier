@@ -72,6 +72,15 @@ object ArtifactError {
     s"$file (expected $sumType $expected in $sumFile, got $got)"
   )
 
+  final case class WrongLength(
+    got: Long,
+    expected: Long,
+    file: String
+  ) extends ArtifactError(
+    "wrong length",
+    s"$file (expected $expected B, got $got B)"
+  )
+
   final case class FileTooOldOrNotFound(
     file: String
   ) extends ArtifactError(
