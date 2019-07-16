@@ -14,6 +14,7 @@ object Deps {
       else "2.1.3"
     }
     def http4s = "0.18.17"
+    def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.28"
   }
@@ -33,7 +34,8 @@ object Deps {
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   def mavenModel = "org.apache.maven" % "maven-model" % "3.6.1"
   // staying before 3.14.0 to the URLStreamHandlerFactory implementation
-  def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % "3.13.1"
+  def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
+  def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.26"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
