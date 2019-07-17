@@ -36,14 +36,17 @@ object Launch extends CaseApp[LaunchOptions] {
   }
 
   def launch(
-    loader: ClassLoader,
+    hierarchy: Seq[(Option[String], Array[URL])],
     mainClass: String,
     args: Seq[String],
     properties: Seq[(String, String)]
-  ): Either[LaunchException, () => Unit] =
+  ): Either[LaunchException, () => Unit] = {
+
+    val loader0 = loader(hierarchy)
+
     for {
       cls <- {
-        try Right(loader.loadClass(mainClass))
+        try Right(loader0.loadClass(mainClass))
         catch {
           case e: ClassNotFoundException =>
             Left(new LaunchException.MainClassNotFound(mainClass, e))
@@ -79,7 +82,7 @@ object Launch extends CaseApp[LaunchOptions] {
         val previousLoader = currentThread.getContextClassLoader
         val previousProperties = properties0.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
-          currentThread.setContextClassLoader(loader)
+          currentThread.setContextClassLoader(loader0)
           for ((k, v) <- properties0)
             sys.props(k) = v
           method.invoke(null, args.toArray)
@@ -96,6 +99,7 @@ object Launch extends CaseApp[LaunchOptions] {
           }
         }
     }
+  }
 
   private def manifestPath = "META-INF/MANIFEST.MF"
 
@@ -168,17 +172,16 @@ object Launch extends CaseApp[LaunchOptions] {
       mainClassOpt.orElse(sameOrgOnlyMainClassOpt)
     }
 
-  def loader(
+  def loaderHierarchy(
     res: Resolution,
     files: Seq[(Artifact, File)],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
     extraJars: Seq[URL]
-  ): URLClassLoader = {
+  ): Seq[(Option[String], Array[URL])] = {
     val fileMap = files.toMap
     val alreadyAdded = Set.empty[File] // unused???
-    val parent = sharedLoaderParams.loaderNames.foldLeft(baseLoader) {
-      (parent, name) =>
+    val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
         val subRes = res.subset(deps)
         val artifacts = coursier.Artifacts.artifacts0(
@@ -190,11 +193,19 @@ object Launch extends CaseApp[LaunchOptions] {
         val files0 = artifacts
           .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
           .filter(!alreadyAdded(_))
-        new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
+        Some(name) -> files0.map(_.toURI.toURL).toArray
     }
     val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++ extraJars
-    new URLClassLoader(cp, parent)
+    parents :+ (None, cp)
   }
+
+  def loader(hierarchy: Seq[(Option[String], Array[URL])]): ClassLoader =
+    hierarchy.foldLeft(baseLoader) {
+      case (parent, (None, urls)) =>
+        new URLClassLoader(urls, parent)
+      case (parent, (Some(name), urls)) =>
+        new SharedClassLoader(urls, parent, Array(name))
+    }
 
   def task(
     params: LaunchParams,
@@ -207,15 +218,6 @@ object Launch extends CaseApp[LaunchOptions] {
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
-      loader0 <- Task.delay {
-        loader(
-          res,
-          files,
-          params.shared.sharedLoader,
-          params.shared.artifact,
-          params.shared.extraJars.map(_.toUri.toURL)
-        )
-      }
       mainClass <- {
         params.shared.mainClassOpt match {
           case Some(c) =>
@@ -283,7 +285,18 @@ object Launch extends CaseApp[LaunchOptions] {
         // order matters: first set jcp, so that the expansion of subsequent properties can reference it
         jcp ++ opt.toSeq ++ params.shared.properties
       }
-      f <- Task.fromEither(launch(loader0, mainClass, userArgs, props))
+      f <- Task.fromEither {
+
+        val hierarchy = loaderHierarchy(
+          res,
+          files,
+          params.shared.sharedLoader,
+          params.shared.artifact,
+          params.shared.extraJars.map(_.toUri.toURL)
+        )
+
+        launch(hierarchy, mainClass, userArgs, props)
+      }
     } yield (mainClass, f)
 
   def run(options: LaunchOptions, args: RemainingArgs): Unit = {

@@ -1,11 +1,9 @@
 package coursier.cli.spark
 
 import java.io.File
-import java.net.URLClassLoader
 
 import caseapp._
 import coursier.cli.deprecated.Helper
-import coursier.cli.launch.Launch
 import coursier.{Dependency, moduleNameString, organizationString}
 
 
@@ -201,13 +199,8 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
       options.common
     )
 
-    val submitLoader = new URLClassLoader(
-      submitCp.map(_.toURI.toURL).toArray,
-      Launch.baseLoader
-    )
-
     coursier.cli.launch.Launch.launch(
-      submitLoader,
+      Seq((None, submitCp.map(_.toURI.toURL).toArray)),
       Submit.mainClassName,
       sparkSubmitOptions,
       Nil
