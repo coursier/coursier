@@ -207,14 +207,15 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val publish = project("publish")
-  .dependsOn(coreJvm, cacheJvm, okhttp)
+  .dependsOn(coreJvm, cacheJvm)
   .settings(
     shared,
     coursierPrefix,
     libs ++= Seq(
       Deps.argonautShapeless,
       Deps.catsCore,
-      Deps.emoji
+      Deps.emoji,
+      Deps.okhttp
     ),
     resolvers += Resolver.typesafeIvyRepo("releases"), // for "com.lightbend" %% "emoji"
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
