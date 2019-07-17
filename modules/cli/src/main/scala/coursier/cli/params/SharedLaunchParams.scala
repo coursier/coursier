@@ -14,7 +14,8 @@ final case class SharedLaunchParams(
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
   properties: Seq[(String, String)],
-  extraJars: Seq[Path]
+  extraJars: Seq[Path],
+  fork: Boolean
 ) {
   def fetch: FetchParams =
     FetchParams(
@@ -52,6 +53,8 @@ object SharedLaunchParams {
       Paths.get(p)
     }
 
+    val fork = options.fork.getOrElse(false)
+
     (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
       (resolve, artifact, sharedLoader, properties) =>
         SharedLaunchParams(
@@ -60,7 +63,8 @@ object SharedLaunchParams {
           sharedLoader,
           mainClassOpt,
           properties,
-          extraJars
+          extraJars,
+          fork
         )
     }
   }

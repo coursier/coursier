@@ -2,6 +2,7 @@ package coursier.cli.launch
 
 import java.io.{File, InputStream, PrintStream}
 import java.net.{URL, URLClassLoader}
+import java.nio.file.Paths
 import java.util.concurrent.ExecutorService
 import java.util.jar.{Manifest => JManifest}
 import java.util.zip.ZipFile
@@ -35,14 +36,48 @@ object Launch extends CaseApp[LaunchOptions] {
     rootLoader(ClassLoader.getSystemClassLoader)
   }
 
+  def launchFork(
+    hierarchy: Seq[(Option[String], Array[File])],
+    mainClass: String,
+    args: Seq[String],
+    properties: Seq[(String, String)]
+  ): Either[LaunchException, () => Int] =
+    hierarchy match {
+      case Seq((None, files)) =>
+
+        // Read JAVA_HOME if it's set? Allow users to change that command via CLI options?
+        val cmd = Seq("java") ++
+          properties.map { case (k, v) => s"-D$k=$v" } ++
+          Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
+          args
+
+        val b = new ProcessBuilder()
+        b.command(cmd: _*)
+        b.inheritIO()
+
+        Right {
+          () =>
+            System.err.println(s"Running ${cmd.map("\"" + _ + "\"").mkString(" ")}")
+            val p = b.start()
+            p.waitFor()
+        }
+      case _ =>
+        Left(new LaunchException.ClasspathHierarchyUnsupportedWhenForking)
+    }
+
   def launch(
-    hierarchy: Seq[(Option[String], Array[URL])],
+    hierarchy: Seq[(Option[String], Array[File])],
     mainClass: String,
     args: Seq[String],
     properties: Seq[(String, String)]
   ): Either[LaunchException, () => Unit] = {
 
-    val loader0 = loader(hierarchy)
+    val loader0 = loader(
+      hierarchy.map {
+        case (nameOpt, files) =>
+          (nameOpt, files.map(_.toURI.toURL))
+      }
+    )
 
     for {
       cls <- {
@@ -64,26 +99,12 @@ object Launch extends CaseApp[LaunchOptions] {
       }.right
     } yield {
       () =>
-        val properties0 = {
-          val m = new java.util.LinkedHashMap[String, String]
-          for ((k, v) <- properties)
-            m.put(k, v)
-          val m0 = coursier.paths.Util.expandProperties(m)
-          val b = new ListBuffer[(String, String)]
-          m0.forEach(
-            new java.util.function.BiConsumer[String, String] {
-              def accept(k: String, v: String) =
-                b += k -> v
-            }
-          )
-          b.result()
-        }
         val currentThread = Thread.currentThread()
         val previousLoader = currentThread.getContextClassLoader
-        val previousProperties = properties0.map(_._1).map(k => k -> Option(System.getProperty(k)))
+        val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
           currentThread.setContextClassLoader(loader0)
-          for ((k, v) <- properties0)
+          for ((k, v) <- properties)
             sys.props(k) = v
           method.invoke(null, args.toArray)
         }
@@ -177,8 +198,8 @@ object Launch extends CaseApp[LaunchOptions] {
     files: Seq[(Artifact, File)],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
-    extraJars: Seq[URL]
-  ): Seq[(Option[String], Array[URL])] = {
+    extraJars: Seq[File]
+  ): Seq[(Option[String], Array[File])] = {
     val fileMap = files.toMap
     val alreadyAdded = Set.empty[File] // unused???
     val parents = sharedLoaderParams.loaderNames.map { name =>
@@ -193,9 +214,9 @@ object Launch extends CaseApp[LaunchOptions] {
         val files0 = artifacts
           .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
           .filter(!alreadyAdded(_))
-        Some(name) -> files0.map(_.toURI.toURL).toArray
+        Some(name) -> files0.toArray
     }
-    val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++ extraJars
+    val cp = files.map(_._2).filterNot(alreadyAdded).toArray ++ extraJars
     parents :+ (None, cp)
   }
 
@@ -214,7 +235,7 @@ object Launch extends CaseApp[LaunchOptions] {
     userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(String, () => Unit)] =
+  ): Task[(String, () => Option[Int])] =
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
@@ -282,8 +303,7 @@ object Launch extends CaseApp[LaunchOptions] {
           else
             Nil
 
-        // order matters: first set jcp, so that the expansion of subsequent properties can reference it
-        jcp ++ opt.toSeq ++ params.shared.properties
+        opt.toSeq ++ params.shared.properties
       }
       f <- Task.fromEither {
 
@@ -292,10 +312,44 @@ object Launch extends CaseApp[LaunchOptions] {
           files,
           params.shared.sharedLoader,
           params.shared.artifact,
-          params.shared.extraJars.map(_.toUri.toURL)
+          params.shared.extraJars.map(_.toFile)
         )
 
-        launch(hierarchy, mainClass, userArgs, props)
+        val jcp =
+          hierarchy match {
+            case Seq((None, files)) =>
+              Seq(
+                "java.class.path" -> files.map(_.getAbsolutePath).mkString(File.pathSeparator)
+              )
+            case _ =>
+              Nil
+          }
+
+        val properties0 = {
+          val m = new java.util.LinkedHashMap[String, String]
+          // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
+          for ((k, v) <- jcp.iterator ++ props.iterator)
+            m.put(k, v)
+          val m0 = coursier.paths.Util.expandProperties(m)
+          // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
+          if (params.shared.fork && props.forall(_._1 != "java.class.path"))
+            m0.remove("java.class.path")
+          val b = new ListBuffer[(String, String)]
+          m0.forEach(
+            new java.util.function.BiConsumer[String, String] {
+              def accept(k: String, v: String) =
+                b += k -> v
+            }
+          )
+          b.result()
+        }
+
+        if (params.shared.fork)
+          launchFork(hierarchy, mainClass, userArgs, properties0)
+            .right.map(f => () => Some(f()))
+        else
+          launch(hierarchy, mainClass, userArgs, properties0)
+          .right.map(f => { () => f(); None })
       }
     } yield (mainClass, f)
 
@@ -354,7 +408,12 @@ object Launch extends CaseApp[LaunchOptions] {
             else if (params.shared.resolve.output.verbosity == 1)
               System.err.println("Launching")
 
-            run()
+            run() match {
+              case None =>
+              case Some(retCode) =>
+                if (retCode != 0)
+                  sys.exit(retCode)
+            }
         }
     }
   }
