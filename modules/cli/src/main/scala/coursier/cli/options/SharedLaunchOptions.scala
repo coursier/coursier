@@ -18,6 +18,8 @@ final case class SharedLaunchOptions(
   @Short("D")
     property: List[String] = Nil,
 
+  fork: Option[Boolean] = None,
+
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
 

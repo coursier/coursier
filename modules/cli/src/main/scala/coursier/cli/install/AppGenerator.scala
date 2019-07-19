@@ -2,7 +2,6 @@ package coursier.cli.install
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.math.BigInteger
-import java.net.URLClassLoader
 import java.nio.channels.{FileChannel, FileLock}
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
@@ -211,32 +210,7 @@ object AppGenerator {
     verbosity: Int,
     mainDependencyOpt: Option[Dependency]
   ): Option[String] = {
-
-    val baseParent = Launch.baseLoader
-
-    val parent =
-      if (shared.isEmpty) baseParent
-      else {
-        val urls = shared.map(_.toURI.toURL)
-        if (verbosity >= 2) {
-          System.err.println(s"${urls.length} JARs in shared class loader:")
-          for (url <- urls)
-            System.err.println(s"  $url")
-        }
-        new URLClassLoader(urls.toArray, baseParent)
-      }
-
-    val loader = {
-      val urls = jars.map(_.toURI.toURL) // appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet).map(_._2.toURI.toURL)
-      if (verbosity >= 2) {
-        System.err.println(s"${urls.length} JARs in class loader:")
-        for (url <- urls)
-          System.err.println(s"  $url")
-      }
-      new URLClassLoader(urls.toArray, parent)
-    }
-
-    val m = Launch.mainClasses(loader)
+    val m = Launch.mainClasses(jars)
     if (verbosity >= 2) {
       System.err.println(s"Found ${m.size} main classes:")
       for (a <- m)

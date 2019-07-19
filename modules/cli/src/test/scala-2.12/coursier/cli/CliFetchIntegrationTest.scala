@@ -116,8 +116,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val params = paramsOrThrow(options)
     val (_, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
       .unsafeRun()(ec)
-    val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
-    assert(Launch.mainClasses(loader) == Map(
+    assert(Launch.mainClasses(files.map(_._2)) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
       ("com.geirsson", "cli") -> "org.scalafmt.cli.Cli"
     ))
@@ -129,7 +128,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val (_, files) = Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
-    assert(Launch.mainClasses(loader) == Map(
+    assert(Launch.mainClasses(files.map(_._2)) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
       ("ch.epfl.scala", "cli") -> "scalafix.cli.Cli"
     ))
@@ -141,7 +140,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val (_, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
-    assert(Launch.mainClasses(loader) == Map(
+    assert(Launch.mainClasses(files.map(_._2)) == Map(
       ("", "Javassist") -> "javassist.CtClass",
       ("" ,"Java Native Access (JNA)") -> "com.sun.jna.Native",
       ("com.lihaoyi", "ammonite") -> "ammonite.Main"
@@ -154,7 +153,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val (_, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
-    assert(Launch.mainClasses(loader) == Map(
+    assert(Launch.mainClasses(files.map(_._2)) == Map(
       ("", "") -> "com.kenai.jffi.Main",
       ("lt.dvim.sssio", "sssio") -> "lt.dvim.sssio.Sssio"
     ))
