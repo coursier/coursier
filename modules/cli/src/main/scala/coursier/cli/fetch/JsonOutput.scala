@@ -13,7 +13,7 @@ object JsonOutput {
     artifacts: Seq[(Dependency, Publication, Artifact)],
     files: Seq[(Artifact, File)],
     classifiers: Set[Classifier],
-    exclusionsInErrors: Boolean // common.verbosityLevel >= 1
+    printExclusions: Boolean // common.verbosityLevel >= 1
   ): String = {
 
     val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
@@ -52,7 +52,7 @@ object JsonOutput {
         artifacts0, // ?? this corresponds to _all_ the artifacts, not just those of d
         Some(jsonReq),
         resolution,
-        printExclusions = exclusionsInErrors,
+        printExclusions = printExclusions,
         excluded = false,
         colors = false,
         overrideClassifiers = classifiers
