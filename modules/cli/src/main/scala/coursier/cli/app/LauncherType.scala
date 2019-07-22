@@ -2,6 +2,7 @@ package coursier.cli.app
 
 sealed abstract class LauncherType extends Product with Serializable {
   def needsBatOnWindows: Boolean = false
+  def isExeOnWindows: Boolean = false
 }
 
 object LauncherType {
@@ -18,8 +19,12 @@ object LauncherType {
   case object Standalone extends LauncherType {
     override def needsBatOnWindows = true
   }
-  case object ScalaNative extends LauncherType
-  case object GraalvmNativeImage extends LauncherType
+  case object ScalaNative extends LauncherType {
+    override def isExeOnWindows: Boolean = true
+  }
+  case object GraalvmNativeImage extends LauncherType {
+    override def isExeOnWindows: Boolean = true
+  }
 
   def parse(input: String): Either[String, LauncherType] =
     input match {
