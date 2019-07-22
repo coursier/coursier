@@ -1,58 +1,39 @@
 package coursier.cache.internal
 
-import java.io.{File, Writer}
+import java.io.Writer
 
-import scala.util.Try
+import org.fusesource.jansi.Ansi.{Erase, ansi}
+import org.jline.terminal.{Terminal => JLineTerminal, TerminalBuilder => JLineTerminalBuilder}
 
 object Terminal {
 
-  // Cut-n-pasted and adapted from
-  // https://github.com/lihaoyi/Ammonite/blob/10854e3b8b454a74198058ba258734a17af32023/terminal/src/main/scala/ammonite/terminal/Utils.scala
+  private def withTerm[T](f: JLineTerminal => T): T = {
+    var term: JLineTerminal = null
+    try {
+      term = JLineTerminalBuilder.terminal()
+      f(term)
+    } finally {
+      if (term != null)
+        term.close()
+    }
+  }
 
-  private lazy val pathedTput = if (new File("/usr/bin/tput").exists()) "/usr/bin/tput" else "tput"
-
-  lazy val ttyAvailable: Boolean =
-    new File("/dev/tty").exists()
-
-  def consoleDim(s: String): Option[Int] =
-    if (ttyAvailable) {
-      import sys.process._
-      val nullLog = new ProcessLogger {
-        def out(s: => String): Unit = {}
-        def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
-      }
-      Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt).toOption
-    } else
-      None
-
-  def consoleDimOrThrow(s: String): Int =
-    if (ttyAvailable) {
-      import sys.process._
-      val nullLog = new ProcessLogger {
-        def out(s: => String): Unit = {}
-        def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
-      }
-      Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt
-    } else
-      throw new Exception("TTY not available")
+  def consoleDims(): (Int, Int) =
+    withTerm(t => (t.getWidth, t.getHeight - 1))
 
   implicit class Ansi(val output: Writer) extends AnyVal {
-    private def control(n: Int, c: Char) = output.write(s"\u001b[" + n + c)
-
     /**
       * Move up `n` squares
       */
-    def up(n: Int): Unit = if (n > 0) control(n, 'A')
+    def up(n: Int): Unit = if (n > 0) output.write(ansi().cursorUp(n).toString)
     /**
       * Move down `n` squares
       */
-    def down(n: Int): Unit = if (n > 0) control(n, 'B')
+    def down(n: Int): Unit = if (n > 0) output.write(ansi().cursorDown(n).toString)
     /**
       * Move left `n` squares
       */
-    def left(n: Int): Unit = if (n > 0) control(n, 'D')
+    def left(n: Int): Unit = if (n > 0) output.write(ansi().cursorLeft(n).toString)
 
     /**
       * Clear the current line
@@ -61,7 +42,14 @@ object Terminal {
       * n=1: clear from cursor to start of line
       * n=2: clear entire line
       */
-    def clearLine(n: Int): Unit = control(n, 'K')
+    def clearLine(n: Int): Unit = {
+      val erase = n match {
+        case 0 => Erase.FORWARD
+        case 1 => Erase.BACKWARD
+        case _ => Erase.ALL
+      }
+      output.write(ansi().eraseLine(erase).toString)
+    }
   }
 
 }

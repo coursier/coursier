@@ -104,7 +104,11 @@ lazy val paths = project("paths")
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(core)
   .jvmSettings(
-    addPathsSources
+    addPathsSources,
+    libraryDependencies ++= Seq(
+      Deps.jansi,
+      Deps.jlineTerminalJansi
+    ),
   )
   .jsSettings(
     name := "fetch-js"
