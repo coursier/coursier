@@ -5,7 +5,6 @@ import java.util.Objects
 
 import coursier.Artifact
 import coursier.core._
-import coursier.util.Print
 
 import scala.collection.mutable
 import scala.collection.parallel.ParSeq
@@ -93,12 +92,6 @@ final case class JsonElem(dep: Dependency,
                           overrideClassifiers: Set[Classifier]
   ) {
 
-  val (red, yellow, reset) =
-    if (colors)
-      (Console.RED, Console.YELLOW, Console.RESET)
-    else
-      ("", "", "")
-
   // This is used to printing json output
   // Option of the file path
   lazy val downloadedFile: Option[String] = {
@@ -119,37 +112,6 @@ final case class JsonElem(dep: Dependency,
   // These are used to printing json output
   val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion"
   val requestedVersionStr = s"${dep.module}:${dep.version}"
-
-  lazy val repr =
-    if (excluded)
-      resolution.reconciledVersions.get(dep.module) match {
-        case None =>
-          s"$yellow(excluded)$reset ${dep.module}:${dep.version}"
-        case Some(version) =>
-          val versionMsg =
-            if (version == dep.version)
-              "this version"
-            else
-              s"version $version"
-
-          s"${dep.module}:${dep.version} " +
-            s"$red(excluded, $versionMsg present anyway)$reset"
-      }
-    else {
-      val versionStr =
-        if (reconciledVersion == dep.version)
-          dep.version
-        else {
-          val assumeCompatibleVersions = Print.compatibleVersions(dep.version, reconciledVersion)
-
-          (if (assumeCompatibleVersions) yellow else red) +
-            s"${dep.version} -> $reconciledVersion" +
-            (if (assumeCompatibleVersions || colors) "" else " (possible incompatibility)") +
-            reset
-        }
-
-      s"${dep.module}:$versionStr"
-    }
 
   lazy val children: Seq[JsonElem] =
     if (excluded)
