@@ -280,6 +280,25 @@ lazy val cli = project("cli")
     onlyIn("2.12")
   )
 
+lazy val `cli-graalvm` = project("cli-graalvm")
+  .dependsOn(cli)
+  .settings(
+    shared,
+    onlyIn("2.12"),
+    coursierPrefix,
+    assemblyMergeStrategy.in(assembly) := {
+      case "module-info.class" => MergeStrategy.discard
+      case x =>
+        val oldStrategy = assemblyMergeStrategy.in(assembly).value
+        oldStrategy(x)
+    },
+    mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
+    libs ++= Seq(
+      "org.bouncycastle" % "bcprov-jdk15on" % "1.61",
+      "org.bouncycastle" % "bcpkix-jdk15on" % "1.61"
+    )
+  )
+
 lazy val `cli-native_03` = project("cli-native_03")
   .dependsOn(cli)
   .settings(
@@ -405,6 +424,7 @@ lazy val jvm = project("jvm")
     benchmark,
     publish,
     cli,
+    `cli-graalvm`,
     okhttp,
     coursierJvm,
     `cli-native_03`,
@@ -450,6 +470,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     benchmark,
     publish,
     cli,
+    `cli-graalvm`,
     scalazJvm,
     scalazJs,
     web,
