@@ -3,16 +3,21 @@ set -eu
 
 BASE="$(dirname "${BASH_SOURCE[0]}")"
 
-ASSEMBLY="coursier-assembly"
+TRANSIENT_ASSEMBLY=false
+
+if [[ -z "${ASSEMBLY:-}" ]]; then
+  # TRANSIENT_ASSEMBLY=true
+  ASSEMBLY="coursier-assembly"
+
+  OUTPUT="$ASSEMBLY" "$BASE/generate-launcher.sh" --assembly
+fi
 
 cleanup() {
-  rm -f "$ASSEMBLY"
+  [[ "$TRANSIENT_ASSEMBLY" == false ]] || rm -f "$ASSEMBLY"
 }
 
 trap cleanup EXIT INT TERM
 
-
-OUTPUT="$ASSEMBLY" "$BASE/generate-launcher.sh" --assembly
 
 OUTPUT="coursier-graalvm"
 
