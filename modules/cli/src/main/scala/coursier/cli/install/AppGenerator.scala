@@ -142,8 +142,15 @@ object AppGenerator {
     // - writing things to a temp file (tmpDest)
     // - atomic move to final dest, so that no borked launcher are exposed at any time, even during launcher generation
 
+    val osExtensionOpt =
+      if (LauncherBat.isWindows) Some(".exe")
+      else None
+
     val dir = dest.getParent
     val tmpDest = dir.resolve(s".${dest.getFileName}.part")
+    val tmpDestWithExtOpt = osExtensionOpt.map { ext =>
+      (tmpDest.getParent.resolve(tmpDest.getFileName.toString + ext), dest.getParent.resolve(dest.getFileName.toString + ext))
+    }
     val info = dir.resolve(s".${dest.getFileName}.info")
     val tmpInfo = dir.resolve(s".${dest.getFileName}.info.part")
     val lockFile = dir.resolve(s".${dest.getFileName}.lock")
@@ -162,19 +169,26 @@ object AppGenerator {
       try {
         lock = channel.lock()
         val res = f(tmpDest, tmpInfo)
-        if (Files.isRegularFile(tmpDest)) {
+        if (Files.isRegularFile(tmpDest) || tmpDestWithExtOpt.map(_._1).exists(Files.isRegularFile(_))) {
+
+          val (actualTmpDest, actualDest) =
+            tmpDestWithExtOpt
+              .filter(t => Files.isRegularFile(t._1))
+              .getOrElse((tmpDest, dest))
+
           if (verbosity >= 2) {
-            System.err.println(s"Wrote $tmpDest")
-            System.err.println(s"Moving $tmpDest to $dest")
+            System.err.println(s"Wrote $actualTmpDest")
+            System.err.println(s"Moving $actualTmpDest to $actualDest")
           }
           Files.deleteIfExists(dest) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+          tmpDestWithExtOpt.map(_._2).foreach(Files.deleteIfExists)
           Files.move(
-            tmpDest,
-            dest,
+            actualTmpDest,
+            actualDest,
             StandardCopyOption.ATOMIC_MOVE
           )
           if (verbosity == 1)
-            System.err.println(s"Wrote $dest")
+            System.err.println(s"Wrote $actualDest")
 
           if (Files.isRegularFile(tmpInfo)) {
             if (verbosity >= 2) {
@@ -475,7 +489,12 @@ object AppGenerator {
                     dest.getParent.resolve(s".${dest.getFileName}.binary")
 
                 def generate(extraArgs: String*): Unit = {
-                  val cmd = Seq(s"${graalvmParams.home}/bin/native-image", "--no-server") ++
+                  val startCmd =
+                    if (LauncherBat.isWindows)
+                      Seq(s"${graalvmParams.home}/bin/native-image.cmd")
+                    else
+                      Seq(s"${graalvmParams.home}/bin/native-image", "--no-server")
+                  val cmd = startCmd ++
                     desc.graalvmOptions.toSeq.flatMap(_.options) ++
                     graalvmParams.extraNativeImageOptions ++
                     extraArgs ++
@@ -488,6 +507,19 @@ object AppGenerator {
                   val retCode = p.waitFor()
                   if (retCode != 0)
                     throw new ErrorRunningGraalvmNativeImage(retCode)
+                  if (LauncherBat.isWindows) {
+                    val exe = imageDest.getFileName.toString + ".exe"
+
+                    import scala.collection.JavaConverters._
+                    val s = Files.list(imageDest.getParent)
+                    val prefix = imageDest.getFileName + "."
+                    s.iterator().asScala.toVector.foreach { p =>
+                      val name = p.getFileName.toString
+                      if (name != exe && name.startsWith(prefix))
+                        Files.deleteIfExists(p)
+                    }
+                    s.close()
+                  }
                 }
 
                 desc.graalvmOptions.flatMap(_.reflectionConf) match {
@@ -556,7 +588,13 @@ object AppGenerator {
             System.err.println(s"Wrote $bat")
         }
 
-        Files.setLastModifiedTime(tmpDest, FileTime.from(currentTime))
+        val actualTmpDest =
+          if (desc.launcherType.isExeOnWindows)
+            tmpDest.getParent.resolve(tmpDest.getFileName.toString + ".exe")
+          else
+            tmpDest
+
+        Files.setLastModifiedTime(actualTmpDest, FileTime.from(currentTime))
         true
       }
     }

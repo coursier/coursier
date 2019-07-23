@@ -8,6 +8,8 @@ final class ConsoleDim {
   private var initialized = false
   private val lock = new Object
 
+  // FIXME On Windows, don't cache Terminal.consoleDims()? (should be a - cheap I think - native call)
+
   private def setup(): Unit = {
 
     // From https://stackoverflow.com/q/31594364/3714539
@@ -35,7 +37,7 @@ final class ConsoleDim {
         dimsOpt.getOrElse {
           if (!initialized)
             setup()
-          val dims = (Terminal.consoleDimOrThrow("cols"), Terminal.consoleDimOrThrow("lines"))
+          val dims = Terminal.consoleDims()
           dimsOpt = Some(dims)
           dims
         }

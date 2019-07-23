@@ -53,7 +53,7 @@ object RefreshLogger {
 
     val env = env0.fold(compatibilityEnv)(!_)
 
-    env || nonInteractive || insideEmacs || ci || !Terminal.ttyAvailable
+    env || nonInteractive || insideEmacs || ci
   }
 
 
@@ -155,7 +155,7 @@ object RefreshLogger {
 class RefreshLogger(
   out: Writer,
   display: RefreshDisplay,
-  val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode && Terminal.ttyAvailable
+  val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode
 ) extends CacheLogger {
 
   import RefreshLogger._
