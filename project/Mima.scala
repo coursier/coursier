@@ -158,6 +158,9 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // Removed private method
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.control$extension"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.coursier$cache$internal$Terminal$Ansi$$control$extension"),
         // Tweaked more or less internal things
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.MockCache.create$default$2"),
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.cache.MockCache.create$default$4"),
