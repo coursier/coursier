@@ -11,7 +11,7 @@ if [[ -z "${ASSEMBLY:-}" ]]; then
 
   # Set that one too once it's published
   # MODULE="coursier-cli-graalvm"
-  OUTPUT="$ASSEMBLY" "$BASE/generate-launcher.sh" --assembly
+  DOWNLOAD_LAUNCHER=true OUTPUT="$ASSEMBLY" "$BASE/generate-launcher.sh" --assembly "$@"
 fi
 
 cleanup() {

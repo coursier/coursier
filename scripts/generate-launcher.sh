@@ -7,14 +7,24 @@ fi
 
 OUTPUT="${OUTPUT:-"coursier"}"
 
-SBTPACK_LAUNCHER="$(dirname "$0")/../modules/cli/target/pack/bin/coursier"
+if [[ "$DOWNLOAD_LAUNCHER" == true ]]; then
+  LAUNCHER="./coursier-$VERSION"
+  curl -Lo "$LAUNCHER" "https://github.com/coursier/coursier/releases/download/v$VERSION/coursier"
+  chmod +x "$LAUNCHER"
+  EXTRA_ARGS="launch -r typesafe:ivy-releases io.get-coursier:coursier-cli_2.12:2.0.0-RC2-6 -E io.get-coursier:coursier-okhttp_2.12 --"
+else
+  LAUNCHER="$(dirname "$0")/../modules/cli/target/pack/bin/coursier"
+  EXTRA_ARGS=""
 
-if [ ! -f "$SBTPACK_LAUNCHER" ]; then
-  sbt scala212 cli/pack
+  if [ ! -f "$LAUNCHER" ]; then
+    sbt scala212 cli/pack
+  fi
 fi
 
-"$SBTPACK_LAUNCHER" bootstrap \
-  "io.get-coursier:coursier-cli_2.12:$VERSION" \
+MODULE="${MODULE:-"coursier-cli"}"
+
+"$LAUNCHER" $EXTRA_ARGS bootstrap \
+  "io.get-coursier::$MODULE:$VERSION" \
   --no-default \
   -r central \
   -r typesafe:ivy-releases \
