@@ -61,7 +61,7 @@ object Fetch extends CaseApp[FetchOptions] {
                 artifacts,
                 artifactFiles,
                 params.artifact.classifiers,
-                params.resolve.output.verbosity >= 1
+                printExclusions = false
               )
 
               Files.write(output, report.getBytes(StandardCharsets.UTF_8))

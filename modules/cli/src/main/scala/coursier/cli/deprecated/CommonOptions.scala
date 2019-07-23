@@ -17,10 +17,6 @@ final case class CommonOptions(
   @Short("T")
     reverseTree: Boolean = false,
 
-  @Help("Specify path for json output")
-  @Short("j")
-    jsonOutputFile: String = "",
-
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
 

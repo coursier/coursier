@@ -751,6 +751,22 @@ object Resolution {
       Configuration.compile
     )
 
+  private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
+    Parse.withFallbackConfig(dep.configuration) match {
+      case Some((main, fallback)) =>
+        val config0 =
+          if (configs(main))
+            main
+          else if (configs(fallback))
+            fallback
+          else
+            dep.configuration
+
+        dep.copy(configuration = config0)
+      case _ =>
+        dep
+    }
+
 }
 
 
@@ -1432,14 +1448,13 @@ final class Resolution private (
     * @return A minimized `dependencies`, applying this kind of substitutions.
     */
   def minDependencies: Set[Dependency] =
-    Orders.minDependencies(
-      dependencies,
-      dep =>
-        projectCache
-          .get(dep)
-          .map(_._2.configurations)
-          .getOrElse(Map.empty)
-    )
+    dependencySet.minimizedSet.map { dep =>
+      val configs = projectCache
+        .get(dep.moduleVersion)
+        .map(_._2.configurations.keySet)
+        .getOrElse(Set.empty)
+      Resolution.fallbackConfigIfNecessary(dep, configs)
+    }
 
   def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
     dependencyArtifacts(classifiers)
