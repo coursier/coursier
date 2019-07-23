@@ -21,7 +21,9 @@ import shapeless._
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
   override val appName = "Coursier"
-  override val progName = "coursier"
+  override val progName =
+    if (sys.props.contains("org.graalvm.nativeimage.imagecode")) "cs"
+    else "coursier"
   override val appVersion = coursier.util.Properties.version
 
   private def zshCompletions(): String = {
