@@ -45,8 +45,8 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.copy(
-            version = projects
+          dep.withVersion(
+            projects
               .get(dep.moduleVersion)
               .fold(dep.version)(_.version)
           )
@@ -54,22 +54,17 @@ object Print {
       else
         deps
 
-    val minDeps = Orders.minDependencies(
-      deps0.toSet,
-      _ => Map.empty
-    )
-
-    val deps1 = minDeps
-      .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
+    val deps1 = deps0
+      .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
       .toVector
       .map { case (k, l) =>
-        k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
+        k.withConfiguration(Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
       }
       .sortBy { dep =>
         (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
       }
 
-    deps1.map(dependency(_, printExclusions)).mkString("\n")
+    deps1.map(dependency(_, printExclusions)).distinct.mkString("\n")
   }
 
   def compatibleVersions(first: String, second: String): Boolean = {
@@ -94,7 +89,7 @@ object Print {
       val roots0 = Option(roots).getOrElse(resolution.minDependencies.toSeq)
 
       val t = ReverseModuleTree.fromDependencyTree(
-        roots0.map(_.module),
+        roots0.map(_.module).distinct,
         DependencyTree(resolution, withExclusions = printExclusions)
       )
 

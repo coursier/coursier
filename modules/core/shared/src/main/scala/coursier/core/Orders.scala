@@ -2,6 +2,7 @@ package coursier.core
 
 object Orders {
 
+  @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
   trait PartialOrdering[T] extends scala.math.PartialOrdering[T] {
     def lteq(x: T, y: T): Boolean =
       tryCompare(x, y)
@@ -9,6 +10,7 @@ object Orders {
   }
 
   /** All configurations that each configuration extends, including the ones it extends transitively */
+  @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
   def allConfigurations(configurations: Map[Configuration, Seq[Configuration]]): Map[Configuration, Set[Configuration]] = {
     def allParents(config: Configuration): Set[Configuration] = {
       def helper(configs: Set[Configuration], acc: Set[Configuration]): Set[Configuration] =
@@ -39,6 +41,7 @@ object Orders {
     *
     * @param configurations: for each configuration, the configurations it directly extends.
     */
+  @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
   def configurationPartialOrder(configurations: Map[Configuration, Seq[Configuration]]): PartialOrdering[Configuration] =
     new PartialOrdering[Configuration] {
       val allParentsMap = allConfigurations(configurations)
@@ -55,6 +58,7 @@ object Orders {
     }
 
   /** Non-optional < optional */
+  @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
   val optionalPartialOrder: PartialOrdering[Boolean] =
     new PartialOrdering[Boolean] {
       def tryCompare(x: Boolean, y: Boolean) =
@@ -74,6 +78,7 @@ object Orders {
    *
    * In particular, no exclusions <= anything <= Set(("*", "*"))
    */
+  @deprecated("Can give incorrect results - will likely be removed at some point in future versions", "2.0.0-RC3")
   val exclusionsPartialOrder: PartialOrdering[Set[(Organization, ModuleName)]] =
     new PartialOrdering[Set[(Organization, ModuleName)]] {
       def boolCmp(a: Boolean, b: Boolean) = (a, b) match {
@@ -141,6 +146,7 @@ object Orders {
    * Assume all dependencies have same `module`, `version`, and `artifact`; see `minDependencies`
    * if they don't.
    */
+  @deprecated("Can give incorrect results - will likely be removed at some point in future versions", "2.0.0-RC3")
   def minDependenciesUnsafe(
     dependencies: Set[Dependency],
     configs: Map[Configuration, Seq[Configuration]]
@@ -174,6 +180,7 @@ object Orders {
    *
    * The returned set brings exactly the same things as `dependencies`, with no redundancy.
    */
+  @deprecated("Can give incorrect results - will likely be removed at some point in future versions, use DependencySet.minimizedSet instead to minimize a dependency set", "2.0.0-RC3")
   def minDependencies(
     dependencies: Set[Dependency],
     configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
