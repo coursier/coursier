@@ -40,7 +40,8 @@ object Launch extends CaseApp[LaunchOptions] {
     hierarchy: Seq[(Option[String], Array[File])],
     mainClass: String,
     args: Seq[String],
-    properties: Seq[(String, String)]
+    properties: Seq[(String, String)],
+    verbosity: Int
   ): Either[LaunchException, () => Int] =
     hierarchy match {
       case Seq((None, files)) =>
@@ -57,7 +58,8 @@ object Launch extends CaseApp[LaunchOptions] {
 
         Right {
           () =>
-            System.err.println(s"Running ${cmd.map("\"" + _ + "\"").mkString(" ")}")
+            if (verbosity >= 1)
+              System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
             val p = b.start()
             p.waitFor()
         }
@@ -345,7 +347,7 @@ object Launch extends CaseApp[LaunchOptions] {
         }
 
         if (params.shared.fork)
-          launchFork(hierarchy, mainClass, userArgs, properties0)
+          launchFork(hierarchy, mainClass, userArgs, properties0, params.shared.resolve.output.verbosity)
             .right.map(f => () => Some(f()))
         else
           launch(hierarchy, mainClass, userArgs, properties0)
