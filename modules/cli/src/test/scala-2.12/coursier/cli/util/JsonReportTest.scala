@@ -1,5 +1,6 @@
 package coursier.cli.util
 
+import argonaut.Parse
 import coursier.cli.CliTestLib
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -12,7 +13,8 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       children = _ => Seq(),
       reconciledVersionStr = _ => "",
       requestedVersionStr = _ => "",
-      getFile = _ => Option("")
+      getFile = _ => Option(""),
+      exclusions = _ => Set.empty
     )
 
     assert(
@@ -28,14 +30,34 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       children = children(_),
       reconciledVersionStr = s => s"$s:reconciled",
       requestedVersionStr = s => s"$s:requested",
-      getFile = _ => Option("")
+      getFile = _ => Option(""),
+      exclusions = _ => Set.empty
     )
 
-    assert(
-      report == "{\"conflict_resolution\":{},\"dependencies\":[" +
-        "{\"coord\":\"a:reconciled\",\"file\":\"\",\"dependencies\":[\"b:reconciled\"]}," +
-        "{\"coord\":\"b:reconciled\",\"file\":\"\",\"dependencies\":[]}]," +
-        "\"version\":\"0.1.0\"}")
+    val reportJson = Parse.parse(report)
+
+    val expectedReportJson = Parse.parse(
+      """{
+        |  "conflict_resolution": {},
+        |  "dependencies": [
+        |    {
+        |      "coord": "a:reconciled",
+        |      "file": "",
+        |      "directDependencies": [ "b:reconciled" ],
+        |      "dependencies": [ "b:reconciled" ]
+        |    },
+        |    {
+        |      "coord": "b:reconciled",
+        |      "file": "",
+        |      "directDependencies": [],
+        |      "dependencies": []
+        |    }
+        |  ],
+        |  "version": "0.1.0"
+        |}""".stripMargin
+    )
+
+    assert(reportJson == expectedReportJson)
   }
   "JsonReport containing two deps" should "be sorted alphabetically regardless of input order" in {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
@@ -46,13 +68,23 @@ class JsonReportTest extends FlatSpec with CliTestLib {
       children = children(_),
       reconciledVersionStr = s => s"$s:reconciled",
       requestedVersionStr = s => s"$s:requested",
-      getFile = _ => Option("")
+      getFile = _ => Option(""),
+      exclusions = _ => Set.empty
     )
 
-    assert(
-      report == "{\"conflict_resolution\":{},\"dependencies\":[" +
-        "{\"coord\":\"a:reconciled\",\"file\":\"\",\"dependencies\":[\"b:reconciled\"]}," +
-        "{\"coord\":\"b:reconciled\",\"file\":\"\",\"dependencies\":[]}]," +
-        "\"version\":\"0.1.0\"}")
+    val reportJson = Parse.parse(report)
+
+    val expectedReportJson = Parse.parse(
+      """{
+        |  "conflict_resolution": {},
+        |  "dependencies": [
+        |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+        |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
+        |  ],
+        |  "version": "0.1.0"
+        |}""".stripMargin
+    )
+
+    assert(reportJson == expectedReportJson)
   }
 }

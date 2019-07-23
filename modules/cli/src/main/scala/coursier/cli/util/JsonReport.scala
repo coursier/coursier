@@ -22,7 +22,13 @@ final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToAr
  * @param file The path to the file for the artifact.
  * @param dependencies The dependencies of the artifact.
  */
-final case class DepNode(coord: String, file: Option[String], dependencies: Set[String])
+final case class DepNode(
+  coord: String,
+  file: Option[String],
+  directDependencies: Set[String],
+  dependencies: Set[String],
+  exclusions: Set[String] = Set.empty
+)
 
 final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode], version: String)
 
@@ -51,7 +57,7 @@ object JsonReport {
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
-              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String]): String = {
+              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String], exclusions: T => Set[String]): String = {
 
     val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
 
@@ -59,20 +65,25 @@ object JsonReport {
         * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
         */
       def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
-        val unseenElems: Seq[T] = elems.filterNot(ancestors.contains)
+        val unseenElems = elems.filterNot(ancestors.contains)
         for (elem <- unseenElems) {
           val depElems = children(elem)
           acc ++= depElems.map(reconciledVersionStr(_))
 
-          if (depElems.nonEmpty) {
+          if (depElems.nonEmpty)
             flattenDeps(children(elem), ancestors + elem, acc)
-          }
         }
       }
 
       val acc = scala.collection.mutable.Set[String]()
       flattenDeps(Seq(r), Set(), acc)
-      DepNode(reconciledVersionStr(r), getFile(r), acc.toSet)
+      DepNode(
+        reconciledVersionStr(r),
+        getFile(r),
+        children(r).map(reconciledVersionStr(_)).toSet,
+        acc.toSet,
+        exclusions(r)
+      )
 
     })
     val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
@@ -112,6 +123,11 @@ final case class JsonElem(dep: Dependency,
   // These are used to printing json output
   val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion"
   val requestedVersionStr = s"${dep.module}:${dep.version}"
+
+  lazy val exclusions: Set[String] = dep.exclusions.map {
+    case (org, name) =>
+      s"${org.value}:${name.value}"
+  }
 
   lazy val children: Seq[JsonElem] =
     if (excluded)

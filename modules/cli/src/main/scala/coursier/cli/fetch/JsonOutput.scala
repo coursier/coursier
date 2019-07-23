@@ -66,7 +66,8 @@ object JsonOutput {
       _.children,
       _.reconciledVersionStr,
       _.requestedVersionStr,
-      _.downloadedFile
+      _.downloadedFile,
+      _.exclusions
     )
   }
 
