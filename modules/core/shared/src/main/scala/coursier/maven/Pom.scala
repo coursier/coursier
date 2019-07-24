@@ -281,6 +281,19 @@ object Pom {
           case Right(d) => d
         }
 
+      val scm = pom.children
+        .find(_.label == "scm")
+        .map { n =>
+          for {
+            url <- text(n, "url", "A publicly browsable repository").right
+            connection <- text(n, "connection", "Requires read access").right
+            devCon <- text(n, "developerConnection", "Requires write access").right
+          } yield Info.Scm(url, connection, devCon)
+        }
+        .collect {
+          case Right(d) => d
+        }
+
       val finalProjModule = projModule.copy(organization = groupId)
 
       val relocationDependencyOpt = pom
@@ -339,7 +352,8 @@ object Pom {
           homePage,
           licenses,
           developers,
-          None
+          None,
+          scm
         )
       )
     }
