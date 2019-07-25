@@ -90,14 +90,15 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
+    var pool: ExecutorService = null
+
     // get options and dependencies from apps if any
     val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
       val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
       val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
       res
     }
 
@@ -110,7 +111,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         params0
     }
 
-    val pool = Sync.fixedThreadPool(params.sharedLaunch.resolve.cache.parallel)
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.sharedLaunch.resolve.cache.parallel)
     val ec = ExecutionContext.fromExecutorService(pool)
 
     val output0 = params.specific.output

@@ -315,14 +315,15 @@ object Resolve extends CaseApp[ResolveOptions] {
 
   def run(options: ResolveOptions, args: RemainingArgs): Unit = {
 
+    var pool: ExecutorService = null
+
     // get options and dependencies from apps if any
     val (options0, deps) = ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
       val initialRepositories = initialParams.repositories.repositories
       val channels = initialParams.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
       val res = handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
       res
     }
 
@@ -335,7 +336,8 @@ object Resolve extends CaseApp[ResolveOptions] {
         params0
     }
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.cache.parallel)
     val ec = ExecutionContext.fromExecutorService(pool)
 
     val t = task(params, pool, System.out, System.err, deps)
