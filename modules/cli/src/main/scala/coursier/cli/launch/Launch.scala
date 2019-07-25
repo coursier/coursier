@@ -357,14 +357,15 @@ object Launch extends CaseApp[LaunchOptions] {
 
   def run(options: LaunchOptions, args: RemainingArgs): Unit = {
 
+    var pool: ExecutorService = null
+
     // get options and dependencies from apps if any
     val (options0, deps) = LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
       val initialRepositories = initialParams.shared.resolve.repositories.repositories
       val channels = initialParams.shared.resolve.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
       val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
       val res = Resolve.handleApps(options, args.remaining, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
 
       if (options.json) {
         val app = res._1.app
@@ -385,7 +386,8 @@ object Launch extends CaseApp[LaunchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
+        if (pool == null)
+          pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, deps, args.unparsed)

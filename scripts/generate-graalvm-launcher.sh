@@ -47,6 +47,7 @@ fi
   -H:ReflectionConfigurationFiles="$BASE/reflection.json" \
   -H:+ReportExceptionStackTraces \
   --initialize-at-build-time=scala.Symbol \
+  --initialize-at-build-time=scala.Function1 \
   --initialize-at-build-time=scala.Function2 \
   --initialize-at-build-time=scala.runtime.StructuralCallSite \
   --initialize-at-build-time=scala.runtime.EmptyMethodCache \

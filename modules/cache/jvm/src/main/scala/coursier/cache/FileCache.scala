@@ -131,12 +131,16 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
-    val referenceFileOpt = artifact
+    lazy val referenceFileOpt = artifact
       .extra
       .get("metadata")
       .map(a => localFile(a.url, a.authentication.map(_.user)))
 
-    def referenceFileExists: Boolean = referenceFileOpt.exists(_.exists())
+    val cacheErrors = artifact.changing && artifact
+      .extra
+      .contains("cache-errors")
+
+    def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(_.exists())
 
     def fileLastModified(file: File): EitherT[F, ArtifactError, Option[Long]] =
       EitherT {
@@ -250,6 +254,25 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
     def shouldDownload(file: File, url: String): EitherT[F, ArtifactError, Boolean] = {
 
+      val errFile0 = errFile(file)
+
+      def checkErrFile: EitherT[F, ArtifactError, Unit] =
+        EitherT {
+          S.schedule[Either[ArtifactError, Unit]](pool) {
+            if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
+              Left(ArtifactError.NotFound(url, Some(true)))
+            else if (cacheErrors && errFile0.exists()) {
+              val ts = errFile0.lastModified()
+              val now = System.currentTimeMillis()
+              if (ts > 0L && now < ts + ttl.fold(0L)(_.toMillis))
+                Left(ArtifactError.NotFound(url))
+              else
+                Right(())
+            } else
+              Right(())
+          }
+        }
+
       def checkNeeded = ttl.fold(S.point(true)) { ttl =>
         if (ttl.isFinite)
           S.bind(lastCheck(file)) {
@@ -273,25 +296,27 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         fromDatesOpt.getOrElse(true)
       }
 
-      EitherT {
-        S.bind(fileExists(file)) {
-          case false =>
-            S.point(Right(true))
-          case true =>
-            S.bind(checkNeeded) {
-              case false =>
-                S.point(Right(false))
-              case true =>
-                S.bind(check.run) {
-                  case Right(false) =>
-                    S.schedule(pool) {
-                      doTouchCheckFile(file)
-                      Right(false)
-                    }
-                  case other =>
-                    S.point(other)
-                }
-            }
+      checkErrFile.flatMap { _ =>
+        EitherT {
+          S.bind(fileExists(file)) {
+            case false =>
+              S.point(Right(true))
+            case true =>
+              S.bind(checkNeeded) {
+                case false =>
+                  S.point(Right(false))
+                case true =>
+                  S.bind(check.run) {
+                    case Right(false) =>
+                      S.schedule(pool) {
+                        doTouchCheckFile(file)
+                        Right(false)
+                      }
+                    case other =>
+                      S.point(other)
+                  }
+              }
+          }
         }
       }
     }
@@ -479,19 +504,13 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
       val errFile0 = errFile(file)
 
-      def validErrFileExists =
-        EitherT {
-          S.schedule[Either[ArtifactError, Boolean]](pool) {
-            Right(referenceFileExists && errFile0.exists())
-          }
-        }
-
       def createErrFile =
         EitherT {
           S.schedule[Either[ArtifactError, Unit]](pool) {
-            if (referenceFileExists) {
-              if (!errFile0.exists())
-                Files.write(errFile0.toPath, Array.emptyByteArray)
+            if (cacheErrors0) {
+              val p = errFile0.toPath
+              Files.createDirectories(p.getParent)
+              Files.write(p, Array.emptyByteArray)
             }
 
             Right(())
@@ -508,28 +527,13 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
           }
         }
 
-      def retainError =
-        EitherT {
-          S.bind(remote(file, url).run) {
-            case err @ Left(ArtifactError.NotFound(_, Some(true))) =>
-              S.map(createErrFile.run)(_ => err: Either[ArtifactError, Unit])
-            case other =>
-              S.map(deleteErrFile.run)(_ => other)
-          }
+      EitherT {
+        S.bind(remote(file, url).run) {
+          case err @ Left(ArtifactError.NotFound(_, Some(true))) =>
+            S.map(createErrFile.run)(_ => err: Either[ArtifactError, Unit])
+          case other =>
+            S.map(deleteErrFile.run)(_ => other)
         }
-
-      cachePolicy match {
-        case CachePolicy.FetchMissing | CachePolicy.LocalOnly | CachePolicy.LocalUpdate | CachePolicy.LocalOnlyIfValid | CachePolicy.LocalUpdateChanging =>
-          validErrFileExists.flatMap { exists =>
-            if (exists)
-              EitherT(
-                S.point[Either[ArtifactError, Unit]](Left(ArtifactError.NotFound(url, Some(true)))))
-            else
-              retainError
-          }
-
-        case CachePolicy.ForceDownload | CachePolicy.Update | CachePolicy.UpdateChanging =>
-          retainError
       }
     }
 
@@ -602,7 +606,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
               case CachePolicy.UpdateChanging | CachePolicy.Update =>
                 update
               case CachePolicy.FetchMissing =>
-                checkFileExists(file, url) orElse remoteKeepErrors(file, url)
+                checkFileExists(file, url).orElse(remoteKeepErrors(file, url))
               case CachePolicy.ForceDownload =>
                 remoteKeepErrors(file, url)
             }

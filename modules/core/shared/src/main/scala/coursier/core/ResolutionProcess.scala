@@ -253,16 +253,18 @@ object ResolutionProcess {
     module: Module,
     version: String,
     fetch: Repository.Fetch[F],
-    fetchs: Seq[Repository.Fetch[F]],
-    listVersionFetch: Repository.Fetch[F] = null,
-    listVersionFetchs: Seq[Repository.Fetch[F]] = null
+    fetchs: Seq[Repository.Fetch[F]]
   )(implicit
     F: Gather[F]
   ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
 
+    val f: Repository.Fetch[F] = { a =>
+      fetchs.foldLeft(fetch(a))((acc, f) => acc.leftFlatMap(_ => f(a)))
+    }
+
     def getLatest(ver: Either[VersionInterval, (Latest, Option[VersionInterval])], fetch: Repository.Fetch[F]) = {
 
-      val lookups = repositories.map(_.versions(module, fetch).run)
+      val lookups = repositories.map(_.versions(module, f).run)
 
       val versionOrError: F[Either[Seq[String], (Version, Repository)]] =
         F.map(F.gather(lookups)) { results =>
@@ -356,12 +358,7 @@ object ResolutionProcess {
     }
 
     def getLatest0(ver: Either[VersionInterval, (Latest, Option[VersionInterval])]) = {
-      val listVersionFetch0 = Option(listVersionFetch).getOrElse(fetch)
-      val listVersionFetchs0 = Option(listVersionFetchs).getOrElse {
-        if (listVersionFetch == null) fetchs
-        else Nil
-      }
-      (getLatest(ver, listVersionFetch0) /: listVersionFetchs0) (_ orElse getLatest(ver, _))
+      (getLatest(ver, fetch) /: fetchs) (_ orElse getLatest(ver, _))
     }
 
     if (version.contains("&")) {
@@ -395,9 +392,7 @@ object ResolutionProcess {
   def fetch[F[_]](
     repositories: Seq[core.Repository],
     fetch: Repository.Fetch[F],
-    fetchs: Seq[Repository.Fetch[F]] = Nil,
-    listVersionFetch: Repository.Fetch[F] = null,
-    listVersionFetchs: Seq[Repository.Fetch[F]] = null
+    fetchs: Seq[Repository.Fetch[F]] = Nil
   )(implicit
     F: Gather[F]
   ): Fetch[F] =
@@ -406,7 +401,7 @@ object ResolutionProcess {
         F.gather {
           modVers.map {
             case (module, version) =>
-              F.map(fetchOne(repositories, module, version, fetch, fetchs, listVersionFetch, listVersionFetchs).run)(d => (module, version) -> d)
+              F.map(fetchOne(repositories, module, version, fetch, fetchs).run)(d => (module, version) -> d)
           }
         }
       )(_.toSeq)

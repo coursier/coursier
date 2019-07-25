@@ -18,7 +18,7 @@ final case class MavenComplete[F[_]](
         Left(new Exception(e))
       case Right(rawListing) =>
         val entries = WebPage.listDirectories(dirUrl, rawListing)
-        Right(entries.filter(_.startsWith(prefix)))
+        Right(entries.filter(_.startsWith(prefix)).toVector)
     }
 
   def organization(prefix: String): F[Either[Throwable, Seq[String]]] = {

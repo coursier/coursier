@@ -251,11 +251,14 @@ final class IvyRepository private (
     } else
       Nil
 
-  private def artifactFor(url: String, changing: Boolean) =
+  private def artifactFor(url: String, changing: Boolean, cacheErrors: Boolean = false) =
     Artifact(
       url,
       Map.empty,
-      Map.empty,
+      if (cacheErrors)
+        Map("cache-errors" -> Artifact("", Map.empty, Map.empty, changing = false, optional = false, None))
+      else
+        Map.empty,
       changing = changing,
       optional = false,
       authentication
@@ -265,7 +268,8 @@ final class IvyRepository private (
     listingPatternOpt: Option[Pattern],
     listingName: String,
     variables: Map[String, String],
-    fetch: Repository.Fetch[F]
+    fetch: Repository.Fetch[F],
+    prefix: String
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Option[(String, Seq[String])]] =
@@ -285,13 +289,14 @@ final class IvyRepository private (
 
         for {
           url <- EitherT(F.point(listingUrl))
-          s <- fetch(artifactFor(url, changing = true))
-        } yield Some((url, WebPage.listDirectories(url, s)))
+          s <- fetch(artifactFor(url, changing = true, cacheErrors = true))
+        } yield Some((url, WebPage.listDirectories(url, s).filter(_.startsWith(prefix)).toVector))
     }
 
-  def availableVersions[F[_]](
+  private[ivy] def availableVersions[F[_]](
     module: Module,
-    fetch: Repository.Fetch[F]
+    fetch: Repository.Fetch[F],
+    prefix: String
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Option[(String, Seq[Version])]] =
@@ -299,7 +304,8 @@ final class IvyRepository private (
       revisionListingPatternOpt,
       "revisions",
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
-      fetch
+      fetch,
+      prefix
     ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
 
   override protected def fetchVersions[F[_]](
@@ -308,7 +314,7 @@ final class IvyRepository private (
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Versions, String)] =
-    availableVersions(module, fetch).map {
+    availableVersions(module, fetch, "").map {
       case Some((listingUrl, l)) if l.nonEmpty =>
         val latest = l.max.repr
         val release = {

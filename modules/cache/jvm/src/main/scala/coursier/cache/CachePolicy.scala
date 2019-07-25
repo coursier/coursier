@@ -1,7 +1,5 @@
 package coursier.cache
 
-import coursier.parse.CachePolicyParser
-
 sealed abstract class CachePolicy extends Product with Serializable
 
 object CachePolicy {

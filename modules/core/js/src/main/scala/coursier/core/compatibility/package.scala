@@ -137,7 +137,7 @@ package object compatibility {
 
   lazy val jqueryAvailable = !js.isUndefined(g.$)
 
-  def listWebPageRawElements(page: String): Seq[String] = {
+  def listWebPageRawElements(page: String): Iterator[String] = {
 
     val links = new ListBuffer[String]
 
@@ -160,7 +160,7 @@ package object compatibility {
       }: js.ThisFunction0[js.Dynamic, Unit])
     }
 
-    links.result()
+    links.result().iterator
   }
 
   def regexLookbehind: String = ":"
