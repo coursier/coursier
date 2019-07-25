@@ -287,7 +287,7 @@ lazy val `cli-graalvm` = project("cli-graalvm")
     onlyIn("2.12"),
     coursierPrefix,
     assemblyMergeStrategy.in(assembly) := {
-      case "module-info.class" => MergeStrategy.discard
+      case x if x == "module-info.class" || x.endsWith("/module-info.class") || x.endsWith("\\module-info.class") => MergeStrategy.discard
       case x =>
         val oldStrategy = assemblyMergeStrategy.in(assembly).value
         oldStrategy(x)
