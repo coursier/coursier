@@ -283,8 +283,8 @@ final class MavenRepository private (
 
     fetch(listingArtifact).flatMap { listing =>
 
-      val files = WebPage.listFiles(listingUrl, listing)
-      val rawVersions = WebPage.listDirectories(listingUrl, listing)
+      val files = WebPage.listFiles(listingUrl, listing).toVector
+      val rawVersions = WebPage.listDirectories(listingUrl, listing).toVector
 
       val res =
         if (files.contains("maven-metadata.xml"))

@@ -66,6 +66,12 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // things that are private now
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.ResolutionProcess.fetchOne"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.compatibility.package.listWebPageRawElements"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.util.WebPage.listFiles"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.WebPage.listElements"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.util.WebPage.listDirectories"),
         // should have been private
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.defaultConfiguration"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.withDefaultConfig"),
