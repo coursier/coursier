@@ -146,6 +146,10 @@ object Mima {
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.profileHandlers"),
         // Repository doesn't extend Product anymore
         ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Repository"),
+        // #1291: Added new field to Info
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.copy"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.this"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.apply"),
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
