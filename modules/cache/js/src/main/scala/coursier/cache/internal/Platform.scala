@@ -1,5 +1,6 @@
 package coursier.cache.internal
 
+import coursier.util.WebPage
 import org.scalajs.dom.raw.{Event, XMLHttpRequest}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -52,13 +53,22 @@ object Platform {
   }
 
   // only on node
-  def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = {
+  def textResource(path: String, linkUrlOpt: Option[String] = None)(implicit ec: ExecutionContext): Future[String] = {
     val p = Promise[String]()
 
     fs.readFile(path, "utf-8", {
       (err: js.Dynamic, data: js.Dynamic) =>
-        if (js.isUndefined(err) || err == null) p.success(data.asInstanceOf[String])
-        else p.failure(new Exception(err.toString))
+        if (js.isUndefined(err) || err == null) {
+          val s = data.asInstanceOf[String]
+          val res = linkUrlOpt match {
+            case None => s
+            case Some(url) =>
+              WebPage.listElements(url, s)
+                .mkString("\n")
+          }
+          p.success(res)
+        } else
+          p.failure(new Exception(err.toString))
         ()
     }: js.Function2[js.Dynamic, js.Dynamic, Unit])
 

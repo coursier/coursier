@@ -12,7 +12,7 @@ import coursier.cache.internal.FileUtil
 import coursier.core.{Artifact, Authentication, Repository}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
-import coursier.util.{EitherT, Sync, Task}
+import coursier.util.{EitherT, Sync, Task, WebPage}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
@@ -240,7 +240,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     }
 
     /** Not wrapped in a `Task` !!! */
-    def doTouchCheckFile(file: File): Unit = {
+    def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
       val ts = System.currentTimeMillis()
       val f = ttlFile(file)
       if (f.exists())
@@ -249,6 +249,32 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         val fos = new FileOutputStream(f)
         fos.write(Array.empty[Byte])
         fos.close()
+      }
+
+      if (updateLinks && file.getName == ".directory") {
+        val linkFile = new File(file.getParent, s".${file.getName}.links")
+
+        val succeeded =
+          try {
+            val content = WebPage.listElements(url, new String(Files.readAllBytes(file.toPath), UTF_8))
+              .mkString("\n")
+
+            var fos: FileOutputStream = null
+            try {
+              fos = new FileOutputStream(linkFile)
+              fos.write(content.getBytes(UTF_8))
+            } finally {
+              if (fos != null)
+                fos.close()
+            }
+            true
+          } catch {
+            case NonFatal(_) =>
+              false
+          }
+
+        if (!succeeded)
+          Files.deleteIfExists(linkFile.toPath)
       }
     }
 
@@ -309,7 +335,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   S.bind(check.run) {
                     case Right(false) =>
                       S.schedule(pool) {
-                        doTouchCheckFile(file)
+                        doTouchCheckFile(file, url, updateLinks = false)
                         Right(false)
                       }
                     case other =>
@@ -398,7 +424,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   for (lastModified <- Option(conn.getLastModified) if lastModified > 0L)
                     file.setLastModified(lastModified)
 
-                  doTouchCheckFile(file)
+                  doTouchCheckFile(file, url, updateLinks = true)
 
                   Right(result)
                 }
@@ -782,13 +808,30 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
     (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
 
-  private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] =
-    filePerPolicy(artifact, policy).leftMap(_.describe).flatMap { f =>
+  private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] = {
+
+    val (artifact0, links) =
+      if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+      else (artifact, false)
+
+    filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>
 
       def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
 
       def read(f: File) =
-        try Right(new String(Files.readAllBytes(f.toPath), UTF_8))
+        try {
+          val content =
+            if (links) {
+              val linkFile = new File(f.getParentFile, s".${f.getName}.links")
+              if (f.getName == ".directory" && linkFile.isFile)
+                new String(Files.readAllBytes(linkFile.toPath), UTF_8)
+              else
+                WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f.toPath), UTF_8))
+                  .mkString("\n")
+            } else
+              new String(Files.readAllBytes(f.toPath), UTF_8)
+          Right(content)
+        }
         catch {
           case NonFatal(e) =>
             Left(s"Could not read (file:${f.getCanonicalPath}): ${e.getMessage}")
@@ -796,31 +839,49 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
       val res = if (f.exists()) {
         if (f.isDirectory) {
-          if (artifact.url.startsWith("file:")) {
+          if (artifact0.url.startsWith("file:")) {
 
-            val elements = f.listFiles().map { c =>
-              val name = c.getName
-              val name0 = if (c.isDirectory)
-                name + "/"
-              else
-                name
+            val content =
+              if (links)
+                f.listFiles()
+                  .map { c =>
+                    val name = c.getName
+                    if (c.isDirectory)
+                      name + "/"
+                    else
+                      name
+                  }
+                  .sorted
+                  .mkString("\n")
+              else {
 
-              s"""<li><a href="$name0">$name0</a></li>"""
-            }.mkString
+                val elements = f.listFiles()
+                  .map { c =>
+                    val name = c.getName
+                    if (c.isDirectory)
+                      name + "/"
+                    else
+                      name
+                  }
+                  .sorted
+                  .map { name0 =>
+                    s"""<li><a href="$name0">$name0</a></li>"""
+                  }
+                  .mkString
 
-            val page =
-              s"""<!DOCTYPE html>
-                 |<html>
-                 |<head></head>
-                 |<body>
-                 |<ul>
-                 |$elements
-                 |</ul>
-                 |</body>
-                 |</html>
-               """.stripMargin
+                s"""<!DOCTYPE html>
+                   |<html>
+                   |<head></head>
+                   |<body>
+                   |<ul>
+                   |$elements
+                   |</ul>
+                   |</body>
+                   |</html>
+                 """.stripMargin
+              }
 
-            Right(page)
+            Right(content)
           } else {
             val f0 = new File(f, ".directory")
 
@@ -839,6 +900,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
       EitherT(S.point[Either[String, String]](res))
     }
+  }
 
   def fetch: Repository.Fetch[F] =
     a =>
