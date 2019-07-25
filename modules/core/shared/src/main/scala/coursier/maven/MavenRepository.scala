@@ -236,7 +236,7 @@ final class MavenRepository private (
       Artifact(
         urlFor(path),
         Map.empty,
-        Map.empty,
+        Map("cache-errors" -> Artifact("", Map.empty, Map.empty, changing = false, optional = false, None)),
         changing = true,
         optional = false,
         authentication = authentication

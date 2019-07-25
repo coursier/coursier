@@ -251,11 +251,14 @@ final class IvyRepository private (
     } else
       Nil
 
-  private def artifactFor(url: String, changing: Boolean) =
+  private def artifactFor(url: String, changing: Boolean, cacheErrors: Boolean = false) =
     Artifact(
       url,
       Map.empty,
-      Map.empty,
+      if (cacheErrors)
+        Map("cache-errors" -> Artifact("", Map.empty, Map.empty, changing = false, optional = false, None))
+      else
+        Map.empty,
       changing = changing,
       optional = false,
       authentication
@@ -286,7 +289,7 @@ final class IvyRepository private (
 
         for {
           url <- EitherT(F.point(listingUrl))
-          s <- fetch(artifactFor(url, changing = true))
+          s <- fetch(artifactFor(url, changing = true, cacheErrors = true))
         } yield Some((url, WebPage.listDirectories(url, s).filter(_.startsWith(prefix)).toVector))
     }
 
