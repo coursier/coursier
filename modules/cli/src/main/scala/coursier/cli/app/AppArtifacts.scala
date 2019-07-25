@@ -3,7 +3,7 @@ package coursier.cli.app
 import java.io.File
 
 import coursier.{Dependency, Fetch, moduleString}
-import coursier.cache.Cache
+import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{Artifact, Module, Repository, Resolution, Version, VersionConstraint}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
@@ -190,36 +190,21 @@ object AppArtifacts {
 
     def forRepo(repo: Repository): Set[String] = {
 
-      val hasOrg = {
-        val base = mod.organization.value
-        val (n, compl) = coursier.complete.Complete(cache)
-          .withRepositories(Seq(repo))
-          .withInput(base)
-          .complete()
-          .unsafeRun()(cache.ec)
+      val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
+      val t = for {
+        _ <- Task.delay(logger.init())
+        a <- repo.versions(mod, cache.fetch).run.attempt
+        _ <- Task.delay(logger.stop())
+        res <- Task.fromEither(a)
+      } yield res
 
-        val orgs = compl
-          .map(s => base.take(n) + s)
-          .filter(_.startsWith(base)) // just in case
-
-        orgs.contains(mod.organization.value)
+      t.unsafeRun()(cache.ec) match {
+        case Left(err) =>
+          // FIXME Trapped error
+          Set.empty
+        case Right((v, _)) =>
+          v.available.toSet
       }
-
-      if (hasOrg) {
-        val base = mod.repr + ":"
-        val (n, compl) = coursier.complete.Complete(cache)
-          .withRepositories(Seq(repo))
-          .withInput(base)
-          .complete()
-          .unsafeRun()(cache.ec)
-
-        compl
-          .map(s => base.take(n) + s)
-          .filter(_.startsWith(base)) // just in case
-          .map(_.stripPrefix(base))
-          .toSet
-      } else
-        Set.empty
     }
 
     repositories.foldLeft(Set.empty[String])((acc, r) => acc ++ forRepo(r))
