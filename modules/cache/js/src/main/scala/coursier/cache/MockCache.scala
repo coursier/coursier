@@ -15,9 +15,13 @@ final case class MockCache(base: String) extends Cache[Task] {
     EitherT {
       assert(artifact.authentication.isEmpty)
 
+      val (artifact0, links) =
+        if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+        else (artifact, false)
+
       val path =
-        if (artifact.url.startsWith("file:")) {
-          val path = artifact
+        if (artifact0.url.startsWith("file:")) {
+          val path = artifact0
             .url
             .stripPrefix("file:")
             .dropWhile(_ == '/')
@@ -26,10 +30,10 @@ final case class MockCache(base: String) extends Cache[Task] {
           else
             path
         } else
-          base + "/" + MockCacheEscape.urlAsPath(artifact.url)
+          base + "/" + MockCacheEscape.urlAsPath(artifact0.url)
 
       Task { implicit ec =>
-        Platform.textResource(path)
+        Platform.textResource(path, if (links) Some(artifact0.url) else None)
           .map(Right(_))
           .recoverWith {
             case e: Exception =>

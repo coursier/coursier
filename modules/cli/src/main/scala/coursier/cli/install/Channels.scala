@@ -24,7 +24,7 @@ object Channels {
     def fromModule(channel: Channel.FromModule): Option[(Channel, String, Array[Byte])] = {
 
       val files = Fetch(cache)
-        .withDependencies(Seq(Dependency(channel.module, "latest.integration")))
+        .withDependencies(Seq(Dependency(channel.module, "latest.release")))
         .withRepositories(repositories)
         .io
         .unsafeRun()(cache.ec)

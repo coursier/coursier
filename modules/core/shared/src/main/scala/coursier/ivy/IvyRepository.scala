@@ -1,8 +1,8 @@
 package coursier.ivy
 
 import coursier.core._
-import coursier.maven.MavenAttributes
-import coursier.util.{EitherT, Monad, WebPage}
+import coursier.maven.{MavenAttributes, MavenComplete}
+import coursier.util.{EitherT, Monad}
 
 final class IvyRepository private (
   val pattern: Pattern,
@@ -289,8 +289,8 @@ final class IvyRepository private (
 
         for {
           url <- EitherT(F.point(listingUrl))
-          s <- fetch(artifactFor(url, changing = true, cacheErrors = true))
-        } yield Some((url, WebPage.listDirectories(url, s).filter(_.startsWith(prefix)).toVector))
+          s <- fetch(artifactFor(url + ".links", changing = true, cacheErrors = true))
+        } yield Some((url, MavenComplete.split0(s, '\n', prefix)))
     }
 
   private[ivy] def availableVersions[F[_]](
