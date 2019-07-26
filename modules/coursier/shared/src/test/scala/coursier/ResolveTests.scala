@@ -208,7 +208,8 @@ object ResolveTests extends TestSuite {
             }
 
 
-            assert(res.isLeft)
+            val isLeft = res.isLeft
+            assert(isLeft)
 
             val error = res.left.get
 
@@ -383,7 +384,8 @@ object ResolveTests extends TestSuite {
             .future()
         }
 
-        assert(res.isLeft)
+        val isLeft = res.isLeft
+        assert(isLeft)
 
         val error = res.left.get
 
@@ -512,7 +514,8 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          assert(res.isLeft)
+          val isLeft = res.isLeft
+          assert(isLeft)
 
           val error = res.left.get
 
@@ -542,7 +545,8 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          assert(res.isLeft)
+          val isLeft = res.isLeft
+          assert(isLeft)
 
           val error = res.left.get
 
