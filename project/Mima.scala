@@ -168,6 +168,14 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // Made ArtifactError extends Exception (rather than being an ADT)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.ArtifactError#")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.ArtifactError$")),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productElementName"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productElementNames"),
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.cache.ArtifactError"),
         // for 2.11 (???)
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.FileCache.coursier$cache$FileCache$$checkFileExists$default$3$1"),
         // Removed private method

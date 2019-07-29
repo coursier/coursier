@@ -203,13 +203,13 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
               case other =>
                 Left(
-                  ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None)
+                  new ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None)
                 )
             }
           } catch {
             case NonFatal(e) =>
               Left(
-                ArtifactError.DownloadError(
+                new ArtifactError.DownloadError(
                   s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
                   Some(e)
                 )
@@ -288,12 +288,12 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         EitherT {
           S.schedule[Either[ArtifactError, Unit]](pool) {
             if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
-              Left(ArtifactError.NotFound(url, Some(true)))
+              Left(new ArtifactError.NotFound(url, Some(true)))
             else if (cacheErrors && errFile0.exists()) {
               val ts = errFile0.lastModified()
               val now = System.currentTimeMillis()
               if (ts > 0L && now < ts + ttl.fold(0L)(_.toMillis))
-                Left(ArtifactError.NotFound(url))
+                Left(new ArtifactError.NotFound(url))
               else
                 Right(())
             } else
@@ -398,9 +398,9 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                 val respCodeOpt = CacheUrl.responseCode(conn)
 
                 if (respCodeOpt.contains(404))
-                  Left(ArtifactError.NotFound(url, permanent = Some(true)))
+                  Left(new ArtifactError.NotFound(url, permanent = Some(true)))
                 else if (respCodeOpt.contains(401))
-                  Left(ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+                  Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
                 else {
                   for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
                     val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -523,7 +523,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                   if (len == fileLen)
                     Right(())
                   else
-                    Left(ArtifactError.WrongLength(fileLen, len, file.getAbsolutePath))
+                    Left(new ArtifactError.WrongLength(fileLen, len, file.getAbsolutePath))
               }
               Some(res)
             } else {
@@ -591,7 +591,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
       EitherT {
         S.bind(remote(file, url, keepHeaderChecksums).run) {
-          case err @ Left(ArtifactError.NotFound(_, Some(true))) =>
+          case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             S.map(createErrFile.run)(_ => err: Either[ArtifactError, Unit])
           case other =>
             S.map(deleteErrFile.run)(_ => other)
@@ -607,7 +607,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             logger.foundLocally(url)
             Right(())
           } else
-            Left(ArtifactError.NotFound(file.toString))
+            Left(new ArtifactError.NotFound(file.toString))
         }
       }
 
@@ -652,7 +652,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                 checkFileExists(file, url, log = false).flatMap { _ =>
                   shouldDownload(file, url).flatMap {
                     case true =>
-                      EitherT[F, ArtifactError, Unit](S.point(Left(ArtifactError.FileTooOldOrNotFound(file.toString))))
+                      EitherT[F, ArtifactError, Unit](S.point(Left(new ArtifactError.FileTooOldOrNotFound(file.toString))))
                     case false =>
                       EitherT(S.point[Either[ArtifactError, Unit]](Right(())))
                   }
@@ -724,7 +724,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
             sumOpt match {
               case None =>
-                Left(ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
+                Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
 
               case Some(sum) =>
                 val md = MessageDigest.getInstance(sumType)
@@ -741,7 +741,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
                 if (sum == calculatedSum)
                   Right(())
                 else
-                  Left(ArtifactError.WrongChecksum(
+                  Left(new ArtifactError.WrongChecksum(
                     sumType,
                     calculatedSum.toString(16),
                     sum.toString(16),
@@ -751,7 +751,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             }
 
           case None =>
-            Left(ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)): Either[ArtifactError, Unit]
+            Left(new ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)): Either[ArtifactError, Unit]
         }
       }
     }
@@ -824,7 +824,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
               //       from artifact0.checksumUrls
-              Left(ArtifactError.ChecksumErrors(checksumErrors))
+              Left(new ArtifactError.ChecksumErrors(checksumErrors))
             case Some(c) => Right((f, c))
           }
         }
@@ -1062,12 +1062,12 @@ object FileCache {
             try f
             catch {
               case nfe: FileNotFoundException if nfe.getMessage != null =>
-                Left(ArtifactError.NotFound(nfe.getMessage))
+                Left(new ArtifactError.NotFound(nfe.getMessage))
             }
           }
 
           val res = res0.getOrElse {
-            Left(ArtifactError.ConcurrentDownload(url))
+            Left(new ArtifactError.ConcurrentDownload(url))
           }
 
           Some(res)
@@ -1078,7 +1078,7 @@ object FileCache {
             None
           case NonFatal(e) =>
             Some(Left(
-              ArtifactError.DownloadError(
+              new ArtifactError.DownloadError(
                 s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
                 Some(e)
               )
@@ -1141,7 +1141,7 @@ object FileCache {
           }
 
         case other =>
-          Left(ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
+          Left(new ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
       }
     } finally {
       if (conn != null)

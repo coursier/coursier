@@ -78,7 +78,7 @@ object CacheLocks {
   }
 
   def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
-    withLockOr(cache, file)(f, Some(Left(ArtifactError.Locked(file))))
+    withLockOr(cache, file)(f, Some(Left(new ArtifactError.Locked(file))))
 
   private val urlLocks = new ConcurrentHashMap[String, Object]
   private val urlLockDummyObject = new Object

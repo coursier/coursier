@@ -854,14 +854,16 @@ object FileCacheTests extends TestSuite {
               .future()
           }
 
-          val expectedRes = Left(
-            ArtifactError.ChecksumErrors(Seq(
-              "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
-            ))
+          val expectedErrors = Seq(
+            "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
           )
 
           assert(res.isLeft)
-          assert(res == expectedRes)
+          assert(res.left.exists {
+            case err: ArtifactError.ChecksumErrors =>
+              err.errors == expectedErrors
+            case _ => ???
+          })
         }
 
         * - async {
@@ -873,15 +875,17 @@ object FileCacheTests extends TestSuite {
               .future()
           }
 
-          val expectedRes = Left(
-            ArtifactError.ChecksumErrors(Seq(
-              "SHA-512" -> s"not found: ${new File(new URI(dummyFileUri + ".sha512"))}",
-              "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
-            ))
+          val expectedErrors = Seq(
+            "SHA-512" -> s"not found: ${new File(new URI(dummyFileUri + ".sha512"))}",
+            "SHA-256" -> s"not found: ${new File(new URI(dummyFileUri + ".sha256"))}"
           )
 
           assert(res.isLeft)
-          assert(res == expectedRes)
+          assert(res.left.exists {
+            case err: ArtifactError.ChecksumErrors =>
+              err.errors == expectedErrors
+            case _ => ???
+          })
         }
       }
 
