@@ -17,9 +17,9 @@ sealed abstract class ArtifactError(
 
 object ArtifactError {
 
-  final case class DownloadError(reason: String) extends ArtifactError(
+  final case class DownloadError(reason: String, e: Option[Throwable]) extends ArtifactError(
     "download error",
-    reason
+    reason + e.map("\n" + _.getStackTrace.map("  " + _).mkString("\n")).mkString
   )
 
   final case class NotFound(

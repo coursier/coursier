@@ -90,7 +90,7 @@ final case class MockCache[F[_]](
 
             S.handle(f) {
               case e: Exception =>
-                Left(ArtifactError.DownloadError(e.toString))
+                Left(ArtifactError.DownloadError(e.toString, Some(e)))
             }
           } else
             S.point(Left(ArtifactError.NotFound(path.toString)))

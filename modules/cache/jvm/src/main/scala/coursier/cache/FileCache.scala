@@ -203,14 +203,15 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
               case other =>
                 Left(
-                  ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)")
+                  ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None)
                 )
             }
           } catch {
             case NonFatal(e) =>
               Left(
                 ArtifactError.DownloadError(
-                  s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url"
+                  s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
+                  Some(e)
                 )
               )
           } finally {
@@ -1078,7 +1079,8 @@ object FileCache {
           case NonFatal(e) =>
             Some(Left(
               ArtifactError.DownloadError(
-                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url"
+                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+                Some(e)
               )
             ))
         }
@@ -1139,7 +1141,7 @@ object FileCache {
           }
 
         case other =>
-          Left(ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)"))
+          Left(ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
       }
     } finally {
       if (conn != null)
