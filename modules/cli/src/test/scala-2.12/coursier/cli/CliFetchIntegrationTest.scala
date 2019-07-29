@@ -84,7 +84,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val params = paramsOrThrow(options)
     val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
-    println(files)
     assert(files.map(_._2.getName).toSet.equals(Set(
       "junit-4.12.jar",
       "junit-4.12-sources.jar",
@@ -1031,7 +1030,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val originalShaContent = Files.readAllBytes(junitPomSha1File)
 
       // Corrupt the pom content
-      println(s"Corrupting $junitPomSha1File")
+      System.err.println(s"Corrupting $junitPomSha1File")
       Files.write(junitPomSha1File, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
 
       // Run fetch again and it should pass because of retrying om the bad pom.
@@ -1095,7 +1094,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val originalJunitJarSha1Content = Files.readAllBytes(originalJunitJarSha1)
 
       // Corrupt the jar content
-      println(s"Corrupting $originalJunitJarSha1")
+      System.err.println(s"Corrupting $originalJunitJarSha1")
       Files.write(originalJunitJarSha1, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
 
       // Run fetch again and it should pass because of retrying on the bad jar.
