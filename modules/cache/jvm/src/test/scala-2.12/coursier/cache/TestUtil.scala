@@ -1,8 +1,10 @@
 package coursier.cache
 
 import java.io.File
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import java.security.KeyStore
+import java.security.{KeyStore, MessageDigest}
 import java.security.cert.X509Certificate
 
 import cats.data.NonEmptyList
@@ -145,5 +147,22 @@ object TestUtil {
       Runtime.getRuntime.removeShutdownHook(shutdownHook)
     }
   }
+
+  private def checksum(b: Array[Byte], alg: String, len: Int): String = {
+    val md = MessageDigest.getInstance(alg)
+    val digest = md.digest(b)
+    val res = new BigInteger(1, digest).toString(16)
+    if (res.length < len)
+      ("0" * (len - res.length)) + res
+    else
+      res
+  }
+
+  def sha256(b: Array[Byte]): String =
+    checksum(b, "SHA-256", 64)
+  def sha1(b: Array[Byte]): String =
+    checksum(b, "SHA-1", 40)
+  def md5(b: Array[Byte]): String =
+    checksum(b, "MD5", 32)
 
 }

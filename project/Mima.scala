@@ -168,6 +168,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // for 2.11 (???)
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.FileCache.coursier$cache$FileCache$$checkFileExists$default$3$1"),
         // Removed private method
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.control$extension"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.coursier$cache$internal$Terminal$Ansi$$control$extension"),

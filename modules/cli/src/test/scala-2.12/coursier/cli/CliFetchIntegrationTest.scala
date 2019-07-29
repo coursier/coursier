@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
+import coursier.cache.FileCache
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, ResolveOptions}
@@ -982,8 +983,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           .head
         val junitPomFile = Paths.get(junitJarPath.replace(".jar", ".pom"))
         val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
         assert(Files.isRegularFile(junitPomFile))
-        assert(Files.isRegularFile(junitPomShaFile))
+        assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(junitAlternativePomShaFile)) //, s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
         junitPomFile
       }
 
@@ -1014,9 +1016,15 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           .head
         val junitPomFile = Paths.get(junitJarPath.replace(".jar", ".pom"))
         val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
         assert(Files.isRegularFile(junitPomFile))
-        assert(Files.isRegularFile(junitPomShaFile))
-        junitPomShaFile
+        assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(junitAlternativePomShaFile))
+        if (Files.isRegularFile(junitPomShaFile))
+          junitPomShaFile
+        else if (Files.isRegularFile(junitAlternativePomShaFile))
+          junitAlternativePomShaFile
+        else
+          sys.error(s"Neither $junitPomShaFile nor $junitAlternativePomShaFile found")
       }
 
       val junitPomSha1File = runFetchJunit()
@@ -1074,8 +1082,13 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
           .head
         val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
-        assert(Files.isRegularFile(junitJarShaFile))
-        junitJarShaFile
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(new File(junitJarPath), "SHA-1").toPath
+        if (Files.isRegularFile(junitJarShaFile))
+          junitJarShaFile
+        else if (Files.isRegularFile(junitAlternativePomShaFile))
+          junitAlternativePomShaFile
+        else
+          sys.error(s"Neither $junitJarShaFile nor $junitAlternativePomShaFile found")
       }
 
       val originalJunitJarSha1 = runFetchJunit()
