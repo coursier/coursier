@@ -253,7 +253,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
       }
 
       if (updateLinks && file.getName == ".directory") {
-        val linkFile = new File(file.getParent, s".${file.getName}.links")
+        val linkFile = auxiliaryFile(file, "links")
 
         val succeeded =
           try {
@@ -881,7 +881,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         try {
           val content =
             if (links) {
-              val linkFile = new File(f.getParentFile, s".${f.getName}.links")
+              val linkFile = auxiliaryFile(f, "links")
               if (f.getName == ".directory" && linkFile.isFile)
                 new String(Files.readAllBytes(linkFile.toPath), UTF_8)
               else
