@@ -90,10 +90,10 @@ final case class MockCache[F[_]](
 
             S.handle(f) {
               case e: Exception =>
-                Left(ArtifactError.DownloadError(e.toString))
+                Left(new ArtifactError.DownloadError(e.toString, Some(e)))
             }
           } else
-            S.point(Left(ArtifactError.NotFound(path.toString)))
+            S.point(Left(new ArtifactError.NotFound(path.toString)))
       }
 
       val e = S.bind[Option[Path], Either[ArtifactError, Path]](fromExtraData) {

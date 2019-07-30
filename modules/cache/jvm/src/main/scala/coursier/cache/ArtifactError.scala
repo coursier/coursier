@@ -2,12 +2,16 @@ package coursier.cache
 
 import java.io.File
 
-// TODO Make that extend Exception
 sealed abstract class ArtifactError(
   val `type`: String,
-  val message: String
-) extends Product with Serializable {
-  def describe: String = s"${`type`}: $message"
+  val message: String,
+  parentOpt: Option[Throwable]
+) extends Exception(s"${`type`}: $message", parentOpt.orNull) {
+
+  def this(`type`: String, message: String) =
+    this(`type`, message, None)
+
+  def describe: String = getMessage
 
   final def notFound: Boolean = this match {
     case _: ArtifactError.NotFound => true
@@ -17,72 +21,73 @@ sealed abstract class ArtifactError(
 
 object ArtifactError {
 
-  final case class DownloadError(reason: String) extends ArtifactError(
+  final class DownloadError(val reason: String, e: Option[Throwable]) extends ArtifactError(
     "download error",
-    reason
+    reason,
+    e
   )
 
-  final case class NotFound(
-    file: String,
-    permanent: Option[Boolean] = None
+  final class NotFound(
+    val file: String,
+    val permanent: Option[Boolean] = None
   ) extends ArtifactError(
     "not found",
     file
   )
 
-  final case class Unauthorized(
-    file: String,
-    realm: Option[String]
+  final class Unauthorized(
+    val file: String,
+    val realm: Option[String]
   ) extends ArtifactError(
     "unauthorized",
     file + realm.fold("")(" (" + _ + ")")
   )
 
-  final case class ChecksumNotFound(
-    sumType: String,
-    file: String
+  final class ChecksumNotFound(
+    val sumType: String,
+    val file: String
   ) extends ArtifactError(
     "checksum not found",
     file
   )
 
-  final case class ChecksumErrors(
-    errors: Seq[(String, String)]
+  final class ChecksumErrors(
+    val errors: Seq[(String, String)]
   ) extends ArtifactError(
     "checksum errors",
     errors.map { case (k, v) => s"$k: $v" }.mkString(", ")
   )
 
-  final case class ChecksumFormatError(
-    sumType: String,
-    file: String
+  final class ChecksumFormatError(
+    val sumType: String,
+    val file: String
   ) extends ArtifactError(
     "checksum format error",
     file
   )
 
-  final case class WrongChecksum(
-    sumType: String,
-    got: String,
-    expected: String,
-    file: String,
-    sumFile: String
+  final class WrongChecksum(
+    val sumType: String,
+    val got: String,
+    val expected: String,
+    val file: String,
+    val sumFile: String
   ) extends ArtifactError(
     "wrong checksum",
     s"$file (expected $sumType $expected in $sumFile, got $got)"
   )
 
-  final case class WrongLength(
-    got: Long,
-    expected: Long,
-    file: String
+  final class WrongLength(
+    val got: Long,
+    val expected: Long,
+    val file: String
   ) extends ArtifactError(
     "wrong length",
     s"$file (expected $expected B, got $got B)"
   )
 
-  final case class FileTooOldOrNotFound(
-    file: String
+  final class FileTooOldOrNotFound(
+    val file: String
   ) extends ArtifactError(
     "file in cache not found or too old",
     file
@@ -90,13 +95,17 @@ object ArtifactError {
 
   sealed abstract class Recoverable(
     `type`: String,
-    message: String
-  ) extends ArtifactError(`type`, message)
-  final case class Locked(file: File) extends Recoverable(
+    message: String,
+    parentOpt: Option[Throwable]
+  ) extends ArtifactError(`type`, message, parentOpt) {
+    def this(`type`: String, message: String) =
+      this(`type`, message, None)
+  }
+  final class Locked(val file: File) extends Recoverable(
     "locked",
     file.toString
   )
-  final case class ConcurrentDownload(url: String) extends Recoverable(
+  final class ConcurrentDownload(val url: String) extends Recoverable(
     "concurrent download",
     url
   )

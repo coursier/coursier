@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
+import coursier.cache.FileCache
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, ResolveOptions}
@@ -83,7 +84,6 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     val params = paramsOrThrow(options)
     val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
-    println(files)
     assert(files.map(_._2.getName).toSet.equals(Set(
       "junit-4.12.jar",
       "junit-4.12-sources.jar",
@@ -982,8 +982,9 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           .head
         val junitPomFile = Paths.get(junitJarPath.replace(".jar", ".pom"))
         val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
         assert(Files.isRegularFile(junitPomFile))
-        assert(Files.isRegularFile(junitPomShaFile))
+        assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(junitAlternativePomShaFile)) //, s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
         junitPomFile
       }
 
@@ -1014,16 +1015,22 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           .head
         val junitPomFile = Paths.get(junitJarPath.replace(".jar", ".pom"))
         val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
         assert(Files.isRegularFile(junitPomFile))
-        assert(Files.isRegularFile(junitPomShaFile))
-        junitPomShaFile
+        assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(junitAlternativePomShaFile))
+        if (Files.isRegularFile(junitPomShaFile))
+          junitPomShaFile
+        else if (Files.isRegularFile(junitAlternativePomShaFile))
+          junitAlternativePomShaFile
+        else
+          sys.error(s"Neither $junitPomShaFile nor $junitAlternativePomShaFile found")
       }
 
       val junitPomSha1File = runFetchJunit()
       val originalShaContent = Files.readAllBytes(junitPomSha1File)
 
       // Corrupt the pom content
-      println(s"Corrupting $junitPomSha1File")
+      System.err.println(s"Corrupting $junitPomSha1File")
       Files.write(junitPomSha1File, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
 
       // Run fetch again and it should pass because of retrying om the bad pom.
@@ -1074,15 +1081,20 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
           .head
         val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
-        assert(Files.isRegularFile(junitJarShaFile))
-        junitJarShaFile
+        val junitAlternativePomShaFile = FileCache.auxiliaryFile(new File(junitJarPath), "SHA-1").toPath
+        if (Files.isRegularFile(junitJarShaFile))
+          junitJarShaFile
+        else if (Files.isRegularFile(junitAlternativePomShaFile))
+          junitAlternativePomShaFile
+        else
+          sys.error(s"Neither $junitJarShaFile nor $junitAlternativePomShaFile found")
       }
 
       val originalJunitJarSha1 = runFetchJunit()
       val originalJunitJarSha1Content = Files.readAllBytes(originalJunitJarSha1)
 
       // Corrupt the jar content
-      println(s"Corrupting $originalJunitJarSha1")
+      System.err.println(s"Corrupting $originalJunitJarSha1")
       Files.write(originalJunitJarSha1, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
 
       // Run fetch again and it should pass because of retrying on the bad jar.
