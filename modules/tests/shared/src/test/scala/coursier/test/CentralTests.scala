@@ -446,7 +446,7 @@ abstract class CentralTests extends TestSuite {
 
           assert(pub.`type` == Type.testJar)
           assert(pub.classifier == Classifier.tests)
-          artifact.url.endsWith("-tests.jar")
+          assert(artifact.url.endsWith("-tests.jar"))
         }
       }
     }

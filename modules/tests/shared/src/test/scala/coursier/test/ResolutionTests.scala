@@ -500,7 +500,7 @@ object ResolutionTests extends TestSuite {
           }
         }
 
-      scala.concurrent.Future.sequence(f)
+      scala.concurrent.Future.sequence(f).map(_ => ())
     }
     'depsFromProfileDisactivatedByPropertyAbsence{
       // A build profile only activates in the absence of some property should

@@ -173,7 +173,6 @@ object ResolveRulesTests extends TestSuite {
           case f: StrictRule =>
             assert(f.rule == rule)
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
-            f.conflict.asInstanceOf[Strict.EvictedDependencies].evicted.foreach(println)
           case _ =>
             throw new Exception("Unexpected exception type", ex)
         }
