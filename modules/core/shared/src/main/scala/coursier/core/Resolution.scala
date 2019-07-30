@@ -210,76 +210,6 @@ object Resolution {
   }
 
   /**
-   * Merge several version constraints together.
-   *
-   * Returns `None` in case of conflict.
-   */
-  def mergeVersions(versions: Seq[String]): Option[String] = {
-
-    val versions0 = versions.distinct
-
-    if (versions0.isEmpty)
-      None
-    else if (versions0.lengthCompare(1) == 0)
-      Some(versions0.head)
-    else {
-
-      val (standard, latests) = versions0.partition {
-        case "latest.integration" => false
-        case "latest.release" => false
-        case "latest.stable" => false
-        case _ => true
-      }
-
-      val retainedStandard =
-        if (standard.isEmpty) None
-        else if (standard.lengthCompare(1) == 0) standard.headOption
-        else {
-          val parsedConstraints = standard.map(Parse.versionConstraint)
-          VersionConstraint
-            .merge(parsedConstraints: _*)
-            .flatMap(_.repr)
-        }
-
-      val retainedLatestOpt =
-        if (latests.isEmpty) None
-        else if (latests.lengthCompare(1) == 0) latests.headOption
-        else {
-          val set = latests.toSet
-          val retained =
-            if (set("latest.integration"))
-              "latest.integration"
-            else if (set("latest.release"))
-              "latest.release"
-            else {
-              // at least two distinct latest.* means we shouldn't even reach this else block anyway
-              assert(set("latest.stable"))
-              "latest.stable"
-            }
-          Some(retained)
-        }
-
-      if (standard.isEmpty)
-        retainedLatestOpt
-      else if (latests.isEmpty)
-        retainedStandard
-      else {
-
-        val parsedIntervals = standard.map(Parse.versionConstraint)
-          .filter(_.preferred.isEmpty) // only keep intervals
-          .filter(_.interval != VersionInterval.zero) // not interval matching any version
-
-        if (parsedIntervals.isEmpty)
-          retainedLatestOpt
-        else
-          VersionConstraint.merge(parsedIntervals: _*)
-            .flatMap(_.repr)
-            .map(itv => (itv +: retainedLatestOpt.toSeq).mkString("&"))
-      }
-    }
-  }
-
-  /**
    * Merge several dependencies, solving version constraints of duplicated
    * modules.
    *
@@ -289,6 +219,7 @@ object Resolution {
     dependencies: TraversableOnce[Dependency],
     forceVersions: Map[Module, String]
   ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
+    def reconcilerByMod(mod: Module): Reconciliation = Reconciliation.Basic
 
     val mergedByModVer = dependencies
       .toVector
@@ -304,7 +235,8 @@ object Resolution {
               if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
               else {
                 val versions = deps.map(_.version)
-                val versionOpt = mergeVersions(versions)
+                val reconciler = reconcilerByMod(module)
+                val versionOpt = reconciler.reconcileVersions(module, versions)
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
