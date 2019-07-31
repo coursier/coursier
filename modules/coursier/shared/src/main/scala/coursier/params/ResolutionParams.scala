@@ -5,19 +5,21 @@
 // DO EDIT MANUALLY from now on
 package coursier.params
 
-import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Version}
+import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation, Version}
 import coursier.params.rule.{Rule, RuleResolution}
+import coursier.util.ModuleMatchers
 
 final class ResolutionParams private (
   val keepOptionalDependencies: Boolean,
   val maxIterations: Int,
-  val forceVersion: Map[coursier.core.Module, String],
+  val forceVersion: Map[Module, String],
   val forcedProperties: Map[String, String],
   val profiles: Set[String],
   val scalaVersion: Option[String],
   val forceScalaVersion: Option[Boolean],
   val typelevel: Boolean,
   val rules: Seq[(Rule, RuleResolution)],
+  val reconciliation: Seq[(ModuleMatchers, Reconciliation)],
   val properties: Seq[(String, String)],
   val exclusions: Set[(Organization, ModuleName)],
   val osInfoOpt: Option[Activation.Os],
@@ -49,6 +51,7 @@ final class ResolutionParams private (
     forceScalaVersion,
     typelevel,
     rules,
+    Nil,
     properties,
     exclusions,
     None,
@@ -122,6 +125,7 @@ final class ResolutionParams private (
         forceScalaVersion == x.forceScalaVersion &&
         typelevel == x.typelevel &&
         rules == x.rules &&
+        reconciliation == x.reconciliation &&
         properties == x.properties &&
         exclusions == x.exclusions &&
         osInfoOpt == x.osInfoOpt &&
@@ -142,6 +146,7 @@ final class ResolutionParams private (
     code = 37 * (code + forceScalaVersion.##)
     code = 37 * (code + typelevel.##)
     code = 37 * (code + rules.##)
+    code = 37 * (code + reconciliation.##)
     code = 37 * (code + properties.##)
     code = 37 * (code + exclusions.##)
     code = 37 * (code + osInfoOpt.##)
@@ -163,6 +168,7 @@ final class ResolutionParams private (
       forceScalaVersion,
       typelevel,
       rules,
+      reconciliation,
       properties,
       exclusions,
       osInfoOpt,
@@ -185,6 +191,7 @@ final class ResolutionParams private (
     forceScalaVersion: Option[Boolean] = forceScalaVersion,
     typelevel: Boolean = typelevel,
     rules: Seq[(Rule, RuleResolution)] = rules,
+    reconciliation: Seq[(ModuleMatchers, Reconciliation)] = reconciliation,
     properties: Seq[(String, String)] = properties,
     exclusions: Set[(Organization, ModuleName)] = exclusions,
     osInfoOpt: Option[Activation.Os] = osInfoOpt,
@@ -203,6 +210,7 @@ final class ResolutionParams private (
       forceScalaVersion,
       typelevel,
       rules,
+      reconciliation,
       properties,
       exclusions,
       osInfoOpt,
@@ -236,6 +244,8 @@ final class ResolutionParams private (
     copy(typelevel = typelevel)
   def withRules(rules: Seq[(Rule, RuleResolution)]): ResolutionParams =
     copy(rules = rules)
+  def withReconciliation(reconciliation: Seq[(ModuleMatchers, Reconciliation)]): ResolutionParams =
+    copy(reconciliation = reconciliation)
   def withExclusions(exclusions: Set[(Organization, ModuleName)]): ResolutionParams =
     copy(exclusions = exclusions)
   def withOsInfo(osInfo: Activation.Os): ResolutionParams =
@@ -423,6 +433,7 @@ object ResolutionParams {
     forceScalaVersion: Option[Boolean],
     typelevel: Boolean,
     rules: Seq[(Rule, RuleResolution)],
+    reconciliation: Seq[(ModuleMatchers, Reconciliation)],
     properties: Seq[(String, String)],
     exclusions: Set[(Organization, ModuleName)],
     osInfoOpt: Option[Activation.Os],
@@ -440,6 +451,7 @@ object ResolutionParams {
       forceScalaVersion,
       typelevel,
       rules,
+      reconciliation,
       properties,
       exclusions,
       osInfoOpt,
@@ -459,6 +471,7 @@ object ResolutionParams {
     forceScalaVersion: Boolean,
     typelevel: Boolean,
     rules: Seq[(Rule, RuleResolution)],
+    reconciliation: Seq[(ModuleMatchers, Reconciliation)],
     properties: Seq[(String, String)],
     exclusions: Set[(Organization, ModuleName)],
     osInfoOpt: Option[Activation.Os],
@@ -476,6 +489,7 @@ object ResolutionParams {
       Option(forceScalaVersion),
       typelevel,
       rules,
+      reconciliation,
       properties,
       exclusions,
       osInfoOpt,

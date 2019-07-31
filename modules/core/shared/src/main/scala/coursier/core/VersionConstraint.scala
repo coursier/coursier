@@ -61,4 +61,21 @@ object VersionConstraint {
 
     constraintOpt.filter(_.isValid)
   }
+
+  def relaxedMerge(constraints: VersionConstraint*): Option[VersionConstraint] = {
+    merge(constraints: _*) orElse {
+      val nonZeroIntervals = constraints.flatMap(c =>
+        if (c.interval == VersionInterval.zero) Nil
+        else List(c.interval)
+      )
+      val lowerBounds = nonZeroIntervals.flatMap(c =>
+        if (c.fromIncluded) c.from.toList
+        else Nil
+      )
+      val preferreds = constraints.flatMap(_.preferred).toList
+      val vs = (lowerBounds ++ preferreds).distinct
+      if (vs.isEmpty) None
+      else Some(VersionConstraint.preferred(vs.max))
+    }
+  }
 }

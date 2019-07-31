@@ -98,5 +98,21 @@ object Reconciliation {
       VersionConstraint.merge(constraints: _*)
   }
 
+  /**
+   * Implements the relaxed reconciliation.
+   */
+  abstract class RelaxedReconciliation extends AbstractReconciliation {
+    override protected def mergeVersionConstraints(constraints: Seq[VersionConstraint]): Option[VersionConstraint] =
+      VersionConstraint.relaxedMerge(constraints: _*)
+  }
+
+  /**
+   * Implements the basic reconciliation rule based on `VersionConstraint.merge`.
+   */
   case object Basic extends BasicReconciliation
+
+  /**
+   * Implements the relaxed reconciliation.
+   */
+  case object Relaxed extends RelaxedReconciliation
 }

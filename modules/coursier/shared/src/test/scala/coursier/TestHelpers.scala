@@ -56,7 +56,18 @@ object TestHelpers extends PlatformTestHelpers {
             params.withDefaultConfiguration(Configuration("really-compile"))
           else
             params
-        "_params" + sha1(params0.toString)
+        // This avoids some sha1 changes
+        def normalize(s: String): String = {
+          val noComma = s.replaceAllLiterally(", ", "||")
+          noComma
+            .replaceAllLiterally("|None|", "")
+            .replaceAllLiterally("|List()|", "")
+            .replaceAllLiterally("|Map()|", "")
+            .replaceAllLiterally("|Set()|", "")
+        }
+        val n = normalize(params0.toString)
+        // println(s"$n: old sha1 ${sha1(params0.toString)} new sha1 ${sha1(n)}")
+        "_params" + sha1(n)
       }
 
     val path = Seq(

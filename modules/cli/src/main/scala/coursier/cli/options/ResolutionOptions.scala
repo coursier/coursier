@@ -5,7 +5,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
 import coursier.params.ResolutionParams
-import coursier.parse.{DependencyParser, ModuleParser, RuleParser}
+import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
 
 final case class ResolutionOptions(
 
@@ -46,6 +46,10 @@ final case class ResolutionOptions(
   @Help("Enforce resolution rules")
   @Short("rule")
     rules: List[String] = Nil,
+
+  @Help("Choose reconciliation strategy")
+  @Value("organization:name:(basic|relaxed)")
+    reconciliation: List[String] = Nil,
 
   strict: Option[Boolean] = None,
 
@@ -126,8 +130,14 @@ final case class ResolutionOptions(
       }
       .map(_.flatten)
 
-    (maxIterationsV, forceVersionV, extraPropertiesV, forcedPropertiesV, rulesV).mapN {
-      (maxIterations, forceVersion, extraProperties, forcedProperties, rules) =>
+    val reconciliationV =
+      ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault) match {
+        case Left(e)      => Validated.invalidNel(e.mkString("\n"))
+        case Right(elems) => Validated.validNel(elems)
+      }
+
+    (maxIterationsV, forceVersionV, extraPropertiesV, forcedPropertiesV, rulesV, reconciliationV).mapN {
+      (maxIterations, forceVersion, extraProperties, forcedProperties, rules, reconciliation) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
           .withMaxIterations(maxIterations)
@@ -139,6 +149,7 @@ final case class ResolutionOptions(
           .withForceScalaVersion(forceScalaVersion)
           .withTypelevel(typelevel)
           .withRules(rules)
+          .withReconciliation(reconciliation)
           .withDefaultConfiguration(Configuration(defaultConfiguration))
     }
   }

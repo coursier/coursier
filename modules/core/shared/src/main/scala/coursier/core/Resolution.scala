@@ -217,10 +217,14 @@ object Resolution {
    */
   def merge(
     dependencies: TraversableOnce[Dependency],
-    forceVersions: Map[Module, String]
+    forceVersions: Map[Module, String],
+    reconciliation: Option[Module => Reconciliation]
   ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
-    def reconcilerByMod(mod: Module): Reconciliation = Reconciliation.Basic
-
+    def reconcilerByMod(mod: Module): Reconciliation =
+      reconciliation match {
+        case Some(f) => f(mod)
+        case _       => Reconciliation.Basic
+      }
     val mergedByModVer = dependencies
       .toVector
       .groupBy(dep => dep.module)
@@ -604,6 +608,7 @@ object Resolution {
     errorCache: Map[Resolution.ModuleVersion, Seq[String]],
     finalDependenciesCache: Map[Dependency, Seq[Dependency]],
     filter: Option[Dependency => Boolean],
+    reconciliation: Option[Module => Reconciliation],
     osInfo: Activation.Os,
     jdkVersion: Option[Version],
     userActivations: Option[Map[String, Boolean]],
@@ -621,6 +626,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -655,6 +661,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      None,
       osInfo,
       jdkVersion,
       userActivations,
@@ -673,6 +680,7 @@ object Resolution {
       Map.empty,
       Map.empty,
       Map.empty,
+      None,
       None,
       Activation.Os.empty,
       None,
@@ -720,6 +728,7 @@ final class Resolution private (
   val errorCache: Map[Resolution.ModuleVersion, Seq[String]],
   val finalDependenciesCache: Map[Dependency, Seq[Dependency]],
   val filter: Option[Dependency => Boolean],
+  val reconciliation: Option[Module => Reconciliation],
   val osInfo: Activation.Os,
   val jdkVersion: Option[Version],
   val userActivations: Option[Map[String, Boolean]],
@@ -743,6 +752,7 @@ final class Resolution private (
           errorCache == other.errorCache &&
           finalDependenciesCache == other.finalDependenciesCache &&
           filter == other.filter &&
+          reconciliation == other.reconciliation &&
           osInfo == other.osInfo &&
           jdkVersion == other.jdkVersion &&
           userActivations == other.userActivations &&
@@ -763,6 +773,7 @@ final class Resolution private (
     code = 37 * code + errorCache.##
     code = 37 * code + finalDependenciesCache.##
     code = 37 * code + filter.##
+    code = 37 * code + reconciliation.##
     code = 37 * code + osInfo.##
     code = 37 * code + jdkVersion.##
     code = 37 * code + userActivations.##
@@ -783,6 +794,7 @@ final class Resolution private (
     b ++= errorCache.toString; b ++= ", "
     b ++= finalDependenciesCache.toString; b ++= ", "
     b ++= filter.toString; b ++= ", "
+    b ++= reconciliation.toString; b ++= ", "
     b ++= osInfo.toString; b ++= ", "
     b ++= jdkVersion.toString; b ++= ", "
     b ++= userActivations.toString; b ++= ", "
@@ -803,6 +815,7 @@ final class Resolution private (
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
+    reconciliation: Option[Module => Reconciliation] = reconciliation,
     osInfo: Activation.Os = osInfo,
     jdkVersion: Option[Version] = jdkVersion,
     userActivations: Option[Map[String, Boolean]] = userActivations,
@@ -820,6 +833,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -839,6 +853,7 @@ final class Resolution private (
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
+    reconciliation: Option[Module => Reconciliation] = reconciliation,
     osInfo: Activation.Os = osInfo,
     jdkVersion: Option[Version] = jdkVersion,
     userActivations: Option[Map[String, Boolean]] = userActivations,
@@ -855,6 +870,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -1025,7 +1041,8 @@ final class Resolution private (
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ dependencySet.minimizedSet ++ transitiveDependencies,
-      forceVersions
+      forceVersions,
+      reconciliation
     )
 
   private def updatedRootDependencies =
