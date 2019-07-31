@@ -43,6 +43,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
     params.otherCaches
   def extraArtifactsOpt: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
     params.extraArtifacts
+  def classpathOrder: Boolean =
+    params.classpathOrder
   def S: Sync[F] =
     params.S
 
@@ -68,6 +70,9 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
     withParams(params.copy(extraArtifactsSeq = l))
 
+  def withClasspathOrder(classpathOrder: Boolean): Artifacts[F] =
+    withParams(params.copy(classpathOrder = classpathOrder))
+
   def io: F[Seq[(Artifact, File)]] =
     S.map(ioResult)(_.artifacts)
 
@@ -80,7 +85,8 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
           r,
           params.classifiers,
           params.mainArtifactsOpt,
-          params.artifactTypesOpt
+          params.artifactTypesOpt,
+          params.classpathOrder
         )
       }
 
@@ -128,6 +134,7 @@ object Artifacts {
         cache,
         Nil,
         Nil,
+        classpathOrder = true,
         S
       )
     )
@@ -227,6 +234,7 @@ object Artifacts {
     cache: Cache[F],
     otherCaches: Seq[Cache[F]],
     extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]],
+    classpathOrder: Boolean,
     S: Sync[F]
   ) {
     def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
@@ -263,7 +271,8 @@ object Artifacts {
     resolution: Resolution,
     classifiers: Set[Classifier],
     mainArtifactsOpt: Option[Boolean],
-    artifactTypesOpt: Option[Set[Type]]
+    artifactTypesOpt: Option[Set[Type]],
+    classpathOrder: Boolean = false
   ): Seq[(Dependency, Publication, Artifact)] = {
 
     val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
@@ -274,7 +283,7 @@ object Artifacts {
 
     val main =
       if (mainArtifacts0)
-        resolution.dependencyArtifacts(None)
+        resolution.dependencyArtifacts(None, classpathOrder)
       else
         Nil
 
@@ -282,7 +291,7 @@ object Artifacts {
       if (classifiers.isEmpty)
         Nil
       else
-        resolution.dependencyArtifacts(Some(classifiers.toSeq))
+        resolution.dependencyArtifacts(Some(classifiers.toSeq), classpathOrder)
 
     val artifacts = (main ++ classifiersArtifacts).map {
       case (dep, pub, artifact) =>

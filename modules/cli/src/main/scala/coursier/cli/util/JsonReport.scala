@@ -137,7 +137,7 @@ final case class JsonElem(dep: Dependency,
 
       val dependencies = resolution.dependenciesOf(
         dep0,
-        withReconciledVersions = false
+        withRetainedVersions = false
       ).sortBy { trDep =>
         (trDep.module.organization, trDep.module.name, trDep.version)
       }.map { d =>
@@ -151,7 +151,7 @@ final case class JsonElem(dep: Dependency,
       def excluded = resolution
         .dependenciesOf(
           dep0.copy(exclusions = Set.empty),
-          withReconciledVersions = false
+          withRetainedVersions = false
         )
         .sortBy { trDep =>
           (trDep.module.organization, trDep.module.name, trDep.version)

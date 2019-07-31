@@ -58,6 +58,8 @@ final class Fetch[F[_]] private (
   def extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] =
     artifactsParams.extraArtifactsSeq
 
+  def classpathOrder: Boolean =
+    artifactsParams.classpathOrder
 
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 
@@ -189,6 +191,9 @@ final class Fetch[F[_]] private (
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Fetch[F] =
     withArtifactsParams(artifactsParams.copy(extraArtifactsSeq = l))
 
+  def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
+    withArtifactsParams(artifactsParams.copy(classpathOrder = classpathOrder))
+
   def ioResult: F[Fetch.Result] = {
 
     val resolutionIO = new Resolve(resolveParams).io
@@ -301,6 +306,7 @@ object Fetch {
         cache,
         Nil,
         Nil,
+        classpathOrder = true,
         S
       ),
       Params(

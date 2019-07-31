@@ -1,3 +1,3 @@
-org.webjars.npm:dom-serializer:0.1.1:compile
-org.webjars.npm:domelementtype:1.3.1:compile
-org.webjars.npm:entities:1.1.2:compile
+org.webjars.npm:domelementtype:1.3.1:default
+org.webjars.npm:entities:1.1.2:default
+org.webjars.npm:dom-serializer:0.1.1:default

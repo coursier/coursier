@@ -39,7 +39,8 @@ object Print {
     deps: Seq[Dependency],
     projects: Map[(Module, String), Project],
     printExclusions: Boolean,
-    useFinalVersions: Boolean = true
+    useFinalVersions: Boolean = true,
+    reorder: Boolean = false
   ): String = {
 
     val deps0 =
@@ -54,17 +55,24 @@ object Print {
       else
         deps
 
-    val deps1 = deps0
-      .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
-      .toVector
-      .map { case (k, l) =>
-        k.withConfiguration(Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
-      }
-      .sortBy { dep =>
-        (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
-      }
+    val deps1 =
+      if (reorder)
+        deps0
+          .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
+          .toVector
+          .map { case (k, l) =>
+            val conf = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*)
+            k.withConfiguration(conf)
+          }
+          .sortBy { dep =>
+            (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
+          }
+      else
+        deps0
 
-    deps1.map(dependency(_, printExclusions)).distinct.mkString("\n")
+    val l = deps1.map(dependency(_, printExclusions))
+    val l0 = if (reorder) l.distinct else l
+    l0.mkString("\n")
   }
 
   def compatibleVersions(first: String, second: String): Boolean = {

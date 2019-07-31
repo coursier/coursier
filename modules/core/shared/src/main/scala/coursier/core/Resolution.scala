@@ -308,14 +308,14 @@ object Resolution {
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
-                    Right(deps.map(dep => dep.copy(version = version)))
+                    Right(deps.map(dep => dep.withVersion(version)))
                   case None =>
                     Left(deps)
                 })
               }
 
             case Some(forcedVersion) =>
-              (Some(forcedVersion), Right(deps.map(dep => dep.copy(version = forcedVersion))))
+              (Some(forcedVersion), Right(deps.map(dep => dep.withVersion(forcedVersion))))
           }
 
           (updatedDeps, versionOpt)
@@ -762,7 +762,7 @@ object Resolution {
           else
             dep.configuration
 
-        dep.copy(configuration = config0)
+        dep.withConfiguration(config0)
       case _ =>
         dep
     }
@@ -1035,15 +1035,37 @@ final class Resolution private (
     } else
       Nil
 
-  def dependenciesOf(dep: Dependency, withReconciledVersions: Boolean = true): Seq[Dependency] =
-    if (withReconciledVersions)
-      finalDependencies0(dep).map { trDep =>
-        trDep.copy(
-          version = reconciledVersions.getOrElse(trDep.module, trDep.version)
-        )
-      }
+  def dependenciesOf(dep: Dependency): Seq[Dependency] =
+    dependenciesOf(dep, withRetainedVersions = false)
+
+  def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean): Seq[Dependency] =
+    dependenciesOf(dep, withRetainedVersions = withRetainedVersions, withFallbackConfig = false)
+
+  private def configsOf(dep: Dependency): Set[Configuration] =
+    projectCache
+      .get(dep.moduleVersion)
+      .map(_._2.configurations.keySet)
+      .getOrElse(Set.empty)
+
+  private def updated(dep: Dependency, withRetainedVersions: Boolean, withFallbackConfig: Boolean): Dependency = {
+    val dep0 =
+      if (withRetainedVersions)
+        dep.withVersion(retainedVersions.getOrElse(dep.module, dep.version))
+      else
+        dep
+    if (withFallbackConfig)
+      Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
     else
-      finalDependencies0(dep)
+      dep0
+  }
+
+  def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean, withFallbackConfig: Boolean): Seq[Dependency] = {
+    val deps = finalDependencies0(dep)
+    if (withRetainedVersions || withFallbackConfig)
+      deps.map(updated(_, withRetainedVersions, withFallbackConfig))
+    else
+      deps
+  }
 
   /**
    * Transitive dependencies of the current dependencies, according to
@@ -1074,11 +1096,20 @@ final class Resolution private (
       forceVersions
     )
 
+  private def updatedRootDependencies =
+    merge(
+      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
+      forceVersions
+    )._2
+
   def reconciledVersions: Map[Module, String] =
     nextDependenciesAndConflicts._3.map {
       case k @ (m, v) =>
         m -> projectCache.get(k).fold(v)(_._2.version)
     }
+
+  def retainedVersions: Map[Module, String] =
+    nextDependenciesAndConflicts._3
 
   /**
    * The modules we miss some info about.
@@ -1449,14 +1480,50 @@ final class Resolution private (
     */
   def minDependencies: Set[Dependency] =
     dependencySet.minimizedSet.map { dep =>
-      val configs = projectCache
-        .get(dep.moduleVersion)
-        .map(_._2.configurations.keySet)
-        .getOrElse(Set.empty)
-      Resolution.fallbackConfigIfNecessary(dep, configs)
+      Resolution.fallbackConfigIfNecessary(dep, configsOf(dep))
     }
 
-  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
+  def orderedDependencies: Seq[Dependency] = {
+
+    def helper(deps: List[Dependency], done: DependencySet): Stream[Dependency] =
+      deps match {
+        case Nil => Stream()
+        case h :: t =>
+          if (done.covers(h))
+            helper(t, done)
+          else {
+            lazy val done0 = done.add(h)
+            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
+              // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
+              .filter(!done0.covers(_))
+            if (todo.nonEmpty)
+              helper(todo.toList ::: deps, done)
+            else if (done.covers(h))
+              helper(t, done)
+            else
+              h #:: helper(t, done0)
+          }
+      }
+
+    val rootDeps = updatedRootDependencies
+      .map(withDefaultConfig(_, defaultConfiguration))
+      .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
+      .toList
+
+    helper(rootDeps, DependencySet.empty).toVector
+  }
+
+  def artifacts(): Seq[Artifact] =
+    artifacts(defaultTypes, None)
+  def artifacts(types: Set[Type]): Seq[Artifact] =
+    artifacts(types, None)
+  def artifacts(classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
+    artifacts(defaultTypes, classifiers)
+
+  def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
+    artifacts(types, classifiers, classpathOrder = false)
+
+  def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
         case (_, pub, artifact) if types(pub.`type`) =>
@@ -1464,9 +1531,15 @@ final class Resolution private (
       }
       .distinct
 
-  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Publication, Artifact)] =
+  def dependencyArtifacts(): Seq[(Dependency, Publication, Artifact)] =
+    dependencyArtifacts(None)
+
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]]): Seq[(Dependency, Publication, Artifact)] =
+    dependencyArtifacts(classifiers, classpathOrder = false)
+
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[(Dependency, Publication, Artifact)] =
     for {
-      dep <- minDependencies.toSeq
+      dep <- (if (classpathOrder) orderedDependencies else minDependencies.toSeq)
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
@@ -1486,16 +1559,8 @@ final class Resolution private (
     artifacts(classifiers = Some(classifiers.map(Classifier(_))))
 
   @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
-  def artifacts: Seq[Artifact] =
-    artifacts()
-
-  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
   def artifacts(withOptional: Boolean): Seq[Artifact] =
     artifacts()
-
-  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
-  def dependencyArtifacts: Seq[(Dependency, Artifact)] =
-    dependencyArtifacts(None).map(t => (t._1, t._3))
 
   @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts(withOptional: Boolean): Seq[(Dependency, Artifact)] =
@@ -1515,9 +1580,9 @@ final class Resolution private (
   @deprecated("Use errors instead", "1.1.0")
   def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
 
-  def dependenciesWithSelectedVersions: Set[Dependency] =
+  def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
-      reconciledVersions.get(dep.module).fold(dep) { v =>
+      retainedVersions.get(dep.module).fold(dep) { v =>
         dep.copy(version = v)
       }
     }
@@ -1534,7 +1599,7 @@ final class Resolution private (
   def subset(dependencies: Seq[Dependency]): Resolution = {
 
     def updateVersion(dep: Dependency): Dependency =
-      dep.copy(version = reconciledVersions.getOrElse(dep.module, dep.version))
+      dep.withVersion(reconciledVersions.getOrElse(dep.module, dep.version))
 
     @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
       val newDeps = current ++ current

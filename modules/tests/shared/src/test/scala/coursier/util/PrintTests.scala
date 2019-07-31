@@ -35,7 +35,7 @@ object PrintTests extends TestSuite {
         dep.copy(attributes = Attributes(Type("fooz"), Classifier.empty))
       )
 
-      val res = Print.dependenciesUnknownConfigs(deps, Map())
+      val res = Print.dependenciesUnknownConfigs(deps, Map(), printExclusions = false, reorder = true)
       val expectedRes = "org:name:0.1:foo"
 
       assert(res == expectedRes)

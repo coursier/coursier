@@ -27,6 +27,9 @@ final case class ResolveOptions(
   @Help("Print conflicts")
     conflicts: Boolean = false,
 
+  @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
+    classpathOrder: Boolean = false,
+
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
 

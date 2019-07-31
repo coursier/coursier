@@ -1,6 +1,6 @@
-com.chuusai:shapeless_2.12:2.3.3:compile
-com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4:compile
-io.argonaut:argonaut_2.12:6.2-RC2:compile
-org.scala-lang:scala-library:2.12.4:compile
-org.scala-lang:scala-reflect:2.12.0:compile
-org.typelevel:macro-compat_2.12:1.1.1:compile
+org.scala-lang:scala-library:2.12.4:default
+org.typelevel:macro-compat_2.12:1.1.1:default
+com.chuusai:shapeless_2.12:2.3.3:default
+org.scala-lang:scala-reflect:2.12.0:default
+io.argonaut:argonaut_2.12:6.2-RC2:default
+com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4:default
