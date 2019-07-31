@@ -26,8 +26,9 @@ object ReconciliationParser {
       case "basic"   => Right(Reconciliation.Basic)
       case "relaxed" => Right(Reconciliation.Relaxed)
       case _         => Left(s"Unknown reconciliation '$v'")
-    }) map { r =>
-      m -> r
+    }) match {
+      case Left(e)  => Left(e)
+      case Right(r) => Right(m -> r)
     }
   }
 }

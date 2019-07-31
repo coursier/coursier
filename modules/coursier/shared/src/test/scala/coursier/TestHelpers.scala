@@ -63,6 +63,7 @@ object TestHelpers extends PlatformTestHelpers {
             .replaceAllLiterally("|None|", "")
             .replaceAllLiterally("|List()|", "")
             .replaceAllLiterally("|Map()|", "")
+            .replaceAllLiterally("HashSet", "Set")
             .replaceAllLiterally("|Set()|", "")
         }
         val n = normalize(params0.toString)
