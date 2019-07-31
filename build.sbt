@@ -257,10 +257,16 @@ lazy val cli = project("cli")
         current / "foo"
     },
     coursierPrefix,
-    unmanagedResources.in(Test) ++= Seq(
-      proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
-      proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
-    ),
+    unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
+    unmanagedResources.in(Test) ++= Def.taskDyn[Seq[File]] {
+      if (javaMajorVer > 8)
+        // Running into obscure proguard issues when building that one with JDK 11…
+        Def.task(Nil)
+      else
+        Def.task {
+          Seq(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
+        }
+    }.value,
     scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
@@ -504,24 +510,37 @@ lazy val addBootstrapJarAsResource = {
 
   import java.nio.file.Files
 
-  packageBin.in(Compile) := {
+  packageBin.in(Compile) := Def.taskDyn {
+
+    val resourcesBootstrapLauncherOptTask: Def.Initialize[Task[Option[File]]] =
+      if (javaMajorVer > 8)
+        Def.task(None)
+      else
+        Def.task {
+          Some(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
+        }
+
     val originalBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
     val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
     val originalResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
-    val resourcesBootstrapJar = proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value
     val source = packageBin.in(Compile).value
 
-    val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
+    Def.task {
+      val resourcesBootstrapJarOpt: Option[File] = resourcesBootstrapLauncherOptTask.value
 
-    ZipUtil.addToZip(source, dest, Seq(
-      "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-      "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath),
-      "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath),
-      "bootstrap-resources-orig.jar" -> Files.readAllBytes(originalResourcesBootstrapJar.toPath)
-    ))
+      val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
 
-    dest
-  }
+      ZipUtil.addToZip(source, dest, Seq(
+        "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
+        "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath),
+        "bootstrap-resources-orig.jar" -> Files.readAllBytes(originalResourcesBootstrapJar.toPath)
+      ) ++ resourcesBootstrapJarOpt.map { resourcesBootstrapJar =>
+        "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath)
+      })
+
+      dest
+    }
+  }.value
 }
 
 lazy val addPathsSources = Seq(
