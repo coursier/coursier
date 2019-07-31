@@ -227,7 +227,7 @@ lazy val publish = project("publish")
 
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, publish)
-  .enablePlugins(ContrabandPlugin, PackPlugin)
+  .enablePlugins(ContrabandPlugin, JlinkPlugin, PackPlugin)
   .settings(
     shared,
     // does this really work?
@@ -277,7 +277,21 @@ lazy val cli = project("cli")
         Seq()
     },
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    onlyIn("2.12")
+    // not to get launchers for each sub-command in the jlink package
+    discoveredMainClasses.in(Compile) := Seq("coursier.cli.Coursier"),
+    onlyIn("2.12"),
+    jlinkIgnoreMissingDependency := JlinkIgnore.everything,
+    jlinkOptions := Seq(
+      "--no-header-files",
+      "--no-man-pages",
+      "--strip-debug",
+      "--add-modules", jlinkModules.value.mkString(","),
+      "--output", target.in(jlinkBuildImage).value.getAbsolutePath
+    ),
+    maintainer := developers.value.head.email,
+    packageName.in(Universal) := "standalone",
+    topLevelDirectory.in(Universal) := Some(s"coursier-${version.value}"),
+    executableScriptName := "coursier"
   )
 
 lazy val `cli-graalvm` = project("cli-graalvm")
