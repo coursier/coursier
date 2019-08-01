@@ -131,7 +131,7 @@ final case class ResolutionOptions(
       .map(_.flatten)
 
     val reconciliationV =
-      ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault) match {
+      ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault).either match {
         case Left(e)      => Validated.invalidNel(e.mkString("\n"))
         case Right(elems) => Validated.validNel(elems)
       }

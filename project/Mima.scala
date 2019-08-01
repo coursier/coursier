@@ -169,8 +169,6 @@ object Mima {
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded.")),
         // https://github.com/coursier/coursier/pull/1293
-        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.Resolution.copy*"),
-        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.copy"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.merge"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.mergeVersions"),
       )
