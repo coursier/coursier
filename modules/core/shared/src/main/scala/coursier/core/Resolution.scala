@@ -240,7 +240,7 @@ object Resolution {
               else {
                 val versions = deps.map(_.version)
                 val reconciler = reconcilerByMod(module)
-                val versionOpt = reconciler.reconcileVersions(module, versions)
+                val versionOpt = reconciler(versions)
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
