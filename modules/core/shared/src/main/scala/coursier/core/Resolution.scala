@@ -1047,7 +1047,8 @@ final class Resolution private (
   private def updatedRootDependencies =
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
-      forceVersions
+      forceVersions,
+      reconciliation
     )._2
 
   def reconciledVersions: Map[Module, String] =
