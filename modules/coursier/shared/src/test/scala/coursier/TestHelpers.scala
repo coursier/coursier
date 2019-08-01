@@ -67,7 +67,6 @@ object TestHelpers extends PlatformTestHelpers {
             .replaceAllLiterally("|Set()|", "")
         }
         val n = normalize(params0.toString)
-        // println(s"$n: old sha1 ${sha1(params0.toString)} new sha1 ${sha1(n)}")
         "_params" + sha1(n)
       }
 
