@@ -680,12 +680,12 @@ object ResolveTests extends TestSuite {
             .withResolutionParams(params)
             .future()
         }
-        val deps = res.dependenciesWithSelectedVersions
+        val deps = res.minDependencies
         val isNumberVersions = deps.collect {
           case dep if dep.module == mod"org.webjars.npm:is-number" =>
             dep.version
         }
-        val expectedIsNumberVersions = Set("4.0.0")
+        val expectedIsNumberVersions = Set("[4.0.0,5)")
         assert(isNumberVersions == expectedIsNumberVersions)
       }
     }
