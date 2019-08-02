@@ -309,12 +309,12 @@ object Resolve extends PlatformResolve {
     val reconciliation: Option[Module => Reconciliation] =
       if (params.reconciliation.isEmpty) None
       else
-        Some((m: Module) => {
+        Some { m =>
           params.reconciliation.find(_._1.matches(m)) match {
             case Some((_, r)) => r
-            case _            => Reconciliation.Basic
+            case None         => Reconciliation.Default
           }
-        })
+        }
 
     coursier.core.Resolution(
       rootDependencies = dependencies,

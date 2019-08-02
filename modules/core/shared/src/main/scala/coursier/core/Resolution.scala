@@ -224,7 +224,7 @@ object Resolution {
     def reconcilerByMod(mod: Module): Reconciliation =
       reconciliation match {
         case Some(f) => f(mod)
-        case _       => Reconciliation.Basic
+        case _       => Reconciliation.Default
       }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
