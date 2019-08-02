@@ -502,4 +502,6 @@ object Settings {
     )
   }
 
+  lazy val javaMajorVer = sys.props("java.version").takeWhile(_.isDigit).toInt
+
 }
