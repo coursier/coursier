@@ -173,7 +173,6 @@ object ResolveRulesTests extends TestSuite {
           case f: StrictRule =>
             assert(f.rule == rule)
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
-            f.conflict.asInstanceOf[Strict.EvictedDependencies].evicted.foreach(println)
           case _ =>
             throw new Exception("Unexpected exception type", ex)
         }
@@ -355,7 +354,7 @@ object ResolveRulesTests extends TestSuite {
             .future()
         }
 
-        val deps = res.dependenciesWithSelectedVersions
+        val deps = res.dependenciesWithRetainedVersions
 
         val shapelessVersions = deps.collect {
           case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
@@ -387,7 +386,7 @@ object ResolveRulesTests extends TestSuite {
             .future()
         }
 
-        val deps = res.dependenciesWithSelectedVersions
+        val deps = res.dependenciesWithRetainedVersions
 
         val shapelessVersions = deps.collect {
           case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>

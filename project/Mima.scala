@@ -66,6 +66,21 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // renamed
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependenciesWithSelectedVersions"),
+        // tweaked default values / overloads
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependencyArtifacts$default$1"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.artifacts$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependenciesOf$default$2"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.artifacts$default$1"),
+        // extra param…
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.Print.dependenciesUnknownConfigs"),
+        // things that are private now
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.ResolutionProcess.fetchOne"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.compatibility.package.listWebPageRawElements"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.util.WebPage.listFiles"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.util.WebPage.listElements"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.util.WebPage.listDirectories"),
         // should have been private
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.defaultConfiguration"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.withDefaultConfig"),
@@ -146,9 +161,16 @@ object Mima {
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser.profileHandlers"),
         // Repository doesn't extend Product anymore
         ProblemFilters.exclude[MissingTypesProblem]("coursier.core.Repository"),
+        // #1291: Added new field to Info
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.copy"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.this"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Info.apply"),
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded.")),
+        // https://github.com/coursier/coursier/pull/1293
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.merge"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.mergeVersions"),
       )
     }
   }
@@ -158,6 +180,19 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // Made ArtifactError extends Exception (rather than being an ADT)
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.ArtifactError#")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.ArtifactError$")),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productIterator"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productPrefix"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productElementName"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.ArtifactError.productElementNames"),
+        ProblemFilters.exclude[MissingTypesProblem]("coursier.cache.ArtifactError"),
+        // for 2.11 (???)
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.FileCache.coursier$cache$FileCache$$checkFileExists$default$3$1"),
+        // Removed private method
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.control$extension"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.internal.Terminal#Ansi.coursier$cache$internal$Terminal$Ansi$$control$extension"),
         // Tweaked more or less internal things
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.cache.MockCache.create$default$2"),
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.cache.MockCache.create$default$4"),

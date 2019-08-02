@@ -3,7 +3,6 @@ package coursier.cli.resolve
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.params.{DependencyParams, OutputParams, RepositoryParams}
-import coursier.core.Repository
 import coursier.params.{CacheParams, ResolutionParams}
 import coursier.parse.ModuleParser
 import coursier.util.ModuleMatcher
@@ -19,7 +18,8 @@ final case class ResolveParams(
   tree: Boolean,
   reverseTree: Boolean,
   whatDependsOn: Seq[ModuleMatcher],
-  conflicts: Boolean
+  conflicts: Boolean,
+  classpathOrder: Boolean
 ) {
   def anyTree: Boolean =
     tree ||
@@ -65,6 +65,8 @@ object ResolveParams {
       else
         Validated.validNel(options.benchmarkCache)
 
+    val classpathOrder = options.classpathOrder
+
     (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
       (cache, output, repositories, dependency, resolution, whatDependsOn, _, benchmarkCache) =>
         ResolveParams(
@@ -78,7 +80,8 @@ object ResolveParams {
           tree,
           reverseTree,
           whatDependsOn.map(m => ModuleMatcher(m)),
-          conflicts
+          conflicts,
+          classpathOrder
         )
     }
   }

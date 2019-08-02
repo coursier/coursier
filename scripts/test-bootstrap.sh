@@ -82,6 +82,14 @@ nailgun() {
   fi
 }
 
+fork() {
+  local OUT="$("$COURSIER" launch --fork io.get-coursier:echo:1.0.1 -- foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from forked echo command." 1>&2
+    exit 1
+  fi
+}
+
 simple() {
   "$COURSIER" bootstrap -o cs-echo io.get-coursier:echo:1.0.1
   local OUT="$(./cs-echo foo)"
@@ -276,6 +284,7 @@ launcherAssemblyPreambleInSource() {
 }
 
 nailgun
+fork
 simple
 require
 javaClassPathProp

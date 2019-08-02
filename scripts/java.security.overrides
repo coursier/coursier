@@ -1,0 +1,5 @@
+security.provider.3=org.bouncycaste.jce.provider.BouncyCastleProvider
+security.provider.6=org.bouncycaste.jce.provider.BouncyCastleProvider
+security.provider.7=org.bouncycaste.jce.provider.BouncyCastleProvider
+security.provider.9=org.bouncycaste.jce.provider.BouncyCastleProvider
+security.provider.10=org.bouncycaste.jce.provider.BouncyCastleProvider

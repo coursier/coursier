@@ -122,7 +122,7 @@ object CacheDefaults {
     // then, use what's available locally
     CachePolicy.LocalOnly,
     // lastly, try to download what's missing
-    CachePolicy.FetchMissing
+    CachePolicy.Update
   )
 
   def cachePolicies: Seq[CachePolicy] = {

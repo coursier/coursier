@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
 import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Sync}
+import coursier.util.{EitherT, Sync, WebPage}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -26,15 +26,20 @@ final case class MockCache[F[_]](
 
   def fetch: Repository.Fetch[F] = { artifact =>
 
-    if (artifact.url.startsWith("http://localhost:"))
+    val (artifact0, links) =
+      if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+      else (artifact, false)
+
+    if (artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
-        CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
+        CacheUrl.urlConnection(artifact0.url, artifact0.authentication).getInputStream,
+        if (links) Some(artifact0.url) else None
       ))
     else
-      file(artifact)
+      file(artifact0)
         .leftMap(_.describe)
         .flatMap { f =>
-          EitherT(MockCache.readFully(new FileInputStream(f)))
+          EitherT(MockCache.readFully(new FileInputStream(f), if (links) Some(artifact0.url) else None))
         }
   }
 
@@ -85,10 +90,10 @@ final case class MockCache[F[_]](
 
             S.handle(f) {
               case e: Exception =>
-                Left(ArtifactError.DownloadError(e.toString))
+                Left(new ArtifactError.DownloadError(e.toString, Some(e)))
             }
           } else
-            S.point(Left(ArtifactError.NotFound(path.toString)))
+            S.point(Left(new ArtifactError.NotFound(path.toString)))
       }
 
       val e = S.bind[Option[Path], Either[ArtifactError, Path]](fromExtraData) {
@@ -135,7 +140,7 @@ object MockCache {
     buffer.toByteArray
   }
 
-  private def readFully[F[_]: Sync](is: => InputStream): F[Either[String, String]] =
+  private def readFully[F[_]: Sync](is: => InputStream, parseLinksUrl: Option[String]): F[Either[String, String]] =
     Sync[F].delay {
       val t = Try {
         val is0 = is
@@ -143,7 +148,12 @@ object MockCache {
           try readFullySync(is0)
           finally is0.close()
 
-        new String(b, StandardCharsets.UTF_8)
+        val s = new String(b, StandardCharsets.UTF_8)
+        parseLinksUrl match {
+          case None => s
+          case Some(url) =>
+            WebPage.listElements(url, s).mkString("\n")
+        }
       }
 
       t match {

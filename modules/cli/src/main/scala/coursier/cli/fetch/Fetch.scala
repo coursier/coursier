@@ -43,7 +43,8 @@ object Fetch extends CaseApp[FetchOptions] {
         res,
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?
-        Some(params.artifact.artifactTypes)  // allow to be null?
+        Some(params.artifact.artifactTypes),  // allow to be null?
+        params.resolve.classpathOrder
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
@@ -61,7 +62,7 @@ object Fetch extends CaseApp[FetchOptions] {
                 artifacts,
                 artifactFiles,
                 params.artifact.classifiers,
-                params.resolve.output.verbosity >= 1
+                printExclusions = false
               )
 
               Files.write(output, report.getBytes(StandardCharsets.UTF_8))
@@ -75,14 +76,15 @@ object Fetch extends CaseApp[FetchOptions] {
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
 
+    var pool: ExecutorService = null
+
     // get options and dependencies from apps if any
     val (options0, deps) = FetchParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
       val initialRepositories = initialParams.resolve.repositories.repositories
       val channels = initialParams.resolve.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
       val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
       val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
       res
     }
 
@@ -93,7 +95,8 @@ object Fetch extends CaseApp[FetchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
+        if (pool == null)
+          pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, deps)

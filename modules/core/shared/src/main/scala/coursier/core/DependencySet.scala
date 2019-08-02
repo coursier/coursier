@@ -32,6 +32,18 @@ final class DependencySet private (
   lazy val minimizedSet: Set[Dependency] =
     grouped.iterator.flatMap(_._2.children.keysIterator).toSet
 
+  def contains(dependency: Dependency): Boolean = {
+    val dep0 = dependency.clearExclusions
+    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    set.contains(dependency)
+  }
+
+  def covers(dependency: Dependency): Boolean = {
+    val dep0 = dependency.clearExclusions
+    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    set.covers(dependency, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+  }
+
   def add(dependency: Dependency): DependencySet =
     add(Seq(dependency))
 
@@ -108,6 +120,14 @@ object DependencySet {
 
     def contains(t: T): Boolean =
       parents.contains(t) || children.contains(t)
+
+    def covers(t: T, size: T => Int, subsetOf: (T, T) => Boolean): Boolean =
+      contains(t) || {
+        val n = size(t)
+        required.filterKeys(_ <= n).iterator.flatMap(_._2.iterator).exists {
+          s0 => subsetOf(s0, t)
+        }
+      }
 
     private def forceAdd(s: T, size: T => Int, subsetOf: (T, T) => Boolean): Sets[T] = {
 

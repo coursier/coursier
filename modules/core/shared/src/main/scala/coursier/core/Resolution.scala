@@ -210,88 +210,24 @@ object Resolution {
   }
 
   /**
-   * Merge several version constraints together.
-   *
-   * Returns `None` in case of conflict.
-   */
-  def mergeVersions(versions: Seq[String]): Option[String] = {
-
-    val versions0 = versions.distinct
-
-    if (versions0.isEmpty)
-      None
-    else if (versions0.lengthCompare(1) == 0)
-      Some(versions0.head)
-    else {
-
-      val (standard, latests) = versions0.partition {
-        case "latest.integration" => false
-        case "latest.release" => false
-        case "latest.stable" => false
-        case _ => true
-      }
-
-      val retainedStandard =
-        if (standard.isEmpty) None
-        else if (standard.lengthCompare(1) == 0) standard.headOption
-        else {
-          val parsedConstraints = standard.map(Parse.versionConstraint)
-          VersionConstraint
-            .merge(parsedConstraints: _*)
-            .flatMap(_.repr)
-        }
-
-      val retainedLatestOpt =
-        if (latests.isEmpty) None
-        else if (latests.lengthCompare(1) == 0) latests.headOption
-        else {
-          val set = latests.toSet
-          val retained =
-            if (set("latest.integration"))
-              "latest.integration"
-            else if (set("latest.release"))
-              "latest.release"
-            else {
-              // at least two distinct latest.* means we shouldn't even reach this else block anyway
-              assert(set("latest.stable"))
-              "latest.stable"
-            }
-          Some(retained)
-        }
-
-      if (standard.isEmpty)
-        retainedLatestOpt
-      else if (latests.isEmpty)
-        retainedStandard
-      else {
-
-        val parsedIntervals = standard.map(Parse.versionConstraint)
-          .filter(_.preferred.isEmpty) // only keep intervals
-          .filter(_.interval != VersionInterval.zero) // not interval matching any version
-
-        if (parsedIntervals.isEmpty)
-          retainedLatestOpt
-        else
-          VersionConstraint.merge(parsedIntervals: _*)
-            .flatMap(_.repr)
-            .map(itv => (itv +: retainedLatestOpt.toSeq).mkString("&"))
-      }
-    }
-  }
-
-  /**
    * Merge several dependencies, solving version constraints of duplicated
    * modules.
    *
    * Returns the conflicted dependencies, and the merged others.
    */
   def merge(
-    dependencies: TraversableOnce[Dependency],
-    forceVersions: Map[Module, String]
+    dependencies: Seq[Dependency],
+    forceVersions: Map[Module, String],
+    reconciliation: Option[Module => Reconciliation],
+    preserveOrder: Boolean = false
   ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
-
-    val mergedByModVer = dependencies
-      .toVector
+    def reconcilerByMod(mod: Module): Reconciliation =
+      reconciliation match {
+        case Some(f) => f(mod)
+        case _       => Reconciliation.Default
+      }
+    val dependencies0 = dependencies.toVector
+    val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
         val anyOrgModule = module.copy(organization = Organization("*"))
@@ -304,27 +240,36 @@ object Resolution {
               if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
               else {
                 val versions = deps.map(_.version)
-                val versionOpt = mergeVersions(versions)
+                val reconciler = reconcilerByMod(module)
+                val versionOpt = reconciler(versions)
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
-                    Right(deps.map(dep => dep.copy(version = version)))
+                    Right(deps.map(dep => dep.withVersion(version)))
                   case None =>
                     Left(deps)
                 })
               }
 
             case Some(forcedVersion) =>
-              (Some(forcedVersion), Right(deps.map(dep => dep.copy(version = forcedVersion))))
+              (Some(forcedVersion), Right(deps.map(dep => dep.withVersion(forcedVersion))))
           }
 
           (updatedDeps, versionOpt)
         }
       }
 
-    val merged = mergedByModVer
-      .values
-      .toVector
+
+    val merged =
+      if (preserveOrder)
+        dependencies0
+          .map(_.module)
+          .distinct
+          .map(mergedByModVer(_))
+      else
+        mergedByModVer
+          .values
+          .toVector
 
     (
       merged
@@ -672,6 +617,7 @@ object Resolution {
     errorCache: Map[Resolution.ModuleVersion, Seq[String]],
     finalDependenciesCache: Map[Dependency, Seq[Dependency]],
     filter: Option[Dependency => Boolean],
+    reconciliation: Option[Module => Reconciliation],
     osInfo: Activation.Os,
     jdkVersion: Option[Version],
     userActivations: Option[Map[String, Boolean]],
@@ -689,6 +635,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -723,6 +670,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      None,
       osInfo,
       jdkVersion,
       userActivations,
@@ -742,6 +690,7 @@ object Resolution {
       Map.empty,
       Map.empty,
       None,
+      None,
       Activation.Os.empty,
       None,
       None,
@@ -750,6 +699,22 @@ object Resolution {
       Map.empty,
       Configuration.compile
     )
+
+  private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
+    Parse.withFallbackConfig(dep.configuration) match {
+      case Some((main, fallback)) =>
+        val config0 =
+          if (configs(main))
+            main
+          else if (configs(fallback))
+            fallback
+          else
+            dep.configuration
+
+        dep.withConfiguration(config0)
+      case _ =>
+        dep
+    }
 
 }
 
@@ -772,6 +737,7 @@ final class Resolution private (
   val errorCache: Map[Resolution.ModuleVersion, Seq[String]],
   val finalDependenciesCache: Map[Dependency, Seq[Dependency]],
   val filter: Option[Dependency => Boolean],
+  val reconciliation: Option[Module => Reconciliation],
   val osInfo: Activation.Os,
   val jdkVersion: Option[Version],
   val userActivations: Option[Map[String, Boolean]],
@@ -795,6 +761,7 @@ final class Resolution private (
           errorCache == other.errorCache &&
           finalDependenciesCache == other.finalDependenciesCache &&
           filter == other.filter &&
+          reconciliation == other.reconciliation &&
           osInfo == other.osInfo &&
           jdkVersion == other.jdkVersion &&
           userActivations == other.userActivations &&
@@ -815,6 +782,7 @@ final class Resolution private (
     code = 37 * code + errorCache.##
     code = 37 * code + finalDependenciesCache.##
     code = 37 * code + filter.##
+    code = 37 * code + reconciliation.##
     code = 37 * code + osInfo.##
     code = 37 * code + jdkVersion.##
     code = 37 * code + userActivations.##
@@ -835,6 +803,7 @@ final class Resolution private (
     b ++= errorCache.toString; b ++= ", "
     b ++= finalDependenciesCache.toString; b ++= ", "
     b ++= filter.toString; b ++= ", "
+    b ++= reconciliation.toString; b ++= ", "
     b ++= osInfo.toString; b ++= ", "
     b ++= jdkVersion.toString; b ++= ", "
     b ++= userActivations.toString; b ++= ", "
@@ -855,6 +824,7 @@ final class Resolution private (
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
+    reconciliation: Option[Module => Reconciliation] = reconciliation,
     osInfo: Activation.Os = osInfo,
     jdkVersion: Option[Version] = jdkVersion,
     userActivations: Option[Map[String, Boolean]] = userActivations,
@@ -872,6 +842,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -907,6 +878,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      None,
       osInfo,
       jdkVersion,
       userActivations,
@@ -1019,15 +991,37 @@ final class Resolution private (
     } else
       Nil
 
-  def dependenciesOf(dep: Dependency, withReconciledVersions: Boolean = true): Seq[Dependency] =
-    if (withReconciledVersions)
-      finalDependencies0(dep).map { trDep =>
-        trDep.copy(
-          version = reconciledVersions.getOrElse(trDep.module, trDep.version)
-        )
-      }
+  def dependenciesOf(dep: Dependency): Seq[Dependency] =
+    dependenciesOf(dep, withRetainedVersions = false)
+
+  def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean): Seq[Dependency] =
+    dependenciesOf(dep, withRetainedVersions = withRetainedVersions, withFallbackConfig = false)
+
+  private def configsOf(dep: Dependency): Set[Configuration] =
+    projectCache
+      .get(dep.moduleVersion)
+      .map(_._2.configurations.keySet)
+      .getOrElse(Set.empty)
+
+  private def updated(dep: Dependency, withRetainedVersions: Boolean, withFallbackConfig: Boolean): Dependency = {
+    val dep0 =
+      if (withRetainedVersions)
+        dep.withVersion(retainedVersions.getOrElse(dep.module, dep.version))
+      else
+        dep
+    if (withFallbackConfig)
+      Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
     else
-      finalDependencies0(dep)
+      dep0
+  }
+
+  def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean, withFallbackConfig: Boolean): Seq[Dependency] = {
+    val deps = finalDependencies0(dep)
+    if (withRetainedVersions || withFallbackConfig)
+      deps.map(updated(_, withRetainedVersions, withFallbackConfig))
+    else
+      deps
+  }
 
   /**
    * Transitive dependencies of the current dependencies, according to
@@ -1055,14 +1049,26 @@ final class Resolution private (
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ dependencySet.minimizedSet ++ transitiveDependencies,
-      forceVersions
+      forceVersions,
+      reconciliation
     )
+
+  private def updatedRootDependencies =
+    merge(
+      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
+      forceVersions,
+      reconciliation,
+      preserveOrder = true
+    )._2
 
   def reconciledVersions: Map[Module, String] =
     nextDependenciesAndConflicts._3.map {
       case k @ (m, v) =>
         m -> projectCache.get(k).fold(v)(_._2.version)
     }
+
+  def retainedVersions: Map[Module, String] =
+    nextDependenciesAndConflicts._3
 
   /**
    * The modules we miss some info about.
@@ -1432,16 +1438,51 @@ final class Resolution private (
     * @return A minimized `dependencies`, applying this kind of substitutions.
     */
   def minDependencies: Set[Dependency] =
-    Orders.minDependencies(
-      dependencies,
-      dep =>
-        projectCache
-          .get(dep)
-          .map(_._2.configurations)
-          .getOrElse(Map.empty)
-    )
+    dependencySet.minimizedSet.map { dep =>
+      Resolution.fallbackConfigIfNecessary(dep, configsOf(dep))
+    }
 
-  def artifacts(types: Set[Type] = defaultTypes, classifiers: Option[Seq[Classifier]] = None): Seq[Artifact] =
+  def orderedDependencies: Seq[Dependency] = {
+
+    def helper(deps: List[Dependency], done: DependencySet): Stream[Dependency] =
+      deps match {
+        case Nil => Stream()
+        case h :: t =>
+          if (done.covers(h))
+            helper(t, done)
+          else {
+            lazy val done0 = done.add(h)
+            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
+              // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
+              .filter(!done0.covers(_))
+            if (todo.nonEmpty)
+              helper(todo.toList ::: deps, done)
+            else if (done.covers(h))
+              helper(t, done)
+            else
+              h #:: helper(t, done0)
+          }
+      }
+
+    val rootDeps = updatedRootDependencies
+      .map(withDefaultConfig(_, defaultConfiguration))
+      .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
+      .toList
+
+    helper(rootDeps, DependencySet.empty).toVector
+  }
+
+  def artifacts(): Seq[Artifact] =
+    artifacts(defaultTypes, None)
+  def artifacts(types: Set[Type]): Seq[Artifact] =
+    artifacts(types, None)
+  def artifacts(classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
+    artifacts(defaultTypes, classifiers)
+
+  def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
+    artifacts(types, classifiers, classpathOrder = false)
+
+  def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[Artifact] =
     dependencyArtifacts(classifiers)
       .collect {
         case (_, pub, artifact) if types(pub.`type`) =>
@@ -1449,9 +1490,15 @@ final class Resolution private (
       }
       .distinct
 
-  def dependencyArtifacts(classifiers: Option[Seq[Classifier]] = None): Seq[(Dependency, Publication, Artifact)] =
+  def dependencyArtifacts(): Seq[(Dependency, Publication, Artifact)] =
+    dependencyArtifacts(None)
+
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]]): Seq[(Dependency, Publication, Artifact)] =
+    dependencyArtifacts(classifiers, classpathOrder = false)
+
+  def dependencyArtifacts(classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[(Dependency, Publication, Artifact)] =
     for {
-      dep <- minDependencies.toSeq
+      dep <- (if (classpathOrder) orderedDependencies else minDependencies.toSeq)
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
@@ -1471,16 +1518,8 @@ final class Resolution private (
     artifacts(classifiers = Some(classifiers.map(Classifier(_))))
 
   @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
-  def artifacts: Seq[Artifact] =
-    artifacts()
-
-  @deprecated("Use artifacts overload accepting types and classifiers instead", "1.1.0-M8")
   def artifacts(withOptional: Boolean): Seq[Artifact] =
     artifacts()
-
-  @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
-  def dependencyArtifacts: Seq[(Dependency, Artifact)] =
-    dependencyArtifacts(None).map(t => (t._1, t._3))
 
   @deprecated("Use dependencyArtifacts overload accepting classifiers instead", "1.1.0-M8")
   def dependencyArtifacts(withOptional: Boolean): Seq[(Dependency, Artifact)] =
@@ -1500,9 +1539,9 @@ final class Resolution private (
   @deprecated("Use errors instead", "1.1.0")
   def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
 
-  def dependenciesWithSelectedVersions: Set[Dependency] =
+  def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
-      reconciledVersions.get(dep.module).fold(dep) { v =>
+      retainedVersions.get(dep.module).fold(dep) { v =>
         dep.copy(version = v)
       }
     }
@@ -1519,7 +1558,7 @@ final class Resolution private (
   def subset(dependencies: Seq[Dependency]): Resolution = {
 
     def updateVersion(dep: Dependency): Dependency =
-      dep.copy(version = reconciledVersions.getOrElse(dep.module, dep.version))
+      dep.withVersion(reconciledVersions.getOrElse(dep.module, dep.version))
 
     @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
       val newDeps = current ++ current

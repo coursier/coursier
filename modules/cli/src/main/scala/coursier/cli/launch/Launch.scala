@@ -2,8 +2,10 @@ package coursier.cli.launch
 
 import java.io.{File, InputStream, PrintStream}
 import java.net.{URL, URLClassLoader}
+import java.nio.file.Paths
 import java.util.concurrent.ExecutorService
 import java.util.jar.{Manifest => JManifest}
+import java.util.zip.ZipFile
 
 import caseapp.CaseApp
 import caseapp.core.RemainingArgs
@@ -34,15 +36,54 @@ object Launch extends CaseApp[LaunchOptions] {
     rootLoader(ClassLoader.getSystemClassLoader)
   }
 
+  def launchFork(
+    hierarchy: Seq[(Option[String], Array[File])],
+    mainClass: String,
+    args: Seq[String],
+    properties: Seq[(String, String)],
+    verbosity: Int
+  ): Either[LaunchException, () => Int] =
+    hierarchy match {
+      case Seq((None, files)) =>
+
+        // Read JAVA_HOME if it's set? Allow users to change that command via CLI options?
+        val cmd = Seq("java") ++
+          properties.map { case (k, v) => s"-D$k=$v" } ++
+          Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
+          args
+
+        val b = new ProcessBuilder()
+        b.command(cmd: _*)
+        b.inheritIO()
+
+        Right {
+          () =>
+            if (verbosity >= 1)
+              System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
+            val p = b.start()
+            p.waitFor()
+        }
+      case _ =>
+        Left(new LaunchException.ClasspathHierarchyUnsupportedWhenForking)
+    }
+
   def launch(
-    loader: ClassLoader,
+    hierarchy: Seq[(Option[String], Array[File])],
     mainClass: String,
     args: Seq[String],
     properties: Seq[(String, String)]
-  ): Either[LaunchException, () => Unit] =
+  ): Either[LaunchException, () => Unit] = {
+
+    val loader0 = loader(
+      hierarchy.map {
+        case (nameOpt, files) =>
+          (nameOpt, files.map(_.toURI.toURL))
+      }
+    )
+
     for {
       cls <- {
-        try Right(loader.loadClass(mainClass))
+        try Right(loader0.loadClass(mainClass))
         catch {
           case e: ClassNotFoundException =>
             Left(new LaunchException.MainClassNotFound(mainClass, e))
@@ -60,26 +101,12 @@ object Launch extends CaseApp[LaunchOptions] {
       }.right
     } yield {
       () =>
-        val properties0 = {
-          val m = new java.util.LinkedHashMap[String, String]
-          for ((k, v) <- properties)
-            m.put(k, v)
-          val m0 = coursier.paths.Util.expandProperties(m)
-          val b = new ListBuffer[(String, String)]
-          m0.forEach(
-            new java.util.function.BiConsumer[String, String] {
-              def accept(k: String, v: String) =
-                b += k -> v
-            }
-          )
-          b.result()
-        }
         val currentThread = Thread.currentThread()
         val previousLoader = currentThread.getContextClassLoader
-        val previousProperties = properties0.map(_._1).map(k => k -> Option(System.getProperty(k)))
+        val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
-          currentThread.setContextClassLoader(loader)
-          for ((k, v) <- properties0)
+          currentThread.setContextClassLoader(loader0)
+          for ((k, v) <- properties)
             sys.props(k) = v
           method.invoke(null, args.toArray)
         }
@@ -95,24 +122,23 @@ object Launch extends CaseApp[LaunchOptions] {
           }
         }
     }
+  }
 
   private def manifestPath = "META-INF/MANIFEST.MF"
 
-  def mainClasses(cl: ClassLoader): Map[(String, String), String] = {
-    import scala.collection.JavaConverters._
+  def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
 
-    val parentMetaInfs = Option(cl.getParent).fold(Set.empty[URL]) { parent =>
-      parent.getResources(manifestPath).asScala.toSet
+    val metaInfs = jars.flatMap { f =>
+      val zf = new ZipFile(f)
+      val entryOpt = Option(zf.getEntry(manifestPath))
+      entryOpt.map(e => () => zf.getInputStream(e)).toSeq
     }
-    val allMetaInfs = cl.getResources(manifestPath).asScala.toVector
 
-    val metaInfs = allMetaInfs.filterNot(parentMetaInfs)
-
-    val mainClasses = metaInfs.flatMap { url =>
+    val mainClasses = metaInfs.flatMap { f =>
       var is: InputStream = null
       val attributes =
         try {
-          is = url.openStream()
+          is = f()
           new JManifest(is).getMainAttributes
         } finally {
           if (is != null)
@@ -169,17 +195,16 @@ object Launch extends CaseApp[LaunchOptions] {
       mainClassOpt.orElse(sameOrgOnlyMainClassOpt)
     }
 
-  def loader(
+  def loaderHierarchy(
     res: Resolution,
     files: Seq[(Artifact, File)],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
-    extraJars: Seq[URL]
-  ): URLClassLoader = {
+    extraJars: Seq[File]
+  ): Seq[(Option[String], Array[File])] = {
     val fileMap = files.toMap
-    val alreadyAdded = Set.empty[File]
-    val parent = sharedLoaderParams.loaderNames.foldLeft(baseLoader) {
-      (parent, name) =>
+    val alreadyAdded = Set.empty[File] // unused???
+    val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
         val subRes = res.subset(deps)
         val artifacts = coursier.Artifacts.artifacts0(
@@ -191,11 +216,19 @@ object Launch extends CaseApp[LaunchOptions] {
         val files0 = artifacts
           .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
           .filter(!alreadyAdded(_))
-        new SharedClassLoader(files0.map(_.toURI.toURL).toArray, parent, Array(name))
+        Some(name) -> files0.toArray
     }
-    val cp = files.map(_._2).filterNot(alreadyAdded).map(_.toURI.toURL).toArray ++ extraJars
-    new URLClassLoader(cp, parent)
+    val cp = files.map(_._2).filterNot(alreadyAdded).toArray ++ extraJars
+    parents :+ (None, cp)
   }
+
+  def loader(hierarchy: Seq[(Option[String], Array[URL])]): ClassLoader =
+    hierarchy.foldLeft(baseLoader) {
+      case (parent, (None, urls)) =>
+        new URLClassLoader(urls, parent)
+      case (parent, (Some(name), urls)) =>
+        new SharedClassLoader(urls, parent, Array(name))
+    }
 
   def task(
     params: LaunchParams,
@@ -204,25 +237,16 @@ object Launch extends CaseApp[LaunchOptions] {
     userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(String, () => Unit)] =
+  ): Task[(String, () => Option[Int])] =
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
-      loader0 <- Task.delay {
-        loader(
-          res,
-          files,
-          params.shared.sharedLoader,
-          params.shared.artifact,
-          params.shared.extraJars.map(_.toUri.toURL)
-        )
-      }
       mainClass <- {
         params.shared.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(mainClasses(loader0)).flatMap { m =>
+            Task.delay(mainClasses(files.map(_._2))).flatMap { m =>
               if (params.shared.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
@@ -281,22 +305,67 @@ object Launch extends CaseApp[LaunchOptions] {
           else
             Nil
 
-        // order matters: first set jcp, so that the expansion of subsequent properties can reference it
-        jcp ++ opt.toSeq ++ params.shared.properties
+        opt.toSeq ++ params.shared.properties
       }
-      f <- Task.fromEither(launch(loader0, mainClass, userArgs, props))
+      f <- Task.fromEither {
+
+        val hierarchy = loaderHierarchy(
+          res,
+          files,
+          params.shared.sharedLoader,
+          params.shared.artifact,
+          params.shared.extraJars.map(_.toFile)
+        )
+
+        val jcp =
+          hierarchy match {
+            case Seq((None, files)) =>
+              Seq(
+                "java.class.path" -> files.map(_.getAbsolutePath).mkString(File.pathSeparator)
+              )
+            case _ =>
+              Nil
+          }
+
+        val properties0 = {
+          val m = new java.util.LinkedHashMap[String, String]
+          // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
+          for ((k, v) <- jcp.iterator ++ props.iterator)
+            m.put(k, v)
+          val m0 = coursier.paths.Util.expandProperties(m)
+          // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
+          if (params.shared.fork && props.forall(_._1 != "java.class.path"))
+            m0.remove("java.class.path")
+          val b = new ListBuffer[(String, String)]
+          m0.forEach(
+            new java.util.function.BiConsumer[String, String] {
+              def accept(k: String, v: String) =
+                b += k -> v
+            }
+          )
+          b.result()
+        }
+
+        if (params.shared.fork)
+          launchFork(hierarchy, mainClass, userArgs, properties0, params.shared.resolve.output.verbosity)
+            .right.map(f => () => Some(f()))
+        else
+          launch(hierarchy, mainClass, userArgs, properties0)
+          .right.map(f => { () => f(); None })
+      }
     } yield (mainClass, f)
 
   def run(options: LaunchOptions, args: RemainingArgs): Unit = {
+
+    var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
     val (options0, deps) = LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
       val initialRepositories = initialParams.shared.resolve.repositories.repositories
       val channels = initialParams.shared.resolve.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
       val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
       val res = Resolve.handleApps(options, args.remaining, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
 
       if (options.json) {
         val app = res._1.app
@@ -317,7 +386,8 @@ object Launch extends CaseApp[LaunchOptions] {
         sys.exit(1)
       case Validated.Valid(params) =>
 
-        val pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
+        if (pool == null)
+          pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
         val ec = ExecutionContext.fromExecutorService(pool)
 
         val t = task(params, pool, deps, args.unparsed)
@@ -342,7 +412,12 @@ object Launch extends CaseApp[LaunchOptions] {
             else if (params.shared.resolve.output.verbosity == 1)
               System.err.println("Launching")
 
-            run()
+            run() match {
+              case None =>
+              case Some(retCode) =>
+                if (retCode != 0)
+                  sys.exit(retCode)
+            }
         }
     }
   }

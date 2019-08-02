@@ -271,6 +271,43 @@ object PomParsingTests extends TestSuite {
       assert(props("commons.osgi.export").contains("org.apache.commons.io.filefilter;"))
       assert(props("commons.osgi.export").contains("org.apache.commons.io.input;"))
     }
+
+    'projectWithScm{
+      val profileNode ="""
+       |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       |    <modelVersion>4.0.0</modelVersion>
+       |    <groupId>com.example</groupId>
+       |    <artifactId>awesome-project</artifactId>
+       |    <version>1.0-SNAPSHOT</version>
+       |
+       |    <url>https://example.com</url>
+       |    <scm>
+       |      <url>https://github.com/coursier/coursier</url>
+       |      <connection>scm:git:git@github.com:coursier/coursier.git</connection>
+       |      <developerConnection>scm:git:git@github.com:coursier/coursier_DEV.git</developerConnection>
+       |    </scm>
+       |</project>""".stripMargin
+
+      val expected = Right(Project(
+        Module(Organization("com.example"), ModuleName("awesome-project")),
+        "1.0-SNAPSHOT"
+      ).copy(info = Info(
+        description = "",
+        homePage = "https://example.com",
+        licenses = Seq.empty,
+        developers = Seq.empty,
+        publication = None,
+        scm = Some(Info.Scm(
+          url = "https://github.com/coursier/coursier",
+          connection = "scm:git:git@github.com:coursier/coursier.git",
+          developerConnection = "scm:git:git@github.com:coursier/coursier_DEV.git"
+        )
+      ))))
+
+      val result = Pom.project(xmlParseDom(profileNode).right.get)
+
+      assert(result == expected)
+    }
   }
 
 }

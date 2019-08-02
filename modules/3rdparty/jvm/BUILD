@@ -75,6 +75,24 @@ jar_library(
     )],
 )
 
+jar_library(
+    name = "jline-terminal-jansi",
+    jars = [jar(
+        org = "org.jline",
+        name = "jline-terminal-jansi",
+        rev = "3.12.1",
+    )],
+)
+
+jar_library(
+    name = "jansi",
+    jars = [jar(
+        org = "org.fusesource.jansi",
+        name = "jansi",
+        rev = "1.18",
+    )],
+)
+
 SCALAJS_REV = "0.9.3"
 
 jar_library(

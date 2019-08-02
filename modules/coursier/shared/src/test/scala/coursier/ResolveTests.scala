@@ -1,9 +1,10 @@
 package coursier
 
-import coursier.core.Configuration
+import coursier.core.{Configuration, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
+import coursier.util.ModuleMatchers
 import utest._
 
 import scala.async.Async.{async, await}
@@ -208,7 +209,8 @@ object ResolveTests extends TestSuite {
             }
 
 
-            assert(res.isLeft)
+            val isLeft = res.isLeft
+            assert(isLeft)
 
             val error = res.left.get
 
@@ -383,7 +385,8 @@ object ResolveTests extends TestSuite {
             .future()
         }
 
-        assert(res.isLeft)
+        val isLeft = res.isLeft
+        assert(isLeft)
 
         val error = res.left.get
 
@@ -512,7 +515,8 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          assert(res.isLeft)
+          val isLeft = res.isLeft
+          assert(isLeft)
 
           val error = res.left.get
 
@@ -542,7 +546,8 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          assert(res.isLeft)
+          val isLeft = res.isLeft
+          assert(isLeft)
 
           val error = res.left.get
 
@@ -658,6 +663,34 @@ object ResolveTests extends TestSuite {
       )
 
       assert(urls == expectedUrls)
+    }
+
+    "relaxed reconciliation" - {
+      * - async {
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.8")
+          .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))
+
+        val res = await {
+          resolve
+            .addDependencies(
+              dep"org.webjars.npm:randomatic:1.1.7",
+              dep"org.webjars.npm:is-odd:2.0.0"
+            )
+            .withResolutionParams(params)
+            .future()
+        }
+
+        await(validateDependencies(res))
+
+        val deps = res.minDependencies
+        val isNumberVersions = deps.collect {
+          case dep if dep.module == mod"org.webjars.npm:is-number" =>
+            dep.version
+        }
+        val expectedIsNumberVersions = Set("[4.0.0,5)")
+        assert(isNumberVersions == expectedIsNumberVersions)
+      }
     }
   }
 }

@@ -77,9 +77,10 @@ object Output {
             messages.mkString("\n")
         } else
           Print.dependenciesUnknownConfigs(
-            res.minDependencies.toVector,
+            if (params.classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
             res.projectCache.mapValues { case (_, p) => p },
-            printExclusions = withExclusions
+            printExclusions = withExclusions,
+            reorder = !params.classpathOrder
           )
 
       if (depsStr.nonEmpty) {

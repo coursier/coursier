@@ -115,14 +115,14 @@ object ChecksumTests extends TestSuite {
         "http://abc.com/com/github/alexarchambault/coursier_2.11/1.0.0-M9/coursier_2.11-1.0.0-M9.pom"
       ).map(artifact)
 
-      def validateAll(sumType: String): Future[Seq[Unit]] =
+      def validateAll(sumType: String): Future[Unit] =
         Gather[Task].gather(
           artifacts.map { artifact =>
             validate(artifact, sumType).map { res =>
               assert(res.isRight)
             }
           }
-        ).future()(ExecutionContext.global)
+        ).map(_ => ()).future()(ExecutionContext.global)
 
       'sha1 - validateAll("SHA-1")
       'sha256 - validateAll("SHA-256")

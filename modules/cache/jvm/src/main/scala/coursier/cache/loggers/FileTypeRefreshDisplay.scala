@@ -61,13 +61,9 @@ class FileTypeRefreshDisplay(
   }
 
   private def truncatedPrintln(out: Writer, s: String, width: Int): Unit = {
-
     out.clearLine(2)
-
-    if (s.length <= width)
-      out.write(s + "\n")
-    else
-      out.write(s.take(width - 1) + "…\n")
+    out.write(RefreshDisplay.truncated(s, width))
+    out.write('\n')
   }
 
   private def extension(url: String): String = {

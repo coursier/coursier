@@ -180,11 +180,11 @@ package object compatibility {
   def encodeURIComponent(s: String): String =
     new java.net.URI(null, null, null, -1, s, null, null) .toASCIIString
 
-  def listWebPageRawElements(page: String): Seq[String] =
+  def listWebPageRawElements(page: String): Iterator[String] =
     Jsoup.parse(page)
       .select("a")
       .asScala
-      .toVector
+      .iterator
       .map(_.attr("href"))
 
   def regexLookbehind: String = "<="

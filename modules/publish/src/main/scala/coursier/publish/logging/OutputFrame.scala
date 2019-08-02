@@ -4,7 +4,7 @@ import java.io._
 import java.util.concurrent.{Executors, ScheduledFuture, TimeUnit}
 
 import coursier.cache.internal.Terminal.Ansi
-import coursier.cache.internal.ThreadUtil
+import coursier.cache.internal.{ConsoleDim, ThreadUtil}
 
 import scala.util.control.NonFatal
 

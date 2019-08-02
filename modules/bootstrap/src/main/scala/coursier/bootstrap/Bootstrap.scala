@@ -150,6 +150,11 @@ object Bootstrap {
   def proguardedResourcesBootstrapResourcePath: String = "bootstrap-resources.jar"
   def resourcesBootstrapResourcePath: String = "bootstrap-resources-orig.jar"
 
+  private lazy val proguardedResourcesBootstrapFound = {
+    // caching in spite of Thread.currentThread().getContextClassLoader that may change…
+    Thread.currentThread().getContextClassLoader.getResourceAsStream(proguardedResourcesBootstrapResourcePath) != null
+  }
+
   def defaultDisableJarChecking(content: Seq[ClassLoaderContent]): Boolean =
     content.exists(_.entries.exists {
       case _: ClasspathEntry.Resource => true
@@ -185,7 +190,11 @@ object Bootstrap {
 
       (hasResources, proguarded) match {
         case (true, true) =>
-          proguardedResourcesBootstrapResourcePath
+          // first one may not have been packaged if coursier was built with JDK 11
+          if (proguardedResourcesBootstrapFound)
+            proguardedResourcesBootstrapResourcePath
+          else
+            resourcesBootstrapResourcePath
         case (true, false) =>
           resourcesBootstrapResourcePath
         case (false, true) =>

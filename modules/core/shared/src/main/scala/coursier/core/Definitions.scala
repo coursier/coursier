@@ -257,7 +257,8 @@ final case class Info(
   homePage: String,
   licenses: Seq[(String, Option[String])],
   developers: Seq[Info.Developer],
-  publication: Option[Versions.DateTime]
+  publication: Option[Versions.DateTime],
+  scm: Option[Info.Scm]
 )
 
 object Info {
@@ -267,7 +268,13 @@ object Info {
     url: String
   )
 
-  val empty = Info("", "", Nil, Nil, None)
+  final case class Scm(
+    url: String,
+    connection: String,
+    developerConnection: String
+  )
+
+  val empty = Info("", "", Nil, Nil, None, None)
 }
 
 // Maven-specific

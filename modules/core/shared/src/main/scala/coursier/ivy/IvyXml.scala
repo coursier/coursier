@@ -215,7 +215,8 @@ object IvyXml {
           "",
           licenses,
           Nil,
-          publicationDate
+          publicationDate,
+          None
         )
       )
     }

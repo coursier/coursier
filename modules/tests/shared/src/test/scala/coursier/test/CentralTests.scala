@@ -446,7 +446,7 @@ abstract class CentralTests extends TestSuite {
 
           assert(pub.`type` == Type.testJar)
           assert(pub.classifier == Classifier.tests)
-          artifact.url.endsWith("-tests.jar")
+          assert(artifact.url.endsWith("-tests.jar"))
         }
       }
     }
@@ -1164,7 +1164,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
 
-          val deps = res.minDependencies.map { dep =>
+          val deps = res.dependencies.map { dep =>
             s"${dep.module}:${dep.version}"
           }
 
@@ -1199,7 +1199,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
 
-          val deps = res.minDependencies.map { dep =>
+          val deps = res.dependencies.map { dep =>
             s"${dep.module}:${dep.version}"
           }
 
@@ -1235,7 +1235,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
 
-          val deps = res.minDependencies.map { dep =>
+          val deps = res.dependencies.map { dep =>
             s"${dep.module}:${dep.version}"
           }
 
@@ -1270,7 +1270,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
 
-          val deps = res.minDependencies.map { dep =>
+          val deps = res.dependencies.map { dep =>
             s"${dep.module}:${dep.version}"
           }
 

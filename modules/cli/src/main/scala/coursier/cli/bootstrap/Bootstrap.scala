@@ -65,19 +65,11 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
       (res, files) = t
       mainClass <- {
-        lazy val loader0 = Launch.loader(
-          res,
-          files,
-          params.sharedLaunch.sharedLoader,
-          params.sharedLaunch.artifact,
-          params.sharedLaunch.extraJars.map(_.toUri.toURL)
-        )
-
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(Launch.mainClasses(loader0)).flatMap { m =>
+            Task.delay(Launch.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
@@ -98,14 +90,15 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
+    var pool: ExecutorService = null
+
     // get options and dependencies from apps if any
     val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
       val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
-      val pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
+      pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
       val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
-      pool.shutdown()
       res
     }
 
@@ -118,7 +111,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         params0
     }
 
-    val pool = Sync.fixedThreadPool(params.sharedLaunch.resolve.cache.parallel)
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.sharedLaunch.resolve.cache.parallel)
     val ec = ExecutionContext.fromExecutorService(pool)
 
     val output0 = params.specific.output

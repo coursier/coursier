@@ -56,15 +56,56 @@ object VersionConstraintTests extends TestSuite {
     'repr{
       'empty{
         val s0 = VersionConstraint.all.repr
-        assert(s0 == Some(""))
+        assert(s0.contains(""))
       }
       'preferred{
         val s0 = VersionConstraint.preferred(Version("2.1")).repr
-        assert(s0 == Some("2.1"))
+        assert(s0.contains("2.1"))
       }
       'interval{
         val s0 = VersionConstraint.interval(VersionInterval(None, Some(Version("2.1")), false, true)).repr
-        assert(s0 == Some("(,2.1]"))
+        assert(s0.contains("(,2.1]"))
+      }
+    }
+
+    "merge" - {
+      * - {
+        val s0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,3.2]"),
+          Parse.versionConstraint("[3.0,4.0)")).get.repr
+        assert(s0.contains("[3.0,3.2]"))
+      }
+
+      * - {
+        val c0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"))
+        assert(c0.isEmpty)
+      }
+
+      * - {
+        val c0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"),
+          Parse.versionConstraint("2.8"))
+        assert(c0.isEmpty)
+      }
+    }
+
+    "relaxedMerge" - {
+      * - {
+        val s0 = VersionConstraint.relaxedMerge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)")).repr
+        assert(s0 == Some("[3.0,4.0)"))
+      }
+
+      * - {
+        val s0 = VersionConstraint.relaxedMerge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"),
+          Parse.versionConstraint("2.8")).preferred.head.repr
+        assert(s0 == "2.8")
       }
     }
   }

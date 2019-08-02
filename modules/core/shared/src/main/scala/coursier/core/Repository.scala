@@ -48,11 +48,20 @@ trait Repository extends Serializable with Artifact.Source {
     None
 
   def versionsCheckHasModule: Boolean =
-    true
+    false
 
   def versions[F[_]](
     module: Module,
     fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (Versions, String)] =
+    versions(module, fetch, versionsCheckHasModule = false)
+
+  def versions[F[_]](
+    module: Module,
+    fetch: Repository.Fetch[F],
+    versionsCheckHasModule: Boolean
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (Versions, String)] =

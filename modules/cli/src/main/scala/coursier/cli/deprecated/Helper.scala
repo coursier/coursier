@@ -1,6 +1,6 @@
 package coursier.cli.deprecated
 
-import java.io.{File, PrintWriter}
+import java.io.File
 import java.net.{URL, URLClassLoader, URLDecoder}
 
 import coursier.{Attributes, Dependency, LocalRepositories, Repositories, Resolution, core}
@@ -9,7 +9,7 @@ import coursier.cache.loggers.RefreshLogger
 import coursier.cli.launch.Launch
 import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
-import coursier.cli.util.{DeprecatedModuleRequirements, JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.cli.util.DeprecatedModuleRequirements
 import coursier.core.{Artifact, Classifier, Configuration, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
@@ -814,53 +814,6 @@ class Helper(
         .mkString("\n")
     }
 
-    val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
-      getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).groupBy(_._1).mapValues(_.map(t => (t._2, t._3)).toVector)
-
-
-    if (!jsonOutputFile.isEmpty) {
-      // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
-      // a strict super set.
-      val deps: Seq[Dependency] = Set(getDepArtifactsForClassifier(sources, javadoc, default, classifier0, res).map(_._1): _*).toSeq
-
-      // A map from requested org:name:version to reconciled org:name:version
-      val conflictResolutionForRoots: Map[String, String] = allDependencies.map({ dep =>
-        val reconciledVersion: String = res.reconciledVersions
-          .getOrElse(dep.module, dep.version)
-        if (reconciledVersion != dep.version) {
-          Option((s"${dep.module}:${dep.version}", s"${dep.module}:$reconciledVersion"))
-        }
-        else {
-          Option.empty
-        }
-      }).filter(_.isDefined).map(_.get).toMap
-
-      val jsonReq = JsonPrintRequirement(artifactToFile, depToArtifacts)
-      val roots = deps.toVector.map(d =>
-        JsonElem(
-          d,
-          artifacts0,
-          Option(jsonReq),
-          res,
-          printExclusions = common.verbosityLevel >= 1,
-          excluded = false,
-          colors = false,
-          overrideClassifiers = overrideClassifiers(sources, javadoc, default, classifier0)
-        )
-      )
-      val jsonStr = JsonReport(
-        roots,
-        conflictResolutionForRoots
-      )(
-        _.children,
-        _.reconciledVersionStr,
-        _.requestedVersionStr,
-        _.downloadedFile
-      )
-      val pw = new PrintWriter(new File(jsonOutputFile))
-      pw.write(jsonStr)
-      pw.close()
-    }
     artifactToFile
   }
 
@@ -999,7 +952,7 @@ class Helper(
 
   lazy val retainedMainClass = {
 
-    val mainClasses = Launch.mainClasses(loader)
+    val mainClasses = Launch.mainClasses(filteredFiles ++ extraJars)
 
     if (common.verbosityLevel >= 2) {
       Console.err.println("Found main classes:")

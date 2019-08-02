@@ -92,20 +92,15 @@ class TestRunner[F[_]: Gather : ToFuture](
       val dep = Dependency(module, version, configuration = configuration)
       val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions))
 
-      // making that lazy makes scalac crash in 2.10 with scalajs
       val result = res
-        .minDependencies
-        .toVector
+        .orderedDependencies
         .map { dep =>
           val projOpt = res.projectCache
             .get(dep.moduleVersion)
             .map { case (_, proj) => proj }
-          val dep0 = dep.copy(
-            version = projOpt.fold(dep.version)(_.actualVersion)
-          )
+          val dep0 = dep.withVersion(projOpt.fold(dep.version)(_.actualVersion))
           (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration.value)
         }
-        .sorted
         .distinct
         .map {
           case (org, name, ver, cfg) =>
@@ -195,7 +190,9 @@ class TestRunner[F[_]: Gather : ToFuture](
       assert(conflicts.isEmpty)
       assert(isDone)
 
-      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_))).map(t => (t._2.attributes, t._3))
+      val artifacts = res.dependencyArtifacts(classifiers = classifierOpt.map(Seq(_)))
+        .map(t => (t._2.attributes, t._3))
+        .distinct
 
       f(artifacts)
     }

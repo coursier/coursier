@@ -39,14 +39,15 @@ object Print {
     deps: Seq[Dependency],
     projects: Map[(Module, String), Project],
     printExclusions: Boolean,
-    useFinalVersions: Boolean = true
+    useFinalVersions: Boolean = true,
+    reorder: Boolean = false
   ): String = {
 
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.copy(
-            version = projects
+          dep.withVersion(
+            projects
               .get(dep.moduleVersion)
               .fold(dep.version)(_.version)
           )
@@ -54,22 +55,24 @@ object Print {
       else
         deps
 
-    val minDeps = Orders.minDependencies(
-      deps0.toSet,
-      _ => Map.empty
-    )
+    val deps1 =
+      if (reorder)
+        deps0
+          .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
+          .toVector
+          .map { case (k, l) =>
+            val conf = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*)
+            k.withConfiguration(conf)
+          }
+          .sortBy { dep =>
+            (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
+          }
+      else
+        deps0
 
-    val deps1 = minDeps
-      .groupBy(_.copy(configuration = Configuration.empty, attributes = Attributes.empty))
-      .toVector
-      .map { case (k, l) =>
-        k.copy(configuration = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*))
-      }
-      .sortBy { dep =>
-        (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
-      }
-
-    deps1.map(dependency(_, printExclusions)).mkString("\n")
+    val l = deps1.map(dependency(_, printExclusions))
+    val l0 = if (reorder) l.distinct else l
+    l0.mkString("\n")
   }
 
   def compatibleVersions(first: String, second: String): Boolean = {
@@ -94,7 +97,7 @@ object Print {
       val roots0 = Option(roots).getOrElse(resolution.minDependencies.toSeq)
 
       val t = ReverseModuleTree.fromDependencyTree(
-        roots0.map(_.module),
+        roots0.map(_.module).distinct,
         DependencyTree(resolution, withExclusions = printExclusions)
       )
 
