@@ -101,13 +101,12 @@ jobs:
       before_install:
         - brew install jq
       script: scripts/travis-graalvm.sh
-    # Doesn't work yet
-    # - stage: upload-launchers
-    #   name: "Push Windows graalvm launcher"
-    #   env: LAUNCHER_OS=win
-    #   language: cpp
-    #   os: windows
-    #   script: scripts/travis-graalvm.sh
+    - stage: upload-launchers
+      name: "Push Windows jlink launcher"
+      env: LAUNCHER_OS=x86_64-pc-win32 TRAVIS_TAG=v2.0.0-RC2-6
+      os: windows
+      language: bash
+      script: scripts/travis-jlink.sh
 branches:
   only:
   - master
