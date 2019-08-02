@@ -58,7 +58,7 @@ object DependencyTree {
       if (excluded)
         Nil
       else {
-        val dep0 = dependency.copy(version = reconciledVersion)
+        val dep0 = dependency.withVersion(reconciledVersion)
 
         val dependencies = resolution
           .dependenciesOf(
