@@ -46,5 +46,7 @@ export CMD="cp modules/cli/target/universal/standalone.zip \$OUTPUT #"
 export HAS_BAT=false
 scripts/upload-launcher/upload-gh-release.sh
 
+gpgconf --kill gpg-agent
+
 # try to find zombie / daemons (must be killed for the job to exit)
 ps -ef
