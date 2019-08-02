@@ -93,7 +93,22 @@ public class CachePath {
         return CoursierPaths.cacheDirectory();
     }
 
-    private static ConcurrentHashMap<Path, Object> processStructureLocks = new ConcurrentHashMap<Path, Object>();
+    // Trying to limit the calls to String.intern via this map (https://shipilev.net/jvm/anatomy-quarks/10-string-intern/)
+    private static ConcurrentHashMap<String, Object> internedStrings = new ConcurrentHashMap<>();
+
+    // Even if two versions of that code end up in the same JVM (say one via a shaded coursier, the other via a
+    // non-shaded coursier), they will rely on the exact same object for locking here (via String.intern), so that the
+    // locks are actually JVM-wide.
+    private static Object lockFor(Path cachePath) {
+        String key = "coursier-jvm-lock-" + cachePath.toString();
+        Object lock0 = internedStrings.get(key);
+        if (lock0 == null) {
+            String internedKey = key.intern();
+            internedStrings.putIfAbsent(internedKey, internedKey);
+            lock0 = internedKey;
+        }
+        return lock0;
+    }
 
     public static <V> V withStructureLock(File cache, Callable<V> callable) throws Exception {
 
@@ -102,16 +117,7 @@ public class CachePath {
         // Keeping the former java.io based implem for now, as this is some quite sensitive code.
 
         Path cachePath = cache.toPath();
-        Object intraProcessLock = processStructureLocks.get(cachePath);
-
-        if (intraProcessLock == null) {
-            Object lock = new Object();
-            Object prev = processStructureLocks.putIfAbsent(cachePath, lock);
-            if (prev == null)
-                intraProcessLock = lock;
-            else
-                intraProcessLock = prev;
-        }
+        Object intraProcessLock = lockFor(cachePath);
 
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
@@ -147,16 +153,7 @@ public class CachePath {
 
     public static <V> V withStructureLock(Path cache, Callable<V> callable) throws Exception {
 
-        Object intraProcessLock = processStructureLocks.get(cache);
-
-        if (intraProcessLock == null) {
-            Object lock = new Object();
-            Object prev = processStructureLocks.putIfAbsent(cache, lock);
-            if (prev == null)
-                intraProcessLock = lock;
-            else
-                intraProcessLock = prev;
-        }
+        Object intraProcessLock = lockFor(cache);
 
         synchronized (intraProcessLock) {
             Path lockFile = cache.resolve(".structure.lock");
