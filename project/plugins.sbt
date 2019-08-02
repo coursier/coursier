@@ -5,7 +5,7 @@ plugins_(
   "org.scala-sbt"      % "sbt-contraband"           % "0.4.4",
   "io.get-coursier"    % "sbt-coursier"             % sbtCoursierVersion,
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
-  "com.typesafe"       % "sbt-mima-plugin"          % "0.3.0",
+  "com.typesafe"       % "sbt-mima-plugin"          % "0.5.0",
   "com.typesafe.sbt"   % "sbt-native-packager"      % "1.3.25",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
