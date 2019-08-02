@@ -103,7 +103,7 @@ jobs:
       script: scripts/travis-graalvm.sh
     - stage: upload-launchers
       name: "Push Windows jlink launcher"
-      env: LAUNCHER_OS=x86_64-pc-win32 TRAVIS_TAG=v2.0.0-RC2-6
+      env: LAUNCHER_OS=x86_64-pc-win32
       os: windows
       language: bash
       script: scripts/travis-jlink.sh
