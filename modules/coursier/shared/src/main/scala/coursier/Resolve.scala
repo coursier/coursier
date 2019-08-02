@@ -1,7 +1,7 @@
 package coursier
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Activation, DependencySet, Exclusions}
+import coursier.core.{Activation, DependencySet, Exclusions, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
@@ -306,6 +306,16 @@ object Resolve extends PlatformResolve {
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
 
+    val reconciliation: Option[Module => Reconciliation] =
+      if (params.reconciliation.isEmpty) None
+      else
+        Some((m: Module) => {
+          params.reconciliation.find(_._1.matches(m)) match {
+            case Some((_, r)) => r
+            case _            => Reconciliation.Basic
+          }
+        })
+
     coursier.core.Resolution(
       rootDependencies = dependencies,
       dependencySet = DependencySet.empty,
@@ -314,7 +324,8 @@ object Resolve extends PlatformResolve {
       projectCache = Map.empty,
       errorCache = Map.empty,
       finalDependenciesCache = Map.empty,
-      filter = Some(dep => params.keepOptionalDependencies || !dep.optional),
+      filter = Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional),
+      reconciliation = reconciliation,
       osInfo = params.osInfoOpt.getOrElse {
         if (params.useSystemOsInfo)
           // call from Sync[F].delay?

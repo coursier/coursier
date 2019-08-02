@@ -210,76 +210,6 @@ object Resolution {
   }
 
   /**
-   * Merge several version constraints together.
-   *
-   * Returns `None` in case of conflict.
-   */
-  def mergeVersions(versions: Seq[String]): Option[String] = {
-
-    val versions0 = versions.distinct
-
-    if (versions0.isEmpty)
-      None
-    else if (versions0.lengthCompare(1) == 0)
-      Some(versions0.head)
-    else {
-
-      val (standard, latests) = versions0.partition {
-        case "latest.integration" => false
-        case "latest.release" => false
-        case "latest.stable" => false
-        case _ => true
-      }
-
-      val retainedStandard =
-        if (standard.isEmpty) None
-        else if (standard.lengthCompare(1) == 0) standard.headOption
-        else {
-          val parsedConstraints = standard.map(Parse.versionConstraint)
-          VersionConstraint
-            .merge(parsedConstraints: _*)
-            .flatMap(_.repr)
-        }
-
-      val retainedLatestOpt =
-        if (latests.isEmpty) None
-        else if (latests.lengthCompare(1) == 0) latests.headOption
-        else {
-          val set = latests.toSet
-          val retained =
-            if (set("latest.integration"))
-              "latest.integration"
-            else if (set("latest.release"))
-              "latest.release"
-            else {
-              // at least two distinct latest.* means we shouldn't even reach this else block anyway
-              assert(set("latest.stable"))
-              "latest.stable"
-            }
-          Some(retained)
-        }
-
-      if (standard.isEmpty)
-        retainedLatestOpt
-      else if (latests.isEmpty)
-        retainedStandard
-      else {
-
-        val parsedIntervals = standard.map(Parse.versionConstraint)
-          .filter(_.preferred.isEmpty) // only keep intervals
-          .filter(_.interval != VersionInterval.zero) // not interval matching any version
-
-        if (parsedIntervals.isEmpty)
-          retainedLatestOpt
-        else
-          VersionConstraint.merge(parsedIntervals: _*)
-            .flatMap(_.repr)
-            .map(itv => (itv +: retainedLatestOpt.toSeq).mkString("&"))
-      }
-    }
-  }
-
-  /**
    * Merge several dependencies, solving version constraints of duplicated
    * modules.
    *
@@ -287,9 +217,14 @@ object Resolution {
    */
   def merge(
     dependencies: TraversableOnce[Dependency],
-    forceVersions: Map[Module, String]
+    forceVersions: Map[Module, String],
+    reconciliation: Option[Module => Reconciliation]
   ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
-
+    def reconcilerByMod(mod: Module): Reconciliation =
+      reconciliation match {
+        case Some(f) => f(mod)
+        case _       => Reconciliation.Basic
+      }
     val mergedByModVer = dependencies
       .toVector
       .groupBy(dep => dep.module)
@@ -304,7 +239,8 @@ object Resolution {
               if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
               else {
                 val versions = deps.map(_.version)
-                val versionOpt = mergeVersions(versions)
+                val reconciler = reconcilerByMod(module)
+                val versionOpt = reconciler(versions)
 
                 (versionOpt, versionOpt match {
                   case Some(version) =>
@@ -672,6 +608,7 @@ object Resolution {
     errorCache: Map[Resolution.ModuleVersion, Seq[String]],
     finalDependenciesCache: Map[Dependency, Seq[Dependency]],
     filter: Option[Dependency => Boolean],
+    reconciliation: Option[Module => Reconciliation],
     osInfo: Activation.Os,
     jdkVersion: Option[Version],
     userActivations: Option[Map[String, Boolean]],
@@ -689,6 +626,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -723,6 +661,7 @@ object Resolution {
       errorCache,
       finalDependenciesCache,
       filter,
+      None,
       osInfo,
       jdkVersion,
       userActivations,
@@ -741,6 +680,7 @@ object Resolution {
       Map.empty,
       Map.empty,
       Map.empty,
+      None,
       None,
       Activation.Os.empty,
       None,
@@ -788,6 +728,7 @@ final class Resolution private (
   val errorCache: Map[Resolution.ModuleVersion, Seq[String]],
   val finalDependenciesCache: Map[Dependency, Seq[Dependency]],
   val filter: Option[Dependency => Boolean],
+  val reconciliation: Option[Module => Reconciliation],
   val osInfo: Activation.Os,
   val jdkVersion: Option[Version],
   val userActivations: Option[Map[String, Boolean]],
@@ -811,6 +752,7 @@ final class Resolution private (
           errorCache == other.errorCache &&
           finalDependenciesCache == other.finalDependenciesCache &&
           filter == other.filter &&
+          reconciliation == other.reconciliation &&
           osInfo == other.osInfo &&
           jdkVersion == other.jdkVersion &&
           userActivations == other.userActivations &&
@@ -831,6 +773,7 @@ final class Resolution private (
     code = 37 * code + errorCache.##
     code = 37 * code + finalDependenciesCache.##
     code = 37 * code + filter.##
+    code = 37 * code + reconciliation.##
     code = 37 * code + osInfo.##
     code = 37 * code + jdkVersion.##
     code = 37 * code + userActivations.##
@@ -851,6 +794,7 @@ final class Resolution private (
     b ++= errorCache.toString; b ++= ", "
     b ++= finalDependenciesCache.toString; b ++= ", "
     b ++= filter.toString; b ++= ", "
+    b ++= reconciliation.toString; b ++= ", "
     b ++= osInfo.toString; b ++= ", "
     b ++= jdkVersion.toString; b ++= ", "
     b ++= userActivations.toString; b ++= ", "
@@ -871,6 +815,7 @@ final class Resolution private (
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
+    reconciliation: Option[Module => Reconciliation] = reconciliation,
     osInfo: Activation.Os = osInfo,
     jdkVersion: Option[Version] = jdkVersion,
     userActivations: Option[Map[String, Boolean]] = userActivations,
@@ -888,6 +833,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      reconciliation,
       osInfo,
       jdkVersion,
       userActivations,
@@ -923,6 +869,7 @@ final class Resolution private (
       errorCache,
       finalDependenciesCache,
       filter,
+      None,
       osInfo,
       jdkVersion,
       userActivations,
@@ -1093,13 +1040,15 @@ final class Resolution private (
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ dependencySet.minimizedSet ++ transitiveDependencies,
-      forceVersions
+      forceVersions,
+      reconciliation
     )
 
   private def updatedRootDependencies =
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
-      forceVersions
+      forceVersions,
+      reconciliation
     )._2
 
   def reconciledVersions: Map[Module, String] =

@@ -67,6 +67,47 @@ object VersionConstraintTests extends TestSuite {
         assert(s0 == Some("(,2.1]"))
       }
     }
+
+    "merge" - {
+      * - {
+        val s0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,3.2]"),
+          Parse.versionConstraint("[3.0,4.0)")).get.repr
+        assert(s0 == Some("[3.0,3.2]"))
+      }
+
+      * - {
+        val c0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"))
+        assert(c0 == None)
+      }
+
+      * - {
+        val c0 = VersionConstraint.merge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"),
+          Parse.versionConstraint("2.8"))
+        assert(c0 == None)
+      }
+    }
+
+    "relaxedMerge" - {
+      * - {
+        val s0 = VersionConstraint.relaxedMerge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)")).get.repr
+        assert(s0 == Some("[3.0,4.0)"))
+      }
+
+      * - {
+        val s0 = VersionConstraint.relaxedMerge(
+          Parse.versionConstraint("[1.0,2.0)"),
+          Parse.versionConstraint("[3.0,4.0)"),
+          Parse.versionConstraint("2.8")).get.preferred.head.repr
+        assert(s0 == "2.8")
+      }
+    }
   }
 
 }
