@@ -1,5 +1,7 @@
 package coursier.core
 
+import scala.annotation.tailrec
+
 final case class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
@@ -65,33 +67,31 @@ object VersionConstraint {
   // 1. sort constraints in ascending order.
   // 2. from the right, merge them two-by-two with the merge method above
   // 3. return the last successful merge
-  def relaxedMerge(constraints: VersionConstraint*): Option[VersionConstraint] = {
-    merge(constraints: _*) orElse {
-      def mergeByTwo(head: VersionConstraint, rest: List[VersionConstraint]): VersionConstraint = {
-        rest match {
-          case next :: xs =>
-            merge(head, next) match {
-              case Some(success) => mergeByTwo(success, xs)
-              case _             => head
-            }
-          case Nil => head
-        }
+  def relaxedMerge(constraints: VersionConstraint*): VersionConstraint = {
+
+    @tailrec
+    def mergeByTwo(head: VersionConstraint, rest: List[VersionConstraint]): VersionConstraint =
+      rest match {
+        case next :: xs =>
+          merge(head, next) match {
+            case Some(success) => mergeByTwo(success, xs)
+            case _             => head
+          }
+        case Nil => head
       }
-      val cs = constraints.toList
-      if (cs.isEmpty) None
-      else if (cs.size == 1) cs.headOption
-      else {
-        val sorted = cs.sortBy(c =>
-          if (c.preferred.nonEmpty) (c.preferred.head: Version)
-          else if (c.interval.fromIncluded && c.interval.from.isDefined) c.interval.from.get
-          else Version("0")
-        )
+
+    val cs = constraints.toList
+    cs match {
+      case Nil => VersionConstraint.all
+      case h :: Nil => h
+      case _ =>
+        val sorted = cs.sortBy { c =>
+          c.preferred.headOption
+            .orElse(c.interval.from)
+            .getOrElse(Version.zero)
+        }
         val reversed = sorted.reverse
-        reversed match {
-          case x :: xs => Some(mergeByTwo(x, xs))
-          case _       => None
-        }
-      }
+        mergeByTwo(reversed.head, reversed.tail)
     }
   }
 }

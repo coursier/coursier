@@ -20,6 +20,8 @@ final case class Version(repr: String) extends Ordered[Version] {
 
 object Version {
 
+  private[coursier] val zero = Version("0")
+
   sealed abstract class Item extends Ordered[Item] {
     def compare(other: Item): Int =
       (this, other) match {

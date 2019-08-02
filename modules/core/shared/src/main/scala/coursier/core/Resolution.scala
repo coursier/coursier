@@ -216,17 +216,18 @@ object Resolution {
    * Returns the conflicted dependencies, and the merged others.
    */
   def merge(
-    dependencies: TraversableOnce[Dependency],
+    dependencies: Seq[Dependency],
     forceVersions: Map[Module, String],
-    reconciliation: Option[Module => Reconciliation]
+    reconciliation: Option[Module => Reconciliation],
+    preserveOrder: Boolean = false
   ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
     def reconcilerByMod(mod: Module): Reconciliation =
       reconciliation match {
         case Some(f) => f(mod)
-        case _       => Reconciliation.Basic
+        case _       => Reconciliation.Default
       }
-    val mergedByModVer = dependencies
-      .toVector
+    val dependencies0 = dependencies.toVector
+    val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
         val anyOrgModule = module.copy(organization = Organization("*"))
@@ -258,9 +259,17 @@ object Resolution {
         }
       }
 
-    val merged = mergedByModVer
-      .values
-      .toVector
+
+    val merged =
+      if (preserveOrder)
+        dependencies0
+          .map(_.module)
+          .distinct
+          .map(mergedByModVer(_))
+      else
+        mergedByModVer
+          .values
+          .toVector
 
     (
       merged
@@ -1048,7 +1057,8 @@ final class Resolution private (
     merge(
       rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
       forceVersions,
-      reconciliation
+      reconciliation,
+      preserveOrder = true
     )._2
 
   def reconciledVersions: Map[Module, String] =

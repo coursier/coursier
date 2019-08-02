@@ -672,7 +672,7 @@ object ResolveTests extends TestSuite {
           .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))
 
         val res = await {
-          Resolve()
+          resolve
             .addDependencies(
               dep"org.webjars.npm:randomatic:1.1.7",
               dep"org.webjars.npm:is-odd:2.0.0"
@@ -680,6 +680,9 @@ object ResolveTests extends TestSuite {
             .withResolutionParams(params)
             .future()
         }
+
+        await(validateDependencies(res))
+
         val deps = res.minDependencies
         val isNumberVersions = deps.collect {
           case dep if dep.module == mod"org.webjars.npm:is-number" =>
