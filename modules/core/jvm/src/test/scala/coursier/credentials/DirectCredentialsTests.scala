@@ -1,17 +1,15 @@
 package coursier.credentials
 
-import utest._
+import org.scalatest.propspec.AnyPropSpec
 
-object DirectCredentialsTests extends TestSuite {
+class DirectCredentialsTests extends AnyPropSpec {
 
-  val tests = Tests {
-    "no password in toString" - {
-      val cred = DirectCredentials("host", "alex", "1234")
-      assert(cred.usernameOpt.contains("alex"))
-      assert(cred.passwordOpt.contains("1234"))
-      assert(cred.toString.contains("alex"))
-      assert(!cred.toString.contains("1234"))
-    }
+  property("no password in toString") {
+    val cred = DirectCredentials("host", "alex", "1234")
+    assert(cred.usernameOpt.contains("alex"))
+    assert(cred.passwordOpt.contains("1234"))
+    assert(cred.toString.contains("alex"))
+    assert(!cred.toString.contains("1234"))
   }
 
 }

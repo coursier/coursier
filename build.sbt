@@ -27,12 +27,17 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.util.shaded"),
-    utest,
     libs ++= Seq(
       Deps.fastParse.value % "shaded",
       Deps.jsoup % "shaded",
       Deps.scalaXml
     ),
+    libs ++= {
+      if (scalaVersion.value.startsWith("2.13."))
+        Seq("org.typelevel" %% "cats-testkit" % "2.0.0-M4" % Test)
+      else
+        Nil
+    },
     shadeNamespaces ++= Set(
       "org.jsoup",
       "fastparse",
