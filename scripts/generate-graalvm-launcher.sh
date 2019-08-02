@@ -46,6 +46,7 @@ fi
   --enable-all-security-services \
   -H:ReflectionConfigurationFiles="$BASE/reflection.json" \
   -H:+ReportExceptionStackTraces \
+  -H:IncludeResources="bootstrap.*\\.jar" \
   --initialize-at-build-time=scala.Symbol \
   --initialize-at-build-time=scala.Function1 \
   --initialize-at-build-time=scala.Function2 \
