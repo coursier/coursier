@@ -9,7 +9,8 @@ object FetchError {
 
   final class DownloadingArtifacts(val errors: Seq[(Artifact, ArtifactError)]) extends FetchError(
     "Error fetching artifacts:\n" +
-      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString
+      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString,
+    errors.headOption.map(_._2).orNull
   )
 
 }
