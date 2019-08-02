@@ -1061,7 +1061,7 @@ final class Resolution private (
       preserveOrder = true
     )._2
 
-  def reconciledVersions: Map[Module, String] =
+  lazy val reconciledVersions: Map[Module, String] =
     nextDependenciesAndConflicts._3.map {
       case k @ (m, v) =>
         m -> projectCache.get(k).fold(v)(_._2.version)
@@ -1558,7 +1558,7 @@ final class Resolution private (
   def subset(dependencies: Seq[Dependency]): Resolution = {
 
     def updateVersion(dep: Dependency): Dependency =
-      dep.withVersion(reconciledVersions.getOrElse(dep.module, dep.version))
+      dep.withVersion(retainedVersions.getOrElse(dep.module, dep.version))
 
     @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
       val newDeps = current ++ current

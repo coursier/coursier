@@ -692,5 +692,22 @@ object ResolveTests extends TestSuite {
         assert(isNumberVersions == expectedIsNumberVersions)
       }
     }
+
+    "subset" - async {
+      val json4s = dep"org.json4s:json4s-native_2.12:[3.3.0,3.5.0)"
+      val res = await {
+        resolve
+          .addDependencies(
+            json4s,
+            dep"org.scala-lang:scala-compiler:2.12.8"
+          )
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val subRes = res.subset(Seq(json4s))
+      await(validateDependencies(subRes))
+    }
   }
 }
