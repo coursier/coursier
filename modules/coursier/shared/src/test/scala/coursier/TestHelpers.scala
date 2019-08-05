@@ -96,13 +96,7 @@ object TestHelpers extends PlatformTestHelpers {
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
-      ).split('\n').toSeq.map { s =>
-        // hack not to have to edit / review lots of test fixtures
-        if (s.endsWith(":compile"))
-          s.stripSuffix(":compile") + ":default"
-        else
-          s
-      }.filter(_.nonEmpty)
+      ).split('\n').toSeq.filter(_.nonEmpty)
 
     for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
       println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")

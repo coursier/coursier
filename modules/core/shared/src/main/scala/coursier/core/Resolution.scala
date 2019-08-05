@@ -677,7 +677,7 @@ object Resolution {
       mapDependencies,
       extraProperties,
       forceProperties,
-      Configuration.compile
+      Configuration.defaultCompile
     )
 
   def apply(): Resolution =
@@ -697,7 +697,7 @@ object Resolution {
       None,
       Nil,
       Map.empty,
-      Configuration.compile
+      Configuration.defaultCompile
     )
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
