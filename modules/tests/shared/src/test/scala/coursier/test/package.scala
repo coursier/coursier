@@ -5,7 +5,7 @@ import coursier.core.Configuration
 package object test {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withCompileScope: Dependency = underlying.copy(configuration = Configuration.compile)
+    def withCompileScope: Dependency = underlying.withConfiguration(Configuration.defaultCompile)
   }
 
   private val projectProperties = Set(

@@ -709,5 +709,20 @@ object ResolveTests extends TestSuite {
       val subRes = res.subset(Seq(json4s))
       await(validateDependencies(subRes))
     }
+
+    "config handling" - async {
+
+      // if config handling gets messed up, like the "default" config of some dependencies ends up being pulled
+      // where it shouldn't, this surfaces more easily here, as sbt-ci-release depends on other sbt plugins,
+      // only available on Ivy repositories and not having a configuration named "default".
+      val res = await {
+        resolve
+          .addDependencies(dep"com.geirsson:sbt-ci-release;scalaVersion=2.12;sbtVersion=1.0:1.2.6")
+          .addRepositories(Repositories.sbtPlugin("releases"))
+          .future()
+      }
+
+      await(validateDependencies(res))
+    }
   }
 }

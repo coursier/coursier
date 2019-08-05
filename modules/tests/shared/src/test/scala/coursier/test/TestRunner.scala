@@ -25,7 +25,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     extraRepos: Seq[Repository] = Nil,
     profiles: Option[Set[String]] = None,
     mapDependencies: Option[Dependency => Dependency] = None,
-    forceVersions: Map[Module, String] = Map.empty
+    forceVersions: Map[Module, String] = Map.empty,
+    defaultConfiguration: Configuration = Configuration.defaultCompile
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -38,6 +39,7 @@ class TestRunner[F[_]: Gather : ToFuture](
       .withUserActivations(profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap))
       .withMapDependencies(mapDependencies)
       .withForceVersions(forceVersions)
+      .withDefaultConfiguration(defaultConfiguration)
       .process
       .run(fetch0)
 
@@ -62,7 +64,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     extraRepos: Seq[Repository] = Nil,
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
-    forceVersions: Map[Module, String] = Map.empty
+    forceVersions: Map[Module, String] = Map.empty,
+    defaultConfiguration: Configuration = Configuration.defaultCompile
   ): Future[Resolution] =
     async {
       val attrPathPart =
@@ -90,7 +93,7 @@ class TestRunner[F[_]: Gather : ToFuture](
       def tryRead = textResource(path)
 
       val dep = Dependency(module, version, configuration = configuration)
-      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions))
+      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions, defaultConfiguration = defaultConfiguration))
 
       val result = res
         .orderedDependencies

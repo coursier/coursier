@@ -529,15 +529,12 @@ object Resolution {
           keepOpt.fold(default) { keep =>
             if (keep(config)) {
               val depConfig =
-                if (actualConfig == Configuration.optional)
-                  defaultConfiguration
-                else if (actualConfig == Configuration.test)
+                if (actualConfig == Configuration.test || actualConfig == Configuration.runtime)
                   Configuration.runtime
                 else
-                  // really keeping the  from.configuration, with its fallback config part
-                  from.configuration
+                  defaultConfiguration
 
-              Seq(dep.copy(configuration = depConfig))
+              Seq(dep.withConfiguration(depConfig))
             } else
               Nil
           }
@@ -677,7 +674,7 @@ object Resolution {
       mapDependencies,
       extraProperties,
       forceProperties,
-      Configuration.compile
+      Configuration.defaultCompile
     )
 
   def apply(): Resolution =
@@ -697,7 +694,7 @@ object Resolution {
       None,
       Nil,
       Map.empty,
-      Configuration.compile
+      Configuration.defaultCompile
     )
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
