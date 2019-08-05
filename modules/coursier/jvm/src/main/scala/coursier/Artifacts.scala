@@ -272,7 +272,7 @@ object Artifacts {
     classifiers: Set[Classifier],
     mainArtifactsOpt: Option[Boolean],
     artifactTypesOpt: Option[Set[Type]],
-    classpathOrder: Boolean = false
+    classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] = {
 
     val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)

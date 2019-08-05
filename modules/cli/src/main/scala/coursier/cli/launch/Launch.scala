@@ -200,7 +200,8 @@ object Launch extends CaseApp[LaunchOptions] {
     files: Seq[(Artifact, File)],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
-    extraJars: Seq[File]
+    extraJars: Seq[File],
+    classpathOrder: Boolean
   ): Seq[(Option[String], Array[File])] = {
     val fileMap = files.toMap
     val alreadyAdded = Set.empty[File] // unused???
@@ -211,7 +212,8 @@ object Launch extends CaseApp[LaunchOptions] {
           subRes,
           artifactParams.classifiers,
           Option(artifactParams.mainArtifacts).map(x => x),
-          Option(artifactParams.artifactTypes)
+          Option(artifactParams.artifactTypes),
+          classpathOrder
         ).map(_._3)
         val files0 = artifacts
           .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
@@ -314,7 +316,8 @@ object Launch extends CaseApp[LaunchOptions] {
           files,
           params.shared.sharedLoader,
           params.shared.artifact,
-          params.shared.extraJars.map(_.toFile)
+          params.shared.extraJars.map(_.toFile),
+          params.shared.resolve.classpathOrder
         )
 
         val jcp =

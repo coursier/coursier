@@ -83,7 +83,8 @@ object AppArtifacts {
           subRes,
           desc.classifiers,
           Some(desc.mainArtifacts),
-          Some(desc.artifactTypes)
+          Some(desc.artifactTypes),
+          classpathOrder = true
         ).map(_._3)
         l.map { a =>
           val f = artifactMap.get(a) match {

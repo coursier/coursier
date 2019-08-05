@@ -221,7 +221,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
                 subRes,
                 params.sharedLaunch.artifact.classifiers,
                 Option(params.sharedLaunch.artifact.mainArtifacts).map(x => x),
-                Option(params.sharedLaunch.artifact.artifactTypes)
+                Option(params.sharedLaunch.artifact.artifactTypes),
+                params.sharedLaunch.resolve.classpathOrder
               ).map(_._3)
 
               val m0 = m.filter(a => !done(a.url)).map(a => a.url -> artifacts.getOrElse(a, sys.error("should not happen")))
