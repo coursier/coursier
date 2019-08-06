@@ -66,10 +66,16 @@ object RepositoryParams {
 
     def fromGitHub(ghCredentials: String): ValidatedNel[String, PublishRepository] = {
 
-      val (ghUser, ghTokenOpt) =
+      val (ghRepo, ghTokenOpt) =
         ghCredentials.split(":", 2) match {
           case Array(user) => (user, None)
           case Array(user, token) => (user, Some(token))
+        }
+
+      val ghUserRepoV =
+        ghRepo.split("/", 2) match {
+          case Array(user, repo) => Validated.validNel((user, repo))
+          case _ => Validated.invalidNel(s"Invalid GitHub repository: '$ghRepo' (expected 'user/repo')")
         }
 
       val ghTokenV =
@@ -82,8 +88,9 @@ object RepositoryParams {
             }
         }
 
-      ghTokenV.map { token =>
-        PublishRepository.gitHub(ghUser, token)
+      (ghUserRepoV, ghTokenV).mapN {
+        case ((user, repo), token) =>
+          PublishRepository.gitHub(user, repo, token)
       }
     }
 

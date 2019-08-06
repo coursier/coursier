@@ -235,6 +235,26 @@ object Pom {
         </scm>
     }
 
+  def overrideDistributionManagementRepository(id: String, name: String, url: String, content: Elem): Elem =
+    addOrUpdate(content, "distributionManagement") {
+      case Some(elem0: Elem) =>
+        addOrUpdate(elem0, "repository") { _ =>
+          <repository>
+            <id>{id}</id>
+            <name>{name}</name>
+            <url>{url}</url>
+          </repository>
+        }
+      case _ =>
+        <distributionManagement>
+          <repository>
+            <id>{id}</id>
+            <name>{name}</name>
+            <url>{url}</url>
+          </repository>
+        </distributionManagement>
+    }
+
   def overrideLicenses(licenses: Seq[License], content: Elem): Elem =
     addOrUpdate(content, "licenses") { _ =>
       <licenses>{

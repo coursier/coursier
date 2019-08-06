@@ -76,13 +76,14 @@ object PublishRepository {
 
   final case class GitHub(
     username: String,
+    repo: String,
     token: String,
     overrideAuthOpt: Option[Authentication]
   ) extends PublishRepository {
 
     def releaseRepo: MavenRepository =
       MavenRepository(
-        s"https://maven.pkg.github.com/$username",
+        s"https://maven.pkg.github.com/$username/$repo",
         authentication = overrideAuthOpt.orElse(Some(Authentication(username, token)))
       )
     def snapshotRepo: MavenRepository =
@@ -96,6 +97,9 @@ object PublishRepository {
     def withAuthentication(auth: Authentication): GitHub =
       copy(overrideAuthOpt = Some(auth))
 
+    override def toString: String =
+      Iterator(username, repo, "****", overrideAuthOpt)
+        .mkString("GitHub(", ", ", ")")
   }
 
   final case class Sonatype(base: MavenRepository) extends PublishRepository {
@@ -138,8 +142,8 @@ object PublishRepository {
       )
   }
 
-  def gitHub(username: String, token: String): PublishRepository =
-    GitHub(username, token, None)
+  def gitHub(username: String, repo: String, token: String): PublishRepository =
+    GitHub(username, repo, token, None)
 
   def bintray(user: String, repository: String, package0: String, apiKey: String): PublishRepository =
     Bintray(user, repository, package0, apiKey, None)

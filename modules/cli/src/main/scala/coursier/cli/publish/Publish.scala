@@ -122,6 +122,16 @@ object Publish extends CaseApp[PublishOptions] {
           else
             None
         }
+        val distMgmtRepo =
+          if (params.repository.gitHub)
+            scmDomainPath.flatMap {
+              case ("github.com", path) if path.count(_ == '/') == 1 =>
+                val owner = path.takeWhile(_ != '/')
+                Some(("github", owner, s"https://maven.pkg.github.com/$path"))
+              case _ => None
+            }
+          else
+            None
         fileSet0.updateMetadata(
           params.metadata.organization,
           params.metadata.name,
@@ -130,6 +140,7 @@ object Publish extends CaseApp[PublishOptions] {
           params.metadata.developersOpt,
           params.metadata.homePage,
           scmDomainPath,
+          distMgmtRepo,
           now
         )
       }
