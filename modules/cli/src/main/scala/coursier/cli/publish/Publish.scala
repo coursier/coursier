@@ -209,7 +209,7 @@ object Publish extends CaseApp[PublishOptions] {
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
         .getOrElse(params.repository.repository.repo(isSnapshot0))
 
-      parallel = params.parallel.getOrElse(params.repository.gitHub)
+      parallel = params.parallel.getOrElse(!params.repository.gitHub)
       urlSuffix = params.urlSuffixOpt.getOrElse(if (params.repository.bintray) ";publish=1" else "")
 
       (upload, _, repo, isLocal) = {
