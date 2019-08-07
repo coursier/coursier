@@ -90,6 +90,16 @@ fork() {
   fi
 }
 
+nonStaticMainClass() {
+  local OUT="$("$COURSIER" launch org.scala-lang:scala-compiler:2.13.0 --main-class scala.tools.nsc.Driver 2>&1 || true)"
+  if echo "$OUT" | grep "Main method in class scala.tools.nsc.Driver is not static"; then
+    :
+  else
+    echo "Error: unexpected output from launch command with non-static main class: $OUT"
+    exit 1
+  fi
+}
+
 simple() {
   "$COURSIER" bootstrap -o cs-echo io.get-coursier:echo:1.0.1
   local OUT="$(./cs-echo foo)"
@@ -285,6 +295,7 @@ launcherAssemblyPreambleInSource() {
 
 nailgun
 fork
+nonStaticMainClass
 simple
 require
 javaClassPathProp

@@ -1,6 +1,7 @@
 package coursier.cli.launch
 
 import java.io.{File, InputStream, PrintStream}
+import java.lang.reflect.Modifier
 import java.net.{URL, URLClassLoader}
 import java.nio.file.Paths
 import java.util.concurrent.ExecutorService
@@ -99,6 +100,13 @@ object Launch extends CaseApp[LaunchOptions] {
             Left(new LaunchException.MainMethodNotFound(cls, e))
         }
       }.right
+      _ <- {
+        val isStatic = Modifier.isStatic(method.getModifiers)
+        if (isStatic)
+          Right(())
+        else
+          Left(new LaunchException.NonStaticMainMethod(cls, method))
+      }
     } yield {
       () =>
         val currentThread = Thread.currentThread()
