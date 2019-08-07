@@ -4,7 +4,7 @@ import java.io.{File, PrintStream}
 import java.net.URI
 import java.nio.file.Paths
 import java.time.Instant
-import java.util.concurrent.{Executors, ScheduledExecutorService}
+import java.util.concurrent.ScheduledExecutorService
 
 import caseapp._
 import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
@@ -29,7 +29,7 @@ object Publish extends CaseApp[PublishOptions] {
 
   private def repoParams(
     repo: MavenRepository,
-    expect100Continue: Boolean = false,
+    parallel: Boolean = false,
     dummyUpload: Boolean = false,
     urlSuffix: String = ""
   ): (Upload, Download, MavenRepository, Boolean) = {
@@ -43,8 +43,12 @@ object Publish extends CaseApp[PublishOptions] {
         val p = Paths.get(new URI(repo.root)).toAbsolutePath
         (FileUpload(p), FileDownload(p), repo.copy(root = "."), true)
       } else if (repo.root.startsWith("http://") || repo.root.startsWith("https://")) {
-        val pool = Sync.fixedThreadPool(if (expect100Continue) 1 else 4) // sizing, shutdown, …
-        val upload = OkhttpUpload.create(pool, expect100Continue, urlSuffix)
+        val pool = Sync.fixedThreadPool(if (parallel) 4 else 1) // sizing, shutdown, …
+        val upload =
+          if (parallel)
+            OkhttpUpload.create(pool, expect100Continue = true, urlSuffix)
+          else
+            HttpURLConnectionUpload.create(pool, urlSuffix)
         (upload, OkhttpDownload.create(pool), repo, false)
       } else
         throw new PublishError.UnrecognizedRepositoryFormat(repo.root)
@@ -118,6 +122,16 @@ object Publish extends CaseApp[PublishOptions] {
           else
             None
         }
+        val distMgmtRepo =
+          if (params.repository.gitHub)
+            scmDomainPath.flatMap {
+              case ("github.com", path) if path.count(_ == '/') == 1 =>
+                val owner = path.takeWhile(_ != '/')
+                Some(("github", owner, s"https://maven.pkg.github.com/$path"))
+              case _ => None
+            }
+          else
+            None
         fileSet0.updateMetadata(
           params.metadata.organization,
           params.metadata.name,
@@ -126,6 +140,7 @@ object Publish extends CaseApp[PublishOptions] {
           params.metadata.developersOpt,
           params.metadata.homePage,
           scmDomainPath,
+          distMgmtRepo,
           now
         )
       }
@@ -205,14 +220,14 @@ object Publish extends CaseApp[PublishOptions] {
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
         .getOrElse(params.repository.repository.repo(isSnapshot0))
 
-      parallel = params.parallel.getOrElse(params.repository.gitHub)
+      parallel = params.parallel.getOrElse(!params.repository.gitHub)
       urlSuffix = params.urlSuffixOpt.getOrElse(if (params.repository.bintray) ";publish=1" else "")
 
       (upload, _, repo, isLocal) = {
         repoParams(
           retainedRepo,
+          parallel = parallel,
           dummyUpload = params.dummy,
-          expect100Continue = parallel,
           urlSuffix = urlSuffix
         )
       }
