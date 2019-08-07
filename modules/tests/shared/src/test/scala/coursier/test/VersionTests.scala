@@ -138,6 +138,8 @@ object VersionTests extends TestSuite {
       assert(compare("1.1.0.0-alpha-1", "1.1.0-beta") < 0)
       assert(compare("1.1.0.0-alpha.1", "1.1.0-beta") < 0)
       assert(compare("1.3.0.Beta1", "1.3.0.Final") < 0)
+
+      assert(compare("4.1.0-173", "4.1.1-178") < 0)
     }
 
 
