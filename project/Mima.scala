@@ -66,6 +66,8 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // almost private…
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Version.postProcess"),
         // renamed
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.dependenciesWithSelectedVersions"),
         // tweaked default values / overloads
