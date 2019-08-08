@@ -48,7 +48,7 @@ final case class ResolutionOptions(
     rules: List[String] = Nil,
 
   @Help("Choose reconciliation strategy")
-  @Value("organization:name:(basic|relaxed)")
+  @Value("organization:name:(relaxed|check-intervals)")
     reconciliation: List[String] = Nil,
 
   strict: Option[Boolean] = None,

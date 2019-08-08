@@ -18,9 +18,9 @@ object ReconciliationParser {
       if (module.organization == Organization("*") && module.name == ModuleName("*")) ModuleMatchers.all
       else ModuleMatchers(exclude = Set(ModuleMatcher.all), include = Set(ModuleMatcher(module)))
     v match {
-      case "default" => Right(m -> Reconciliation.Default)
-      case "relaxed" => Right(m -> Reconciliation.Relaxed)
-      case _         => Left(s"Unknown reconciliation '$v'")
+      case "check-intervals" => Right(m -> Reconciliation.CheckIntervals)
+      case "relaxed"         => Right(m -> Reconciliation.Relaxed)
+      case _                 => Left(s"Unknown reconciliation '$v'")
     }
   }
 }
