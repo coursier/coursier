@@ -188,7 +188,7 @@ object Version {
     }
   }
 
-  def postProcess(prevIsNumeric: Option[Boolean], item: Item, tokens0: Stream[(Tokenizer.Separator, Item)]): Stream[Item] = {
+  def postProcess(item: Item, tokens0: Stream[(Tokenizer.Separator, Item)]): Stream[Item] = {
 
     val tokens =
       // drop some '.0' under some conditions ???
@@ -220,7 +220,7 @@ object Version {
 
     def next =
       if (tokens.isEmpty) Stream()
-      else postProcess(Some(isNumeric(nextItem)), tokens.head._2, tokens.tail)
+      else postProcess(tokens.head._2, tokens.tail)
 
     nextItem #:: next
   }
@@ -234,7 +234,7 @@ object Version {
   def items(repr: String): List[Item] = {
     val (first, tokens) = Tokenizer(repr)
 
-    postProcess(None, first, tokens).toList
+    postProcess(first, tokens).toList
   }
 
   @tailrec
