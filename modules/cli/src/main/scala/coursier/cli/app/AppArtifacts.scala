@@ -4,10 +4,10 @@ import java.io.File
 
 import coursier.{Dependency, Fetch, moduleString}
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Artifact, Module, Repository, Resolution, Version, VersionConstraint}
+import coursier.core.{Module, Repository, Resolution, Version, VersionConstraint}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
-import coursier.util.Task
+import coursier.util.{Artifact, Task}
 
 final case class AppArtifacts(
   fetchResult: Fetch.Result,

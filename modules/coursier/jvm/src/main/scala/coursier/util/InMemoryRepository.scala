@@ -132,11 +132,11 @@ final class InMemoryRepository private (
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
+  ): EitherT[F, String, (ArtifactSource, Project)] = {
 
     val res = fallbacks
       .get((module, version))
-      .fold[Either[String, (Artifact.Source, Project)]](Left("No fallback URL found")) {
+      .fold[Either[String, (ArtifactSource, Project)]](Left("No fallback URL found")) {
         case (url, _) =>
 
           val urlStr = url.toExternalForm

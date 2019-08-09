@@ -108,7 +108,7 @@ final class Missing private (
 
       if (depMgmtMissing.isEmpty) {
 
-        type Elem = ((Module, String), (Artifact.Source, Project))
+        type Elem = ((Module, String), (ArtifactSource, Project))
         val modVer = depMgmtMissing0.map(_._1._1).toSet
 
         @tailrec
@@ -232,7 +232,7 @@ object ResolutionProcess {
 
   type MD = Seq[(
     (Module, String),
-    Either[Seq[String], (Artifact.Source, Project)]
+    Either[Seq[String], (ArtifactSource, Project)]
   )]
 
   type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
@@ -256,7 +256,7 @@ object ResolutionProcess {
     fetchs: Seq[Repository.Fetch[F]]
   )(implicit
     F: Gather[F]
-  ): EitherT[F, Seq[String], (Artifact.Source, Project)] = {
+  ): EitherT[F, Seq[String], (ArtifactSource, Project)] = {
 
     val f: Repository.Fetch[F] = { a =>
       fetchs.foldLeft(fetch(a))((acc, f) => acc.leftFlatMap(_ => f(a)))
@@ -376,7 +376,7 @@ object ResolutionProcess {
           }
         }
 
-      val task0 = lookups.foldLeft[F[Either[Seq[String], (Artifact.Source, Project)]]](F.point(Left(Nil))) {
+      val task0 = lookups.foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
         case (acc, (_, eitherProjTask)) =>
           F.bind(acc) {
             case Left(errors) =>
@@ -386,7 +386,7 @@ object ResolutionProcess {
           }
       }
 
-      val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (Artifact.Source, Project)])
+      val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
       EitherT(task)
     }
 
@@ -474,7 +474,7 @@ object ResolutionProcess {
   private[coursier] def fetchAll[F[_]](
     modVers: Seq[(Module, String)],
     fetch: ResolutionProcess.Fetch[F]
-  )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (Artifact.Source, Project)])]] = {
+  )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]] = {
 
     def uniqueModules(modVers: Seq[(Module, String)]): Stream[Seq[(Module, String)]] = {
 
@@ -499,7 +499,7 @@ object ResolutionProcess {
 
     uniqueModules(modVers)
       .toVector
-      .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (Artifact.Source, Project)])])) {
+      .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])])) {
         (acc, l) =>
           F.bind(acc) { v =>
             F.map(fetch(l)) { e =>

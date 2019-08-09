@@ -1,9 +1,9 @@
 package coursier.util
 
-private[coursier] object WebPage {
+private[coursier] object WebPage extends WebPageCompatibility {
 
   def listElements(url: String, page: String): Iterator[String] =
-    coursier.core.compatibility.listWebPageRawElements(page)
+    listWebPageRawElements(page)
       .collect {
         case elem if elem.nonEmpty =>
           elem

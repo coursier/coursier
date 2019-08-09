@@ -2,7 +2,7 @@ package coursier.ivy
 
 import coursier.core._
 import coursier.maven.{MavenAttributes, MavenComplete}
-import coursier.util.{EitherT, Monad}
+import coursier.util.{Artifact, EitherT, Monad}
 
 final class IvyRepository private (
   val pattern: Pattern,
@@ -343,7 +343,7 @@ final class IvyRepository private (
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] = {
+  ): EitherT[F, String, (ArtifactSource, Project)] = {
 
     val eitherArtifact: Either[String, Artifact] =
       for {

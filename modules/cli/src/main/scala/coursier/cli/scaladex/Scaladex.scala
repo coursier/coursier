@@ -5,8 +5,8 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.CacheUrl
-import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Gather, Task}
+import coursier.core.Repository
+import coursier.util.{Artifact, EitherT, Gather, Task}
 import coursier.Module
 
 trait Scaladex[F[_]] {

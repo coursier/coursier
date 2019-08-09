@@ -6,9 +6,7 @@ import coursier.util.{SaxHandler, Xml}
 
 import javax.xml.parsers.SAXParserFactory
 
-import scala.collection.JavaConverters._
 import scala.xml.{Attribute, Elem, MetaData, Null}
-import org.jsoup.Jsoup
 import org.xml.sax
 import org.xml.sax.InputSource
 import org.xml.sax.helpers.DefaultHandler
@@ -179,13 +177,6 @@ package object compatibility {
 
   def encodeURIComponent(s: String): String =
     new java.net.URI(null, null, null, -1, s, null, null) .toASCIIString
-
-  def listWebPageRawElements(page: String): Iterator[String] =
-    Jsoup.parse(page)
-      .select("a")
-      .asScala
-      .iterator
-      .map(_.attr("href"))
 
   def regexLookbehind: String = "<="
 

@@ -2,9 +2,9 @@ package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
 import coursier.maven.MavenRepository
-import coursier.util.{EitherT, Monad}
+import coursier.util.{Artifact, EitherT, Monad}
 
-trait Repository extends Serializable with Artifact.Source {
+trait Repository extends Serializable with ArtifactSource {
 
   def repr: String =
     toString
@@ -15,7 +15,7 @@ trait Repository extends Serializable with Artifact.Source {
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)]
+  ): EitherT[F, String, (ArtifactSource, Project)]
 
   def findMaybeInterval[F[_]](
     module: Module,
@@ -23,7 +23,7 @@ trait Repository extends Serializable with Artifact.Source {
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] =
+  ): EitherT[F, String, (ArtifactSource, Project)] =
     Parse.versionInterval(version)
       .orElse(Parse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
@@ -36,7 +36,7 @@ trait Repository extends Serializable with Artifact.Source {
               versions0.inInterval(itv) match {
                 case None =>
                   val reason = s"No version found for $version in $versionsUrl"
-                  EitherT[F, String, (Artifact.Source, Project)](F.point(Left(reason)))
+                  EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
                 case Some(version0) =>
                   find(module, version0, fetch)
                     .map(t => t._1 -> t._2.copy(versions = Some(versions0)))

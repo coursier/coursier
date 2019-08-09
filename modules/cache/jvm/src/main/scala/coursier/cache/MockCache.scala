@@ -7,8 +7,7 @@ import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
-import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Sync, WebPage}
+import coursier.util.{Artifact, EitherT, Sync, WebPage}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -24,7 +23,7 @@ final case class MockCache[F[_]](
 
   private implicit def S0 = S
 
-  def fetch: Repository.Fetch[F] = { artifact =>
+  def fetch: Cache.Fetch[F] = { artifact =>
 
     val (artifact0, links) =
       if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)

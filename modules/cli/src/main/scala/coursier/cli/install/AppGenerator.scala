@@ -17,8 +17,8 @@ import coursier.cache.internal.FileUtil
 import coursier.cli.app.{AppArtifacts, AppDescriptor, LauncherType, RawAppDescriptor, RawSource, Source}
 import coursier.cli.launch.Launch
 import coursier.cli.native.{NativeBuilder, NativeLauncherOptions, NativeLauncherParams}
-import coursier.core.{Artifact, Dependency, Repository}
-import coursier.util.Task
+import coursier.core.{Dependency, Repository}
+import coursier.util.{Artifact, Task}
 
 import scala.util.control.NonFatal
 

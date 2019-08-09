@@ -22,7 +22,7 @@ build_script:
   - cmd: .\cs-echo foo
   - sbt testsJVM/test:compile # this checks out some git submodules
   - ps: Start-Job -filepath .\modules\tests\handmade-metadata\scripts\start-it-auth-server.ps1 -ArgumentList $pwd\modules\tests\handmade-metadata, $env:TEST_REPOSITORY_HOST, $env:TEST_REPOSITORY_PORT, $env:TEST_REPOSITORY_USER, $env:TEST_REPOSITORY_PASSWORD
-  - sbt "set version in ThisBuild := \"0.1.2-publish-local\"" scala212 coreJVM/publishLocal cli/publishLocal
+  - sbt "set version in ThisBuild := \"0.1.2-publish-local\"" scala212 utilJVM/publishLocal coreJVM/publishLocal cli/publishLocal
 
 test_script:
   - sbt scala213 testsJVM/test

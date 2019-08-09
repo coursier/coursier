@@ -3,7 +3,6 @@ package coursier.cli.launch
 import java.io.{File, InputStream, PrintStream}
 import java.lang.reflect.Modifier
 import java.net.{URL, URLClassLoader}
-import java.nio.file.Paths
 import java.util.concurrent.ExecutorService
 import java.util.jar.{Manifest => JManifest}
 import java.util.zip.ZipFile
@@ -15,9 +14,9 @@ import coursier.cli.app.RawAppDescriptor
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
-import coursier.core.{Artifact, Dependency, Resolution}
+import coursier.core.{Dependency, Resolution}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency}
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, Sync, Task}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer

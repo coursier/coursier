@@ -3,8 +3,7 @@ package coursier.internal
 import java.io.File
 
 import coursier.cache.{ArtifactError, Cache, CacheLogger}
-import coursier.core.{Artifact, Repository}
-import coursier.util.{EitherT, Sync}
+import coursier.util.{Artifact, EitherT, Sync}
 
 import scala.concurrent.ExecutionContext
 
@@ -12,7 +11,7 @@ final case class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends C
 
   private implicit def S0 = S
 
-  def fetch: Repository.Fetch[F] =
+  def fetch: Cache.Fetch[F] =
     new InMemoryCachingFetcher(underlying.fetch).fetcher
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] =

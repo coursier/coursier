@@ -11,8 +11,8 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.native.NativeBuilder
 import coursier.cli.resolve.{Resolve, ResolveException}
-import coursier.core.{Artifact, Resolution}
-import coursier.util.{Sync, Task}
+import coursier.core.Resolution
+import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
