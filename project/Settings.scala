@@ -113,7 +113,7 @@ object Settings {
   
       state.value.log.info(s"Wrote $f")
   
-      Seq(f)
+      Nil
     }
 
   lazy val coursierPrefix = {
