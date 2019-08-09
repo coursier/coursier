@@ -43,7 +43,9 @@ object Reconciliation {
       Some(retained)
     }
 
-  case object Default extends Reconciliation {
+  def Default: Reconciliation = Relaxed
+
+  case object CheckIntervals extends Reconciliation {
     def apply(versions: Seq[String]): Option[String] = {
       if (versions.isEmpty)
         None

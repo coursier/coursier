@@ -173,6 +173,7 @@ object Mima {
         // https://github.com/coursier/coursier/pull/1293
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.merge"),
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.core.Resolution.mergeVersions"),
+        ProblemFilters.exclude[MissingClassProblem]("coursier.core.Reconciliation$Default$"),
       )
     }
   }
