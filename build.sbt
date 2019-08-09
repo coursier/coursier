@@ -35,7 +35,8 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    dontPublishScalaJsIn("2.11")
+    dontPublishScalaJsIn("2.11"),
+    Mima.previousArtifacts
   )
 
 lazy val utilJvm = util.jvm

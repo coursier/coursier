@@ -49,7 +49,7 @@ runJvmTests() {
 }
 
 checkBinaryCompatibility() {
-  sbt scalaFromEnv coreJVM/mimaReportBinaryIssues cacheJVM/mimaReportBinaryIssues
+  sbt scalaFromEnv mimaReportBinaryIssues
 }
 
 testBootstrap() {
