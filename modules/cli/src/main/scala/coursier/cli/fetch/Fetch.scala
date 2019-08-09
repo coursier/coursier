@@ -8,8 +8,8 @@ import java.util.concurrent.ExecutorService
 import caseapp._
 import cats.data.Validated
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
-import coursier.core.{Artifact, Resolution}
-import coursier.util.{Sync, Task}
+import coursier.core.Resolution
+import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 

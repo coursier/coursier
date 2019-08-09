@@ -74,7 +74,7 @@ package object coursier {
 
   type ModuleVersion = (core.Module, String)
 
-  type ProjectCache = Map[ModuleVersion, (Artifact.Source, Project)]
+  type ProjectCache = Map[ModuleVersion, (ArtifactSource, Project)]
 
   type Repository = core.Repository
   val Repository = core.Repository
@@ -125,9 +125,6 @@ package object coursier {
 
     def defaultTypes: Set[Type] = coursier.core.Resolution.defaultTypes
   }
-
-  type Artifact = core.Artifact
-  val Artifact = core.Artifact
 
   type Classifier = core.Classifier
   val Classifier = core.Classifier

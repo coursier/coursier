@@ -23,18 +23,36 @@ inThisBuild(List(
   )
 ))
 
-lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
+lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.util.shaded"),
+    libs ++= Seq(
+      Deps.jsoup % "shaded"
+    ),
+    shadeNamespaces ++= Set("org.jsoup")
+  )
+  .settings(
+    shared,
+    coursierPrefix,
+    dontPublishScalaJsIn("2.11"),
+    Mima.previousArtifacts
+  )
+
+lazy val utilJvm = util.jvm
+lazy val utilJs = util.js
+
+lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
+  .dependsOn(util)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jvmSettings(
+    shading("coursier.core.shaded"),
     utest,
     libs ++= Seq(
       Deps.fastParse.value % "shaded",
-      Deps.jsoup % "shaded",
       Deps.scalaXml
     ),
     shadeNamespaces ++= Set(
-      "org.jsoup",
       "fastparse",
       "sourcecode"
     ),
@@ -102,7 +120,7 @@ lazy val paths = project("paths")
   )
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
-  .dependsOn(core)
+  .dependsOn(util)
   .jvmSettings(
     addPathsSources,
     libraryDependencies ++= Seq(
@@ -111,7 +129,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     ),
   )
   .jsSettings(
-    name := "fetch-js"
+    name := "fetch-js",
+    libs += Deps.cross.scalaJsDom.value
   )
   .settings(
     shared,
@@ -431,6 +450,7 @@ lazy val coursierJs = coursier.js
 lazy val jvm = project("jvm")
   .dummy
   .aggregate(
+    utilJvm,
     coreJvm,
     testsJvm,
     `proxy-tests`,
@@ -459,6 +479,7 @@ lazy val jvm = project("jvm")
 lazy val js = project("js")
   .dummy
   .aggregate(
+    utilJs,
     coreJs,
     cacheJs,
     testsJs,
@@ -474,6 +495,8 @@ lazy val js = project("js")
 lazy val `coursier-repo` = project("coursier-repo")
   .in(root)
   .aggregate(
+    utilJvm,
+    utilJs,
     catsJvm,
     catsJs,
     coreJvm,

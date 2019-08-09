@@ -61,6 +61,7 @@ def main(publishLocal: Boolean = false, npmInstall: Boolean = false, yarnRunBuil
     Util.runCmd(Seq(
       "sbt",
       "set version in ThisBuild := \"" + version + "\"",
+      "utilJVM/publishLocal",
       "coreJVM/publishLocal",
       "cacheJVM/publishLocal",
       "catsJVM/publishLocal",

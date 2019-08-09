@@ -10,10 +10,10 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.FileUtil
-import coursier.core.{Artifact, Authentication, Repository}
+import coursier.core.Authentication
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
-import coursier.util.{EitherT, Sync, Task, WebPage}
+import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
@@ -962,11 +962,11 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     }
   }
 
-  def fetch: Repository.Fetch[F] =
+  def fetch: Cache.Fetch[F] =
     a =>
       (fetchPerPolicy(a, cachePolicies.head) /: cachePolicies.tail)(_ orElse fetchPerPolicy(a, _))
 
-  override def fetchs: Seq[Repository.Fetch[F]] =
+  override def fetchs: Seq[Cache.Fetch[F]] =
     cachePolicies.map { p =>
       (a: Artifact) =>
         fetchPerPolicy(a, p)

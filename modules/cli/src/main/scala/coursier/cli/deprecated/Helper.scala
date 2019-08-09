@@ -10,7 +10,7 @@ import coursier.cli.launch.Launch
 import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.DeprecatedModuleRequirements
-import coursier.core.{Artifact, Classifier, Configuration, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
+import coursier.core.{Classifier, Configuration, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository

@@ -8,7 +8,7 @@ import coursier.core.Publication
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}

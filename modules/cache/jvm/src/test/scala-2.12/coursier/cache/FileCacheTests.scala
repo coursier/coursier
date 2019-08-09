@@ -7,9 +7,8 @@ import java.nio.file.Files
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
-import coursier.core.Artifact
 import coursier.credentials.{Credentials, DirectCredentials}
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, Sync, Task}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location}
 import org.http4s.{Header, HttpService, Response, Uri}

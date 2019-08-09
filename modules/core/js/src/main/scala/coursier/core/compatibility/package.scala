@@ -6,8 +6,6 @@ import org.scalajs.dom.raw.NodeList
 
 import coursier.util.{SaxHandler, Xml}
 
-import scala.collection.mutable.ListBuffer
-
 package object compatibility {
   def option[A](a: js.Dynamic): Option[A] =
     if (js.isUndefined(a)) None
@@ -131,37 +129,6 @@ package object compatibility {
 
   def encodeURIComponent(s: String): String =
     g.encodeURIComponent(s).asInstanceOf[String]
-
-  // FIXME Won't work in the browser
-  lazy val cheerio = g.require("cheerio")
-
-  lazy val jqueryAvailable = !js.isUndefined(g.$)
-
-  def listWebPageRawElements(page: String): Iterator[String] = {
-
-    val links = new ListBuffer[String]
-
-    // getting weird "maybe a wrong Dynamic method signature" errors when trying to factor that more
-
-    if (jqueryAvailable)
-        g.$("<div></div>").html(page).find("a").each({ self: js.Dynamic =>
-        val href = g.$(self).attr("href")
-        if (!js.isUndefined(href))
-          links += href.asInstanceOf[String]
-        ()
-      }: js.ThisFunction0[js.Dynamic, Unit])
-    else {
-      val jquery = cheerio.load(page)
-      jquery("a").each({ self: js.Dynamic =>
-        val href = jquery(self).attr("href")
-        if (!js.isUndefined(href))
-          links += href.asInstanceOf[String]
-        ()
-      }: js.ThisFunction0[js.Dynamic, Unit])
-    }
-
-    links.result().iterator
-  }
 
   def regexLookbehind: String = ":"
 

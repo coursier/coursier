@@ -3,11 +3,11 @@ package coursier.test
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.{Artifact, Attributes, Dependency, MavenRepository, Module, Repository, Resolution}
+import coursier.{Attributes, Dependency, MavenRepository, Module, Repository, Resolution}
 import coursier.core.{Classifier, Configuration, Extension, ResolutionProcess}
 import coursier.test.compatibility.{textResource, tryCreate}
 import coursier.test.util.ToFuture
-import coursier.util.Gather
+import coursier.util.{Artifact, Gather}
 
 import scala.concurrent.{ExecutionContext, Future}
 

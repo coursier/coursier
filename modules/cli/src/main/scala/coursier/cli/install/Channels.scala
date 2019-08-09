@@ -9,8 +9,8 @@ import coursier.{Dependency, Fetch}
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
 import coursier.cli.app.Codecs.{decodeObj, encodeObj}
-import coursier.core.{Artifact, Repository}
-import coursier.util.Task
+import coursier.core.Repository
+import coursier.util.{Artifact, Task}
 
 object Channels {
 

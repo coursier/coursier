@@ -1,7 +1,6 @@
 package coursier.cache
 
 import coursier.cache.internal.Platform
-import coursier.core.Repository
 import coursier.util.{EitherT, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,7 +9,7 @@ final case class AlwaysDownload(
   logger: CacheLogger = CacheLogger.nop
 ) extends Cache[Task] {
 
-  def fetch: Repository.Fetch[Task] = { artifact =>
+  def fetch: Cache.Fetch[Task] = { artifact =>
     EitherT(
       Task { implicit ec =>
         Future(logger.downloadingArtifact(artifact.url))

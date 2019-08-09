@@ -4,7 +4,7 @@ package test
 import java.math.BigInteger
 
 import coursier.cache.{ArtifactError, CacheChecksum, FileCache}
-import coursier.util.{Gather, Sync, Task}
+import coursier.util.{Artifact, Gather, Sync, Task}
 import utest._
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -2,6 +2,8 @@ package coursier.core
 
 import java.util.concurrent.ConcurrentHashMap
 
+import coursier.util.Artifact
+
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -610,7 +612,7 @@ object Resolution {
     dependencySet: DependencySet,
     forceVersions: Map[Module, String],
     conflicts: Set[Dependency],
-    projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)],
+    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
     errorCache: Map[Resolution.ModuleVersion, Seq[String]],
     finalDependenciesCache: Map[Dependency, Seq[Dependency]],
     filter: Option[Dependency => Boolean],
@@ -647,7 +649,7 @@ object Resolution {
     dependencySet: DependencySet,
     forceVersions: Map[Module, String],
     conflicts: Set[Dependency],
-    projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)],
+    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
     errorCache: Map[Resolution.ModuleVersion, Seq[String]],
     finalDependenciesCache: Map[Dependency, Seq[Dependency]],
     filter: Option[Dependency => Boolean],
@@ -730,7 +732,7 @@ final class Resolution private (
   val dependencySet: DependencySet,
   val forceVersions: Map[Module, String],
   val conflicts: Set[Dependency],
-  val projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)],
+  val projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
   val errorCache: Map[Resolution.ModuleVersion, Seq[String]],
   val finalDependenciesCache: Map[Dependency, Seq[Dependency]],
   val filter: Option[Dependency => Boolean],
@@ -817,7 +819,7 @@ final class Resolution private (
     dependencySet: DependencySet = dependencySet,
     forceVersions: Map[Module, String] = forceVersions,
     conflicts: Set[Dependency] = conflicts,
-    projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)] = projectCache,
+    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = projectCache,
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
@@ -855,7 +857,7 @@ final class Resolution private (
     dependencySet: DependencySet = dependencySet,
     forceVersions: Map[Module, String] = forceVersions,
     conflicts: Set[Dependency] = conflicts,
-    projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)] = projectCache,
+    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = projectCache,
     errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
     finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
     filter: Option[Dependency => Boolean] = filter,
@@ -898,7 +900,7 @@ final class Resolution private (
 
 
   // Make these private[coursier] ?
-  def withProjectCache(projectCache: Map[Resolution.ModuleVersion, (Artifact.Source, Project)]): Resolution =
+  def withProjectCache(projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)]): Resolution =
     copy0(projectCache = projectCache)
   def withErrorCache(errorCache: Map[Resolution.ModuleVersion, Seq[String]]): Resolution =
     copy0(errorCache = errorCache)
@@ -946,7 +948,7 @@ final class Resolution private (
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala
     )
 
-  def addToProjectCache(projects: (Resolution.ModuleVersion, (Artifact.Source, Project))*): Resolution = {
+  def addToProjectCache(projects: (Resolution.ModuleVersion, (ArtifactSource, Project))*): Resolution = {
 
     val duplicates = projects
       .collect {

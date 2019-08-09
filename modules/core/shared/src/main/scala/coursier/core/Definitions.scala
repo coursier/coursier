@@ -1,5 +1,7 @@
 package coursier.core
 
+import coursier.util.Artifact
+
 final case class Organization(value: String) extends AnyVal {
   def map(f: String => String): Organization =
     Organization(f(value))
@@ -317,27 +319,10 @@ final case class Publication(
   def attributes: Attributes = Attributes(`type`, classifier)
 }
 
-final case class Artifact(
-  url: String,
-  checksumUrls: Map[String, String],
-  extra: Map[String, Artifact],
-  changing: Boolean,
-  optional: Boolean,
-  authentication: Option[Authentication]
-) {
-
-  // attributes, `type`, and classifier don't live here anymore.
-  // Get them via the dependencyArtifacts method on Resolution.
-}
-
-object Artifact {
-
-  trait Source {
-    def artifacts(
-      dependency: Dependency,
-      project: Project,
-      overrideClassifiers: Option[Seq[Classifier]]
-    ): Seq[(Publication, Artifact)]
-  }
-
+trait ArtifactSource {
+  def artifacts(
+    dependency: Dependency,
+    project: Project,
+    overrideClassifiers: Option[Seq[Classifier]]
+  ): Seq[(Publication, Artifact)]
 }

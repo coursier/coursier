@@ -3,8 +3,8 @@ package coursier.cli.util
 import java.io.File
 import java.util.Objects
 
-import coursier.Artifact
 import coursier.core._
+import coursier.util.Artifact
 
 import scala.collection.mutable
 import scala.collection.parallel.ParSeq

@@ -3,6 +3,7 @@ package coursier
 import java.lang.{Boolean => JBoolean}
 
 import coursier.params.ResolutionParams
+import coursier.util.Artifact
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}

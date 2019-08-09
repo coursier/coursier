@@ -2,7 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
-import coursier.util.{EitherT, Monad, WebPage}
+import coursier.util.{Artifact, EitherT, Monad, WebPage}
 
 object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
@@ -368,7 +368,7 @@ final class MavenRepository private (
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, (Artifact.Source, Project)] =
+  ): EitherT[F, String, (ArtifactSource, Project)] =
     EitherT {
       def withSnapshotVersioning =
         snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>

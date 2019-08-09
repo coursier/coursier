@@ -1,11 +1,11 @@
 package coursier
 package test
 
-import coursier.core.{Activation, Configuration, Repository}
+import coursier.core.{Activation, ArtifactSource, Configuration, Repository}
 import coursier.maven.MavenRepository
 import utest._
-import scala.async.Async.{async, await}
 
+import scala.async.Async.{async, await}
 import coursier.core
 import coursier.test.compatibility._
 
@@ -28,7 +28,7 @@ object ResolutionTests extends TestSuite {
       .future()
 
   implicit class ProjectOps(val p: Project) extends AnyVal {
-    def kv: (ModuleVersion, (Artifact.Source, Project)) = p.moduleVersion -> (testRepository, p)
+    def kv: (ModuleVersion, (ArtifactSource, Project)) = p.moduleVersion -> (testRepository, p)
   }
 
   val projects = Seq(

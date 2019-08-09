@@ -6,7 +6,7 @@ import java.lang.{Boolean => JBoolean}
 import coursier.cache.{ArtifactError, Cache}
 import coursier.core.Publication
 import coursier.error.FetchError
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, Sync, Task}
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration

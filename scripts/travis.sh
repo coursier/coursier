@@ -9,7 +9,7 @@ setupCoursierBinDir() {
 
 integrationTestsRequirements() {
   # Required for ~/.ivy2/local repo tests
-  sbt 'set version in ThisBuild := "0.1.2-publish-local"' scala212 coreJVM/publishLocal cli/publishLocal
+  sbt 'set version in ThisBuild := "0.1.2-publish-local"' scala212 utilJVM/publishLocal coreJVM/publishLocal cli/publishLocal
 }
 
 isScalaJs() {
@@ -49,7 +49,7 @@ runJvmTests() {
 }
 
 checkBinaryCompatibility() {
-  sbt scalaFromEnv coreJVM/mimaReportBinaryIssues cacheJVM/mimaReportBinaryIssues
+  sbt scalaFromEnv mimaReportBinaryIssues
 }
 
 testBootstrap() {
