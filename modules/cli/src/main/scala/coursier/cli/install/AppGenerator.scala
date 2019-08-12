@@ -317,7 +317,7 @@ object AppGenerator {
         lock(artifacts)
       }
 
-      lazy val upToDate = Files.exists(infoFile) && {
+      def upToDate = Files.exists(infoFile) && {
 
         // TODO Look for files on the side too (native launchers)
 
@@ -446,111 +446,97 @@ object AppGenerator {
               extraZipEntries = extraEntries
             )
 
-          case LauncherType.Assembly | LauncherType.GraalvmNativeImage =>
+          case LauncherType.Assembly =>
 
             assert(appArtifacts.shared.isEmpty) // just in case
 
-            val isNativeImage = desc.launcherType == LauncherType.GraalvmNativeImage
+            // FIXME Allow to adjust merge rules?
+            Assembly.create(
+              appArtifacts.fetchResult.files,
+              desc.javaOptions,
+              mainClass,
+              tmpDest,
+              extraZipEntries = extraEntries
+            )
 
-            val (assemblyDest, hookOpt, graalvmParamsOpt0) =
-              if (isNativeImage) {
-                val graalvmParams = graalvmParamsOpt.getOrElse {
-                  throw new NoGraalvmInstallationPassed
+          case LauncherType.GraalvmNativeImage =>
+
+            assert(appArtifacts.shared.isEmpty) // just in case
+
+            val graalvmParams = graalvmParamsOpt.getOrElse {
+              throw new NoGraalvmInstallationPassed
+            }
+
+            val shellPrependOptions = desc.graalvmOptions.toSeq.flatMap(_.shellPrependOptions)
+
+            val imageDest =
+              if (shellPrependOptions.isEmpty || LauncherBat.isWindows)
+                tmpDest
+              else
+                dest.getParent.resolve(s".${dest.getFileName}.binary")
+
+            def generate(extraArgs: String*): Unit = {
+              val cp = appArtifacts
+                .fetchResult
+                .files
+                .map(_.getAbsolutePath)
+                .mkString(File.pathSeparator)
+              val startCmd =
+                if (LauncherBat.isWindows)
+                  Seq(s"${graalvmParams.home}/bin/native-image.cmd")
+                else
+                  Seq(s"${graalvmParams.home}/bin/native-image", "--no-server")
+              val cmd = startCmd ++
+                desc.graalvmOptions.toSeq.flatMap(_.options) ++
+                graalvmParams.extraNativeImageOptions ++
+                Seq(s"-H:Name=${desc.nameOpt.getOrElse(dest.getFileName.toString)}") ++
+                extraArgs ++
+                Seq("-cp", cp, mainClass, imageDest.toString)
+              if (verbosity >= 1)
+                System.err.println(s"Running $cmd")
+              val b = new ProcessBuilder(cmd: _*)
+                .inheritIO()
+              val p = b.start()
+              val retCode = p.waitFor()
+              if (retCode != 0)
+                throw new ErrorRunningGraalvmNativeImage(retCode)
+              if (LauncherBat.isWindows) {
+                val exe = imageDest.getFileName.toString + ".exe"
+
+                import scala.collection.JavaConverters._
+                val s = Files.list(imageDest.getParent)
+                val prefix = imageDest.getFileName + "."
+                s.iterator().asScala.toVector.foreach { p =>
+                  val name = p.getFileName.toString
+                  if (name != exe && name.startsWith(prefix))
+                    Files.deleteIfExists(p)
                 }
-                val tmpFile = Files.createTempFile(s"coursier-install-${dest.getFileName}-assembly", ".jar")
-                val hook: Thread =
-                  new Thread("cleanup") {
-                    override def run() =
-                      Files.deleteIfExists(tmpFile)
-                  }
-                Runtime.getRuntime.addShutdownHook(hook)
-                (tmpFile, Some(hook), Some(graalvmParams))
-              } else
-                (tmpDest, None, None)
-
-            try {
-              // FIXME Allow to adjust merge rules?
-              Assembly.create(
-                appArtifacts.fetchResult.files,
-                desc.javaOptions,
-                mainClass,
-                assemblyDest,
-                extraZipEntries = if (graalvmParamsOpt0.isEmpty) extraEntries else Nil
-              )
-
-              for (graalvmParams <- graalvmParamsOpt0) {
-
-                val shellPrependOptions = desc.graalvmOptions.toSeq.flatMap(_.shellPrependOptions)
-
-                val imageDest =
-                  if (shellPrependOptions.isEmpty || LauncherBat.isWindows)
-                    tmpDest
-                  else
-                    dest.getParent.resolve(s".${dest.getFileName}.binary")
-
-                def generate(extraArgs: String*): Unit = {
-                  val startCmd =
-                    if (LauncherBat.isWindows)
-                      Seq(s"${graalvmParams.home}/bin/native-image.cmd")
-                    else
-                      Seq(s"${graalvmParams.home}/bin/native-image", "--no-server")
-                  val cmd = startCmd ++
-                    desc.graalvmOptions.toSeq.flatMap(_.options) ++
-                    graalvmParams.extraNativeImageOptions ++
-                    extraArgs ++
-                    Seq("-jar", assemblyDest.toString, imageDest.toString)
-                  if (verbosity >= 1)
-                    System.err.println(s"Running $cmd")
-                  val b = new ProcessBuilder(cmd: _*)
-                    .inheritIO()
-                  val p = b.start()
-                  val retCode = p.waitFor()
-                  if (retCode != 0)
-                    throw new ErrorRunningGraalvmNativeImage(retCode)
-                  if (LauncherBat.isWindows) {
-                    val exe = imageDest.getFileName.toString + ".exe"
-
-                    import scala.collection.JavaConverters._
-                    val s = Files.list(imageDest.getParent)
-                    val prefix = imageDest.getFileName + "."
-                    s.iterator().asScala.toVector.foreach { p =>
-                      val name = p.getFileName.toString
-                      if (name != exe && name.startsWith(prefix))
-                        Files.deleteIfExists(p)
-                    }
-                    s.close()
-                  }
-                }
-
-                desc.graalvmOptions.flatMap(_.reflectionConf) match {
-                  case None =>
-                    generate()
-                  case Some(conf) =>
-                    withTempFile(conf.getBytes(StandardCharsets.UTF_8)) { confFile =>
-                      generate(s"-H:ReflectionConfigurationFiles=${confFile.toAbsolutePath}")
-                    }
-                }
-
-                if (shellPrependOptions.nonEmpty) {
-                  // https://stackoverflow.com/a/246128/3714539
-                  val launcher =
-                    s"""#!/usr/bin/env bash
-                       |set -u
-                       |DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-                       |exec "$$DIR/${imageDest.getFileName}" ${shellPrependOptions.mkString(" ")} "$$@"
-                       |""".stripMargin
-                  Files.write(tmpDest, launcher.getBytes(StandardCharsets.UTF_8))
-                  coursier.bootstrap.util.FileUtil.tryMakeExecutable(tmpDest)
-                }
-
-                writeInfoFile(tmpInfo, extraEntries)
-              }
-            } finally {
-              for (hook <- hookOpt) {
-                hook.run()
-                Runtime.getRuntime.removeShutdownHook(hook)
+                s.close()
               }
             }
+
+            desc.graalvmOptions.flatMap(_.reflectionConf) match {
+              case None =>
+                generate()
+              case Some(conf) =>
+                withTempFile(conf.getBytes(StandardCharsets.UTF_8)) { confFile =>
+                  generate(s"-H:ReflectionConfigurationFiles=${confFile.toAbsolutePath}")
+                }
+            }
+
+            if (shellPrependOptions.nonEmpty) {
+              // https://stackoverflow.com/a/246128/3714539
+              val launcher =
+                s"""#!/usr/bin/env bash
+                   |set -u
+                   |DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+                   |exec "$$DIR/${imageDest.getFileName}" ${shellPrependOptions.mkString(" ")} "$$@"
+                   |""".stripMargin
+              Files.write(tmpDest, launcher.getBytes(StandardCharsets.UTF_8))
+              coursier.bootstrap.util.FileUtil.tryMakeExecutable(tmpDest)
+            }
+
+            writeInfoFile(tmpInfo, extraEntries)
 
           case LauncherType.ScalaNative =>
 
