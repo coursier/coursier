@@ -124,11 +124,14 @@ lazy val paths = project("paths")
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(util)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
+    shading("coursier.cache.shaded"),
+    shadeNamespaces ++= Set("org.fusesource", "org.jline"),
     addPathsSources,
     libraryDependencies ++= Seq(
-      Deps.jansi,
-      Deps.jlineTerminalJansi
+      Deps.jansi % "shaded",
+      Deps.jlineTerminalJansi % "shaded"
     ),
   )
   .jsSettings(
