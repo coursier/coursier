@@ -76,6 +76,7 @@ lazy val coreJvm = core.jvm
 lazy val coreJs = core.js
 
 lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
+  .disablePlugins(MimaPlugin)
   .dependsOn(core, coursier % Test)
   .jsSettings(
     scalaJSStage.in(Global) := FastOptStage,
@@ -96,6 +97,7 @@ lazy val testsJvm = tests.jvm
 lazy val testsJs = tests.js
 
 lazy val `proxy-tests` = project("proxy-tests")
+  .disablePlugins(MimaPlugin)
   .dependsOn(testsJvm % "test->test")
   .configs(Integration)
   .settings(
@@ -113,6 +115,7 @@ lazy val `proxy-tests` = project("proxy-tests")
   )
 
 lazy val paths = project("paths")
+  .disablePlugins(MimaPlugin)
   .settings(
     pureJava,
     dontPublish,
@@ -121,11 +124,15 @@ lazy val paths = project("paths")
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(util)
+  .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
+    shading("coursier.cache.shaded"),
+    shadeNamespaces ++= Set("org.fusesource", "org.jline"),
+    shadeNamespaces ++= Set("io.github.soc"),
     addPathsSources,
     libraryDependencies ++= Seq(
-      Deps.jansi,
-      Deps.jlineTerminalJansi
+      Deps.jansi % "shaded",
+      Deps.jlineTerminalJansi % "shaded"
     ),
   )
   .jsSettings(
@@ -195,6 +202,7 @@ lazy val catsJs = cats.js
 
 lazy val `bootstrap-launcher` = project("bootstrap-launcher")
   .enablePlugins(SbtProguard)
+  .disablePlugins(MimaPlugin)
   .settings(
     pureJava,
     dontPublish,
@@ -205,6 +213,7 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
 
 lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher")
   .enablePlugins(SbtProguard)
+  .disablePlugins(MimaPlugin)
   .settings(
     pureJava,
     dontPublish,
@@ -214,6 +223,7 @@ lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher"
   )
 
 lazy val bootstrap = project("bootstrap")
+  .disablePlugins(MimaPlugin)
   .settings(
     shared,
     coursierPrefix,
@@ -223,6 +233,7 @@ lazy val bootstrap = project("bootstrap")
 lazy val benchmark = project("benchmark")
   .dependsOn(coursierJvm)
   .enablePlugins(JmhPlugin)
+  .disablePlugins(MimaPlugin)
   .settings(
     shared,
     dontPublish,
@@ -230,6 +241,7 @@ lazy val benchmark = project("benchmark")
   )
 
 lazy val publish = project("publish")
+  .disablePlugins(MimaPlugin)
   .dependsOn(coreJvm, cacheJvm)
   .settings(
     shared,
@@ -247,6 +259,7 @@ lazy val publish = project("publish")
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, publish)
   .enablePlugins(ContrabandPlugin, JlinkPlugin, PackPlugin)
+  .disablePlugins(MimaPlugin)
   .settings(
     shared,
     // does this really work?
@@ -320,6 +333,7 @@ lazy val cli = project("cli")
   )
 
 lazy val `cli-graalvm` = project("cli-graalvm")
+  .disablePlugins(MimaPlugin)
   .dependsOn(cli)
   .settings(
     shared,
@@ -339,6 +353,7 @@ lazy val `cli-graalvm` = project("cli-graalvm")
   )
 
 lazy val `cli-native_03` = project("cli-native_03")
+  .disablePlugins(MimaPlugin)
   .dependsOn(cli)
   .settings(
     shared,
@@ -355,6 +370,7 @@ lazy val `cli-native_03` = project("cli-native_03")
   )
 
 lazy val `cli-native_040M2` = project("cli-native_040M2")
+  .disablePlugins(MimaPlugin)
   .dependsOn(cli)
   .settings(
     shared,
@@ -372,6 +388,7 @@ lazy val `cli-native_040M2` = project("cli-native_040M2")
 
 lazy val web = project("web")
   .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .disablePlugins(MimaPlugin)
   .dependsOn(coursierJs)
   .settings(
     shared,
@@ -411,6 +428,7 @@ lazy val web = project("web")
   )
 
 lazy val okhttp = project("okhttp")
+  .disablePlugins(MimaPlugin)
   .dependsOn(cacheJvm)
   .settings(
     shared,
@@ -426,6 +444,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     Mima.previousArtifacts,
     Mima.coursierFilters
   )
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jsSettings(
     libs += Deps.cross.fastParse.value
   )
@@ -493,6 +512,7 @@ lazy val js = project("js")
   )
 
 lazy val `coursier-repo` = project("coursier-repo")
+  .disablePlugins(MimaPlugin)
   .in(root)
   .aggregate(
     utilJvm,
