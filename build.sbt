@@ -128,6 +128,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .jvmSettings(
     shading("coursier.cache.shaded"),
     shadeNamespaces ++= Set("org.fusesource", "org.jline"),
+    shadeNamespaces ++= Set("io.github.soc"),
     addPathsSources,
     libraryDependencies ++= Seq(
       Deps.jansi % "shaded",
