@@ -264,9 +264,11 @@ lazy val install = project("install")
     coursierPrefix,
     libs ++= Seq(
       Deps.argonautShapeless,
-      Deps.catsCore
+      Deps.catsCore,
+      Deps.scalatest % Test
     ),
-    onlyIn("2.12")
+    onlyIn("2.12"),
+    addBootstrapJarResourceInTests
   )
 
 lazy val cli = project("cli")
@@ -302,16 +304,7 @@ lazy val cli = project("cli")
         current / "foo"
     },
     coursierPrefix,
-    unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
-    unmanagedResources.in(Test) ++= Def.taskDyn[Seq[File]] {
-      if (javaMajorVer > 8)
-        // Running into obscure proguard issues when building that one with JDK 11…
-        Def.task(Nil)
-      else
-        Def.task {
-          Seq(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
-        }
-    }.value,
+    addBootstrapJarResourceInTests,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -599,6 +592,19 @@ lazy val addBootstrapJarAsResource = {
     }
   }.value
 }
+
+lazy val addBootstrapJarResourceInTests = Seq(
+  unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
+  unmanagedResources.in(Test) ++= Def.taskDyn[Seq[File]] {
+    if (javaMajorVer > 8)
+    // Running into obscure proguard issues when building that one with JDK 11…
+      Def.task(Nil)
+    else
+      Def.task {
+        Seq(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
+      }
+  }.value
+)
 
 lazy val addPathsSources = Seq(
   addDirectoriesSources,

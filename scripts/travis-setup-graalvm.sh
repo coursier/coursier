@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -e
-
 export JABBA_HOME="$HOME/.jabba" GRAALVM_JDK="graalvm@19.0.2"
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
   # doesn't work yet (even locally)
@@ -29,10 +26,3 @@ else
 fi
 
 export GRAALVM_HOME
-
-export CONTENT_TYPE="application/octet-stream"
-export REPO="coursier/coursier"
-export NAME="cs-${LAUNCHER_OS}"
-export CMD="./scripts/generate-graalvm-launcher.sh"
-export HAS_BAT=false
-scripts/upload-launcher/upload-gh-release.sh

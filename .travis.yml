@@ -42,6 +42,7 @@ jobs:
     - env: SCALA_VERSION=2.12
       sudo: required
       services: docker
+      before_script: source scripts/travis-setup-graalvm.sh
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
       script: sbt scala212 test:compile testsJVM/test
@@ -93,7 +94,7 @@ jobs:
     - stage: upload-launchers
       name: "Push Linux graalvm launcher"
       env: LAUNCHER_OS=x86_64-pc-linux
-      script: scripts/travis-graalvm.sh
+      script: scripts/travis-native-image.sh
     - stage: upload-launchers
       name: "Push OS X graalvm launcher"
       env: LAUNCHER_OS=x86_64-apple-darwin # vaguely like llvm target triple
@@ -102,7 +103,7 @@ jobs:
       jdk: openjdk9
       before_install:
         - brew install jq
-      script: scripts/travis-graalvm.sh
+      script: scripts/travis-native-image.sh
     - stage: upload-launchers
       name: "Push Windows jlink launcher"
       env: LAUNCHER_OS=x86_64-pc-win32

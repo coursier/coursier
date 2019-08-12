@@ -510,7 +510,7 @@ object AppGenerator {
         }
 
         val actualTmpDest =
-          if (desc.launcherType.isExeOnWindows)
+          if (desc.launcherType.isExeOnWindows && LauncherBat.isWindows)
             tmpDest.getParent.resolve(tmpDest.getFileName.toString + ".exe")
           else
             tmpDest
