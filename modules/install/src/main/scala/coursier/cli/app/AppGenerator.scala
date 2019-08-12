@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.cli.app
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.math.BigInteger
@@ -14,9 +14,7 @@ import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, Launche
 import coursier.Fetch
 import coursier.cache.{Cache, CacheLocks}
 import coursier.cache.internal.FileUtil
-import coursier.cli.app.{AppArtifacts, AppDescriptor, LauncherType, RawAppDescriptor, RawSource, Source}
-import coursier.cli.launch.Launch
-import coursier.cli.native.{NativeBuilder, NativeLauncherOptions, NativeLauncherParams}
+import coursier.cli.native.{NativeBuilder, NativeLauncherParams}
 import coursier.core.{Dependency, Repository}
 import coursier.util.{Artifact, Task}
 
@@ -224,13 +222,13 @@ object AppGenerator {
     verbosity: Int,
     mainDependencyOpt: Option[Dependency]
   ): Option[String] = {
-    val m = Launch.mainClasses(jars)
+    val m = MainClass.mainClasses(jars)
     if (verbosity >= 2) {
       System.err.println(s"Found ${m.size} main classes:")
       for (a <- m)
         System.err.println(s"  $a")
     }
-    Launch.retainedMainClassOpt(m, mainDependencyOpt) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
+    MainClass.retainedMainClassOpt(m, mainDependencyOpt) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
   }
 
   private def writeInfoFile(dest: Path, entries: Seq[(ZipEntry, Array[Byte])]): Unit = {
@@ -485,7 +483,7 @@ object AppGenerator {
             val builder = NativeBuilder.load(fetch, appArtifacts.platformSuffixOpt.fold("")(_.stripPrefix("_native")))
 
             // FIXME Allow options to be tweaked
-            val params = NativeLauncherParams(NativeLauncherOptions()).toEither.right.get
+            val params = NativeLauncherParams.default()
 
             builder.build(
               mainClass,

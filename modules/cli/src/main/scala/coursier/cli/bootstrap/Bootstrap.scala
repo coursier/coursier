@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
 import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, LauncherBat}
+import coursier.cli.app.MainClass
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.native.NativeBuilder
@@ -69,14 +70,14 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(Launch.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
+            Task.delay(MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
                     m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)\n" }.mkString +
                     "\n"
                 )
-              Launch.retainedMainClassOpt(m, res.rootDependencies.headOption) match {
+              MainClass.retainedMainClassOpt(m, res.rootDependencies.headOption) match {
                 case Some(c) =>
                   Task.point(c)
                 case None =>

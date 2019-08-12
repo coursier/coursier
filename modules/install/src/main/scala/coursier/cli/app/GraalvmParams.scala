@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.cli.app
 
 final case class GraalvmParams(
   home: String,

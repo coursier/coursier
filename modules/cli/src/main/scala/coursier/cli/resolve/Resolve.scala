@@ -10,8 +10,8 @@ import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.{AppArtifacts, RawAppDescriptor}
-import coursier.cli.install.{Channel, Install}
+import coursier.cli.app.{AppArtifacts, Channel, RawAppDescriptor}
+import coursier.cli.install.Install
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}

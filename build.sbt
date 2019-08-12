@@ -256,8 +256,21 @@ lazy val publish = project("publish")
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
   )
 
+lazy val install = project("install")
+  .disablePlugins(MimaPlugin)
+  .dependsOn(bootstrap, coursierJvm)
+  .settings(
+    shared,
+    coursierPrefix,
+    libs ++= Seq(
+      Deps.argonautShapeless,
+      Deps.catsCore
+    ),
+    onlyIn("2.12")
+  )
+
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, publish)
+  .dependsOn(bootstrap, coursierJvm, install, publish)
   .enablePlugins(ContrabandPlugin, JlinkPlugin, PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
@@ -299,7 +312,6 @@ lazy val cli = project("cli")
           Seq(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
         }
     }.value,
-    scalacOptions += "-Ypartial-unification",
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -482,6 +494,7 @@ lazy val jvm = project("jvm")
     bootstrap,
     benchmark,
     publish,
+    install,
     cli,
     `cli-graalvm`,
     okhttp,
@@ -532,6 +545,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     bootstrap,
     benchmark,
     publish,
+    install,
     cli,
     `cli-graalvm`,
     scalazJvm,

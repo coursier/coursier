@@ -1,11 +1,10 @@
-package coursier.cli.install
+package coursier.cli.app
 
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 
 import coursier.bootstrap.LauncherBat
-import coursier.cli.install.AppGenerator.ErrorRunningGraalvmNativeImage
 
 object GraalvmNativeImage {
 

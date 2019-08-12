@@ -9,6 +9,7 @@ scala_library(
         "bootstrap:bootstrap",
         "cache:cache",
         "core:core",
+        "install:install",
         "interop/scalaz:scalaz-interop",
         "coursier:coursier",
         "publish:publish",

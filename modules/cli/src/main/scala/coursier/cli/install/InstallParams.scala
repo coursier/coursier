@@ -6,7 +6,7 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.app.RawAppDescriptor
+import coursier.cli.app.{Channel, RawAppDescriptor}
 import coursier.moduleString
 import coursier.core.Repository
 import coursier.parse.RepositoryParser

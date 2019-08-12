@@ -3,7 +3,6 @@ package coursier.cli.app
 import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.install.Channel
 import coursier.parse.RepositoryParser
 
 final case class RawSource(

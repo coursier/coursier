@@ -8,7 +8,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
-import coursier.cli.app.RawAppDescriptor
+import coursier.cli.app.{AppGenerator, RawAppDescriptor}
 import coursier.util.{Sync, Task}
 import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}

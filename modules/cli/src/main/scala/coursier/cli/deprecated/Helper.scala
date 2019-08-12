@@ -6,6 +6,7 @@ import java.net.{URL, URLClassLoader, URLDecoder}
 import coursier.{Attributes, Dependency, LocalRepositories, Repositories, Resolution, core}
 import coursier.cache._
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.app.MainClass
 import coursier.cli.launch.Launch
 import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
@@ -952,7 +953,7 @@ class Helper(
 
   lazy val retainedMainClass = {
 
-    val mainClasses = Launch.mainClasses(filteredFiles ++ extraJars)
+    val mainClasses = MainClass.mainClasses(filteredFiles ++ extraJars)
 
     if (common.verbosityLevel >= 2) {
       Console.err.println("Found main classes:")

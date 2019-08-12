@@ -5,6 +5,7 @@ import java.nio.file.{Path, Paths}
 import caseapp.Tag
 import cats.data.ValidatedNel
 import coursier.cache.CacheLogger
+import coursier.cli.app.GraalvmParams
 import coursier.cli.params.OutputParams
 import coursier.params.CacheParams
 
