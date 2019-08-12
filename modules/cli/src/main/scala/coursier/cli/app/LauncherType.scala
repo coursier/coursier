@@ -7,16 +7,15 @@ sealed abstract class LauncherType extends Product with Serializable {
 
 object LauncherType {
 
-  case object Bootstrap extends LauncherType {
+  sealed abstract class BootstrapLike extends LauncherType {
     override def needsBatOnWindows = true
   }
+
+  case object Bootstrap extends BootstrapLike
+  case object Hybrid extends BootstrapLike
+  case object Standalone extends BootstrapLike
+
   case object Assembly extends LauncherType {
-    override def needsBatOnWindows = true
-  }
-  case object Hybrid extends LauncherType {
-    override def needsBatOnWindows = true
-  }
-  case object Standalone extends LauncherType {
     override def needsBatOnWindows = true
   }
   case object ScalaNative extends LauncherType {
