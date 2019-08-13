@@ -76,7 +76,7 @@ object ResolutionError {
     val rule: Rule,
     val conflict: UnsatisfiedRule,
     message: String
-  ) extends Simple(resolution, s"Unsatisfiable rule $rule: $message", conflict)
+  ) extends Simple(resolution, message, conflict)
 
 
 }

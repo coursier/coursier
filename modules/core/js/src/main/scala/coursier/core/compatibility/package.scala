@@ -132,4 +132,7 @@ package object compatibility {
 
   def regexLookbehind: String = ":"
 
+  def hasConsole: Boolean =
+    true // no System.console in Scala.JS
+
 }
