@@ -26,4 +26,7 @@ abstract class Rule extends Product with Serializable {
               .right.map(r => Right(Some(r)))
         }
     }
+
+  def repr: String =
+    toString
 }

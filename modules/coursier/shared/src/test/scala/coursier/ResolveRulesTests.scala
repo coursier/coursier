@@ -207,7 +207,7 @@ object ResolveRulesTests extends TestSuite {
             assert(f.rule == rule)
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
             f.conflict match {
-              case e: Strict.EvictedDependencies => e.evicted
+              case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
               case _ => ???
             }
           case _ =>
@@ -250,7 +250,7 @@ object ResolveRulesTests extends TestSuite {
             assert(f.rule == rule)
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
             f.conflict match {
-              case e: Strict.EvictedDependencies => e.evicted
+              case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
               case _ => ???
             }
           case _ =>
@@ -324,7 +324,7 @@ object ResolveRulesTests extends TestSuite {
               assert(f.rule == rule)
               assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
               f.conflict match {
-                case e: Strict.EvictedDependencies => e.evicted
+                case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
                 case _ => ???
               }
             case _ =>

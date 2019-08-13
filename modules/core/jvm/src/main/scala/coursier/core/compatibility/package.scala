@@ -180,4 +180,7 @@ package object compatibility {
 
   def regexLookbehind: String = "<="
 
+  def hasConsole: Boolean =
+    System.console() != null
+
 }

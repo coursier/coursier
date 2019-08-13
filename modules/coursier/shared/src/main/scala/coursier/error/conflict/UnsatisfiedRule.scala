@@ -6,4 +6,4 @@ abstract class UnsatisfiedRule(
   val rule: Rule,
   message: String,
   cause: Throwable = null
-) extends Exception(s"Unsatisfied rule $rule: $message", cause)
+) extends Exception(s"Unsatisfied rule ${rule.repr}: $message", cause)

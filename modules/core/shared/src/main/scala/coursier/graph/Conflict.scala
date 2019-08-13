@@ -1,6 +1,8 @@
 package coursier.graph
 
 import coursier.core.{Module, Parse, Resolution, Version, VersionConstraint, VersionInterval}
+import coursier.util.Print.Colors
+import coursier.util.{Print, Tree}
 
 final case class Conflict(
   module: Module,
@@ -27,6 +29,25 @@ object Conflict {
         tree.module,
         tree.reconciledVersion
       )
+
+    def repr: String = {
+
+      val colors0 = Colors.get(coursier.core.compatibility.hasConsole)
+
+      val treeRepr = Tree(Seq(tree).toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(_.dependees)
+        .render { node =>
+          if (node.excludedDependsOn)
+            s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
+          else
+            s"${node.module}:${node.reconciledVersion}"
+        }
+
+      val assumeCompatibleVersions = Print.compatibleVersions(tree.dependsOnVersion, tree.dependsOnReconciledVersion)
+
+      s"\n${tree.dependsOnModule.repr}:" +
+        s"${if (assumeCompatibleVersions) colors0.yellow else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
+        s"(${tree.dependsOnVersion} wanted)\n" + treeRepr
+    }
   }
 
   def conflicted(resolution: Resolution, withExclusions: Boolean = false): Seq[Conflicted] = {

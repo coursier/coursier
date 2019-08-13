@@ -2,7 +2,7 @@ package coursier.params.rule
 
 import coursier.core.Resolution
 import coursier.error.conflict.UnsatisfiedRule
-import coursier.graph.Conflict
+import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
 
 final case class Strict(
@@ -17,11 +17,12 @@ final case class Strict(
 
   def check(res: Resolution): Option[EvictedDependencies] = {
 
-    val conflicts = coursier.graph.Conflict(res).filter { c =>
-      val ignore = ignoreIfForcedVersion && res.forceVersions.get(c.module).contains(c.version)
+    val conflicts = coursier.graph.Conflict.conflicted(res).filter { c =>
+      val conflict = c.conflict
+      val ignore = ignoreIfForcedVersion && res.forceVersions.get(conflict.module).contains(conflict.version)
       !ignore &&
-        include.exists(_.matches(c.module)) &&
-        !exclude.exists(_.matches(c.module))
+        include.exists(_.matches(conflict.module)) &&
+        !exclude.exists(_.matches(conflict.module))
     }
 
     if (conflicts.isEmpty)
@@ -32,13 +33,39 @@ final case class Strict(
 
   def tryResolve(res: Resolution, conflict: EvictedDependencies): Either[UnsatisfiableRule, Resolution] =
     Left(new UnsatisfiableRule(res, this, conflict))
+
+  override def repr: String = {
+    val b = new StringBuilder("Strict(")
+    var anyElem = false
+    if (include.nonEmpty) {
+      anyElem = true
+      b ++= include.toVector.map(_.matcher.repr).sorted.mkString(" | ")
+    }
+    if (exclude.nonEmpty) {
+      if (anyElem)
+        b ++= ", "
+      else
+        anyElem = true
+      b ++= "exclude="
+      b ++= exclude.toVector.map(_.matcher.repr).sorted.mkString(" | ")
+    }
+    if (!ignoreIfForcedVersion) {
+      if (anyElem)
+        b ++= ", "
+      else
+        anyElem = true
+      b ++= "ignoreIfForcedVersion=false"
+    }
+    b += ')'
+    b.result()
+  }
 }
 
 object Strict {
 
   final class EvictedDependencies(
     override val rule: Strict,
-    val evicted: Seq[Conflict]
+    val evicted: Seq[Conflicted]
   ) extends UnsatisfiedRule(
     rule,
     s"Found evicted dependencies:\n" +
