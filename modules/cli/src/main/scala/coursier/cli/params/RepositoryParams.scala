@@ -6,7 +6,7 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.install.Channel
+import coursier.cli.app.Channel
 import coursier.{Repositories, moduleString}
 import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository

@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.cli.app
 
 import java.io.FileInputStream
 import java.nio.charset.StandardCharsets

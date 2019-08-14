@@ -41,6 +41,12 @@ object Settings {
       "-language:higherKinds",
       "-language:implicitConversions"
     ),
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaBinaryVersion.value) match {
+        case Some((2, min)) if min <= 12 => Seq("-Ypartial-unification")
+        case _ => Nil
+      }
+    },
     javacOptions ++= Seq(
       "-source", "1.8",
       "-target", "1.8"

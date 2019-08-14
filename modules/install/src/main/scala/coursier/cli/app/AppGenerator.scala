@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.cli.app
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.math.BigInteger
@@ -14,9 +14,7 @@ import coursier.bootstrap.{Assembly, ClassLoaderContent, ClasspathEntry, Launche
 import coursier.Fetch
 import coursier.cache.{Cache, CacheLocks}
 import coursier.cache.internal.FileUtil
-import coursier.cli.app.{AppArtifacts, AppDescriptor, LauncherType, RawAppDescriptor, RawSource, Source}
-import coursier.cli.launch.Launch
-import coursier.cli.native.{NativeBuilder, NativeLauncherOptions, NativeLauncherParams}
+import coursier.cli.native.{NativeBuilder, NativeLauncherParams}
 import coursier.core.{Dependency, Repository}
 import coursier.util.{Artifact, Task}
 
@@ -224,13 +222,13 @@ object AppGenerator {
     verbosity: Int,
     mainDependencyOpt: Option[Dependency]
   ): Option[String] = {
-    val m = Launch.mainClasses(jars)
+    val m = MainClass.mainClasses(jars)
     if (verbosity >= 2) {
       System.err.println(s"Found ${m.size} main classes:")
       for (a <- m)
         System.err.println(s"  $a")
     }
-    Launch.retainedMainClassOpt(m, mainDependencyOpt) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
+    MainClass.retainedMainClassOpt(m, mainDependencyOpt) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
   }
 
   private def writeInfoFile(dest: Path, entries: Seq[(ZipEntry, Array[Byte])]): Unit = {
@@ -249,19 +247,6 @@ object AppGenerator {
         zos.close()
       if (fos != null)
         fos.close()
-    }
-  }
-
-  private def withTempFile[T](content: Array[Byte])(t: Path => T): T = {
-
-    val path = Files.createTempFile("temp", ".tmp")
-
-    try {
-      Files.write(path, content)
-      t(path)
-    }
-    finally {
-      Files.deleteIfExists(path)
     }
   }
 
@@ -317,7 +302,7 @@ object AppGenerator {
         lock(artifacts)
       }
 
-      lazy val upToDate = Files.exists(infoFile) && {
+      def upToDate = Files.exists(infoFile) && {
 
         // TODO Look for files on the side too (native launchers)
 
@@ -360,27 +345,26 @@ object AppGenerator {
         }
       }
 
-      val mainClass = {
+      (force || !upToDate) && {
 
-        def foundMainClassOpt0 =
-          foundMainClassOpt(
-            appArtifacts.shared.map(_._2),
-            appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet).map(_._2),
-            verbosity,
-            appArtifacts.fetchResult.resolution.rootDependencies.headOption
-          )
+        val mainClass = {
 
-        desc.mainClass
-          .orElse(foundMainClassOpt0)
-          .orElse(desc.defaultMainClass)
-          .getOrElse {
-            throw new NoMainClassFound
-          }
-      }
+          def foundMainClassOpt0 =
+            foundMainClassOpt(
+              appArtifacts.shared.map(_._2),
+              appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet).map(_._2),
+              verbosity,
+              appArtifacts.fetchResult.resolution.rootDependencies.headOption
+            )
 
-      if (!force && upToDate)
-        false
-      else {
+          desc.mainClass
+            .orElse(foundMainClassOpt0)
+            .orElse(desc.defaultMainClass)
+            .getOrElse {
+              throw new NoMainClassFound
+            }
+        }
+
         val extraEntries = {
 
           val lockFileEntry = {
@@ -417,7 +401,7 @@ object AppGenerator {
         }
 
         desc.launcherType match {
-          case LauncherType.Bootstrap | LauncherType.Hybrid | LauncherType.Standalone =>
+          case _: LauncherType.BootstrapLike =>
             val isStandalone = desc.launcherType != LauncherType.Bootstrap
             val sharedContentOpt =
               if (appArtifacts.shared.isEmpty) None
@@ -446,110 +430,47 @@ object AppGenerator {
               extraZipEntries = extraEntries
             )
 
-          case LauncherType.Assembly | LauncherType.GraalvmNativeImage =>
+          case LauncherType.Assembly =>
 
             assert(appArtifacts.shared.isEmpty) // just in case
 
-            val isNativeImage = desc.launcherType == LauncherType.GraalvmNativeImage
+            // FIXME Allow to adjust merge rules?
+            Assembly.create(
+              appArtifacts.fetchResult.files,
+              desc.javaOptions,
+              mainClass,
+              tmpDest,
+              extraZipEntries = extraEntries
+            )
 
-            val (assemblyDest, hookOpt, graalvmParamsOpt0) =
-              if (isNativeImage) {
-                val graalvmParams = graalvmParamsOpt.getOrElse {
-                  throw new NoGraalvmInstallationPassed
-                }
-                val tmpFile = Files.createTempFile(s"coursier-install-${dest.getFileName}-assembly", ".jar")
-                val hook: Thread =
-                  new Thread("cleanup") {
-                    override def run() =
-                      Files.deleteIfExists(tmpFile)
-                  }
-                Runtime.getRuntime.addShutdownHook(hook)
-                (tmpFile, Some(hook), Some(graalvmParams))
-              } else
-                (tmpDest, None, None)
+          case LauncherType.GraalvmNativeImage =>
 
-            try {
-              // FIXME Allow to adjust merge rules?
-              Assembly.create(
-                appArtifacts.fetchResult.files,
-                desc.javaOptions,
-                mainClass,
-                assemblyDest,
-                extraZipEntries = if (graalvmParamsOpt0.isEmpty) extraEntries else Nil
-              )
+            assert(appArtifacts.shared.isEmpty) // just in case
 
-              for (graalvmParams <- graalvmParamsOpt0) {
+            val graalvmParams = graalvmParamsOpt.getOrElse {
+              throw new NoGraalvmInstallationPassed
+            }
 
-                val shellPrependOptions = desc.graalvmOptions.toSeq.flatMap(_.shellPrependOptions)
+            val shellPrependOptions = desc.graalvmOptions.toSeq.flatMap(_.shellPrependOptions)
 
-                val imageDest =
-                  if (shellPrependOptions.isEmpty || LauncherBat.isWindows)
-                    tmpDest
-                  else
-                    dest.getParent.resolve(s".${dest.getFileName}.binary")
+            val res = GraalvmNativeImage.create(
+              graalvmParams,
+              desc.graalvmOptions.toSeq.flatMap(_.options),
+              shellPrependOptions,
+              tmpDest,
+              dest,
+              appArtifacts.fetchResult.files.map(_.toPath),
+              Some(desc.nameOpt.getOrElse(dest.getFileName.toString)),
+              mainClass,
+              desc.graalvmOptions.flatMap(_.reflectionConf),
+              verbosity
+            )
 
-                def generate(extraArgs: String*): Unit = {
-                  val startCmd =
-                    if (LauncherBat.isWindows)
-                      Seq(s"${graalvmParams.home}/bin/native-image.cmd")
-                    else
-                      Seq(s"${graalvmParams.home}/bin/native-image", "--no-server")
-                  val cmd = startCmd ++
-                    desc.graalvmOptions.toSeq.flatMap(_.options) ++
-                    graalvmParams.extraNativeImageOptions ++
-                    extraArgs ++
-                    Seq("-jar", assemblyDest.toString, imageDest.toString)
-                  if (verbosity >= 1)
-                    System.err.println(s"Running $cmd")
-                  val b = new ProcessBuilder(cmd: _*)
-                    .inheritIO()
-                  val p = b.start()
-                  val retCode = p.waitFor()
-                  if (retCode != 0)
-                    throw new ErrorRunningGraalvmNativeImage(retCode)
-                  if (LauncherBat.isWindows) {
-                    val exe = imageDest.getFileName.toString + ".exe"
-
-                    import scala.collection.JavaConverters._
-                    val s = Files.list(imageDest.getParent)
-                    val prefix = imageDest.getFileName + "."
-                    s.iterator().asScala.toVector.foreach { p =>
-                      val name = p.getFileName.toString
-                      if (name != exe && name.startsWith(prefix))
-                        Files.deleteIfExists(p)
-                    }
-                    s.close()
-                  }
-                }
-
-                desc.graalvmOptions.flatMap(_.reflectionConf) match {
-                  case None =>
-                    generate()
-                  case Some(conf) =>
-                    withTempFile(conf.getBytes(StandardCharsets.UTF_8)) { confFile =>
-                      generate(s"-H:ReflectionConfigurationFiles=${confFile.toAbsolutePath}")
-                    }
-                }
-
-                if (shellPrependOptions.nonEmpty) {
-                  // https://stackoverflow.com/a/246128/3714539
-                  val launcher =
-                    s"""#!/usr/bin/env bash
-                       |set -u
-                       |DIR="$$( cd "$$( dirname "$${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-                       |exec "$$DIR/${imageDest.getFileName}" ${shellPrependOptions.mkString(" ")} "$$@"
-                       |""".stripMargin
-                  Files.write(tmpDest, launcher.getBytes(StandardCharsets.UTF_8))
-                  coursier.bootstrap.util.FileUtil.tryMakeExecutable(tmpDest)
-                }
-
+            res match {
+              case Left(retCode) =>
+                throw new ErrorRunningGraalvmNativeImage(retCode)
+              case Right(()) =>
                 writeInfoFile(tmpInfo, extraEntries)
-              }
-            } finally {
-              for (hook <- hookOpt) {
-                hook.run()
-                Runtime.getRuntime.removeShutdownHook(hook)
-              }
             }
 
           case LauncherType.ScalaNative =>
@@ -562,7 +483,7 @@ object AppGenerator {
             val builder = NativeBuilder.load(fetch, appArtifacts.platformSuffixOpt.fold("")(_.stripPrefix("_native")))
 
             // FIXME Allow options to be tweaked
-            val params = NativeLauncherParams(NativeLauncherOptions()).toEither.right.get
+            val params = NativeLauncherParams.default()
 
             builder.build(
               mainClass,
@@ -589,7 +510,7 @@ object AppGenerator {
         }
 
         val actualTmpDest =
-          if (desc.launcherType.isExeOnWindows)
+          if (desc.launcherType.isExeOnWindows && LauncherBat.isWindows)
             tmpDest.getParent.resolve(tmpDest.getFileName.toString + ".exe")
           else
             tmpDest

@@ -15,7 +15,7 @@ final case class BootstrapParams(
 object BootstrapParams {
   def apply(options: BootstrapOptions): ValidatedNel[String, BootstrapParams] = {
     val sharedLaunchV = SharedLaunchParams(options.sharedLaunchOptions)
-    val nativeBootstrapV = NativeLauncherParams(options.nativeOptions)
+    val nativeBootstrapV = options.nativeOptions.params
     val specificV = BootstrapSpecificParams(
       options.options,
       sharedLaunchV

@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.cli.app
 
 import java.util.regex.Pattern.quote
 

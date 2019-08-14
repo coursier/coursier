@@ -9,7 +9,7 @@ import java.util.Locale
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
 import coursier.cache.Cache
-import coursier.cli.app.{AppDescriptor, RawAppDescriptor, RawSource, Source}
+import coursier.cli.app.{AppDescriptor, AppGenerator, Channel, Channels, RawAppDescriptor, RawSource, Source}
 import coursier.cli.util.Guard
 import coursier.core.Repository
 import coursier.ivy.IvyRepository

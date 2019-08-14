@@ -6,7 +6,7 @@ import java.time.Instant
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
-import coursier.cli.app.RawAppDescriptor
+import coursier.cli.app.{AppGenerator, Channels, RawAppDescriptor}
 import coursier.cli.util.Guard
 import coursier.util.Sync
 
