@@ -181,9 +181,9 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
       }
 
     S.bind(S.bind(run(initialRes))(validate0)) { res0 =>
-      S.bind(recurseOnRules(res0, params.resolutionParams.rules)) {
+      S.bind(recurseOnRules(res0, params.resolutionParams.actualRules)) {
         case (res0, conflicts) =>
-          S.map(validateAllRules(res0, params.resolutionParams.rules)) { _ =>
+          S.map(validateAllRules(res0, params.resolutionParams.actualRules)) { _ =>
             (res0, conflicts)
           }
       }
@@ -306,15 +306,17 @@ object Resolve extends PlatformResolve {
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
 
-    val reconciliation: Option[Module => Reconciliation] =
-      if (params.reconciliation.isEmpty) None
+    val reconciliation: Option[Module => Reconciliation] = {
+      val actualReconciliation = params.actualReconciliation
+      if (actualReconciliation.isEmpty) None
       else
         Some { m =>
-          params.reconciliation.find(_._1.matches(m)) match {
+          actualReconciliation.find(_._1.matches(m)) match {
             case Some((_, r)) => r
             case None         => Reconciliation.Default
           }
         }
+    }
 
     coursier.core.Resolution(
       rootDependencies = dependencies,

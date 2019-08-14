@@ -106,4 +106,17 @@ object Reconciliation {
       }
     }
   }
+
+  /**
+    * Strict version reconciliation.
+    *
+    * This particular instance behaves the same as [[Default]] when used by
+    * [[coursier.core.Resolution]]. Actual strict conflict manager is handled
+    * by `coursier.params.rule.Strict`, which is set up by `coursier.Resolve`
+    * when a strict reconciliation is added to it.
+    */
+  case object Strict extends Reconciliation {
+    def apply(versions: Seq[String]): Option[String] =
+      Default(versions)
+  }
 }

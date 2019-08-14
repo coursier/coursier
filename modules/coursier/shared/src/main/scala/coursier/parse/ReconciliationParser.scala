@@ -20,7 +20,8 @@ object ReconciliationParser {
     v match {
       case "default" => Right(m -> Reconciliation.Default)
       case "relaxed" => Right(m -> Reconciliation.Relaxed)
-      case _         => Left(s"Unknown reconciliation '$v'")
+      case "strict" => Right(m -> Reconciliation.Strict)
+      case _ => Left(s"Unknown reconciliation '$v'")
     }
   }
 }
