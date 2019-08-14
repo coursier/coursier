@@ -70,9 +70,6 @@ object DontBumpRootDependencies {
   def apply(): DontBumpRootDependencies =
     DontBumpRootDependencies(ModuleMatchers.all)
 
-  def apply(matcher: ModuleMatchers, matcher1: ModuleMatchers, matchers: ModuleMatchers*): DontBumpRootDependencies =
-    DontBumpRootDependencies(matchers.foldLeft(matcher + matcher1)(_ + _))
-
   final class BumpedRootDependencies(
     val bumpedRootDependencies: Seq[(Dependency, String)],
     override val rule: DontBumpRootDependencies

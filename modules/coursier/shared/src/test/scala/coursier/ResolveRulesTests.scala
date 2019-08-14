@@ -1,10 +1,11 @@
 package coursier
 
+import coursier.core.Reconciliation
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
-import coursier.util.ModuleMatcher
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -332,6 +333,29 @@ object ResolveRulesTests extends TestSuite {
           }
 
           assert(evicted == expectedEvicted)
+        }
+      }
+
+      'viaReconciliation - async {
+
+        val params = ResolutionParams()
+          .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        ex match {
+          case f: StrictRule =>
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
         }
       }
     }
