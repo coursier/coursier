@@ -1,5 +1,7 @@
 package coursier
 
+import java.util.concurrent.ConcurrentHashMap
+
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{Activation, DependencySet, Exclusions, Reconciliation}
 import coursier.error.ResolutionError
@@ -310,11 +312,22 @@ object Resolve extends PlatformResolve {
       val actualReconciliation = params.actualReconciliation
       if (actualReconciliation.isEmpty) None
       else
-        Some { m =>
-          actualReconciliation.find(_._1.matches(m)) match {
-            case Some((_, r)) => r
-            case None         => Reconciliation.Default
-          }
+        Some {
+          val cache = new ConcurrentHashMap[Module, Reconciliation]
+          m =>
+            val reconciliation = cache.get(m)
+            if (reconciliation == null) {
+              val rec = actualReconciliation.find(_._1.matches(m)) match {
+                case Some((_, r)) => r
+                case None => Reconciliation.Default
+              }
+              val prev = cache.putIfAbsent(m, rec)
+              if (prev == null)
+                rec
+              else
+                prev
+            } else
+              reconciliation
         }
     }
 

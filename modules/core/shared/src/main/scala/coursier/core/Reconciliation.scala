@@ -119,4 +119,12 @@ object Reconciliation {
     def apply(versions: Seq[String]): Option[String] =
       Default(versions)
   }
+
+  def apply(input: String): Option[Reconciliation] =
+    input match {
+      case "default" => Some(Default)
+      case "relaxed" => Some(Relaxed)
+      case "strict" => Some(Strict)
+      case _ => None
+    }
 }

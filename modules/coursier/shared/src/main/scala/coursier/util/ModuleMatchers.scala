@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.Module
+import coursier.core.{Module, ModuleName, Organization}
 
 final case class ModuleMatchers(
   exclude: Set[ModuleMatcher],
@@ -31,5 +31,12 @@ object ModuleMatchers {
 
   def all: ModuleMatchers =
     ModuleMatchers(Set.empty, Set.empty)
+
+  def only(mod: Module): ModuleMatchers =
+    ModuleMatchers(Set.empty, Set(ModuleMatcher(mod)), includeByDefault = false)
+  def only(mod: ModuleMatcher): ModuleMatchers =
+    ModuleMatchers(Set.empty, Set(mod), includeByDefault = false)
+  def only(org: Organization, name: ModuleName): ModuleMatchers =
+    ModuleMatchers(Set.empty, Set(ModuleMatcher(Module(org, name, Map.empty))), includeByDefault = false)
 
 }
