@@ -134,6 +134,18 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       Deps.jansi % "shaded",
       Deps.jlineTerminalJansi % "shaded"
     ),
+    packageBin.in(Compile) := {
+      // manually editing files under META-INF/services until sbt-shading does it automatically
+      val previous = packageBin.in(Compile).value
+      val new0 = new File(previous.getParentFile, s"${previous.getName.stripSuffix(".jar")}-edited.jar")
+      ZipUtil.addToZip(
+        previous,
+	new0,
+	Seq(
+	  "META-INF/services/org.jline.terminal.spi.JansiSupport" -> "coursier.cache.shaded.org.jline.terminal.spi.JansiSupport\n".getBytes("UTF-8"))
+      )
+      new0
+    }
   )
   .jsSettings(
     name := "fetch-js",
