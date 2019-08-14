@@ -270,18 +270,11 @@ final class ResolutionParams private (
   def addExclusions(exclusions: (Organization, ModuleName)*): ResolutionParams =
     copy(exclusions = this.exclusions ++ exclusions)
 
-  def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] = {
-
-    val reconciliation0 = reconciliation.map {
+  def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] =
+    reconciliation.map {
       case (m, Reconciliation.Strict) => (m, Reconciliation.Default)
       case other => other
     }
-
-    reconciliation0
-      .reverse
-      .dropWhile(_._2 == Reconciliation.Default)
-      .reverse
-  }
 
   lazy val actualRules: Seq[(Rule, RuleResolution)] = {
 
