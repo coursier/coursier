@@ -6,7 +6,7 @@ import coursier.cache.internal.FileUtil
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
 
 final case class NexusDocker(base: String, shutdown: () => Unit)
@@ -17,7 +17,8 @@ object NexusDocker {
     basePath: String,
     // can't find a way to get back a randomly assigned port (even following https://github.com/spotify/docker-client/issues/625)
     // so that one has to be specified
-    hostPort: Int
+    hostPort: Int,
+    timeout: Duration = 2.minutes
   ): NexusDocker = {
 
     val addr = s"localhost:$hostPort"
@@ -79,7 +80,13 @@ object NexusDocker {
         } else
           throw new Exception(s"Timeout when waiting for container for $image to be up-and-running")
 
-      loop(60)
+      val retryCount =
+        if (timeout.isFinite)
+          (timeout / retryDuration).ceil.toInt
+        else
+          Int.MaxValue
+
+      loop(retryCount)
 
       NexusDocker(base, () => shutdown())
     } catch {
