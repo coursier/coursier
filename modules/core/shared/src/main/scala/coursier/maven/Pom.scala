@@ -283,15 +283,12 @@ object Pom {
 
       val scm = pom.children
         .find(_.label == "scm")
-        .map { n =>
-          for {
-            url <- text(n, "url", "A publicly browsable repository").right
-            connection <- text(n, "connection", "Requires read access").right
-            devCon <- text(n, "developerConnection", "Requires write access").right
-          } yield Info.Scm(url, connection, devCon)
-        }
-        .collect {
-          case Right(d) => d
+        .flatMap { n =>
+          Option(Info.Scm(
+            text(n, "url", "A publicly browsable repository").right.toOption,
+            text(n, "connection", "Requires read access").right.toOption,
+            text(n, "developerConnection", "Requires write access").right.toOption
+          )).filter(scm => scm.url.isDefined || scm.connection.isDefined || scm.developerConnection.isDefined)
         }
 
       val finalProjModule = projModule.copy(organization = groupId)

@@ -271,9 +271,9 @@ object Info {
   )
 
   final case class Scm(
-    url: String,
-    connection: String,
-    developerConnection: String
+    url: Option[String],
+    connection: Option[String],
+    developerConnection: Option[String]
   )
 
   val empty = Info("", "", Nil, Nil, None, None)
