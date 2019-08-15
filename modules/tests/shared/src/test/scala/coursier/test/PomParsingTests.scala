@@ -284,7 +284,6 @@ object PomParsingTests extends TestSuite {
        |    <scm>
        |      <url>https://github.com/coursier/coursier</url>
        |      <connection>scm:git:git@github.com:coursier/coursier.git</connection>
-       |      <developerConnection>scm:git:git@github.com:coursier/coursier_DEV.git</developerConnection>
        |    </scm>
        |</project>""".stripMargin
 
@@ -298,9 +297,9 @@ object PomParsingTests extends TestSuite {
         developers = Seq.empty,
         publication = None,
         scm = Some(Info.Scm(
-          url = "https://github.com/coursier/coursier",
-          connection = "scm:git:git@github.com:coursier/coursier.git",
-          developerConnection = "scm:git:git@github.com:coursier/coursier_DEV.git"
+          url = Some("https://github.com/coursier/coursier"),
+          connection = Some("scm:git:git@github.com:coursier/coursier.git"),
+          developerConnection = None
         )
       ))))
 
