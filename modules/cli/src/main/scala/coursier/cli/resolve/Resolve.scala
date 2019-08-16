@@ -28,7 +28,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     */
   def handleScaladexDependencies(
     params: ResolveParams,
-    pool: ExecutorService
+    pool: ExecutorService,
+    scalaVersion: String
   ): Task[List[Dependency]] =
     if (params.dependency.scaladexLookups.isEmpty)
       Task.point(Nil)
@@ -39,7 +40,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
 
       val tasks = params.dependency.scaladexLookups.map { s =>
-        Dependencies.handleScaladexDependency(s, params.resolution.selectedScalaVersion, scaladex, params.output.verbosity)
+        Dependencies.handleScaladexDependency(s, scalaVersion, scaladex, params.output.verbosity)
           .map {
             case Left(error) => Validated.invalidNel(error)
             case Right(l) => Validated.validNel(l)
@@ -109,7 +110,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     args: Seq[String],
     printOutput: Boolean = true,
     force: Boolean = false
-  ): Task[Resolution] = {
+  ): Task[(Resolution, String, Option[String])] = {
 
     val cache = params.cache.cache(
       pool,
@@ -198,15 +199,15 @@ object Resolve extends CaseApp[ResolveOptions] {
             )
         }
 
-        (deps0, repositories)
+        (deps0, repositories, scalaVersion, platformOpt)
       }
     }
 
     lift {
 
-      val (deps, repositories) = unlift(Task.fromEither(depsAndReposOrError))
+      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError))
 
-      val scaladexDeps = unlift(handleScaladexDependencies(params, pool))
+      val scaladexDeps = unlift(handleScaladexDependencies(params, pool, scalaVersion))
 
       val deps0 = deps ++ scaladexDeps
 
@@ -257,6 +258,8 @@ object Resolve extends CaseApp[ResolveOptions] {
         Output.printResolutionResult(
           printResultStdout = outputToStdout,
           params,
+          scalaVersion,
+          platformOpt,
           res,
           stdout,
           stderr,
@@ -267,7 +270,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       for (err <- errors)
         stderr.println(err.getMessage)
 
-      res
+      (res, scalaVersion, platformOpt)
     }
   }
 

@@ -4,8 +4,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.params.{DependencyParams, OutputParams, RepositoryParams}
 import coursier.params.{CacheParams, ResolutionParams}
-import coursier.parse.ModuleParser
-import coursier.util.ModuleMatcher
+import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
 final case class ResolveParams(
   cache: CacheParams,
@@ -17,7 +16,7 @@ final case class ResolveParams(
   benchmarkCache: Boolean,
   tree: Boolean,
   reverseTree: Boolean,
-  whatDependsOn: Seq[ModuleMatcher],
+  whatDependsOn: Seq[JavaOrScalaModule],
   conflicts: Boolean,
   classpathOrder: Boolean
 ) {
@@ -39,15 +38,9 @@ object ResolveParams {
     val benchmark = options.benchmark
     val tree = options.tree
     val reverseTree = options.reverseTree
-    val whatDependsOnV =
-      resolutionV.toOption.map(_.selectedScalaVersion) match {
-        case None =>
-          Validated.validNel(Nil)
-        case Some(sv) =>
-          options.whatDependsOn.traverse(
-            ModuleParser.module(_, sv).toValidatedNel
-          )
-      }
+    val whatDependsOnV = options.whatDependsOn.traverse(
+      ModuleParser.javaOrScalaModule(_).toValidatedNel
+    )
 
     val conflicts = options.conflicts
 
@@ -79,7 +72,7 @@ object ResolveParams {
           benchmarkCache,
           tree,
           reverseTree,
-          whatDependsOn.map(m => ModuleMatcher(m)),
+          whatDependsOn,
           conflicts,
           classpathOrder
         )

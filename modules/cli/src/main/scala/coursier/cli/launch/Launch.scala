@@ -13,7 +13,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.Resolution
-import coursier.parse.{DependencyParser, JavaOrScalaDependency}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.annotation.tailrec
@@ -132,6 +132,8 @@ object Launch extends CaseApp[LaunchOptions] {
   def loaderHierarchy(
     res: Resolution,
     files: Seq[(Artifact, File)],
+    scalaVersion: String,
+    platformOpt: Option[String],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
     extraJars: Seq[File],
@@ -141,7 +143,7 @@ object Launch extends CaseApp[LaunchOptions] {
     val alreadyAdded = Set.empty[File] // unused???
     val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-        val subRes = res.subset(deps)
+        val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))))
         val artifacts = coursier.Artifacts.artifacts0(
           subRes,
           artifactParams.classifiers,
@@ -176,7 +178,7 @@ object Launch extends CaseApp[LaunchOptions] {
   ): Task[(String, () => Option[Int])] =
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
-      (res, files) = t
+      (res, scalaVersion, platformOpt, files) = t
       mainClass <- {
         params.shared.mainClassOpt match {
           case Some(c) =>
@@ -248,6 +250,8 @@ object Launch extends CaseApp[LaunchOptions] {
         val hierarchy = loaderHierarchy(
           res,
           files,
+          scalaVersion,
+          platformOpt,
           params.shared.sharedLoader,
           params.shared.artifact,
           params.shared.extraJars.map(_.toFile),

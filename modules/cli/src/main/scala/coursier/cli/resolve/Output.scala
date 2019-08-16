@@ -6,7 +6,8 @@ import coursier.cli.params.OutputParams
 import coursier.core.{Dependency, Resolution}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
-import coursier.util.Print
+import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.util.{ModuleMatcher, Print}
 
 object Output {
 
@@ -39,6 +40,8 @@ object Output {
   def printResolutionResult(
     printResultStdout: Boolean,
     params: ResolveParams,
+    scalaVersion: String,
+    platformOpt: Option[String],
     res: Resolution,
     stdout: PrintStream,
     stderr: PrintStream,
@@ -51,15 +54,18 @@ object Output {
       val withExclusions = params.output.verbosity >= 1
 
       val depsStr =
-        if (params.whatDependsOn.nonEmpty)
+        if (params.whatDependsOn.nonEmpty) {
+          val matchers = params.whatDependsOn
+            .map(_.module(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion))
+            .map(ModuleMatcher(_))
           Print.dependencyTree(
             res,
-            roots = res.minDependencies.filter(f => params.whatDependsOn.exists(m => m.matches(f.module))).toSeq,
+            roots = res.minDependencies.filter(f => matchers.exists(m => m.matches(f.module))).toSeq,
             printExclusions = withExclusions,
             reverse = true,
             colors = colors
           )
-        else if (params.reverseTree || params.tree)
+        } else if (params.reverseTree || params.tree)
           Print.dependencyTree(
             res,
             printExclusions = withExclusions,

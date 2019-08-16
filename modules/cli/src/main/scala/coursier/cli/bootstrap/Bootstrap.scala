@@ -13,6 +13,7 @@ import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.native.NativeBuilder
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.Resolution
+import coursier.parse.JavaOrScalaModule
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
@@ -61,10 +62,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, Seq[(Artifact, File)], String)] =
+  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)], String)] =
     for {
       t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
-      (res, files) = t
+      (res, scalaVersion, platformOpt, files) = t
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
@@ -86,7 +87,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             }
         }
       }
-    } yield (res, files, mainClass)
+    } yield (res, scalaVersion, platformOpt, files, mainClass)
 
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
@@ -129,7 +130,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       Nil
     )
 
-    val (res, files, mainClass) = t.attempt.unsafeRun()(ec) match {
+    val (res, scalaVersion, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
       case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
         System.err.println(e.message)
         sys.exit(1)
@@ -216,7 +217,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             case ((done, acc), name) =>
 
               val deps = params.sharedLaunch.sharedLoader.loaderDependencies.getOrElse(name, Nil)
-              val subRes = res.subset(deps)
+              val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))))
 
               val m = coursier.Artifacts.artifacts0(
                 subRes,
