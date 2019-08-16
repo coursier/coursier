@@ -21,7 +21,7 @@ object Fetch extends CaseApp[FetchOptions] {
     args: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, Seq[(Artifact, File)])] = {
+  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)])] = {
 
     val resolveTask = coursier.cli.resolve.Resolve.task(
       params.resolve,
@@ -38,7 +38,8 @@ object Fetch extends CaseApp[FetchOptions] {
     val cache = params.resolve.cache.cache[Task](pool, logger)
 
     for {
-      res <- resolveTask
+      t <- resolveTask
+      (res, scalaVersion, platformOpt) = t
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
@@ -71,7 +72,7 @@ object Fetch extends CaseApp[FetchOptions] {
             Task.point(())
         }
       }
-    } yield (res, artifactFiles)
+    } yield (res, scalaVersion, platformOpt, artifactFiles)
   }
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
@@ -109,7 +110,7 @@ object Fetch extends CaseApp[FetchOptions] {
             Output.errPrintln(e.getMessage)
             sys.exit(1)
           case Left(e) => throw e
-          case Right((_, files)) =>
+          case Right((_, _, _, files)) =>
             // Some progress lines seem to be scraped without this.
             Console.out.flush()
 

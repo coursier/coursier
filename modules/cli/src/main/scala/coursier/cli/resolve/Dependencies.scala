@@ -73,7 +73,7 @@ object Dependencies {
   def withExtraRepo(
     rawDependencies: Seq[String],
     extraDependencies: Seq[(JavaOrScalaDependency, Map[String, String])]
-  ): Either[Throwable, (List[JavaOrScalaDependency], Option[Map[(JavaOrScalaModule, String), URL]])] =
+  ): Either[Throwable, (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, String), URL])] =
     handleDependencies(rawDependencies) match {
       case Validated.Valid(l) =>
 
@@ -81,22 +81,18 @@ object Dependencies {
 
         val deps = l0.map(_._1)
 
-        val extraRepoOpt = {
-
+        val extraRepo =
           // Any dependencies with URIs should not be resolved with a pom so this is a
           // hack to add all the deps with URIs to the FallbackDependenciesRepository
           // which will be used during the resolve
-          val m = l0.flatMap {
+          l0.flatMap {
             case (dep, extraParams) =>
               extraParams.get("url").map { url =>
                 (dep.module, dep.version) -> new URL(URLDecoder.decode(url, "UTF-8"))
               }
           }.toMap
 
-          Some(m).filter(_.nonEmpty)
-        }
-
-        Right((deps, extraRepoOpt))
+        Right((deps, extraRepo))
 
       case Validated.Invalid(err) =>
         Left(new ResolveException(

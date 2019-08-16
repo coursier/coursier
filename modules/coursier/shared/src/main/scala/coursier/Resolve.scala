@@ -6,6 +6,7 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{Activation, DependencySet, Exclusions, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
+import coursier.graph.ReverseModuleTree
 import coursier.internal.Typelevel
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}

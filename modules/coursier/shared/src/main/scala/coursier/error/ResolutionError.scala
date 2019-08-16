@@ -2,8 +2,10 @@ package coursier.error
 
 import coursier.core.{Dependency, Module, Resolution}
 import coursier.error.conflict.UnsatisfiedRule
+import coursier.graph.ReverseModuleTree
 import coursier.params.rule.Rule
-import coursier.util.Print
+import coursier.util.{Print, Tree}
+import coursier.util.Print.{Colors, compatibleVersions}
 
 sealed abstract class ResolutionError(
   val resolution: Resolution,
@@ -38,12 +40,40 @@ object ResolutionError {
   ) extends Simple(
     resolution,
     "Conflicting dependencies:\n" +
-      Print.dependenciesUnknownConfigs(
-        dependencies.toVector,
-        Map.empty,
-        printExclusions = false,
-        useFinalVersions = false
-      )
+      {
+        val roots = resolution.conflicts.map(_.module)
+        val trees = ReverseModuleTree(resolution, roots = roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes)))
+        val colors0 = Colors.get(coursier.core.compatibility.hasConsole)
+
+        val renderedTrees = trees.map { t =>
+          val rendered = Tree(t.dependees.toVector)(_.dependees)
+            .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) { node =>
+              if (node.excludedDependsOn)
+                s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
+              else if (node.dependsOnModule == t.module) {
+                val assumeCompatibleVersions = compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+
+                s"${node.module}:${node.reconciledVersion} " +
+                  (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+                  s"wants ${node.dependsOnVersion}" +
+                  colors0.reset
+              } else if (node.dependsOnVersion != node.dependsOnReconciledVersion) {
+                val assumeCompatibleVersions = compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+
+                s"${node.module}:${node.reconciledVersion} " +
+                  (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+                  s"wants ${node.dependsOnModule}:${node.dependsOnVersion}" +
+                  colors0.reset
+              } else
+                s"${node.module}:${node.reconciledVersion}"
+            }
+
+          s"${t.module.repr}:${t.dependees.map(_.dependsOnVersion).distinct.mkString(" or ")} wanted by\n\n" +
+            rendered + "\n"
+        }
+
+        renderedTrees.mkString("\n")
+      }
   )
 
   sealed abstract class Simple(resolution: Resolution, message: String, cause: Throwable = null)

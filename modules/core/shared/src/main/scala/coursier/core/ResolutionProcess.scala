@@ -294,7 +294,7 @@ object ResolutionProcess {
               Left {
                 ver match {
                   case Left(itv) =>
-                    s"No version found for $itv in $listingUrl"
+                    s"No version found for ${itv.repr} in $listingUrl"
                   case Right((kind, _)) =>
                     s"No latest ${kind.name} version found in $listingUrl"
                 }
@@ -328,7 +328,7 @@ object ResolutionProcess {
             case Right((_, listingUrl)) =>
               ver match {
                 case Left(itv) =>
-                  s"No version found for $itv in $listingUrl"
+                  s"No version found for ${itv.repr} in $listingUrl"
                 case Right((kind, _)) =>
                   s"No latest ${kind.name} version found in $listingUrl"
               }
