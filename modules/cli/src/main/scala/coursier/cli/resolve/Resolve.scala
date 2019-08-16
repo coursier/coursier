@@ -16,6 +16,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
+import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
 import scala.concurrent.ExecutionContext
@@ -121,24 +122,37 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       lift {
 
-        val (javaOrScalaDeps, urlDepsOpt) = unlift {
+        val (javaOrScalaDeps, urlDeps) = unlift {
           Dependencies.withExtraRepo(
             args,
-            params.dependency.intransitiveDependencies ++ params.dependency.sbtPluginDependencies
+            params.dependency.intransitiveDependencies
           )
         }
 
-        val (scalaVersion, _, deps) = unlift {
+        val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
+          Dependencies.withExtraRepo(
+            Nil,
+            params.dependency.sbtPluginDependencies
+          )
+        }
+
+        val (scalaVersion, platformOpt, deps) = unlift {
           AppArtifacts.dependencies(
             cache,
             params.repositories.repositories,
             params.dependency.platformOpt,
             params.output.verbosity,
-            javaOrScalaDeps
+            javaOrScalaDeps,
+            constraintOpt = params.resolution.scalaVersion.map { s =>
+              val reworked =
+                if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
+                else s
+              coursier.core.Parse.versionConstraint(reworked)
+            }
           ).left.map(err => new Exception(err))
         }
 
-        val extraRepoOpt = urlDepsOpt.map { m =>
+        val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
           val m0 = m.map {
             case ((mod, v), url) =>
               ((mod.module(scalaVersion), v), (url, true))
@@ -150,7 +164,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         }
 
         val deps0 = Dependencies.addExclusions(
-          deps,
+          deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
           params.dependency.exclude.map { m =>
             val m0 = m.module(scalaVersion)
             (m0.organization, m0.name)

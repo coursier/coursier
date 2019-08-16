@@ -26,7 +26,7 @@ final case class DependencyParams(
 }
 
 object DependencyParams {
-  def apply(options: DependencyOptions): ValidatedNel[String, DependencyParams] = {
+  def apply(options: DependencyOptions, forcedScalaVersionOpt: Option[String]): ValidatedNel[String, DependencyParams] = {
 
     val excludeV =
       ModuleParser.javaOrScalaModules(options.exclude).either match {
@@ -137,8 +137,17 @@ object DependencyParams {
               "1.0"
             case arr => arr.take(2).mkString(".")
           }
+          val scalaVer = forcedScalaVersionOpt
+            .map(_.split('.').take(2).mkString("."))
+            .getOrElse {
+              sbtVer match {
+                case "0.13" => "2.10"
+                case "1.0" => "2.12"
+                case _ => "2.12" // ???
+              }
+            }
           Map(
-            "scalaVersion" -> "2.12", // FIXME Apply later when we know the selected scala version
+            "scalaVersion" -> scalaVer, // FIXME Apply later when we know the selected scala version?
             "sbtVersion" -> sbtVer
           )
         }
