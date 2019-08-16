@@ -75,12 +75,16 @@ object Print {
     l0.mkString("\n")
   }
 
-  def compatibleVersions(first: String, second: String): Boolean = {
+  def compatibleVersions(compatibleWith: String, selected: String): Boolean = {
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
 
-    first.split('.').take(2).toSeq == second.split('.').take(2).toSeq
+    val c = Parse.versionConstraint(compatibleWith)
+    if (c.interval == VersionInterval.zero)
+      compatibleWith.split('.').take(2).toSeq == selected.split('.').take(2).toSeq
+    else
+      c.interval.contains(Version(selected))
   }
 
   def dependencyTree(
