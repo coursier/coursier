@@ -78,6 +78,7 @@ object Conflict {
         val node = ReverseModuleTree.Node(
           dep.module,
           dep.version,
+          dep.version,
           dep.module,
           dep.version,
           version,

@@ -67,7 +67,7 @@ object ReverseModuleTree {
 
     val alreadySeen = new mutable.HashSet[ModuleTree]
     val dependees = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
-    val versions = new mutable.HashMap[Module, String]
+    val versions = new mutable.HashMap[Module, (String, String)]
     val toCheck = new mutable.Queue[ModuleTree]
 
     toCheck ++= moduleTrees
@@ -75,12 +75,12 @@ object ReverseModuleTree {
     while (toCheck.nonEmpty) {
       val elem = toCheck.dequeue()
       alreadySeen += elem
-      versions.put(elem.module, elem.reconciledVersion)
+      versions.put(elem.module, (elem.reconciledVersion, elem.retainedVersion))
       val children = elem.children
       toCheck ++= children.filterNot(alreadySeen)
       for (c <- children) {
         val b = dependees.getOrElseUpdate(c.module, new mutable.HashSet[(Module, String, Boolean)])
-        b.add((elem.module, c.reconciledVersion, false))
+        b.add((elem.module, c.retainedVersion, false))
       }
     }
 
@@ -93,15 +93,15 @@ object ReverseModuleTree {
 
     for {
       m <- roots
-      v <- versions.get(m)
-    } yield Node(m, v, m, v, v, excludedDependsOn = false, dependees0, versions0)
+      (reconciled, retained) <- versions.get(m)
+    } yield Node(m, reconciled, retained, m, reconciled, reconciled, excludedDependsOn = false, dependees0, versions0)
   }
 
   def fromDependencyTree(roots: Seq[Module], dependencyTrees: Seq[DependencyTree]): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
     val dependees = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
-    val versions = new mutable.HashMap[Module, String]
+    val versions = new mutable.HashMap[Module, (String, String)]
     val toCheck = new mutable.Queue[DependencyTree]
 
     toCheck ++= dependencyTrees
@@ -109,7 +109,7 @@ object ReverseModuleTree {
     while (toCheck.nonEmpty) {
       val elem = toCheck.dequeue()
       alreadySeen += elem
-      versions.put(elem.dependency.module, elem.reconciledVersion)
+      versions.put(elem.dependency.module, (elem.reconciledVersion, elem.retainedVersion))
       val children = elem.children
       toCheck ++= children.filterNot(alreadySeen)
       for (c <- children) {
@@ -127,8 +127,8 @@ object ReverseModuleTree {
 
     for {
       m <- roots
-      v <- versions.get(m)
-    } yield Node(m, v, m, v, v, excludedDependsOn = false, dependees0, versions0)
+      (reconciled, retained) <- versions.get(m)
+    } yield Node(m, reconciled, retained, m, reconciled, reconciled, excludedDependsOn = false, dependees0, versions0)
   }
 
   def apply(resolution: Resolution, roots: Seq[Module] = null, withExclusions: Boolean = false): Seq[ReverseModuleTree] = {
@@ -141,18 +141,19 @@ object ReverseModuleTree {
   private[graph] final case class Node(
     module: Module,
     reconciledVersion: String,
+    retainedVersion: String,
     dependsOnModule: Module,
     dependsOnVersion: String,
     dependsOnReconciledVersion: String,
     excludedDependsOn: Boolean,
     allDependees: Map[Module, Seq[(Module, String, Boolean)]],
-    versions: Map[Module, String]
+    versions: Map[Module, (String, String)]
   ) extends ReverseModuleTree {
     def dependees: Seq[Node] =
       for {
         (m, wantVer, excl) <- allDependees.getOrElse(module, Nil)
-        v <- versions.get(m)
-      } yield Node(m, v, module, wantVer, reconciledVersion, excl, allDependees, versions)
+        (reconciled, retained) <- versions.get(m)
+      } yield Node(m, reconciled, retained, module, wantVer, reconciledVersion, excl, allDependees, versions)
   }
 
 }
