@@ -1471,7 +1471,7 @@ final class Resolution private (
       .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
       .toList
 
-    helper(rootDeps, DependencySet.empty).toVector
+    (rootDeps ++ helper(rootDeps, DependencySet.empty)).distinct
   }
 
   def artifacts(): Seq[Artifact] =
