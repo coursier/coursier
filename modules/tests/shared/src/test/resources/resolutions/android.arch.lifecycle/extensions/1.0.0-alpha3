@@ -1,3 +1,4 @@
+android.arch.lifecycle:extensions:1.0.0-alpha3:default
 com.android.support:support-annotations:25.3.1:default
 android.arch.lifecycle:common:1.0.0-alpha3:default
 android.arch.core:core:1.0.0-alpha3:default
@@ -7,4 +8,3 @@ com.android.support:support-media-compat:25.3.1:default
 com.android.support:support-core-ui:25.3.1:default
 com.android.support:support-core-utils:25.3.1:default
 com.android.support:support-fragment:25.3.1:default
-android.arch.lifecycle:extensions:1.0.0-alpha3:default

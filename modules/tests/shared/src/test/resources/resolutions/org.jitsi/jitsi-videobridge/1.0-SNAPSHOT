@@ -1,3 +1,4 @@
+org.jitsi:jitsi-videobridge:1.0-SNAPSHOT:default
 org.apache.httpcomponents:httpcore:4.4.1:default
 org.apache.httpcomponents:httpcore-nio:4.4.1:default
 commons-logging:commons-logging:1.2:default
@@ -92,4 +93,3 @@ org.slf4j:slf4j-jdk14:1.7.7:default
 org.slf4j:osgi-over-slf4j:1.7.7:default
 org.slf4j:jul-to-slf4j:1.7.7:default
 rusv:agafua-syslog:0.4:default
-org.jitsi:jitsi-videobridge:1.0-SNAPSHOT:default

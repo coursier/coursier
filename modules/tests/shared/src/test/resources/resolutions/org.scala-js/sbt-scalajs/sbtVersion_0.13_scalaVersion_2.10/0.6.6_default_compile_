@@ -1,3 +1,4 @@
+org.scala-js:sbt-scalajs;sbtVersion=0.13;scalaVersion=2.10:0.6.6:compile
 org.scala-lang:scala-library:2.10.6:default
 org.scala-js:scalajs-ir_2.10:0.6.6:default
 args4j:args4j:2.0.16:default
@@ -15,4 +16,3 @@ org.webjars:envjs:1.2:default
 org.scala-js:scalajs-js-envs_2.10:0.6.6:default
 org.scala-sbt:test-interface:1.0:default
 org.scala-js:scalajs-sbt-test-adapter_2.10:0.6.6:default
-org.scala-js:sbt-scalajs;sbtVersion=0.13;scalaVersion=2.10:0.6.6:compile

@@ -1,3 +1,4 @@
+https://repo1.maven.org/maven2/io/get-coursier/coursier-cli_2.12/1.1.0-M8/coursier-cli_2.12-1.1.0-M8.jar
 https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.6/scala-library-2.12.6.jar
 https://repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_2.12/1.1.0/scala-xml_2.12-1.1.0.jar
 https://repo1.maven.org/maven2/io/get-coursier/coursier-core_2.12/1.1.0-M8/coursier-core_2.12-1.1.0-M8.jar
@@ -15,4 +16,3 @@ https://repo1.maven.org/maven2/org/typelevel/cats-kernel_2.12/1.4.0/cats-kernel_
 https://repo1.maven.org/maven2/org/typelevel/cats-core_2.12/1.4.0/cats-core_2.12-1.4.0.jar
 https://repo1.maven.org/maven2/io/argonaut/argonaut_2.12/6.2.1/argonaut_2.12-6.2.1.jar
 https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M8/argonaut-shapeless_6.2_2.12-1.2.0-M8.jar
-https://repo1.maven.org/maven2/io/get-coursier/coursier-cli_2.12/1.1.0-M8/coursier-cli_2.12-1.1.0-M8.jar

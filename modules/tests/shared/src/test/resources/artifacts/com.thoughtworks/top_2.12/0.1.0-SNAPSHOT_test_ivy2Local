@@ -1,3 +1,5 @@
+file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12-tests.jar
+file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12.jar
 https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar
 https://repo1.maven.org/maven2/org/reactivestreams/reactive-streams/1.0.2/reactive-streams-1.0.2.jar
 https://repo1.maven.org/maven2/io/reactivex/rxjava2/rxjava/2.2.8/rxjava-2.2.8.jar
@@ -11,5 +13,3 @@ https://repo1.maven.org/maven2/com/typesafe/akka/akka-actor_2.12/2.5.21/akka-act
 https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar
 https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar
 https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12-tests.jar
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12.jar

@@ -1,3 +1,4 @@
+com.github.ddispaltro:sbt-reactjs;sbtVersion=0.13;scalaVersion=2.10:0.6.8:compile
 org.webjars:react:0.14.8:default
 org.webjars.npm:private:0.1.6:default
 org.webjars.npm:commander:2.5.0:default
@@ -70,4 +71,3 @@ org.webjars:webjars-locator:0.25:default
 com.typesafe:npm_2.10:1.1.1:default
 com.typesafe.sbt:sbt-web;sbtVersion=0.13;scalaVersion=2.10:1.2.1:compile
 com.typesafe.sbt:sbt-js-engine;sbtVersion=0.13;scalaVersion=2.10:1.1.3:compile
-com.github.ddispaltro:sbt-reactjs;sbtVersion=0.13;scalaVersion=2.10:0.6.8:compile

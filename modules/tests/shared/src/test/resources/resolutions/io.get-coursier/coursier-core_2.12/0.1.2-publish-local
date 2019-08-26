@@ -1,4 +1,4 @@
+io.get-coursier:coursier-core_2.12:0.1.2-publish-local:compile
 org.scala-lang:scala-library:2.12.8:default
 io.get-coursier:coursier-util_2.12:0.1.2-publish-local:compile
 org.scala-lang.modules:scala-xml_2.12:1.2.0:default
-io.get-coursier:coursier-core_2.12:0.1.2-publish-local:compile

@@ -1,3 +1,4 @@
+http://repository.splicemachine.com/nexus/content/groups/public/com/splicemachine/splice_spark/2.8.0.1915-SNAPSHOT/splice_spark-2.8.0.1915-SNAPSHOT.jar
 https://repo1.maven.org/maven2/com/sun/jersey/jersey-core/1.19.4/jersey-core-1.19.4.jar
 https://repo1.maven.org/maven2/org/codehaus/jackson/jackson-core-asl/1.9.13/jackson-core-asl-1.9.13.jar
 https://repo1.maven.org/maven2/org/codehaus/jackson/jackson-mapper-asl/1.9.13/jackson-mapper-asl-1.9.13.jar
@@ -227,4 +228,3 @@ https://repo1.maven.org/maven2/io/airlift/stats/0.144/stats-0.144.jar
 https://repo1.maven.org/maven2/com/facebook/presto/orc/orc-protobuf/1/orc-protobuf-1.jar
 https://repo1.maven.org/maven2/com/databricks/spark-avro_2.11/4.0.0/spark-avro_2.11-4.0.0.jar
 http://repository.splicemachine.com/nexus/content/groups/public/com/splicemachine/hbase_sql/2.8.0.1915-SNAPSHOT/hbase_sql-2.8.0.1915-20190427.052130-10-mapr6.1.0.jar
-http://repository.splicemachine.com/nexus/content/groups/public/com/splicemachine/splice_spark/2.8.0.1915-SNAPSHOT/splice_spark-2.8.0.1915-SNAPSHOT.jar

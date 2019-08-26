@@ -1,3 +1,4 @@
+com.netflix.karyon:karyon-eureka:1.0.28:default
 org.slf4j:slf4j-api:1.7.12:default
 javax.inject:javax.inject:1:default
 com.google.code.findbugs:jsr305:3.0.0:default
@@ -61,4 +62,3 @@ com.google.inject:guice:4.0:default
 com.google.code.findbugs:jsr305:3.0.0:default
 com.netflix.governator:governator-annotations:1.8.1:default
 com.netflix.eureka:eureka-client:1.2.0:default
-com.netflix.karyon:karyon-eureka:1.0.28:default

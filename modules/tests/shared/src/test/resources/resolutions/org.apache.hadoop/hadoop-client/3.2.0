@@ -1,3 +1,4 @@
+org.apache.hadoop:hadoop-client:3.2.0:default
 org.apache.hadoop:hadoop-annotations:3.2.0:default
 com.google.guava:guava:16.0.1:default
 commons-cli:commons-cli:1.2:default
@@ -220,4 +221,3 @@ org.apache.hadoop:hadoop-mapreduce-client-core:3.2.0:default
 org.apache.hadoop:hadoop-mapreduce-client-common:3.2.0:default
 org.apache.hadoop:hadoop-mapreduce-client-jobclient:3.2.0:default
 org.apache.hadoop:hadoop-annotations:3.2.0:default
-org.apache.hadoop:hadoop-client:3.2.0:default

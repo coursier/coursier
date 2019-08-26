@@ -1,3 +1,4 @@
+io.monix:monix_2.12:2.3.0:default
 org.scala-lang:scala-library:2.12.2:default
 io.monix:monix-types_2.12:2.3.0:default
 org.reactivestreams:reactive-streams:1.0.0:default
@@ -5,4 +6,3 @@ io.monix:monix-execution_2.12:2.3.0:default
 io.monix:monix-eval_2.12:2.3.0:default
 org.jctools:jctools-core:2.0.1:default
 io.monix:monix-reactive_2.12:2.3.0:default
-io.monix:monix_2.12:2.3.0:default

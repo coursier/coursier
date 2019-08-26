@@ -1,3 +1,4 @@
+org.glassfish.jersey.core:jersey-client:2.19:default
 javax.ws.rs:javax.ws.rs-api:2.0.1:default
 javax.annotation:javax.annotation-api:1.2:default
 org.glassfish.jersey.bundles.repackaged:jersey-guava:2.19:default
@@ -10,4 +11,3 @@ org.javassist:javassist:3.18.1-GA:default
 org.glassfish.hk2:hk2-locator:2.4.0-b25:default
 org.glassfish.hk2:osgi-resource-locator:1.0.1:default
 org.glassfish.jersey.core:jersey-common:2.19:default
-org.glassfish.jersey.core:jersey-client:2.19:default

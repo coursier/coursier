@@ -1,3 +1,4 @@
+io.get-coursier:coursier-cli_2.12:1.1.0-M8:default
 org.scala-lang:scala-library:2.12.6:default
 org.scala-lang.modules:scala-xml_2.12:1.1.0:default
 io.get-coursier:coursier-core_2.12:1.1.0-M8:default
@@ -15,4 +16,3 @@ org.typelevel:cats-kernel_2.12:1.4.0:default
 org.typelevel:cats-core_2.12:1.4.0:default
 io.argonaut:argonaut_2.12:6.2.1:default
 com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8:default
-io.get-coursier:coursier-cli_2.12:1.1.0-M8:default

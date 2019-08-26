@@ -1,3 +1,4 @@
+https://repo1.maven.org/maven2/sh/almond/scala-kernel_2.12.8/0.7.0/scala-kernel_2.12.8-0.7.0.jar
 https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar
 https://repo1.maven.org/maven2/sh/almond/interpreter-api_2.12/0.7.0/interpreter-api_2.12-0.7.0.jar
 https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar
@@ -109,4 +110,3 @@ https://repo1.maven.org/maven2/com/lihaoyi/ammonite-interp_2.12.8/1.6.9-15-6720d
 https://repo1.maven.org/maven2/com/lihaoyi/ammonite-terminal_2.12/1.6.9-15-6720d42/ammonite-terminal_2.12-1.6.9-15-6720d42.jar
 https://repo1.maven.org/maven2/com/lihaoyi/ammonite-repl_2.12.8/1.6.9-15-6720d42/ammonite-repl_2.12.8-1.6.9-15-6720d42.jar
 https://repo1.maven.org/maven2/sh/almond/scala-interpreter_2.12.8/0.7.0/scala-interpreter_2.12.8-0.7.0.jar
-https://repo1.maven.org/maven2/sh/almond/scala-kernel_2.12.8/0.7.0/scala-kernel_2.12.8-0.7.0.jar

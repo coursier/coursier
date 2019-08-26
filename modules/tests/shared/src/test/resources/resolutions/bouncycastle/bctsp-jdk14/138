@@ -1,4 +1,4 @@
+bouncycastle:bctsp-jdk14:138:default
 org.bouncycastle:bcprov-jdk14:1.38:default
 org.bouncycastle:bcmail-jdk14:1.38:default
 org.bouncycastle:bctsp-jdk14:1.38:default
-bouncycastle:bctsp-jdk14:138:default

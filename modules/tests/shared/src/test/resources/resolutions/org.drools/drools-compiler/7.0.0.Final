@@ -1,3 +1,4 @@
+org.drools:drools-compiler:7.0.0.Final:default
 org.mvel:mvel2:2.3.0.Final:default
 org.slf4j:slf4j-api:1.7.7:default
 org.kie:kie-api:7.0.0.Final:default
@@ -10,4 +11,3 @@ xmlpull:xmlpull:1.1.3.1:default
 xpp3:xpp3_min:1.1.4c:default
 com.thoughtworks.xstream:xstream:1.4.9:default
 com.google.protobuf:protobuf-java:2.6.0:default
-org.drools:drools-compiler:7.0.0.Final:default

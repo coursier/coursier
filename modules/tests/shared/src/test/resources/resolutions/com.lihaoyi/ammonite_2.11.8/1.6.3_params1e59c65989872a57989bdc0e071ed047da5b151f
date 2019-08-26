@@ -1,3 +1,4 @@
+com.lihaoyi:ammonite_2.11.8:1.6.3:default
 org.typelevel:scala-library:2.11.8:default
 com.github.scopt:scopt_2.11:3.5.0:default
 com.lihaoyi:sourcecode_2.11:0.1.5:default
@@ -34,4 +35,3 @@ org.jline:jline-terminal-jna:3.6.2:default
 org.jline:jline-reader:3.6.2:default
 com.github.javaparser:javaparser-core:3.2.5:default
 com.lihaoyi:ammonite-repl_2.11.8:1.6.3:default
-com.lihaoyi:ammonite_2.11.8:1.6.3:default
