@@ -1471,7 +1471,10 @@ final class Resolution private (
       .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
       .toList
 
-    (rootDeps ++ helper(rootDeps, DependencySet.empty)).distinct
+    helper(rootDeps, DependencySet.empty)
+      .sortWith { (first, second) =>
+        rootDeps.contains(first) && !rootDeps.contains(second)
+      }
   }
 
   def artifacts(): Seq[Artifact] =
