@@ -199,53 +199,15 @@ object Version {
     }
   }
 
-  def postProcess(item: Item, tokens0: Stream[(Tokenizer.Separator, Item)]): Stream[Item] = {
+  // def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
 
-    val tokens =
-      // drop some '.0' under some conditions ???
-      if (isNumeric(item)) {
-        val nextNonDotZero = tokens0.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
-        if (nextNonDotZero.headOption.forall { case (sep, t) => sep != Tokenizer.Plus && !isMinMax(t) && !isNumeric(t) })
-          nextNonDotZero
-        else
-          tokens0
-      } else
-        tokens0
-
-    def ifFollowedByNumberElse(ifFollowedByNumber: Item, default: Item) = {
-      val followedByNumber = tokens.headOption
-        .exists{ case (Tokenizer.None, num: Numeric) if !num.isEmpty => true; case _ => false }
-
-      if (followedByNumber) ifFollowedByNumber
-      else default
-    }
-
-    val nextItem = item match {
-      case Tag("min") => Min
-      case Tag("max") => Max
-      case Tag("a") => ifFollowedByNumberElse(alphaQualifier, item)
-      case Tag("b") => ifFollowedByNumberElse(betaQualifier, item)
-      case Tag("m") => ifFollowedByNumberElse(milestoneQualifier, item)
-      case _ => item
-    }
-
-    def next =
-      if (tokens.isEmpty) Stream()
-      else postProcess(tokens.head._2, tokens.tail)
-
-    nextItem #:: next
-  }
-
-  def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
-
-  def isMinMax(item: Item) = {
-    (item eq Min) || (item eq Max) || item == Tag("min") || item == Tag("max")
-  }
+  // def isMinMax(item: Item) = {
+  //   (item eq Min) || (item eq Max) || item == Tag("min") || item == Tag("max")
+  // }
 
   def items(repr: String): List[Item] = {
     val (first, tokens) = Tokenizer(repr)
-
-    postProcess(first, tokens).toList
+    first :: tokens.toList.map(_._2)
   }
 
   @tailrec
