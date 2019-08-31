@@ -29,8 +29,7 @@ object Version {
         case (BigNumber(a), BigNumber(b)) => a.compare(b)
         case (Number(a), BigNumber(b)) => -b.compare(a)
         case (BigNumber(a), Number(b)) => a.compare(b)
-        case (Qualifier(_, a), Qualifier(_, b)) => a.compare(b)
-        case (Literal(a), Literal(b)) => a.compareToIgnoreCase(b)
+        case (a @ Tag(_), b @ Tag(_)) => a.compareTag(b)
         case (BuildMetadata(_), BuildMetadata(_)) =>
           // Semver § 10: two versions that differ only in the build metadata, have the same precedence.
           // Might introduce some non-determinism though :-/
@@ -65,13 +64,32 @@ object Version {
     def repr: String = value.toString
     override def compareToEmpty = value.compare(0)
   }
-  final case class Qualifier(value: String, level: Int) extends Item {
-    val order = -2
-    override def compareToEmpty = level.compare(0)
-  }
-  final case class Literal(value: String) extends Item {
+
+  /**
+   * Tags represent prerelease tags, typically appearing after - for SemVer compatible versions.
+   */
+  final case class Tag(value: String) extends Item {
     val order = -1
-    override def compareToEmpty = if (value.isEmpty) 0 else 1
+    private val otherLevel = -5
+    lazy val level: Int =
+      value match {
+        case "ga" | "final" | "" => 0 // 1.0.0 equivalent
+        case "snapshot"          => -1
+        case "rc" | "cr"         => -2
+        case "beta" | "b"        => -3
+        case "alpha" | "a"       => -4
+        case "dev"               => -6
+        case "sp" | "bin"        => 1
+        case _                   => otherLevel
+      }
+
+    override def compareToEmpty = level.compare(0)
+    def isPreRelease: Boolean = level < 0
+    def compareTag(other: Tag): Int = {
+      val levelComp = level.compare(other.level)
+      if (levelComp == 0 && level == otherLevel) value.compareToIgnoreCase(other.value)
+      else levelComp
+    }
   }
   final case class BuildMetadata(value: String) extends Item {
     val order = 1
@@ -88,23 +106,9 @@ object Version {
 
   val empty = Number(0)
 
-  private val alphaQualifier = Qualifier("alpha", -5)
-  private val betaQualifier = Qualifier("beta", -4)
-  private val milestoneQualifier = Qualifier("milestone", -3)
-
-  val qualifiers = Seq[Qualifier](
-    alphaQualifier,
-    betaQualifier,
-    milestoneQualifier,
-    Qualifier("cr", -2),
-    Qualifier("rc", -2),
-    Qualifier("snapshot", -1),
-    Qualifier("ga", 0),
-    Qualifier("final", 0),
-    Qualifier("sp", 1)
-  )
-
-  val qualifiersMap = qualifiers.map(q => q.value -> q).toMap
+  private val alphaQualifier = Tag("alpha")
+  private val betaQualifier = Tag("beta")
+  private val milestoneQualifier = Tag("milestone")
 
   object Tokenizer {
     sealed abstract class Separator
@@ -136,9 +140,11 @@ object Version {
               letters(b += s.head, s.tail)
 
           val (letters0, rem) = letters(new StringBuilder, s)
-          val item =
-            qualifiersMap.getOrElse(letters0, Literal(letters0))
-
+          val item = letters0 match {
+            case "min" => Min
+            case "max" => Max
+            case _     => Tag(letters0)
+          }
           (item, rem)
         } else {
           val (sep, _) = parseSeparator(s)
@@ -151,7 +157,7 @@ object Version {
 
             val (item, rem0) = other(new StringBuilder, s)
 
-            (Literal(item), rem0)
+            (Tag(item), rem0)
           } else
             (empty, s)
         }
@@ -210,11 +216,9 @@ object Version {
     }
 
     val nextItem = item match {
-      case Literal("min") => Min
-      case Literal("max") => Max
-      case Literal("a") => ifFollowedByNumberElse(alphaQualifier, item)
-      case Literal("b") => ifFollowedByNumberElse(betaQualifier, item)
-      case Literal("m") => ifFollowedByNumberElse(milestoneQualifier, item)
+      case Tag("a") => ifFollowedByNumberElse(alphaQualifier, item)
+      case Tag("b") => ifFollowedByNumberElse(betaQualifier, item)
+      case Tag("m") => ifFollowedByNumberElse(milestoneQualifier, item)
       case _ => item
     }
 
@@ -228,7 +232,7 @@ object Version {
   def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
 
   def isMinMax(item: Item) = {
-    (item eq Min) || (item eq Max) || item == Literal("min") || item == Literal("max")
+    (item eq Min) || (item eq Max) || item == Tag("min") || item == Tag("max")
   }
 
   def items(repr: String): List[Item] = {
