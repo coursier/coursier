@@ -9,11 +9,7 @@ import coursier.core.compatibility._
  *  Same kind of ordering as aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
  */
 final case class Version(repr: String) extends Ordered[Version] {
-  lazy val items = Version.items(repr)
-  lazy val rawItems: Seq[Version.Item] = {
-    val (first, tokens) = Version.Tokenizer(repr)
-    first +: tokens.toVector.map { case (_, item) => item }
-  }
+  lazy val items: List[Version.Item] = Version.items(repr)
   def compare(other: Version) = Version.listCompare(items, other.items)
   def isEmpty = items.forall(_.isEmpty)
 }
@@ -93,7 +89,7 @@ object Version {
   }
   final case class BuildMetadata(value: String) extends Item {
     val order = 1
-    override def compareToEmpty = if (value.isEmpty) 0 else 1
+    override def compareToEmpty = 0
   }
 
   case object Min extends Item {
@@ -118,8 +114,8 @@ object Version {
     case object Plus extends Separator
     case object None extends Separator
 
-    def apply(s: String): (Item, Stream[(Separator, Item)]) = {
-      def parseItem(s: Stream[Char]): (Item, Stream[Char]) = {
+    def apply(str: String): (Item, Stream[(Separator, Item)]) = {
+      def parseItem(s: Stream[Char], prev: Option[Separator]): (Item, Stream[Char]) = {
         if (s.isEmpty) (empty, s)
         else if (s.head.isDigit) {
           def digits(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
@@ -141,6 +137,7 @@ object Version {
 
           val (letters0, rem) = letters(new StringBuilder, s)
           val item = letters0 match {
+            case "x" if prev == Some(Dot) => Max
             case "min" => Min
             case "max" => Max
             case _     => Tag(letters0)
@@ -148,18 +145,22 @@ object Version {
           (item, rem)
         } else {
           val (sep, _) = parseSeparator(s)
-          if (sep == None) {
-            def other(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
-              if (s.isEmpty || s.head.isLetterOrDigit || parseSeparator(s)._1 != None)
-                (b.result().toLowerCase, s)  // not specifying a Locale (error with scala js)
-              else
-                other(b += s.head, s.tail)
+          (prev, sep) match {
+            case (_, None) =>
+              def other(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
+                if (s.isEmpty || s.head.isLetterOrDigit || parseSeparator(s)._1 != None)
+                  (b.result().toLowerCase, s)  // not specifying a Locale (error with scala js)
+                else
+                  other(b += s.head, s.tail)
 
-            val (item, rem0) = other(new StringBuilder, s)
-
-            (Tag(item), rem0)
-          } else
-            (empty, s)
+              val (item, rem0) = other(new StringBuilder, s)
+              // treat .* as .max
+              if (prev == Some(Dot) && item == "*") (Max, rem0)
+              else (Tag(item), rem0)
+            // treat .+ as .max
+            case (Some(Dot), Plus) => (Max, s)
+            case _                 => (empty, s)
+          }
         }
       }
 
@@ -183,13 +184,13 @@ object Version {
             case Plus =>
               Stream((sep, BuildMetadata(rem0.mkString)))
             case _ =>
-              val (item, rem) = parseItem(rem0)
+              val (item, rem) = parseItem(rem0, Some(sep))
               (sep, item) #:: helper(rem)
           }
         }
       }
 
-      val (first, rem) = parseItem(s.toStream)
+      val (first, rem) = parseItem(str.toStream, scala.None)
       (first, helper(rem))
     }
   }

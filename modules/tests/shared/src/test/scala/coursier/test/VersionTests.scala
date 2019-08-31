@@ -45,7 +45,9 @@ object VersionTests extends TestSuite {
 
     'buildMetadata - {
       * - {
-        assert(compare("1.2", "1.2+foo") < 0)
+        assert(compare("1.2", "1.2+foo") == 0)
+        assert(compare("2.0", "2.0+20130313144700") == 0)
+        assert(compare("2.0+20130313144700", "2.0.2") < 0)
 
         // Semver § 10: two versions that differ only in the build metadata, have the same precedence
         assert(compare("1.2+bar", "1.2+foo") == 0)
@@ -359,6 +361,10 @@ object VersionTests extends TestSuite {
       assert(compare("1.max", "1.0" ) > 0)
       assert(compare("1.max", "1.9999999999" ) > 0)
 
+      assert(compare("1.*", "1.9999999999" ) > 0)
+      assert(compare("1.+", "1.9999999999" ) > 0)
+      assert(compare("1.x", "1.9999999999" ) > 0)
+
       assert(compare("1.max", "1.MAX" ) == 0)
 
       assert(compare("1.max", "2.0-alpha-1" ) < 0)
@@ -401,6 +407,12 @@ object VersionTests extends TestSuite {
       assert(items == expectedItems)
     }
 
+
+    'xhandling - {
+      val items = Version("1.x.0-alpha").items
+      val expectedItems = Seq(Version.Number(1), Version.Max, Version.Number(0), Version.Tag("alpha"))
+      assert(items == expectedItems)
+    }
   }
 
 }
