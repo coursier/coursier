@@ -368,6 +368,12 @@ object VersionTests extends TestSuite {
       assert(items == expectedItems)
     }
 
+
+    'xhandling - {
+      val items = Version("1.x.0-alpha").items
+      val expectedItems = Seq(Version.Number(1), Version.Max, Version.Number(0), Version.Tag("alpha"))
+      assert(items == expectedItems)
+    }
   }
 
 }
