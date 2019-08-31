@@ -332,8 +332,7 @@ object VersionTests extends TestSuite {
       assert(increasing( "0.9.9-SNAPSHOT", "0.9.9", "0.9.10-SNAPSHOT", "0.9.10", "1.0-alpha-2-SNAPSHOT", "1.0-alpha-2",
         "1.0-alpha-10-SNAPSHOT", "1.0-alpha-10", "1.0-beta-1-SNAPSHOT", "1.0-beta-1",
         "1.0-rc-1-SNAPSHOT", "1.0-rc-1", "1.0-SNAPSHOT", "1.0", "1.0-sp-1-SNAPSHOT", "1.0-sp-1"))
-      // FIXME Should pass?
-      // assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
+      assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
       assert(increasing("1.0.1-alpha-1-SNAPSHOT",
       "1.0.1-alpha-1", "1.0.1-beta-1-SNAPSHOT", "1.0.1-beta-1",
         "1.0.1-rc-1-SNAPSHOT", "1.0.1-rc-1", "1.0.1-SNAPSHOT", "1.0.1", "1.1-SNAPSHOT", "1.1" ))

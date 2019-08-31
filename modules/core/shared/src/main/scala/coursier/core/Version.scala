@@ -9,7 +9,7 @@ import coursier.core.compatibility._
  *  Same kind of ordering as aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
  */
 final case class Version(repr: String) extends Ordered[Version] {
-  lazy val items: List[Version.Item] = Version.items(repr)
+  lazy val items: Vector[Version.Item] = Version.items(repr)
   def compare(other: Version) = Version.listCompare(items, other.items)
   def isEmpty = items.forall(_.isEmpty)
 }
@@ -26,11 +26,6 @@ object Version {
         case (Number(a), BigNumber(b)) => -b.compare(a)
         case (BigNumber(a), Number(b)) => a.compare(b)
         case (a @ Tag(_), b @ Tag(_)) => a.compareTag(b)
-        case (BuildMetadata(_), BuildMetadata(_)) =>
-          // Semver § 10: two versions that differ only in the build metadata, have the same precedence.
-          // Might introduce some non-determinism though :-/
-          0
-
         case _ =>
           val rel0 = compareToEmpty
           val rel1 = other.compareToEmpty
@@ -199,19 +194,39 @@ object Version {
     }
   }
 
-  // def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
+  def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
+  def isBuildMetadata(item: Item) = item match { case _: BuildMetadata => true; case _ => false }
 
-  // def isMinMax(item: Item) = {
-  //   (item eq Min) || (item eq Max) || item == Tag("min") || item == Tag("max")
-  // }
-
-  def items(repr: String): List[Item] = {
+  def items(repr: String): Vector[Item] = {
     val (first, tokens) = Tokenizer(repr)
-    first :: tokens.toList.map(_._2)
+    first +: tokens.toVector.map(_._2)
+  }
+
+  // before comparing two versions pad the number parts to the equal number of digits
+  // for example, 1-ga, and 1.0.0 comparison will be adjusted first to 1.0.0-ga and 1.0.0.
+  def listCompare(first0: Vector[Item], second0: Vector[Item]): Int = {
+    // Semver § 10: two versions that differ only in the build metadata, have the same precedence.
+    val first = first0.filterNot(isBuildMetadata)
+    val second = second0.filterNot(isBuildMetadata)
+
+    def padNum(xs: Vector[Item], original: Int, next: Int): Vector[Item] = {
+      val (before, after) = xs.splitAt(original)
+      before ++ Vector.fill(next - original)(empty) ++ after
+    }
+    val num1 = first.takeWhile(isNumeric)
+    val num2 = second.takeWhile(isNumeric)
+    (num1.size, num2.size) match {
+      case (x, y) if x == y =>
+        listCompare0(first, second)
+      case (x, y) if x > y  =>
+        listCompare0(first, padNum(second, y, x))
+      case (x, y) if x < y  =>
+        listCompare0(padNum(first, x, y), second)
+    }
   }
 
   @tailrec
-  def listCompare(first: List[Item], second: List[Item]): Int = {
+  private def listCompare0(first: Vector[Item], second: Vector[Item]): Int = {
     if (first.isEmpty && second.isEmpty) 0
     else if (first.isEmpty) {
       assert(second.nonEmpty)
@@ -221,7 +236,7 @@ object Version {
       first.dropWhile(_.isEmpty).headOption.fold(0)(_.compareToEmpty)
     } else {
       val rel = first.head.compare(second.head)
-      if (rel == 0) listCompare(first.tail, second.tail)
+      if (rel == 0) listCompare0(first.tail, second.tail)
       else rel
     }
   }
