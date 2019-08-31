@@ -194,7 +194,7 @@ object VersionTests extends TestSuite {
       assert(compare("1-alpha", "1-beta" ) < 0)
       assert(compare("1-beta1", "1-b1" ) == 0)
       assert(compare("1-beta", "1-milestone" ) > 0)
-      assert(compare("1-milestone1", "1-m1" ) == 0)
+      assert(compare("1-milestone1", "1-m1" ) > 0)
       assert(compare("1-milestone", "1-rc" ) < 0)
       assert(compare("1-rc", "1-cr" ) == 0)
       assert(compare("1-rc", "1-snapshot" ) < 0)
@@ -376,8 +376,7 @@ object VersionTests extends TestSuite {
       assert(increasing( "0.9.9-SNAPSHOT", "0.9.9", "0.9.10-SNAPSHOT", "0.9.10", "1.0-alpha-2-SNAPSHOT", "1.0-alpha-2",
         "1.0-alpha-10-SNAPSHOT", "1.0-alpha-10", "1.0-beta-1-SNAPSHOT", "1.0-beta-1",
         "1.0-rc-1-SNAPSHOT", "1.0-rc-1", "1.0-SNAPSHOT", "1.0", "1.0-sp-1-SNAPSHOT", "1.0-sp-1"))
-      // FIXME Should pass?
-      // assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
+      assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
       assert(increasing("1.0.1-alpha-1-SNAPSHOT",
       "1.0.1-alpha-1", "1.0.1-beta-1-SNAPSHOT", "1.0.1-beta-1",
         "1.0.1-rc-1-SNAPSHOT", "1.0.1-rc-1", "1.0.1-SNAPSHOT", "1.0.1", "1.1-SNAPSHOT", "1.1" ))
@@ -386,6 +385,9 @@ object VersionTests extends TestSuite {
       assert(increasing( "1.0.alpha", "1.0", "1.0-1" ))
       assert(increasing( "1.0-alpha", "1.0", "1.0.1" ))
       assert(increasing( "1.0.alpha", "1.0", "1.0.1" ))
+
+      assert(increasing( "1.0-M1", "1.0-MF", "1.0-X1", "1.0-alpha1", "1.0-RC1", "1.0", "2.0", "2.0.2"))
+      assert(increasing( "1.0-MF", "1.0-X1", "1.0a", "1.0-RC1", "1.0", "2.0", "2.0.2"))
     }
 
 
@@ -403,7 +405,7 @@ object VersionTests extends TestSuite {
 
     'specialStartChar - {
       val items = Version("[1.2.0]").items
-      val expectedItems = Seq(Version.Tag("["), Version.Number(1), Version.Number(2), Version.Tag("]"))
+      val expectedItems = Seq(Version.Tag("["), Version.Number(1), Version.Number(2), Version.Number(0), Version.Tag("]"))
       assert(items == expectedItems)
     }
 
