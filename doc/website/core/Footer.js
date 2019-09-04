@@ -36,11 +36,11 @@ class Footer extends React.Component {
           </div>
           <div>
             <h5>Community</h5>
-            <a href="https://github.com/coursier/coursier" target="_blank">
-              <img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&label=stars&logo=github&style=social" />
-            </a>
             <a href="https://gitter.im/coursier/coursier" target="_blank">
               <img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&style=social" />
+            </a>
+            <a href="https://github.com/coursier/coursier" target="_blank">
+              <img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&label=stars&logo=github&style=social" />
             </a>
           </div>
         </section>
