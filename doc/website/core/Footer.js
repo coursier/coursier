@@ -28,14 +28,14 @@ class Footer extends React.Component {
             </a>
           </h2>
           <div>
-            <h5>Docs</h5>
+            <h5><a href={this.docUrl('overview')}>Docs</h5></h5>
             <a href={this.docUrl('overview')}>Overview</a>
             <a href={this.docUrl('cli-overview')}>Install CLI</a>
             <a href={this.docUrl('sbt-coursier')}>Setup sbt</a>
             <a href={this.docUrl('api')}>Use the API</a>
           </div>
           <div>
-            <h5>Community</h5>
+            <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
             <a href="https://gitter.im/coursier/coursier" target="_blank">
               <img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&style=social" />
             </a>
