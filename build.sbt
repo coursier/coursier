@@ -456,8 +456,12 @@ lazy val okhttp = project("okhttp")
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.internal.shaded"),
+    shading("coursier.core.shaded"), // shading only fastparse, that core shades too, so shading things under the same namespace
     libs += Deps.fastParse.value % "shaded",
+    shadeNamespaces ++= Set(
+      "fastparse",
+      "sourcecode"
+    ),
     Mima.previousArtifacts,
     Mima.coursierFilters
   )
