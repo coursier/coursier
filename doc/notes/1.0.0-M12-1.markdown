@@ -10,7 +10,7 @@ or a `publish` command is running in another sbt, these acquire the lock and mak
 controls whether coursier checks the `credentials` key. It is set to true by
 default for now, but may not be so in the future because of this lock issue.
 
-* Disable progress bars by default if the `CI` or `INSIDE_EMACS` environement
+* Disable progress bars by default if the `CI` or `INSIDE_EMACS` environment
 variables are set ([#257])
 
 These were already disabled if the current process has no input (that is if
