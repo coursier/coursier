@@ -6,7 +6,7 @@ import coursier.core._
 sealed abstract class DependencyTree {
   def dependency: Dependency
 
-  /** Whether this dependency was excluded by its parent (but landed in the classpath noneless via other dependencies. */
+  /** Whether this dependency was excluded by its parent (but landed in the classpath nonetheless via other dependencies. */
   def excluded: Boolean
 
   def reconciledVersion: String
