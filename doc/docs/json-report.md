@@ -43,7 +43,7 @@ Add 'version' field to the report.
           <path>
         ]
       ],
-      "dependencies": [ // coodinates for its transitive dependencies
+      "dependencies": [ // coordinates for its transitive dependencies
         <orgX:nameX:versionX>,
         <orgY:nameY:versionY>,
       ]
@@ -56,7 +56,7 @@ Add 'version' field to the report.
           <path>
         ]
       ],
-      "dependencies": [ // coodinates for its transitive dependencies
+      "dependencies": [ // coordinates for its transitive dependencies
         <orgX:nameX:versionX>,
         <orgZ:nameZ:versionZ>,
       ]
