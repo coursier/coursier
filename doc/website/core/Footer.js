@@ -28,7 +28,7 @@ class Footer extends React.Component {
             </a>
           </h2>
           <div>
-            <h5><a href={this.docUrl('overview')}>Docs</h5></h5>
+            <h5><a href={this.docUrl('overview')}>Docs</a></h5>
             <a href={this.docUrl('overview')}>Overview</a>
             <a href={this.docUrl('cli-overview')}>Install CLI</a>
             <a href={this.docUrl('sbt-coursier')}>Setup sbt</a>
