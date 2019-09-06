@@ -648,6 +648,80 @@ object FileCacheTests extends TestSuite {
 
       }
 
+      'ransomCase - {
+
+        val httpRealm = "simple realm"
+        val httpsRealm = "secure realm"
+
+        val httpUserPass = ("simple", "SiMpLe")
+        val httpsUserPass = ("secure", "sEcUrE")
+
+        def withServers[T](f: (Uri, Uri) => T): T = {
+
+          var httpsBaseOpt = Option.empty[Uri]
+
+          val httpRoutes = HttpService[IO] {
+            case GET -> Root / "auth-redirect" =>
+              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+            case req @ GET -> Root / "auth" / "redirect" =>
+              if (authorized(req, httpUserPass))
+                TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
+              else
+                unauth(httpRealm)
+            case req @ GET -> Root / "auth" / "hello" =>
+              if (authorized(req, httpUserPass))
+                Ok("hello auth")
+              else
+                unauth(httpRealm, "bAsIc")
+          }
+
+          val httpsRoutes = HttpService[IO] {
+            case req @ GET -> Root / "auth" / "hello" =>
+              if (authorized(req, httpsUserPass))
+                Ok("hello auth secure")
+              else
+                unauth(httpsRealm, "BAsiC")
+          }
+
+          withHttpServer(httpRoutes) { httpBase =>
+            withHttpServer(httpsRoutes, withSsl = true) { httpsBase =>
+              httpsBaseOpt = Some(httpsBase)
+              f(httpBase, httpsBase)
+            }
+          }
+        }
+
+        val credFileUri = Option(getClass.getResource("/credentials.properties"))
+          .map(_.toURI)
+          .getOrElse {
+            throw new Exception("credentials.properties resource not found")
+          }
+        val credFile = new File(credFileUri)
+        assert(credFile.exists())
+
+        * - {
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth-redirect",
+              "hello auth secure",
+              _.withFollowHttpToHttpsRedirections(true)
+                .addFileCredentials(credFile)
+            )
+          }
+        }
+
+        * - {
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth" / "redirect",
+              "hello auth",
+              _.addFileCredentials(credFile)
+            )
+          }
+        }
+
+      }
+
       'maxRedirects - {
 
         val httpRoutes = HttpService[IO] {

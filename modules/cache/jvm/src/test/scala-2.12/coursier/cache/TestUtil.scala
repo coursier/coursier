@@ -99,8 +99,8 @@ object TestUtil {
     res.nonEmpty
   }
 
-  def unauth(realm: String) =
-    Unauthorized(`WWW-Authenticate`(NonEmptyList.one(Challenge("Basic", realm))))
+  def unauth(realm: String, challenge: String = "Basic") =
+    Unauthorized(`WWW-Authenticate`(NonEmptyList.one(Challenge(challenge, realm))))
 
   implicit class UserUriOps(private val uri: Uri) extends AnyVal {
     def withUser(userOpt: Option[String]): Uri =
