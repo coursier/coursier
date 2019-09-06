@@ -49,7 +49,7 @@ _coursier() {
   local property=( {--property,-D}'[set Java properties in the generated launcher]:key-value:' )
   local quiet=( {--quiet,-q}'[quiet output]' )
   local repository=( {--repository,-r}'[repository; for multiple repositories, separate with comma and/or add this option multiple times]:repository:' )
-  local reverseTree=( {--reverse-tree,-T}'[print dependencies as an inverted tree; dependees as children]' )
+  local reverseTree=( {--reverse-tree,-T}'[print dependencies as a reversed tree; dependees as children]' )
   local sbtPluginHack=( '--sbt-plugin-hack[modify names in Maven repository paths for sbt plugins]' )
   local scalaVersion=( {--scala-version,-e}'[default Scala version]:version:' )
   local sourcesR=( {--sources,-R}'[source repository; for multiple repositories, separate with comma and/or add this option multiple times]:value:' )
