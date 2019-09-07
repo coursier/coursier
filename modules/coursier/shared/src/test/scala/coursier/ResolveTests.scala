@@ -717,7 +717,7 @@ object ResolveTests extends TestSuite {
       // only available on Ivy repositories and not having a configuration named "default".
       val res = await {
         resolve
-          .addDependencies(dep"com.geirsson:sbt-ci-release;scalaVersion=2.12;sbtVersion=1.0:1.2.6")
+          .addDependencies(dep"com.geirsson:sbt-ci-release;scalaVersion=2.12;sbtVersion=1.0:1.3.1")
           .addRepositories(Repositories.sbtPlugin("releases"))
           .future()
       }
