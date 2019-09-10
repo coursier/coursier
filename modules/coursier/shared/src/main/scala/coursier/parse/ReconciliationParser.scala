@@ -17,11 +17,8 @@ object ReconciliationParser {
     val m =
       if (module.organization == Organization("*") && module.name == ModuleName("*")) ModuleMatchers.all
       else ModuleMatchers(exclude = Set(ModuleMatcher.all), include = Set(ModuleMatcher(module)))
-    v match {
-      case "default" => Right(m -> Reconciliation.Default)
-      case "relaxed" => Right(m -> Reconciliation.Relaxed)
-      case "strict" => Right(m -> Reconciliation.Strict)
-      case _ => Left(s"Unknown reconciliation '$v'")
-    }
+    Reconciliation(v)
+      .map(m -> _)
+      .toRight(s"Unknown reconciliation '$v'")
   }
 }
