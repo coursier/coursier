@@ -201,7 +201,7 @@ object ResolveRulesTests extends TestSuite {
         }
 
         val expectedEvicted = Seq(
-          Conflict(mod"org.typelevel:cats-core_2.11", "1.6.0", "1.5.0", wasExcluded = false, mod"org.typelevel:cats-core_2.11", "1.5.0")
+          Conflict(mod"org.typelevel:cats-core_2.11", "2.0.0", "1.5.0", wasExcluded = false, mod"org.typelevel:cats-core_2.11", "1.5.0")
         )
         val evicted = ex match {
           case f: StrictRule =>
