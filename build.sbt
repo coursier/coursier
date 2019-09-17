@@ -35,8 +35,9 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    dontPublishScalaJsIn("2.11"),
-    Mima.previousArtifacts
+    Mima.previousArtifacts,
+    Mima.utilFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val utilJvm = util.jvm
@@ -67,9 +68,9 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
-    Mima.coreFilters
+    Mima.coreFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val coreJvm = core.jvm
@@ -153,6 +154,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    coursierPrefix,
     utest,
     libs ++= {
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
@@ -167,10 +169,9 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
           Nil
       }
     },
-    dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
-    coursierPrefix,
-    Mima.cacheFilters
+    Mima.cacheFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val cacheJvm = cache.jvm
@@ -187,10 +188,10 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .settings(
     name := "scalaz-interop",
     shared,
-    dontPublishScalaJsIn("2.11"),
+    coursierPrefix,
     utest,
     Mima.previousArtifacts,
-    coursierPrefix
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val scalazJvm = scalaz.jvm
@@ -201,12 +202,12 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .settings(
     name := "cats-interop",
     shared,
-    dontPublishScalaJsIn("2.11"),
     utest,
-    Mima.previousArtifacts,
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
+    Mima.previousArtifacts,
     onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val catsJvm = cats.jvm
