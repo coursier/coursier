@@ -58,14 +58,24 @@ object Mima {
   )
 
   // until 2.0 final, mima is just there to check that we don't break too many things or unexpected stuff
+  lazy val utilFilters = {
+    mimaBinaryIssueFilters ++= {
+      import com.typesafe.tools.mima.core._
+
+      Seq(
+        // ignore shaded-stuff related errors
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
+      )
+    }
+  }
+
   lazy val coreFilters = {
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
 
       Seq(
         // ignore shaded-stuff related errors
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.shaded.")),
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
       )
     }
   }
@@ -74,7 +84,10 @@ object Mima {
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
 
-      Seq()
+      Seq(
+        // ignore shaded-stuff related errors
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.shaded."))
+      )
     }
   }
 
