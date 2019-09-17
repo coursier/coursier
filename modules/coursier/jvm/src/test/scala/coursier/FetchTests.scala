@@ -266,6 +266,39 @@ object FetchTests extends TestSuite {
       }
     }
 
+    'subset - async {
+
+      val res = await {
+        Fetch()
+          .noMirrors
+          .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
+          .withCache(cache)
+          .addRepositories(Repositories.jitpack)
+          .futureResult()
+      }
+
+      await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+
+      val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8:_"))
+
+      val subsetArtifacts = await {
+        Artifacts()
+          .withResolution(subsetRes)
+          .future()
+      }
+
+      await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
+
+      val subsetSourcesArtifacts = await {
+        Artifacts()
+          .withResolution(subsetRes)
+          .withClassifiers(Set(Classifier.sources))
+          .future()
+      }
+
+      await(validateArtifacts(subsetRes, subsetSourcesArtifacts.map(_._1), classifiers = Set(Classifier.sources)))
+    }
+
   }
 
 }

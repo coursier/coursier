@@ -8,7 +8,9 @@ import coursier.util.ModuleMatcher
 final case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
   exclude: Set[ModuleMatcher] = Set.empty,
-  ignoreIfForcedVersion: Boolean = true
+  includeByDefault: Boolean = false,
+  ignoreIfForcedVersion: Boolean = true,
+  semVer: Boolean = false
 ) extends Rule {
 
   import Strict._
@@ -17,12 +19,17 @@ final case class Strict(
 
   def check(res: Resolution): Option[EvictedDependencies] = {
 
-    val conflicts = coursier.graph.Conflict.conflicted(res).filter { c =>
+    val conflicts = coursier.graph.Conflict.conflicted(res, semVer = semVer).filter { c =>
       val conflict = c.conflict
       val ignore = ignoreIfForcedVersion && res.forceVersions.get(conflict.module).contains(conflict.version)
-      !ignore &&
-        include.exists(_.matches(conflict.module)) &&
-        !exclude.exists(_.matches(conflict.module))
+      def matches =
+        if (includeByDefault)
+          include.exists(_.matches(conflict.module)) ||
+            !exclude.exists(_.matches(conflict.module))
+        else
+          include.exists(_.matches(conflict.module)) &&
+            !exclude.exists(_.matches(conflict.module))
+      !ignore && matches
     }
 
     if (conflicts.isEmpty)
@@ -48,6 +55,13 @@ final case class Strict(
         anyElem = true
       b ++= "exclude="
       b ++= exclude.toVector.map(_.matcher.repr).sorted.mkString(" | ")
+    }
+    if (includeByDefault) {
+      if (anyElem)
+        b ++= ", "
+      else
+        anyElem = true
+      b ++= "ignoreIfForcedVersion=true"
     }
     if (!ignoreIfForcedVersion) {
       if (anyElem)

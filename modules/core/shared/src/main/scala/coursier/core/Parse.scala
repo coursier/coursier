@@ -20,11 +20,11 @@ object Parse {
       case latestSubRevision(prefix, delim) =>
         for {
           from <- version(prefix)
-          if from.rawItems.nonEmpty
+          if from.items.nonEmpty
           max = (if (delim.isEmpty) "." else delim) + "max"
           to <- version(prefix + max)
           // the contrary would mean something went wrong in the loose substitution above
-          if from.rawItems.init == to.rawItems.dropRight(1).init
+          if from.items.init == to.items.dropRight(1).init
         } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = true)
       case _ =>
         None

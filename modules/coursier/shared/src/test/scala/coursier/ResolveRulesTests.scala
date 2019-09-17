@@ -1,10 +1,11 @@
 package coursier
 
+import coursier.core.Reconciliation
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
 import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
-import coursier.util.ModuleMatcher
+import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -333,6 +334,123 @@ object ResolveRulesTests extends TestSuite {
 
           assert(evicted == expectedEvicted)
         }
+      }
+
+      'viaReconciliation - async {
+
+        val params = ResolutionParams()
+          .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        ex match {
+          case f: StrictRule =>
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
+        }
+      }
+    }
+
+    "semVer reconciliation" - {
+      "strict check" - async {
+
+        val params = ResolutionParams()
+          .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"io.argonaut:argonaut_2.11:6.1"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        ex match {
+          case f: StrictRule =>
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+            val evicted = f.conflict.asInstanceOf[Strict.EvictedDependencies]
+            assert(evicted.evicted.length == 2)
+            val conflictedModules = evicted.evicted.map(_.conflict.module).toSet
+            val expectedConflictedModules = Set(
+              mod"io.argonaut:argonaut_2.11",
+              mod"org.scala-lang:scala-library"
+            )
+            assert(conflictedModules == expectedConflictedModules)
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
+        }
+      }
+
+      "conflict" - async {
+
+        val params = ResolutionParams()
+          .addReconciliation(ModuleMatchers.all -> Reconciliation.SemVer)
+
+        val ex = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"io.argonaut:argonaut_2.11:6.1"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+            .failed
+        }
+
+        ex match {
+          case f: StrictRule =>
+            assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
+            val evicted = f.conflict.asInstanceOf[Strict.EvictedDependencies]
+            assert(evicted.evicted.length == 1)
+            val conflict = evicted.evicted.head.conflict
+            val expectedConflict = Conflict(
+              mod"io.argonaut:argonaut_2.11",
+              "6.2.3",
+              "6.1",
+              wasExcluded = false,
+              mod"io.argonaut:argonaut_2.11",
+              "6.1"
+            )
+            assert(conflict == expectedConflict)
+          case _ =>
+            throw new Exception("Unexpected exception type", ex)
+        }
+      }
+
+      "no conflict" - async {
+
+        val params = ResolutionParams()
+          .addReconciliation(ModuleMatchers.all -> Reconciliation.SemVer)
+
+        val res = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"io.argonaut:argonaut_2.11:6.2"
+            )
+            .withResolutionParams(params)
+            .withCache(cache)
+            .future()
+        }
+
+        await(validateDependencies(res, params))
       }
     }
 

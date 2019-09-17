@@ -60,7 +60,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "Normal fetch" should "get all files" in {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
     assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
@@ -71,7 +71,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     )
     val options = FetchOptions(artifactOptions = artifactOpt)
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
     assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
@@ -83,7 +83,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     )
     val options = FetchOptions(artifactOptions = artifactOpt)
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
     assert(files.map(_._2.getName).toSet.equals(Set(
       "junit-4.12.jar",
@@ -102,7 +102,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       artifactOptions = artifactOpt
     )
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
       .unsafeRun()(ec)
     assert(files.map(_._2.getName).toSet.equals(Set(
       "junit-4.12.jar",
@@ -115,7 +115,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "scalafmt-cli fetch" should "discover all main classes" in {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
       .unsafeRun()(ec)
     assert(MainClass.mainClasses(files.map(_._2)) == Map(
       ("", "") -> "com.martiansoftware.nailgun.NGServer",
@@ -126,7 +126,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "scalafix-cli fetch" should "discover all main classes" in {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
     assert(MainClass.mainClasses(files.map(_._2)) == Map(
@@ -138,7 +138,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "ammonite fetch" should "discover all main classes" in {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
     assert(MainClass.mainClasses(files.map(_._2)) == Map(
@@ -151,7 +151,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
   "sssio fetch" should "discover all main classes" in {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
-    val (_, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
       .unsafeRun()(ec)
     val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
     assert(MainClass.mainClasses(files.map(_._2)) == Map(
@@ -168,7 +168,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
       val params = paramsOrThrow(options)
 
-      val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+      val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
         .unsafeRun()(ec)
       val filesFetched = files.map(_._2.getName).toSet
       val expected = Set("junit-4.12.jar")
@@ -202,7 +202,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
       val params = paramsOrThrow(options)
 
-      val (_, files) = Fetch.task(params, pool, Seq("org.apache.avro:avro:1.7.4"))
+      val (_, _, _, files) = Fetch.task(params, pool, Seq("org.apache.avro:avro:1.7.4"))
         .unsafeRun()(ec)
 
       val filesFetched = files.map(_._2.getName).toSet
@@ -253,7 +253,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
           val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
           val params = paramsOrThrow(options)
 
-          val (_, files) = Fetch.task(params, pool, Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"))
+          val (_, _, _, files) = Fetch.task(params, pool, Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1"))
             .unsafeRun()(ec)
           val filesFetched = files.map(_._2.getName).toSet
           assert(filesFetched.contains("xz-1.0.jar"))
@@ -975,7 +975,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
-        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
           .unsafeRun()(ec)
         assert(files.map(_._2.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -1008,7 +1008,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
-        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
           .unsafeRun()(ec)
         assert(files.map(_._2.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -1047,7 +1047,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
-        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
           .unsafeRun()(ec)
         assert(files.map(_._2.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -1075,7 +1075,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
-        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
           .unsafeRun()(ec)
         assert(files.map(_._2.getName).toSet
           .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -1111,7 +1111,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
         val resolveOpt = ResolveOptions(cacheOptions = cacheOpt)
         val options = FetchOptions(resolveOptions = resolveOpt)
         val params = paramsOrThrow(options)
-        val (_, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
           .unsafeRun()(ec)
         assert(files.map(_._2.getName).toSet
           .equals(Set("junit-4.6.jar")))
@@ -1158,7 +1158,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       artifactOptions = artifactOptions
     )
     val params = paramsOrThrow(options)
-    val (_, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
+    val (_, _, _, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
       .unsafeRun()(ec)
 
     val expectedUrls = Seq(

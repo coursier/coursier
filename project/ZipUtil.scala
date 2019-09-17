@@ -44,7 +44,9 @@ object ZipUtil {
         }
       }
 
-    for ((ent, data) <- zipEntries(bootstrapZip)) {
+    val extraNames = extra.map(_._1).toSet
+
+    for ((ent, data) <- zipEntries(bootstrapZip) if !extraNames(ent.getName)) {
 
       // Same workaround as https://github.com/spring-projects/spring-boot/issues/13720
       // (https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2ff64cd06c0b25857e3e0dfdb6733174R144)

@@ -17,7 +17,7 @@ final case class ResolveOptions(
   @Help("Print dependencies as a tree")
   @Short("t")
     tree: Boolean = false,
-  @Help("Print dependencies as an inversed tree (dependees as children)")
+  @Help("Print dependencies as a reversed tree (dependees as children)")
   @Short("T")
     reverseTree: Boolean = false,
   @Help("Print what depends on the passed modules")

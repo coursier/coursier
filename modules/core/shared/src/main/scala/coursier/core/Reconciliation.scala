@@ -106,4 +106,39 @@ object Reconciliation {
       }
     }
   }
+
+  /**
+    * Strict version reconciliation.
+    *
+    * This particular instance behaves the same as [[Default]] when used by
+    * [[coursier.core.Resolution]]. Actual strict conflict manager is handled
+    * by `coursier.params.rule.Strict`, which is set up by `coursier.Resolve`
+    * when a strict reconciliation is added to it.
+    */
+  case object Strict extends Reconciliation {
+    def apply(versions: Seq[String]): Option[String] =
+      Default(versions)
+  }
+
+  /**
+    * Semantic versioning version reconciliation.
+    *
+    * This particular instance behaves the same as [[Default]] when used by
+    * [[coursier.core.Resolution]]. Actual semantic versioning checks are handled
+    * by `coursier.params.rule.Strict` with field `semVer = true`, which is set up
+    * by `coursier.Resolve` when a SemVer reconciliation is added to it.
+    */
+  case object SemVer extends Reconciliation {
+    def apply(versions: Seq[String]): Option[String] =
+      Default(versions)
+  }
+
+  def apply(input: String): Option[Reconciliation] =
+    input match {
+      case "default" => Some(Default)
+      case "relaxed" => Some(Relaxed)
+      case "strict" => Some(Strict)
+      case "semver" => Some(SemVer)
+      case _ => None
+    }
 }

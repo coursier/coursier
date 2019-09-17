@@ -6,7 +6,7 @@
 package coursier.params
 
 import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation, Version}
-import coursier.params.rule.{Rule, RuleResolution}
+import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 
 final class ResolutionParams private (
@@ -265,8 +265,28 @@ final class ResolutionParams private (
   def withDefaultConfiguration(defaultConfiguration: Configuration): ResolutionParams =
     copy(defaultConfiguration = defaultConfiguration)
 
+  def addReconciliation(reconciliation: (ModuleMatchers, Reconciliation)*): ResolutionParams =
+    copy(reconciliation = this.reconciliation ++ reconciliation)
   def addExclusions(exclusions: (Organization, ModuleName)*): ResolutionParams =
     copy(exclusions = this.exclusions ++ exclusions)
+
+  def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] =
+    reconciliation.map {
+      case (m, Reconciliation.Strict | Reconciliation.SemVer) => (m, Reconciliation.Default)
+      case other => other
+    }
+
+  lazy val actualRules: Seq[(Rule, RuleResolution)] = {
+
+    val fromReconciliation = reconciliation.collect {
+      case (m, Reconciliation.Strict) =>
+        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault), RuleResolution.Fail)
+      case (m, Reconciliation.SemVer) =>
+        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault, semVer = true), RuleResolution.Fail)
+    }
+
+    rules ++ fromReconciliation
+  }
 }
 object ResolutionParams {
 

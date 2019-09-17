@@ -31,7 +31,7 @@ class CliUnitTest extends FlatSpec {
   "Normal text" should "parse correctly" in withFile(
     "org1:name1--org2:name2") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val params = DependencyParams(options)
+    val params = DependencyParams(options, None)
       .fold(e => sys.error(e.toString), identity)
     val expected = Map(JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(JavaOrScalaModule.JavaModule(mod"org2:name2")))
     assert(params.perModuleExclude.equals(expected), s"got ${params.perModuleExclude}")
@@ -43,7 +43,7 @@ class CliUnitTest extends FlatSpec {
       "org4:name4--org5:name5") { (file, _) =>
 
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    val params = DependencyParams(options)
+    val params = DependencyParams(options, None)
       .fold(e => sys.error(e.toString), identity)
     val expected = Map(
       JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(JavaOrScalaModule.JavaModule(mod"org2:name2"), JavaOrScalaModule.JavaModule(mod"org3:name3")),
@@ -57,7 +57,7 @@ class CliUnitTest extends FlatSpec {
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams(options).toEither match {
+    DependencyParams(options, None).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>
@@ -68,7 +68,7 @@ class CliUnitTest extends FlatSpec {
   "child has no name" should "error" in withFile(
     "org1:name1--org2:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams(options).toEither match {
+    DependencyParams(options, None).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>
@@ -79,7 +79,7 @@ class CliUnitTest extends FlatSpec {
   "child has nothing" should "error" in withFile(
     "org1:name1--:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-    DependencyParams(options).toEither match {
+    DependencyParams(options, None).toEither match {
       case Left(errors) =>
         assert(errors.exists(_.startsWith("Failed to parse ")))
       case Right(p) =>

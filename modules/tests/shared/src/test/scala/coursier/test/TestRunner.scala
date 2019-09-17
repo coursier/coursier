@@ -4,7 +4,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import coursier.{Attributes, Dependency, MavenRepository, Module, Repository, Resolution}
-import coursier.core.{Classifier, Configuration, Extension, ResolutionProcess}
+import coursier.core.{Classifier, Configuration, Extension, Reconciliation, ResolutionProcess}
 import coursier.test.compatibility.{textResource, tryCreate}
 import coursier.test.util.ToFuture
 import coursier.util.{Artifact, Gather}
@@ -26,7 +26,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     profiles: Option[Set[String]] = None,
     mapDependencies: Option[Dependency => Dependency] = None,
     forceVersions: Map[Module, String] = Map.empty,
-    defaultConfiguration: Configuration = Configuration.defaultCompile
+    defaultConfiguration: Configuration = Configuration.defaultCompile,
+    reconciliation: Option[Module => Reconciliation] = None
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -40,6 +41,7 @@ class TestRunner[F[_]: Gather : ToFuture](
       .withMapDependencies(mapDependencies)
       .withForceVersions(forceVersions)
       .withDefaultConfiguration(defaultConfiguration)
+      .withReconciliation(reconciliation)
       .process
       .run(fetch0)
 

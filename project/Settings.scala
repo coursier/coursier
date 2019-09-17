@@ -9,6 +9,7 @@ import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
 import com.lightbend.sbt.SbtProguard
 import com.lightbend.sbt.SbtProguard.autoImport._
 import com.typesafe.sbt.pgp._
+import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import coursier.ShadingPlugin.autoImport._
 import Aliases._
 import ScalaVersion._
@@ -256,7 +257,7 @@ object Settings {
     }
     val inputs = (proguardConfiguration.in(Proguard).value +: SbtProguard.inputFiles(proguardFilteredInputs.in(Proguard).value)).toSet
 
-    // coursier-specific: more agressive existing file re-use (ran into suspicious multiple runs of proguard on Travis CI)
+    // coursier-specific: more aggressive existing file re-use (ran into suspicious multiple runs of proguard on Travis CI)
     if (outputsValue.exists(!_.exists()))
       cachedProguard(inputs)
 
@@ -434,6 +435,13 @@ object Settings {
           previous
         else
           None
+      },
+      mimaPreviousArtifacts := {
+        val previous = mimaPreviousArtifacts.?.value
+        if (ok.value)
+          previous.getOrElse(Set.empty)
+        else
+          Set.empty
       }
     )
   }

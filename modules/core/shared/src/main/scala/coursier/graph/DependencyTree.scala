@@ -6,11 +6,13 @@ import coursier.core._
 sealed abstract class DependencyTree {
   def dependency: Dependency
 
-  /** Whether this dependency was excluded by its parent (but landed in the classpath noneless via other dependencies. */
+  /** Whether this dependency was excluded by its parent (but landed in the classpath nonetheless via other dependencies. */
   def excluded: Boolean
 
-  /** The final version of this dependency. */
   def reconciledVersion: String
+
+  /** The final version of this dependency. */
+  def retainedVersion: String
 
   /** Dependencies of this node. */
   def children: Seq[DependencyTree]
@@ -52,13 +54,18 @@ object DependencyTree {
         .reconciledVersions
         .getOrElse(dependency.module, dependency.version)
 
+    def retainedVersion: String =
+      resolution
+        .retainedVersions
+        .getOrElse(dependency.module, dependency.version)
+
     // don't make that a val!! issues with cyclic dependencies
     // (see e.g. edu.illinois.cs.cogcomp:illinois-pos in the tests)
     def children: Seq[DependencyTree] =
       if (excluded)
         Nil
       else {
-        val dep0 = dependency.withVersion(reconciledVersion)
+        val dep0 = dependency.withVersion(retainedVersion)
 
         val dependencies = resolution
           .dependenciesOf(

@@ -50,13 +50,30 @@ object Conflict {
     }
   }
 
-  def conflicted(resolution: Resolution, withExclusions: Boolean = false): Seq[Conflicted] = {
+  def conflicted(
+    resolution: Resolution,
+    withExclusions: Boolean = false,
+    semVer: Boolean = false
+  ): Seq[Conflicted] = {
 
     val tree = ReverseModuleTree(resolution, withExclusions = withExclusions)
 
+    def compatible(wanted: String, selected: String): Boolean =
+      wanted == selected || {
+        val c = Parse.versionConstraint(wanted)
+        val v = Version(selected)
+        if (c.interval == VersionInterval.zero) {
+          if (semVer)
+            c.preferred.exists(_.items.take(2) == v.items.take(2))
+          else
+            c.preferred.contains(v)
+        } else
+          c.interval.contains(v)
+      }
+
     val transitive = tree.flatMap { t =>
       t.dependees.collect {
-        case d  if !d.excludedDependsOn && d.dependsOnReconciledVersion != d.dependsOnVersion =>
+        case d  if !d.excludedDependsOn && !compatible(d.dependsOnReconciledVersion, d.dependsOnVersion) =>
           Conflicted(d)
       }
     }
@@ -65,18 +82,13 @@ object Conflict {
       val version = resolution
         .reconciledVersions
         .getOrElse(dep.module, dep.version)
-      val c = Parse.versionConstraint(dep.version)
-      val v = Version(version)
-      val matches =
-        if (c.interval == VersionInterval.zero)
-          c.preferred.contains(v)
-        else
-          c.interval.contains(v)
+      val matches = compatible(dep.version, version)
       if (matches)
         Nil
       else {
         val node = ReverseModuleTree.Node(
           dep.module,
+          dep.version,
           dep.version,
           dep.module,
           dep.version,
@@ -92,8 +104,8 @@ object Conflict {
     fromRoots ++ transitive
   }
 
-  def apply(resolution: Resolution, withExclusions: Boolean = false): Seq[Conflict] =
-    conflicted(resolution, withExclusions)
+  def apply(resolution: Resolution, withExclusions: Boolean = false, semVer: Boolean = false): Seq[Conflict] =
+    conflicted(resolution, withExclusions, semVer)
       .map(_.conflict)
 
 }

@@ -1,9 +1,12 @@
 package coursier
 
+import java.util.concurrent.ConcurrentHashMap
+
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{Activation, DependencySet, Exclusions, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
+import coursier.graph.ReverseModuleTree
 import coursier.internal.Typelevel
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
@@ -181,9 +184,9 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
       }
 
     S.bind(S.bind(run(initialRes))(validate0)) { res0 =>
-      S.bind(recurseOnRules(res0, params.resolutionParams.rules)) {
+      S.bind(recurseOnRules(res0, params.resolutionParams.actualRules)) {
         case (res0, conflicts) =>
-          S.map(validateAllRules(res0, params.resolutionParams.rules)) { _ =>
+          S.map(validateAllRules(res0, params.resolutionParams.actualRules)) { _ =>
             (res0, conflicts)
           }
       }
@@ -306,15 +309,28 @@ object Resolve extends PlatformResolve {
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
 
-    val reconciliation: Option[Module => Reconciliation] =
-      if (params.reconciliation.isEmpty) None
+    val reconciliation: Option[Module => Reconciliation] = {
+      val actualReconciliation = params.actualReconciliation
+      if (actualReconciliation.isEmpty) None
       else
-        Some { m =>
-          params.reconciliation.find(_._1.matches(m)) match {
-            case Some((_, r)) => r
-            case None         => Reconciliation.Default
-          }
+        Some {
+          val cache = new ConcurrentHashMap[Module, Reconciliation]
+          m =>
+            val reconciliation = cache.get(m)
+            if (reconciliation == null) {
+              val rec = actualReconciliation.find(_._1.matches(m)) match {
+                case Some((_, r)) => r
+                case None => Reconciliation.Default
+              }
+              val prev = cache.putIfAbsent(m, rec)
+              if (prev == null)
+                rec
+              else
+                prev
+            } else
+              reconciliation
         }
+    }
 
     coursier.core.Resolution(
       rootDependencies = dependencies,

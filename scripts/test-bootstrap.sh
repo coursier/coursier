@@ -293,6 +293,15 @@ launcherAssemblyPreambleInSource() {
 ./coursier-test.jar --help
 }
 
+resolveRules() {
+  # just checking that this doesn't crash with a ClassNotFoundException because
+  # of shading
+  ./coursier-test resolve \
+    -r jitpack \
+    sh.almond:scala-kernel_2.12.8:0.3.0 \
+    --rule 'SameVersion(com.fasterxml.jackson.core:jackson-*)'
+}
+
 nailgun
 fork
 nonStaticMainClass
@@ -317,3 +326,5 @@ launcherJavaPropsEnv
 launcherJavaPropsEnvMulti
 launcherAssembly
 launcherAssemblyPreambleInSource
+
+resolveRules

@@ -66,7 +66,7 @@ object Assembly {
       zos.closeEntry()
     }
 
-    val concatenedEntries = new mutable.HashMap[String, ::[(ZipEntry, Array[Byte])]]
+    val concatenatedEntries = new mutable.HashMap[String, ::[(ZipEntry, Array[Byte])]]
 
     var ignore = Set.empty[String]
 
@@ -88,7 +88,7 @@ object Assembly {
         for ((ent, content) <- entries) {
 
           def append(): Unit =
-            concatenedEntries += ent.getName -> ::((ent, content), concatenedEntries.getOrElse(ent.getName, Nil))
+            concatenatedEntries += ent.getName -> ::((ent, content), concatenatedEntries.getOrElse(ent.getName, Nil))
 
           rulesMap.get(ent.getName) match {
             case Some(Rule.Exclude(_)) =>
@@ -121,7 +121,7 @@ object Assembly {
       }
     }
 
-    for ((_, entries) <- concatenedEntries) {
+    for ((_, entries) <- concatenatedEntries) {
       val (ent, _) = entries.head
 
       ent.setCompressedSize(-1L)

@@ -68,7 +68,7 @@ object SinglePackageParams {
               (Classifier(strClassifier), Extension(ext), p)
           }
         case _ =>
-          Validated.invalidNel(s"Maformed artifact argument: $s (expected: ${q}classifier:/path/to/artifact$q)")
+          Validated.invalidNel(s"Malformed artifact argument: $s (expected: ${q}classifier:/path/to/artifact$q)")
       }
     }
 

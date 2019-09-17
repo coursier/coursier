@@ -120,7 +120,7 @@ object RepositoryParams {
 
     def fromSonatype =
       if (options.repository.nonEmpty || options.readFrom.nonEmpty)
-        Validated.invalidNel("Cannot specify --repository or --read-fron along with --sonatype")
+        Validated.invalidNel("Cannot specify --repository or --read-from along with --sonatype")
       else
         Validated.validNel(
           PublishRepository.Sonatype(MavenRepository(sonatypeBase))

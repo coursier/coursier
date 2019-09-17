@@ -88,7 +88,7 @@ final class DirectCredentials private(
         realm.forall(realm0.contains)
     }
 
-  // Only called on initial artifact URLs, no on the ones originating from redirections
+  // Only called on initial artifact URLs, not on the ones originating from redirections
   def matches(url: String, user: String): Boolean =
     nonEmpty && {
       val uriOpt = Try(new URI(url)).toOption

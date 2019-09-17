@@ -926,6 +926,9 @@ final class Resolution private (
   def withDefaultConfiguration(configuration: Configuration): Resolution =
     copy0(defaultConfiguration = configuration)
 
+  def withReconciliation(reconciliation: Option[Module => Reconciliation]): Resolution =
+    copy0(reconciliation = reconciliation)
+
 
   def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
     copyWithCache(
@@ -1572,9 +1575,13 @@ final class Resolution private (
         newDeps
     }
 
+    val dependencies0 = dependencies
+      .map(withDefaultConfig(_, defaultConfiguration))
+      .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
+
     copyWithCache(
-      rootDependencies = dependencies,
-      dependencySet = dependencySet.setValues(helper(dependencies.map(updateVersion).toSet))
+      rootDependencies = dependencies0,
+      dependencySet = dependencySet.setValues(helper(dependencies0.toSet))
       // don't know if something should be done about conflicts
     )
   }

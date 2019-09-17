@@ -2,21 +2,17 @@ package coursier.cli.params
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.Dependency
+import coursier.dependencyString
 import coursier.cli.options.SharedLoaderOptions
-import coursier.core.Configuration
-import coursier.parse.{DependencyParser, ModuleParser}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency, ModuleParser}
 
 final case class SharedLoaderParams(
   loaderNames: Seq[String],
-  loaderDependencies: Map[String, Seq[Dependency]]
+  loaderDependencies: Map[String, Seq[JavaOrScalaDependency]]
 )
 
 object SharedLoaderParams {
-  def from(
-    options: SharedLoaderOptions,
-    scalaVersion: String
-  ): ValidatedNel[String, SharedLoaderParams] = {
+  def from(options: SharedLoaderOptions): ValidatedNel[String, SharedLoaderParams] = {
 
     val targetsOpt = {
       val l = options
@@ -36,7 +32,7 @@ object SharedLoaderParams {
       .traverse { d =>
         d.split(":", 2) match {
           case Array(target, dep) =>
-            DependencyParser.dependencyParams(dep, scalaVersion) match {
+            DependencyParser.javaOrScalaDependencyParams(dep) match {
               case Left(err) =>
                 Validated.invalidNel(s"$d: $err")
               case Right((dep0, params)) =>
@@ -61,11 +57,11 @@ object SharedLoaderParams {
             (defaultTarget, dep0)
         }
 
-        ModuleParser.module(dep, scalaVersion) match {
+        ModuleParser.javaOrScalaModule(dep) match {
           case Left(err) =>
             Validated.invalidNel(s"$d: $err")
           case Right(m) =>
-            val asDep = Dependency(m, "_") // actual version shouldn't matter
+            val asDep = JavaOrScalaDependency(m, dep"_:_:_") // actual version shouldn't matter
             Validated.validNel(target -> asDep)
         }
       }

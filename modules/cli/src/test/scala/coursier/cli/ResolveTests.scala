@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 
 import caseapp.core.RemainingArgs
 import cats.data.Validated
-import coursier.cli.options.{DependencyOptions, OutputOptions}
+import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
 import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams}
 import coursier.util.Sync
 import org.junit.runner.RunWith
@@ -276,6 +276,28 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
         |org.spire-math:jawn-parser_2.12:0.10.4:default
         |org.vafer:jdeb:1.3:default
         |""".stripMargin
+
+    assert(output === expectedOutput)
+  }
+
+  it should "resolve sbt 0.13 plugins" in {
+    val options = ResolveOptions(
+      dependencyOptions = DependencyOptions(
+        sbtPlugin = List("org.scalameta:sbt-metals:0.7.0"),
+        sbtVersion = "0.13"
+      )
+    )
+    val args = RemainingArgs(Nil, Nil)
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, "UTF-8")
+    val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
     assert(output === expectedOutput)
   }

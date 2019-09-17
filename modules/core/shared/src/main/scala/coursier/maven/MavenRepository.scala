@@ -294,7 +294,7 @@ final class MavenRepository private (
         else {
           val parsedVersions = rawVersions.map(Version(_))
           val nonPreVersions = parsedVersions.filter(_.items.forall {
-            case q: Version.Qualifier => q.level >= 0
+            case t: Version.Tag => !t.isPreRelease
             case _ => true
           })
 

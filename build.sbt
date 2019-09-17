@@ -35,8 +35,9 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    dontPublishScalaJsIn("2.11"),
-    Mima.previousArtifacts
+    Mima.previousArtifacts,
+    Mima.utilFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val utilJvm = util.jvm
@@ -67,9 +68,9 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
-    Mima.coreFilters
+    Mima.coreFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val coreJvm = core.jvm
@@ -134,6 +135,18 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       Deps.jansi % "shaded",
       Deps.jlineTerminalJansi % "shaded"
     ),
+    packageBin.in(Compile) := {
+      // manually editing files under META-INF/services until sbt-shading does it automatically
+      val previous = packageBin.in(Compile).value
+      val new0 = new File(previous.getParentFile, s"${previous.getName.stripSuffix(".jar")}-edited.jar")
+      ZipUtil.addToZip(
+        previous,
+	new0,
+	Seq(
+	  "META-INF/services/org.jline.terminal.spi.JansiSupport" -> "coursier.cache.shaded.org.jline.terminal.spi.JansiSupport\n".getBytes("UTF-8"))
+      )
+      new0
+    }
   )
   .jsSettings(
     name := "fetch-js",
@@ -141,6 +154,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    coursierPrefix,
     utest,
     libs ++= {
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
@@ -155,10 +169,9 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
           Nil
       }
     },
-    dontPublishScalaJsIn("2.11"),
     Mima.previousArtifacts,
-    coursierPrefix,
-    Mima.cacheFilters
+    Mima.cacheFilters,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val cacheJvm = cache.jvm
@@ -175,10 +188,10 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .settings(
     name := "scalaz-interop",
     shared,
-    dontPublishScalaJsIn("2.11"),
+    coursierPrefix,
     utest,
     Mima.previousArtifacts,
-    coursierPrefix
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val scalazJvm = scalaz.jvm
@@ -189,11 +202,11 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .settings(
     name := "cats-interop",
     shared,
-    dontPublishScalaJsIn("2.11"),
     utest,
-    Mima.previousArtifacts,
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
+    Mima.previousArtifacts,
+    dontPublishScalaJsIn("2.11")
   )
 
 lazy val catsJvm = cats.jvm
@@ -443,8 +456,12 @@ lazy val okhttp = project("okhttp")
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.internal.shaded"),
+    shading("coursier.core.shaded"), // shading only fastparse, that core shades too, so shading things under the same namespace
     libs += Deps.fastParse.value % "shaded",
+    shadeNamespaces ++= Set(
+      "fastparse",
+      "sourcecode"
+    ),
     Mima.previousArtifacts,
     Mima.coursierFilters
   )
