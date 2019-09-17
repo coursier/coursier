@@ -194,7 +194,6 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     Mima.previousArtifacts,
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
-    onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
   )
 
 lazy val catsJvm = cats.jvm
