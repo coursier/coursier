@@ -1,4 +1,5 @@
 
+import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt._
 import sbt.Keys._
@@ -26,6 +27,14 @@ object Publish {
         case (maj, min) => s"$maj.$min"
       }
       sbv == sbv0 && publishArtifact.value
+    },
+    mimaPreviousArtifacts := {
+      val previous = mimaPreviousArtifacts.value
+      val publish = publishArtifact.value
+      if (publish)
+        previous
+      else
+        Set.empty
     }
   )
 
@@ -33,6 +42,14 @@ object Publish {
     publishArtifact := {
       (!ScalaJSPlugin.autoImport.isScalaJSProject.value || !sbv.contains(scalaBinaryVersion.value)) &&
         publishArtifact.value
+    },
+    mimaPreviousArtifacts := {
+      val previous = mimaPreviousArtifacts.value
+      val publish = publishArtifact.value
+      if (publish)
+        previous
+      else
+        Set.empty
     }
   )
 
