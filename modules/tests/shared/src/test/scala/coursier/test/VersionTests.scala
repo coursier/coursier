@@ -45,7 +45,9 @@ object VersionTests extends TestSuite {
 
     'buildMetadata - {
       * - {
-        assert(compare("1.2", "1.2+foo") < 0)
+        assert(compare("1.2", "1.2+foo") == 0)
+        assert(compare("2.0", "2.0+20130313144700") == 0)
+        assert(compare("2.0+20130313144700", "2.0.2") < 0)
 
         // Semver § 10: two versions that differ only in the build metadata, have the same precedence
         assert(compare("1.2+bar", "1.2+foo") == 0)
@@ -187,11 +189,12 @@ object VersionTests extends TestSuite {
 
 
     'wellKnownQualifierOrdering - {
+      assert(compare("1-dev1", "1-alpha1" ) < 0)
       assert(compare("1-alpha1", "1-a1" ) == 0)
       assert(compare("1-alpha", "1-beta" ) < 0)
       assert(compare("1-beta1", "1-b1" ) == 0)
-      assert(compare("1-beta", "1-milestone" ) < 0)
-      assert(compare("1-milestone1", "1-m1" ) == 0)
+      assert(compare("1-beta", "1-milestone" ) > 0)
+      assert(compare("1-milestone1", "1-m1" ) > 0)
       assert(compare("1-milestone", "1-rc" ) < 0)
       assert(compare("1-rc", "1-cr" ) == 0)
       assert(compare("1-rc", "1-snapshot" ) < 0)
@@ -206,6 +209,8 @@ object VersionTests extends TestSuite {
       assert(compare("1", "1-final" ) == 0)
       assert(compare("1", "1-sp" ) < 0)
 
+      assert(compare("2.12.4-bin-typelevel-4", "2.12.4" ) > 0)
+
       assert(compare("A.rc.1", "A.ga.1" ) < 0)
       assert(compare("A.sp.1", "A.ga.1" ) > 0)
       assert(compare("A.rc.x", "A.ga.x" ) < 0)
@@ -214,26 +219,50 @@ object VersionTests extends TestSuite {
 
 
     'wellKnownQualifierVersusUnknownQualifierOrdering - {
-      assert(compare("1-abc", "1-alpha" ) > 0)
-      assert(compare("1-abc", "1-beta" ) > 0)
-      assert(compare("1-abc", "1-milestone" ) > 0)
-      assert(compare("1-abc", "1-rc" ) > 0)
-      assert(compare("1-abc", "1-snapshot" ) > 0)
-      assert(compare("1-abc", "1" ) > 0)
-      assert(compare("1-abc", "1-sp" ) > 0)
+      assert(compare("1-milestone", "1-rc" ) < 0)
+      assert(compare("1-milestone", "1-beta" ) < 0)
+      assert(compare("1-M1", "1-rc1" ) < 0)
+
+      assert(compare("1-abc", "1-alpha" ) < 0)
+      assert(compare("1-abc", "1-beta" ) < 0)
+      assert(compare("1-abc", "1-milestone" ) < 0)
+      assert(compare("1-abc", "1-rc" ) < 0)
+      assert(compare("1-abc", "1-snapshot" ) < 0)
+      assert(compare("1-abc", "1" ) < 0)
+      assert(compare("1-abc", "1-sp" ) < 0)
+
+      assert(compare("1.0m", "1.0" ) < 0)
+      assert(compare("1.0-m", "1.0" ) < 0)
+      assert(compare("1.0.m", "1.0" ) < 0)
+
+      assert(compare("1.0m1", "1.0" ) < 0)
+      assert(compare("1.0-m1", "1.0" ) < 0)
+      assert(compare("1.0.m1", "1.0" ) < 0)
+      assert(compare("1.0m.1", "1.0" ) < 0)
+      assert(compare("1.0m-1", "1.0" ) < 0)
+
+      assert(compare("1.0.1-MF", "1.0.0" ) > 0)
+      assert(compare("1.0.1-MF", "1.0.1" ) < 0)
+      assert(compare("1.0.1-MF", "1.0.2" ) < 0)
+      assert(compare("1.0.1-X20", "1.0.0" ) > 0)
+      assert(compare("1.0.1-X20", "1.0.1" ) < 0)
+      assert(compare("1.0.1-X20", "1.0.2" ) < 0)
+      assert(compare("1.0.1-SNAP12", "1.0.0" ) > 0)
+      assert(compare("1.0.1-SNAP12", "1.0.1" ) < 0)
+      assert(compare("1.0.1-SNAP12", "1.0.2" ) < 0)
     }
 
 
     'wellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber - {
-      assert(compare("1.0a", "1.0" ) > 0)
-      assert(compare("1.0-a", "1.0" ) > 0)
-      assert(compare("1.0.a", "1.0" ) > 0)
-      assert(compare("1.0b", "1.0" ) > 0)
-      assert(compare("1.0-b", "1.0" ) > 0)
-      assert(compare("1.0.b", "1.0" ) > 0)
-      assert(compare("1.0m", "1.0" ) > 0)
-      assert(compare("1.0-m", "1.0" ) > 0)
-      assert(compare("1.0.m", "1.0" ) > 0)
+      assert(compare("1.0a", "1.0" ) < 0)
+      assert(compare("1.0-a", "1.0" ) < 0)
+      assert(compare("1.0.a", "1.0" ) < 0)
+      assert(compare("1.0b", "1.0" ) < 0)
+      assert(compare("1.0-b", "1.0" ) < 0)
+      assert(compare("1.0.b", "1.0" ) < 0)
+      assert(compare("1.0m", "1.0" ) < 0)
+      assert(compare("1.0-m", "1.0" ) < 0)
+      assert(compare("1.0.m", "1.0" ) < 0)
 
       assert(compare("1.0a1", "1.0" ) < 0)
       assert(compare("1.0-a1", "1.0" ) < 0)
@@ -245,12 +274,12 @@ object VersionTests extends TestSuite {
       assert(compare("1.0-m1", "1.0" ) < 0)
       assert(compare("1.0.m1", "1.0" ) < 0)
 
-      assert(compare("1.0a.1", "1.0" ) > 0)
-      assert(compare("1.0a-1", "1.0" ) > 0)
-      assert(compare("1.0b.1", "1.0" ) > 0)
-      assert(compare("1.0b-1", "1.0" ) > 0)
-      assert(compare("1.0m.1", "1.0" ) > 0)
-      assert(compare("1.0m-1", "1.0" ) > 0)
+      assert(compare("1.0a.1", "1.0" ) < 0)
+      assert(compare("1.0a-1", "1.0" ) < 0)
+      assert(compare("1.0b.1", "1.0" ) < 0)
+      assert(compare("1.0b-1", "1.0" ) < 0)
+      assert(compare("1.0m.1", "1.0" ) < 0)
+      assert(compare("1.0m-1", "1.0" ) < 0)
     }
 
 
@@ -332,6 +361,10 @@ object VersionTests extends TestSuite {
       assert(compare("1.max", "1.0" ) > 0)
       assert(compare("1.max", "1.9999999999" ) > 0)
 
+      assert(compare("1.*", "1.9999999999" ) > 0)
+      assert(compare("1.+", "1.9999999999" ) > 0)
+      assert(compare("1.x", "1.9999999999" ) > 0)
+
       assert(compare("1.max", "1.MAX" ) == 0)
 
       assert(compare("1.max", "2.0-alpha-1" ) < 0)
@@ -343,8 +376,7 @@ object VersionTests extends TestSuite {
       assert(increasing( "0.9.9-SNAPSHOT", "0.9.9", "0.9.10-SNAPSHOT", "0.9.10", "1.0-alpha-2-SNAPSHOT", "1.0-alpha-2",
         "1.0-alpha-10-SNAPSHOT", "1.0-alpha-10", "1.0-beta-1-SNAPSHOT", "1.0-beta-1",
         "1.0-rc-1-SNAPSHOT", "1.0-rc-1", "1.0-SNAPSHOT", "1.0", "1.0-sp-1-SNAPSHOT", "1.0-sp-1"))
-      // FIXME Should pass?
-      // assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
+      assert(compare("1.0-sp-1", "1.0.1-alpha-1-SNAPSHOT") < 0)
       assert(increasing("1.0.1-alpha-1-SNAPSHOT",
       "1.0.1-alpha-1", "1.0.1-beta-1-SNAPSHOT", "1.0.1-beta-1",
         "1.0.1-rc-1-SNAPSHOT", "1.0.1-rc-1", "1.0.1-SNAPSHOT", "1.0.1", "1.1-SNAPSHOT", "1.1" ))
@@ -353,6 +385,9 @@ object VersionTests extends TestSuite {
       assert(increasing( "1.0.alpha", "1.0", "1.0-1" ))
       assert(increasing( "1.0-alpha", "1.0", "1.0.1" ))
       assert(increasing( "1.0.alpha", "1.0", "1.0.1" ))
+
+      assert(increasing( "1.0-M1", "1.0-MF", "1.0-X1", "1.0-alpha1", "1.0-RC1", "1.0", "2.0", "2.0.2"))
+      assert(increasing( "1.0-MF", "1.0-X1", "1.0a", "1.0-RC1", "1.0", "2.0", "2.0.2"))
     }
 
 
@@ -370,10 +405,16 @@ object VersionTests extends TestSuite {
 
     'specialStartChar - {
       val items = Version("[1.2.0]").items
-      val expectedItems = Seq(Version.Literal("["), Version.Number(1), Version.Number(2), Version.Literal("]"))
+      val expectedItems = Seq(Version.Tag("["), Version.Number(1), Version.Number(2), Version.Number(0), Version.Tag("]"))
       assert(items == expectedItems)
     }
 
+
+    'xhandling - {
+      val items = Version("1.x.0-alpha").items
+      val expectedItems = Seq(Version.Number(1), Version.Max, Version.Number(0), Version.Tag("alpha"))
+      assert(items == expectedItems)
+    }
   }
 
 }

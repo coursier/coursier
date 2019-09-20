@@ -272,7 +272,7 @@ final class ResolutionParams private (
 
   def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] =
     reconciliation.map {
-      case (m, Reconciliation.Strict) => (m, Reconciliation.Default)
+      case (m, Reconciliation.Strict | Reconciliation.SemVer) => (m, Reconciliation.Default)
       case other => other
     }
 
@@ -281,6 +281,8 @@ final class ResolutionParams private (
     val fromReconciliation = reconciliation.collect {
       case (m, Reconciliation.Strict) =>
         (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault), RuleResolution.Fail)
+      case (m, Reconciliation.SemVer) =>
+        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault, semVer = true), RuleResolution.Fail)
     }
 
     rules ++ fromReconciliation

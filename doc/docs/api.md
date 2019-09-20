@@ -17,7 +17,7 @@ and fetch their artifacts.
 ## Resolve
 
 `coursier.Resolve` allows to run resolutions, that is
-finding all the transitive dependencies of some intial dependencies (while
+finding all the transitive dependencies of some initial dependencies (while
 reconciling their versions at the same time).
 
 This entirely relies on metadata, that is POM or `maven-metadata.xml` files

@@ -382,6 +382,7 @@ object CacheUrl {
     }
 
   private[coursier] val BasicRealm = (
+    "(?i)" + // case-insensitive, the response might be BASIC realm=
     "^" +
       Pattern.quote("Basic realm=\"") +
       "([^" + Pattern.quote("\"") + "]*)" +

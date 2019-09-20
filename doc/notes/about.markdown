@@ -17,7 +17,7 @@ Compared to the default dependency resolution of sbt, it adds:
 
 * downloading of artifacts in parallel,
 * better offline mode - one can safely work with snapshot dependencies if these are in cache (sbt tends to try and fail if it cannot check for updates),
-* non obfuscated cache (cache structure just mimicks the URL it caches),
+* non obfuscated cache (cache structure just mimics the URL it caches),
 * no global lock (no "Waiting for ~/.ivy2/.sbt.ivy.lock to be available").
 
 From the command-line, it also has:

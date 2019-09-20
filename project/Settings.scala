@@ -257,7 +257,7 @@ object Settings {
     }
     val inputs = (proguardConfiguration.in(Proguard).value +: SbtProguard.inputFiles(proguardFilteredInputs.in(Proguard).value)).toSet
 
-    // coursier-specific: more agressive existing file re-use (ran into suspicious multiple runs of proguard on Travis CI)
+    // coursier-specific: more aggressive existing file re-use (ran into suspicious multiple runs of proguard on Travis CI)
     if (outputsValue.exists(!_.exists()))
       cachedProguard(inputs)
 

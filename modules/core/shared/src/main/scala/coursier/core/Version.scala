@@ -9,11 +9,7 @@ import coursier.core.compatibility._
  *  Same kind of ordering as aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
  */
 final case class Version(repr: String) extends Ordered[Version] {
-  lazy val items = Version.items(repr)
-  lazy val rawItems: Seq[Version.Item] = {
-    val (first, tokens) = Version.Tokenizer(repr)
-    first +: tokens.toVector.map { case (_, item) => item }
-  }
+  lazy val items: Vector[Version.Item] = Version.items(repr)
   def compare(other: Version) = Version.listCompare(items, other.items)
   def isEmpty = items.forall(_.isEmpty)
 }
@@ -29,13 +25,7 @@ object Version {
         case (BigNumber(a), BigNumber(b)) => a.compare(b)
         case (Number(a), BigNumber(b)) => -b.compare(a)
         case (BigNumber(a), Number(b)) => a.compare(b)
-        case (Qualifier(_, a), Qualifier(_, b)) => a.compare(b)
-        case (Literal(a), Literal(b)) => a.compareToIgnoreCase(b)
-        case (BuildMetadata(_), BuildMetadata(_)) =>
-          // Semver § 10: two versions that differ only in the build metadata, have the same precedence.
-          // Might introduce some non-determinism though :-/
-          0
-
+        case (a @ Tag(_), b @ Tag(_)) => a.compareTag(b)
         case _ =>
           val rel0 = compareToEmpty
           val rel1 = other.compareToEmpty
@@ -65,17 +55,36 @@ object Version {
     def repr: String = value.toString
     override def compareToEmpty = value.compare(0)
   }
-  final case class Qualifier(value: String, level: Int) extends Item {
-    val order = -2
-    override def compareToEmpty = level.compare(0)
-  }
-  final case class Literal(value: String) extends Item {
+
+  /**
+   * Tags represent prerelease tags, typically appearing after - for SemVer compatible versions.
+   */
+  final case class Tag(value: String) extends Item {
     val order = -1
-    override def compareToEmpty = if (value.isEmpty) 0 else 1
+    private val otherLevel = -5
+    lazy val level: Int =
+      value match {
+        case "ga" | "final" | "" => 0 // 1.0.0 equivalent
+        case "snapshot"          => -1
+        case "rc" | "cr"         => -2
+        case "beta" | "b"        => -3
+        case "alpha" | "a"       => -4
+        case "dev"               => -6
+        case "sp" | "bin"        => 1
+        case _                   => otherLevel
+      }
+
+    override def compareToEmpty = level.compare(0)
+    def isPreRelease: Boolean = level < 0
+    def compareTag(other: Tag): Int = {
+      val levelComp = level.compare(other.level)
+      if (levelComp == 0 && level == otherLevel) value.compareToIgnoreCase(other.value)
+      else levelComp
+    }
   }
   final case class BuildMetadata(value: String) extends Item {
     val order = 1
-    override def compareToEmpty = if (value.isEmpty) 0 else 1
+    override def compareToEmpty = 0
   }
 
   case object Min extends Item {
@@ -88,24 +97,6 @@ object Version {
 
   val empty = Number(0)
 
-  private val alphaQualifier = Qualifier("alpha", -5)
-  private val betaQualifier = Qualifier("beta", -4)
-  private val milestoneQualifier = Qualifier("milestone", -3)
-
-  val qualifiers = Seq[Qualifier](
-    alphaQualifier,
-    betaQualifier,
-    milestoneQualifier,
-    Qualifier("cr", -2),
-    Qualifier("rc", -2),
-    Qualifier("snapshot", -1),
-    Qualifier("ga", 0),
-    Qualifier("final", 0),
-    Qualifier("sp", 1)
-  )
-
-  val qualifiersMap = qualifiers.map(q => q.value -> q).toMap
-
   object Tokenizer {
     sealed abstract class Separator
     case object Dot extends Separator
@@ -114,8 +105,8 @@ object Version {
     case object Plus extends Separator
     case object None extends Separator
 
-    def apply(s: String): (Item, Stream[(Separator, Item)]) = {
-      def parseItem(s: Stream[Char]): (Item, Stream[Char]) = {
+    def apply(str: String): (Item, Stream[(Separator, Item)]) = {
+      def parseItem(s: Stream[Char], prev: Option[Separator]): (Item, Stream[Char]) = {
         if (s.isEmpty) (empty, s)
         else if (s.head.isDigit) {
           def digits(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
@@ -136,24 +127,31 @@ object Version {
               letters(b += s.head, s.tail)
 
           val (letters0, rem) = letters(new StringBuilder, s)
-          val item =
-            qualifiersMap.getOrElse(letters0, Literal(letters0))
-
+          val item = letters0 match {
+            case "x" if prev == Some(Dot) => Max
+            case "min" => Min
+            case "max" => Max
+            case _     => Tag(letters0)
+          }
           (item, rem)
         } else {
           val (sep, _) = parseSeparator(s)
-          if (sep == None) {
-            def other(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
-              if (s.isEmpty || s.head.isLetterOrDigit || parseSeparator(s)._1 != None)
-                (b.result().toLowerCase, s)  // not specifying a Locale (error with scala js)
-              else
-                other(b += s.head, s.tail)
+          (prev, sep) match {
+            case (_, None) =>
+              def other(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
+                if (s.isEmpty || s.head.isLetterOrDigit || parseSeparator(s)._1 != None)
+                  (b.result().toLowerCase, s)  // not specifying a Locale (error with scala js)
+                else
+                  other(b += s.head, s.tail)
 
-            val (item, rem0) = other(new StringBuilder, s)
-
-            (Literal(item), rem0)
-          } else
-            (empty, s)
+              val (item, rem0) = other(new StringBuilder, s)
+              // treat .* as .max
+              if (prev == Some(Dot) && item == "*") (Max, rem0)
+              else (Tag(item), rem0)
+            // treat .+ as .max
+            case (Some(Dot), Plus) => (Max, s)
+            case _                 => (empty, s)
+          }
         }
       }
 
@@ -177,68 +175,55 @@ object Version {
             case Plus =>
               Stream((sep, BuildMetadata(rem0.mkString)))
             case _ =>
-              val (item, rem) = parseItem(rem0)
+              val (item, rem) = parseItem(rem0, Some(sep))
               (sep, item) #:: helper(rem)
           }
         }
       }
 
-      val (first, rem) = parseItem(s.toStream)
+      val (first, rem) = parseItem(str.toStream, scala.None)
       (first, helper(rem))
     }
   }
 
-  def postProcess(item: Item, tokens0: Stream[(Tokenizer.Separator, Item)]): Stream[Item] = {
-
-    val tokens =
-      // drop some '.0' under some conditions ???
-      if (isNumeric(item)) {
-        val nextNonDotZero = tokens0.dropWhile{case (Tokenizer.Dot, n: Numeric) => n.isEmpty; case _ => false }
-        if (nextNonDotZero.headOption.forall { case (sep, t) => sep != Tokenizer.Plus && !isMinMax(t) && !isNumeric(t) })
-          nextNonDotZero
-        else
-          tokens0
-      } else
-        tokens0
-
-    def ifFollowedByNumberElse(ifFollowedByNumber: Item, default: Item) = {
-      val followedByNumber = tokens.headOption
-        .exists{ case (Tokenizer.None, num: Numeric) if !num.isEmpty => true; case _ => false }
-
-      if (followedByNumber) ifFollowedByNumber
-      else default
-    }
-
-    val nextItem = item match {
-      case Literal("min") => Min
-      case Literal("max") => Max
-      case Literal("a") => ifFollowedByNumberElse(alphaQualifier, item)
-      case Literal("b") => ifFollowedByNumberElse(betaQualifier, item)
-      case Literal("m") => ifFollowedByNumberElse(milestoneQualifier, item)
-      case _ => item
-    }
-
-    def next =
-      if (tokens.isEmpty) Stream()
-      else postProcess(tokens.head._2, tokens.tail)
-
-    nextItem #:: next
-  }
-
   def isNumeric(item: Item) = item match { case _: Numeric => true; case _ => false }
+  private def isNumericOrMinMax(item: Item): Boolean =
+    item match {
+      case _: Numeric | Min | Max => true
+      case _ => false
+    }
+  def isBuildMetadata(item: Item) = item match { case _: BuildMetadata => true; case _ => false }
 
-  def isMinMax(item: Item) = {
-    (item eq Min) || (item eq Max) || item == Literal("min") || item == Literal("max")
+  def items(repr: String): Vector[Item] = {
+    val (first, tokens) = Tokenizer(repr)
+    first +: tokens.toVector.map(_._2)
   }
 
-  def items(repr: String): List[Item] = {
-    val (first, tokens) = Tokenizer(repr)
+  // before comparing two versions pad the number parts to the equal number of digits
+  // for example, 1-ga, and 1.0.0 comparison will be adjusted first to 1.0.0-ga and 1.0.0.
+  def listCompare(first0: Vector[Item], second0: Vector[Item]): Int = {
+    // Semver § 10: two versions that differ only in the build metadata, have the same precedence.
+    val first = first0.filterNot(isBuildMetadata)
+    val second = second0.filterNot(isBuildMetadata)
 
-    postProcess(first, tokens).toList
+    def padNum(xs: Vector[Item], original: Int, next: Int): Vector[Item] = {
+      val (before, after) = xs.splitAt(original)
+      before ++ Vector.fill(next - original)(empty) ++ after
+    }
+    val num1 = first.takeWhile(isNumericOrMinMax)
+    val num2 = second.takeWhile(isNumericOrMinMax)
+    (num1.size, num2.size) match {
+      case (x, y) if x == y =>
+        listCompare0(first, second)
+      case (x, y) if x > y  =>
+        listCompare0(first, padNum(second, y, x))
+      case (x, y) if x < y  =>
+        listCompare0(padNum(first, x, y), second)
+    }
   }
 
   @tailrec
-  def listCompare(first: List[Item], second: List[Item]): Int = {
+  private def listCompare0(first: Vector[Item], second: Vector[Item]): Int = {
     if (first.isEmpty && second.isEmpty) 0
     else if (first.isEmpty) {
       assert(second.nonEmpty)
@@ -248,7 +233,7 @@ object Version {
       first.dropWhile(_.isEmpty).headOption.fold(0)(_.compareToEmpty)
     } else {
       val rel = first.head.compare(second.head)
-      if (rel == 0) listCompare(first.tail, second.tail)
+      if (rel == 0) listCompare0(first.tail, second.tail)
       else rel
     }
   }
