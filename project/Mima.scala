@@ -49,7 +49,6 @@ object Mima {
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      val sv = scalaVersion.value
       val versions = binaryCompatibilityVersions
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
