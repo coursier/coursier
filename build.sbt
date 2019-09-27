@@ -205,26 +205,8 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     utest,
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
-    mimaPreviousArtifacts := {
-      import Mima.binaryCompatibilityVersions
-      val previous = binaryCompatibilityVersions.map(organization.value %%% moduleName.value % _)
-      val sv = scalaVersion.value
-      if (sv.startsWith("2.13.")) {
-        previous.filter(_.revision != "2.0.0-RC3-4")
-      } else {
-        previous
-      }
-    },
-    mimaBinaryIssueFilters ++= {
-      import com.typesafe.tools.mima.core._
-      import com.typesafe.tools.mima.core.ProblemFilters._
-      Seq(
-        exclude[IncompatibleSignatureProblem]("coursier.interop.LowPriorityCatsImplicits.coursierGatherFromCats"),
-        exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierSyncFromCats"),
-        exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierGatherFromCats"),
-        exclude[IncompatibleSignatureProblem]("coursier.interop.PlatformCatsImplicits.coursierSyncFromCats")
-      )
-    },
+    Mima.previousArtifacts,
+    Mima.catsInteropFilters,
     dontPublishScalaJsIn("2.11")
   )
 
