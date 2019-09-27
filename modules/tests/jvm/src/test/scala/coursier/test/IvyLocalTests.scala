@@ -1,10 +1,13 @@
 package coursier.test
 
+import java.io.File
+
 import coursier.{Classifier, Dependency, LocalRepositories, Type, moduleString}
+import coursier.ivy.{IvyRepository, Pattern}
 import coursier.test.compatibility._
+import utest._
 
 import scala.async.Async.{async, await}
-import utest._
 
 object IvyLocalTests extends TestSuite {
 
@@ -16,7 +19,11 @@ object IvyLocalTests extends TestSuite {
     'coursier {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
-      val extraRepos = Seq(LocalRepositories.ivy2Local)
+      val mockIvy2Local = IvyRepository.fromPattern(
+        new File("modules/tests/metadata/ivy-local").getAbsoluteFile.toURI.toASCIIString +: Pattern.default,
+        dropInfoAttributes = true
+      )
+      val extraRepos = Seq(mockIvy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
       'resolution - runner.resolutionCheck(

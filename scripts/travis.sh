@@ -7,11 +7,6 @@ setupCoursierBinDir() {
   export PATH="$(pwd)/bin:$PATH"
 }
 
-integrationTestsRequirements() {
-  # Required for ~/.ivy2/local repo tests
-  sbt 'set version in ThisBuild := "0.1.2-publish-local"' scala212 utilJVM/publishLocal coreJVM/publishLocal cli/publishLocal
-}
-
 isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
@@ -75,7 +70,6 @@ elif isScalaNative; then
 elif bootstrap; then
   testBootstrap
 else
-  integrationTestsRequirements
   jvmCompile
 
   runJvmTests
