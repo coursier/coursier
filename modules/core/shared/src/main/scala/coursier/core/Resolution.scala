@@ -1458,9 +1458,7 @@ final class Resolution private (
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             if (todo.nonEmpty)
-              helper(todo.toList ::: deps, done)
-            else if (done.covers(h))
-              helper(t, done)
+              h #:: helper(t ::: todo.toList, done0)
             else
               h #:: helper(t, done0)
           }
@@ -1472,9 +1470,6 @@ final class Resolution private (
       .toList
 
     helper(rootDeps, DependencySet.empty)
-      .sortWith { (first, second) =>
-        rootDeps.contains(first) && !rootDeps.contains(second)
-      }
   }
 
   def artifacts(): Seq[Artifact] =

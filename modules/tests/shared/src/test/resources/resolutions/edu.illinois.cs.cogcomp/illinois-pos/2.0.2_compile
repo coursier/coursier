@@ -1,6 +1,6 @@
 edu.illinois.cs.cogcomp:illinois-pos:2.0.2:compile
-net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a:default
-nz.ac.waikato.cms.weka:weka-stable:3.6.10:default
-de.bwaldvogel:liblinear:1.94:default
 edu.illinois.cs.cogcomp:LBJava:1.0.3:default
 edu.illinois.cs.cogcomp:illinois-pos:2.0.2:default
+nz.ac.waikato.cms.weka:weka-stable:3.6.10:default
+de.bwaldvogel:liblinear:1.94:default
+net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a:default
