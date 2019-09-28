@@ -106,4 +106,16 @@ object Mima {
     }
   }
 
+  lazy val catsInteropFilters = {
+    import com.typesafe.tools.mima.core._
+    import com.typesafe.tools.mima.core.ProblemFilters._
+
+    mimaBinaryIssueFilters ++= Seq(
+      exclude[IncompatibleSignatureProblem]("coursier.interop.LowPriorityCatsImplicits.coursierGatherFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierSyncFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierGatherFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.PlatformCatsImplicits.coursierSyncFromCats")
+    )
+  }
+
 }
