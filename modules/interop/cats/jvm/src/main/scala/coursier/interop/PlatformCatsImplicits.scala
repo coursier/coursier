@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 abstract class PlatformCatsImplicits {
 
-  implicit def coursierSyncFromCats[F[_], F0[_]](implicit N: _root_.cats.effect.Sync[F], par: _root_.cats.Parallel[F, F0], cs: _root_.cats.effect.ContextShift[F]): Sync[F] =
+  implicit def coursierSyncFromCats[F[_], F0[_]](implicit N: _root_.cats.effect.Sync[F], par: _root_.cats.Parallel.Aux[F, F0], cs: _root_.cats.effect.ContextShift[F]): Sync[F] =
     new Sync[F] {
       def point[A](a: A): F[A] =
         a.pure[F]

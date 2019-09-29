@@ -8,7 +8,7 @@ import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
 import com.lightbend.sbt.SbtProguard
 import com.lightbend.sbt.SbtProguard.autoImport._
-import com.typesafe.sbt.pgp._
+import com.jsuereth.sbtpgp._
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import coursier.ShadingPlugin.autoImport._
 import Aliases._

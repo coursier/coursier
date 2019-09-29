@@ -206,7 +206,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
     Mima.previousArtifacts,
-    onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
+    Mima.catsInteropFilters,
     dontPublishScalaJsIn("2.11")
   )
 

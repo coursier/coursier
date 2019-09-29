@@ -61,7 +61,7 @@ object Deps {
     // other settings.
 
     def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % versions.argonautShapeless)
-    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "1.2.0")
+    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.0.0")
     def fastParse = setting {
       "com.lihaoyi" %%% "fastparse" % versions.fastParse.value
     }

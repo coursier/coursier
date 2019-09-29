@@ -50,7 +50,11 @@ object Mima {
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
       val sv = scalaVersion.value
-      val versions = binaryCompatibilityVersions
+      val versions =
+        if (sv.startsWith("2.13.") || sv.startsWith("2.12."))
+          binaryCompatibilityVersions.filter(_ != "2.0.0-RC3-4")
+        else
+          binaryCompatibilityVersions
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
       }
@@ -100,6 +104,18 @@ object Mima {
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded."))
       )
     }
+  }
+
+  lazy val catsInteropFilters = {
+    import com.typesafe.tools.mima.core._
+    import com.typesafe.tools.mima.core.ProblemFilters._
+
+    mimaBinaryIssueFilters ++= Seq(
+      exclude[IncompatibleSignatureProblem]("coursier.interop.LowPriorityCatsImplicits.coursierGatherFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierSyncFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierGatherFromCats"),
+      exclude[IncompatibleSignatureProblem]("coursier.interop.PlatformCatsImplicits.coursierSyncFromCats")
+    )
   }
 
 }

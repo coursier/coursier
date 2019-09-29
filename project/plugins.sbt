@@ -1,9 +1,8 @@
 
 plugins_(
   "com.eed3si9n"       % "sbt-assembly"             % "0.14.10",
-  "com.geirsson"       % "sbt-ci-release"           % "1.3.2",
+  "com.geirsson"       % "sbt-ci-release"           % "1.4.31",
   "org.scala-sbt"      % "sbt-contraband"           % "0.4.4",
-  "io.get-coursier"    % "sbt-coursier"             % sbtCoursierVersion,
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.6.0",
   "com.typesafe.sbt"   % "sbt-native-packager"      % "1.4.1",
@@ -12,8 +11,9 @@ plugins_(
   "org.scala-js"       % "sbt-scalajs"              % "0.6.29",
   "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.14.0",
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1",
-  "io.get-coursier"    % "sbt-shading"              % sbtCoursierVersion
 )
 
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC3-6")
+addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.0.0-RC3-6")
+
 def plugins_(modules: ModuleID*) = modules.map(addSbtPlugin)
-def libs = libraryDependencies
