@@ -18,28 +18,35 @@ public final class CoursierPaths {
         throw new Error();
     }
 
-    private static ProjectDirectories coursierDirectories;
+    private static final Object coursierDirectoriesLock = new Object();
+    private static ProjectDirectories coursierDirectories0;
 
+    private static final Object cacheDirectoryLock = new Object();
     private static volatile File cacheDirectory0 = null;
 
-    private static final Object lock = new Object();
+    private static final Object configDirectoryLock = new Object();
+    private static volatile File configDirectory0 = null;
+
+    private static final Object dataLocalDirectoryLock = new Object();
+    private static volatile File dataLocalDirectory0 = null;
 
     // TODO After switching to nio, that logic can be unit tested with mock filesystems.
 
-    private static File computeCacheDirectory() throws IOException {
+    private static String computeCacheDirectory() throws IOException {
         String path = System.getenv("COURSIER_CACHE");
 
         if (path == null)
             path = System.getProperty("coursier.cache");
 
-        File baseXdgDir = new File(coursierDirectories.cacheDir);
+        if (path != null)
+          return path;
+
+        File baseXdgDir = new File(coursierDirectories().cacheDir);
         File xdgDir = new File(baseXdgDir, "v1");
         String xdgPath = xdgDir.getAbsolutePath();
 
-        if (path == null) {
-            if (baseXdgDir.isDirectory())
-              path = xdgPath;
-        }
+        if (baseXdgDir.isDirectory())
+            path = xdgPath;
 
         if (path == null) {
             File coursierDotFile = new File(System.getProperty("user.home") + "/.coursier");
@@ -49,35 +56,81 @@ public final class CoursierPaths {
 
         if (path == null) {
             path = xdgPath;
-            Files.createDirectories(xdgDir.toPath());
+            Util.createDirectories(xdgDir.toPath());
         }
 
-        return new File(path).getAbsoluteFile();
-    }
-
-    private static void init() throws IOException {
-
-        if (cacheDirectory0 == null)
-            synchronized (lock) {
-                if (cacheDirectory0 == null) {
-                    coursierDirectories = ProjectDirectories.from(null, null, "Coursier");
-                    cacheDirectory0 = computeCacheDirectory();
-                }
-            }
+        return path;
     }
 
     public static File cacheDirectory() throws IOException {
-        init();
+
+        if (cacheDirectory0 == null)
+            synchronized (cacheDirectoryLock) {
+                if (cacheDirectory0 == null) {
+                    cacheDirectory0 = new File(computeCacheDirectory()).getAbsoluteFile();
+                }
+            }
+
         return cacheDirectory0;
     }
 
+    private static ProjectDirectories coursierDirectories() throws IOException {
+
+        if (coursierDirectories0 == null)
+            synchronized (coursierDirectoriesLock) {
+                if (coursierDirectories0 == null) {
+                    coursierDirectories0 = ProjectDirectories.from(null, null, "Coursier");
+                }
+            }
+
+        return coursierDirectories0;
+    }
+
+    private static String computeConfigDirectory() throws IOException {
+        String path = System.getenv("COURSIER_CONFIG_DIR");
+
+        if (path == null)
+            path = System.getProperty("coursier.config-dir");
+
+        if (path != null)
+          return path;
+
+        return coursierDirectories().configDir;
+    }
+
     public static File configDirectory() throws IOException {
-        init();
-        return new File(coursierDirectories.configDir);
+
+        if (configDirectory0 == null)
+            synchronized (configDirectoryLock) {
+                if (configDirectory0 == null) {
+                    configDirectory0 = new File(computeConfigDirectory()).getAbsoluteFile();
+                }
+            }
+
+        return configDirectory0;
+    }
+
+    private static String computeDataLocalDirectory() throws IOException {
+        String path = System.getenv("COURSIER_DATA_DIR");
+
+        if (path == null)
+            path = System.getProperty("coursier.data-dir");
+
+        if (path != null)
+          return path;
+
+        return coursierDirectories().dataLocalDir;
     }
 
     public static File dataLocalDirectory() throws IOException {
-        init();
-        return new File(coursierDirectories.dataLocalDir);
+
+        if (dataLocalDirectory0 == null)
+            synchronized (dataLocalDirectoryLock) {
+                if (dataLocalDirectory0 == null) {
+                    dataLocalDirectory0 = new File(computeDataLocalDirectory()).getAbsoluteFile();
+                }
+            }
+
+        return dataLocalDirectory0;
     }
 }
