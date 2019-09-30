@@ -121,7 +121,7 @@ public class CachePath {
 
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
-            Files.createDirectories(lockFile.toPath().getParent());
+            Util.createDirectories(lockFile.toPath().getParent());
             FileOutputStream out = null;
 
             try {
@@ -157,7 +157,7 @@ public class CachePath {
 
         synchronized (intraProcessLock) {
             Path lockFile = cache.resolve(".structure.lock");
-            Files.createDirectories(lockFile.getParent());
+            Util.createDirectories(lockFile.getParent());
             FileChannel channel = null;
 
             try {
