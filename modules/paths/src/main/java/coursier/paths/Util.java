@@ -1,5 +1,9 @@
 package coursier.paths;
 
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -53,5 +57,28 @@ public class Util {
         }
 
         return resolved;
+    }
+
+    private static boolean createDirectories0(Path path) throws IOException {
+        try {
+            Files.createDirectories(path);
+            return true;
+        } catch (FileAlreadyExistsException ex) {
+            return false;
+        }
+    }
+
+    public static void createDirectories(Path path) throws IOException {
+        int max = path.getNameCount();
+        int count = 0;
+        boolean success = false;
+
+        while (!success && count < max) {
+            success = createDirectories0(path);
+            count += 1;
+        }
+
+        if (!success)
+          Files.createDirectories(path);
     }
 }
