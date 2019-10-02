@@ -290,7 +290,7 @@ object PomParsingTests extends TestSuite {
       val expected = Right(Project(
         Module(Organization("com.example"), ModuleName("awesome-project")),
         "1.0-SNAPSHOT"
-      ).copy(info = Info(
+      ).withInfo(Info(
         description = "",
         homePage = "https://example.com",
         licenses = Seq.empty,

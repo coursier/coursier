@@ -606,9 +606,8 @@ object Pom {
     val configurations = proj.configurations +
       (optionalConfig -> (proj.configurations.getOrElse(optionalConfig, Nil) ++ fromConfigs.filter(_.nonEmpty)).distinct)
 
-    proj.copy(
-      configurations = configurations,
-      dependencies = proj.dependencies ++ optionalDeps
-    )
+    proj
+      .withConfigurations(configurations)
+      .withDependencies(proj.dependencies ++ optionalDeps)
   }
 }

@@ -961,7 +961,7 @@ final class Resolution private (
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
       projectCache = projectCache ++ projects.map {
         case (modVer, (s, p)) =>
-          val p0 = withDependencyManagement(p.copy(properties = extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+          val p0 = withDependencyManagement(p.withProperties(extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
           (modVer, (s, p0))
       }
     )
@@ -1292,9 +1292,7 @@ final class Resolution private (
   }
 
   private def withFinalProperties(project: Project): Project =
-    project.copy(
-      properties = projectProperties(project)
-    )
+    project.withProperties(projectProperties(project))
 
   /**
    * Add dependency management / inheritance related items to `project`,
@@ -1358,8 +1356,8 @@ final class Resolution private (
 
     // 1.3 & 1.4 (if only vaguely so)
     val project0 = withFinalProperties(
-      project.copy(
-        properties = parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
+      project.withProperties(
+        parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
       )
     )
 
@@ -1399,10 +1397,10 @@ final class Resolution private (
 
     val depsSet = deps.toSet
 
-    project0.copy(
-      packagingOpt = project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))),
-      version = substituteProps(project0.version, propertiesMap0),
-      dependencies =
+    project0
+      .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
+      .withVersion(substituteProps(project0.version, propertiesMap0))
+      .withDependencies(
         dependencies0
           .filterNot{case (config, dep) =>
             config == Configuration.`import` && depsSet(dep.moduleVersion)
@@ -1410,12 +1408,14 @@ final class Resolution private (
         project0.parent  // belongs to 1.5 & 1.6
           .filter(projectCache.contains)
           .toSeq
-          .flatMap(projectCache(_)._2.dependencies),
-      dependencyManagement = depMgmt.values.toSeq
-        .filterNot{case (config, dep) =>
-          config == Configuration.`import` && depsSet(dep.moduleVersion)
-        }
-    )
+          .flatMap(projectCache(_)._2.dependencies)
+      )
+      .withDependencyManagement(
+        depMgmt.values.toSeq
+          .filterNot{case (config, dep) =>
+            config == Configuration.`import` && depsSet(dep.moduleVersion)
+          }
+      )
   }
 
   /**

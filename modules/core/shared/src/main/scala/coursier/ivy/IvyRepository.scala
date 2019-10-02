@@ -379,31 +379,32 @@ final class IvyRepository private (
     } yield {
       val proj =
         if (dropInfoAttributes)
-          proj0.copy(
-            module = proj0.module.withAttributes(
-              proj0.module.attributes.filter {
-                case (k, _) => !k.startsWith("info.")
-              }
-            ),
-            dependencies = proj0.dependencies.map {
-              case (config, dep0) =>
-                val dep = dep0.copy(
-                  module = dep0.module.withAttributes(
-                    dep0.module.attributes.filter {
-                      case (k, _) => !k.startsWith("info.")
-                    }
+          proj0
+            .withModule(
+              proj0.module.withAttributes(
+                proj0.module.attributes.filter {
+                  case (k, _) => !k.startsWith("info.")
+                }
+              )
+            )
+            .withDependencies(
+              proj0.dependencies.map {
+                case (config, dep0) =>
+                  val dep = dep0.copy(
+                    module = dep0.module.withAttributes(
+                      dep0.module.attributes.filter {
+                        case (k, _) => !k.startsWith("info.")
+                      }
+                    )
                   )
-                )
 
-                config -> dep
-            }
-          )
+                  config -> dep
+              }
+            )
         else
           proj0
 
-      this -> proj.copy(
-        actualVersionOpt = Some(version)
-      )
+      this -> proj.withActualVersionOpt(Some(version))
     }
   }
 

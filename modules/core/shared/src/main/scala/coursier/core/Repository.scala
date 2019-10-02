@@ -39,7 +39,7 @@ trait Repository extends Serializable with ArtifactSource {
                   EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
                 case Some(version0) =>
                   find(module, version0, fetch)
-                    .map(t => t._1 -> t._2.copy(versions = Some(versions0)))
+                    .map(t => t._1 -> t._2.withVersions(Some(versions0)))
               }
           }
     }

@@ -210,7 +210,7 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-final case class Project(
+@data class Project(
   module: Module,
   version: String,
   // First String is configuration (scope for Maven)
