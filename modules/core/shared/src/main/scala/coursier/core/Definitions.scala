@@ -280,7 +280,7 @@ object Info {
 }
 
 // Maven-specific
-final case class Profile(
+@data class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
