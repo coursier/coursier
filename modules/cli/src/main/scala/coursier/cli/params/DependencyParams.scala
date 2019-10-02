@@ -155,9 +155,7 @@ object DependencyParams {
           case (dep, params) =>
             val dep0 = dep.withUnderlyingDependency { dep =>
               dep.copy(
-                module = dep.module.copy(
-                  attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
-                )
+                module = dep.module.withAttributes(defaults ++ dep.module.attributes) // dependency specific attributes override the default values
               )
             }
             (dep0, params)

@@ -191,10 +191,9 @@ object Resolution {
     dependencies.map {
       case (config, dep) =>
         config.map(substituteProps0) -> dep.copy(
-          module = dep.module.copy(
-            organization = dep.module.organization.map(substituteProps0),
-            name = dep.module.name.map(substituteProps0)
-          ),
+          module = dep.module
+            .withOrganization(dep.module.organization.map(substituteProps0))
+            .withName(dep.module.name.map(substituteProps0)),
           version = substituteProps0(dep.version),
           attributes = dep.attributes.copy(
             `type` = dep.attributes.`type`.map(substituteProps0),
@@ -232,7 +231,7 @@ object Resolution {
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
-        val anyOrgModule = module.copy(organization = Organization("*"))
+        val anyOrgModule = module.withOrganization(Organization("*"))
         val forcedVersionOpt = forceVersions.get(module)
           .orElse(forceVersions.get(anyOrgModule))
 
@@ -598,9 +597,7 @@ object Resolution {
         fullCrossVersionBase(dep.module) match {
           case Some(base) =>
             dep.copy(
-              module = dep.module.copy(
-                name = ModuleName(base + "_" + sv)
-              )
+              module = dep.module.withName(ModuleName(base + "_" + sv))
             )
           case None =>
             dep

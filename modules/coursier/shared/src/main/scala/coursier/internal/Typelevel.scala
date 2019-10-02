@@ -19,9 +19,7 @@ object Typelevel {
 
   def swap(module: Module): Module =
     if (module.organization == mainLineOrg && modules(module.name) && module.attributes.isEmpty)
-      module.copy(
-        organization = typelevelOrg
-      )
+      module.withOrganization(typelevelOrg)
     else
       module
 

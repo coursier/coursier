@@ -68,9 +68,7 @@ object JavaOrScalaDependency {
       val newName = baseDependency.module.name.value + platformSuffix + scalaSuffix
 
       baseDependency.copy(
-        module = baseDependency.module.copy(
-          name = ModuleName(newName)
-        )
+        module = baseDependency.module.withName(ModuleName(newName))
       )
     }
 
@@ -78,8 +76,8 @@ object JavaOrScalaDependency {
       if (withPlatformSuffix)
         withUnderlyingDependency { dep =>
           dep.copy(
-            module = dep.module.copy(
-              name = ModuleName(dep.module.name.value + platformSuffix)
+            module = dep.module.withName(
+              ModuleName(dep.module.name.value + platformSuffix)
             )
           )
         }

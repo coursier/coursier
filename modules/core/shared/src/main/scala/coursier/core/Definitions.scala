@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.util.Artifact
+import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
   def map(f: String => String): Organization =
@@ -31,16 +32,15 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-final case class Module(
+@data class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
 ) {
 
-  def trim: Module = copy(
-    organization = organization.map(_.trim),
-    name = name.map(_.trim)
-  )
+  def trim: Module =
+    withOrganization(organization.map(_.trim))
+      .withName(name.map(_.trim))
 
   private def attributesStr = attributes.toSeq
     .sortBy { case (k, _) => k }
@@ -59,7 +59,7 @@ final case class Module(
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  override final lazy val hashCode = Module.unapply(this).get.hashCode()
+  override final lazy val hashCode = tuple.hashCode()
 }
 
 

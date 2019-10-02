@@ -79,8 +79,7 @@ object App {
 
         val sortedDeps = res.minDependencies.toList
           .sortBy { dep =>
-            val (org, name, _) = coursier.core.Module.unapply(dep.module).get
-            (org, name)
+            (dep.module.organization, dep.module.name)
           }
 
         <.table(^.`class` := "table",
@@ -136,14 +135,14 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputOrganization", "Organization"),
                   <.input(^.`class` := "form-control", ^.id := "inputOrganization", ^.placeholder := "Organization",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(organization = Organization(value)))),
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.withOrganization(Organization(value)))),
                     ^.value := module.organization.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputName", "Name"),
                   <.input(^.`class` := "form-control", ^.id := "inputName", ^.placeholder := "Name",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.copy(name = ModuleName(value)))),
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.withName(ModuleName(value)))),
                     ^.value := module.name.value
                   )
                 ),

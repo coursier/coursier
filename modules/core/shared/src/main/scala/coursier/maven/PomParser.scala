@@ -186,7 +186,7 @@ object PomParser {
         val extraAttrsMap = extraAttrs
           .map {
             case (mod, ver) =>
-              (mod.copy(attributes = Map.empty), ver) -> mod.attributes
+              (mod.withAttributes(Map.empty), ver) -> mod.attributes
           }
           .toMap
 
@@ -196,10 +196,9 @@ object PomParser {
           if (relocationGroupIdOpt.nonEmpty || relocationArtifactIdOpt.nonEmpty || relocationVersionOpt.nonEmpty)
             Some {
               Configuration.empty -> Dependency(
-                projModule.copy(
-                  organization = relocationGroupIdOpt.getOrElse(projModule.organization),
-                  name = relocationArtifactIdOpt.getOrElse(projModule.name)
-                ),
+                projModule
+                  .withOrganization(relocationGroupIdOpt.getOrElse(projModule.organization))
+                  .withName(relocationArtifactIdOpt.getOrElse(projModule.name)),
                 relocationVersionOpt.getOrElse(finalVersion),
                 Configuration.empty,
                 Set.empty[(Organization, ModuleName)],
@@ -217,7 +216,7 @@ object PomParser {
           (relocationDependencyOpt.toList ::: dependencies.toList).map {
             case (config, dep0) =>
               val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-                dep0.copy(module = dep0.module.copy(attributes = attrs))
+                dep0.copy(module = dep0.module.withAttributes(attrs))
               )
               config -> dep
           },
