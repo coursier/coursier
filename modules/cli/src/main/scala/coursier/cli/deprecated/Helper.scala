@@ -696,7 +696,7 @@ class Helper(
       case (dep, pub, artifact) =>
         (
           dep.copy(
-            attributes = dep.attributes.copy(classifier = pub.classifier)),
+            attributes = dep.attributes.withClassifier(pub.classifier)),
           pub,
           artifact
         )

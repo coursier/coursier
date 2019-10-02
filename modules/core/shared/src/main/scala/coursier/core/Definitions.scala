@@ -181,7 +181,7 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-final case class Attributes(
+@data class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {

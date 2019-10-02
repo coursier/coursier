@@ -195,10 +195,9 @@ object Resolution {
             .withOrganization(dep.module.organization.map(substituteProps0))
             .withName(dep.module.name.map(substituteProps0)),
           version = substituteProps0(dep.version),
-          attributes = dep.attributes.copy(
-            `type` = dep.attributes.`type`.map(substituteProps0),
-            classifier = dep.attributes.classifier.map(substituteProps0)
-          ),
+          attributes = dep.attributes
+            .withType(dep.attributes.`type`.map(substituteProps0))
+            .withClassifier(dep.attributes.classifier.map(substituteProps0)),
           configuration = dep.configuration.map(substituteProps0),
           exclusions = dep.exclusions.map {
             case (org, name) =>

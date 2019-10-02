@@ -295,7 +295,7 @@ object Artifacts {
 
     val artifacts = (main ++ classifiersArtifacts).map {
       case (dep, pub, artifact) =>
-        (dep.copy(attributes = dep.attributes.copy(classifier = pub.classifier)), pub, artifact)
+        (dep.copy(attributes = dep.attributes.withClassifier(pub.classifier)), pub, artifact)
     }
 
     if (artifactTypes0(Type.all))

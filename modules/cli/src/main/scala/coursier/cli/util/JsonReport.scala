@@ -142,7 +142,7 @@ final case class JsonElem(dep: Dependency,
         (trDep.module.organization, trDep.module.name, trDep.version)
       }.map { d =>
         if (overrideClassifiers.contains(dep0.attributes.classifier)) {
-          d.copy(attributes = d.attributes.copy(classifier = dep0.attributes.classifier))
+          d.copy(attributes = d.attributes.withClassifier(dep0.attributes.classifier))
         } else {
           d
         }
