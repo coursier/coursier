@@ -298,7 +298,7 @@ object Info {
 )
 
 // Maven-specific
-final case class SnapshotVersioning(
+@data class SnapshotVersioning(
   module: Module,
   version: String,
   latest: String,
