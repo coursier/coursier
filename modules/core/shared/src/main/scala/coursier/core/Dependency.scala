@@ -55,10 +55,9 @@ final class Dependency private (
       version = version,
       configuration = configuration,
       exclusions = exclusions,
-      publication = publication.copy(
-        `type` = attributes.`type`,
-        classifier = attributes.classifier
-      ),
+      publication = publication
+        .withType(attributes.`type`)
+        .withClassifier(attributes.classifier),
       optional = optional,
       transitive = transitive
     )
@@ -109,10 +108,7 @@ final class Dependency private (
   def withExclusions(exclusions: Set[(Organization, ModuleName)]): Dependency =
     copy0(exclusions = exclusions)
   def withAttributes(attributes: Attributes): Dependency =
-    copy0(publication = publication.copy(
-      `type` = attributes.`type`,
-      classifier = attributes.classifier
-    ))
+    copy0(publication = publication.withType(attributes.`type`).withClassifier(attributes.classifier))
   def withPublication(publication: Publication): Dependency =
     copy0(publication = publication)
   def withPublication(name: String): Dependency =

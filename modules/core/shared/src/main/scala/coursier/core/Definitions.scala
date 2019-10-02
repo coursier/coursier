@@ -310,7 +310,7 @@ object Info {
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-final case class Publication(
+@data class Publication(
   name: String,
   `type`: Type,
   ext: Extension,

@@ -186,7 +186,7 @@ final class IvyRepository private (
                 if (dependency.publication.ext.isEmpty) MavenAttributes.typeExtension(tpe)
                 else dependency.publication.ext
               Seq(
-                dependency.publication.copy(`type` = tpe, ext = ext)
+                dependency.publication.withType(tpe).withExt(ext)
               )
             } else if (dependency.attributes.classifier.nonEmpty)
               // FIXME We're ignoring dependency.attributes.`type` in this case
