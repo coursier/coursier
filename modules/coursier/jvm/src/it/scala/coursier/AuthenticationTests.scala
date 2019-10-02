@@ -40,7 +40,7 @@ object AuthenticationTests extends TestSuite {
             MavenRepository(testRepo),
             Repositories.central
           ))
-          .addDependencies(dep"com.abc:test:0.1".copy(transitive = false))
+          .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
           .withCache(
             FileCache()
               .noCredentials

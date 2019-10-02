@@ -155,7 +155,7 @@ object Orders {
     val groupedDependencies = dependencies
       .map(fallbackConfigIfNecessary(_, availableConfigs))
       .groupBy(dep => (dep.optional, dep.configuration))
-      .mapValues(deps => deps.head.copy(exclusions = deps.foldLeft(Exclusions.one)((acc, dep) => Exclusions.meet(acc, dep.exclusions))))
+      .mapValues(deps => deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) => Exclusions.meet(acc, dep.exclusions))))
       .toList
 
     val remove =
@@ -186,7 +186,7 @@ object Orders {
     configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
   ): Set[Dependency] = {
     dependencies
-      .groupBy(_.copy(configuration = Configuration.empty, exclusions = Set.empty, optional = false))
+      .groupBy(_.withConfiguration(Configuration.empty).withExclusions(Set.empty).withOptional(false))
       .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
       .valuesIterator
       .fold(Set.empty)(_ ++ _)
