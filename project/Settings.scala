@@ -30,6 +30,8 @@ object Settings {
     resolvers += Resolver.mavenLocal
   }
 
+  private lazy val isScala213 = Def.setting(scalaVersion.value.startsWith("2.13."))
+
   lazy val javaScalaPluginShared = Seq(
     test.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := {},
     scalazBintrayRepository,
@@ -52,7 +54,15 @@ object Settings {
       "-source", "1.8",
       "-target", "1.8"
     ),
-    javacOptions.in(Keys.doc) := Seq()
+    javacOptions.in(Keys.doc) := Seq(),
+    libraryDependencies ++= {
+      if (isScala213.value) Nil
+      else Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.1" cross CrossVersion.full))
+    },
+    scalacOptions ++= {
+      if (isScala213.value) Seq("-Ymacro-annotations")
+      else Nil
+    }
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
     if (prop == "0" || prop == "false")

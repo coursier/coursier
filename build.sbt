@@ -37,7 +37,8 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
     coursierPrefix,
     Mima.previousArtifacts,
     Mima.utilFilters,
-    dontPublishScalaJsIn("2.11")
+    dontPublishScalaJsIn("2.11"),
+    libs += Deps.dataClass % Provided
   )
 
 lazy val utilJvm = util.jvm
@@ -70,7 +71,8 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     coursierPrefix,
     Mima.previousArtifacts,
     Mima.coreFilters,
-    dontPublishScalaJsIn("2.11")
+    dontPublishScalaJsIn("2.11"),
+    libs += Deps.dataClass % Provided
   )
 
 lazy val coreJvm = core.jvm
@@ -156,6 +158,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     shared,
     coursierPrefix,
     utest,
+    libs += Deps.dataClass % Provided,
     libs ++= {
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
         case Some((2, 12)) =>

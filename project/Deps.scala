@@ -22,6 +22,7 @@ object Deps {
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % versions.argonautShapeless
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M9"
   def catsCore = "org.typelevel" %% "cats-core" % "1.6.0"
+  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.1.1"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def emoji = "com.lightbend" %% "emoji" % "1.2.1"
   def fastParse = setting {

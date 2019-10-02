@@ -1,6 +1,7 @@
 scala_library(
     name = "core",
     dependencies = [
+        "3rdparty/jvm:data-class",
         "3rdparty/jvm:fastParse",
         # TODO(wisechengyi) for some reason there is no compile error
         # and this is needed at runtime.
