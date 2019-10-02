@@ -113,7 +113,7 @@ object DependencyParams {
             )
           case Right(l) =>
             Right(
-              moduleReq(l.map { case (d, p) => (d.withUnderlyingDependency(_.copy(transitive = false)), p) })
+              moduleReq(l.map { case (d, p) => (d.withUnderlyingDependency(_.withTransitive(false)), p) })
             )
         }
       }
@@ -154,9 +154,7 @@ object DependencyParams {
         val l = l0.map {
           case (dep, params) =>
             val dep0 = dep.withUnderlyingDependency { dep =>
-              dep.copy(
-                module = dep.module.withAttributes(defaults ++ dep.module.attributes) // dependency specific attributes override the default values
-              )
+              dep.withModule(dep.module.withAttributes(defaults ++ dep.module.attributes)) // dependency specific attributes override the default values
             }
             (dep0, params)
         }

@@ -95,9 +95,7 @@ final case class RawAppDescriptor(
           repositories,
           dependencies.map { dep =>
             dep.withUnderlyingDependency { dep0 =>
-              dep0.copy(
-                exclusions = dep0.exclusions ++ exclusions
-              )
+              dep0.withExclusions(dep0.exclusions ++ exclusions)
             }
           },
           sharedDependencies,

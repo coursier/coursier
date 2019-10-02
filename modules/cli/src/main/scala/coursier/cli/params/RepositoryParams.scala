@@ -82,14 +82,14 @@ object RepositoryParams {
 
         // take sbtPluginHack into account
         repos = repos.map {
-          case m: MavenRepository => m.copy(sbtAttrStub = options.sbtPluginHack)
+          case m: MavenRepository => m.withSbtAttrStub(options.sbtPluginHack)
           case other => other
         }
 
         // take dropInfoAttr into account
         if (options.dropInfoAttr)
           repos = repos.map {
-            case m: IvyRepository => m.copy(dropInfoAttributes = true)
+            case m: IvyRepository => m.withDropInfoAttributes(true)
             case other => other
           }
 

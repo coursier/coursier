@@ -866,7 +866,8 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     file(artifact, retry)
 
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
-    (filePerPolicy(artifact, cachePolicies.head, retry) /: cachePolicies.tail.map(filePerPolicy(artifact, _, retry)))(_ orElse _)
+    cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
+      .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
 
   private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] = {
 
@@ -964,7 +965,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
   def fetch: Cache.Fetch[F] =
     a =>
-      (fetchPerPolicy(a, cachePolicies.head) /: cachePolicies.tail)(_ orElse fetchPerPolicy(a, _))
+      cachePolicies.tail.foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
 
   override def fetchs: Seq[Cache.Fetch[F]] =
     cachePolicies.map { p =>

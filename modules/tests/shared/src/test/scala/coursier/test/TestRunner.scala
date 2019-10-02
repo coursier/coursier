@@ -94,7 +94,7 @@ class TestRunner[F[_]: Gather : ToFuture](
 
       def tryRead = textResource(path)
 
-      val dep = Dependency(module, version, configuration = configuration)
+      val dep = Dependency.of(module, version).withConfiguration(configuration)
       val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions, defaultConfiguration = defaultConfiguration))
 
       val result = res
@@ -156,7 +156,7 @@ class TestRunner[F[_]: Gather : ToFuture](
   )(
     f: Seq[Artifact] => T
   ): Future[T] = {
-    val dep = Dependency(module, version, transitive = transitive, attributes = attributes)
+    val dep = Dependency.of(module, version).withTransitive(transitive).withAttributes(attributes)
     withArtifacts(dep, extraRepos, classifierOpt)(f)
   }
 

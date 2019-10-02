@@ -137,7 +137,7 @@ object Orders {
           else
             dep.configuration
 
-        dep.copy(configuration = config0)
+        dep.withConfiguration(config0)
       case _ =>
         dep
     }

@@ -328,7 +328,7 @@ object Pom {
         (relocationDependencyOpt.toSeq ++ deps).map {
           case (config, dep0) =>
             val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-              dep0.copy(module = dep0.module.withAttributes(attrs))
+              dep0.withModule(dep0.module.withAttributes(attrs))
             )
             config -> dep
         },
@@ -600,7 +600,7 @@ object Pom {
 
     val optionalDeps = proj.dependencies.collect {
       case (conf, dep) if dep.optional && fromConfigs(conf) =>
-        optionalConfig -> dep.copy(optional = false)
+        optionalConfig -> dep.withOptional(false)
     }
 
     val configurations = proj.configurations +

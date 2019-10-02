@@ -45,17 +45,15 @@ final class TreeMirror private(
           .find(f => url == f || url.startsWith(f + "/"))
           .map { f =>
             val newRoot = to + url.stripPrefix(f)
-            m.copy(root = newRoot, authentication = None)
+            m.withRoot(newRoot).withAuthentication(None)
           }
       case i: IvyRepository =>
         from
           .find(f => i.pattern.startsWith(f) && i.metadataPatternOpt.forall(_.startsWith(f)))
           .map { f =>
-            i.copy(
-              pattern = i.pattern.stripPrefix(f).addPrefix(to),
-              metadataPatternOpt = i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)),
-              authentication = None
-            )
+            i.withPattern(i.pattern.stripPrefix(f).addPrefix(to))
+              .withMetadataPattern(i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)))
+              .withAuthentication(None)
           }
       case _ =>
         None

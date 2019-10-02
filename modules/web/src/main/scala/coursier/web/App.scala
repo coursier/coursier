@@ -135,21 +135,21 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputOrganization", "Organization"),
                   <.input(^.`class` := "form-control", ^.id := "inputOrganization", ^.placeholder := "Organization",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.withOrganization(Organization(value)))),
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.withModule(dep.module.withOrganization(Organization(value)))),
                     ^.value := module.organization.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputName", "Name"),
                   <.input(^.`class` := "form-control", ^.id := "inputName", ^.placeholder := "Name",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(module = dep.module.withName(ModuleName(value)))),
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.withModule(dep.module.withName(ModuleName(value)))),
                     ^.value := module.name.value
                   )
                 ),
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputVersion", "Version"),
                   <.input(^.`class` := "form-control", ^.id := "inputVersion", ^.placeholder := "Version",
-                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.copy(version = value)),
+                    ^.onChange ==> backend.updateModule(moduleIdx, (dep, value) => dep.withVersion(value)),
                     ^.value := version
                   )
                 ),
@@ -246,7 +246,7 @@ object App {
                 <.div(^.`class` := "form-group",
                   <.label(^.`for` := "inputVersion", "Root"),
                   <.input(^.`class` := "form-control", ^.id := "inputVersion", ^.placeholder := "Root",
-                    ^.onChange ==> backend.updateRepo(repoIdx, (item, value) => (item._1, item._2.copy(root = value))),
+                    ^.onChange ==> backend.updateRepo(repoIdx, (item, value) => (item._1, item._2.withRoot(value))),
                     ^.value := repo.root
                   )
                 ),
@@ -374,7 +374,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(mod"io.get-coursier:coursier-cache_2.12", "1.1.0-M7") // DEBUG
+      Dependency.of(mod"io.get-coursier:coursier-cache_2.12", "1.1.0-M7") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),

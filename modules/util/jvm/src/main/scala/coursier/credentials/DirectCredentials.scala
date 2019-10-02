@@ -104,7 +104,7 @@ final class DirectCredentials private(
 
   def authentication: Authentication =
     Authentication(
-      username,
+      usernameOpt.getOrElse(""),
       passwordOpt,
       realmOpt = realm,
       optional = optional,

@@ -133,7 +133,7 @@ final case class JsonElem(dep: Dependency,
     if (excluded)
       Nil
     else {
-      val dep0 = dep.copy(version = reconciledVersion)
+      val dep0 = dep.withVersion(reconciledVersion)
 
       val dependencies = resolution.dependenciesOf(
         dep0,
@@ -141,16 +141,15 @@ final case class JsonElem(dep: Dependency,
       ).sortBy { trDep =>
         (trDep.module.organization, trDep.module.name, trDep.version)
       }.map { d =>
-        if (overrideClassifiers.contains(dep0.attributes.classifier)) {
-          d.copy(attributes = d.attributes.withClassifier(dep0.attributes.classifier))
-        } else {
+        if (overrideClassifiers.contains(dep0.attributes.classifier))
+          d.withAttributes(d.attributes.withClassifier(dep0.attributes.classifier))
+        else
           d
-        }
       }
 
       def excluded = resolution
         .dependenciesOf(
-          dep0.copy(exclusions = Set.empty),
+          dep0.withExclusions(Set.empty),
           withRetainedVersions = false
         )
         .sortBy { trDep =>
@@ -160,7 +159,12 @@ final case class JsonElem(dep: Dependency,
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
         case (mod, ver) =>
           JsonElem(
-            Dependency(mod, ver, Configuration.empty, Set.empty[(Organization, ModuleName)], Attributes.empty, optional = false, transitive = false),
+            Dependency(mod, ver)
+              .withConfiguration(Configuration.empty)
+              .withExclusions(Set.empty[(Organization, ModuleName)])
+              .withAttributes(Attributes.empty)
+              .withOptional(false)
+              .withTransitive(false),
             artifacts,
             jsonPrintRequirement,
             resolution,

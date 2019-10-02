@@ -24,8 +24,6 @@ object Typelevel {
       module
 
   val swap: Dependency => Dependency =
-    dependency => dependency.copy(
-      module = swap(dependency.module)
-    )
+    dependency => dependency.withModule(swap(dependency.module))
 
 }

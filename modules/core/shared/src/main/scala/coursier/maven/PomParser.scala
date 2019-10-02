@@ -216,7 +216,7 @@ object PomParser {
           (relocationDependencyOpt.toList ::: dependencies.toList).map {
             case (config, dep0) =>
               val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-                dep0.copy(module = dep0.module.withAttributes(attrs))
+                dep0.withModule(dep0.module.withAttributes(attrs))
               )
               config -> dep
           },

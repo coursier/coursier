@@ -405,12 +405,12 @@ object ResolutionProcess {
           F.bind(lookups) { results =>
             EitherT(F.point(versionOrError(results, ver))).flatMap {
               case (v, repo) =>
-                (getLatest(v, repo, fetch) /: fetchs) (_ orElse getLatest(v, repo, _))
+                fetchs.foldLeft(getLatest(v, repo, fetch))(_ orElse getLatest(v, repo, _))
             }.run
           }
         }
       else
-        (get(fetch, intervalOpt = Some(ver)) /: fetchs)(_ orElse get(_, intervalOpt = Some(ver)))
+        fetchs.foldLeft(get(fetch, intervalOpt = Some(ver)))(_ orElse get(_, intervalOpt = Some(ver)))
     }
 
     if (version.contains("&")) {
@@ -435,7 +435,7 @@ object ResolutionProcess {
         case None =>
           val c = Parse.versionConstraint(version)
           if (c.interval == VersionInterval.zero)
-            (get(fetch) /: fetchs)(_ orElse get(_))
+            fetchs.foldLeft(get(fetch))(_ orElse get(_))
           else
             getLatest0(Left(c.interval))
       }
