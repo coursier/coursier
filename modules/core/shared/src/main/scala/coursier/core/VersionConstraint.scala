@@ -1,8 +1,10 @@
 package coursier.core
 
+import dataclass.data
+
 import scala.annotation.tailrec
 
-final case class VersionConstraint(
+@data class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
 ) {
