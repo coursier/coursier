@@ -489,8 +489,8 @@ final class MavenRepository private (
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      val artifact0 = artifact.copy(
-        extra = artifact.extra + ("metadata" -> metadataArtifact)
+      val artifact0 = artifact.withExtra(
+        artifact.extra + ("metadata" -> metadataArtifact)
       )
       (publication, artifact0)
     }

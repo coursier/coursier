@@ -802,8 +802,8 @@ object FileCacheTests extends TestSuite {
         }
 
         def artifact(base: Uri)(f: DirectCredentials => DirectCredentials) =
-          TestUtil.artifact(base / "redirect").copy(
-            authentication = Some(f(credentials(base, userPass)).authentication)
+          TestUtil.artifact(base / "redirect").withAuthentication(
+            Some(f(credentials(base, userPass)).authentication)
           )
 
         // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact

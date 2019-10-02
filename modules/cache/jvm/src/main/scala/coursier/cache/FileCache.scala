@@ -770,7 +770,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
-        artifact.copy(authentication = authOpt)
+        artifact.withAuthentication(authOpt)
       } else
         artifact
     }
@@ -871,7 +871,7 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] = {
 
     val (artifact0, links) =
-      if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+      if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
     filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>

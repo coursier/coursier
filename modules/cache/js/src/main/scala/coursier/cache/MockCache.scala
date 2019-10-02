@@ -15,7 +15,7 @@ final case class MockCache(base: String) extends Cache[Task] {
       assert(artifact.authentication.isEmpty)
 
       val (artifact0, links) =
-        if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+        if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
         else (artifact, false)
 
       val path =
