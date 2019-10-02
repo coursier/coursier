@@ -1,6 +1,8 @@
 package coursier.core
 
-final case class Versions(
+import dataclass.data
+
+@data class Versions(
   latest: String,
   release: String,
   available: List[String],
@@ -76,7 +78,7 @@ final case class Versions(
 }
 
 object Versions {
-  final case class DateTime(
+  @data class DateTime(
     year: Int,
     month: Int,
     day: Int,
