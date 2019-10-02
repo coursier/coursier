@@ -1,7 +1,9 @@
 package coursier.core
 
+import dataclass.data
+
 // Maven-specific
-final case class Activation(
+@data class Activation(
   properties: Seq[(String, Option[String])],
   os: Activation.Os,
   jdk: Option[Either[VersionInterval, Seq[Version]]]
@@ -45,7 +47,7 @@ final case class Activation(
 
 object Activation {
 
-  final case class Os(
+  @data class Os(
     arch: Option[String],
     families: Set[String],
     name: Option[String],
