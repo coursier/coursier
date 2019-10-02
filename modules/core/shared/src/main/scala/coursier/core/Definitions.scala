@@ -290,7 +290,7 @@ object Info {
 )
 
 // Maven-specific
-final case class SnapshotVersion(
+@data class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value: String,
