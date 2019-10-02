@@ -254,7 +254,7 @@ object Attributes {
 }
 
 /** Extra project info, not used during resolution */
-final case class Info(
+@data class Info(
   description: String,
   homePage: String,
   licenses: Seq[(String, Option[String])],
@@ -264,13 +264,13 @@ final case class Info(
 )
 
 object Info {
-  final case class Developer(
+  @data class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  final case class Scm(
+  @data class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
