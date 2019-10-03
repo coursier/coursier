@@ -39,7 +39,7 @@ trait Repository extends Serializable with ArtifactSource {
                   EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
                 case Some(version0) =>
                   find(module, version0, fetch)
-                    .map(t => t._1 -> t._2.copy(versions = Some(versions0)))
+                    .map(t => t._1 -> t._2.withVersions(Some(versions0)))
               }
           }
     }
@@ -95,13 +95,13 @@ object Repository {
 
   implicit class ArtifactExtensions(val underlying: Artifact) extends AnyVal {
     def withDefaultChecksums: Artifact =
-      underlying.copy(checksumUrls = underlying.checksumUrls ++ Seq(
+      underlying.withChecksumUrls(underlying.checksumUrls ++ Seq(
         "MD5" -> (underlying.url + ".md5"),
         "SHA-1" -> (underlying.url + ".sha1"),
         "SHA-256" -> (underlying.url + ".sha256")
       ))
     def withDefaultSignature: Artifact =
-      underlying.copy(extra = underlying.extra ++ Seq(
+      underlying.withExtra(underlying.extra ++ Seq(
         "sig" ->
           Artifact(
             underlying.url + ".asc",

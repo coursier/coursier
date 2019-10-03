@@ -89,13 +89,13 @@ class Helper(
     var repos = (if (common.repositoryOptions.noDefault) Nil else defaultRepositories) ++ repos0
 
     repos = repos.map {
-      case m: MavenRepository => m.copy(sbtAttrStub = common.repositoryOptions.sbtPluginHack)
+      case m: MavenRepository => m.withSbtAttrStub(common.repositoryOptions.sbtPluginHack)
       case other => other
     }
 
     if (common.repositoryOptions.dropInfoAttr)
       repos = repos.map {
-        case m: IvyRepository => m.copy(dropInfoAttributes = true)
+        case m: IvyRepository => m.withDropInfoAttributes(true)
         case other => other
       }
 
@@ -180,7 +180,7 @@ class Helper(
       res
         .collect { case Right(l) => l }
         .flatten
-        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]()) }
+        .map { case (mod, ver) => (Dependency.of(mod, ver), Map[String, String]()) }
         .toList
     }
 
@@ -290,7 +290,7 @@ class Helper(
       case Left(e) =>
         (e, Nil)
       case Right(deps) =>
-        (Nil, moduleReq(deps).map { case (d, p) => (d.copy(transitive = false), p) })
+        (Nil, moduleReq(deps).map { case (d, p) => (d.withTransitive(false), p) })
     }
 
   val (sbtPluginModVerCfgErrors: Seq[String], sbtPluginDepsWithExtraParams: Seq[(Dependency, Map[String, String])]) = {
@@ -320,10 +320,8 @@ class Helper(
       }
     val ok0 = ok.map {
       case (dep, params) =>
-        val dep0 = dep.copy(
-          module = dep.module.copy(
-            attributes = defaults ++ dep.module.attributes // dependency specific attributes override the default values
-          )
+        val dep0 = dep.withModule(
+          dep.module.withAttributes(defaults ++ dep.module.attributes) // dependency specific attributes override the default values
         )
         (dep0, params)
     }
@@ -697,8 +695,7 @@ class Helper(
     raw.map {
       case (dep, pub, artifact) =>
         (
-          dep.copy(
-            attributes = dep.attributes.copy(classifier = pub.classifier)),
+          dep.withAttributes(dep.attributes.withClassifier(pub.classifier)),
           pub,
           artifact
         )
@@ -899,12 +896,9 @@ class Helper(
             case (t, l) =>
               t -> l.map {
                 case (mod, ver) =>
-                  Dependency(
-                    mod,
-                    ver,
-                    configuration = Configuration.runtime,
-                    attributes = Attributes()
-                  )
+                  Dependency.of(mod, ver)
+                    .withConfiguration(Configuration.runtime)
+                    .withAttributes(Attributes())
               }
           }
       }

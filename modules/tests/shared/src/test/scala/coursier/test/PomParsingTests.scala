@@ -21,10 +21,8 @@ object PomParsingTests extends TestSuite {
                    """
 
       val expected = Right(
-        Configuration.empty -> Dependency(
-          mod"comp:lib",
-          "2.1",
-          attributes = Attributes(classifier = Classifier("extra"))
+        Configuration.empty -> Dependency.of(mod"comp:lib", "2.1").withAttributes(
+          Attributes(classifier = Classifier("extra"))
         )
       )
 
@@ -130,7 +128,7 @@ object PomParsingTests extends TestSuite {
         None,
         Profile.Activation(Nil),
         Seq(
-          Configuration.empty -> Dependency(mod"comp:lib", "0.2")),
+          Configuration.empty -> Dependency.of(mod"comp:lib", "0.2")),
         Nil,
         Map.empty
       ))
@@ -162,7 +160,7 @@ object PomParsingTests extends TestSuite {
         Profile.Activation(Nil),
         Nil,
         Seq(
-          Configuration.test -> Dependency(mod"comp:lib", "0.2")),
+          Configuration.test -> Dependency.of(mod"comp:lib", "0.2")),
         Map.empty
       ))
 
@@ -290,7 +288,7 @@ object PomParsingTests extends TestSuite {
       val expected = Right(Project(
         Module(Organization("com.example"), ModuleName("awesome-project")),
         "1.0-SNAPSHOT"
-      ).copy(info = Info(
+      ).withInfo(Info(
         description = "",
         homePage = "https://example.com",
         licenses = Seq.empty,

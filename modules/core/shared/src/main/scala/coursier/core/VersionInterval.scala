@@ -1,6 +1,8 @@
 package coursier.core
 
-final case class VersionInterval(
+import dataclass.data
+
+@data class VersionInterval(
   from: Option[Version],
   to: Option[Version],
   fromIncluded: Boolean,
@@ -67,8 +69,13 @@ final case class VersionInterval(
   def constraint: VersionConstraint =
     this match {
       case VersionInterval.zero => VersionConstraint.all
-      case VersionInterval(Some(version), None, true, false) => VersionConstraint.preferred(version)
-      case itv => VersionConstraint.interval(itv)
+      case itv =>
+        (itv.from, itv.to, itv.fromIncluded, itv.toIncluded) match {
+          case (Some(version), None, true, false) =>
+            VersionConstraint.preferred(version)
+          case _ =>
+            VersionConstraint.interval(itv)
+        }
     }
 
   def repr: String = Seq(

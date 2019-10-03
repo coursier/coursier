@@ -384,7 +384,7 @@ final class MavenRepository private (
               )
             case versioning @ Some(_) =>
               findVersioning(module, version, versioning, fetch)
-                .map(_.copy(snapshotVersioning = Some(snapshotVersioning)))
+                .map(_.withSnapshotVersioning(Some(snapshotVersioning)))
           }
         }
 
@@ -401,7 +401,7 @@ final class MavenRepository private (
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.right.map(proj => (this, proj.copy(actualVersionOpt = Some(version)))))
+      F.map(res)(_.right.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =
@@ -431,10 +431,9 @@ final class MavenRepository private (
       proj0 <- EitherT(F.point[Either[String, Project]](if (useSaxParser) parseRawPomSax(str) else parseRawPomDom(str)))
     } yield
       Pom.addOptionalDependenciesInConfig(
-        proj0.copy(
-          actualVersionOpt = Some(version),
-          configurations = defaultConfigurations
-        ),
+        proj0
+          .withActualVersionOpt(Some(version))
+          .withConfigurations(defaultConfigurations),
         Set(Configuration.empty, Configuration.default),
         Configuration.optional
       )
@@ -489,8 +488,8 @@ final class MavenRepository private (
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      val artifact0 = artifact.copy(
-        extra = artifact.extra + ("metadata" -> metadataArtifact)
+      val artifact0 = artifact.withExtra(
+        artifact.extra + ("metadata" -> metadataArtifact)
       )
       (publication, artifact0)
     }

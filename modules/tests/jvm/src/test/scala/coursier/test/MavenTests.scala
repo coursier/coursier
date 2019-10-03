@@ -16,12 +16,9 @@ object MavenTests extends TestSuite {
   val tests = Tests {
     'testSnapshotNoVersioning - {
 
-      val dep = Dependency(
-        mod"com.abc:test-snapshot-special",
-        "0.1.0-SNAPSHOT",
-        transitive = false,
-        attributes = Attributes()
-      )
+      val dep = Dependency.of(mod"com.abc:test-snapshot-special", "0.1.0-SNAPSHOT")
+        .withTransitive(false)
+        .withAttributes(Attributes())
 
       val repoBase = new File(HandmadeMetadata.repoBase, "http/abc.com")
         .toURI
@@ -33,7 +30,7 @@ object MavenTests extends TestSuite {
       val sourcesJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82-sources.jar"
 
       * - runner.withArtifacts(
-        dep = dep.copy(attributes = Attributes(Type.jar)),
+        dep = dep.withAttributes(Attributes(Type.jar)),
         extraRepos = Seq(repo),
         classifierOpt = None
       ) {
@@ -44,7 +41,7 @@ object MavenTests extends TestSuite {
       }
 
       * - runner.withArtifacts(
-        dep = dep.copy(attributes = Attributes(Type.source)),
+        dep = dep.withAttributes(Attributes(Type.source)),
         extraRepos = Seq(repo),
         classifierOpt = Some(Classifier.sources)
       ) {

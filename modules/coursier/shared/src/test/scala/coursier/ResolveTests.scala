@@ -364,7 +364,7 @@ object ResolveTests extends TestSuite {
 
         val res = await {
           resolve
-            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".copy(configuration = Configuration.defaultCompile))
+            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".withConfiguration(Configuration.defaultCompile))
             .future()
         }
 

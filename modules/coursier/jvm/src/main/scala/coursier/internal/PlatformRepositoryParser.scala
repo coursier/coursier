@@ -74,19 +74,15 @@ abstract class PlatformRepositoryParser {
 
                 repo.right.map {
                   case m: MavenRepository =>
-                    m.copy(
-                      root = baseUrl,
-                      authentication = Some(auth)
-                    )
+                    m.withRoot(baseUrl).withAuthentication(Some(auth))
                   case i: IvyRepository =>
-                    i.copy(
-                      pattern = coursier.ivy.Pattern(
+                    i.withAuthentication(Some(auth)).withPattern(
+                      coursier.ivy.Pattern(
                         coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
                           case _: coursier.ivy.Pattern.Chunk.Const => true
                           case _ => false
                         }
-                      ),
-                      authentication = Some(auth)
+                      )
                     )
                   case r =>
                     sys.error(s"Unrecognized repository: $r")

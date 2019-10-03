@@ -66,7 +66,7 @@ object RuleParser {
       P("Strict" ~ ("(" ~ moduleOrExcludedModule.rep(sep = P("," ~ " ".rep)) ~ ")").?).map { modulesOpt =>
         val (exclude, include) = modulesOpt.getOrElse(Nil).partition(_.organization.value.startsWith("!"))
         val include0 = if (include.isEmpty) Set(ModuleMatcher.all) else include.map(ModuleMatcher(_)).toSet
-        val exclude0 = exclude.map(m => m.copy(organization = Organization(m.organization.value.stripPrefix("!"))))
+        val exclude0 = exclude.map(m => m.withOrganization(Organization(m.organization.value.stripPrefix("!"))))
         Strict(
           include0,
           exclude0.map(ModuleMatcher(_)).toSet

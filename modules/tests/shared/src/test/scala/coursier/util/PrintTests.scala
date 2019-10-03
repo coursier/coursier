@@ -26,14 +26,11 @@ object PrintTests extends TestSuite {
 
   val tests = Tests {
     'ignoreAttributes - {
-      val dep = Dependency(
-        mod"org:name",
-        "0.1",
-        configuration = Configuration("foo")
-      )
+      val dep = Dependency.of(mod"org:name", "0.1")
+        .withConfiguration(Configuration("foo"))
       val deps = Seq(
         dep,
-        dep.copy(attributes = Attributes(Type("fooz"), Classifier.empty))
+        dep.withAttributes(Attributes(Type("fooz"), Classifier.empty))
       )
 
       val res = Print.dependenciesUnknownConfigs(deps, Map(), printExclusions = false, reorder = true)
@@ -47,7 +44,7 @@ object PrintTests extends TestSuite {
         val junit = mod"junit:junit"
         val junitVersion = "4.10"
 
-        val result = await(runner.resolve(Seq(Dependency(junit, junitVersion))))
+        val result = await(runner.resolve(Seq(Dependency.of(junit, junitVersion))))
 
         val hamcrest = mod"org.hamcrest:hamcrest-core"
         val hamcrestVersion = "1.1"
@@ -76,7 +73,7 @@ object PrintTests extends TestSuite {
         val version = "2.3.11"
 
         val result = await(runner.resolve(
-          Seq(Dependency(mod, version)),
+          Seq(Dependency.of(mod, version)),
           forceVersions = Map(mod"org.webjars.npm:caniuse-lite" -> "1.0.30000748"),
           reconciliation = Some(_ => Reconciliation.Relaxed)
         ))

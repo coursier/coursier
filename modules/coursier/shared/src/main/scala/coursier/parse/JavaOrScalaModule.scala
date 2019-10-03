@@ -44,9 +44,7 @@ object JavaOrScalaModule {
 
       val newName = baseModule.name.value + scalaSuffix
 
-      baseModule.copy(
-        name = ModuleName(newName)
-      )
+      baseModule.withName(ModuleName(newName))
     }
   }
 }

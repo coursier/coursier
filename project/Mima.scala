@@ -49,12 +49,7 @@ object Mima {
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      val sv = scalaVersion.value
-      val versions =
-        if (sv.startsWith("2.13.") || sv.startsWith("2.12."))
-          binaryCompatibilityVersions.filter(_ != "2.0.0-RC3-4")
-        else
-          binaryCompatibilityVersions
+      val versions = binaryCompatibilityVersions.filter(_ != "2.0.0-RC3-4")
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
       }

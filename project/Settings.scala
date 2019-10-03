@@ -30,6 +30,8 @@ object Settings {
     resolvers += Resolver.mavenLocal
   }
 
+  private lazy val isScala213 = Def.setting(scalaVersion.value.startsWith("2.13."))
+
   lazy val javaScalaPluginShared = Seq(
     test.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := {},
     scalazBintrayRepository,
@@ -52,7 +54,15 @@ object Settings {
       "-source", "1.8",
       "-target", "1.8"
     ),
-    javacOptions.in(Keys.doc) := Seq()
+    javacOptions.in(Keys.doc) := Seq(),
+    libraryDependencies ++= {
+      if (isScala213.value) Nil
+      else Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.1" cross CrossVersion.full))
+    },
+    scalacOptions ++= {
+      if (isScala213.value) Seq("-Ymacro-annotations")
+      else Nil
+    }
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
     if (prop == "0" || prop == "false")
@@ -99,27 +109,27 @@ object Settings {
     autoScalaLibrary := false
   )
 
-  lazy val generatePropertyFile = 
+  lazy val generatePropertyFile =
     resourceGenerators.in(Compile) += Def.task {
       import sys.process._
 
       val dir = classDirectory.in(Compile).value / "coursier"
       val ver = version.value
-  
+
       val f = dir / "coursier.properties"
       dir.mkdirs()
 
       val p = new java.util.Properties
-  
+
       p.setProperty("version", ver)
       p.setProperty("commit-hash", Seq("git", "rev-parse", "HEAD").!!.trim)
-  
+
       val w = new java.io.FileOutputStream(f)
       p.store(w, "Coursier properties")
       w.close()
-  
+
       state.value.log.info(s"Wrote $f")
-  
+
       Nil
     }
 
@@ -239,7 +249,7 @@ object Settings {
         PgpKeys.publishSigned := PgpKeys.publishSigned.in(Shading).value,
         PgpKeys.publishLocalSigned := PgpKeys.publishLocalSigned.in(Shading).value
       )
-  
+
   // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
   lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {
     SbtProguard.writeConfiguration(proguardConfiguration.in(Proguard).value, proguardOptions.in(Proguard).value)
@@ -392,7 +402,7 @@ object Settings {
         output
       }
     )
-  
+
   lazy val publishGeneratedSources = Seq(
     // https://github.com/sbt/sbt/issues/2205
     mappings in (Compile, packageSrc) ++= {

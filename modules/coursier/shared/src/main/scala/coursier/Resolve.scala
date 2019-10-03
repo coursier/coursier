@@ -273,8 +273,8 @@ object Resolve extends PlatformResolve {
           filter(dep.module.organization, dep.module.name)
         }
         .map { dep =>
-          dep.copy(
-            exclusions = Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
+          dep.withExclusions(
+            Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
           )
         }
     }

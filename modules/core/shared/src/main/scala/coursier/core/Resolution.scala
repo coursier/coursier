@@ -84,7 +84,7 @@ object Resolution {
 
   def addDependencies(deps: Seq[Seq[(Configuration, Dependency)]]): Seq[(Configuration, Dependency)] = {
     val res =
-      (deps :\ (Set.empty[DepMgmt.Key], Seq.empty[(Configuration, Dependency)])) {
+      deps.foldRight(Set.empty[DepMgmt.Key], Seq.empty[(Configuration, Dependency)]) {
         case (deps0, (set, acc)) =>
           val deps = deps0
             .filter{case (_, dep) => !set(DepMgmt.key(dep))}
@@ -190,24 +190,28 @@ object Resolution {
 
     dependencies.map {
       case (config, dep) =>
-        config.map(substituteProps0) -> dep.copy(
-          module = dep.module.copy(
-            organization = dep.module.organization.map(substituteProps0),
-            name = dep.module.name.map(substituteProps0)
-          ),
-          version = substituteProps0(dep.version),
-          attributes = dep.attributes.copy(
-            `type` = dep.attributes.`type`.map(substituteProps0),
-            classifier = dep.attributes.classifier.map(substituteProps0)
-          ),
-          configuration = dep.configuration.map(substituteProps0),
-          exclusions = dep.exclusions.map {
-            case (org, name) =>
-              (org.map(substituteProps0), name.map(substituteProps0))
-          }
-          // FIXME The content of the optional tag may also be a property in
-          // the original POM. Maybe not parse it that earlier?
-        )
+        val dep0 = dep
+          .withModule(
+            dep.module
+              .withOrganization(dep.module.organization.map(substituteProps0))
+              .withName(dep.module.name.map(substituteProps0))
+          )
+          .withVersion(substituteProps0(dep.version))
+          .withAttributes(
+            dep.attributes
+              .withType(dep.attributes.`type`.map(substituteProps0))
+              .withClassifier(dep.attributes.classifier.map(substituteProps0))
+          )
+          .withConfiguration(dep.configuration.map(substituteProps0))
+          .withExclusions(
+            dep.exclusions.map {
+              case (org, name) =>
+                (org.map(substituteProps0), name.map(substituteProps0))
+            }
+          )
+        // FIXME The content of the optional tag may also be a property in
+        // the original POM. Maybe not parse it that earlier?
+        config.map(substituteProps0) -> dep0
     }
   }
 
@@ -232,7 +236,7 @@ object Resolution {
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
-        val anyOrgModule = module.copy(organization = Organization("*"))
+        val anyOrgModule = module.withOrganization(Organization("*"))
         val forcedVersionOpt = forceVersions.get(module)
           .orElse(forceVersions.get(anyOrgModule))
 
@@ -308,7 +312,7 @@ object Resolution {
         for ((mgmtConfig, mgmtDep) <- dict.get(DepMgmt.key(dep0))) {
 
           if (mgmtDep.version.nonEmpty)
-            dep = dep.copy(version = mgmtDep.version)
+            dep = dep.withVersion(mgmtDep.version)
 
           if (config.isEmpty)
             config = mgmtConfig
@@ -319,10 +323,10 @@ object Resolution {
           // false from no optional section in the dependency management for now.
 
           if (dep.exclusions.isEmpty)
-            dep = dep.copy(exclusions = mgmtDep.exclusions)
+            dep = dep.withExclusions(mgmtDep.exclusions)
 
           if (mgmtDep.optional)
-            dep = dep.copy(optional = mgmtDep.optional)
+            dep = dep.withOptional(mgmtDep.optional)
         }
 
         (config, dep)
@@ -353,9 +357,7 @@ object Resolution {
       }
       .map {
         case (config, dep) =>
-          config -> dep.copy(
-            exclusions = Exclusions.minimize(dep.exclusions ++ exclusions)
-          )
+          config -> dep.withExclusions(Exclusions.minimize(dep.exclusions ++ exclusions))
       }
   }
 
@@ -513,7 +515,7 @@ object Resolution {
 
         val dep =
           if (from.optional)
-            dep0.copy(optional = true)
+            dep0.withOptional(true)
           else
             dep0
 
@@ -593,15 +595,11 @@ object Resolution {
 
     dep =>
       if (dep.module.organization == Organization("org.scala-lang") && scalaModules.contains(dep.module.name))
-        dep.copy(version = sv)
+        dep.withVersion(sv)
       else
         fullCrossVersionBase(dep.module) match {
           case Some(base) =>
-            dep.copy(
-              module = dep.module.copy(
-                name = ModuleName(base + "_" + sv)
-              )
-            )
+            dep.withModule(dep.module.withName(ModuleName(base + "_" + sv)))
           case None =>
             dep
         }
@@ -965,7 +963,7 @@ final class Resolution private (
       finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
       projectCache = projectCache ++ projects.map {
         case (modVer, (s, p)) =>
-          val p0 = withDependencyManagement(p.copy(properties = extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+          val p0 = withDependencyManagement(p.withProperties(extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
           (modVer, (s, p0))
       }
     )
@@ -1101,7 +1099,7 @@ final class Resolution private (
   }
 
   private def eraseVersion(dep: Dependency) =
-    dep.copy(version = "")
+    dep.withVersion("")
 
   /**
    * Returns a map giving the dependencies that brought each of
@@ -1296,9 +1294,7 @@ final class Resolution private (
   }
 
   private def withFinalProperties(project: Project): Project =
-    project.copy(
-      properties = projectProperties(project)
-    )
+    project.withProperties(projectProperties(project))
 
   /**
    * Add dependency management / inheritance related items to `project`,
@@ -1362,8 +1358,8 @@ final class Resolution private (
 
     // 1.3 & 1.4 (if only vaguely so)
     val project0 = withFinalProperties(
-      project.copy(
-        properties = parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
+      project.withProperties(
+        parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
       )
     )
 
@@ -1403,10 +1399,10 @@ final class Resolution private (
 
     val depsSet = deps.toSet
 
-    project0.copy(
-      packagingOpt = project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))),
-      version = substituteProps(project0.version, propertiesMap0),
-      dependencies =
+    project0
+      .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
+      .withVersion(substituteProps(project0.version, propertiesMap0))
+      .withDependencies(
         dependencies0
           .filterNot{case (config, dep) =>
             config == Configuration.`import` && depsSet(dep.moduleVersion)
@@ -1414,12 +1410,14 @@ final class Resolution private (
         project0.parent  // belongs to 1.5 & 1.6
           .filter(projectCache.contains)
           .toSeq
-          .flatMap(projectCache(_)._2.dependencies),
-      dependencyManagement = depMgmt.values.toSeq
-        .filterNot{case (config, dep) =>
-          config == Configuration.`import` && depsSet(dep.moduleVersion)
-        }
-    )
+          .flatMap(projectCache(_)._2.dependencies)
+      )
+      .withDependencyManagement(
+        depMgmt.values.toSeq
+          .filterNot{case (config, dep) =>
+            config == Configuration.`import` && depsSet(dep.moduleVersion)
+          }
+      )
   }
 
   /**
@@ -1542,7 +1540,7 @@ final class Resolution private (
   def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
       retainedVersions.get(dep.module).fold(dep) { v =>
-        dep.copy(version = v)
+        dep.withVersion(v)
       }
     }
 

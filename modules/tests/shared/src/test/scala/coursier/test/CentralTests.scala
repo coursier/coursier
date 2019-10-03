@@ -64,7 +64,7 @@ abstract class CentralTests extends TestSuite {
 
     'jodaVersionInterval - {
       async {
-        val dep = Dependency(Module(org"joda-time", name"joda-time"), "[2.2,2.8]")
+        val dep = Dependency.of(Module(org"joda-time", name"joda-time"), "[2.2,2.8]")
         val res0 = await(runner.resolve(Seq(dep)))
         val res = res0.clearCaches
 

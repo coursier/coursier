@@ -80,7 +80,7 @@ object DependencyTree {
 
         def excluded = resolution
           .dependenciesOf(
-            dep0.copy(exclusions = Set.empty),
+            dep0.withExclusions(Set.empty),
             withRetainedVersions = false
           )
           .sortBy { trDep =>

@@ -1,8 +1,10 @@
 package coursier.core
 
+import dataclass.data
+
 import scala.annotation.tailrec
 
-final case class VersionConstraint(
+@data class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
 ) {
@@ -51,7 +53,7 @@ object VersionConstraint {
     val intervals = constraints.map(_.interval)
 
     val intervalOpt =
-      (Option(VersionInterval.zero) /: intervals) {
+      intervals.foldLeft(Option(VersionInterval.zero)) {
         case (acc, itv) =>
           acc.flatMap(_.merge(itv))
       }

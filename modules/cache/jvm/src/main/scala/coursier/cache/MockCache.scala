@@ -26,7 +26,7 @@ final case class MockCache[F[_]](
   def fetch: Cache.Fetch[F] = { artifact =>
 
     val (artifact0, links) =
-      if (artifact.url.endsWith("/.links")) (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
+      if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
     if (artifact0.url.startsWith("http://localhost:"))
