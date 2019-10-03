@@ -1457,10 +1457,10 @@ final class Resolution private (
             val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
-            if (todo.nonEmpty)
-              h #:: helper(t ::: todo.toList, done0)
-            else
-              h #:: helper(t, done0)
+            val t0 =
+              if (todo.isEmpty) t
+              else t ::: todo.toList
+            h #:: helper(t0, done0)
           }
       }
 
@@ -1469,7 +1469,7 @@ final class Resolution private (
       .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
       .toList
 
-    helper(rootDeps, DependencySet.empty)
+    helper(rootDeps, DependencySet.empty).toVector
   }
 
   def artifacts(): Seq[Artifact] =
