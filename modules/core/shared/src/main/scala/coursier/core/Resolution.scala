@@ -1457,12 +1457,10 @@ final class Resolution private (
             val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
-            if (todo.nonEmpty)
-              helper(todo.toList ::: deps, done)
-            else if (done.covers(h))
-              helper(t, done)
-            else
-              h #:: helper(t, done0)
+            val t0 =
+              if (todo.isEmpty) t
+              else t ::: todo.toList
+            h #:: helper(t0, done0)
           }
       }
 
