@@ -30,7 +30,10 @@ object Settings {
     resolvers += Resolver.mavenLocal
   }
 
-  private lazy val isScala213 = Def.setting(scalaVersion.value.startsWith("2.13."))
+  private lazy val isAtLeastScala213 = Def.setting {
+    import Ordering.Implicits._
+    CrossVersion.partialVersion(scalaVersion.value).exists(_ >= (2, 13))
+  }
 
   lazy val javaScalaPluginShared = Seq(
     test.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := {},
@@ -56,11 +59,11 @@ object Settings {
     ),
     javacOptions.in(Keys.doc) := Seq(),
     libraryDependencies ++= {
-      if (isScala213.value) Nil
+      if (isAtLeastScala213.value) Nil
       else Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.1" cross CrossVersion.full))
     },
     scalacOptions ++= {
-      if (isScala213.value) Seq("-Ymacro-annotations")
+      if (isAtLeastScala213.value) Seq("-Ymacro-annotations")
       else Nil
     }
   ) ++ {
