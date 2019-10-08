@@ -33,7 +33,7 @@ object ResolveParams {
     val outputV = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
-    val dependencyV = DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersion))
+    val dependencyV = DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
 
     val benchmark = options.benchmark
     val tree = options.tree
