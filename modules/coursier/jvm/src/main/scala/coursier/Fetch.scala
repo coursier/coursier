@@ -12,25 +12,13 @@ import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import dataclass.data
 
-final class Fetch[F[_]] private (
+@data class Fetch[F[_]](
   private val resolve: Resolve[F],
   private val artifacts: Artifacts[F],
-  private val fetchParams: Fetch.Params
+  fetchCacheOpt: Option[File]
 ) {
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Fetch[_] =>
-        resolve == other.resolve && artifacts == other.artifacts
-    }
-
-  override def hashCode(): Int =
-    37 * (17 + resolve.##) + artifacts.##
-
-  override def toString: String =
-    s"Fetch($resolve, $artifacts)"
-
 
   def dependencies: Seq[Dependency] =
     resolve.dependencies
@@ -105,13 +93,6 @@ final class Fetch[F[_]] private (
     cacheKeyOpt.nonEmpty
 
 
-  private def withResolve(resolve: Resolve[F]): Fetch[F] =
-    new Fetch(resolve, artifacts, fetchParams)
-  private def withArtifacts(artifacts: Artifacts[F]): Fetch[F] =
-    new Fetch(resolve, artifacts, fetchParams)
-  private def withFetchParams(fetchParams: Fetch.Params): Fetch[F] =
-    new Fetch(resolve, artifacts, fetchParams)
-
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
     withResolve(resolve.withDependencies(dependencies))
   def addDependencies(dependencies: Dependency*): Fetch[F] =
@@ -148,9 +129,9 @@ final class Fetch[F[_]] private (
     withArtifacts(artifacts.withOtherCaches(caches))
 
   def withFetchCache(location: File): Fetch[F] =
-    withFetchParams(fetchParams.copy(fetchCacheOpt = Some(location)))
+    withFetchCacheOpt(Some(location))
   def withFetchCache(locationOpt: Option[File]): Fetch[F] =
-    withFetchParams(fetchParams.copy(fetchCacheOpt = locationOpt))
+    withFetchCacheOpt(locationOpt)
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
     withResolve(resolve.withThroughOpt(Some(resolve.throughOpt.fold(f)(_ andThen f))))
@@ -208,7 +189,7 @@ final class Fetch[F[_]] private (
   def io: F[Seq[File]] = {
 
     val cacheKeyOpt0 = for {
-      fetchCache <- fetchParams.fetchCacheOpt
+      fetchCache <- fetchCacheOpt
       key <- cacheKeyOpt
     } yield {
       val cache = FetchCache(fetchCache.toPath)
@@ -243,62 +224,31 @@ final class Fetch[F[_]] private (
 
 object Fetch {
 
-  final class Result private (
-    val resolution: Resolution,
-    val detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-    val extraArtifacts: Seq[(Artifact, File)]
+  @data class Result(
+    resolution: Resolution,
+    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+    extraArtifacts: Seq[(Artifact, File)]
   ) {
-
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case other: Result =>
-          resolution == other.resolution &&
-            detailedArtifacts == other.detailedArtifacts &&
-            extraArtifacts == other.extraArtifacts
-        case _ => false
-      }
-
-    override def hashCode(): Int = {
-      var code = 17 + "coursier.Fetch.Result".##
-      code = 37 * code + resolution.##
-      code = 37 * code + detailedArtifacts.##
-      code = 37 * code + extraArtifacts.##
-      code
-    }
-
-    override def toString: String =
-      s"Fetch.Result($resolution, $detailedArtifacts, $extraArtifacts)"
-
 
     def artifacts: Seq[(Artifact, File)] =
       detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
 
     def files: Seq[File] =
       artifacts.map(_._2)
-
   }
 
-  object Result {
-    def apply(
-      resolution: Resolution,
-      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-      extraArtifacts: Seq[(Artifact, File)]
-    ): Result =
-      new Result(
-        resolution,
-        detailedArtifacts,
-        extraArtifacts
-      )
-  }
+  def apply(): Fetch[Task] =
+    new Fetch(
+      Resolve(Cache.default),
+      Artifacts(Cache.default),
+      None
+    )
 
-  // see Resolve.apply for why cache is passed here
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Fetch[F] =
+  def apply[F[_]](cache: Cache[F])(implicit S: Sync[F]): Fetch[F] =
     new Fetch[F](
       Resolve(cache),
       Artifacts(cache),
-      Params(
-        None
-      )
+      None
     )
 
   implicit class FetchTaskOps(private val fetch: Fetch[Task]) extends AnyVal {
@@ -342,9 +292,5 @@ object Fetch {
     }
 
   }
-
-  private final case class Params(
-    fetchCacheOpt: Option[File]
-  )
 
 }
