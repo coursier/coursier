@@ -3,6 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{Artifact, EitherT, Monad, WebPage}
+import dataclass._
 
 object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
@@ -78,94 +79,24 @@ object MavenRepository {
     } yield proj
 
 
-  def apply(
-    root: String,
-    changing: Option[Boolean] = None,
-    sbtAttrStub: Boolean = true,
-    authentication: Option[Authentication] = None
-  ): MavenRepository =
-    new MavenRepository(
-      actualRoot(root),
-      changing,
-      sbtAttrStub,
-      authentication,
-      versionsCheckHasModule = true
-    )
-
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
 }
 
-final class MavenRepository private (
-  val root: String,
-  val changing: Option[Boolean],
+@data(apply = false) class MavenRepository(
+  root: String,
+  authentication: Option[Authentication] = None,
+  @since
+  changing: Option[Boolean] = None,
   /** Hackish hack for sbt plugins mainly - that's some totally ad hoc stuff… */
-  val sbtAttrStub: Boolean,
-  val authentication: Option[Authentication],
-  override val versionsCheckHasModule: Boolean
+  sbtAttrStub: Boolean = true,
+  @since
+  override val versionsCheckHasModule: Boolean = true
 ) extends Repository {
 
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: MavenRepository =>
-        root == other.root &&
-          changing == other.changing &&
-          sbtAttrStub == other.sbtAttrStub &&
-          authentication == other.authentication &&
-          versionsCheckHasModule == other.versionsCheckHasModule
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    var code = 17 + "coursier.maven.MavenRepository".##
-    code = 37 * code + root.##
-    code = 37 * code + changing.##
-    code = 37 * code + sbtAttrStub.##
-    code = 37 * code + authentication.##
-    code = 37 * code + versionsCheckHasModule.##
-    37 * code
-  }
-
-  override def toString: String =
-    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication, $versionsCheckHasModule)"
-
-  private def copy0(
-    root: String = root,
-    changing: Option[Boolean] = changing,
-    sbtAttrStub: Boolean = sbtAttrStub,
-    authentication: Option[Authentication] = authentication,
-    versionsCheckHasModule: Boolean = versionsCheckHasModule
-  ): MavenRepository =
-    new MavenRepository(
-      MavenRepository.actualRoot(root),
-      changing,
-      sbtAttrStub,
-      authentication,
-      versionsCheckHasModule
-    )
-
-  @deprecated("Use the with* methods instead", "2.0.0-RC3")
-  def copy(
-    root: String = root,
-    changing: Option[Boolean] = changing,
-    sbtAttrStub: Boolean = sbtAttrStub,
-    authentication: Option[Authentication] = authentication
-  ): MavenRepository =
-    copy0(root, changing, sbtAttrStub, authentication)
-
-  def withRoot(root: String): MavenRepository =
-    copy0(root = root)
-  def withChanging(changingOpt: Option[Boolean]): MavenRepository =
-    copy0(changing = changingOpt)
   def withChanging(changing: Boolean): MavenRepository =
-    copy0(changing = Some(changing))
-  def withSbtAttrStub(sbtAttrStub: Boolean): MavenRepository =
-    copy0(sbtAttrStub = sbtAttrStub)
-  def withAuthentication(authentication: Option[Authentication]): MavenRepository =
-    copy0(authentication = authentication)
-  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): MavenRepository =
-    copy0(versionsCheckHasModule = versionsCheckHasModule)
+    withChanging(Some(changing))
 
 
   import Repository._
