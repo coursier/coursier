@@ -52,7 +52,7 @@ final class TreeMirror private(
           .find(f => i.pattern.startsWith(f) && i.metadataPatternOpt.forall(_.startsWith(f)))
           .map { f =>
             i.withPattern(i.pattern.stripPrefix(f).addPrefix(to))
-              .withMetadataPattern(i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)))
+              .withMetadataPatternOpt(i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)))
               .withAuthentication(None)
           }
       case _ =>
