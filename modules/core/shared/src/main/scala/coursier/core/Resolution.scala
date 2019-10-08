@@ -7,6 +7,7 @@ import coursier.util.Artifact
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import dataclass.data
 
 object Resolution {
 
@@ -605,98 +606,6 @@ object Resolution {
         }
   }
 
-  def apply(
-    rootDependencies: Seq[Dependency],
-    dependencySet: DependencySet,
-    forceVersions: Map[Module, String],
-    conflicts: Set[Dependency],
-    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]],
-    finalDependenciesCache: Map[Dependency, Seq[Dependency]],
-    filter: Option[Dependency => Boolean],
-    reconciliation: Option[Module => Reconciliation],
-    osInfo: Activation.Os,
-    jdkVersion: Option[Version],
-    userActivations: Option[Map[String, Boolean]],
-    mapDependencies: Option[Dependency => Dependency],
-    extraProperties: Seq[(String, String)],
-    forceProperties: Map[String, String], // FIXME Make that a seq too?
-    defaultConfiguration: Configuration
-  ): Resolution =
-    new Resolution(
-      rootDependencies,
-      dependencySet,
-      forceVersions,
-      conflicts,
-      projectCache,
-      errorCache,
-      finalDependenciesCache,
-      filter,
-      reconciliation,
-      osInfo,
-      jdkVersion,
-      userActivations,
-      mapDependencies,
-      extraProperties,
-      forceProperties,
-      defaultConfiguration
-    )
-
-  def apply(
-    rootDependencies: Seq[Dependency],
-    dependencySet: DependencySet,
-    forceVersions: Map[Module, String],
-    conflicts: Set[Dependency],
-    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]],
-    finalDependenciesCache: Map[Dependency, Seq[Dependency]],
-    filter: Option[Dependency => Boolean],
-    osInfo: Activation.Os,
-    jdkVersion: Option[Version],
-    userActivations: Option[Map[String, Boolean]],
-    mapDependencies: Option[Dependency => Dependency],
-    extraProperties: Seq[(String, String)],
-    forceProperties: Map[String, String] // FIXME Make that a seq too?
-  ): Resolution =
-    new Resolution(
-      rootDependencies,
-      dependencySet,
-      forceVersions,
-      conflicts,
-      projectCache,
-      errorCache,
-      finalDependenciesCache,
-      filter,
-      None,
-      osInfo,
-      jdkVersion,
-      userActivations,
-      mapDependencies,
-      extraProperties,
-      forceProperties,
-      Configuration.defaultCompile
-    )
-
-  def apply(): Resolution =
-    new Resolution(
-      Nil,
-      DependencySet.empty,
-      Map.empty,
-      Set.empty,
-      Map.empty,
-      Map.empty,
-      Map.empty,
-      None,
-      None,
-      Activation.Os.empty,
-      None,
-      None,
-      None,
-      Nil,
-      Map.empty,
-      Configuration.defaultCompile
-    )
-
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     Parse.withFallbackConfig(dep.configuration) match {
       case Some((main, fallback)) =>
@@ -725,207 +634,36 @@ object Resolution {
  * @param projectCache: cache of known projects
  * @param errorCache: keeps track of the modules whose project definition could not be found
  */
-final class Resolution private (
-  val rootDependencies: Seq[Dependency],
-  val dependencySet: DependencySet,
-  val forceVersions: Map[Module, String],
-  val conflicts: Set[Dependency],
-  val projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)],
-  val errorCache: Map[Resolution.ModuleVersion, Seq[String]],
-  val finalDependenciesCache: Map[Dependency, Seq[Dependency]],
-  val filter: Option[Dependency => Boolean],
-  val reconciliation: Option[Module => Reconciliation],
-  val osInfo: Activation.Os,
-  val jdkVersion: Option[Version],
-  val userActivations: Option[Map[String, Boolean]],
-  val mapDependencies: Option[Dependency => Dependency],
-  val extraProperties: Seq[(String, String)],
-  val forceProperties: Map[String, String], // FIXME Make that a seq too?
-  val defaultConfiguration: Configuration
-) extends Serializable {
+@data class Resolution(
+  rootDependencies: Seq[Dependency] = Nil,
+  dependencySet: DependencySet = DependencySet.empty,
+  forceVersions: Map[Module, String] = Map.empty,
+  conflicts: Set[Dependency] = Set.empty,
+  projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = Map.empty,
+  errorCache: Map[Resolution.ModuleVersion, Seq[String]] = Map.empty,
+  finalDependenciesCache: Map[Dependency, Seq[Dependency]] = Map.empty,
+  filter: Option[Dependency => Boolean] = None,
+  reconciliation: Option[Module => Reconciliation] = None,
+  osInfo: Activation.Os = Activation.Os.empty,
+  jdkVersion: Option[Version] = None,
+  userActivations: Option[Map[String, Boolean]] = None,
+  mapDependencies: Option[Dependency => Dependency] = None,
+  extraProperties: Seq[(String, String)] = Nil,
+  forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
+  defaultConfiguration: Configuration = Configuration.defaultCompile
+) {
 
   lazy val dependencies: Set[Dependency] =
     dependencySet.set
 
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Resolution =>
-        rootDependencies == other.rootDependencies &&
-          dependencySet == other.dependencySet &&
-          forceVersions == other.forceVersions &&
-          conflicts == other.conflicts &&
-          projectCache == other.projectCache &&
-          errorCache == other.errorCache &&
-          finalDependenciesCache == other.finalDependenciesCache &&
-          filter == other.filter &&
-          reconciliation == other.reconciliation &&
-          osInfo == other.osInfo &&
-          jdkVersion == other.jdkVersion &&
-          userActivations == other.userActivations &&
-          mapDependencies == other.mapDependencies &&
-          extraProperties == other.extraProperties &&
-          forceProperties == other.forceProperties &&
-          defaultConfiguration == other.defaultConfiguration
-      case _ => false
-    }
-
   override lazy val hashCode: Int = {
     var code = 17 + "coursier.core.Resolution".##
-    code = 37 * code + rootDependencies.##
-    code = 37 * code + dependencySet.##
-    code = 37 * code + forceVersions.##
-    code = 37 * code + conflicts.##
-    code = 37 * code + projectCache.##
-    code = 37 * code + errorCache.##
-    code = 37 * code + finalDependenciesCache.##
-    code = 37 * code + filter.##
-    code = 37 * code + reconciliation.##
-    code = 37 * code + osInfo.##
-    code = 37 * code + jdkVersion.##
-    code = 37 * code + userActivations.##
-    code = 37 * code + mapDependencies.##
-    code = 37 * code + extraProperties.##
-    code = 37 * code + forceProperties.##
-    code = 37 * code + defaultConfiguration.##
-    code
+    code = 37 * code + tuple.##
+    37 * code
   }
 
-  override def toString: String = {
-    val b = new StringBuilder("Resolution(")
-    b ++= rootDependencies.toString; b ++= ", "
-    b ++= dependencySet.set.toString; b ++= ", "
-    b ++= forceVersions.toString; b ++= ", "
-    b ++= conflicts.toString; b ++= ", "
-    b ++= projectCache.toString; b ++= ", "
-    b ++= errorCache.toString; b ++= ", "
-    b ++= finalDependenciesCache.toString; b ++= ", "
-    b ++= filter.toString; b ++= ", "
-    b ++= reconciliation.toString; b ++= ", "
-    b ++= osInfo.toString; b ++= ", "
-    b ++= jdkVersion.toString; b ++= ", "
-    b ++= userActivations.toString; b ++= ", "
-    b ++= mapDependencies.toString; b ++= ", "
-    b ++= extraProperties.toString; b ++= ", "
-    b ++= forceProperties.toString; b ++= ", "
-    b ++= defaultConfiguration.toString
-    b += ')'
-    b.result()
-  }
-
-  private def copy0(
-    rootDependencies: Seq[Dependency] = rootDependencies,
-    dependencySet: DependencySet = dependencySet,
-    forceVersions: Map[Module, String] = forceVersions,
-    conflicts: Set[Dependency] = conflicts,
-    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = projectCache,
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
-    finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
-    filter: Option[Dependency => Boolean] = filter,
-    reconciliation: Option[Module => Reconciliation] = reconciliation,
-    osInfo: Activation.Os = osInfo,
-    jdkVersion: Option[Version] = jdkVersion,
-    userActivations: Option[Map[String, Boolean]] = userActivations,
-    mapDependencies: Option[Dependency => Dependency] = mapDependencies,
-    extraProperties: Seq[(String, String)] = extraProperties,
-    forceProperties: Map[String, String] = forceProperties,
-    defaultConfiguration: Configuration = defaultConfiguration
-  ): Resolution =
-    new Resolution(
-      rootDependencies,
-      dependencySet,
-      forceVersions,
-      conflicts,
-      projectCache,
-      errorCache,
-      finalDependenciesCache,
-      filter,
-      reconciliation,
-      osInfo,
-      jdkVersion,
-      userActivations,
-      mapDependencies,
-      extraProperties,
-      forceProperties,
-      defaultConfiguration
-    )
-
-  @deprecated("Use the with* method instead", "2.0.0-RC3")
-  def copy(
-    rootDependencies: Seq[Dependency] = rootDependencies,
-    dependencySet: DependencySet = dependencySet,
-    forceVersions: Map[Module, String] = forceVersions,
-    conflicts: Set[Dependency] = conflicts,
-    projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = projectCache,
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache,
-    finalDependenciesCache: Map[Dependency, Seq[Dependency]] = finalDependenciesCache,
-    filter: Option[Dependency => Boolean] = filter,
-    osInfo: Activation.Os = osInfo,
-    jdkVersion: Option[Version] = jdkVersion,
-    userActivations: Option[Map[String, Boolean]] = userActivations,
-    mapDependencies: Option[Dependency => Dependency] = mapDependencies,
-    extraProperties: Seq[(String, String)] = extraProperties,
-    forceProperties: Map[String, String] = forceProperties
-  ): Resolution =
-    new Resolution(
-      rootDependencies,
-      dependencySet,
-      forceVersions,
-      conflicts,
-      projectCache,
-      errorCache,
-      finalDependenciesCache,
-      filter,
-      None,
-      osInfo,
-      jdkVersion,
-      userActivations,
-      mapDependencies,
-      extraProperties,
-      forceProperties,
-      defaultConfiguration
-    )
-
-  def withRootDependencies(rootDependencies: Seq[Dependency]): Resolution =
-    copy0(rootDependencies = rootDependencies)
-  def withDependencySet(dependencySet: DependencySet): Resolution =
-    copy0(dependencySet = dependencySet)
   def withDependencies(dependencies: Set[Dependency]): Resolution =
-    copy0(dependencySet = dependencySet.setValues(dependencies))
-  def withForceVersions(forceVersions: Map[Module, String]): Resolution =
-    copy0(forceVersions = forceVersions)
-  def withConflicts(conflicts: Set[Dependency]): Resolution =
-    copy0(conflicts = conflicts)
-
-
-  // Make these private[coursier] ?
-  def withProjectCache(projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)]): Resolution =
-    copy0(projectCache = projectCache)
-  def withErrorCache(errorCache: Map[Resolution.ModuleVersion, Seq[String]]): Resolution =
-    copy0(errorCache = errorCache)
-  def withFinalDependenciesCache(finalDependenciesCache: Map[Dependency, Seq[Dependency]]): Resolution =
-    copy0(finalDependenciesCache = finalDependenciesCache)
-
-  def withFilter(filter: Option[Dependency => Boolean]): Resolution =
-    copy0(filter = filter)
-
-  def withOsInfo(osInfo: Activation.Os): Resolution =
-    copy0(osInfo = osInfo)
-  def withJdkVersion(jdkVersion: Option[Version]): Resolution =
-    copy0(jdkVersion = jdkVersion)
-  def withUserActivations(userActivations: Option[Map[String, Boolean]]): Resolution =
-    copy0(userActivations = userActivations)
-  def withMapDependencies(mapDependencies: Option[Dependency => Dependency]): Resolution =
-    copy0(mapDependencies = mapDependencies)
-  def withExtraProperties(extraProperties: Seq[(String, String)]): Resolution =
-    copy0(extraProperties = extraProperties)
-  def withForceProperties(forceProperties: Map[String, String]): Resolution =
-    copy0(forceProperties = forceProperties)
-
-  def withDefaultConfiguration(configuration: Configuration): Resolution =
-    copy0(defaultConfiguration = configuration)
-
-  def withReconciliation(reconciliation: Option[Module => Reconciliation]): Resolution =
-    copy0(reconciliation = reconciliation)
+    withDependencySet(dependencySet.setValues(dependencies))
 
 
   def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
@@ -941,13 +679,11 @@ final class Resolution private (
     // don't allow changing mapDependencies here - that would invalidate finalDependenciesCache
     // don't allow changing projectCache here - use addToProjectCache that takes forceProperties into account
   ): Resolution =
-    copy0(
-      rootDependencies,
-      dependencySet,
-      conflicts = conflicts,
-      errorCache = errorCache,
-      finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala
-    )
+    withRootDependencies(rootDependencies)
+      .withDependencySet(dependencySet)
+      .withConflicts(conflicts)
+      .withErrorCache(errorCache)
+      .withFinalDependenciesCache(finalDependenciesCache ++ finalDependenciesCache0.asScala)
 
   def addToProjectCache(projects: (Resolution.ModuleVersion, (ArtifactSource, Project))*): Resolution = {
 
@@ -959,14 +695,14 @@ final class Resolution private (
 
     assert(duplicates.isEmpty, s"Projects already added in resolution: ${duplicates.mkString(", ")}")
 
-    copy0(
-      finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala,
-      projectCache = projectCache ++ projects.map {
-        case (modVer, (s, p)) =>
-          val p0 = withDependencyManagement(p.withProperties(extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
-          (modVer, (s, p0))
+    withFinalDependenciesCache(finalDependenciesCache ++ finalDependenciesCache0.asScala)
+      .withProjectCache {
+        projectCache ++ projects.map {
+          case (modVer, (s, p)) =>
+            val p0 = withDependencyManagement(p.withProperties(extraProperties ++ p.properties.filter(kv => !forceProperties.contains(kv._1)) ++ forceProperties))
+            (modVer, (s, p0))
+        }
       }
-    )
   }
 
   import Resolution._
