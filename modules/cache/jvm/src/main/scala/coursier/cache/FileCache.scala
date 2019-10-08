@@ -110,8 +110,6 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
     withParams(params.copy(maxRedirections = maxOpt))
   def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
     withParams(params.copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached))
-  def withSync[G[_]](implicit S0: Sync[G]): FileCache[G] =
-    withParams(params.copy(S = S0))
 
 
   def localFile(url: String, user: Option[String] = None): File =

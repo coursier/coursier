@@ -38,7 +38,6 @@ abstract class CacheParamsHelpers {
       .withRetry(retryCount)
       .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
       .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
-      .withSync(S)
 
     if (!useEnvCredentials)
       c = c.withCredentials(Nil)
