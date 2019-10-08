@@ -11,82 +11,49 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import dataclass.data
 
-final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Params[F]) {
+@data class Artifacts[F[_]](
+  cache: Cache[F],
+  resolutions: Seq[Resolution] = Nil,
+  classifiers: Set[Classifier] = Set.empty,
+  mainArtifactsOpt: Option[Boolean] = None,
+  artifactTypesOpt: Option[Set[Type]] = None,
+  otherCaches: Seq[Cache[F]] = Nil,
+  extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
+  classpathOrder: Boolean = true
+)(implicit S: Sync[F]) {
 
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Artifacts[_] =>
-        params == other.params
-    }
-
-  override def hashCode(): Int =
-    17 + params.##
-
-  override def toString: String =
-    s"Artifacts($params)"
-
-  private def withParams(params: Artifacts.Params[F]): Artifacts[F] =
-    new Artifacts(params)
-
-  def resolutions: Seq[Resolution] =
-    params.resolutions
-  def classifiers: Set[Classifier] =
-    params.classifiers
-  def mainArtifactsOpt: Option[Boolean] =
-    params.mainArtifactsOpt
-  def artifactTypesOpt: Option[Set[Type]] =
-    params.artifactTypesOpt
-  def cache: Cache[F] =
-    params.cache
-  def otherCaches: Seq[Cache[F]] =
-    params.otherCaches
-  def extraArtifactsOpt: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
-    params.extraArtifacts
-  def classpathOrder: Boolean =
-    params.classpathOrder
-  def S: Sync[F] =
-    params.S
+  private def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
+    l => extraArtifactsSeq.flatMap(_(l))
 
   def withResolution(resolution: Resolution): Artifacts[F] =
-    withParams(params.copy(resolutions = Seq(resolution)))
-  def withResolutions(resolutions: Seq[Resolution]): Artifacts[F] =
-    withParams(params.copy(resolutions = resolutions))
-  def withClassifiers(classifiers: Set[Classifier]): Artifacts[F] =
-    withParams(params.copy(classifiers = classifiers))
+    withResolutions(Seq(resolution))
   def withMainArtifacts(mainArtifacts: JBoolean): Artifacts[F] =
-    withParams(params.copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x)))
+    withMainArtifactsOpt(Option(mainArtifacts).map(x => x))
   def withArtifactTypes(artifactTypes: Set[Type]): Artifacts[F] =
-    withParams(params.copy(artifactTypesOpt = Option(artifactTypes)))
-  def withCache(cache: Cache[F]): Artifacts[F] =
-    withParams(params.copy(cache = cache))
-  def withOtherCaches(caches: Seq[Cache[F]]): Artifacts[F] =
-    withParams(params.copy(otherCaches = caches))
+    withArtifactTypesOpt(Option(artifactTypes))
 
   def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Artifacts[F] =
-    withParams(params.copy(extraArtifactsSeq = params.extraArtifactsSeq :+ f))
+    withExtraArtifactsSeq(extraArtifactsSeq :+ f)
   def noExtraArtifacts(): Artifacts[F] =
-    withParams(params.copy(extraArtifactsSeq = Nil))
+    withExtraArtifactsSeq(Nil)
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
-    withParams(params.copy(extraArtifactsSeq = l))
-
-  def withClasspathOrder(classpathOrder: Boolean): Artifacts[F] =
-    withParams(params.copy(classpathOrder = classpathOrder))
+    withExtraArtifactsSeq(l)
 
   def io: F[Seq[(Artifact, File)]] =
     S.map(ioResult)(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
 
-    val a = params
-      .resolutions
+    val a = resolutions
       .flatMap { r =>
         Artifacts.artifacts0(
           r,
-          params.classifiers,
-          params.mainArtifactsOpt,
-          params.artifactTypesOpt,
-          params.classpathOrder
+          classifiers,
+          mainArtifactsOpt,
+          artifactTypesOpt,
+          classpathOrder
         )
       }
 
@@ -96,12 +63,12 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
       }
       .toMap
 
-    val allArtifacts = (a.map(_._3) ++ params.extraArtifacts(a)).distinct
+    val allArtifacts = (a.map(_._3) ++ extraArtifacts(a)).distinct
 
     val res = Artifacts.fetchArtifacts(
       allArtifacts,
-      params.cache,
-      params.otherCaches: _*
+      cache,
+      otherCaches: _*
     )(S)
 
     S.map(res) { l =>
@@ -123,73 +90,29 @@ final class Artifacts[F[_]] private[coursier] (private val params: Artifacts.Par
 
 object Artifacts {
 
-  // see Resolve.apply for why cache is passed here
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Artifacts[F] =
-    new Artifacts(
-      Params(
-        Nil,
-        Set(),
-        None,
-        None,
-        cache,
-        Nil,
-        Nil,
-        classpathOrder = true,
-        S
-      )
-    )
+  def apply(): Artifacts[Task] =
+    new Artifacts(Cache.default)
 
 
-  final class Result private (
-    val detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-    val extraArtifacts: Seq[(Artifact, File)]
+  @data class Result(
+    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
+    extraArtifacts: Seq[(Artifact, File)]
   ) {
-
-    override def equals(obj: Any): Boolean =
-      obj match {
-        case other: Result =>
-          detailedArtifacts == other.detailedArtifacts &&
-            extraArtifacts == other.extraArtifacts
-        case _ => false
-      }
-
-    override def hashCode(): Int = {
-      var code = 17 + "coursier.Fetch.Result".##
-      code = 37 * code + detailedArtifacts.##
-      code = 37 * code + extraArtifacts.##
-      code
-    }
-
-    override def toString: String =
-      s"Artifacts.Result($detailedArtifacts, $extraArtifacts)"
-
 
     def artifacts: Seq[(Artifact, File)] =
       detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
 
     def files: Seq[File] =
       artifacts.map(_._2)
-
-  }
-
-  object Result {
-    def apply(
-      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-      extraArtifacts: Seq[(Artifact, File)]
-    ): Result =
-      new Result(
-        detailedArtifacts,
-        extraArtifacts
-      )
   }
 
 
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
 
-    def future()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Seq[(Artifact, File)]] =
+    def future()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Seq[(Artifact, File)]] =
       artifacts.io.future()
 
-    def either()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+    def either()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
 
       val f = artifacts
         .io
@@ -200,15 +123,15 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
-    def run()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Seq[(Artifact, File)] = {
+    def run()(implicit ec: ExecutionContext = artifacts.cache.ec): Seq[(Artifact, File)] = {
       val f = artifacts.io.future()
       Await.result(f, Duration.Inf)
     }
 
-    def futureResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Future[Result] =
+    def futureResult()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Result] =
       artifacts.ioResult.future()
 
-    def eitherResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Either[FetchError, Result] = {
+    def eitherResult()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Result] = {
 
       val f = artifacts
         .ioResult
@@ -219,29 +142,11 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
-    def runResult()(implicit ec: ExecutionContext = artifacts.params.cache.ec): Result = {
+    def runResult()(implicit ec: ExecutionContext = artifacts.cache.ec): Result = {
       val f = artifacts.ioResult.future()
       Await.result(f, Duration.Inf)
     }
 
-  }
-
-  private[coursier] final case class Params[F[_]](
-    resolutions: Seq[Resolution],
-    classifiers: Set[Classifier],
-    mainArtifactsOpt: Option[Boolean],
-    artifactTypesOpt: Option[Set[Type]],
-    cache: Cache[F],
-    otherCaches: Seq[Cache[F]],
-    extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]],
-    classpathOrder: Boolean,
-    S: Sync[F]
-  ) {
-    def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
-      l => extraArtifactsSeq.flatMap(_(l))
-
-    override def toString: String =
-      productIterator.mkString("ArtifactsParams(", ", ", ")")
   }
 
   def defaultTypes(

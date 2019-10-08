@@ -15,21 +15,21 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 final class Fetch[F[_]] private (
   private val resolve: Resolve[F],
-  private val artifactsParams: Artifacts.Params[F],
+  private val artifacts: Artifacts[F],
   private val fetchParams: Fetch.Params
 ) {
 
   override def equals(obj: Any): Boolean =
     obj match {
       case other: Fetch[_] =>
-        resolve == other.resolve && artifactsParams == other.artifactsParams
+        resolve == other.resolve && artifacts == other.artifacts
     }
 
   override def hashCode(): Int =
-    37 * (17 + resolve.##) + artifactsParams.##
+    37 * (17 + resolve.##) + artifacts.##
 
   override def toString: String =
-    s"Fetch($resolve, $artifactsParams)"
+    s"Fetch($resolve, $artifacts)"
 
 
   def dependencies: Seq[Dependency] =
@@ -50,27 +50,27 @@ final class Fetch[F[_]] private (
     resolve.S
 
   def classifiers: Set[Classifier] =
-    artifactsParams.classifiers
+    artifacts.classifiers
   def mainArtifactsOpt: Option[Boolean] =
-    artifactsParams.mainArtifactsOpt
+    artifacts.mainArtifactsOpt
   def artifactTypesOpt: Option[Set[Type]] =
-    artifactsParams.artifactTypesOpt
+    artifacts.artifactTypesOpt
   def extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] =
-    artifactsParams.extraArtifactsSeq
+    artifacts.extraArtifactsSeq
 
   def classpathOrder: Boolean =
-    artifactsParams.classpathOrder
+    artifacts.classpathOrder
 
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 
     val mayBeCached =
       resolve.throughOpt.isEmpty &&
         resolve.transformFetcherOpt.isEmpty &&
-        artifactsParams.extraArtifactsSeq.isEmpty &&
-        artifactsParams.resolutions.isEmpty
+        artifacts.extraArtifactsSeq.isEmpty &&
+        artifacts.resolutions.isEmpty
 
     if (mayBeCached)
-      artifactsParams.cache match {
+      artifacts.cache match {
         case f: FileCache[F] =>
           val key = FetchCache.Key(
             resolve.finalDependencies,
@@ -89,9 +89,9 @@ final class Fetch[F[_]] private (
             resolve.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolve.resolutionParams.profiles.toVector.sorted,
             f.location.getAbsolutePath,
-            artifactsParams.classifiers.toVector.sorted,
-            artifactsParams.mainArtifactsOpt,
-            artifactsParams.artifactTypesOpt.map(_.toVector.sorted)
+            artifacts.classifiers.toVector.sorted,
+            artifacts.mainArtifactsOpt,
+            artifacts.artifactTypesOpt.map(_.toVector.sorted)
           )
           Some(key)
         case _ =>
@@ -106,11 +106,11 @@ final class Fetch[F[_]] private (
 
 
   private def withResolve(resolve: Resolve[F]): Fetch[F] =
-    new Fetch(resolve, artifactsParams, fetchParams)
-  private def withArtifactsParams(artifactsParams: Artifacts.Params[F]): Fetch[F] =
-    new Fetch(resolve, artifactsParams, fetchParams)
+    new Fetch(resolve, artifacts, fetchParams)
+  private def withArtifacts(artifacts: Artifacts[F]): Fetch[F] =
+    new Fetch(resolve, artifacts, fetchParams)
   private def withFetchParams(fetchParams: Fetch.Params): Fetch[F] =
-    new Fetch(resolve, artifactsParams, fetchParams)
+    new Fetch(resolve, artifacts, fetchParams)
 
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
     withResolve(resolve.withDependencies(dependencies))
@@ -137,15 +137,15 @@ final class Fetch[F[_]] private (
 
   def withCache(cache: Cache[F]): Fetch[F] =
     withResolve(resolve.withCache(cache))
-      .withArtifactsParams(artifactsParams.copy(cache = cache))
+      .withArtifacts(artifacts.withCache(cache))
 
   def withResolveCache(cache: Cache[F]): Fetch[F] =
     withResolve(resolve.withCache(cache))
   def withArtifactsCache(cache: Cache[F]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(cache = cache))
+    withArtifacts(artifacts.withCache(cache))
 
   def withOtherArtifactsCaches(caches: Seq[Cache[F]]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(otherCaches = caches))
+    withArtifacts(artifacts.withOtherCaches(caches))
 
   def withFetchCache(location: File): Fetch[F] =
     withFetchParams(fetchParams.copy(fetchCacheOpt = Some(location)))
@@ -167,36 +167,36 @@ final class Fetch[F[_]] private (
     withResolve(resolve.withTransformFetcherOpt(fOpt))
 
   def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(classifiers = classifiers))
+    withArtifacts(artifacts.withClassifiers(classifiers))
   def addClassifiers(classifiers: Classifier*): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(classifiers = artifactsParams.classifiers ++ classifiers))
+    withArtifacts(artifacts.withClassifiers(artifacts.classifiers ++ classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x)))
+    withArtifacts(artifacts.withMainArtifactsOpt(Option(mainArtifacts).map(x => x)))
   def withMainArtifacts(): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(mainArtifactsOpt = Some(true)))
+    withArtifacts(artifacts.withMainArtifactsOpt(Some(true)))
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(artifactTypes)))
+    withArtifacts(artifacts.withArtifactTypesOpt(Some(artifactTypes)))
   def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(artifactsParams.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)))
+    withArtifacts(artifacts.withArtifactTypesOpt(Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)))
   def allArtifactTypes(): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(artifactTypesOpt = Some(Set(Type.all))))
+    withArtifacts(artifacts.withArtifactTypesOpt(Some(Set(Type.all))))
 
   def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(extraArtifactsSeq = artifactsParams.extraArtifactsSeq :+ f))
+    withArtifacts(artifacts.withExtraArtifactsSeq(artifacts.extraArtifactsSeq :+ f))
   def noExtraArtifacts(): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(extraArtifactsSeq = Nil))
+    withArtifacts(artifacts.withExtraArtifactsSeq(Nil))
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(extraArtifactsSeq = l))
+    withArtifacts(artifacts.withExtraArtifactsSeq(l))
 
   def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
-    withArtifactsParams(artifactsParams.copy(classpathOrder = classpathOrder))
+    withArtifacts(artifacts.withClasspathOrder(classpathOrder))
 
   def ioResult: F[Fetch.Result] = {
 
     val resolutionIO = resolve.io
 
     S.bind(resolutionIO) { resolution =>
-      val fetchIO_ = new Artifacts(artifactsParams)
+      val fetchIO_ = artifacts
         .withResolution(resolution)
         .ioResult
       S.map(fetchIO_) { res =>
@@ -295,17 +295,7 @@ object Fetch {
   def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Fetch[F] =
     new Fetch[F](
       Resolve(cache),
-      Artifacts.Params(
-        Nil,
-        Set(),
-        None,
-        None,
-        cache,
-        Nil,
-        Nil,
-        classpathOrder = true,
-        S
-      ),
+      Artifacts(cache),
       Params(
         None
       )
