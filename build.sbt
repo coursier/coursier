@@ -320,36 +320,10 @@ lazy val install = project("install")
 
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, install, publish)
-  .enablePlugins(ContrabandPlugin, JlinkPlugin, PackPlugin)
+  .enablePlugins(JlinkPlugin, PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
-    // does this really work?
-    skipGeneration in generateContrabands := {
-      !isSbv("2.12").value
-    },
-    managedSourceDirectories.in(Compile) ++= {
-      val baseDir = baseDirectory.value
-      if (isSbv("2.12").value)
-        Seq(baseDir / "src" / "main" / "contraband-scala")
-      else
-        Nil
-    },
-    sourceManaged.in(Compile, generateContrabands) := {
-      val baseDir = baseDirectory.value
-      val previous = sourceManaged.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
-        baseDir / "src" / "main" / "contraband-scala"
-      else
-        previous
-    },
-    contrabandSource.in(Compile, generateContrabands) := {
-      val current = contrabandSource.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
-        current
-      else
-        current / "foo"
-    },
     coursierPrefix,
     addBootstrapJarResourceInTests,
     libs ++= {
