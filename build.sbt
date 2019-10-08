@@ -515,7 +515,8 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     utest,
     libs ++= Seq(
       Deps.scalaAsync.value % Test,
-      Deps.cross.argonautShapeless.value
+      Deps.cross.argonautShapeless.value,
+      Deps.dataClass % Provided
     )
   )
 
