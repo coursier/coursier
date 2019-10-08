@@ -82,6 +82,10 @@ object MavenRepository {
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
+  def apply(root: String): MavenRepository =
+    new MavenRepository(actualRoot(root))
+  def apply(root: String, authentication: Option[Authentication]): MavenRepository =
+    new MavenRepository(actualRoot(root), authentication)
 }
 
 @data(apply = false) class MavenRepository(
