@@ -1,10 +1,12 @@
 package coursier.util
 
 import coursier.core.{Module, ModuleName, Organization}
+import dataclass._
 
-final case class ModuleMatchers(
+@data class ModuleMatchers(
   exclude: Set[ModuleMatcher],
   include: Set[ModuleMatcher] = Set(),
+  @since
   includeByDefault: Boolean = true
 ) {
 
