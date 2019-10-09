@@ -7,3 +7,9 @@
 [![Scaladoc](https://javadoc-badge.appspot.com/io.get-coursier/coursier-core_2.12.svg?label=scaladoc)](https://javadoc-badge.appspot.com/io.get-coursier/coursier-core_2.12)
 
 See the [website](https://get-coursier.io) for more details.
+
+
+## Developing
+
+Build may fail if using system-wide installed sbt. 
+Please use the sbt launcher in repository by running `./sbt`.
