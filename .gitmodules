@@ -3,7 +3,7 @@
 	url = https://github.com/coursier/test-metadata.git
 [submodule "modules/directories"]
 	path = modules/directories
-	url = https://github.com/coursier/directories-jvm.git
+	url = https://github.com/soc/directories-jvm.git
 [submodule "modules/tests/handmade-metadata"]
 	path = modules/tests/handmade-metadata
 	url = https://github.com/coursier/handmade-metadata.git
