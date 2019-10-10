@@ -3,6 +3,37 @@ import Aliases._
 import Settings.{crossProject, project, _}
 import Publish._
 
+lazy val warn = {
+  try {
+    Thread.currentThread()
+      .getContextClassLoader
+      .loadClass("coursier.Resolve")
+  } catch {
+    case _: ClassNotFoundException =>
+      val (red, reset) =
+        if (sys.env.contains("CI") || java.lang.Boolean.getBoolean("sbt.log.noformat"))
+          ("", "")
+	else
+	  (scala.Console.YELLOW, scala.Console.RESET)
+
+      System.err.println(
+        s"""$red
+           |Warning: It seems you're using the default sbt launcher.
+           |The coursier build currently requires using the coursier-based
+           |sbt-launcher (https://github.com/coursier/sbt-launcher).
+           |Use
+           |  ./sbt
+           |to run the coursier-based launcher instead.
+           |$reset""".stripMargin
+      )
+ }
+}
+
+version := {
+  warn
+  version.value
+}
+
 lazy val getSbtCoursierVersion = settingKey[String]("")
 
 getSbtCoursierVersion := {
