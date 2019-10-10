@@ -399,7 +399,7 @@ lazy val `cli-graalvm` = project("cli-graalvm")
     },
     mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
     libs ++= Seq(
-      "org.bouncycastle" % "bcprov-jdk15on" % "1.63",
+      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
       "org.bouncycastle" % "bcpkix-jdk15on" % "1.63"
     )
   )
