@@ -95,6 +95,13 @@ object PomParser {
 
     var description = ""
     var url = ""
+    val licenses = Nil // TODO
+    val developers = Nil // TODO
+    val publication = Option.empty[Versions.DateTime] // TODO
+    var scmOpt = Option.empty[Info.Scm]
+    var scmUrl = Option.empty[String]
+    var scmConnection = Option.empty[String]
+    var scmDeveloperConnection = Option.empty[String]
 
     var packagingOpt = Option.empty[Type]
 
@@ -234,10 +241,10 @@ object PomParser {
           Info(
             description,
             url,
-            Nil, // TODO
-            Nil, // TODO
-            None,
-            None
+            licenses,
+            developers,
+            publication,
+            scmOpt
           )
         )
       }
@@ -340,6 +347,11 @@ object PomParser {
     "profile" :: "profiles" :: "project" :: Nil,
     (s, p) => {
       s.profiles += p
+    }
+  ) ++ scmHandlers(
+    "scm" :: "project" :: Nil,
+    (s, scm) => {
+      s.scmOpt = Some(scm)
     }
   )
 
@@ -547,4 +559,31 @@ object PomParser {
     }
     .toMap
 
+  private def scmHandlers(prefix: List[String], add: (State, Info.Scm) => Unit) =
+    Seq(
+      new SectionHandler(prefix) {
+        def start(state: State) = {
+        }
+        def end(state: State) = {
+          val d = Info.Scm(
+            url = state.scmUrl,
+            connection = state.scmConnection,
+            developerConnection = state.scmDeveloperConnection
+          )
+          add(state, d)
+        }
+      },
+      content("url" :: prefix) {
+        (state, content) =>
+          state.scmUrl = Some(content)
+      },
+      content("connection" :: prefix) {
+        (state, content) =>
+          state.scmConnection = Some(content)
+      },
+      content("developerConnection" :: prefix) {
+        (state, content) =>
+          state.scmDeveloperConnection = Some(content)
+      }
+    )
 }
