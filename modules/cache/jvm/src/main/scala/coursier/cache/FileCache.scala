@@ -20,40 +20,28 @@ import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
+import dataclass.data
 
-final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cache[F] {
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: FileCache[_] =>
-        params == other.params
-      case _ => false
-    }
-
-  override def hashCode(): Int =
-    17 + params.##
-
-  override def toString: String =
-    s"FileCache($params)"
-
-
-  def location: File = params.location
-  def cachePolicies: Seq[CachePolicy] = params.cachePolicies
-  def checksums: Seq[Option[String]] = params.checksums
-  def credentials: Seq[Credentials] = params.credentials
-  def logger: CacheLogger = params.logger
-  def pool: ExecutorService = params.pool
-  def ttl: Option[Duration] = params.ttl
-  def localArtifactsShouldBeCached: Boolean = params.localArtifactsShouldBeCached
-  def followHttpToHttpsRedirections: Boolean = params.followHttpToHttpsRedirections
-  def followHttpsToHttpRedirections: Boolean = params.followHttpsToHttpRedirections
-  def maxRedirections: Option[Int] = params.maxRedirections
-  def sslRetry: Int = params.sslRetry
-  def sslSocketFactoryOpt: Option[SSLSocketFactory] = params.sslSocketFactoryOpt
-  def hostnameVerifierOpt: Option[HostnameVerifier] = params.hostnameVerifierOpt
-  def retry: Int = params.retry
-  def bufferSize: Int = params.bufferSize
-  def S: Sync[F] = params.S
+@data class FileCache[F[_]](
+  location: File,
+  cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
+  checksums: Seq[Option[String]] = CacheDefaults.checksums,
+  credentials: Seq[Credentials] = CacheDefaults.credentials,
+  logger: CacheLogger = CacheLogger.nop,
+  pool: ExecutorService = CacheDefaults.pool,
+  ttl: Option[Duration] = CacheDefaults.ttl,
+  localArtifactsShouldBeCached: Boolean = false,
+  followHttpToHttpsRedirections: Boolean = true,
+  followHttpsToHttpRedirections: Boolean = false,
+  maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
+  sslRetry: Int = CacheDefaults.sslRetryCount,
+  sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
+  hostnameVerifierOpt: Option[HostnameVerifier] = None,
+  retry: Int = CacheDefaults.defaultRetryCount,
+  bufferSize: Int = CacheDefaults.bufferSize
+)(implicit
+  S: Sync[F]
+) extends Cache[F] {
 
   private lazy val allCredentials0 =
     credentials.flatMap(_.get())
@@ -61,63 +49,26 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
   def allCredentials: F[Seq[DirectCredentials]] =
     S.delay(allCredentials0)
 
-  private def withParams[G[_]](params: FileCache.Params[G]): FileCache[G] =
-    new FileCache(params)
-
-  def withLocation(location: File): FileCache[F] =
-    withParams(params.copy(location = location))
   def withLocation(location: String): FileCache[F] =
     withLocation(new File(location))
-  def withCachePolicies(cachePolicies: Seq[CachePolicy]): FileCache[F] =
-    withParams(params.copy(cachePolicies = cachePolicies))
-  def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
-    withParams(params.copy(checksums = checksums))
-  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
-    withParams(params.copy(credentials = credentials))
   def noCredentials: FileCache[F] =
-    withParams(params.copy(credentials = Nil))
+    withCredentials(Nil)
   def addCredentials(credentials: Credentials*): FileCache[F] =
-    withParams(params.copy(credentials = params.credentials ++ credentials))
+    withCredentials(this.credentials ++ credentials)
   def addFileCredentials(credentialFile: File): FileCache[F] =
-    withParams(params.copy(credentials = params.credentials :+ FileCredentials(credentialFile.getAbsolutePath)))
-  def withLogger(logger: CacheLogger): FileCache[F] =
-    withParams(params.copy(logger = logger))
-  def withPool(pool: ExecutorService): FileCache[F] =
-    withParams(params.copy(pool = pool))
-  def withTtl(ttl: Option[Duration]): FileCache[F] =
-    withParams(params.copy(ttl = ttl))
+    withCredentials(this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
   def withTtl(ttl: Duration): FileCache[F] =
     withTtl(Some(ttl))
-  def withSslRetry(sslRetry: Int): FileCache[F] =
-    withParams(params.copy(sslRetry = sslRetry))
   def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
-    withParams(params.copy(sslSocketFactoryOpt = Some(sslSocketFactory)))
-  def withSslSocketFactoryOpt(sslSocketFactoryOpt: Option[SSLSocketFactory]): FileCache[F] =
-    withParams(params.copy(sslSocketFactoryOpt = sslSocketFactoryOpt))
+    withSslSocketFactoryOpt(Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
-    withParams(params.copy(hostnameVerifierOpt = Some(hostnameVerifier)))
-  def withHostnameVerifierOpt(hostnameVerifierOpt: Option[HostnameVerifier]): FileCache[F] =
-    withParams(params.copy(hostnameVerifierOpt = hostnameVerifierOpt))
-  def withRetry(retry: Int): FileCache[F] =
-    withParams(params.copy(retry = retry))
-  def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
-    withParams(params.copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections))
-  def withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections: Boolean): FileCache[F] =
-    withParams(params.copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections))
+    withHostnameVerifierOpt(Some(hostnameVerifier))
   def withMaxRedirections(max: Int): FileCache[F] =
-    withParams(params.copy(maxRedirections = Some(max)))
-  def withMaxRedirections(maxOpt: Option[Int]): FileCache[F] =
-    withParams(params.copy(maxRedirections = maxOpt))
-  def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
-    withParams(params.copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached))
-  def withSync[G[_]](implicit S0: Sync[G]): FileCache[G] =
-    withParams(params.copy(S = S0))
+    withMaxRedirections(Some(max))
 
 
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
-
-  private implicit val S0 = S
 
   import FileCache.{auxiliaryFile, checksumHeader, clearAuxiliaryFiles, readFullyTo, contentLength}
 
@@ -979,26 +930,6 @@ final class FileCache[F[_]](private val params: FileCache.Params[F]) extends Cac
 
 object FileCache {
 
-  private final case class Params[F[_]](
-    location: File,
-    cachePolicies: Seq[CachePolicy],
-    checksums: Seq[Option[String]],
-    credentials: Seq[Credentials],
-    logger: CacheLogger,
-    pool: ExecutorService,
-    ttl: Option[Duration],
-    localArtifactsShouldBeCached: Boolean,
-    followHttpToHttpsRedirections: Boolean,
-    followHttpsToHttpRedirections: Boolean,
-    maxRedirections: Option[Int],
-    sslRetry: Int,
-    sslSocketFactoryOpt: Option[SSLSocketFactory],
-    hostnameVerifierOpt: Option[HostnameVerifier],
-    retry: Int,
-    bufferSize: Int,
-    S: Sync[F]
-  )
-
   private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
 
@@ -1152,27 +1083,7 @@ object FileCache {
 
 
   def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
-    new FileCache(
-      Params(
-        location = CacheDefaults.location,
-        cachePolicies = CacheDefaults.cachePolicies,
-        checksums = CacheDefaults.checksums,
-        credentials = CacheDefaults.credentials,
-        logger = CacheLogger.nop,
-        pool = CacheDefaults.pool,
-        ttl = CacheDefaults.ttl,
-        localArtifactsShouldBeCached = false,
-        followHttpToHttpsRedirections = true,
-        followHttpsToHttpRedirections = false,
-        maxRedirections = CacheDefaults.maxRedirections,
-        sslRetry = CacheDefaults.sslRetryCount,
-        sslSocketFactoryOpt = None,
-        hostnameVerifierOpt = None,
-        retry = CacheDefaults.defaultRetryCount,
-        bufferSize = CacheDefaults.bufferSize,
-        S = S
-      )
-    )
+    FileCache(CacheDefaults.location)(S)
 
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")

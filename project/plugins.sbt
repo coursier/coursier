@@ -2,7 +2,6 @@
 plugins_(
   "com.eed3si9n"       % "sbt-assembly"             % "0.14.10",
   "com.geirsson"       % "sbt-ci-release"           % "1.4.31",
-  "org.scala-sbt"      % "sbt-contraband"           % "0.4.4",
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.6.0",
   "com.typesafe.sbt"   % "sbt-native-packager"      % "1.4.1",

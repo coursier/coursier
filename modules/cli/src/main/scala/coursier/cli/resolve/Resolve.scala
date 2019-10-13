@@ -144,7 +144,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             params.dependency.platformOpt,
             params.output.verbosity,
             javaOrScalaDeps,
-            constraintOpt = params.resolution.scalaVersion.map { s =>
+            constraintOpt = params.resolution.scalaVersionOpt.map { s =>
               val reworked =
                 if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
                 else s

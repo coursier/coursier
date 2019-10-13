@@ -4,74 +4,34 @@ import coursier.Resolve
 import coursier.cache.Cache
 import coursier.core.Repository
 import coursier.util.Sync
+import dataclass.data
 
-final class Complete[F[_]] private (
-  val repositories: Seq[Repository],
-  val scalaVersion: Option[String],
-  val scalaBinaryVersion: Option[String],
-  val input: String,
-  val cache: Cache[F],
-  val F: Sync[F]
+@data class Complete[F[_]](
+  cache: Cache[F],
+  repositories: Seq[Repository] = Resolve.defaultRepositories,
+  scalaVersionOpt: Option[String] = None,
+  scalaBinaryVersionOpt: Option[String] = None,
+  input: String = ""
+)(implicit
+  F: Sync[F]
 ) {
 
-  private implicit def F0: Sync[F] = F
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Complete[F] =>
-        repositories == other.repositories &&
-          scalaVersion == other.scalaVersion &&
-          scalaBinaryVersion == other.scalaBinaryVersion &&
-          input == other.input &&
-          cache == other.cache &&
-          F == other.F
-      case _ =>
-        false
-    }
-
-  override def hashCode(): Int =
-    37 * (37 * (37 * (37 * (37 * (37 * (17 + "coursier.complete.Complete".##) + repositories.##) + scalaVersion.##) + scalaBinaryVersion.##) + input.##) + cache.##) + F.##
-
-  override def toString: String =
-    s"Complete($repositories, $scalaVersion, $scalaBinaryVersion, $input, $cache, $F)"
-
-  private def copy(
-    repositories: Seq[Repository] = repositories,
-    scalaVersion: Option[String] = scalaVersion,
-    scalaBinaryVersion: Option[String] = scalaBinaryVersion,
-    input: String = input,
-    cache: Cache[F] = cache,
-    F: Sync[F] = F
-  ): Complete[F] =
-    new Complete(repositories, scalaVersion, scalaBinaryVersion, input, cache, F)
-
-
-  def withRepositories(repositories: Seq[Repository]): Complete[F] =
-    copy(repositories = repositories)
   def addRepositories(repository: Repository*): Complete[F] =
-    copy(repositories = repositories ++ repository)
+    withRepositories(repositories ++ repository)
 
   def withScalaVersion(version: String, adjustBinaryVersion: Boolean): Complete[F] =
-    copy(
-      scalaVersion = Some(version),
-      scalaBinaryVersion = if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version)) else scalaBinaryVersion
-    )
-  def withScalaVersion(versionOpt: Option[String], adjustBinaryVersion: Boolean): Complete[F] =
-    copy(
-      scalaVersion = versionOpt,
-      scalaBinaryVersion = if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion) else scalaBinaryVersion
-    )
+    withScalaVersionOpt(Some(version))
+      .withScalaBinaryVersionOpt(if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version)) else scalaBinaryVersionOpt)
   def withScalaVersion(version: String): Complete[F] =
     withScalaVersion(version, adjustBinaryVersion = true)
-  def withScalaVersion(versionOpt: Option[String]): Complete[F] =
-    withScalaVersion(versionOpt, adjustBinaryVersion = versionOpt.nonEmpty)
+  def withScalaVersionOpt(versionOpt: Option[String], adjustBinaryVersion: Boolean): Complete[F] =
+    withScalaVersionOpt(versionOpt)
+      .withScalaBinaryVersionOpt(if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion) else scalaBinaryVersionOpt)
+  // FIXME Manage to recover that back (automatically adjusting scalaBinaryVersionOpt when scalaVersionOpt is set)
+  // def withScalaVersionOpt(versionOpt: Option[String]): Complete[F] =
+  //   withScalaVersionOpt(versionOpt, adjustBinaryVersion = versionOpt.nonEmpty)
   def withScalaBinaryVersion(version: String): Complete[F] =
-    copy(scalaBinaryVersion = Some(version))
-  def withScalaBinaryVersion(versionOpt: Option[String]): Complete[F] =
-    copy(scalaBinaryVersion = versionOpt)
-
-  def withInput(input: String): Complete[F] =
-    copy(input = input)
+    withScalaBinaryVersionOpt(Some(version))
 
   def complete(): F[(Int, Seq[String])] =
     F.map(result())(r => (r.from, r.completions))
@@ -82,7 +42,7 @@ final class Complete[F[_]] private (
       repositories.distinct.flatMap(r => r.completeOpt(cache.fetch).map((r, _)).toSeq)
 
     val inputF = F.fromAttempt(
-      Repository.Complete.parse(input, scalaVersion.getOrElse(""), scalaBinaryVersion.getOrElse(""))
+      Repository.Complete.parse(input, scalaVersionOpt.getOrElse(""), scalaBinaryVersionOpt.getOrElse(""))
     )
 
     val t = F.bind(inputF) { input0 =>
@@ -120,7 +80,7 @@ object Complete {
     else
       scalaVersion.split('.').take(2).mkString(".")
 
-  final case class Result(
+  @data class Result(
     input: Repository.Complete.Input,
     results: Seq[(Repository, Either[Throwable, Seq[String]])]
   ) {
@@ -128,7 +88,4 @@ object Complete {
     def completions: Seq[String] =
       results.flatMap(_._2.right.toSeq.flatten)
   }
-
-  def apply[F[_]](cache: Cache[F])(implicit F: Sync[F]): Complete[F] =
-    new Complete(Resolve.defaultRepositories, None, None, "", cache, F)
 }
