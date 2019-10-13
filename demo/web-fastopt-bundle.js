@@ -15936,703 +15936,6 @@ function $m_Lcoursier_core_Resolution$DepMgmt$() {
   return $n_Lcoursier_core_Resolution$DepMgmt$
 }
 /** @constructor */
-function $c_Lcoursier_core_ResolutionProcess() {
-  $c_O.call(this)
-}
-$c_Lcoursier_core_ResolutionProcess.prototype = new $h_O();
-$c_Lcoursier_core_ResolutionProcess.prototype.constructor = $c_Lcoursier_core_ResolutionProcess;
-/** @constructor */
-function $h_Lcoursier_core_ResolutionProcess() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_ResolutionProcess.prototype = $c_Lcoursier_core_ResolutionProcess.prototype;
-$c_Lcoursier_core_ResolutionProcess.prototype.run__F1__I__Lcoursier_util_Monad__O = (function(fetch, maxIterations, F) {
-  var _$this = this;
-  _run: while (true) {
-    if ((maxIterations === 0)) {
-      return F.point__O__O(_$this.current__Lcoursier_core_Resolution())
-    } else {
-      var maxIterations0 = ((maxIterations > 0) ? (((-1) + maxIterations) | 0) : maxIterations);
-      var x1 = _$this;
-      if ((x1 instanceof $c_Lcoursier_core_Done)) {
-        var x2 = $as_Lcoursier_core_Done(x1);
-        return F.point__O__O(x2.resolution$2)
-      } else if ((x1 instanceof $c_Lcoursier_core_Missing)) {
-        var x3 = $as_Lcoursier_core_Missing(x1);
-        return F.bind__O__F1__O($m_Lcoursier_core_ResolutionProcess$().fetchAll__sc_Seq__F1__Lcoursier_util_Monad__O(x3.missing$2, fetch, F), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, x3$1, fetch$1, maxIterations0$1, F$1) {
-          return (function(result$2) {
-            var result = $as_sci_Vector(result$2);
-            return x3$1.next0__sc_Seq__Lcoursier_core_ResolutionProcess(result).run__F1__I__Lcoursier_util_Monad__O(fetch$1, maxIterations0$1, F$1)
-          })
-        })(_$this, x3, fetch, maxIterations0, F)))
-      } else if ((x1 instanceof $c_Lcoursier_core_Continue)) {
-        var x4 = $as_Lcoursier_core_Continue(x1);
-        var temp$_$this = x4.nextNoCont__Lcoursier_core_ResolutionProcess();
-        _$this = temp$_$this;
-        maxIterations = maxIterations0;
-        continue _run
-      } else {
-        throw new $c_s_MatchError().init___O(x1)
-      }
-    }
-  }
-});
-function $as_Lcoursier_core_ResolutionProcess(obj) {
-  return (((obj instanceof $c_Lcoursier_core_ResolutionProcess) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.ResolutionProcess"))
-}
-function $isArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_ResolutionProcess)))
-}
-function $asArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) {
-  return (($isArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.ResolutionProcess;", depth))
-}
-/** @constructor */
-function $c_Lcoursier_core_ResolutionProcess$() {
-  $c_O.call(this)
-}
-$c_Lcoursier_core_ResolutionProcess$.prototype = new $h_O();
-$c_Lcoursier_core_ResolutionProcess$.prototype.constructor = $c_Lcoursier_core_ResolutionProcess$;
-/** @constructor */
-function $h_Lcoursier_core_ResolutionProcess$() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_ResolutionProcess$.prototype = $c_Lcoursier_core_ResolutionProcess$.prototype;
-$c_Lcoursier_core_ResolutionProcess$.prototype.init___ = (function() {
-  return this
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.versionOrError0$1__p1__s_util_Either__s_util_Either__s_util_Either = (function(results, ver) {
-  if ((results instanceof $c_s_util_Right)) {
-    var x2 = $as_s_util_Right(results);
-    var p3 = $as_T2(x2.value$2);
-    if ((p3 !== null)) {
-      var v = $as_Lcoursier_core_Versions(p3.$$und1__O());
-      var listingUrl = $as_T(p3.$$und2__O());
-      matchEnd7: {
-        var selectedOpt;
-        if ((ver instanceof $c_s_util_Left)) {
-          var x2$2 = $as_s_util_Left(ver);
-          var itv = $as_Lcoursier_core_VersionInterval(x2$2.value$2);
-          var selectedOpt = v.inInterval__Lcoursier_core_VersionInterval__s_Option(itv);
-          break matchEnd7
-        };
-        if ((ver instanceof $c_s_util_Right)) {
-          var x3 = $as_s_util_Right(ver);
-          var p4 = $as_T2(x3.value$2);
-          if ((p4 !== null)) {
-            var kind = $as_Lcoursier_core_Latest(p4.$$und1__O());
-            var selectedOpt = v.latest__Lcoursier_core_Latest__s_Option(kind);
-            break matchEnd7
-          }
-        };
-        throw new $c_s_MatchError().init___O(ver)
-      };
-      if ((selectedOpt instanceof $c_s_Some)) {
-        var x2$3 = $as_s_Some(selectedOpt);
-        var ver0 = $as_T(x2$3.value$2);
-        var selectedVer = new $c_Lcoursier_core_Version().init___T(ver0);
-        if ((ver instanceof $c_s_util_Right)) {
-          var x2$4 = $as_s_util_Right(ver);
-          var p3$2 = $as_T2(x2$4.value$2);
-          if ((p3$2 !== null)) {
-            var kind$2 = $as_Lcoursier_core_Latest(p3$2.$$und1__O());
-            var p4$2 = $as_s_Option(p3$2.$$und2__O());
-            if ((p4$2 instanceof $c_s_Some)) {
-              var x5 = $as_s_Some(p4$2);
-              var itv$2 = $as_Lcoursier_core_VersionInterval(x5.value$2);
-              if ((!itv$2.contains__Lcoursier_core_Version__Z(selectedVer))) {
-                $m_s_package$();
-                var x1$5 = v.latest__Lcoursier_core_Latest__s_Option(kind$2);
-                var x = $m_s_None$();
-                if ((x === x1$5)) {
-                  var value = ((("No latest " + kind$2.name$1) + " version found in ") + listingUrl)
-                } else {
-                  if ((!(x1$5 instanceof $c_s_Some))) {
-                    throw new $c_s_MatchError().init___O(x1$5)
-                  };
-                  var x2$5 = $as_s_Some(x1$5);
-                  var v0 = $as_T(x2$5.value$2);
-                  var value = ((v0 === selectedVer.repr$1) ? ((((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl) + " not in ") + itv$2.repr__T()) : (((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl) + " not retained"))
-                };
-                return new $c_s_util_Left().init___O(value)
-              }
-            }
-          }
-        };
-        $m_s_package$();
-        return new $c_s_util_Right().init___O(selectedVer)
-      } else {
-        var x$3 = $m_s_None$();
-        if ((x$3 === selectedOpt)) {
-          $m_s_package$();
-          matchEnd7$3: {
-            var value$1;
-            if ((ver instanceof $c_s_util_Left)) {
-              var x2$6 = $as_s_util_Left(ver);
-              var itv$3 = $as_Lcoursier_core_VersionInterval(x2$6.value$2);
-              var value$1 = ((("No version found for " + itv$3.repr__T()) + " in ") + listingUrl);
-              break matchEnd7$3
-            };
-            if ((ver instanceof $c_s_util_Right)) {
-              var x3$2 = $as_s_util_Right(ver);
-              var p4$3 = $as_T2(x3$2.value$2);
-              if ((p4$3 !== null)) {
-                var kind$3 = $as_Lcoursier_core_Latest(p4$3.$$und1__O());
-                var value$1 = ((("No latest " + kind$3.name$1) + " version found in ") + listingUrl);
-                break matchEnd7$3
-              }
-            };
-            throw new $c_s_MatchError().init___O(ver)
-          };
-          return new $c_s_util_Left().init___O(value$1)
-        } else {
-          throw new $c_s_MatchError().init___O(selectedOpt)
-        }
-      }
-    }
-  };
-  if ((results instanceof $c_s_util_Left)) {
-    var x4 = $as_s_util_Left(results);
-    var e = $as_T(x4.value$2);
-    $m_s_package$();
-    return new $c_s_util_Left().init___O(e)
-  };
-  throw new $c_s_MatchError().init___O(results)
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.apply__Lcoursier_core_Resolution__Lcoursier_core_ResolutionProcess = (function(resolution) {
-  var resolution0 = resolution.nextIfNoMissing__Lcoursier_core_Resolution();
-  if (resolution0.isDone__Z()) {
-    return new $c_Lcoursier_core_Done().init___Lcoursier_core_Resolution(resolution0)
-  } else {
-    var this$2 = resolution0.missingFromCache__sci_Set();
-    var missing = $f_sc_SetLike__toSeq__sc_Seq(this$2);
-    var cont = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(resolution$2$2) {
-        var resolution$2 = $as_Lcoursier_core_Resolution(resolution$2$2);
-        return $m_Lcoursier_core_ResolutionProcess$().apply__Lcoursier_core_Resolution__Lcoursier_core_ResolutionProcess(resolution$2)
-      })
-    })(this));
-    return new $c_Lcoursier_core_Missing().init___sc_Seq__Lcoursier_core_Resolution__F1(missing, resolution0, cont)
-  }
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.fetchAll__sc_Seq__F1__Lcoursier_util_Monad__O = (function(modVers, fetch, F) {
-  var this$1 = this.uniqueModules$1__p1__sc_Seq__sci_Stream(modVers);
-  $m_sci_Vector$();
-  var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
-  var this$4 = $as_sci_Vector($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$1, cbf));
-  var this$3 = $m_s_package$().Vector$1;
-  var z = F.point__O__O(this$3.NIL$6);
-  var elem$1 = null;
-  elem$1 = z;
-  var this$6 = this$4.iterator__sci_VectorIterator();
-  while (this$6.$$undhasNext$2) {
-    var arg1 = this$6.next__O();
-    var arg1$1 = elem$1;
-    var l = $as_sc_Seq(arg1);
-    elem$1 = F.bind__O__F1__O(arg1$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$4, fetch$5, l$1) {
-      return (function(v$2) {
-        var v = $as_sci_Vector(v$2);
-        var elem = fetch$5.apply__O__O(l$1);
-        var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, v$1) {
-          return (function(e$2) {
-            var e = $as_sc_Seq(e$2);
-            return $as_sci_Vector(v$1.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(e, ($m_sci_Vector$(), $m_sc_IndexedSeq$().ReusableCBF$6)))
-          })
-        })($this, v));
-        return $f_Lcoursier_util_Monad__map__O__F1__O(F$4, elem, f)
-      })
-    })(this, F, fetch, l)))
-  };
-  return elem$1
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT = (function(fetch, intervalOpt, repositories$1, module$1, version$1, F$2) {
-  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, intervalOpt$1, module$1$1, version$1$1, fetch$1, F$2$1) {
-    return (function(repo$2) {
-      var repo = $as_Lcoursier_core_Repository(repo$2);
-      var x = $m_s_None$();
-      if ((x === intervalOpt$1)) {
-        var y = repo.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$1, version$1$1, fetch$1, F$2$1).run$1;
-        return new $c_T2().init___O__O(repo, y)
-      } else if ((intervalOpt$1 instanceof $c_s_Some)) {
-        var x2 = $as_s_Some(intervalOpt$1);
-        var itv = $as_s_util_Either(x2.value$2);
-        var y$1 = $f_Lcoursier_core_Repository__versions__Lcoursier_core_Module__F1__Z__Lcoursier_util_Monad__Lcoursier_util_EitherT(repo, module$1$1, fetch$1, false, F$2$1).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, F$2$2, itv$1, repo$1, module$1$2, fetch$3) {
-          return (function(x0$1$2) {
-            var x0$1 = $as_T2(x0$1$2);
-            if ((x0$1 !== null)) {
-              var v = $as_Lcoursier_core_Versions(x0$1.$$und1__O());
-              var s = $as_T(x0$1.$$und2__O());
-              $m_s_package$();
-              var value = new $c_T2().init___O__O(v, s);
-              return new $c_Lcoursier_util_EitherT().init___O(F$2$2.point__O__O($this$1.versionOrError0$1__p1__s_util_Either__s_util_Either__s_util_Either(new $c_s_util_Right().init___O(value), itv$1))).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2, repo$1$1, module$1$3, fetch$3$1, F$2$3) {
-                return (function(retainedVer$2) {
-                  var retainedVer = $as_Lcoursier_core_Version(retainedVer$2);
-                  return repo$1$1.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$3, retainedVer.repr$1, fetch$3$1, F$2$3)
-                })
-              })($this$1, repo$1, module$1$2, fetch$3, F$2$2)), F$2$2)
-            } else {
-              throw new $c_s_MatchError().init___O(x0$1)
-            }
-          })
-        })($this, F$2$1, itv, repo, module$1$1, fetch$1)), F$2$1).run$1;
-        return new $c_T2().init___O__O(repo, y$1)
-      } else {
-        throw new $c_s_MatchError().init___O(intervalOpt$1)
-      }
-    })
-  })(this, intervalOpt, module$1, version$1, fetch, F$2));
-  var this$6 = $m_sc_Seq$();
-  var lookups = $as_sc_Seq(repositories$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$6.ReusableCBFInstance$2));
-  $m_s_package$();
-  var value$1 = $m_sci_Nil$();
-  var task0 = lookups.foldLeft__O__F2__O(F$2.point__O__O(new $c_s_util_Left().init___O(value$1)), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$2$1, F$2$4) {
-    return (function(x0$2$2, x1$1$2) {
-      var x1$1 = $as_T2(x1$1$2);
-      var x1 = new $c_T2().init___O__O(x0$2$2, x1$1);
-      var acc = x1.$$und1$f;
-      var p2 = $as_T2(x1.$$und2$f);
-      if ((p2 !== null)) {
-        var eitherProjTask = p2.$$und2__O();
-        return F$2$4.bind__O__F1__O(acc, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$3, F$2$5, eitherProjTask$1) {
-          return (function(x0$3$2) {
-            var x0$3 = $as_s_util_Either(x0$3$2);
-            if ((x0$3 instanceof $c_s_util_Left)) {
-              var x2$1 = $as_s_util_Left(x0$3);
-              var errors = $as_sc_Seq(x2$1.value$2);
-              var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$4, errors$1) {
-                return (function(x$13$2) {
-                  var x$13 = $as_s_util_Either(x$13$2);
-                  var this$8 = new $c_s_util_Either$LeftProjection().init___s_util_Either(x$13);
-                  var x1$2 = this$8.e$1;
-                  if ((x1$2 instanceof $c_s_util_Left)) {
-                    var x2$2 = $as_s_util_Left(x1$2);
-                    var a = x2$2.value$2;
-                    var error = $as_T(a);
-                    var this$9 = $m_sc_Seq$();
-                    return new $c_s_util_Left().init___O($as_sc_Seq(errors$1.$$plus$colon__O__scg_CanBuildFrom__O(error, this$9.ReusableCBFInstance$2)))
-                  } else {
-                    return this$8.e$1
-                  }
-                })
-              })($this$3, errors));
-              return $f_Lcoursier_util_Monad__map__O__F1__O(F$2$5, eitherProjTask$1, f)
-            } else if ((x0$3 instanceof $c_s_util_Right)) {
-              var x3 = $as_s_util_Right(x0$3);
-              return F$2$5.point__O__O(x3)
-            } else {
-              throw new $c_s_MatchError().init___O(x0$3)
-            }
-          })
-        })(this$2$1, F$2$4, eitherProjTask)))
-      };
-      throw new $c_s_MatchError().init___O(x1)
-    })
-  })(this, F$2)));
-  var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-    return (function(e$2) {
-      var e = $as_s_util_Either(e$2);
-      var this$10 = new $c_s_util_Either$LeftProjection().init___s_util_Either(e);
-      var x1$3 = this$10.e$1;
-      if ((x1$3 instanceof $c_s_util_Left)) {
-        var x2$3 = $as_s_util_Left(x1$3);
-        var a$1 = x2$3.value$2;
-        var x$15 = $as_sc_Seq(a$1);
-        return new $c_s_util_Left().init___O($as_sc_Seq(x$15.reverse__O()))
-      } else {
-        return this$10.e$1
-      }
-    })
-  })(this));
-  var task = $f_Lcoursier_util_Monad__map__O__F1__O(F$2, task0, f$1);
-  return new $c_Lcoursier_util_EitherT().init___O(task)
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.versionOrError$1__p1__sc_Seq__s_util_Either__sc_Seq__s_util_Either = (function(results, ver, repositories$1) {
-  var this$1 = $m_sc_Seq$();
-  var jsx$4 = $as_sc_TraversableLike(results.zip__sc_GenIterable__scg_CanBuildFrom__O(repositories$1, this$1.ReusableCBFInstance$2));
-  var jsx$3 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$3().init___s_util_Either(ver);
-  var this$2 = $m_sc_Seq$();
-  var jsx$2 = $as_sc_TraversableLike(jsx$4.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$3, this$2.ReusableCBFInstance$2));
-  var jsx$1 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$4().init___();
-  var this$3 = $m_sc_Seq$();
-  var found = $as_sc_Seq(jsx$2.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2));
-  if (found.isEmpty__Z()) {
-    $m_s_package$();
-    var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, ver$1) {
-      return (function(x0$1$2) {
-        var x0$1 = $as_s_util_Either(x0$1$2);
-        if ((x0$1 instanceof $c_s_util_Left)) {
-          var x2 = $as_s_util_Left(x0$1);
-          var e = $as_T(x2.value$2);
-          return e
-        };
-        if ((x0$1 instanceof $c_s_util_Right)) {
-          var x3 = $as_s_util_Right(x0$1);
-          var p4 = $as_T2(x3.value$2);
-          if ((p4 !== null)) {
-            var listingUrl = $as_T(p4.$$und2__O());
-            if ((ver$1 instanceof $c_s_util_Left)) {
-              var x2$2 = $as_s_util_Left(ver$1);
-              var itv = $as_Lcoursier_core_VersionInterval(x2$2.value$2);
-              return ((("No version found for " + itv.repr__T()) + " in ") + listingUrl)
-            };
-            if ((ver$1 instanceof $c_s_util_Right)) {
-              var x3$2 = $as_s_util_Right(ver$1);
-              var p4$2 = $as_T2(x3$2.value$2);
-              if ((p4$2 !== null)) {
-                var kind = $as_Lcoursier_core_Latest(p4$2.$$und1__O());
-                return ((("No latest " + kind.name$1) + " version found in ") + listingUrl)
-              }
-            };
-            throw new $c_s_MatchError().init___O(ver$1)
-          }
-        };
-        throw new $c_s_MatchError().init___O(x0$1)
-      })
-    })(this, ver));
-    var this$4 = $m_sc_Seq$();
-    var value = results.map__F1__scg_CanBuildFrom__O(jsx$5, this$4.ReusableCBFInstance$2);
-    return new $c_s_util_Left().init___O(value)
-  } else {
-    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
-      return (function(x$11$2) {
-        var x$11 = $as_T3(x$11$2);
-        return $as_Lcoursier_core_Version(x$11.$$und1$1)
-      })
-    })(this));
-    var this$6 = $m_s_math_Ordering$();
-    var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-    var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
-    var x1 = $as_T3($f_sc_TraversableOnce__maxBy__F1__s_math_Ordering__O(found, f, cmp));
-    if ((x1 === null)) {
-      throw new $c_s_MatchError().init___O(x1)
-    };
-    var selectedVer = $as_Lcoursier_core_Version(x1.$$und1$1);
-    var repo = $as_Lcoursier_core_Repository(x1.$$und2$1);
-    if ((ver instanceof $c_s_util_Right)) {
-      var x2$1 = $as_s_util_Right(ver);
-      var p3 = $as_T2(x2$1.value$2);
-      if ((p3 !== null)) {
-        var kind$1 = $as_Lcoursier_core_Latest(p3.$$und1__O());
-        var p4$1 = $as_s_Option(p3.$$und2__O());
-        if ((p4$1 instanceof $c_s_Some)) {
-          var x5 = $as_s_Some(p4$1);
-          var itv$1 = $as_Lcoursier_core_VersionInterval(x5.value$2);
-          if ((!itv$1.contains__Lcoursier_core_Version__Z(selectedVer))) {
-            $m_s_package$();
-            var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, kind$2, selectedVer$2, itv$2) {
-              return (function(x0$2$2) {
-                var x0$2 = $as_s_util_Either(x0$2$2);
-                if ((x0$2 instanceof $c_s_util_Left)) {
-                  var x2$3 = $as_s_util_Left(x0$2);
-                  var e$1 = $as_T(x2$3.value$2);
-                  return e$1
-                };
-                if ((x0$2 instanceof $c_s_util_Right)) {
-                  var x3$1 = $as_s_util_Right(x0$2);
-                  var p4$3 = $as_T2(x3$1.value$2);
-                  if ((p4$3 !== null)) {
-                    var v = $as_Lcoursier_core_Versions(p4$3.$$und1__O());
-                    var listingUrl$1 = $as_T(p4$3.$$und2__O());
-                    var x1$2 = v.latest__Lcoursier_core_Latest__s_Option(kind$2);
-                    var x = $m_s_None$();
-                    if ((x === x1$2)) {
-                      return ((("No latest " + kind$2.name$1) + " version found in ") + listingUrl$1)
-                    } else if ((x1$2 instanceof $c_s_Some)) {
-                      var x2$2$1 = $as_s_Some(x1$2);
-                      var v0 = $as_T(x2$2$1.value$2);
-                      return ((v0 === selectedVer$2.repr$1) ? ((((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl$1) + " not in ") + itv$2.repr__T()) : (((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl$1) + " not retained"))
-                    } else {
-                      throw new $c_s_MatchError().init___O(x1$2)
-                    }
-                  }
-                };
-                throw new $c_s_MatchError().init___O(x0$2)
-              })
-            })(this, kind$1, selectedVer, itv$1));
-            var this$7 = $m_sc_Seq$();
-            var value$1 = results.map__F1__scg_CanBuildFrom__O(jsx$6, this$7.ReusableCBFInstance$2);
-            return new $c_s_util_Left().init___O(value$1)
-          }
-        }
-      }
-    };
-    $m_s_package$();
-    var value$2 = new $c_T2().init___O__O(selectedVer, repo);
-    return new $c_s_util_Right().init___O(value$2)
-  }
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT = (function(v, repo, fetch, module$1, F$2, repositories$1) {
-  return repo.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, v.repr$1, fetch, F$2).leftMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, repositories$1$1, repo$1) {
-    return (function(err$2) {
-      var err = $as_T(err$2);
-      var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, repo$2, err$1) {
-        return (function(r$2) {
-          var r = $as_Lcoursier_core_Repository(r$2);
-          return (((r === null) ? (repo$2 === null) : r.equals__O__Z(repo$2)) ? err$1 : "")
-        })
-      })($this, repo$1, err));
-      var this$1 = $m_sc_Seq$();
-      return $as_sc_Seq(repositories$1$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
-    })
-  })(this, repositories$1, repo)), F$2)
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.uniqueModules$1__p1__sc_Seq__sci_Stream = (function(modVers) {
-  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-    return (function(x$25$2) {
-      var x$25 = $as_T2(x$25$2);
-      return $as_Lcoursier_core_Module(x$25.$$und1__O())
-    })
-  })(this));
-  var this$1 = $f_sc_TraversableLike__groupBy__F1__sci_Map(modVers, f);
-  var jsx$4 = $f_sc_MapLike__toSeq__sc_Seq(this$1);
-  var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2) {
-    return (function(x$26$2) {
-      var x$26 = $as_T2(x$26$2);
-      return $as_sc_Seq(x$26.$$und2__O())
-    })
-  })(this));
-  var this$3 = $m_sc_Seq$();
-  var jsx$2 = $as_sc_TraversableLike(jsx$4.map__F1__scg_CanBuildFrom__O(jsx$3, this$3.ReusableCBFInstance$2));
-  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-    return (function(x0$1$2) {
-      var x0$1 = $as_sc_Seq(x0$1$2);
-      $m_sc_Seq$();
-      var o8 = new $c_s_Some().init___O(x0$1);
-      if (((o8.value$2 !== null) && ($as_sc_SeqLike(o8.value$2).lengthCompare__I__I(1) === 0))) {
-        var v = $as_T2($as_sc_SeqLike(o8.value$2).apply__I__O(0));
-        return new $c_T2().init___O__O(v, $m_sci_Nil$())
-      };
-      $m_sc_Seq$();
-      var o10 = new $c_s_Some().init___O(x0$1);
-      if (((o10.value$2 !== null) && ($as_sc_SeqLike(o10.value$2).lengthCompare__I__I(0) === 0))) {
-        $m_s_sys_package$().error__T__sr_Nothing$("Cannot happen")
-      };
-      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-        return (function(x0$2$2) {
-          var x0$2 = $as_T2(x0$2$2);
-          if ((x0$2 !== null)) {
-            var v0 = $as_T(x0$2.$$und2__O());
-            return new $c_Lcoursier_core_Version().init___T(v0)
-          } else {
-            throw new $c_s_MatchError().init___O(x0$2)
-          }
-        })
-      })(this$3$1));
-      var this$6 = $m_s_math_Ordering$();
-      var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-      var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
-      var res = $as_T2($f_sc_TraversableOnce__maxBy__F1__s_math_Ordering__O(x0$1, f$1, cmp));
-      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, res$1) {
-        return (function(x$27$2) {
-          var x$27 = $as_T2(x$27$2);
-          return (!((x$27 === null) ? (res$1 === null) : x$27.equals__O__Z(res$1)))
-        })
-      })(this$3$1, res));
-      return new $c_T2().init___O__O(res, x0$1.filterImpl__F1__Z__O(p, false))
-    })
-  })(this));
-  var this$7 = $m_sc_Seq$();
-  var res$2 = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$7.ReusableCBFInstance$2));
-  var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-    return (function(x$28$2) {
-      var x$28 = $as_T2(x$28$2);
-      return $as_sc_Seq(x$28.$$und2__O())
-    })
-  })(this));
-  var this$8 = $m_sc_Seq$();
-  var other = $as_sc_Seq(res$2.flatMap__F1__scg_CanBuildFrom__O(jsx$5, this$8.ReusableCBFInstance$2));
-  if (other.isEmpty__Z()) {
-    $m_s_package$();
-    var array = [modVers];
-    var xs = new $c_sjs_js_WrappedArray().init___sjs_js_Array(array);
-    var this$12 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs, 0, $uI(xs.array$6.length));
-    return $f_sc_Iterator__toStream__sci_Stream(this$12)
-  } else {
-    var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
-      return (function(x$29$2) {
-        var x$29 = $as_T2(x$29$2);
-        return $as_T2(x$29.$$und1__O())
-      })
-    })(this));
-    var this$13 = $m_sc_Seq$();
-    var missing0 = $as_sc_Seq(res$2.map__F1__scg_CanBuildFrom__O(jsx$6, this$13.ReusableCBFInstance$2));
-    $m_sci_Stream$();
-    var stream = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$6$1, other$1) {
-      return (function() {
-        return this$6$1.uniqueModules$1__p1__sc_Seq__sci_Stream(other$1)
-      })
-    })(this, other));
-    return new $c_sci_Stream$ConsWrapper().init___F0(stream).$$hash$colon$colon__O__sci_Stream(missing0)
-  }
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT = (function(ver, F$2, repositories$1, module$1, f$2, fetchs$1, fetch$2, version$1) {
-  var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(ver);
-  var x1 = this$1.e$1;
-  if ((x1 instanceof $c_s_util_Right)) {
-    var x2 = $as_s_util_Right(x1);
-    var b = x2.value$2;
-    var x$16 = $as_T2(b);
-    var x = x$16.$$und1__O();
-    var x$2 = $m_Lcoursier_core_Latest$Integration$();
-    var shouldParallelize = ((x !== null) && $objectEquals(x, x$2))
-  } else {
-    var shouldParallelize = false
-  };
-  if (shouldParallelize) {
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, module$1$1, f$2$1, F$2$1) {
-      return (function(x$17$2) {
-        var x$17 = $as_Lcoursier_core_Repository(x$17$2);
-        return $f_Lcoursier_core_Repository__versions__Lcoursier_core_Module__F1__Z__Lcoursier_util_Monad__Lcoursier_util_EitherT(x$17, module$1$1, f$2$1, false, F$2$1).run$1
-      })
-    })(this, module$1, f$2, F$2));
-    var this$3 = $m_sc_Seq$();
-    var lookups = F$2.gather__sc_Seq__O($as_sc_Seq(repositories$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)));
-    return new $c_Lcoursier_util_EitherT().init___O(F$2.bind__O__F1__O(lookups, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, F$2$2, ver$1, fetchs$1$1, fetch$2$1, repositories$1$1, module$1$2) {
-      return (function(results$2) {
-        var results = $as_sc_Seq(results$2);
-        return new $c_Lcoursier_util_EitherT().init___O(F$2$2.point__O__O(this$3$1.versionOrError$1__p1__sc_Seq__s_util_Either__sc_Seq__s_util_Either(results, ver$1, repositories$1$1))).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, fetchs$1$2, fetch$2$2, F$2$3, module$1$3, repositories$1$2) {
-          return (function(x0$1$2) {
-            var x0$1 = $as_T2(x0$1$2);
-            if ((x0$1 !== null)) {
-              var v = $as_Lcoursier_core_Version(x0$1.$$und1__O());
-              var repo = $as_Lcoursier_core_Repository(x0$1.$$und2__O());
-              return $as_Lcoursier_util_EitherT(fetchs$1$2.foldLeft__O__F2__O($this.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT(v, repo, fetch$2$2, module$1$3, F$2$3, repositories$1$2), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1, v$1, repo$1, F$2$4, module$1$4, repositories$1$3) {
-                return (function(x$18$2, x$19$2) {
-                  var x$18 = $as_Lcoursier_util_EitherT(x$18$2);
-                  var x$19 = $as_F1(x$19$2);
-                  return x$18.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$2, v$1$1, repo$3, x$19$1, module$1$5, F$2$5, repositories$1$4) {
-                    return (function() {
-                      return $this$2.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT(v$1$1, repo$3, x$19$1, module$1$5, F$2$5, repositories$1$4)
-                    })
-                  })($this$1, v$1, repo$1, x$19, module$1$4, F$2$4, repositories$1$3)), F$2$4)
-                })
-              })($this, v, repo, F$2$3, module$1$3, repositories$1$2))))
-            } else {
-              throw new $c_s_MatchError().init___O(x0$1)
-            }
-          })
-        })(this$3$1, fetchs$1$1, fetch$2$1, F$2$2, module$1$2, repositories$1$1)), F$2$2).run$1
-      })
-    })(this, F$2, ver, fetchs$1, fetch$2, repositories$1, module$1))))
-  } else {
-    return $as_Lcoursier_util_EitherT(fetchs$1.foldLeft__O__F2__O(this.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(fetch$2, new $c_s_Some().init___O(ver), repositories$1, module$1, version$1, F$2), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$4, ver$2, F$2$6, repositories$1$5, module$1$6, version$1$1) {
-      return (function(x$20$2, x$21$2) {
-        var x$20 = $as_Lcoursier_util_EitherT(x$20$2);
-        var x$21 = $as_F1(x$21$2);
-        return x$20.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$3, x$21$1, ver$2$1, repositories$1$6, module$1$7, version$1$2, F$2$7) {
-          return (function() {
-            return $this$3.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(x$21$1, new $c_s_Some().init___O(ver$2$1), repositories$1$6, module$1$7, version$1$2, F$2$7)
-          })
-        })(this$4, x$21, ver$2, repositories$1$5, module$1$6, version$1$1, F$2$6)), F$2$6)
-      })
-    })(this, ver, F$2, repositories$1, module$1, version$1))))
-  }
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.fetchOne__sc_Seq__Lcoursier_core_Module__T__F1__sc_Seq__Lcoursier_util_Gather__Lcoursier_util_EitherT = (function(repositories, module, version, fetch, fetchs, F) {
-  var f$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, fetchs$1, fetch$1, F$1) {
-    return (function(a$2) {
-      var a = $as_Lcoursier_util_Artifact(a$2);
-      return $as_Lcoursier_util_EitherT(fetchs$1.foldLeft__O__F2__O(fetch$1.apply__O__O(a), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1, a$1, F$2) {
-        return (function(acc$2, f$2) {
-          var acc = $as_Lcoursier_util_EitherT(acc$2);
-          var f = $as_F1(f$2);
-          return acc.leftFlatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2, f$1, a$1$1) {
-            return (function(x$10$2) {
-              $as_T(x$10$2);
-              return $as_Lcoursier_util_EitherT(f$1.apply__O__O(a$1$1))
-            })
-          })($this$1, f, a$1)), F$2)
-        })
-      })($this, a, F$1))))
-    })
-  })(this, fetchs, fetch, F));
-  if (($uI(version.indexOf("&")) !== (-1))) {
-    var this$5 = new $c_sci_StringOps().init___T(version);
-    var xs = $f_sci_StringLike__split__C__AT(this$5, 38);
-    var this$8 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
-    var versions = $as_sc_Seq($f_sc_SeqLike__distinct__O(this$8));
-    $m_s_Predef$().assert__Z__V((versions.length__I() === 2));
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
-      return (function(s$2) {
-        var s = $as_T(s$2);
-        var this$9 = $m_Lcoursier_core_Latest$().apply__T__s_Option(s);
-        if (this$9.isEmpty__Z()) {
-          $m_s_package$();
-          return new $c_s_util_Left().init___O(s)
-        } else {
-          $m_s_package$();
-          var value = this$9.get__O();
-          return new $c_s_util_Right().init___O(value)
-        }
-      })
-    })(this));
-    var this$12 = $m_sc_Seq$();
-    var parsed = $as_sc_Seq(versions.map__F1__scg_CanBuildFrom__O(jsx$1, this$12.ReusableCBFInstance$2));
-    var jsx$2 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$5().init___();
-    var this$13 = $m_sc_Seq$();
-    var latest = $as_sc_Seq(parsed.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$2, this$13.ReusableCBFInstance$2));
-    var jsx$3 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$6().init___();
-    var this$14 = $m_sc_Seq$();
-    var other = $as_sc_Seq(parsed.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$3, this$14.ReusableCBFInstance$2));
-    $m_s_Predef$().assert__Z__V((latest.length__I() === 1));
-    $m_s_Predef$().assert__Z__V((other.length__I() === 1));
-    var latest0 = $as_Lcoursier_core_Latest(latest.head__O());
-    $m_s_Predef$().assert__Z__V($as_Lcoursier_core_VersionConstraint(other.head__O()).preferred$1.isEmpty__Z());
-    var itv = $as_Lcoursier_core_VersionConstraint(other.head__O()).interval$1;
-    $m_s_package$();
-    var value$1 = new $c_T2().init___O__O(latest0, new $c_s_Some().init___O(itv));
-    return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Right().init___O(value$1), F, repositories, module, f$3, fetchs, fetch, version)
-  } else {
-    var x1 = $m_Lcoursier_core_Latest$().apply__T__s_Option(version);
-    if ((x1 instanceof $c_s_Some)) {
-      var x2 = $as_s_Some(x1);
-      var kind = $as_Lcoursier_core_Latest(x2.value$2);
-      $m_s_package$();
-      var value$2 = new $c_T2().init___O__O(kind, $m_s_None$());
-      return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Right().init___O(value$2), F, repositories, module, f$3, fetchs, fetch, version)
-    } else {
-      var x = $m_s_None$();
-      if ((x === x1)) {
-        var c = $m_Lcoursier_core_Parse$().versionConstraint__T__Lcoursier_core_VersionConstraint(version);
-        var x$3 = c.interval$1;
-        var x$4 = $m_Lcoursier_core_VersionInterval$().zero$1;
-        if (((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))) {
-          return $as_Lcoursier_util_EitherT(fetchs.foldLeft__O__F2__O(this.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(fetch, $m_s_None$(), repositories, module, version, F), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1, F$3, repositories$1, module$1, version$1) {
-            return (function(x$22$2, x$23$2) {
-              var x$22 = $as_Lcoursier_util_EitherT(x$22$2);
-              var x$23 = $as_F1(x$23$2);
-              return x$22.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$3, x$23$1, repositories$1$1, module$1$1, version$1$1, F$2$1) {
-                return (function() {
-                  return $this$3.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(x$23$1, $m_s_None$(), repositories$1$1, module$1$1, version$1$1, F$2$1)
-                })
-              })(this$3$1, x$23, repositories$1, module$1, version$1, F$3)), F$3)
-            })
-          })(this, F, repositories, module, version))))
-        } else {
-          $m_s_package$();
-          var value$3 = c.interval$1;
-          return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Left().init___O(value$3), F, repositories, module, f$3, fetchs, fetch, version)
-        }
-      } else {
-        throw new $c_s_MatchError().init___O(x1)
-      }
-    }
-  }
-});
-var $d_Lcoursier_core_ResolutionProcess$ = new $TypeData().initClass({
-  Lcoursier_core_ResolutionProcess$: 0
-}, false, "coursier.core.ResolutionProcess$", {
-  Lcoursier_core_ResolutionProcess$: 1,
-  O: 1
-});
-$c_Lcoursier_core_ResolutionProcess$.prototype.$classData = $d_Lcoursier_core_ResolutionProcess$;
-var $n_Lcoursier_core_ResolutionProcess$ = (void 0);
-function $m_Lcoursier_core_ResolutionProcess$() {
-  if ((!$n_Lcoursier_core_ResolutionProcess$)) {
-    $n_Lcoursier_core_ResolutionProcess$ = new $c_Lcoursier_core_ResolutionProcess$().init___()
-  };
-  return $n_Lcoursier_core_ResolutionProcess$
-}
-/** @constructor */
 function $c_Lcoursier_core_Type$Exotic$() {
   $c_O.call(this);
   this.mavenPlugin$1 = null;
@@ -20461,6 +19764,37 @@ function $m_Lcoursier_package$() {
   return $n_Lcoursier_package$
 }
 /** @constructor */
+function $c_Lcoursier_package$Resolution$() {
+  $c_O.call(this);
+  this.empty$1 = null
+}
+$c_Lcoursier_package$Resolution$.prototype = new $h_O();
+$c_Lcoursier_package$Resolution$.prototype.constructor = $c_Lcoursier_package$Resolution$;
+/** @constructor */
+function $h_Lcoursier_package$Resolution$() {
+  /*<skip>*/
+}
+$h_Lcoursier_package$Resolution$.prototype = $c_Lcoursier_package$Resolution$.prototype;
+$c_Lcoursier_package$Resolution$.prototype.init___ = (function() {
+  $n_Lcoursier_package$Resolution$ = this;
+  this.empty$1 = $m_Lcoursier_core_Resolution$().apply__Lcoursier_core_Resolution();
+  return this
+});
+var $d_Lcoursier_package$Resolution$ = new $TypeData().initClass({
+  Lcoursier_package$Resolution$: 0
+}, false, "coursier.package$Resolution$", {
+  Lcoursier_package$Resolution$: 1,
+  O: 1
+});
+$c_Lcoursier_package$Resolution$.prototype.$classData = $d_Lcoursier_package$Resolution$;
+var $n_Lcoursier_package$Resolution$ = (void 0);
+function $m_Lcoursier_package$Resolution$() {
+  if ((!$n_Lcoursier_package$Resolution$)) {
+    $n_Lcoursier_package$Resolution$ = new $c_Lcoursier_package$Resolution$().init___()
+  };
+  return $n_Lcoursier_package$Resolution$
+}
+/** @constructor */
 function $c_Lcoursier_util_PlatformTaskCompanion() {
   $c_O.call(this);
   this.sync$1 = null
@@ -21426,7 +20760,7 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
               var value$3$1 = $as_T(value$3$2$1);
               var jsx$111 = item$3.$$und1__O();
               var this$359 = $as_Lcoursier_maven_MavenRepository(item$3.$$und2__O());
-              return new $c_T2().init___O__O(jsx$111, this$359.copy0__p1__T__s_Option__Z__s_Option__Z__Lcoursier_maven_MavenRepository(value$3$1, this$359.changing$1, this$359.sbtAttrStub$1, this$359.authentication$1, this$359.versionsCheckHasModule$1))
+              return new $c_T2().init___O__O(jsx$111, new $c_Lcoursier_maven_MavenRepository().init___T__s_Option__s_Option__Z__Z(value$3$1, this$359.authentication$1, this$359.changing$1, this$359.sbtAttrStub$1, this$359.versionsCheckHasModule$1))
             })
           })(this$8$1));
           var array$49 = [jsx$115, jsx$114, jsx$113, jsx$112.$$eq$eq$greater__F1__Ljapgolly_scalajs_react_vdom_DomCallbackResult__Ljapgolly_scalajs_react_vdom_TagMod(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$4, backend$11, repoIdx$2, eta$0$5$1) {
@@ -21561,17 +20895,17 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
         var jsx$156 = jsx$179.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("table", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$69));
         $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
         var c$1 = $m_Lcoursier_web_App$().repoEditModal$1;
-        var this$463 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$1.ctor__Ljapgolly_scalajs_react_CtorType());
+        var this$461 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$1.ctor__Ljapgolly_scalajs_react_CtorType());
         var this$457 = new $c_s_PartialFunction$Lifted().init___s_PartialFunction(repos);
-        var this$462 = this$457.apply__O__s_Option(editRepoIdx);
+        var this$460 = this$457.apply__O__s_Option(editRepoIdx);
         var $default = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$4$5) {
           return (function() {
-            var y = $m_Lcoursier_package$().MavenRepository$1.apply__T__s_Option__Z__s_Option__Lcoursier_maven_MavenRepository("", ($m_Lcoursier_package$(), $m_s_None$()), ($m_Lcoursier_package$(), true), ($m_Lcoursier_package$(), $m_s_None$()));
+            var y = $m_Lcoursier_package$().MavenRepository$1.apply__T__Lcoursier_maven_MavenRepository("");
             return new $c_T2().init___O__O("", y)
           })
         })(this$10$1));
-        var props$1 = new $c_T3().init___O__O__O((this$462.isEmpty__Z() ? $default.apply__O() : this$462.get__O()), editRepoIdx, backend$12);
-        var u$1 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$463.construct$2.apply__O__O__O(props$1, this$463.mods$2));
+        var props$1 = new $c_T3().init___O__O__O((this$460.isEmpty__Z() ? $default.apply__O() : this$460.get__O()), editRepoIdx, backend$12);
+        var u$1 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$461.construct$2.apply__O__O__O(props$1, this$461.mods$2));
         var array$70 = [jsx$180, jsx$156, u$1.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
         var a$4 = jsx$187.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$70));
         return a$4.render__Ljapgolly_scalajs_react_vdom_VdomElement()
@@ -21609,13 +20943,13 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
         if (options.followOptional$1) {
           $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
           $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-          var this$477 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("checked");
+          var this$475 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("checked");
           var t$38 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtBoolean$2;
-          var jsx$188 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$38, this$477.name$1, true)
+          var jsx$188 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$38, this$475.name$1, true)
         } else {
-          var this$478 = $m_Ljapgolly_scalajs_react_vdom_TagMod$();
+          var this$476 = $m_Ljapgolly_scalajs_react_vdom_TagMod$();
           var ms = $m_sci_Nil$();
-          var jsx$188 = this$478.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(ms)
+          var jsx$188 = this$476.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(ms)
         };
         var array$71 = [jsx$189, jsx$188];
         var array$72 = [jsx$190.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$71)), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Follow optional dependencies"))];
@@ -21656,9 +20990,9 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
           var jsx$195 = jsx$198.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$76));
           $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
           var c$2 = $m_Lcoursier_web_App$().resultDependencies$1;
-          var this$503 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$2.ctor__Ljapgolly_scalajs_react_CtorType());
+          var this$501 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$2.ctor__Ljapgolly_scalajs_react_CtorType());
           var props$2 = new $c_T2().init___O__O(res$2, backend$18);
-          var u$2 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$503.construct$2.apply__O__O__O(props$2, this$503.mods$2));
+          var u$2 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$501.construct$2.apply__O__O__O(props$2, this$501.mods$2));
           var array$77 = [jsx$195, u$2.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
           var a$6 = jsx$199.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$77));
           return a$6.render__Ljapgolly_scalajs_react_vdom_VdomElement()
@@ -21684,10 +21018,10 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
   var xs = new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$78);
   var jsx$201 = $f_sc_IndexedSeqOptimized__toList__sci_List(xs);
   var jsx$200 = $m_sc_Seq$();
-  var y$1 = $m_Lcoursier_package$().MavenRepository$1.apply__T__s_Option__Z__s_Option__Lcoursier_maven_MavenRepository("https://repo1.maven.org/maven2", ($m_Lcoursier_package$(), $m_s_None$()), ($m_Lcoursier_package$(), true), ($m_Lcoursier_package$(), $m_s_None$()));
+  var y$1 = $m_Lcoursier_package$().MavenRepository$1.apply__T__Lcoursier_maven_MavenRepository("https://repo1.maven.org/maven2");
   var array$79 = [new $c_T2().init___O__O("central", y$1)];
   this.initialState$1 = new $c_Lcoursier_web_State().init___sc_Seq__sc_Seq__Lcoursier_web_ResolutionOptions__s_Option__I__I__Z__Z__sc_Seq(jsx$201, $as_sc_Seq(jsx$200.apply__sc_Seq__sc_GenTraversable(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$79))), new $c_Lcoursier_web_ResolutionOptions().init___Z(false), $m_s_None$(), (-1), (-1), false, false, $m_sci_Nil$());
-  var this$887 = ($m_Ljapgolly_scalajs_react_package$(), new $c_Ljapgolly_scalajs_react_component_builder_Builder$Step1().init___T("Coursier")).initialState__F0__Ljapgolly_scalajs_react_component_builder_Builder$Step2(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$15$1) {
+  var this$883 = ($m_Ljapgolly_scalajs_react_package$(), new $c_Ljapgolly_scalajs_react_component_builder_Builder$Step1().init___T("Coursier")).initialState__F0__Ljapgolly_scalajs_react_component_builder_Builder$Step2(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$15$1) {
     return (function() {
       return $m_Lcoursier_web_App$().initialState$1
     })
@@ -21700,10 +21034,10 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
   var r = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$17$1) {
     return (function(scope$2) {
       var scope = $as_Ljapgolly_scalajs_react_component_builder_Lifecycle$RenderScope(scope$2).raw$1;
-      var this$522 = new $c_Ljapgolly_scalajs_react_component_builder_Lifecycle$RenderScope().init___Ljapgolly_scalajs_react_raw_React$Component(scope);
-      var S = $as_Lcoursier_web_State($f_Ljapgolly_scalajs_react_component_builder_Lifecycle$Base__mountedImpure__Ljapgolly_scalajs_react_component_Scala$MountedWithRoot(this$522).state__O());
-      var this$523 = new $c_Ljapgolly_scalajs_react_component_builder_Lifecycle$RenderScope().init___Ljapgolly_scalajs_react_raw_React$Component(scope);
-      var backend$19 = $as_Lcoursier_web_Backend($f_Ljapgolly_scalajs_react_component_builder_Lifecycle$Base__backend__O(this$523));
+      var this$518 = new $c_Ljapgolly_scalajs_react_component_builder_Lifecycle$RenderScope().init___Ljapgolly_scalajs_react_raw_React$Component(scope);
+      var S = $as_Lcoursier_web_State($f_Ljapgolly_scalajs_react_component_builder_Lifecycle$Base__mountedImpure__Ljapgolly_scalajs_react_component_Scala$MountedWithRoot(this$518).state__O());
+      var this$519 = new $c_Ljapgolly_scalajs_react_component_builder_Lifecycle$RenderScope().init___Ljapgolly_scalajs_react_raw_React$Component(scope);
+      var backend$19 = $as_Lcoursier_web_Backend($f_Ljapgolly_scalajs_react_component_builder_Lifecycle$Base__backend__O(this$519));
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var jsx$338 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
@@ -21711,44 +21045,44 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$528 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$524 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$39 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$336 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$39, this$528.name$1, "tabpanel");
+      var jsx$336 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$39, this$524.name$1, "tabpanel");
       var jsx$335 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var jsx$334 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("nav nav-tabs", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$533 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$529 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$40 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$333 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$40, this$533.name$1, "tablist");
+      var jsx$333 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$40, this$529.name$1, "tablist");
       var jsx$332 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$537 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$533 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$41 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$331 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$41, this$537.name$1, "presentation");
+      var jsx$331 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$41, this$533.name$1, "presentation");
       var jsx$330 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("active", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       var jsx$329 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$541 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$537 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$42 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$328 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$42, this$541.name$1, "#dependencies");
+      var jsx$328 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$42, this$537.name$1, "#dependencies");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$544 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$540 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$43 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$327 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$43, this$544.name$1, "dependencies");
+      var jsx$327 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$43, this$540.name$1, "dependencies");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$547 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$543 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$44 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$326 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$44, this$547.name$1, "tab");
-      var this$549 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$326 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$44, this$543.name$1, "tab");
+      var this$545 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$45 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$325 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$45, this$549.name$1, "tab");
+      var jsx$325 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$45, this$545.name$1, "tab");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var v = (("Dependencies (" + S.modules$1.length__I()) + ")");
       $m_Ljapgolly_scalajs_react_vdom_VdomNode$();
@@ -21759,28 +21093,28 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$559 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$555 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$46 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$322 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$46, this$559.name$1, "presentation");
+      var jsx$322 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$46, this$555.name$1, "presentation");
       var jsx$321 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$562 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$558 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$47 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$320 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$47, this$562.name$1, "#repositories");
+      var jsx$320 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$47, this$558.name$1, "#repositories");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$565 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$561 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$48 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$319 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$48, this$565.name$1, "repositories");
+      var jsx$319 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$48, this$561.name$1, "repositories");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$568 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$564 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$49 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$318 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$49, this$568.name$1, "tab");
-      var this$570 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$318 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$49, this$564.name$1, "tab");
+      var this$566 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$50 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$317 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$50, this$570.name$1, "tab");
+      var jsx$317 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$50, this$566.name$1, "tab");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var v$1 = (("Repositories (" + S.repositories$1.length__I()) + ")");
       $m_Ljapgolly_scalajs_react_vdom_VdomNode$();
@@ -21791,28 +21125,28 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$580 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$576 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$51 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$314 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$51, this$580.name$1, "presentation");
+      var jsx$314 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$51, this$576.name$1, "presentation");
       var jsx$313 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$583 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$579 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$52 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$312 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$52, this$583.name$1, "#options");
+      var jsx$312 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$52, this$579.name$1, "#options");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$586 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$582 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$53 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$311 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$53, this$586.name$1, "options");
+      var jsx$311 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$53, this$582.name$1, "options");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$589 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$585 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$54 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$310 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$54, this$589.name$1, "tab");
-      var this$591 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$310 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$54, this$585.name$1, "tab");
+      var this$587 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$55 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$84 = [jsx$312, jsx$311, jsx$310, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$55, this$591.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Options"))];
+      var array$84 = [jsx$312, jsx$311, jsx$310, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$55, this$587.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Options"))];
       var array$85 = [jsx$314, jsx$313.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$84))];
       var array$86 = [jsx$334, jsx$333, jsx$324, jsx$316, jsx$315.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$85))];
       var jsx$309 = jsx$335.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("ul", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$86));
@@ -21823,60 +21157,60 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$605 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$601 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$56 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$305 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$56, this$605.name$1, "tabpanel");
+      var jsx$305 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$56, this$601.name$1, "tabpanel");
       var jsx$304 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane active", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$609 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$605 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$57 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$303 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$57, this$609.name$1, "dependencies");
+      var jsx$303 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$57, this$605.name$1, "dependencies");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var c$3 = $m_Lcoursier_web_App$().modules$1;
-      var this$611 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$3.ctor__Ljapgolly_scalajs_react_CtorType());
+      var this$607 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$3.ctor__Ljapgolly_scalajs_react_CtorType());
       var props$3 = new $c_T3().init___O__O__O(S.modules$1, S.editModuleIdx$1, backend$19);
-      var u$3 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$611.construct$2.apply__O__O__O(props$3, this$611.mods$2));
+      var u$3 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$607.construct$2.apply__O__O__O(props$3, this$607.mods$2));
       var array$87 = [jsx$305, jsx$304, jsx$303, u$3.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
       var jsx$302 = jsx$306.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$87));
       var jsx$301 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$618 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$614 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$58 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$300 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$58, this$618.name$1, "tabpanel");
+      var jsx$300 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$58, this$614.name$1, "tabpanel");
       var jsx$299 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$622 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$618 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$59 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$298 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$59, this$622.name$1, "repositories");
+      var jsx$298 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$59, this$618.name$1, "repositories");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var c$4 = $m_Lcoursier_web_App$().repositories$1;
-      var this$624 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$4.ctor__Ljapgolly_scalajs_react_CtorType());
+      var this$620 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$4.ctor__Ljapgolly_scalajs_react_CtorType());
       var props$4 = new $c_T3().init___O__O__O(S.repositories$1, S.editRepoIdx$1, backend$19);
-      var u$4 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$624.construct$2.apply__O__O__O(props$4, this$624.mods$2));
+      var u$4 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$620.construct$2.apply__O__O__O(props$4, this$620.mods$2));
       var array$88 = [jsx$300, jsx$299, jsx$298, u$4.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
       var jsx$297 = jsx$301.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$88));
       var jsx$296 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$631 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$627 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$60 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$295 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$60, this$631.name$1, "tabpanel");
+      var jsx$295 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$60, this$627.name$1, "tabpanel");
       var jsx$294 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$635 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$631 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$61 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$293 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$61, this$635.name$1, "options");
+      var jsx$293 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$61, this$631.name$1, "options");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var c$5 = $m_Lcoursier_web_App$().options$1;
-      var this$637 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$5.ctor__Ljapgolly_scalajs_react_CtorType());
+      var this$633 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$5.ctor__Ljapgolly_scalajs_react_CtorType());
       var props$5 = new $c_T2().init___O__O(S.options$1, backend$19);
-      var u$5 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$637.construct$2.apply__O__O__O(props$5, this$637.mods$2));
+      var u$5 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$633.construct$2.apply__O__O__O(props$5, this$633.mods$2));
       var array$89 = [jsx$295, jsx$294, jsx$293, u$5.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
       var array$90 = [jsx$307, jsx$302, jsx$297, jsx$296.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$89))];
       var array$91 = [jsx$336, jsx$309, jsx$308.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$90))];
@@ -21895,16 +21229,16 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       var jsx$287 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.type$1.$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("submit", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$653 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$649 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$62 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$286 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$62, this$653.name$1, "resolveButton");
+      var jsx$286 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$62, this$649.name$1, "resolveButton");
       var jsx$285 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("btn btn-lg btn-primary", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$657 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("disabled");
+      var this$653 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("disabled");
       var a$8 = S.resolving$1;
       var t$63 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtBoolean$2;
-      var array$92 = [jsx$287, jsx$286, jsx$285, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$63, this$657.name$1, a$8), (S.resolving$1 ? ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolving...")) : ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolve")))];
+      var array$92 = [jsx$287, jsx$286, jsx$285, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$63, this$653.name$1, a$8), (S.resolving$1 ? ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolving...")) : ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolve")))];
       var array$93 = [jsx$289, jsx$288.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("button", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$92))];
       var array$94 = [jsx$290.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("form", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$93))];
       var jsx$284 = jsx$291.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$94));
@@ -21912,147 +21246,147 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$671 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$667 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$64 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$282 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$64, this$671.name$1, "tabpanel");
+      var jsx$282 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$64, this$667.name$1, "tabpanel");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$674 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$670 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$65 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$281 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$65, this$674.name$1, "results");
+      var jsx$281 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$65, this$670.name$1, "results");
       var jsx$280 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var jsx$279 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("nav nav-tabs", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$679 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$675 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$66 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$278 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$66, this$679.name$1, "tablist");
+      var jsx$278 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$66, this$675.name$1, "tablist");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$682 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$678 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$67 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$277 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$67, this$682.name$1, "resTabs");
+      var jsx$277 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$67, this$678.name$1, "resTabs");
       var jsx$276 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$686 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$682 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$68 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$275 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$68, this$686.name$1, "presentation");
+      var jsx$275 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$68, this$682.name$1, "presentation");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$689 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$685 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$69 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$274 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$69, this$689.name$1, "resResTab");
+      var jsx$274 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$69, this$685.name$1, "resResTab");
       var jsx$273 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$692 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$688 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$70 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$272 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$70, this$692.name$1, "#resolution");
+      var jsx$272 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$70, this$688.name$1, "#resolution");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$695 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$691 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$71 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$271 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$71, this$695.name$1, "resolution");
+      var jsx$271 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$71, this$691.name$1, "resolution");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$698 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$694 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$72 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$270 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$72, this$698.name$1, "tab");
-      var this$700 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$270 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$72, this$694.name$1, "tab");
+      var this$696 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$73 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$95 = [jsx$272, jsx$271, jsx$270, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$73, this$700.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolution"))];
+      var array$95 = [jsx$272, jsx$271, jsx$270, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$73, this$696.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Resolution"))];
       var array$96 = [jsx$275, jsx$274, jsx$273.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$95))];
       var jsx$269 = jsx$276.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$96));
       var jsx$268 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$710 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$706 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$74 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$267 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$74, this$710.name$1, "presentation");
+      var jsx$267 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$74, this$706.name$1, "presentation");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$713 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$709 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$75 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$266 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$75, this$713.name$1, "resLogTab");
+      var jsx$266 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$75, this$709.name$1, "resLogTab");
       var jsx$265 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$716 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$712 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$76 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$264 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$76, this$716.name$1, "#log");
+      var jsx$264 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$76, this$712.name$1, "#log");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$719 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$715 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$77 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$263 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$77, this$719.name$1, "log");
+      var jsx$263 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$77, this$715.name$1, "log");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$722 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$718 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$78 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$262 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$78, this$722.name$1, "tab");
-      var this$724 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$262 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$78, this$718.name$1, "tab");
+      var this$720 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$79 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$97 = [jsx$264, jsx$263, jsx$262, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$79, this$724.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Log"))];
+      var array$97 = [jsx$264, jsx$263, jsx$262, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$79, this$720.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Log"))];
       var array$98 = [jsx$267, jsx$266, jsx$265.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$97))];
       var jsx$261 = jsx$268.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$98));
       var jsx$260 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$734 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$730 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$80 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$259 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$80, this$734.name$1, "presentation");
+      var jsx$259 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$80, this$730.name$1, "presentation");
       var jsx$258 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$737 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$733 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$81 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$257 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$81, this$737.name$1, "#depgraph");
+      var jsx$257 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$81, this$733.name$1, "#depgraph");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$740 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$736 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$82 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$256 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$82, this$740.name$1, "depgraph");
+      var jsx$256 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$82, this$736.name$1, "depgraph");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$743 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$739 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$83 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$255 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$83, this$743.name$1, "tab");
-      var this$745 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$255 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$83, this$739.name$1, "tab");
+      var this$741 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$84 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$99 = [jsx$257, jsx$256, jsx$255, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$84, this$745.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Graph"))];
+      var array$99 = [jsx$257, jsx$256, jsx$255, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$84, this$741.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Graph"))];
       var array$100 = [jsx$259, jsx$258.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$99))];
       var jsx$254 = jsx$260.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$100));
       var jsx$253 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$755 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$751 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$85 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$252 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$85, this$755.name$1, "presentation");
+      var jsx$252 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$85, this$751.name$1, "presentation");
       var jsx$251 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$less$3.a__Ljapgolly_scalajs_react_vdom_HtmlTags$a$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$758 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
+      var this$754 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("href");
       var t$86 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$250 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$86, this$758.name$1, "#deptreepanel");
+      var jsx$250 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$86, this$754.name$1, "#deptreepanel");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.aria__Ljapgolly_scalajs_react_vdom_HtmlAttrs$aria$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$761 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
+      var this$757 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("aria-controls");
       var t$87 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$249 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$87, this$761.name$1, "deptreepanel");
+      var jsx$249 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$87, this$757.name$1, "deptreepanel");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$764 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$760 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$88 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$248 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$88, this$764.name$1, "tab");
-      var this$766 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
+      var jsx$248 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$88, this$760.name$1, "tab");
+      var this$762 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("data-toggle");
       var t$89 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$101 = [jsx$250, jsx$249, jsx$248, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$89, this$766.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Tree"))];
+      var array$101 = [jsx$250, jsx$249, jsx$248, $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$89, this$762.name$1, "tab"), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Tree"))];
       var array$102 = [jsx$252, jsx$251.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$101))];
       var array$103 = [jsx$279, jsx$278, jsx$277, jsx$269, jsx$261, jsx$254, jsx$253.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$102))];
       var jsx$247 = jsx$280.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("ul", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$103));
@@ -22063,35 +21397,35 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$780 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$776 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$90 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$243 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$90, this$780.name$1, "tabpanel");
+      var jsx$243 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$90, this$776.name$1, "tabpanel");
       var jsx$242 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$784 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$780 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$91 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$241 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$91, this$784.name$1, "resolution");
+      var jsx$241 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$91, this$780.name$1, "resolution");
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var c$6 = $m_Lcoursier_web_App$().resolution$1;
-      var this$786 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$6.ctor__Ljapgolly_scalajs_react_CtorType());
+      var this$782 = $as_Ljapgolly_scalajs_react_CtorType$Props(c$6.ctor__Ljapgolly_scalajs_react_CtorType());
       var props$6 = new $c_T2().init___O__O(S.resolutionOpt$1, backend$19);
-      var u$6 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$786.construct$2.apply__O__O__O(props$6, this$786.mods$2));
+      var u$6 = $as_Ljapgolly_scalajs_react_component_Generic$UnmountedWithRoot(this$782.construct$2.apply__O__O__O(props$6, this$782.mods$2));
       var array$104 = [jsx$243, jsx$242, jsx$241, u$6.vdomElement__Ljapgolly_scalajs_react_vdom_VdomElement()];
       var jsx$240 = jsx$244.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$104));
       var jsx$239 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$793 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$789 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$92 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$238 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$92, this$793.name$1, "tabpanel");
+      var jsx$238 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$92, this$789.name$1, "tabpanel");
       var jsx$237 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$797 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$793 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$93 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$236 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$93, this$797.name$1, "log");
+      var jsx$236 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$93, this$793.name$1, "log");
       var jsx$235 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var array$105 = [$m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.type$1.$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("button", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("btn btn-default", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2), $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.onClick$1.$$eq$eq$greater__F1__Ljapgolly_scalajs_react_vdom_DomCallbackResult__Ljapgolly_scalajs_react_vdom_TagMod(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$8, backend$21) {
@@ -22117,13 +21451,13 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
           return jsx$227.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("li", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$106))
         })
       })(this$17$1));
-      var this$814 = $m_sc_Seq$();
-      var as$3 = $as_sc_TraversableOnce(jsx$228.map__F1__scg_CanBuildFrom__O(jsx$226, this$814.ReusableCBFInstance$2));
+      var this$810 = $m_sc_Seq$();
+      var as$3 = $as_sc_TraversableOnce(jsx$228.map__F1__scg_CanBuildFrom__O(jsx$226, this$810.ReusableCBFInstance$2));
       var $$this$4 = as$3;
       var f$15 = $m_s_Predef$().singleton$und$less$colon$less$2;
       var jsx$229 = $m_Ljapgolly_scalajs_react_vdom_TagMod$();
-      var this$817 = $$this$4.toIterator__sc_Iterator();
-      var array$107 = [jsx$230, jsx$229.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$817, f$15))];
+      var this$813 = $$this$4.toIterator__sc_Iterator();
+      var array$107 = [jsx$230, jsx$229.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$813, f$15))];
       var array$108 = [jsx$232, jsx$231.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("ul", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$107))];
       var array$109 = [jsx$238, jsx$237, jsx$236, jsx$234, jsx$233.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$108))];
       var jsx$225 = jsx$239.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$109));
@@ -22131,27 +21465,27 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$827 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$823 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$94 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$223 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$94, this$827.name$1, "tabpanel");
+      var jsx$223 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$94, this$823.name$1, "tabpanel");
       var jsx$222 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$831 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$827 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$95 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$221 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$95, this$831.name$1, "depgraph");
+      var jsx$221 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$95, this$827.name$1, "depgraph");
       var jsx$220 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var jsx$219 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.type$1.$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("button", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       var jsx$218 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("btn btn-default", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       var jsx$217 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().$$up$3.onClick$1;
-      var this$834 = S.resolutionOpt$1;
+      var this$830 = S.resolutionOpt$1;
       var $default$1 = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$4$6) {
         return (function() {
           return $m_Lcoursier_package$Resolution$().empty$1
         })
       })(this$17$1));
-      var eta$0$6 = $as_Lcoursier_core_Resolution((this$834.isEmpty__Z() ? $default$1.apply__O() : this$834.get__O()));
+      var eta$0$6 = $as_Lcoursier_core_Resolution((this$830.isEmpty__Z() ? $default$1.apply__O() : this$830.get__O()));
       var array$110 = [jsx$219, jsx$218, jsx$217.$$eq$eq$greater__F1__Ljapgolly_scalajs_react_vdom_DomCallbackResult__Ljapgolly_scalajs_react_vdom_TagMod(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$3, backend$22, eta$0$6$1) {
         return (function(e$5$2) {
           return new $c_Ljapgolly_scalajs_react_CallbackTo().init___F0(backend$22.updateDepGraphBtn__Lcoursier_core_Resolution__Ljapgolly_scalajs_react_raw_SyntheticEvent__F0(eta$0$6$1, e$5$2))
@@ -22162,24 +21496,24 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$843 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$839 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$96 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$111 = [$m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$96, this$843.name$1, "depgraphcanvas")];
+      var array$111 = [$m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$96, this$839.name$1, "depgraphcanvas")];
       var array$112 = [jsx$223, jsx$222, jsx$221, jsx$216, jsx$215.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$111))];
       var jsx$214 = jsx$224.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$112));
       var jsx$213 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$851 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
+      var this$847 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("role");
       var t$97 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$212 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$97, this$851.name$1, "tabpanel");
+      var jsx$212 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$97, this$847.name$1, "tabpanel");
       var jsx$211 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("tab-pane", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$855 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$851 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$98 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var jsx$210 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$98, this$855.name$1, "deptreepanel");
+      var jsx$210 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$98, this$851.name$1, "deptreepanel");
       var jsx$209 = $m_Ljapgolly_scalajs_react_vdom_HtmlTagOf$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       var jsx$208 = ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_Attr$ClassName$()).$$colon$eq__O__F2__Ljapgolly_scalajs_react_vdom_TagMod("checkbox", $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2);
@@ -22194,13 +21528,13 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       if (S.reverseTree$1) {
         $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
         $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-        var this$862 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("checked");
+        var this$858 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("checked");
         var t$99 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtBoolean$2;
-        var jsx$204 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$99, this$862.name$1, true)
+        var jsx$204 = $m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$99, this$858.name$1, true)
       } else {
-        var this$863 = $m_Ljapgolly_scalajs_react_vdom_TagMod$();
+        var this$859 = $m_Ljapgolly_scalajs_react_vdom_TagMod$();
         var ms$1 = $m_sci_Nil$();
-        var jsx$204 = this$863.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(ms$1)
+        var jsx$204 = this$859.fromTraversableOnce__sc_TraversableOnce__Ljapgolly_scalajs_react_vdom_TagMod(ms$1)
       };
       var array$113 = [jsx$205, jsx$204];
       var array$114 = [jsx$206.apply__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$113)), ($m_Ljapgolly_scalajs_react_vdom_html$und$less$up$(), $m_Ljapgolly_scalajs_react_vdom_VdomNode$(), new $c_Ljapgolly_scalajs_react_vdom_VdomNode().init___sjs_js_$bar("Reverse"))];
@@ -22210,9 +21544,9 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$();
       $m_Ljapgolly_scalajs_react_vdom_PackageBase$();
-      var this$875 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
+      var this$871 = new $c_Ljapgolly_scalajs_react_vdom_Attr$Generic().init___T("id");
       var t$100 = $m_Ljapgolly_scalajs_react_vdom_html$und$less$up$().vdomAttrVtString$2;
-      var array$116 = [$m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$100, this$875.name$1, "deptree")];
+      var array$116 = [$m_Ljapgolly_scalajs_react_vdom_Attr$ValueType$().apply$extension__F2__T__O__Ljapgolly_scalajs_react_vdom_TagMod(t$100, this$871.name$1, "deptree")];
       var array$117 = [jsx$212, jsx$211, jsx$210, jsx$203, jsx$202.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$116))];
       var array$118 = [jsx$245, jsx$240, jsx$225, jsx$214, jsx$213.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$117))];
       var array$119 = [jsx$282, jsx$281, jsx$247, jsx$246.apply$extension__T__sc_Seq__Ljapgolly_scalajs_react_vdom_TagOf("div", new $c_sjs_js_WrappedArray().init___sjs_js_Array(array$118))];
@@ -22221,7 +21555,7 @@ $c_Lcoursier_web_App$.prototype.init___ = (function() {
       return a$9.render__Ljapgolly_scalajs_react_vdom_VdomElement()
     })
   })(this));
-  this.app$1 = this$887.renderWith__F1__Ljapgolly_scalajs_react_component_builder_Builder$Step4(r).build__Ljapgolly_scalajs_react_CtorType$Summoner__Ljapgolly_scalajs_react_internal_JsRepr__Ljapgolly_scalajs_react_component_JsBaseComponentTemplate$ComponentWithRoot($m_Ljapgolly_scalajs_react_CtorType$Summoner$().summonN__Ljapgolly_scalajs_react_internal_Singleton__Ljapgolly_scalajs_react_CtorType$Summoner($m_Ljapgolly_scalajs_react_internal_Singleton$().BoxUnit$1), $m_Ljapgolly_scalajs_react_internal_JsRepr$().unit$1);
+  this.app$1 = this$883.renderWith__F1__Ljapgolly_scalajs_react_component_builder_Builder$Step4(r).build__Ljapgolly_scalajs_react_CtorType$Summoner__Ljapgolly_scalajs_react_internal_JsRepr__Ljapgolly_scalajs_react_component_JsBaseComponentTemplate$ComponentWithRoot($m_Ljapgolly_scalajs_react_CtorType$Summoner$().summonN__Ljapgolly_scalajs_react_internal_Singleton__Ljapgolly_scalajs_react_CtorType$Summoner($m_Ljapgolly_scalajs_react_internal_Singleton$().BoxUnit$1), $m_Ljapgolly_scalajs_react_internal_JsRepr$().unit$1);
   return this
 });
 $c_Lcoursier_web_App$.prototype.popOver$1__p1__T__T__T__Lcoursier_web_Backend__Ljapgolly_scalajs_react_vdom_TagOf = (function(type, label, desc, backend$1) {
@@ -22952,27 +22286,14 @@ $c_Lcoursier_web_Backend.prototype.task$1__p1__Lcoursier_web_State__Lcoursier_ca
   $m_Lcoursier_package$Resolution$();
   var this$2 = $m_Lcoursier_core_Resolution$().apply__Lcoursier_core_Resolution();
   var rootDependencies = s$1.modules$1;
-  var dependencySet = this$2.dependencySet$1;
-  var forceVersions = this$2.forceVersions$1;
-  var conflicts = this$2.conflicts$1;
-  var projectCache = this$2.projectCache$1;
-  var errorCache = this$2.errorCache$1;
-  var finalDependenciesCache = this$2.finalDependenciesCache$1;
-  var filter = this$2.filter$1;
-  var reconciliation = this$2.reconciliation$1;
-  var osInfo = this$2.osInfo$1;
-  var jdkVersion = this$2.jdkVersion$1;
-  var userActivations = this$2.userActivations$1;
-  var mapDependencies = this$2.mapDependencies$1;
-  var extraProperties = this$2.extraProperties$1;
-  var forceProperties = this$2.forceProperties$1;
-  var defaultConfiguration = this$2.defaultConfiguration$1;
-  var underlying = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(rootDependencies, dependencySet, forceVersions, conflicts, projectCache, errorCache, finalDependenciesCache, filter, reconciliation, osInfo, jdkVersion, userActivations, mapDependencies, extraProperties, forceProperties, defaultConfiguration).withFilter__s_Option__Lcoursier_core_Resolution(new $c_s_Some().init___O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, s$1$1) {
+  var this$3 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(rootDependencies, this$2.dependencySet$1, this$2.forceVersions$1, this$2.conflicts$1, this$2.projectCache$1, this$2.errorCache$1, this$2.finalDependenciesCache$1, this$2.filter$1, this$2.reconciliation$1, this$2.osInfo$1, this$2.jdkVersion$1, this$2.userActivations$1, this$2.mapDependencies$1, this$2.extraProperties$1, this$2.forceProperties$1, this$2.defaultConfiguration$1);
+  var filter = new $c_s_Some().init___O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, s$1$1) {
     return (function(dep$2) {
       var dep = $as_Lcoursier_core_Dependency(dep$2);
       return (s$1$1.options$1.followOptional$1 || (!dep.optional$1))
     })
-  })(this, s$1))));
+  })(this, s$1)));
+  var underlying = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$3.rootDependencies$1, this$3.dependencySet$1, this$3.forceVersions$1, this$3.conflicts$1, this$3.projectCache$1, this$3.errorCache$1, this$3.finalDependenciesCache$1, filter, this$3.reconciliation$1, this$3.osInfo$1, this$3.jdkVersion$1, this$3.userActivations$1, this$3.mapDependencies$1, this$3.extraProperties$1, this$3.forceProperties$1, this$3.defaultConfiguration$1);
   var jsx$3 = $m_Lcoursier_package$().ResolutionProcess$1.apply__Lcoursier_core_Resolution__Lcoursier_core_ResolutionProcess(underlying);
   var jsx$2 = s$1.repositories$1;
   var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
@@ -22986,8 +22307,8 @@ $c_Lcoursier_web_Backend.prototype.task$1__p1__Lcoursier_web_State__Lcoursier_ca
       }
     })
   })(this));
-  var this$5 = $m_sc_Seq$();
-  return $as_Lcoursier_util_Task(jsx$3.run__F1__I__Lcoursier_util_Monad__O(this.fetch__sc_Seq__F1__F1($as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$5.ReusableCBFInstance$2)), new $c_Lcoursier_cache_AlwaysDownload().init___Lcoursier_cache_CacheLogger(logger$1).fetch__F1()), 100, $m_Lcoursier_util_Task$().sync$1)).value$1
+  var this$6 = $m_sc_Seq$();
+  return $as_Lcoursier_util_Task(jsx$3.run__F1__I__Lcoursier_util_Monad__O(this.fetch__sc_Seq__F1__F1($as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$6.ReusableCBFInstance$2)), new $c_Lcoursier_cache_AlwaysDownload().init___Lcoursier_cache_CacheLogger(logger$1).fetch__F1()), 100, $m_Lcoursier_util_Task$().sync$1)).value$1
 });
 $c_Lcoursier_web_Backend.prototype.handleResolve__Ljapgolly_scalajs_react_raw_SyntheticEvent__F0 = (function(e) {
   var f = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, e$1) {
@@ -23103,19 +22424,19 @@ $c_Lcoursier_web_Backend.prototype.updateModule__I__F2__Ljapgolly_scalajs_react_
 });
 $c_Lcoursier_web_Backend.prototype.addRepo__Ljapgolly_scalajs_react_raw_SyntheticEvent__F0 = (function(e) {
   e.preventDefault();
-  var this$9 = this.coursier$web$Backend$$$$f;
+  var this$7 = this.coursier$web$Backend$$$$f;
   var mod = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
     return (function(state$2) {
       var state = $as_Lcoursier_web_State(state$2);
       var jsx$2 = state.repositories$1;
-      var y = $m_Lcoursier_package$().MavenRepository$1.apply__T__s_Option__Z__s_Option__Lcoursier_maven_MavenRepository("", ($m_Lcoursier_package$(), $m_s_None$()), ($m_Lcoursier_package$(), true), ($m_Lcoursier_package$(), $m_s_None$()));
+      var y = $m_Lcoursier_package$().MavenRepository$1.apply__T__Lcoursier_maven_MavenRepository("");
       var jsx$1 = new $c_T2().init___O__O("", y);
-      var this$5 = $m_sc_Seq$();
-      var repositories = $as_sc_Seq(jsx$2.$$colon$plus__O__scg_CanBuildFrom__O(jsx$1, this$5.ReusableCBFInstance$2));
+      var this$3 = $m_sc_Seq$();
+      var repositories = $as_sc_Seq(jsx$2.$$colon$plus__O__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2));
       var x = ("Repositories:\n" + repositories.mkString__T__T("\n"));
-      var this$7 = $m_s_Console$();
-      var this$8 = $as_Ljava_io_PrintStream(this$7.outVar$2.v$1);
-      this$8.java$lang$JSConsoleBasedPrintStream$$printString__T__V((x + "\n"));
+      var this$5 = $m_s_Console$();
+      var this$6 = $as_Ljava_io_PrintStream(this$5.outVar$2.v$1);
+      this$6.java$lang$JSConsoleBasedPrintStream$$printString__T__V((x + "\n"));
       var x$2 = (((-1) + repositories.length__I()) | 0);
       var x$3 = state.modules$1;
       var x$4 = state.options$1;
@@ -23127,7 +22448,7 @@ $c_Lcoursier_web_Backend.prototype.addRepo__Ljapgolly_scalajs_react_raw_Syntheti
       return new $c_Lcoursier_web_State().init___sc_Seq__sc_Seq__Lcoursier_web_ResolutionOptions__s_Option__I__I__Z__Z__sc_Seq(x$3, repositories, x$4, x$5, x$6, x$2, x$7, x$8, x$9)
     })
   })(this));
-  return $as_Ljapgolly_scalajs_react_CallbackTo(this$9.modState__F1__F0__O(mod, $m_Ljapgolly_scalajs_react_Callback$().empty$1)).japgolly$scalajs$react$CallbackTo$$f$1
+  return $as_Ljapgolly_scalajs_react_CallbackTo(this$7.modState__F1__F0__O(mod, $m_Ljapgolly_scalajs_react_Callback$().empty$1)).japgolly$scalajs$react$CallbackTo$$f$1
 });
 $c_Lcoursier_web_Backend.prototype.options$lzycompute$1__p1__V = (function() {
   if ((this.options$module$1 === null)) {
@@ -33209,512 +32530,6 @@ function $h_Lcoursier_cache_Cache() {
 }
 $h_Lcoursier_cache_Cache.prototype = $c_Lcoursier_cache_Cache.prototype;
 /** @constructor */
-function $c_Lcoursier_core_Continue() {
-  $c_Lcoursier_core_ResolutionProcess.call(this);
-  this.current$2 = null;
-  this.cont$2 = null
-}
-$c_Lcoursier_core_Continue.prototype = new $h_Lcoursier_core_ResolutionProcess();
-$c_Lcoursier_core_Continue.prototype.constructor = $c_Lcoursier_core_Continue;
-/** @constructor */
-function $h_Lcoursier_core_Continue() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_Continue.prototype = $c_Lcoursier_core_Continue.prototype;
-$c_Lcoursier_core_Continue.prototype.init___Lcoursier_core_Resolution__F1 = (function(current, cont) {
-  this.current$2 = current;
-  this.cont$2 = cont;
-  return this
-});
-$c_Lcoursier_core_Continue.prototype.nextNoCont__Lcoursier_core_ResolutionProcess = (function() {
-  var _$this = this;
-  _nextNoCont: while (true) {
-    var this$1 = _$this;
-    var x1 = $as_Lcoursier_core_ResolutionProcess(this$1.cont$2.apply__O__O(this$1.current$2));
-    if ((x1 instanceof $c_Lcoursier_core_Continue)) {
-      var x2 = $as_Lcoursier_core_Continue(x1);
-      _$this = x2;
-      continue _nextNoCont
-    } else {
-      return x1
-    }
-  }
-});
-$c_Lcoursier_core_Continue.prototype.equals__O__Z = (function(obj) {
-  if ((obj instanceof $c_Lcoursier_core_Continue)) {
-    var x2 = $as_Lcoursier_core_Continue(obj);
-    var x = this.current$2;
-    var x$2 = x2.current$2;
-    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
-      var x$3 = this.cont$2;
-      var x$4 = x2.cont$2;
-      return ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_core_Continue.prototype.toString__T = (function() {
-  return (((("Continue(" + this.current$2) + ", ") + this.cont$2) + ")")
-});
-$c_Lcoursier_core_Continue.prototype.hashCode__I = (function() {
-  var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.core.Continue")) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.current$2)) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.cont$2)) | 0);
-  return $imul(37, code)
-});
-$c_Lcoursier_core_Continue.prototype.current__Lcoursier_core_Resolution = (function() {
-  return this.current$2
-});
-function $as_Lcoursier_core_Continue(obj) {
-  return (((obj instanceof $c_Lcoursier_core_Continue) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Continue"))
-}
-function $isArrayOf_Lcoursier_core_Continue(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Continue)))
-}
-function $asArrayOf_Lcoursier_core_Continue(obj, depth) {
-  return (($isArrayOf_Lcoursier_core_Continue(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Continue;", depth))
-}
-var $d_Lcoursier_core_Continue = new $TypeData().initClass({
-  Lcoursier_core_Continue: 0
-}, false, "coursier.core.Continue", {
-  Lcoursier_core_Continue: 1,
-  Lcoursier_core_ResolutionProcess: 1,
-  O: 1
-});
-$c_Lcoursier_core_Continue.prototype.$classData = $d_Lcoursier_core_Continue;
-/** @constructor */
-function $c_Lcoursier_core_Done() {
-  $c_Lcoursier_core_ResolutionProcess.call(this);
-  this.resolution$2 = null
-}
-$c_Lcoursier_core_Done.prototype = new $h_Lcoursier_core_ResolutionProcess();
-$c_Lcoursier_core_Done.prototype.constructor = $c_Lcoursier_core_Done;
-/** @constructor */
-function $h_Lcoursier_core_Done() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_Done.prototype = $c_Lcoursier_core_Done.prototype;
-$c_Lcoursier_core_Done.prototype.equals__O__Z = (function(obj) {
-  if ((obj instanceof $c_Lcoursier_core_Done)) {
-    var x2 = $as_Lcoursier_core_Done(obj);
-    var x = this.resolution$2;
-    var x$2 = x2.resolution$2;
-    return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_core_Done.prototype.toString__T = (function() {
-  return (("Done(" + this.resolution$2) + ")")
-});
-$c_Lcoursier_core_Done.prototype.init___Lcoursier_core_Resolution = (function(resolution) {
-  this.resolution$2 = resolution;
-  return this
-});
-$c_Lcoursier_core_Done.prototype.current__Lcoursier_core_Resolution = (function() {
-  return this.resolution$2
-});
-$c_Lcoursier_core_Done.prototype.hashCode__I = (function() {
-  var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.core.Done")) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.resolution$2)) | 0);
-  return $imul(37, code)
-});
-function $as_Lcoursier_core_Done(obj) {
-  return (((obj instanceof $c_Lcoursier_core_Done) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Done"))
-}
-function $isArrayOf_Lcoursier_core_Done(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Done)))
-}
-function $asArrayOf_Lcoursier_core_Done(obj, depth) {
-  return (($isArrayOf_Lcoursier_core_Done(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Done;", depth))
-}
-var $d_Lcoursier_core_Done = new $TypeData().initClass({
-  Lcoursier_core_Done: 0
-}, false, "coursier.core.Done", {
-  Lcoursier_core_Done: 1,
-  Lcoursier_core_ResolutionProcess: 1,
-  O: 1
-});
-$c_Lcoursier_core_Done.prototype.$classData = $d_Lcoursier_core_Done;
-/** @constructor */
-function $c_Lcoursier_core_Missing() {
-  $c_Lcoursier_core_ResolutionProcess.call(this);
-  this.missing$2 = null;
-  this.current$2 = null;
-  this.cont$2 = null
-}
-$c_Lcoursier_core_Missing.prototype = new $h_Lcoursier_core_ResolutionProcess();
-$c_Lcoursier_core_Missing.prototype.constructor = $c_Lcoursier_core_Missing;
-/** @constructor */
-function $h_Lcoursier_core_Missing() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_Missing.prototype = $c_Lcoursier_core_Missing.prototype;
-$c_Lcoursier_core_Missing.prototype.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess = (function(res, successes$1) {
-  var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, res$1) {
-    return (function(x0$1$2) {
-      var x0$1 = $as_T2(x0$1$2);
-      if ((x0$1 !== null)) {
-        var modVer = $as_T2(x0$1.$$und1__O());
-        return (!res$1.projectCache$1.contains__O__Z(modVer))
-      } else {
-        throw new $c_s_MatchError().init___O(x0$1)
-      }
-    })
-  })(this, res));
-  var remainingSuccesses = $as_sc_Seq(successes$1.filterImpl__F1__Z__O(p, false));
-  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, res$2) {
-    return (function(x0$2$2) {
-      var x0$2 = $as_T2(x0$2$2);
-      if ((x0$2 !== null)) {
-        var p3 = $as_T2(x0$2.$$und2__O());
-        if ((p3 !== null)) {
-          var proj = $as_Lcoursier_core_Project(p3.$$und2__O());
-          var y = res$2.dependencyManagementMissing__Lcoursier_core_Project__sci_Set(proj);
-          return new $c_T2().init___O__O(x0$2, y)
-        }
-      };
-      throw new $c_s_MatchError().init___O(x0$2)
-    })
-  })(this, res));
-  var this$4 = $m_sc_Seq$();
-  var depMgmtMissing0 = $as_sc_Seq(remainingSuccesses.map__F1__scg_CanBuildFrom__O(jsx$1, this$4.ReusableCBFInstance$2));
-  var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-    return (function(x$1$2) {
-      var x$1 = $as_T2(x$1$2);
-      return $as_sci_Set(x$1.$$und2__O())
-    })
-  })(this));
-  var this$5 = $m_sc_Seq$();
-  var this$7 = $as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$2, this$5.ReusableCBFInstance$2));
-  var z = $m_sci_Set$EmptySet$();
-  var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$4$1) {
-    return (function(x$2$2, x$3$2) {
-      var x$2 = $as_sci_Set(x$2$2);
-      var x$3 = $as_sci_Set(x$3$2);
-      return $as_sci_Set(x$2.$$plus$plus__sc_GenTraversableOnce__sc_Set(x$3))
-    })
-  })(this));
-  var depMgmtMissing = $as_sci_Set(this$7.foldLeft__O__F2__O(z, op));
-  if (depMgmtMissing.isEmpty__Z()) {
-    var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
-      return (function(x$4$2) {
-        var x$4 = $as_T2(x$4$2);
-        return $as_T2($as_T2(x$4.$$und1__O()).$$und1__O())
-      })
-    })(this));
-    var this$8 = $m_sc_Seq$();
-    var modVer$1 = $as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$3, this$8.ReusableCBFInstance$2)).toSet__sci_Set();
-    var jsx$4 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1, modVer$2) {
-      return (function(x0$3$2) {
-        var x0$3 = $as_T2(x0$3$2);
-        if ((x0$3 !== null)) {
-          var k = $as_T2(x0$3.$$und1__O());
-          var v = $as_sci_Set(x0$3.$$und2__O());
-          var y$1 = v.intersect__sc_GenSet__O(modVer$2);
-          return new $c_T2().init___O__O(k, y$1)
-        } else {
-          throw new $c_s_MatchError().init___O(x0$3)
-        }
-      })
-    })(this, modVer$1));
-    var this$11 = $m_sc_Seq$();
-    var orderedSuccesses = this.order$1__p2__sci_Map__sci_List__sci_List($as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$4, this$11.ReusableCBFInstance$2)).toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2), $m_sci_Nil$());
-    var acc = res;
-    var these = orderedSuccesses;
-    while ((!these.isEmpty__Z())) {
-      var arg1 = acc;
-      var arg2 = these.head__O();
-      var x0$4 = $as_Lcoursier_core_Resolution(arg1);
-      var x1$1 = $as_T2(arg2);
-      var x1 = new $c_T2().init___O__O(x0$4, x1$1);
-      matchEnd5: {
-        var acc$1 = $as_Lcoursier_core_Resolution(x1.$$und1$f);
-        var p2 = $as_T2(x1.$$und2$f);
-        if ((p2 !== null)) {
-          var modVer0 = $as_T2(p2.$$und1__O());
-          var p3$1 = $as_T2(p2.$$und2__O());
-          if ((p3$1 !== null)) {
-            var source = $as_Lcoursier_core_ArtifactSource(p3$1.$$und1__O());
-            var proj$1 = $as_Lcoursier_core_Project(p3$1.$$und2__O());
-            var y$2 = new $c_T2().init___O__O(source, proj$1);
-            var array = [new $c_T2().init___O__O(modVer0, y$2)];
-            var pf = new $c_Lcoursier_core_Resolution$$anonfun$3().init___Lcoursier_core_Resolution(acc$1);
-            $m_sc_Seq$();
-            $m_sjs_js_WrappedArray$();
-            var array$1 = [];
-            var i = 0;
-            var len = $uI(array.length);
-            while ((i < len)) {
-              var index = i;
-              var arg1$1 = array[index];
-              var $default = $m_s_PartialFunction$().scala$PartialFunction$$fallback$undpf$f;
-              var z$1 = pf.applyOrElse__T2__F1__O($as_T2(arg1$1), $default);
-              if ((!$m_s_PartialFunction$().scala$PartialFunction$$fallbackOccurred__O__Z(z$1))) {
-                array$1.push(z$1)
-              };
-              i = ((1 + i) | 0)
-            };
-            var assertion = ($uI(array$1.length) === 0);
-            if ((!assertion)) {
-              var b = new $c_scm_StringBuilder().init___();
-              var elem$1 = false;
-              elem$1 = true;
-              b.append__T__scm_StringBuilder("");
-              var i$1 = 0;
-              var len$1 = $uI(array$1.length);
-              while ((i$1 < len$1)) {
-                var index$1 = i$1;
-                var arg1$2 = array$1[index$1];
-                if (elem$1) {
-                  b.append__O__scm_StringBuilder(arg1$2);
-                  elem$1 = false
-                } else {
-                  b.append__T__scm_StringBuilder(", ");
-                  b.append__O__scm_StringBuilder(arg1$2)
-                };
-                i$1 = ((1 + i$1) | 0)
-              };
-              b.append__T__scm_StringBuilder("");
-              throw new $c_jl_AssertionError().init___O((("assertion failed: " + "Projects already added in resolution: ") + b.underlying$5.java$lang$StringBuilder$$content$f))
-            };
-            var jsx$5 = acc$1.finalDependenciesCache$1;
-            var this$20 = $m_sc_JavaConverters$();
-            var m = acc$1.finalDependenciesCache0$1;
-            var x$1$1 = jsx$5.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce($f_sc_convert_DecorateAsScala__mapAsScalaConcurrentMapConverter__ju_concurrent_ConcurrentMap__sc_convert_Decorators$AsScala(this$20, m).asScala__O()));
-            var jsx$10 = acc$1.projectCache$1;
-            $m_sc_Seq$();
-            $m_sjs_js_WrappedArray$();
-            var b$1 = new $c_sjs_js_WrappedArray().init___();
-            var x1$2 = $uI(array.length);
-            switch (x1$2) {
-              case (-1): {
-                break
-              }
-            };
-            var i$2 = 0;
-            var len$2 = $uI(array.length);
-            while ((i$2 < len$2)) {
-              var index$2 = i$2;
-              var arg1$3 = array[index$2];
-              var x0$1$1 = $as_T2(arg1$3);
-              matchEnd4$1: {
-                var elem;
-                if ((x0$1$1 !== null)) {
-                  var modVer$3 = $as_T2(x0$1$1.$$und1__O());
-                  var p2$1 = $as_T2(x0$1$1.$$und2__O());
-                  if ((p2$1 !== null)) {
-                    var s = $as_Lcoursier_core_ArtifactSource(p2$1.$$und1__O());
-                    var p$1 = $as_Lcoursier_core_Project(p2$1.$$und2__O());
-                    var jsx$9 = acc$1.extraProperties$1;
-                    var this$23 = p$1.properties$1;
-                    var p$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-                      return (function(kv$2) {
-                        var kv = $as_T2(kv$2);
-                        return (!$this$1.forceProperties$1.contains__O__Z(kv.$$und1__O()))
-                      })
-                    })(acc$1));
-                    var jsx$8 = $as_sc_GenTraversableOnce(this$23.filterImpl__F1__Z__O(p$2, false));
-                    var this$24 = $m_sc_Seq$();
-                    var jsx$7 = $as_sc_TraversableLike(jsx$9.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$8, this$24.ReusableCBFInstance$2));
-                    var jsx$6 = acc$1.forceProperties$1;
-                    var this$25 = $m_sc_Seq$();
-                    var properties = $as_sc_Seq(jsx$7.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$6, this$25.ReusableCBFInstance$2));
-                    var p0 = acc$1.withDependencyManagement__Lcoursier_core_Project__Lcoursier_core_Project(new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(p$1.module$1, p$1.version$1, p$1.dependencies$1, p$1.configurations$1, p$1.parent$1, p$1.dependencyManagement$1, properties, p$1.profiles$1, p$1.versions$1, p$1.snapshotVersioning$1, p$1.packagingOpt$1, p$1.relocated$1, p$1.actualVersionOpt$1, p$1.publications$1, p$1.info$1));
-                    var elem = new $c_T2().init___O__O(modVer$3, new $c_T2().init___O__O(s, p0));
-                    break matchEnd4$1
-                  }
-                };
-                throw new $c_s_MatchError().init___O(x0$1$1)
-              };
-              b$1.array$6.push(elem);
-              i$2 = ((1 + i$2) | 0)
-            };
-            var x$2$1 = jsx$10.$$plus$plus__sc_GenTraversableOnce__sci_Map(b$1);
-            var x$3$1 = acc$1.rootDependencies$1;
-            var x$4$1 = acc$1.dependencySet$1;
-            var x$5 = acc$1.forceVersions$1;
-            var x$6 = acc$1.conflicts$1;
-            var x$7 = acc$1.errorCache$1;
-            var x$8 = acc$1.filter$1;
-            var x$9 = acc$1.reconciliation$1;
-            var x$10 = acc$1.osInfo$1;
-            var x$11 = acc$1.jdkVersion$1;
-            var x$12 = acc$1.userActivations$1;
-            var x$13 = acc$1.mapDependencies$1;
-            var x$14 = acc$1.extraProperties$1;
-            var x$15 = acc$1.forceProperties$1;
-            var x$16 = acc$1.defaultConfiguration$1;
-            acc = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(x$3$1, x$4$1, x$5, x$6, x$2$1, x$7, x$1$1, x$8, x$9, x$10, x$11, x$12, x$13, x$14, x$15, x$16);
-            break matchEnd5
-          }
-        };
-        throw new $c_s_MatchError().init___O(x1)
-      };
-      these = $as_sc_LinearSeqOptimized(these.tail__O())
-    };
-    var res0 = $as_Lcoursier_core_Resolution(acc);
-    var cont = this.cont$2;
-    return new $c_Lcoursier_core_Continue().init___Lcoursier_core_Resolution__F1(res0, cont)
-  } else {
-    var missing = $f_sc_SetLike__toSeq__sc_Seq(depMgmtMissing);
-    var cont$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$8$1, successes$1$1) {
-      return (function(res$2$2) {
-        var res$2$1 = $as_Lcoursier_core_Resolution(res$2$2);
-        return this$8$1.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess(res$2$1, successes$1$1)
-      })
-    })(this, successes$1));
-    return new $c_Lcoursier_core_Missing().init___sc_Seq__Lcoursier_core_Resolution__F1(missing, res, cont$1)
-  }
-});
-$c_Lcoursier_core_Missing.prototype.order$1__p2__sci_Map__sci_List__sci_List = (function(map, acc) {
-  _order: while (true) {
-    if (map.isEmpty__Z()) {
-      return acc.reverse__sci_List()
-    } else {
-      var this$2 = map;
-      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-        return (function(x$5$2) {
-          var x$5 = $as_T2(x$5$2);
-          return $as_sc_TraversableOnce(x$5.$$und2__O()).size__I()
-        })
-      })(this));
-      var this$1 = $m_sci_Iterable$();
-      var bf = this$1.ReusableCBFInstance$2;
-      var min = $uI($as_sc_TraversableOnce($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf)).min__s_math_Ordering__O($m_s_math_Ordering$Int$()));
-      var this$3 = map;
-      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, min$1) {
-        return (function(x0$1$2) {
-          var x0$1 = $as_T2(x0$1$2);
-          if ((x0$1 !== null)) {
-            var v = $as_sci_Set(x0$1.$$und2__O());
-            return (v.size__I() === min$1)
-          } else {
-            throw new $c_s_MatchError().init___O(x0$1)
-          }
-        })
-      })(this, min));
-      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
-      if ((x1 === null)) {
-        throw new $c_s_MatchError().init___O(x1)
-      };
-      var toAdd = $as_sci_Map(x1.$$und1__O());
-      var remaining = $as_sci_Map(x1.$$und2__O());
-      var this$4 = toAdd.keySet__sc_Set();
-      var z = acc;
-      var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1) {
-        return (function(x$7$2, x$8$2) {
-          var x$7 = $as_sci_List(x$7$2);
-          var x$8 = $as_T2(x$8$2);
-          return new $c_sci_$colon$colon().init___O__sci_List(x$8, x$7)
-        })
-      })(this));
-      var acc0 = $as_sci_List($f_sc_TraversableOnce__foldLeft__O__F2__O(this$4, z, op));
-      var this$6 = remaining.keySet__sci_Set();
-      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-        return (function(x$9$2) {
-          var x$9 = $as_T2(x$9$2);
-          return $as_T2(x$9.$$und1__O())
-        })
-      })(this));
-      var this$5 = $m_sci_Set$();
-      var bf$1 = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$5);
-      var remainingKeys = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$6, f$1, bf$1));
-      var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1, remainingKeys$1) {
-        return (function(x0$2$2) {
-          var x0$2 = $as_T2(x0$2$2);
-          if ((x0$2 !== null)) {
-            var k = $as_T2(x0$2.$$und1__O());
-            var v$1 = $as_sci_Set(x0$2.$$und2__O());
-            var y = v$1.intersect__sc_GenSet__O(remainingKeys$1);
-            return new $c_T2().init___O__O(k, y)
-          } else {
-            throw new $c_s_MatchError().init___O(x0$2)
-          }
-        })
-      })(this, remainingKeys));
-      var this$9 = $m_sci_Map$();
-      var bf$2 = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$9);
-      var map0 = $as_sci_Map($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(remaining, f$2, bf$2));
-      map = map0;
-      acc = acc0;
-      continue _order
-    }
-  }
-});
-$c_Lcoursier_core_Missing.prototype.equals__O__Z = (function(obj) {
-  if ((obj instanceof $c_Lcoursier_core_Missing)) {
-    var x2 = $as_Lcoursier_core_Missing(obj);
-    var x = this.missing$2;
-    var x$2 = x2.missing$2;
-    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
-      var x$3 = this.current$2;
-      var x$4 = x2.current$2;
-      var jsx$1 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
-    } else {
-      var jsx$1 = false
-    };
-    if (jsx$1) {
-      var x$5 = this.cont$2;
-      var x$6 = x2.cont$2;
-      return ((x$5 === null) ? (x$6 === null) : x$5.equals__O__Z(x$6))
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_core_Missing.prototype.next0__sc_Seq__Lcoursier_core_ResolutionProcess = (function(results) {
-  var jsx$1 = new $c_Lcoursier_core_Missing$$anonfun$1().init___Lcoursier_core_Missing(this);
-  var this$1 = $m_sc_Seq$();
-  var errors = $as_sc_Seq(results.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2));
-  var jsx$2 = new $c_Lcoursier_core_Missing$$anonfun$2().init___Lcoursier_core_Missing(this);
-  var this$2 = $m_sc_Seq$();
-  var successes = $as_sc_Seq(results.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$2, this$2.ReusableCBFInstance$2));
-  var current0 = this.current$2.addToErrorCache__sc_Iterable__Lcoursier_core_Resolution(errors);
-  return this.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess(current0, successes)
-});
-$c_Lcoursier_core_Missing.prototype.toString__T = (function() {
-  return (((((("Missing(" + this.missing$2) + ", ") + this.current$2) + ", ") + this.cont$2) + ")")
-});
-$c_Lcoursier_core_Missing.prototype.init___sc_Seq__Lcoursier_core_Resolution__F1 = (function(missing, current, cont) {
-  this.missing$2 = missing;
-  this.current$2 = current;
-  this.cont$2 = cont;
-  return this
-});
-$c_Lcoursier_core_Missing.prototype.current__Lcoursier_core_Resolution = (function() {
-  return this.current$2
-});
-$c_Lcoursier_core_Missing.prototype.hashCode__I = (function() {
-  var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.core.Missing")) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.missing$2)) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.current$2)) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.cont$2)) | 0);
-  return $imul(37, code)
-});
-function $as_Lcoursier_core_Missing(obj) {
-  return (((obj instanceof $c_Lcoursier_core_Missing) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Missing"))
-}
-function $isArrayOf_Lcoursier_core_Missing(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Missing)))
-}
-function $asArrayOf_Lcoursier_core_Missing(obj, depth) {
-  return (($isArrayOf_Lcoursier_core_Missing(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Missing;", depth))
-}
-var $d_Lcoursier_core_Missing = new $TypeData().initClass({
-  Lcoursier_core_Missing: 0
-}, false, "coursier.core.Missing", {
-  Lcoursier_core_Missing: 1,
-  Lcoursier_core_ResolutionProcess: 1,
-  O: 1
-});
-$c_Lcoursier_core_Missing.prototype.$classData = $d_Lcoursier_core_Missing;
-/** @constructor */
 function $c_Lcoursier_core_compatibility_package$$anon$1() {
   $c_O.call(this);
   this.attributesMap$1 = null;
@@ -36062,6 +34877,77 @@ var $d_s_Predef$$anon$1 = new $TypeData().initClass({
   scg_CanBuildFrom: 1
 });
 $c_s_Predef$$anon$1.prototype.$classData = $d_s_Predef$$anon$1;
+function $f_s_Product16__productElement__I__O($thiz, n) {
+  switch (n) {
+    case 0: {
+      return $thiz.$$und1$1;
+      break
+    }
+    case 1: {
+      return $thiz.$$und2$1;
+      break
+    }
+    case 2: {
+      return $thiz.$$und3$1;
+      break
+    }
+    case 3: {
+      return $thiz.$$und4$1;
+      break
+    }
+    case 4: {
+      return $thiz.$$und5$1;
+      break
+    }
+    case 5: {
+      return $thiz.$$und6$1;
+      break
+    }
+    case 6: {
+      return $thiz.$$und7$1;
+      break
+    }
+    case 7: {
+      return $thiz.$$und8$1;
+      break
+    }
+    case 8: {
+      return $thiz.$$und9$1;
+      break
+    }
+    case 9: {
+      return $thiz.$$und10$1;
+      break
+    }
+    case 10: {
+      return $thiz.$$und11$1;
+      break
+    }
+    case 11: {
+      return $thiz.$$und12$1;
+      break
+    }
+    case 12: {
+      return $thiz.$$und13$1;
+      break
+    }
+    case 13: {
+      return $thiz.$$und14$1;
+      break
+    }
+    case 14: {
+      return $thiz.$$und15$1;
+      break
+    }
+    case 15: {
+      return $thiz.$$und16$1;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+}
 function $f_s_Product2__productElement__I__O($thiz, n) {
   switch (n) {
     case 0: {
@@ -37863,1144 +36749,6 @@ function $m_Lcoursier_core_Repository$() {
   return $n_Lcoursier_core_Repository$
 }
 /** @constructor */
-function $c_Lcoursier_core_Resolution() {
-  $c_O.call(this);
-  this.dependencies$1 = null;
-  this.hashCode$1 = 0;
-  this.transitiveDependencies$1 = null;
-  this.nextDependenciesAndConflicts$1 = null;
-  this.reconciledVersions$1 = null;
-  this.missingFromCache$1 = null;
-  this.isDone$1 = false;
-  this.reverseDependencies$1 = null;
-  this.remainingDependencies$1 = null;
-  this.newDependencies$1 = null;
-  this.nextNoMissingUnsafe$1 = null;
-  this.rootDependencies$1 = null;
-  this.dependencySet$1 = null;
-  this.forceVersions$1 = null;
-  this.conflicts$1 = null;
-  this.projectCache$1 = null;
-  this.errorCache$1 = null;
-  this.finalDependenciesCache$1 = null;
-  this.filter$1 = null;
-  this.reconciliation$1 = null;
-  this.osInfo$1 = null;
-  this.jdkVersion$1 = null;
-  this.userActivations$1 = null;
-  this.mapDependencies$1 = null;
-  this.extraProperties$1 = null;
-  this.forceProperties$1 = null;
-  this.defaultConfiguration$1 = null;
-  this.finalDependenciesCache0$1 = null;
-  this.bitmap$0$1 = 0
-}
-$c_Lcoursier_core_Resolution.prototype = new $h_O();
-$c_Lcoursier_core_Resolution.prototype.constructor = $c_Lcoursier_core_Resolution;
-/** @constructor */
-function $h_Lcoursier_core_Resolution() {
-  /*<skip>*/
-}
-$h_Lcoursier_core_Resolution.prototype = $c_Lcoursier_core_Resolution.prototype;
-$c_Lcoursier_core_Resolution.prototype.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution = (function(rootDependencies, dependencySet, conflicts, errorCache) {
-  var jsx$1 = this.finalDependenciesCache$1;
-  var this$1 = $m_sc_JavaConverters$();
-  var m = this.finalDependenciesCache0$1;
-  var x$5 = jsx$1.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce($f_sc_convert_DecorateAsScala__mapAsScalaConcurrentMapConverter__ju_concurrent_ConcurrentMap__sc_convert_Decorators$AsScala(this$1, m).asScala__O()));
-  var x$6 = this.forceVersions$1;
-  var x$7 = this.projectCache$1;
-  var x$8 = this.filter$1;
-  var x$9 = this.reconciliation$1;
-  var x$10 = this.osInfo$1;
-  var x$11 = this.jdkVersion$1;
-  var x$12 = this.userActivations$1;
-  var x$13 = this.mapDependencies$1;
-  var x$14 = this.extraProperties$1;
-  var x$15 = this.forceProperties$1;
-  var x$16 = this.defaultConfiguration$1;
-  return new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(rootDependencies, dependencySet, x$6, conflicts, x$7, errorCache, x$5, x$8, x$9, x$10, x$11, x$12, x$13, x$14, x$15, x$16)
-});
-$c_Lcoursier_core_Resolution.prototype.missingFromCache$lzycompute__p1__sci_Set = (function() {
-  if (((32 & this.bitmap$0$1) === 0)) {
-    var this$2 = this.dependencies__sci_Set();
-    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(x$15$2) {
-        var x$15 = $as_Lcoursier_core_Dependency(x$15$2);
-        return x$15.moduleVersion__T2()
-      })
-    })(this));
-    var this$1 = $m_sci_Set$();
-    var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
-    var modules = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf));
-    var jsx$2 = $as_sc_TraversableLike(this.nextDependenciesAndConflicts__T3().$$und2$1);
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
-      return (function(x$16$2) {
-        var x$16 = $as_Lcoursier_core_Dependency(x$16$2);
-        return x$16.moduleVersion__T2()
-      })
-    })(this));
-    var this$3 = $m_sc_Seq$();
-    var nextModules = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2));
-    this.missingFromCache$1 = $as_sci_Set(modules.$$plus$plus__sc_GenTraversableOnce__sc_Set(nextModules).filterNot__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-      return (function(mod$2) {
-        var mod = $as_T2(mod$2);
-        return (this$3$1.projectCache$1.contains__O__Z(mod) || this$3$1.errorCache$1.contains__O__Z(mod))
-      })
-    })(this))));
-    this.bitmap$0$1 = (32 | this.bitmap$0$1)
-  };
-  return this.missingFromCache$1
-});
-$c_Lcoursier_core_Resolution.prototype.dependenciesOf__Lcoursier_core_Dependency__Z__Z__sc_Seq = (function(dep, withRetainedVersions, withFallbackConfig) {
-  var deps = this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep);
-  if ((withRetainedVersions || withFallbackConfig)) {
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, withRetainedVersions$1, withFallbackConfig$1) {
-      return (function(x$11$2) {
-        var x$11 = $as_Lcoursier_core_Dependency(x$11$2);
-        return $this.updated__p1__Lcoursier_core_Dependency__Z__Z__Lcoursier_core_Dependency(x$11, withRetainedVersions$1, withFallbackConfig$1)
-      })
-    })(this, withRetainedVersions, withFallbackConfig));
-    var this$1 = $m_sc_Seq$();
-    return $as_sc_Seq(deps.map__F1__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
-  } else {
-    return deps
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.helper$3__p1__sci_Set__sci_Set__sci_Set__sci_Set = (function(toCheck, done, missing) {
-  _helper: while (true) {
-    if (toCheck.isEmpty__Z()) {
-      return missing
-    } else if (toCheck.exists__F1__Z(done)) {
-      var this$1 = toCheck;
-      var xs = done;
-      toCheck = $as_sci_Set($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$1, xs));
-      continue _helper
-    } else if (toCheck.exists__F1__Z(missing)) {
-      var this$2 = toCheck;
-      var xs$1 = missing;
-      toCheck = $as_sci_Set($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$2, xs$1));
-      continue _helper
-    } else if (toCheck.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(key$2) {
-        var key = $as_T2(key$2);
-        return $this.projectCache$1.contains__O__Z(key)
-      })
-    })(this)))) {
-      var this$3 = toCheck;
-      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
-        return (function(key$3$2) {
-          var key$3 = $as_T2(key$3$2);
-          return this$2$1.projectCache$1.contains__O__Z(key$3)
-        })
-      })(this));
-      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
-      if ((x1 === null)) {
-        throw new $c_s_MatchError().init___O(x1)
-      };
-      var checking = $as_sci_Set(x1.$$und1__O());
-      var remaining = $as_sci_Set(x1.$$und2__O());
-      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-        return (function(mod$2) {
-          var mod = $as_T2(mod$2);
-          return this$3$1.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set($as_Lcoursier_core_Project($as_T2(this$3$1.projectCache$1.apply__O__O(mod)).$$und2__O()))
-        })
-      })(this));
-      var this$4 = $m_sci_Set$();
-      var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$4);
-      var directRequirements = $as_sci_Set($f_sc_TraversableLike__flatMap__F1__scg_CanBuildFrom__O(checking, f, bf));
-      var temp$toCheck$3 = $as_sci_Set(remaining.$$plus$plus__sc_GenTraversableOnce__sc_Set(directRequirements));
-      var temp$done = $as_sci_Set(done.$$plus$plus__sc_GenTraversableOnce__sc_Set(checking));
-      toCheck = temp$toCheck$3;
-      done = temp$done;
-      continue _helper
-    } else if (toCheck.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-      return (function(key$4$2) {
-        var key$4 = $as_T2(key$4$2);
-        return this$4$1.errorCache$1.contains__O__Z(key$4)
-      })
-    })(this)))) {
-      var this$6 = toCheck;
-      var p$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5) {
-        return (function(key$5$2) {
-          var key$5 = $as_T2(key$5$2);
-          return this$5.errorCache$1.contains__O__Z(key$5)
-        })
-      })(this));
-      var x1$2 = $f_sc_TraversableLike__partition__F1__T2(this$6, p$1);
-      if ((x1$2 === null)) {
-        throw new $c_s_MatchError().init___O(x1$2)
-      };
-      var errored = $as_sci_Set(x1$2.$$und1__O());
-      var remaining$3 = $as_sci_Set(x1$2.$$und2__O());
-      var temp$done$2 = $as_sci_Set(done.$$plus$plus__sc_GenTraversableOnce__sc_Set(errored));
-      toCheck = remaining$3;
-      done = temp$done$2;
-      continue _helper
-    } else {
-      var temp$toCheck$5 = $m_sci_Set$EmptySet$();
-      var temp$missing = $as_sci_Set(missing.$$plus$plus__sc_GenTraversableOnce__sc_Set(toCheck));
-      toCheck = temp$toCheck$5;
-      missing = temp$missing;
-      continue _helper
-    }
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.newDependencies__sci_Set = (function() {
-  return (((512 & this.bitmap$0$1) === 0) ? this.newDependencies$lzycompute__p1__sci_Set() : this.newDependencies$1)
-});
-$c_Lcoursier_core_Resolution.prototype.init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T = (function(rootDependencies, dependencySet, forceVersions, conflicts, projectCache, errorCache, finalDependenciesCache, filter, reconciliation, osInfo, jdkVersion, userActivations, mapDependencies, extraProperties, forceProperties, defaultConfiguration) {
-  this.rootDependencies$1 = rootDependencies;
-  this.dependencySet$1 = dependencySet;
-  this.forceVersions$1 = forceVersions;
-  this.conflicts$1 = conflicts;
-  this.projectCache$1 = projectCache;
-  this.errorCache$1 = errorCache;
-  this.finalDependenciesCache$1 = finalDependenciesCache;
-  this.filter$1 = filter;
-  this.reconciliation$1 = reconciliation;
-  this.osInfo$1 = osInfo;
-  this.jdkVersion$1 = jdkVersion;
-  this.userActivations$1 = userActivations;
-  this.mapDependencies$1 = mapDependencies;
-  this.extraProperties$1 = extraProperties;
-  this.forceProperties$1 = forceProperties;
-  this.defaultConfiguration$1 = defaultConfiguration;
-  this.finalDependenciesCache0$1 = new $c_ju_concurrent_ConcurrentHashMap().init___();
-  return this
-});
-$c_Lcoursier_core_Resolution.prototype.equals__O__Z = (function(obj) {
-  if ((obj instanceof $c_Lcoursier_core_Resolution)) {
-    var x2 = $as_Lcoursier_core_Resolution(obj);
-    var x = this.rootDependencies$1;
-    var x$2 = x2.rootDependencies$1;
-    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
-      var x$3 = this.dependencySet$1;
-      var x$4 = x2.dependencySet$1;
-      var jsx$14 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
-    } else {
-      var jsx$14 = false
-    };
-    if (jsx$14) {
-      var x$5 = this.forceVersions$1;
-      var x$6 = x2.forceVersions$1;
-      var jsx$13 = ((x$5 === null) ? (x$6 === null) : $f_sc_GenMapLike__equals__O__Z(x$5, x$6))
-    } else {
-      var jsx$13 = false
-    };
-    if (jsx$13) {
-      var x$7 = this.conflicts$1;
-      var x$8 = x2.conflicts$1;
-      var jsx$12 = ((x$7 === null) ? (x$8 === null) : $f_sc_GenSetLike__equals__O__Z(x$7, x$8))
-    } else {
-      var jsx$12 = false
-    };
-    if (jsx$12) {
-      var x$9 = this.projectCache$1;
-      var x$10 = x2.projectCache$1;
-      var jsx$11 = ((x$9 === null) ? (x$10 === null) : $f_sc_GenMapLike__equals__O__Z(x$9, x$10))
-    } else {
-      var jsx$11 = false
-    };
-    if (jsx$11) {
-      var x$11 = this.errorCache$1;
-      var x$12 = x2.errorCache$1;
-      var jsx$10 = ((x$11 === null) ? (x$12 === null) : $f_sc_GenMapLike__equals__O__Z(x$11, x$12))
-    } else {
-      var jsx$10 = false
-    };
-    if (jsx$10) {
-      var x$13 = this.finalDependenciesCache$1;
-      var x$14 = x2.finalDependenciesCache$1;
-      var jsx$9 = ((x$13 === null) ? (x$14 === null) : $f_sc_GenMapLike__equals__O__Z(x$13, x$14))
-    } else {
-      var jsx$9 = false
-    };
-    if (jsx$9) {
-      var x$15 = this.filter$1;
-      var x$16 = x2.filter$1;
-      var jsx$8 = ((x$15 === null) ? (x$16 === null) : x$15.equals__O__Z(x$16))
-    } else {
-      var jsx$8 = false
-    };
-    if (jsx$8) {
-      var x$17 = this.reconciliation$1;
-      var x$18 = x2.reconciliation$1;
-      var jsx$7 = ((x$17 === null) ? (x$18 === null) : x$17.equals__O__Z(x$18))
-    } else {
-      var jsx$7 = false
-    };
-    if (jsx$7) {
-      var x$19 = this.osInfo$1;
-      var x$20 = x2.osInfo$1;
-      var jsx$6 = ((x$19 === null) ? (x$20 === null) : x$19.equals__O__Z(x$20))
-    } else {
-      var jsx$6 = false
-    };
-    if (jsx$6) {
-      var x$21 = this.jdkVersion$1;
-      var x$22 = x2.jdkVersion$1;
-      var jsx$5 = ((x$21 === null) ? (x$22 === null) : x$21.equals__O__Z(x$22))
-    } else {
-      var jsx$5 = false
-    };
-    if (jsx$5) {
-      var x$23 = this.userActivations$1;
-      var x$24 = x2.userActivations$1;
-      var jsx$4 = ((x$23 === null) ? (x$24 === null) : x$23.equals__O__Z(x$24))
-    } else {
-      var jsx$4 = false
-    };
-    if (jsx$4) {
-      var x$25 = this.mapDependencies$1;
-      var x$26 = x2.mapDependencies$1;
-      var jsx$3 = ((x$25 === null) ? (x$26 === null) : x$25.equals__O__Z(x$26))
-    } else {
-      var jsx$3 = false
-    };
-    if (jsx$3) {
-      var x$27 = this.extraProperties$1;
-      var x$28 = x2.extraProperties$1;
-      var jsx$2 = ((x$27 === null) ? (x$28 === null) : x$27.equals__O__Z(x$28))
-    } else {
-      var jsx$2 = false
-    };
-    if (jsx$2) {
-      var x$29 = this.forceProperties$1;
-      var x$30 = x2.forceProperties$1;
-      var jsx$1 = ((x$29 === null) ? (x$30 === null) : $f_sc_GenMapLike__equals__O__Z(x$29, x$30))
-    } else {
-      var jsx$1 = false
-    };
-    if (jsx$1) {
-      return (this.defaultConfiguration$1 === x2.defaultConfiguration$1)
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.withDependencyManagement__Lcoursier_core_Project__Lcoursier_core_Project = (function(project) {
-  var this$1 = project.parent$1;
-  if (this$1.isEmpty__Z()) {
-    var this$2 = $m_s_None$()
-  } else {
-    var arg1 = this$1.get__O();
-    var key = $as_T2(arg1);
-    var this$2 = this.projectCache$1.get__O__s_Option(key)
-  };
-  if (this$2.isEmpty__Z()) {
-    var this$3 = $m_s_None$()
-  } else {
-    var arg1$1 = this$2.get__O();
-    var x$26 = $as_T2(arg1$1);
-    var this$3 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$26.$$und2__O()).properties$1)
-  };
-  var parentProperties0 = $as_sc_Seq((this$3.isEmpty__Z() ? $as_sc_Seq($m_sc_Seq$().apply__sc_Seq__sc_GenTraversable($m_sci_Nil$())) : this$3.get__O()));
-  var approxProperties = parentProperties0.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2).$$plus$plus__sc_GenTraversableOnce__sci_Map($m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project));
-  var profiles0 = $m_Lcoursier_core_Resolution$().profiles__Lcoursier_core_Project__sci_Map__Lcoursier_core_Activation$Os__s_Option__s_Option__sc_Seq(project, approxProperties, this.osInfo$1, this.jdkVersion$1, this.userActivations$1);
-  var jsx$4 = project.properties$1;
-  var this$4 = $m_sc_Seq$();
-  var jsx$3 = $as_sc_TraversableLike(parentProperties0.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$4, this$4.ReusableCBFInstance$2));
-  var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-    return (function(x$27$2) {
-      var x$27 = $as_Lcoursier_core_Profile(x$27$2);
-      return x$27.properties$1
-    })
-  })(this));
-  var this$5 = $m_sc_Seq$();
-  var jsx$1 = $as_sc_GenTraversableOnce(profiles0.flatMap__F1__scg_CanBuildFrom__O(jsx$2, this$5.ReusableCBFInstance$2));
-  var this$6 = $m_sc_Seq$();
-  var properties = $as_sc_Seq(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$6.ReusableCBFInstance$2));
-  var project0 = this.withFinalProperties__p1__Lcoursier_core_Project__Lcoursier_core_Project(new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project.module$1, project.version$1, project.dependencies$1, project.configurations$1, project.parent$1, project.dependencyManagement$1, properties, project.profiles$1, project.versions$1, project.snapshotVersioning$1, project.packagingOpt$1, project.relocated$1, project.actualVersionOpt$1, project.publications$1, project.info$1));
-  var propertiesMap0 = project0.properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2);
-  var jsx$9 = $m_Lcoursier_core_Resolution$();
-  var x$29 = project0.dependencies$1;
-  var jsx$8 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
-    return (function(x$28$2) {
-      var x$28 = $as_Lcoursier_core_Profile(x$28$2);
-      return x$28.dependencies$1
-    })
-  })(this));
-  var this$7 = $m_sc_Seq$();
-  var jsx$7 = $as_sc_SeqLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$8, this$7.ReusableCBFInstance$2));
-  var this$8 = $m_sc_Seq$();
-  var jsx$6 = $as_sc_TraversableLike(jsx$7.$$plus$colon__O__scg_CanBuildFrom__O(x$29, this$8.ReusableCBFInstance$2));
-  var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1, propertiesMap0$1) {
-    return (function(x$30$2) {
-      var x$30 = $as_sc_Seq(x$30$2);
-      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$30, propertiesMap0$1)
-    })
-  })(this, propertiesMap0));
-  var this$9 = $m_sc_Seq$();
-  var dependencies0 = jsx$9.addDependencies__sc_Seq__sc_Seq($as_sc_Seq(jsx$6.map__F1__scg_CanBuildFrom__O(jsx$5, this$9.ReusableCBFInstance$2)));
-  var jsx$14 = $m_Lcoursier_core_Resolution$();
-  var x$32 = project0.dependencyManagement$1;
-  var jsx$13 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$7$1) {
-    return (function(x$31$2) {
-      var x$31 = $as_Lcoursier_core_Profile(x$31$2);
-      return x$31.dependencyManagement$1
-    })
-  })(this));
-  var this$10 = $m_sc_Seq$();
-  var jsx$12 = $as_sc_SeqLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$13, this$10.ReusableCBFInstance$2));
-  var this$11 = $m_sc_Seq$();
-  var jsx$11 = $as_sc_TraversableLike(jsx$12.$$plus$colon__O__scg_CanBuildFrom__O(x$32, this$11.ReusableCBFInstance$2));
-  var jsx$10 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$8$1, propertiesMap0$2) {
-    return (function(x$33$2) {
-      var x$33 = $as_sc_Seq(x$33$2);
-      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$33, propertiesMap0$2)
-    })
-  })(this, propertiesMap0));
-  var this$12 = $m_sc_Seq$();
-  var dependenciesMgmt0 = jsx$14.addDependencies__sc_Seq__sc_Seq($as_sc_Seq(jsx$11.map__F1__scg_CanBuildFrom__O(jsx$10, this$12.ReusableCBFInstance$2)));
-  var jsx$20 = new $c_Lcoursier_core_Resolution$$anonfun$5().init___Lcoursier_core_Resolution(this);
-  var this$13 = $m_sc_Seq$();
-  var jsx$19 = $as_sc_TraversableLike(dependencies0.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$20, this$13.ReusableCBFInstance$2));
-  var jsx$18 = new $c_Lcoursier_core_Resolution$$anonfun$6().init___Lcoursier_core_Resolution(this);
-  var this$14 = $m_sc_Seq$();
-  var jsx$17 = $as_sc_GenTraversableOnce(dependenciesMgmt0.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$18, this$14.ReusableCBFInstance$2));
-  var this$15 = $m_sc_Seq$();
-  var jsx$16 = $as_sc_TraversableLike(jsx$19.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$17, this$15.ReusableCBFInstance$2));
-  var xo = project0.parent$1;
-  var jsx$15 = xo.toList__sci_List();
-  var this$17 = $m_sc_Seq$();
-  var deps0 = $as_sc_Seq(jsx$16.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$15, this$17.ReusableCBFInstance$2));
-  var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$9$1) {
-    return (function(key$3$2) {
-      var key$3 = $as_T2(key$3$2);
-      return this$9$1.projectCache$1.contains__O__Z(key$3)
-    })
-  })(this));
-  var deps = $as_sc_Seq(deps0.filterImpl__F1__Z__O(p, false));
-  var jsx$21 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$10$1) {
-    return (function(x$34$2) {
-      var x$34 = $as_T2(x$34$2);
-      return $as_Lcoursier_core_Project($as_T2(this$10$1.projectCache$1.apply__O__O(x$34)).$$und2__O())
-    })
-  })(this));
-  var this$18 = $m_sc_Seq$();
-  var projs = $as_sc_Seq(deps.map__F1__scg_CanBuildFrom__O(jsx$21, this$18.ReusableCBFInstance$2));
-  var x$37 = project0.dependencyManagement$1;
-  var jsx$28 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$11$1) {
-    return (function(x$35$2) {
-      var x$35 = $as_Lcoursier_core_Profile(x$35$2);
-      return x$35.dependencyManagement$1
-    })
-  })(this));
-  var this$19 = $m_sc_Seq$();
-  var jsx$27 = $as_sc_TraversableLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$28, this$19.ReusableCBFInstance$2));
-  var jsx$26 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$12$1) {
-    return (function(x$36$2) {
-      var x$36 = $as_Lcoursier_core_Project(x$36$2);
-      return x$36.dependencyManagement$1
-    })
-  })(this));
-  var this$20 = $m_sc_Seq$();
-  var jsx$25 = $as_sc_GenTraversableOnce(projs.map__F1__scg_CanBuildFrom__O(jsx$26, this$20.ReusableCBFInstance$2));
-  var this$21 = $m_sc_Seq$();
-  var jsx$24 = $as_sc_SeqLike(jsx$27.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$25, this$21.ReusableCBFInstance$2));
-  var this$22 = $m_sc_Seq$();
-  var jsx$23 = $as_sc_TraversableLike(jsx$24.$$plus$colon__O__scg_CanBuildFrom__O(x$37, this$22.ReusableCBFInstance$2));
-  var jsx$22 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$13$1, propertiesMap0$3) {
-    return (function(x$38$2) {
-      var x$38 = $as_sc_Seq(x$38$2);
-      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$38, propertiesMap0$3)
-    })
-  })(this, propertiesMap0));
-  var this$23 = $m_sc_Seq$();
-  var depMgmt = $as_sci_Map($as_sc_TraversableOnce(jsx$23.map__F1__scg_CanBuildFrom__O(jsx$22, this$23.ReusableCBFInstance$2)).foldLeft__O__F2__O($m_sci_Map$EmptyMap$(), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$14$1) {
-    return (function(dict$2, deps$2$2) {
-      var dict = $as_sci_Map(dict$2);
-      var deps$2 = $as_sc_Seq(deps$2$2);
-      return $m_Lcoursier_core_Resolution$DepMgmt$().addSeq__sci_Map__sc_Seq__sci_Map(dict, deps$2)
-    })
-  })(this))));
-  var depsSet = deps.toSet__sci_Set();
-  var this$25 = project0.packagingOpt$1;
-  if (this$25.isEmpty__Z()) {
-    var packagingOpt = $m_s_None$()
-  } else {
-    var arg1$2 = this$25.get__O();
-    var x$39 = $as_Lcoursier_core_Type(arg1$2).value$1;
-    var packagingOpt = new $c_s_Some().init___O(new $c_Lcoursier_core_Type().init___T(($m_Lcoursier_core_Type$(), $m_Lcoursier_core_Resolution$().substituteProps__T__sci_Map__T(x$39, propertiesMap0))))
-  };
-  var this$27 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project0.module$1, project0.version$1, project0.dependencies$1, project0.configurations$1, project0.parent$1, project0.dependencyManagement$1, project0.properties$1, project0.profiles$1, project0.versions$1, project0.snapshotVersioning$1, packagingOpt, project0.relocated$1, project0.actualVersionOpt$1, project0.publications$1, project0.info$1);
-  var version = $m_Lcoursier_core_Resolution$().substituteProps__T__sci_Map__T(project0.version$1, propertiesMap0);
-  var this$37 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$27.module$1, version, this$27.dependencies$1, this$27.configurations$1, this$27.parent$1, this$27.dependencyManagement$1, this$27.properties$1, this$27.profiles$1, this$27.versions$1, this$27.snapshotVersioning$1, this$27.packagingOpt$1, this$27.relocated$1, this$27.actualVersionOpt$1, this$27.publications$1, this$27.info$1);
-  var p$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$16$1, depsSet$1) {
-    return (function(x0$1$2) {
-      var x0$1 = $as_T2(x0$1$2);
-      if ((x0$1 !== null)) {
-        var config = $as_Lcoursier_core_Configuration(x0$1.$$und1__O()).value$1;
-        var dep = $as_Lcoursier_core_Dependency(x0$1.$$und2__O());
-        if ((config === $m_Lcoursier_core_Configuration$().import$1)) {
-          var elem = dep.moduleVersion__T2();
-          return depsSet$1.contains__O__Z(elem)
-        } else {
-          return false
-        }
-      } else {
-        throw new $c_s_MatchError().init___O(x0$1)
-      }
-    })
-  })(this, depsSet));
-  var jsx$32 = $as_sc_TraversableLike(dependencies0.filterImpl__F1__Z__O(p$1, true));
-  var this$28 = project0.parent$1;
-  if (this$28.isEmpty__Z()) {
-    var jsx$30 = true
-  } else {
-    var arg1$3 = this$28.get__O();
-    var key$4 = $as_T2(arg1$3);
-    var jsx$30 = this.projectCache$1.contains__O__Z(key$4)
-  };
-  if (jsx$30) {
-    var xo$1 = this$28
-  } else {
-    var xo$1 = $m_s_None$()
-  };
-  var this$30 = xo$1.toList__sci_List();
-  var f = (function(this$18$1) {
-    return (function(x$41$2) {
-      var x$41 = $as_T2(x$41$2);
-      return $as_Lcoursier_core_Project($as_T2(this$18$1.projectCache$1.apply__O__O(x$41)).$$und2__O()).dependencies$1
-    })
-  })(this);
-  var this$31 = $m_sc_Seq$();
-  var bf = this$31.ReusableCBFInstance$2;
-  if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$30 === $m_sci_Nil$())) {
-      var jsx$31 = $m_sci_Nil$()
-    } else {
-      var rest = this$30;
-      var found = new $c_sr_BooleanRef().init___Z(false);
-      var h = new $c_sr_ObjectRef().init___O(null);
-      var t = new $c_sr_ObjectRef().init___O(null);
-      while ((rest !== $m_sci_Nil$())) {
-        var arg1$4 = rest.head__O();
-        $as_sc_GenTraversableOnce(f(arg1$4)).seq__sc_TraversableOnce().foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, found$1, h$1, t$1) {
-          return (function(b$2) {
-            if ((!found$1.elem$1)) {
-              h$1.elem$1 = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
-              t$1.elem$1 = $as_sci_$colon$colon(h$1.elem$1);
-              found$1.elem$1 = true
-            } else {
-              var nx = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
-              $as_sci_$colon$colon(t$1.elem$1).tl$5 = nx;
-              t$1.elem$1 = nx
-            }
-          })
-        })(this$30, found, h, t)));
-        rest = $as_sci_List(rest.tail__O())
-      };
-      var jsx$31 = ((!found.elem$1) ? $m_sci_Nil$() : $as_sci_$colon$colon(h.elem$1))
-    }
-  } else {
-    $m_sci_List$();
-    var b = new $c_scm_ListBuffer().init___();
-    var these = this$30;
-    while ((!these.isEmpty__Z())) {
-      var arg1$5 = these.head__O();
-      var xs = $as_sc_GenTraversableOnce(f(arg1$5)).seq__sc_TraversableOnce();
-      b.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer(xs);
-      these = $as_sci_List(these.tail__O())
-    };
-    var jsx$31 = b.toList__sci_List()
-  };
-  var jsx$29 = $as_sc_GenTraversableOnce(jsx$31);
-  var this$36 = $m_sc_Seq$();
-  var dependencies = $as_sc_Seq(jsx$32.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$29, this$36.ReusableCBFInstance$2));
-  var this$40 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$37.module$1, this$37.version$1, dependencies, this$37.configurations$1, this$37.parent$1, this$37.dependencyManagement$1, this$37.properties$1, this$37.profiles$1, this$37.versions$1, this$37.snapshotVersioning$1, this$37.packagingOpt$1, this$37.relocated$1, this$37.actualVersionOpt$1, this$37.publications$1, this$37.info$1);
-  var this$38 = new $c_sc_MapLike$DefaultValuesIterable().init___sc_MapLike(depMgmt);
-  var this$39 = this$38.$$outer$3.valuesIterator__sc_Iterator().toStream__sci_Stream();
-  var p$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$19$1, depsSet$2) {
-    return (function(x0$2$2) {
-      var x0$2 = $as_T2(x0$2$2);
-      if ((x0$2 !== null)) {
-        var config$1 = $as_Lcoursier_core_Configuration(x0$2.$$und1__O()).value$1;
-        var dep$1 = $as_Lcoursier_core_Dependency(x0$2.$$und2__O());
-        if ((config$1 === $m_Lcoursier_core_Configuration$().import$1)) {
-          var elem$1 = dep$1.moduleVersion__T2();
-          return depsSet$2.contains__O__Z(elem$1)
-        } else {
-          return false
-        }
-      } else {
-        throw new $c_s_MatchError().init___O(x0$2)
-      }
-    })
-  })(this, depsSet));
-  var dependencyManagement = this$39.filterImpl__F1__Z__sci_Stream(p$2, true);
-  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$40.module$1, this$40.version$1, this$40.dependencies$1, this$40.configurations$1, this$40.parent$1, dependencyManagement, this$40.properties$1, this$40.profiles$1, this$40.versions$1, this$40.snapshotVersioning$1, this$40.packagingOpt$1, this$40.relocated$1, this$40.actualVersionOpt$1, this$40.publications$1, this$40.info$1)
-});
-$c_Lcoursier_core_Resolution.prototype.nextDependenciesAndConflicts__T3 = (function() {
-  return (((8 & this.bitmap$0$1) === 0) ? this.nextDependenciesAndConflicts$lzycompute__p1__T3() : this.nextDependenciesAndConflicts$1)
-});
-$c_Lcoursier_core_Resolution.prototype.isDone$lzycompute__p1__Z = (function() {
-  if (((64 & this.bitmap$0$1) === 0)) {
-    this.isDone$1 = (this.missingFromCache__sci_Set().isEmpty__Z() && this.isFixPoint$1__p1__Z());
-    this.bitmap$0$1 = (64 | this.bitmap$0$1)
-  };
-  return this.isDone$1
-});
-$c_Lcoursier_core_Resolution.prototype.hashCode$lzycompute__p1__I = (function() {
-  if (((2 & this.bitmap$0$1) === 0)) {
-    var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.core.Resolution")) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.rootDependencies$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.dependencySet$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.forceVersions$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.conflicts$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.projectCache$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.errorCache$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.finalDependenciesCache$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.filter$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.reconciliation$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.osInfo$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.jdkVersion$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.userActivations$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.mapDependencies$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.extraProperties$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.forceProperties$1)) | 0);
-    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(new $c_Lcoursier_core_Configuration().init___T(this.defaultConfiguration$1))) | 0);
-    this.hashCode$1 = code;
-    this.bitmap$0$1 = (2 | this.bitmap$0$1)
-  };
-  return this.hashCode$1
-});
-$c_Lcoursier_core_Resolution.prototype.nextNoMissingUnsafe__p1__Lcoursier_core_Resolution = (function() {
-  return (((1024 & this.bitmap$0$1) === 0) ? this.nextNoMissingUnsafe$lzycompute__p1__Lcoursier_core_Resolution() : this.nextNoMissingUnsafe$1)
-});
-$c_Lcoursier_core_Resolution.prototype.toString__T = (function() {
-  var b = new $c_scm_StringBuilder().init___T("Resolution(");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.rootDependencies$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$1 = this.dependencySet$1.set$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$1));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$2 = this.forceVersions$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$2));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$3 = this.conflicts$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$3));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$4 = this.projectCache$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$4));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$5 = this.errorCache$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$5));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$6 = this.finalDependenciesCache$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$6));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.filter$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.reconciliation$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.osInfo$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.jdkVersion$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.userActivations$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.mapDependencies$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder(this.extraProperties$1.toString__T());
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  var this$7 = this.forceProperties$1;
-  b.$$plus$plus$eq__T__scm_StringBuilder($f_sc_TraversableLike__toString__T(this$7));
-  b.$$plus$plus$eq__T__scm_StringBuilder(", ");
-  b.$$plus$plus$eq__T__scm_StringBuilder($m_Lcoursier_core_Configuration$().toString$extension__T__T(this.defaultConfiguration$1));
-  b.$$plus$eq__C__scm_StringBuilder(41);
-  return b.underlying$5.java$lang$StringBuilder$$content$f
-});
-$c_Lcoursier_core_Resolution.prototype.dependencies$lzycompute__p1__sci_Set = (function() {
-  if (((1 & this.bitmap$0$1) === 0)) {
-    this.dependencies$1 = this.dependencySet$1.set$1;
-    this.bitmap$0$1 = (1 | this.bitmap$0$1)
-  };
-  return this.dependencies$1
-});
-$c_Lcoursier_core_Resolution.prototype.configsOf__p1__Lcoursier_core_Dependency__sci_Set = (function(dep) {
-  var this$1 = this.projectCache$1.get__O__s_Option(dep.moduleVersion__T2());
-  if (this$1.isEmpty__Z()) {
-    var this$2 = $m_s_None$()
-  } else {
-    var arg1 = this$1.get__O();
-    var x$10 = $as_T2(arg1);
-    var this$2 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$10.$$und2__O()).configurations$1.keySet__sci_Set())
-  };
-  return $as_sci_Set((this$2.isEmpty__Z() ? $m_sci_Set$EmptySet$() : this$2.get__O()))
-});
-$c_Lcoursier_core_Resolution.prototype.nextDependenciesAndConflicts$lzycompute__p1__T3 = (function() {
-  if (((8 & this.bitmap$0$1) === 0)) {
-    var jsx$7 = $m_Lcoursier_core_Resolution$();
-    var jsx$6 = this.rootDependencies$1;
-    var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(x$12$2) {
-        var x$12 = $as_Lcoursier_core_Dependency(x$12$2);
-        return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$withDefaultConfig__Lcoursier_core_Dependency__T__Lcoursier_core_Dependency(x$12, $this.defaultConfiguration$1)
-      })
-    })(this));
-    var this$1 = $m_sc_Seq$();
-    var jsx$4 = $as_sc_TraversableLike(jsx$6.map__F1__scg_CanBuildFrom__O(jsx$5, this$1.ReusableCBFInstance$2));
-    var jsx$3 = this.dependencySet$1.minimizedSet__sci_Set();
-    var this$2 = $m_sc_Seq$();
-    var jsx$2 = $as_sc_TraversableLike(jsx$4.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$3, this$2.ReusableCBFInstance$2));
-    var jsx$1 = this.transitiveDependencies__sc_Seq();
-    var this$3 = $m_sc_Seq$();
-    this.nextDependenciesAndConflicts$1 = jsx$7.merge__sc_Seq__sci_Map__s_Option__Z__T3($as_sc_Seq(jsx$2.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)), this.forceVersions$1, this.reconciliation$1, ($m_Lcoursier_core_Resolution$(), false));
-    this.bitmap$0$1 = (8 | this.bitmap$0$1)
-  };
-  return this.nextDependenciesAndConflicts$1
-});
-$c_Lcoursier_core_Resolution.prototype.withFinalProperties__p1__Lcoursier_core_Project__Lcoursier_core_Project = (function(project) {
-  var properties = $m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project);
-  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project.module$1, project.version$1, project.dependencies$1, project.configurations$1, project.parent$1, project.dependencyManagement$1, properties, project.profiles$1, project.versions$1, project.snapshotVersioning$1, project.packagingOpt$1, project.relocated$1, project.actualVersionOpt$1, project.publications$1, project.info$1)
-});
-$c_Lcoursier_core_Resolution.prototype.withFilter__s_Option__Lcoursier_core_Resolution = (function(filter) {
-  var x$2 = this.rootDependencies$1;
-  var x$3 = this.dependencySet$1;
-  var x$4 = this.forceVersions$1;
-  var x$5 = this.conflicts$1;
-  var x$6 = this.projectCache$1;
-  var x$7 = this.errorCache$1;
-  var x$8 = this.finalDependenciesCache$1;
-  var x$9 = this.reconciliation$1;
-  var x$10 = this.osInfo$1;
-  var x$11 = this.jdkVersion$1;
-  var x$12 = this.userActivations$1;
-  var x$13 = this.mapDependencies$1;
-  var x$14 = this.extraProperties$1;
-  var x$15 = this.forceProperties$1;
-  var x$16 = this.defaultConfiguration$1;
-  return new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(x$2, x$3, x$4, x$5, x$6, x$7, x$8, filter, x$9, x$10, x$11, x$12, x$13, x$14, x$15, x$16)
-});
-$c_Lcoursier_core_Resolution.prototype.dependencyManagementMissing__Lcoursier_core_Project__sci_Set = (function(project) {
-  var jsx$2 = this.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set(project);
-  var array = [project.moduleVersion__T2()];
-  if (($uI(array.length) === 0)) {
-    var jsx$1 = $m_sci_Set$EmptySet$()
-  } else {
-    var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_Set$EmptySet$());
-    var i = 0;
-    var len = $uI(array.length);
-    while ((i < len)) {
-      var index = i;
-      var arg1 = array[index];
-      b.$$plus$eq__O__scm_SetBuilder(arg1);
-      i = ((1 + i) | 0)
-    };
-    var jsx$1 = b.elems$1
-  };
-  return this.helper$3__p1__sci_Set__sci_Set__sci_Set__sci_Set(jsx$2, $as_sci_Set(jsx$1), $m_sci_Set$EmptySet$())
-});
-$c_Lcoursier_core_Resolution.prototype.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set = (function(project) {
-  var this$1 = project.parent$1;
-  if ((!this$1.isEmpty__Z())) {
-    var arg1 = this$1.get__O();
-    var par = $as_T2(arg1);
-    var parentFound = (this.projectCache$1.contains__O__Z(par) || this.errorCache$1.contains__O__Z(par));
-    var needsParent = (!parentFound)
-  } else {
-    var needsParent = false
-  };
-  if (needsParent) {
-    var xo = project.parent$1;
-    var this$3 = xo.toList__sci_List();
-    var this$4 = $m_sci_Set$();
-    var cbf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$4);
-    return $as_sci_Set($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$3, cbf))
-  } else {
-    var this$5 = project.parent$1;
-    if (this$5.isEmpty__Z()) {
-      var this$6 = $m_s_None$()
-    } else {
-      var arg1$1 = this$5.get__O();
-      var key = $as_T2(arg1$1);
-      var this$6 = this.projectCache$1.get__O__s_Option(key)
-    };
-    if (this$6.isEmpty__Z()) {
-      var this$7 = $m_s_None$()
-    } else {
-      var arg1$2 = this$6.get__O();
-      var x$23 = $as_T2(arg1$2);
-      var this$7 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$23.$$und2__O()).properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2))
-    };
-    var parentProperties0 = $as_sci_Map((this$7.isEmpty__Z() ? $as_sci_Map($m_s_Predef$().Map$2.apply__sc_Seq__sc_GenMap($m_sci_Nil$())) : this$7.get__O()));
-    var approxProperties = parentProperties0.$$plus$plus__sc_GenTraversableOnce__sci_Map($m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project));
-    var jsx$4 = $m_Lcoursier_core_Resolution$().profiles__Lcoursier_core_Project__sci_Map__Lcoursier_core_Activation$Os__s_Option__s_Option__sc_Seq(project, approxProperties, this.osInfo$1, this.jdkVersion$1, this.userActivations$1);
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
-      return (function(p$2) {
-        var p = $as_Lcoursier_core_Profile(p$2);
-        var jsx$3 = p.dependencies$1;
-        var jsx$2 = p.dependencyManagement$1;
-        var this$8 = $m_sc_Seq$();
-        return $as_sc_Seq(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$2, this$8.ReusableCBFInstance$2))
-      })
-    })(this));
-    var this$9 = $m_sc_Seq$();
-    var profileDependencies = $as_sc_Seq(jsx$4.flatMap__F1__scg_CanBuildFrom__O(jsx$1, this$9.ReusableCBFInstance$2));
-    var jsx$10 = $m_Lcoursier_core_Resolution$();
-    var jsx$9 = project.dependencies$1;
-    var jsx$8 = project.dependencyManagement$1;
-    var this$10 = $m_sc_Seq$();
-    var jsx$7 = $as_sc_TraversableLike(jsx$9.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$8, this$10.ReusableCBFInstance$2));
-    var this$11 = $m_sc_Seq$();
-    var jsx$6 = jsx$10.withProperties__sc_Seq__sci_Map__sc_Seq($as_sc_Seq(jsx$7.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(profileDependencies, this$11.ReusableCBFInstance$2)), approxProperties);
-    var jsx$5 = new $c_Lcoursier_core_Resolution$$anonfun$4().init___Lcoursier_core_Resolution(this);
-    var this$12 = $m_sc_Seq$();
-    var modules = $as_sc_Seq(jsx$6.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$5, this$12.ReusableCBFInstance$2));
-    return modules.toSet__sci_Set()
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.reverseDependencies__sci_Map = (function() {
-  return (((128 & this.bitmap$0$1) === 0) ? this.reverseDependencies$lzycompute__p1__sci_Map() : this.reverseDependencies$1)
-});
-$c_Lcoursier_core_Resolution.prototype.remainingDependencies$lzycompute__p1__sci_Set = (function() {
-  if (((256 & this.bitmap$0$1) === 0)) {
-    var jsx$4 = this.rootDependencies$1;
-    var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(x$21$2) {
-        var x$21 = $as_Lcoursier_core_Dependency(x$21$2);
-        return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$withDefaultConfig__Lcoursier_core_Dependency__T__Lcoursier_core_Dependency(x$21, $this.defaultConfiguration$1)
-      })
-    })(this));
-    var this$1 = $m_sc_Seq$();
-    var jsx$2 = $as_sc_TraversableLike(jsx$4.map__F1__scg_CanBuildFrom__O(jsx$3, this$1.ReusableCBFInstance$2));
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2) {
-      return (function(dep$2) {
-        var dep = $as_Lcoursier_core_Dependency(dep$2);
-        return new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, "", dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1)
-      })
-    })(this));
-    var this$3 = $m_sc_Seq$();
-    var rootDependencies0 = $as_sc_TraversableOnce(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)).toSet__sci_Set();
-    var filteredReverseDependencies = this.helper$2__p1__sci_Map__sci_Set__sci_Map(this.reverseDependencies__sci_Map(), rootDependencies0);
-    this.remainingDependencies$1 = $as_sci_Set(rootDependencies0.$$plus$plus__sc_GenTraversableOnce__sc_Set(filteredReverseDependencies.keySet__sc_Set()));
-    this.bitmap$0$1 = (256 | this.bitmap$0$1)
-  };
-  return this.remainingDependencies$1
-});
-$c_Lcoursier_core_Resolution.prototype.isDone__Z = (function() {
-  return (((64 & this.bitmap$0$1) === 0) ? this.isDone$lzycompute__p1__Z() : this.isDone$1)
-});
-$c_Lcoursier_core_Resolution.prototype.dependencies__sci_Set = (function() {
-  return (((1 & this.bitmap$0$1) === 0) ? this.dependencies$lzycompute__p1__sci_Set() : this.dependencies$1)
-});
-$c_Lcoursier_core_Resolution.prototype.nextNoMissingUnsafe$lzycompute__p1__Lcoursier_core_Resolution = (function() {
-  if (((1024 & this.bitmap$0$1) === 0)) {
-    var x1 = this.nextDependenciesAndConflicts__T3();
-    if ((x1 === null)) {
-      throw new $c_s_MatchError().init___O(x1)
-    };
-    var newConflicts = $as_sc_Seq(x1.$$und1$1);
-    var x$1 = this.dependencySet$1.setValues__sci_Set__Lcoursier_core_DependencySet($as_sci_Set(this.newDependencies__sci_Set().$$plus$plus__sc_GenTraversableOnce__sc_Set(newConflicts)));
-    var x$2 = newConflicts.toSet__sci_Set();
-    var x$3 = this.rootDependencies$1;
-    var x$4 = this.errorCache$1;
-    this.nextNoMissingUnsafe$1 = this.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution(x$3, x$1, x$2, x$4);
-    this.bitmap$0$1 = (1024 | this.bitmap$0$1)
-  };
-  return this.nextNoMissingUnsafe$1
-});
-$c_Lcoursier_core_Resolution.prototype.transitiveDependencies__sc_Seq = (function() {
-  return (((4 & this.bitmap$0$1) === 0) ? this.transitiveDependencies$lzycompute__p1__sc_Seq() : this.transitiveDependencies$1)
-});
-$c_Lcoursier_core_Resolution.prototype.transitiveDependencies$lzycompute__p1__sc_Seq = (function() {
-  if (((4 & this.bitmap$0$1) === 0)) {
-    var this$1 = this.dependencySet$1.minimizedSet__sci_Set();
-    var xs = this.conflicts$1;
-    var this$3 = $as_sc_TraversableOnce($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$1, xs)).toVector__sci_Vector();
-    $m_sci_Vector$();
-    $m_sc_IndexedSeq$();
-    $m_sci_Vector$();
-    var b = new $c_sci_VectorBuilder().init___();
-    var this$5 = this$3.iterator__sci_VectorIterator();
-    while (this$5.$$undhasNext$2) {
-      var arg1 = this$5.next__O();
-      var dep = $as_Lcoursier_core_Dependency(arg1);
-      var xs$1 = this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep).seq__sc_TraversableOnce();
-      $as_sci_VectorBuilder($f_scg_Growable__$$plus$plus$eq__sc_TraversableOnce__scg_Growable(b, xs$1))
-    };
-    this.transitiveDependencies$1 = b.result__sci_Vector();
-    this.bitmap$0$1 = (4 | this.bitmap$0$1)
-  };
-  return this.transitiveDependencies$1
-});
-$c_Lcoursier_core_Resolution.prototype.helper$2__p1__sci_Map__sci_Set__sci_Map = (function(reverseDeps, rootDependencies0$1) {
-  _helper: while (true) {
-    var this$1 = reverseDeps;
-    var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, rootDependencies0$1$1) {
-      return (function(kv$2) {
-        var kv = $as_T2(kv$2);
-        if ($as_sc_SeqLike(kv.$$und2__O()).isEmpty__Z()) {
-          var elem = kv.$$und1__O();
-          return (!rootDependencies0$1$1.contains__O__Z(elem))
-        } else {
-          return false
-        }
-      })
-    })(this, rootDependencies0$1));
-    var x1 = $f_sc_TraversableLike__partition__F1__T2(this$1, p);
-    if ((x1 === null)) {
-      throw new $c_s_MatchError().init___O(x1)
-    };
-    var toRemove = $as_sci_Map(x1.$$und1__O());
-    var remaining = $as_sci_Map(x1.$$und2__O());
-    if (toRemove.isEmpty__Z()) {
-      return reverseDeps
-    } else {
-      var this$5 = remaining.mapValues__F1__sci_Map(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, remaining$2, rootDependencies0$1$2) {
-        return (function(broughtBy$2) {
-          var broughtBy = $as_sci_Vector(broughtBy$2);
-          $m_sci_Vector$();
-          var b = new $c_sci_VectorBuilder().init___();
-          var this$4 = broughtBy.iterator__sci_VectorIterator();
-          while (this$4.$$undhasNext$2) {
-            var arg1 = this$4.next__O();
-            var x = $as_Lcoursier_core_Dependency(arg1);
-            if (((remaining$2.contains__O__Z(x) || rootDependencies0$1$2.contains__O__Z(x)) !== false)) {
-              b.$$plus$eq__O__sci_VectorBuilder(arg1)
-            }
-          };
-          return b.result__sci_Vector()
-        })
-      })(this, remaining, rootDependencies0$1))).iterator__sc_Iterator();
-      var b$1 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-      while (this$5.hasNext__Z()) {
-        var arg1$1 = this$5.next__O();
-        b$1.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1$1))
-      };
-      reverseDeps = $as_sci_Map(b$1.elems$1);
-      continue _helper
-    }
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.addToErrorCache__sc_Iterable__Lcoursier_core_Resolution = (function(entries) {
-  var x$1 = this.errorCache$1.$$plus$plus__sc_GenTraversableOnce__sci_Map(entries);
-  var x$2 = this.rootDependencies$1;
-  var x$3 = this.dependencySet$1;
-  var x$4 = this.conflicts$1;
-  return this.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution(x$2, x$3, x$4, x$1)
-});
-$c_Lcoursier_core_Resolution.prototype.reverseDependencies$lzycompute__p1__sci_Map = (function() {
-  if (((128 & this.bitmap$0$1) === 0)) {
-    var x1 = this.nextDependenciesAndConflicts__T3();
-    if ((x1 === null)) {
-      throw new $c_s_MatchError().init___O(x1)
-    };
-    var updatedConflicts = $as_sc_Seq(x1.$$und1$1);
-    var updatedDeps = $as_sc_Seq(x1.$$und2$1);
-    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(dep$2) {
-        var dep = $as_Lcoursier_core_Dependency(dep$2);
-        var jsx$3 = $this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep);
-        var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, dep$1) {
-          return (function(trDep$2) {
-            var trDep = $as_Lcoursier_core_Dependency(trDep$2);
-            var self = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(trDep.module$1, "", trDep.configuration$1, trDep.exclusions$1, trDep.publication$1, trDep.optional$1, trDep.transitive$1);
-            var y = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep$1.module$1, "", dep$1.configuration$1, dep$1.exclusions$1, dep$1.publication$1, dep$1.optional$1, dep$1.transitive$1);
-            return new $c_T2().init___O__O(self, y)
-          })
-        })($this, dep));
-        var this$3 = $m_sc_Seq$();
-        return $as_sc_Seq(jsx$3.map__F1__scg_CanBuildFrom__O(jsx$2, this$3.ReusableCBFInstance$2))
-      })
-    })(this));
-    var this$4 = $m_sc_Seq$();
-    var trDepsSeq = $as_sc_Seq(updatedDeps.flatMap__F1__scg_CanBuildFrom__O(jsx$1, this$4.ReusableCBFInstance$2));
-    var this$5 = $m_sc_Seq$();
-    var jsx$5 = $as_sc_TraversableLike(updatedDeps.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(updatedConflicts, this$5.ReusableCBFInstance$2));
-    var jsx$4 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
-      return (function(dep$3$2) {
-        var dep$3 = $as_Lcoursier_core_Dependency(dep$3$2);
-        return new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep$3.module$1, "", dep$3.configuration$1, dep$3.exclusions$1, dep$3.publication$1, dep$3.optional$1, dep$3.transitive$1)
-      })
-    })(this));
-    var this$6 = $m_sc_Seq$();
-    var knownDeps = $as_sc_TraversableOnce(jsx$5.map__F1__scg_CanBuildFrom__O(jsx$4, this$6.ReusableCBFInstance$2)).toSet__sci_Set();
-    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-      return (function(x$18$2) {
-        var x$18 = $as_T2(x$18$2);
-        return $as_Lcoursier_core_Dependency(x$18.$$und1__O())
-      })
-    })(this));
-    var this$8 = $f_sc_TraversableLike__groupBy__F1__sci_Map(trDepsSeq, f).mapValues__F1__sci_Map(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-      return (function(x$19$2) {
-        var x$19 = $as_sc_Seq(x$19$2);
-        var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2) {
-          return (function(x$20$2) {
-            var x$20 = $as_T2(x$20$2);
-            return $as_Lcoursier_core_Dependency(x$20.$$und2__O())
-          })
-        })(this$4$1));
-        var this$7 = $m_sc_Seq$();
-        return $as_sc_TraversableOnce(x$19.map__F1__scg_CanBuildFrom__O(jsx$6, this$7.ReusableCBFInstance$2)).toVector__sci_Vector()
-      })
-    })(this))).filterKeys__F1__sci_Map(knownDeps);
-    $m_sci_Vector$();
-    var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
-    var this$10 = $as_sci_Vector($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$8, cbf));
-    var b = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-    var this$12 = this$10.iterator__sci_VectorIterator();
-    while (this$12.$$undhasNext$2) {
-      var arg1 = this$12.next__O();
-      b.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1))
-    };
-    this.reverseDependencies$1 = $as_sci_Map(b.elems$1);
-    this.bitmap$0$1 = (128 | this.bitmap$0$1)
-  };
-  return this.reverseDependencies$1
-});
-$c_Lcoursier_core_Resolution.prototype.isFixPoint$1__p1__Z = (function() {
-  var x1 = this.nextDependenciesAndConflicts__T3();
-  if ((x1 === null)) {
-    throw new $c_s_MatchError().init___O(x1)
-  };
-  var nextConflicts = $as_sc_Seq(x1.$$und1$1);
-  var x = this.dependencies__sci_Set();
-  var x$2 = this.newDependencies__sci_Set().$$plus$plus__sc_GenTraversableOnce__sc_Set(nextConflicts);
-  if (((x === null) ? (x$2 === null) : $f_sc_GenSetLike__equals__O__Z(x, x$2))) {
-    var x$3 = this.conflicts$1;
-    var x$4 = nextConflicts.toSet__sci_Set();
-    return ((x$3 === null) ? (x$4 === null) : $f_sc_GenSetLike__equals__O__Z(x$3, x$4))
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.hashCode__I = (function() {
-  return (((2 & this.bitmap$0$1) === 0) ? this.hashCode$lzycompute__p1__I() : this.hashCode$1)
-});
-$c_Lcoursier_core_Resolution.prototype.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq = (function(dep) {
-  if (dep.transitive$1) {
-    var deps = $as_sc_Seq(this.finalDependenciesCache$1.getOrElse__O__F0__O(dep, new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, dep$1) {
-      return (function() {
-        return $as_sc_Seq($this.finalDependenciesCache0$1.get__O__O(dep$1))
-      })
-    })(this, dep))));
-    if ((deps === null)) {
-      var x1 = this.projectCache$1.get__O__s_Option(dep.moduleVersion__T2());
-      if ((x1 instanceof $c_s_Some)) {
-        var x2 = $as_s_Some(x1);
-        var p3 = $as_T2(x2.value$2);
-        if ((p3 !== null)) {
-          var proj = $as_Lcoursier_core_Project(p3.$$und2__O());
-          var this$2 = $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$finalDependencies__Lcoursier_core_Dependency__Lcoursier_core_Project__T__sc_Seq(dep, proj, this.defaultConfiguration$1);
-          var this$1 = this.filter$1;
-          var p = $as_F1((this$1.isEmpty__Z() ? new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-            return (function(dep$2) {
-              var dep$3 = $as_Lcoursier_core_Dependency(dep$2);
-              return $m_Lcoursier_core_Resolution$().defaultFilter__Lcoursier_core_Dependency__Z(dep$3)
-            })
-          })(this)) : this$1.get__O()));
-          var res0 = $as_sc_Seq(this$2.filterImpl__F1__Z__O(p, false));
-          var this$3 = this.mapDependencies$1;
-          if (this$3.isEmpty__Z()) {
-            var res = res0
-          } else {
-            var arg1 = this$3.get__O();
-            var x$9 = $as_F1(arg1);
-            var this$4 = $m_sc_Seq$();
-            var res = $as_sc_Seq(res0.map__F1__scg_CanBuildFrom__O(x$9, this$4.ReusableCBFInstance$2))
-          };
-          this.finalDependenciesCache0$1.put__O__O__O(dep, res);
-          return res
-        }
-      };
-      var x = $m_s_None$();
-      if ((x === x1)) {
-        return $m_sci_Nil$()
-      };
-      throw new $c_s_MatchError().init___O(x1)
-    } else {
-      return deps
-    }
-  } else {
-    return $m_sci_Nil$()
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.updated__p1__Lcoursier_core_Dependency__Z__Z__Lcoursier_core_Dependency = (function(dep, withRetainedVersions, withFallbackConfig) {
-  if (withRetainedVersions) {
-    var version = $as_T($as_sci_Map(this.nextDependenciesAndConflicts__T3().$$und3$1).getOrElse__O__F0__O(dep.module$1, new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, dep$1) {
-      return (function() {
-        return dep$1.version$1
-      })
-    })(this, dep))));
-    var dep0 = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, version, dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1)
-  } else {
-    var dep0 = dep
-  };
-  return (withFallbackConfig ? $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$fallbackConfigIfNecessary__Lcoursier_core_Dependency__sci_Set__Lcoursier_core_Dependency(dep0, this.configsOf__p1__Lcoursier_core_Dependency__sci_Set(dep0)) : dep0)
-});
-$c_Lcoursier_core_Resolution.prototype.minDependencies__sci_Set = (function() {
-  var this$2 = this.dependencySet$1.minimizedSet__sci_Set();
-  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-    return (function(dep$2) {
-      var dep = $as_Lcoursier_core_Dependency(dep$2);
-      return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$fallbackConfigIfNecessary__Lcoursier_core_Dependency__sci_Set__Lcoursier_core_Dependency(dep, $this.configsOf__p1__Lcoursier_core_Dependency__sci_Set(dep))
-    })
-  })(this));
-  var this$1 = $m_sci_Set$();
-  var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
-  return $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf))
-});
-$c_Lcoursier_core_Resolution.prototype.nextIfNoMissing__Lcoursier_core_Resolution = (function() {
-  var _$this = this;
-  _nextIfNoMissing: while (true) {
-    var missing = _$this.missingFromCache__sci_Set();
-    if (missing.isEmpty__Z()) {
-      var next0 = _$this.nextNoMissingUnsafe__p1__Lcoursier_core_Resolution();
-      var x$3 = _$this;
-      if (((next0 === null) ? (x$3 === null) : next0.equals__O__Z(x$3))) {
-        return _$this
-      } else {
-        _$this = next0;
-        continue _nextIfNoMissing
-      }
-    } else {
-      return _$this
-    }
-  }
-});
-$c_Lcoursier_core_Resolution.prototype.newDependencies$lzycompute__p1__sci_Set = (function() {
-  if (((512 & this.bitmap$0$1) === 0)) {
-    var remainingDependencies0 = this.remainingDependencies__sci_Set();
-    this.newDependencies$1 = $as_sc_TraversableOnce($as_sc_TraversableLike(this.nextDependenciesAndConflicts__T3().$$und2$1).filter__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, remainingDependencies0$1) {
-      return (function(dep$2) {
-        var dep = $as_Lcoursier_core_Dependency(dep$2);
-        var elem = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, "", dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1);
-        return remainingDependencies0$1.contains__O__Z(elem)
-      })
-    })(this, remainingDependencies0)))).toSet__sci_Set();
-    this.bitmap$0$1 = (512 | this.bitmap$0$1)
-  };
-  return this.newDependencies$1
-});
-$c_Lcoursier_core_Resolution.prototype.missingFromCache__sci_Set = (function() {
-  return (((32 & this.bitmap$0$1) === 0) ? this.missingFromCache$lzycompute__p1__sci_Set() : this.missingFromCache$1)
-});
-$c_Lcoursier_core_Resolution.prototype.remainingDependencies__sci_Set = (function() {
-  return (((256 & this.bitmap$0$1) === 0) ? this.remainingDependencies$lzycompute__p1__sci_Set() : this.remainingDependencies$1)
-});
-function $as_Lcoursier_core_Resolution(obj) {
-  return (((obj instanceof $c_Lcoursier_core_Resolution) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Resolution"))
-}
-function $isArrayOf_Lcoursier_core_Resolution(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Resolution)))
-}
-function $asArrayOf_Lcoursier_core_Resolution(obj, depth) {
-  return (($isArrayOf_Lcoursier_core_Resolution(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Resolution;", depth))
-}
-var $d_Lcoursier_core_Resolution = new $TypeData().initClass({
-  Lcoursier_core_Resolution: 0
-}, false, "coursier.core.Resolution", {
-  Lcoursier_core_Resolution: 1,
-  O: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_Lcoursier_core_Resolution.prototype.$classData = $d_Lcoursier_core_Resolution;
-/** @constructor */
 function $c_Lcoursier_core_Resolution$() {
   $c_O.call(this);
   this.mavenScopes$1 = null;
@@ -40088,6 +37836,654 @@ function $m_Lcoursier_core_Resolution$() {
   return $n_Lcoursier_core_Resolution$
 }
 /** @constructor */
+function $c_Lcoursier_core_ResolutionProcess$() {
+  $c_O.call(this)
+}
+$c_Lcoursier_core_ResolutionProcess$.prototype = new $h_O();
+$c_Lcoursier_core_ResolutionProcess$.prototype.constructor = $c_Lcoursier_core_ResolutionProcess$;
+/** @constructor */
+function $h_Lcoursier_core_ResolutionProcess$() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_ResolutionProcess$.prototype = $c_Lcoursier_core_ResolutionProcess$.prototype;
+$c_Lcoursier_core_ResolutionProcess$.prototype.init___ = (function() {
+  return this
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.versionOrError0$1__p1__s_util_Either__s_util_Either__s_util_Either = (function(results, ver) {
+  if ((results instanceof $c_s_util_Right)) {
+    var x2 = $as_s_util_Right(results);
+    var p3 = $as_T2(x2.value$2);
+    if ((p3 !== null)) {
+      var v = $as_Lcoursier_core_Versions(p3.$$und1__O());
+      var listingUrl = $as_T(p3.$$und2__O());
+      matchEnd7: {
+        var selectedOpt;
+        if ((ver instanceof $c_s_util_Left)) {
+          var x2$2 = $as_s_util_Left(ver);
+          var itv = $as_Lcoursier_core_VersionInterval(x2$2.value$2);
+          var selectedOpt = v.inInterval__Lcoursier_core_VersionInterval__s_Option(itv);
+          break matchEnd7
+        };
+        if ((ver instanceof $c_s_util_Right)) {
+          var x3 = $as_s_util_Right(ver);
+          var p4 = $as_T2(x3.value$2);
+          if ((p4 !== null)) {
+            var kind = $as_Lcoursier_core_Latest(p4.$$und1__O());
+            var selectedOpt = v.latest__Lcoursier_core_Latest__s_Option(kind);
+            break matchEnd7
+          }
+        };
+        throw new $c_s_MatchError().init___O(ver)
+      };
+      if ((selectedOpt instanceof $c_s_Some)) {
+        var x2$3 = $as_s_Some(selectedOpt);
+        var ver0 = $as_T(x2$3.value$2);
+        var selectedVer = new $c_Lcoursier_core_Version().init___T(ver0);
+        if ((ver instanceof $c_s_util_Right)) {
+          var x2$4 = $as_s_util_Right(ver);
+          var p3$2 = $as_T2(x2$4.value$2);
+          if ((p3$2 !== null)) {
+            var kind$2 = $as_Lcoursier_core_Latest(p3$2.$$und1__O());
+            var p4$2 = $as_s_Option(p3$2.$$und2__O());
+            if ((p4$2 instanceof $c_s_Some)) {
+              var x5 = $as_s_Some(p4$2);
+              var itv$2 = $as_Lcoursier_core_VersionInterval(x5.value$2);
+              if ((!itv$2.contains__Lcoursier_core_Version__Z(selectedVer))) {
+                $m_s_package$();
+                var x1$5 = v.latest__Lcoursier_core_Latest__s_Option(kind$2);
+                var x = $m_s_None$();
+                if ((x === x1$5)) {
+                  var value = ((("No latest " + kind$2.name$1) + " version found in ") + listingUrl)
+                } else {
+                  if ((!(x1$5 instanceof $c_s_Some))) {
+                    throw new $c_s_MatchError().init___O(x1$5)
+                  };
+                  var x2$5 = $as_s_Some(x1$5);
+                  var v0 = $as_T(x2$5.value$2);
+                  var value = ((v0 === selectedVer.repr$1) ? ((((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl) + " not in ") + itv$2.repr__T()) : (((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl) + " not retained"))
+                };
+                return new $c_s_util_Left().init___O(value)
+              }
+            }
+          }
+        };
+        $m_s_package$();
+        return new $c_s_util_Right().init___O(selectedVer)
+      } else {
+        var x$3 = $m_s_None$();
+        if ((x$3 === selectedOpt)) {
+          $m_s_package$();
+          matchEnd7$3: {
+            var value$1;
+            if ((ver instanceof $c_s_util_Left)) {
+              var x2$6 = $as_s_util_Left(ver);
+              var itv$3 = $as_Lcoursier_core_VersionInterval(x2$6.value$2);
+              var value$1 = ((("No version found for " + itv$3.repr__T()) + " in ") + listingUrl);
+              break matchEnd7$3
+            };
+            if ((ver instanceof $c_s_util_Right)) {
+              var x3$2 = $as_s_util_Right(ver);
+              var p4$3 = $as_T2(x3$2.value$2);
+              if ((p4$3 !== null)) {
+                var kind$3 = $as_Lcoursier_core_Latest(p4$3.$$und1__O());
+                var value$1 = ((("No latest " + kind$3.name$1) + " version found in ") + listingUrl);
+                break matchEnd7$3
+              }
+            };
+            throw new $c_s_MatchError().init___O(ver)
+          };
+          return new $c_s_util_Left().init___O(value$1)
+        } else {
+          throw new $c_s_MatchError().init___O(selectedOpt)
+        }
+      }
+    }
+  };
+  if ((results instanceof $c_s_util_Left)) {
+    var x4 = $as_s_util_Left(results);
+    var e = $as_T(x4.value$2);
+    $m_s_package$();
+    return new $c_s_util_Left().init___O(e)
+  };
+  throw new $c_s_MatchError().init___O(results)
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.apply__Lcoursier_core_Resolution__Lcoursier_core_ResolutionProcess = (function(resolution) {
+  var resolution0 = resolution.nextIfNoMissing__Lcoursier_core_Resolution();
+  if (resolution0.isDone__Z()) {
+    return new $c_Lcoursier_core_Done().init___Lcoursier_core_Resolution(resolution0)
+  } else {
+    var this$2 = resolution0.missingFromCache__sci_Set();
+    var missing = $f_sc_SetLike__toSeq__sc_Seq(this$2);
+    var cont = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(resolution$2$2) {
+        var resolution$2 = $as_Lcoursier_core_Resolution(resolution$2$2);
+        return $m_Lcoursier_core_ResolutionProcess$().apply__Lcoursier_core_Resolution__Lcoursier_core_ResolutionProcess(resolution$2)
+      })
+    })(this));
+    return new $c_Lcoursier_core_Missing().init___sc_Seq__Lcoursier_core_Resolution__F1(missing, resolution0, cont)
+  }
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.fetchAll__sc_Seq__F1__Lcoursier_util_Monad__O = (function(modVers, fetch, F) {
+  var this$1 = this.uniqueModules$1__p1__sc_Seq__sci_Stream(modVers);
+  $m_sci_Vector$();
+  var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
+  var this$4 = $as_sci_Vector($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$1, cbf));
+  var this$3 = $m_s_package$().Vector$1;
+  var z = F.point__O__O(this$3.NIL$6);
+  var elem$1 = null;
+  elem$1 = z;
+  var this$6 = this$4.iterator__sci_VectorIterator();
+  while (this$6.$$undhasNext$2) {
+    var arg1 = this$6.next__O();
+    var arg1$1 = elem$1;
+    var l = $as_sc_Seq(arg1);
+    elem$1 = F.bind__O__F1__O(arg1$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$4, fetch$5, l$1) {
+      return (function(v$2) {
+        var v = $as_sci_Vector(v$2);
+        var elem = fetch$5.apply__O__O(l$1);
+        var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, v$1) {
+          return (function(e$2) {
+            var e = $as_sc_Seq(e$2);
+            return $as_sci_Vector(v$1.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(e, ($m_sci_Vector$(), $m_sc_IndexedSeq$().ReusableCBF$6)))
+          })
+        })($this, v));
+        return $f_Lcoursier_util_Monad__map__O__F1__O(F$4, elem, f)
+      })
+    })(this, F, fetch, l)))
+  };
+  return elem$1
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT = (function(fetch, intervalOpt, repositories$1, module$1, version$1, F$2) {
+  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, intervalOpt$1, module$1$1, version$1$1, fetch$1, F$2$1) {
+    return (function(repo$2) {
+      var repo = $as_Lcoursier_core_Repository(repo$2);
+      var x = $m_s_None$();
+      if ((x === intervalOpt$1)) {
+        var y = repo.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$1, version$1$1, fetch$1, F$2$1).run$1;
+        return new $c_T2().init___O__O(repo, y)
+      } else if ((intervalOpt$1 instanceof $c_s_Some)) {
+        var x2 = $as_s_Some(intervalOpt$1);
+        var itv = $as_s_util_Either(x2.value$2);
+        var y$1 = $f_Lcoursier_core_Repository__versions__Lcoursier_core_Module__F1__Z__Lcoursier_util_Monad__Lcoursier_util_EitherT(repo, module$1$1, fetch$1, false, F$2$1).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, F$2$2, itv$1, repo$1, module$1$2, fetch$3) {
+          return (function(x0$1$2) {
+            var x0$1 = $as_T2(x0$1$2);
+            if ((x0$1 !== null)) {
+              var v = $as_Lcoursier_core_Versions(x0$1.$$und1__O());
+              var s = $as_T(x0$1.$$und2__O());
+              $m_s_package$();
+              var value = new $c_T2().init___O__O(v, s);
+              return new $c_Lcoursier_util_EitherT().init___O(F$2$2.point__O__O($this$1.versionOrError0$1__p1__s_util_Either__s_util_Either__s_util_Either(new $c_s_util_Right().init___O(value), itv$1))).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2, repo$1$1, module$1$3, fetch$3$1, F$2$3) {
+                return (function(retainedVer$2) {
+                  var retainedVer = $as_Lcoursier_core_Version(retainedVer$2);
+                  return repo$1$1.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$3, retainedVer.repr$1, fetch$3$1, F$2$3)
+                })
+              })($this$1, repo$1, module$1$2, fetch$3, F$2$2)), F$2$2)
+            } else {
+              throw new $c_s_MatchError().init___O(x0$1)
+            }
+          })
+        })($this, F$2$1, itv, repo, module$1$1, fetch$1)), F$2$1).run$1;
+        return new $c_T2().init___O__O(repo, y$1)
+      } else {
+        throw new $c_s_MatchError().init___O(intervalOpt$1)
+      }
+    })
+  })(this, intervalOpt, module$1, version$1, fetch, F$2));
+  var this$6 = $m_sc_Seq$();
+  var lookups = $as_sc_Seq(repositories$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$6.ReusableCBFInstance$2));
+  $m_s_package$();
+  var value$1 = $m_sci_Nil$();
+  var task0 = lookups.foldLeft__O__F2__O(F$2.point__O__O(new $c_s_util_Left().init___O(value$1)), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$2$1, F$2$4) {
+    return (function(x0$2$2, x1$1$2) {
+      var x1$1 = $as_T2(x1$1$2);
+      var x1 = new $c_T2().init___O__O(x0$2$2, x1$1);
+      var acc = x1.$$und1$f;
+      var p2 = $as_T2(x1.$$und2$f);
+      if ((p2 !== null)) {
+        var eitherProjTask = p2.$$und2__O();
+        return F$2$4.bind__O__F1__O(acc, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$3, F$2$5, eitherProjTask$1) {
+          return (function(x0$3$2) {
+            var x0$3 = $as_s_util_Either(x0$3$2);
+            if ((x0$3 instanceof $c_s_util_Left)) {
+              var x2$1 = $as_s_util_Left(x0$3);
+              var errors = $as_sc_Seq(x2$1.value$2);
+              var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$4, errors$1) {
+                return (function(x$13$2) {
+                  var x$13 = $as_s_util_Either(x$13$2);
+                  var this$8 = new $c_s_util_Either$LeftProjection().init___s_util_Either(x$13);
+                  var x1$2 = this$8.e$1;
+                  if ((x1$2 instanceof $c_s_util_Left)) {
+                    var x2$2 = $as_s_util_Left(x1$2);
+                    var a = x2$2.value$2;
+                    var error = $as_T(a);
+                    var this$9 = $m_sc_Seq$();
+                    return new $c_s_util_Left().init___O($as_sc_Seq(errors$1.$$plus$colon__O__scg_CanBuildFrom__O(error, this$9.ReusableCBFInstance$2)))
+                  } else {
+                    return this$8.e$1
+                  }
+                })
+              })($this$3, errors));
+              return $f_Lcoursier_util_Monad__map__O__F1__O(F$2$5, eitherProjTask$1, f)
+            } else if ((x0$3 instanceof $c_s_util_Right)) {
+              var x3 = $as_s_util_Right(x0$3);
+              return F$2$5.point__O__O(x3)
+            } else {
+              throw new $c_s_MatchError().init___O(x0$3)
+            }
+          })
+        })(this$2$1, F$2$4, eitherProjTask)))
+      };
+      throw new $c_s_MatchError().init___O(x1)
+    })
+  })(this, F$2)));
+  var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+    return (function(e$2) {
+      var e = $as_s_util_Either(e$2);
+      var this$10 = new $c_s_util_Either$LeftProjection().init___s_util_Either(e);
+      var x1$3 = this$10.e$1;
+      if ((x1$3 instanceof $c_s_util_Left)) {
+        var x2$3 = $as_s_util_Left(x1$3);
+        var a$1 = x2$3.value$2;
+        var x$15 = $as_sc_Seq(a$1);
+        return new $c_s_util_Left().init___O($as_sc_Seq(x$15.reverse__O()))
+      } else {
+        return this$10.e$1
+      }
+    })
+  })(this));
+  var task = $f_Lcoursier_util_Monad__map__O__F1__O(F$2, task0, f$1);
+  return new $c_Lcoursier_util_EitherT().init___O(task)
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.versionOrError$1__p1__sc_Seq__s_util_Either__sc_Seq__s_util_Either = (function(results, ver, repositories$1) {
+  var this$1 = $m_sc_Seq$();
+  var jsx$4 = $as_sc_TraversableLike(results.zip__sc_GenIterable__scg_CanBuildFrom__O(repositories$1, this$1.ReusableCBFInstance$2));
+  var jsx$3 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$3().init___s_util_Either(ver);
+  var this$2 = $m_sc_Seq$();
+  var jsx$2 = $as_sc_TraversableLike(jsx$4.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$3, this$2.ReusableCBFInstance$2));
+  var jsx$1 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$4().init___();
+  var this$3 = $m_sc_Seq$();
+  var found = $as_sc_Seq(jsx$2.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2));
+  if (found.isEmpty__Z()) {
+    $m_s_package$();
+    var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, ver$1) {
+      return (function(x0$1$2) {
+        var x0$1 = $as_s_util_Either(x0$1$2);
+        if ((x0$1 instanceof $c_s_util_Left)) {
+          var x2 = $as_s_util_Left(x0$1);
+          var e = $as_T(x2.value$2);
+          return e
+        };
+        if ((x0$1 instanceof $c_s_util_Right)) {
+          var x3 = $as_s_util_Right(x0$1);
+          var p4 = $as_T2(x3.value$2);
+          if ((p4 !== null)) {
+            var listingUrl = $as_T(p4.$$und2__O());
+            if ((ver$1 instanceof $c_s_util_Left)) {
+              var x2$2 = $as_s_util_Left(ver$1);
+              var itv = $as_Lcoursier_core_VersionInterval(x2$2.value$2);
+              return ((("No version found for " + itv.repr__T()) + " in ") + listingUrl)
+            };
+            if ((ver$1 instanceof $c_s_util_Right)) {
+              var x3$2 = $as_s_util_Right(ver$1);
+              var p4$2 = $as_T2(x3$2.value$2);
+              if ((p4$2 !== null)) {
+                var kind = $as_Lcoursier_core_Latest(p4$2.$$und1__O());
+                return ((("No latest " + kind.name$1) + " version found in ") + listingUrl)
+              }
+            };
+            throw new $c_s_MatchError().init___O(ver$1)
+          }
+        };
+        throw new $c_s_MatchError().init___O(x0$1)
+      })
+    })(this, ver));
+    var this$4 = $m_sc_Seq$();
+    var value = results.map__F1__scg_CanBuildFrom__O(jsx$5, this$4.ReusableCBFInstance$2);
+    return new $c_s_util_Left().init___O(value)
+  } else {
+    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
+      return (function(x$11$2) {
+        var x$11 = $as_T3(x$11$2);
+        return $as_Lcoursier_core_Version(x$11.$$und1$1)
+      })
+    })(this));
+    var this$6 = $m_s_math_Ordering$();
+    var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
+    var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
+    var x1 = $as_T3($f_sc_TraversableOnce__maxBy__F1__s_math_Ordering__O(found, f, cmp));
+    if ((x1 === null)) {
+      throw new $c_s_MatchError().init___O(x1)
+    };
+    var selectedVer = $as_Lcoursier_core_Version(x1.$$und1$1);
+    var repo = $as_Lcoursier_core_Repository(x1.$$und2$1);
+    if ((ver instanceof $c_s_util_Right)) {
+      var x2$1 = $as_s_util_Right(ver);
+      var p3 = $as_T2(x2$1.value$2);
+      if ((p3 !== null)) {
+        var kind$1 = $as_Lcoursier_core_Latest(p3.$$und1__O());
+        var p4$1 = $as_s_Option(p3.$$und2__O());
+        if ((p4$1 instanceof $c_s_Some)) {
+          var x5 = $as_s_Some(p4$1);
+          var itv$1 = $as_Lcoursier_core_VersionInterval(x5.value$2);
+          if ((!itv$1.contains__Lcoursier_core_Version__Z(selectedVer))) {
+            $m_s_package$();
+            var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, kind$2, selectedVer$2, itv$2) {
+              return (function(x0$2$2) {
+                var x0$2 = $as_s_util_Either(x0$2$2);
+                if ((x0$2 instanceof $c_s_util_Left)) {
+                  var x2$3 = $as_s_util_Left(x0$2);
+                  var e$1 = $as_T(x2$3.value$2);
+                  return e$1
+                };
+                if ((x0$2 instanceof $c_s_util_Right)) {
+                  var x3$1 = $as_s_util_Right(x0$2);
+                  var p4$3 = $as_T2(x3$1.value$2);
+                  if ((p4$3 !== null)) {
+                    var v = $as_Lcoursier_core_Versions(p4$3.$$und1__O());
+                    var listingUrl$1 = $as_T(p4$3.$$und2__O());
+                    var x1$2 = v.latest__Lcoursier_core_Latest__s_Option(kind$2);
+                    var x = $m_s_None$();
+                    if ((x === x1$2)) {
+                      return ((("No latest " + kind$2.name$1) + " version found in ") + listingUrl$1)
+                    } else if ((x1$2 instanceof $c_s_Some)) {
+                      var x2$2$1 = $as_s_Some(x1$2);
+                      var v0 = $as_T(x2$2$1.value$2);
+                      return ((v0 === selectedVer$2.repr$1) ? ((((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl$1) + " not in ") + itv$2.repr__T()) : (((((("Latest " + kind$2.name$1) + " ") + v0) + " from ") + listingUrl$1) + " not retained"))
+                    } else {
+                      throw new $c_s_MatchError().init___O(x1$2)
+                    }
+                  }
+                };
+                throw new $c_s_MatchError().init___O(x0$2)
+              })
+            })(this, kind$1, selectedVer, itv$1));
+            var this$7 = $m_sc_Seq$();
+            var value$1 = results.map__F1__scg_CanBuildFrom__O(jsx$6, this$7.ReusableCBFInstance$2);
+            return new $c_s_util_Left().init___O(value$1)
+          }
+        }
+      }
+    };
+    $m_s_package$();
+    var value$2 = new $c_T2().init___O__O(selectedVer, repo);
+    return new $c_s_util_Right().init___O(value$2)
+  }
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT = (function(v, repo, fetch, module$1, F$2, repositories$1) {
+  return repo.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, v.repr$1, fetch, F$2).leftMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, repositories$1$1, repo$1) {
+    return (function(err$2) {
+      var err = $as_T(err$2);
+      var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, repo$2, err$1) {
+        return (function(r$2) {
+          var r = $as_Lcoursier_core_Repository(r$2);
+          return (((r === null) ? (repo$2 === null) : r.equals__O__Z(repo$2)) ? err$1 : "")
+        })
+      })($this, repo$1, err));
+      var this$1 = $m_sc_Seq$();
+      return $as_sc_Seq(repositories$1$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
+    })
+  })(this, repositories$1, repo)), F$2)
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.uniqueModules$1__p1__sc_Seq__sci_Stream = (function(modVers) {
+  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+    return (function(x$25$2) {
+      var x$25 = $as_T2(x$25$2);
+      return $as_Lcoursier_core_Module(x$25.$$und1__O())
+    })
+  })(this));
+  var this$1 = $f_sc_TraversableLike__groupBy__F1__sci_Map(modVers, f);
+  var jsx$4 = $f_sc_MapLike__toSeq__sc_Seq(this$1);
+  var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2) {
+    return (function(x$26$2) {
+      var x$26 = $as_T2(x$26$2);
+      return $as_sc_Seq(x$26.$$und2__O())
+    })
+  })(this));
+  var this$3 = $m_sc_Seq$();
+  var jsx$2 = $as_sc_TraversableLike(jsx$4.map__F1__scg_CanBuildFrom__O(jsx$3, this$3.ReusableCBFInstance$2));
+  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+    return (function(x0$1$2) {
+      var x0$1 = $as_sc_Seq(x0$1$2);
+      $m_sc_Seq$();
+      var o8 = new $c_s_Some().init___O(x0$1);
+      if (((o8.value$2 !== null) && ($as_sc_SeqLike(o8.value$2).lengthCompare__I__I(1) === 0))) {
+        var v = $as_T2($as_sc_SeqLike(o8.value$2).apply__I__O(0));
+        return new $c_T2().init___O__O(v, $m_sci_Nil$())
+      };
+      $m_sc_Seq$();
+      var o10 = new $c_s_Some().init___O(x0$1);
+      if (((o10.value$2 !== null) && ($as_sc_SeqLike(o10.value$2).lengthCompare__I__I(0) === 0))) {
+        $m_s_sys_package$().error__T__sr_Nothing$("Cannot happen")
+      };
+      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
+        return (function(x0$2$2) {
+          var x0$2 = $as_T2(x0$2$2);
+          if ((x0$2 !== null)) {
+            var v0 = $as_T(x0$2.$$und2__O());
+            return new $c_Lcoursier_core_Version().init___T(v0)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$2)
+          }
+        })
+      })(this$3$1));
+      var this$6 = $m_s_math_Ordering$();
+      var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
+      var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
+      var res = $as_T2($f_sc_TraversableOnce__maxBy__F1__s_math_Ordering__O(x0$1, f$1, cmp));
+      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, res$1) {
+        return (function(x$27$2) {
+          var x$27 = $as_T2(x$27$2);
+          return (!((x$27 === null) ? (res$1 === null) : x$27.equals__O__Z(res$1)))
+        })
+      })(this$3$1, res));
+      return new $c_T2().init___O__O(res, x0$1.filterImpl__F1__Z__O(p, false))
+    })
+  })(this));
+  var this$7 = $m_sc_Seq$();
+  var res$2 = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$7.ReusableCBFInstance$2));
+  var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+    return (function(x$28$2) {
+      var x$28 = $as_T2(x$28$2);
+      return $as_sc_Seq(x$28.$$und2__O())
+    })
+  })(this));
+  var this$8 = $m_sc_Seq$();
+  var other = $as_sc_Seq(res$2.flatMap__F1__scg_CanBuildFrom__O(jsx$5, this$8.ReusableCBFInstance$2));
+  if (other.isEmpty__Z()) {
+    $m_s_package$();
+    var array = [modVers];
+    var xs = new $c_sjs_js_WrappedArray().init___sjs_js_Array(array);
+    var this$12 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs, 0, $uI(xs.array$6.length));
+    return $f_sc_Iterator__toStream__sci_Stream(this$12)
+  } else {
+    var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
+      return (function(x$29$2) {
+        var x$29 = $as_T2(x$29$2);
+        return $as_T2(x$29.$$und1__O())
+      })
+    })(this));
+    var this$13 = $m_sc_Seq$();
+    var missing0 = $as_sc_Seq(res$2.map__F1__scg_CanBuildFrom__O(jsx$6, this$13.ReusableCBFInstance$2));
+    $m_sci_Stream$();
+    var stream = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$6$1, other$1) {
+      return (function() {
+        return this$6$1.uniqueModules$1__p1__sc_Seq__sci_Stream(other$1)
+      })
+    })(this, other));
+    return new $c_sci_Stream$ConsWrapper().init___F0(stream).$$hash$colon$colon__O__sci_Stream(missing0)
+  }
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT = (function(ver, F$2, repositories$1, module$1, f$2, fetchs$1, fetch$2, version$1) {
+  var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(ver);
+  var x1 = this$1.e$1;
+  if ((x1 instanceof $c_s_util_Right)) {
+    var x2 = $as_s_util_Right(x1);
+    var b = x2.value$2;
+    var x$16 = $as_T2(b);
+    var x = x$16.$$und1__O();
+    var x$2 = $m_Lcoursier_core_Latest$Integration$();
+    var shouldParallelize = ((x !== null) && $objectEquals(x, x$2))
+  } else {
+    var shouldParallelize = false
+  };
+  if (shouldParallelize) {
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, module$1$1, f$2$1, F$2$1) {
+      return (function(x$17$2) {
+        var x$17 = $as_Lcoursier_core_Repository(x$17$2);
+        return $f_Lcoursier_core_Repository__versions__Lcoursier_core_Module__F1__Z__Lcoursier_util_Monad__Lcoursier_util_EitherT(x$17, module$1$1, f$2$1, false, F$2$1).run$1
+      })
+    })(this, module$1, f$2, F$2));
+    var this$3 = $m_sc_Seq$();
+    var lookups = F$2.gather__sc_Seq__O($as_sc_Seq(repositories$1.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)));
+    return new $c_Lcoursier_util_EitherT().init___O(F$2.bind__O__F1__O(lookups, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, F$2$2, ver$1, fetchs$1$1, fetch$2$1, repositories$1$1, module$1$2) {
+      return (function(results$2) {
+        var results = $as_sc_Seq(results$2);
+        return new $c_Lcoursier_util_EitherT().init___O(F$2$2.point__O__O(this$3$1.versionOrError$1__p1__sc_Seq__s_util_Either__sc_Seq__s_util_Either(results, ver$1, repositories$1$1))).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, fetchs$1$2, fetch$2$2, F$2$3, module$1$3, repositories$1$2) {
+          return (function(x0$1$2) {
+            var x0$1 = $as_T2(x0$1$2);
+            if ((x0$1 !== null)) {
+              var v = $as_Lcoursier_core_Version(x0$1.$$und1__O());
+              var repo = $as_Lcoursier_core_Repository(x0$1.$$und2__O());
+              return $as_Lcoursier_util_EitherT(fetchs$1$2.foldLeft__O__F2__O($this.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT(v, repo, fetch$2$2, module$1$3, F$2$3, repositories$1$2), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1, v$1, repo$1, F$2$4, module$1$4, repositories$1$3) {
+                return (function(x$18$2, x$19$2) {
+                  var x$18 = $as_Lcoursier_util_EitherT(x$18$2);
+                  var x$19 = $as_F1(x$19$2);
+                  return x$18.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$2, v$1$1, repo$3, x$19$1, module$1$5, F$2$5, repositories$1$4) {
+                    return (function() {
+                      return $this$2.getLatest$1__p1__Lcoursier_core_Version__Lcoursier_core_Repository__F1__Lcoursier_core_Module__Lcoursier_util_Gather__sc_Seq__Lcoursier_util_EitherT(v$1$1, repo$3, x$19$1, module$1$5, F$2$5, repositories$1$4)
+                    })
+                  })($this$1, v$1, repo$1, x$19, module$1$4, F$2$4, repositories$1$3)), F$2$4)
+                })
+              })($this, v, repo, F$2$3, module$1$3, repositories$1$2))))
+            } else {
+              throw new $c_s_MatchError().init___O(x0$1)
+            }
+          })
+        })(this$3$1, fetchs$1$1, fetch$2$1, F$2$2, module$1$2, repositories$1$1)), F$2$2).run$1
+      })
+    })(this, F$2, ver, fetchs$1, fetch$2, repositories$1, module$1))))
+  } else {
+    return $as_Lcoursier_util_EitherT(fetchs$1.foldLeft__O__F2__O(this.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(fetch$2, new $c_s_Some().init___O(ver), repositories$1, module$1, version$1, F$2), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$4, ver$2, F$2$6, repositories$1$5, module$1$6, version$1$1) {
+      return (function(x$20$2, x$21$2) {
+        var x$20 = $as_Lcoursier_util_EitherT(x$20$2);
+        var x$21 = $as_F1(x$21$2);
+        return x$20.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$3, x$21$1, ver$2$1, repositories$1$6, module$1$7, version$1$2, F$2$7) {
+          return (function() {
+            return $this$3.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(x$21$1, new $c_s_Some().init___O(ver$2$1), repositories$1$6, module$1$7, version$1$2, F$2$7)
+          })
+        })(this$4, x$21, ver$2, repositories$1$5, module$1$6, version$1$1, F$2$6)), F$2$6)
+      })
+    })(this, ver, F$2, repositories$1, module$1, version$1))))
+  }
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.fetchOne__sc_Seq__Lcoursier_core_Module__T__F1__sc_Seq__Lcoursier_util_Gather__Lcoursier_util_EitherT = (function(repositories, module, version, fetch, fetchs, F) {
+  var f$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, fetchs$1, fetch$1, F$1) {
+    return (function(a$2) {
+      var a = $as_Lcoursier_util_Artifact(a$2);
+      return $as_Lcoursier_util_EitherT(fetchs$1.foldLeft__O__F2__O(fetch$1.apply__O__O(a), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1, a$1, F$2) {
+        return (function(acc$2, f$2) {
+          var acc = $as_Lcoursier_util_EitherT(acc$2);
+          var f = $as_F1(f$2);
+          return acc.leftFlatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2, f$1, a$1$1) {
+            return (function(x$10$2) {
+              $as_T(x$10$2);
+              return $as_Lcoursier_util_EitherT(f$1.apply__O__O(a$1$1))
+            })
+          })($this$1, f, a$1)), F$2)
+        })
+      })($this, a, F$1))))
+    })
+  })(this, fetchs, fetch, F));
+  if (($uI(version.indexOf("&")) !== (-1))) {
+    var this$5 = new $c_sci_StringOps().init___T(version);
+    var xs = $f_sci_StringLike__split__C__AT(this$5, 38);
+    var this$8 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
+    var versions = $as_sc_Seq($f_sc_SeqLike__distinct__O(this$8));
+    $m_s_Predef$().assert__Z__V((versions.length__I() === 2));
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
+      return (function(s$2) {
+        var s = $as_T(s$2);
+        var this$9 = $m_Lcoursier_core_Latest$().apply__T__s_Option(s);
+        if (this$9.isEmpty__Z()) {
+          $m_s_package$();
+          return new $c_s_util_Left().init___O(s)
+        } else {
+          $m_s_package$();
+          var value = this$9.get__O();
+          return new $c_s_util_Right().init___O(value)
+        }
+      })
+    })(this));
+    var this$12 = $m_sc_Seq$();
+    var parsed = $as_sc_Seq(versions.map__F1__scg_CanBuildFrom__O(jsx$1, this$12.ReusableCBFInstance$2));
+    var jsx$2 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$5().init___();
+    var this$13 = $m_sc_Seq$();
+    var latest = $as_sc_Seq(parsed.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$2, this$13.ReusableCBFInstance$2));
+    var jsx$3 = new $c_Lcoursier_core_ResolutionProcess$$anonfun$6().init___();
+    var this$14 = $m_sc_Seq$();
+    var other = $as_sc_Seq(parsed.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$3, this$14.ReusableCBFInstance$2));
+    $m_s_Predef$().assert__Z__V((latest.length__I() === 1));
+    $m_s_Predef$().assert__Z__V((other.length__I() === 1));
+    var latest0 = $as_Lcoursier_core_Latest(latest.head__O());
+    $m_s_Predef$().assert__Z__V($as_Lcoursier_core_VersionConstraint(other.head__O()).preferred$1.isEmpty__Z());
+    var itv = $as_Lcoursier_core_VersionConstraint(other.head__O()).interval$1;
+    $m_s_package$();
+    var value$1 = new $c_T2().init___O__O(latest0, new $c_s_Some().init___O(itv));
+    return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Right().init___O(value$1), F, repositories, module, f$3, fetchs, fetch, version)
+  } else {
+    var x1 = $m_Lcoursier_core_Latest$().apply__T__s_Option(version);
+    if ((x1 instanceof $c_s_Some)) {
+      var x2 = $as_s_Some(x1);
+      var kind = $as_Lcoursier_core_Latest(x2.value$2);
+      $m_s_package$();
+      var value$2 = new $c_T2().init___O__O(kind, $m_s_None$());
+      return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Right().init___O(value$2), F, repositories, module, f$3, fetchs, fetch, version)
+    } else {
+      var x = $m_s_None$();
+      if ((x === x1)) {
+        var c = $m_Lcoursier_core_Parse$().versionConstraint__T__Lcoursier_core_VersionConstraint(version);
+        var x$3 = c.interval$1;
+        var x$4 = $m_Lcoursier_core_VersionInterval$().zero$1;
+        if (((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))) {
+          return $as_Lcoursier_util_EitherT(fetchs.foldLeft__O__F2__O(this.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(fetch, $m_s_None$(), repositories, module, version, F), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1, F$3, repositories$1, module$1, version$1) {
+            return (function(x$22$2, x$23$2) {
+              var x$22 = $as_Lcoursier_util_EitherT(x$22$2);
+              var x$23 = $as_F1(x$23$2);
+              return x$22.orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this$3, x$23$1, repositories$1$1, module$1$1, version$1$1, F$2$1) {
+                return (function() {
+                  return $this$3.get$1__p1__F1__s_Option__sc_Seq__Lcoursier_core_Module__T__Lcoursier_util_Gather__Lcoursier_util_EitherT(x$23$1, $m_s_None$(), repositories$1$1, module$1$1, version$1$1, F$2$1)
+                })
+              })(this$3$1, x$23, repositories$1, module$1, version$1, F$3)), F$3)
+            })
+          })(this, F, repositories, module, version))))
+        } else {
+          $m_s_package$();
+          var value$3 = c.interval$1;
+          return this.getLatest0$1__p1__s_util_Either__Lcoursier_util_Gather__sc_Seq__Lcoursier_core_Module__F1__sc_Seq__F1__T__Lcoursier_util_EitherT(new $c_s_util_Left().init___O(value$3), F, repositories, module, f$3, fetchs, fetch, version)
+        }
+      } else {
+        throw new $c_s_MatchError().init___O(x1)
+      }
+    }
+  }
+});
+var $d_Lcoursier_core_ResolutionProcess$ = new $TypeData().initClass({
+  Lcoursier_core_ResolutionProcess$: 0
+}, false, "coursier.core.ResolutionProcess$", {
+  Lcoursier_core_ResolutionProcess$: 1,
+  O: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lcoursier_core_ResolutionProcess$.prototype.$classData = $d_Lcoursier_core_ResolutionProcess$;
+var $n_Lcoursier_core_ResolutionProcess$ = (void 0);
+function $m_Lcoursier_core_ResolutionProcess$() {
+  if ((!$n_Lcoursier_core_ResolutionProcess$)) {
+    $n_Lcoursier_core_ResolutionProcess$ = new $c_Lcoursier_core_ResolutionProcess$().init___()
+  };
+  return $n_Lcoursier_core_ResolutionProcess$
+}
+/** @constructor */
 function $c_Lcoursier_core_Type$() {
   $c_O.call(this);
   this.ordering$1 = null;
@@ -40901,12 +39297,12 @@ $c_Lcoursier_maven_MavenRepository$.prototype.isSnapshot__T__Z = (function(versi
 $c_Lcoursier_maven_MavenRepository$.prototype.parseRawPomSax__T__s_util_Either = (function(str) {
   return $as_Lcoursier_maven_PomParser($m_Lcoursier_core_compatibility_package$().xmlParseSax__T__Lcoursier_util_SaxHandler__Lcoursier_util_SaxHandler(str, new $c_Lcoursier_maven_PomParser().init___())).project__s_util_Either()
 });
-$c_Lcoursier_maven_MavenRepository$.prototype.coursier$maven$MavenRepository$$actualRoot__T__T = (function(root) {
+$c_Lcoursier_maven_MavenRepository$.prototype.actualRoot__p1__T__T = (function(root) {
   var this$2 = new $c_sci_StringOps().init___T(root);
   return $f_sci_StringLike__stripSuffix__T__T(this$2, "/")
 });
-$c_Lcoursier_maven_MavenRepository$.prototype.apply__T__s_Option__Z__s_Option__Lcoursier_maven_MavenRepository = (function(root, changing, sbtAttrStub, authentication) {
-  return new $c_Lcoursier_maven_MavenRepository().init___T__s_Option__Z__s_Option__Z(this.coursier$maven$MavenRepository$$actualRoot__T__T(root), changing, sbtAttrStub, authentication, true)
+$c_Lcoursier_maven_MavenRepository$.prototype.apply__T__Lcoursier_maven_MavenRepository = (function(root) {
+  return new $c_Lcoursier_maven_MavenRepository().init___T(this.actualRoot__p1__T__T(root))
 });
 $c_Lcoursier_maven_MavenRepository$.prototype.parseRawPomDom__T__s_util_Either = (function(str) {
   var this$1 = $m_Lcoursier_core_compatibility_package$().xmlParseDom__T__s_util_Either(str);
@@ -41260,39 +39656,6 @@ var $d_Lcoursier_maven_PomParser$$anon$7 = new $TypeData().initClass({
   O: 1
 });
 $c_Lcoursier_maven_PomParser$$anon$7.prototype.$classData = $d_Lcoursier_maven_PomParser$$anon$7;
-/** @constructor */
-function $c_Lcoursier_package$Resolution$() {
-  $c_O.call(this);
-  this.empty$1 = null
-}
-$c_Lcoursier_package$Resolution$.prototype = new $h_O();
-$c_Lcoursier_package$Resolution$.prototype.constructor = $c_Lcoursier_package$Resolution$;
-/** @constructor */
-function $h_Lcoursier_package$Resolution$() {
-  /*<skip>*/
-}
-$h_Lcoursier_package$Resolution$.prototype = $c_Lcoursier_package$Resolution$.prototype;
-$c_Lcoursier_package$Resolution$.prototype.init___ = (function() {
-  $n_Lcoursier_package$Resolution$ = this;
-  this.empty$1 = $m_Lcoursier_core_Resolution$().apply__Lcoursier_core_Resolution();
-  return this
-});
-var $d_Lcoursier_package$Resolution$ = new $TypeData().initClass({
-  Lcoursier_package$Resolution$: 0
-}, false, "coursier.package$Resolution$", {
-  Lcoursier_package$Resolution$: 1,
-  O: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_Lcoursier_package$Resolution$.prototype.$classData = $d_Lcoursier_package$Resolution$;
-var $n_Lcoursier_package$Resolution$ = (void 0);
-function $m_Lcoursier_package$Resolution$() {
-  if ((!$n_Lcoursier_package$Resolution$)) {
-    $n_Lcoursier_package$Resolution$ = new $c_Lcoursier_package$Resolution$().init___()
-  };
-  return $n_Lcoursier_package$Resolution$
-}
 /** @constructor */
 function $c_Ljapgolly_scalajs_react_component_builder_Lifecycle$() {
   $c_O.call(this)
@@ -50200,6 +48563,1274 @@ var $d_Lcoursier_core_Repository$Complete$Result = new $TypeData().initClass({
 });
 $c_Lcoursier_core_Repository$Complete$Result.prototype.$classData = $d_Lcoursier_core_Repository$Complete$Result;
 /** @constructor */
+function $c_Lcoursier_core_Resolution() {
+  $c_O.call(this);
+  this.dependencies$1 = null;
+  this.hashCode$1 = 0;
+  this.transitiveDependencies$1 = null;
+  this.nextDependenciesAndConflicts$1 = null;
+  this.reconciledVersions$1 = null;
+  this.missingFromCache$1 = null;
+  this.isDone$1 = false;
+  this.reverseDependencies$1 = null;
+  this.remainingDependencies$1 = null;
+  this.newDependencies$1 = null;
+  this.nextNoMissingUnsafe$1 = null;
+  this.rootDependencies$1 = null;
+  this.dependencySet$1 = null;
+  this.forceVersions$1 = null;
+  this.conflicts$1 = null;
+  this.projectCache$1 = null;
+  this.errorCache$1 = null;
+  this.finalDependenciesCache$1 = null;
+  this.filter$1 = null;
+  this.reconciliation$1 = null;
+  this.osInfo$1 = null;
+  this.jdkVersion$1 = null;
+  this.userActivations$1 = null;
+  this.mapDependencies$1 = null;
+  this.extraProperties$1 = null;
+  this.forceProperties$1 = null;
+  this.defaultConfiguration$1 = null;
+  this.finalDependenciesCache0$1 = null;
+  this.bitmap$0$1 = 0
+}
+$c_Lcoursier_core_Resolution.prototype = new $h_O();
+$c_Lcoursier_core_Resolution.prototype.constructor = $c_Lcoursier_core_Resolution;
+/** @constructor */
+function $h_Lcoursier_core_Resolution() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_Resolution.prototype = $c_Lcoursier_core_Resolution.prototype;
+$c_Lcoursier_core_Resolution.prototype.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution = (function(rootDependencies, dependencySet, conflicts, errorCache) {
+  var this$1 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(rootDependencies, this.dependencySet$1, this.forceVersions$1, this.conflicts$1, this.projectCache$1, this.errorCache$1, this.finalDependenciesCache$1, this.filter$1, this.reconciliation$1, this.osInfo$1, this.jdkVersion$1, this.userActivations$1, this.mapDependencies$1, this.extraProperties$1, this.forceProperties$1, this.defaultConfiguration$1);
+  var this$2 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$1.rootDependencies$1, dependencySet, this$1.forceVersions$1, this$1.conflicts$1, this$1.projectCache$1, this$1.errorCache$1, this$1.finalDependenciesCache$1, this$1.filter$1, this$1.reconciliation$1, this$1.osInfo$1, this$1.jdkVersion$1, this$1.userActivations$1, this$1.mapDependencies$1, this$1.extraProperties$1, this$1.forceProperties$1, this$1.defaultConfiguration$1);
+  var this$3 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$2.rootDependencies$1, this$2.dependencySet$1, this$2.forceVersions$1, conflicts, this$2.projectCache$1, this$2.errorCache$1, this$2.finalDependenciesCache$1, this$2.filter$1, this$2.reconciliation$1, this$2.osInfo$1, this$2.jdkVersion$1, this$2.userActivations$1, this$2.mapDependencies$1, this$2.extraProperties$1, this$2.forceProperties$1, this$2.defaultConfiguration$1);
+  var this$5 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$3.rootDependencies$1, this$3.dependencySet$1, this$3.forceVersions$1, this$3.conflicts$1, this$3.projectCache$1, errorCache, this$3.finalDependenciesCache$1, this$3.filter$1, this$3.reconciliation$1, this$3.osInfo$1, this$3.jdkVersion$1, this$3.userActivations$1, this$3.mapDependencies$1, this$3.extraProperties$1, this$3.forceProperties$1, this$3.defaultConfiguration$1);
+  var jsx$1 = this.finalDependenciesCache$1;
+  var this$4 = $m_sc_JavaConverters$();
+  var m = this.finalDependenciesCache0$1;
+  var finalDependenciesCache = jsx$1.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce($f_sc_convert_DecorateAsScala__mapAsScalaConcurrentMapConverter__ju_concurrent_ConcurrentMap__sc_convert_Decorators$AsScala(this$4, m).asScala__O()));
+  return new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$5.rootDependencies$1, this$5.dependencySet$1, this$5.forceVersions$1, this$5.conflicts$1, this$5.projectCache$1, this$5.errorCache$1, finalDependenciesCache, this$5.filter$1, this$5.reconciliation$1, this$5.osInfo$1, this$5.jdkVersion$1, this$5.userActivations$1, this$5.mapDependencies$1, this$5.extraProperties$1, this$5.forceProperties$1, this$5.defaultConfiguration$1)
+});
+$c_Lcoursier_core_Resolution.prototype.missingFromCache$lzycompute__p1__sci_Set = (function() {
+  if (((32 & this.bitmap$0$1) === 0)) {
+    var this$2 = this.dependencies__sci_Set();
+    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(x$15$2) {
+        var x$15 = $as_Lcoursier_core_Dependency(x$15$2);
+        return x$15.moduleVersion__T2()
+      })
+    })(this));
+    var this$1 = $m_sci_Set$();
+    var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
+    var modules = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf));
+    var jsx$2 = $as_sc_TraversableLike(this.nextDependenciesAndConflicts__T3().$$und2$1);
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
+      return (function(x$16$2) {
+        var x$16 = $as_Lcoursier_core_Dependency(x$16$2);
+        return x$16.moduleVersion__T2()
+      })
+    })(this));
+    var this$3 = $m_sc_Seq$();
+    var nextModules = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2));
+    this.missingFromCache$1 = $as_sci_Set(modules.$$plus$plus__sc_GenTraversableOnce__sc_Set(nextModules).filterNot__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+      return (function(mod$2) {
+        var mod = $as_T2(mod$2);
+        return (this$3$1.projectCache$1.contains__O__Z(mod) || this$3$1.errorCache$1.contains__O__Z(mod))
+      })
+    })(this))));
+    this.bitmap$0$1 = (32 | this.bitmap$0$1)
+  };
+  return this.missingFromCache$1
+});
+$c_Lcoursier_core_Resolution.prototype.productPrefix__T = (function() {
+  return ""
+});
+$c_Lcoursier_core_Resolution.prototype.dependenciesOf__Lcoursier_core_Dependency__Z__Z__sc_Seq = (function(dep, withRetainedVersions, withFallbackConfig) {
+  var deps = this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep);
+  if ((withRetainedVersions || withFallbackConfig)) {
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, withRetainedVersions$1, withFallbackConfig$1) {
+      return (function(x$11$2) {
+        var x$11 = $as_Lcoursier_core_Dependency(x$11$2);
+        return $this.updated__p1__Lcoursier_core_Dependency__Z__Z__Lcoursier_core_Dependency(x$11, withRetainedVersions$1, withFallbackConfig$1)
+      })
+    })(this, withRetainedVersions, withFallbackConfig));
+    var this$1 = $m_sc_Seq$();
+    return $as_sc_Seq(deps.map__F1__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
+  } else {
+    return deps
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.productArity__I = (function() {
+  return 16
+});
+$c_Lcoursier_core_Resolution.prototype.helper$3__p1__sci_Set__sci_Set__sci_Set__sci_Set = (function(toCheck, done, missing) {
+  _helper: while (true) {
+    if (toCheck.isEmpty__Z()) {
+      return missing
+    } else if (toCheck.exists__F1__Z(done)) {
+      var this$1 = toCheck;
+      var xs = done;
+      toCheck = $as_sci_Set($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$1, xs));
+      continue _helper
+    } else if (toCheck.exists__F1__Z(missing)) {
+      var this$2 = toCheck;
+      var xs$1 = missing;
+      toCheck = $as_sci_Set($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$2, xs$1));
+      continue _helper
+    } else if (toCheck.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(key$2) {
+        var key = $as_T2(key$2);
+        return $this.projectCache$1.contains__O__Z(key)
+      })
+    })(this)))) {
+      var this$3 = toCheck;
+      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
+        return (function(key$3$2) {
+          var key$3 = $as_T2(key$3$2);
+          return this$2$1.projectCache$1.contains__O__Z(key$3)
+        })
+      })(this));
+      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
+      if ((x1 === null)) {
+        throw new $c_s_MatchError().init___O(x1)
+      };
+      var checking = $as_sci_Set(x1.$$und1__O());
+      var remaining = $as_sci_Set(x1.$$und2__O());
+      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+        return (function(mod$2) {
+          var mod = $as_T2(mod$2);
+          return this$3$1.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set($as_Lcoursier_core_Project($as_T2(this$3$1.projectCache$1.apply__O__O(mod)).$$und2__O()))
+        })
+      })(this));
+      var this$4 = $m_sci_Set$();
+      var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$4);
+      var directRequirements = $as_sci_Set($f_sc_TraversableLike__flatMap__F1__scg_CanBuildFrom__O(checking, f, bf));
+      var temp$toCheck$3 = $as_sci_Set(remaining.$$plus$plus__sc_GenTraversableOnce__sc_Set(directRequirements));
+      var temp$done = $as_sci_Set(done.$$plus$plus__sc_GenTraversableOnce__sc_Set(checking));
+      toCheck = temp$toCheck$3;
+      done = temp$done;
+      continue _helper
+    } else if (toCheck.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+      return (function(key$4$2) {
+        var key$4 = $as_T2(key$4$2);
+        return this$4$1.errorCache$1.contains__O__Z(key$4)
+      })
+    })(this)))) {
+      var this$6 = toCheck;
+      var p$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5) {
+        return (function(key$5$2) {
+          var key$5 = $as_T2(key$5$2);
+          return this$5.errorCache$1.contains__O__Z(key$5)
+        })
+      })(this));
+      var x1$2 = $f_sc_TraversableLike__partition__F1__T2(this$6, p$1);
+      if ((x1$2 === null)) {
+        throw new $c_s_MatchError().init___O(x1$2)
+      };
+      var errored = $as_sci_Set(x1$2.$$und1__O());
+      var remaining$3 = $as_sci_Set(x1$2.$$und2__O());
+      var temp$done$2 = $as_sci_Set(done.$$plus$plus__sc_GenTraversableOnce__sc_Set(errored));
+      toCheck = remaining$3;
+      done = temp$done$2;
+      continue _helper
+    } else {
+      var temp$toCheck$5 = $m_sci_Set$EmptySet$();
+      var temp$missing = $as_sci_Set(missing.$$plus$plus__sc_GenTraversableOnce__sc_Set(toCheck));
+      toCheck = temp$toCheck$5;
+      missing = temp$missing;
+      continue _helper
+    }
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.newDependencies__sci_Set = (function() {
+  return (((512 & this.bitmap$0$1) === 0) ? this.newDependencies$lzycompute__p1__sci_Set() : this.newDependencies$1)
+});
+$c_Lcoursier_core_Resolution.prototype.init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T = (function(rootDependencies, dependencySet, forceVersions, conflicts, projectCache, errorCache, finalDependenciesCache, filter, reconciliation, osInfo, jdkVersion, userActivations, mapDependencies, extraProperties, forceProperties, defaultConfiguration) {
+  this.rootDependencies$1 = rootDependencies;
+  this.dependencySet$1 = dependencySet;
+  this.forceVersions$1 = forceVersions;
+  this.conflicts$1 = conflicts;
+  this.projectCache$1 = projectCache;
+  this.errorCache$1 = errorCache;
+  this.finalDependenciesCache$1 = finalDependenciesCache;
+  this.filter$1 = filter;
+  this.reconciliation$1 = reconciliation;
+  this.osInfo$1 = osInfo;
+  this.jdkVersion$1 = jdkVersion;
+  this.userActivations$1 = userActivations;
+  this.mapDependencies$1 = mapDependencies;
+  this.extraProperties$1 = extraProperties;
+  this.forceProperties$1 = forceProperties;
+  this.defaultConfiguration$1 = defaultConfiguration;
+  this.finalDependenciesCache0$1 = new $c_ju_concurrent_ConcurrentHashMap().init___();
+  return this
+});
+$c_Lcoursier_core_Resolution.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Resolution(obj);
+    var x = this.rootDependencies$1;
+    var x$2 = other.rootDependencies$1;
+    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
+      var x$3 = this.dependencySet$1;
+      var x$4 = other.dependencySet$1;
+      var jsx$14 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
+    } else {
+      var jsx$14 = false
+    };
+    if (jsx$14) {
+      var x$5 = this.forceVersions$1;
+      var x$6 = other.forceVersions$1;
+      var jsx$13 = ((x$5 === null) ? (x$6 === null) : $f_sc_GenMapLike__equals__O__Z(x$5, x$6))
+    } else {
+      var jsx$13 = false
+    };
+    if (jsx$13) {
+      var x$7 = this.conflicts$1;
+      var x$8 = other.conflicts$1;
+      var jsx$12 = ((x$7 === null) ? (x$8 === null) : $f_sc_GenSetLike__equals__O__Z(x$7, x$8))
+    } else {
+      var jsx$12 = false
+    };
+    if (jsx$12) {
+      var x$9 = this.projectCache$1;
+      var x$10 = other.projectCache$1;
+      var jsx$11 = ((x$9 === null) ? (x$10 === null) : $f_sc_GenMapLike__equals__O__Z(x$9, x$10))
+    } else {
+      var jsx$11 = false
+    };
+    if (jsx$11) {
+      var x$11 = this.errorCache$1;
+      var x$12 = other.errorCache$1;
+      var jsx$10 = ((x$11 === null) ? (x$12 === null) : $f_sc_GenMapLike__equals__O__Z(x$11, x$12))
+    } else {
+      var jsx$10 = false
+    };
+    if (jsx$10) {
+      var x$13 = this.finalDependenciesCache$1;
+      var x$14 = other.finalDependenciesCache$1;
+      var jsx$9 = ((x$13 === null) ? (x$14 === null) : $f_sc_GenMapLike__equals__O__Z(x$13, x$14))
+    } else {
+      var jsx$9 = false
+    };
+    if (jsx$9) {
+      var x$15 = this.filter$1;
+      var x$16 = other.filter$1;
+      var jsx$8 = ((x$15 === null) ? (x$16 === null) : x$15.equals__O__Z(x$16))
+    } else {
+      var jsx$8 = false
+    };
+    if (jsx$8) {
+      var x$17 = this.reconciliation$1;
+      var x$18 = other.reconciliation$1;
+      var jsx$7 = ((x$17 === null) ? (x$18 === null) : x$17.equals__O__Z(x$18))
+    } else {
+      var jsx$7 = false
+    };
+    if (jsx$7) {
+      var x$19 = this.osInfo$1;
+      var x$20 = other.osInfo$1;
+      var jsx$6 = ((x$19 === null) ? (x$20 === null) : x$19.equals__O__Z(x$20))
+    } else {
+      var jsx$6 = false
+    };
+    if (jsx$6) {
+      var x$21 = this.jdkVersion$1;
+      var x$22 = other.jdkVersion$1;
+      var jsx$5 = ((x$21 === null) ? (x$22 === null) : x$21.equals__O__Z(x$22))
+    } else {
+      var jsx$5 = false
+    };
+    if (jsx$5) {
+      var x$23 = this.userActivations$1;
+      var x$24 = other.userActivations$1;
+      var jsx$4 = ((x$23 === null) ? (x$24 === null) : x$23.equals__O__Z(x$24))
+    } else {
+      var jsx$4 = false
+    };
+    if (jsx$4) {
+      var x$25 = this.mapDependencies$1;
+      var x$26 = other.mapDependencies$1;
+      var jsx$3 = ((x$25 === null) ? (x$26 === null) : x$25.equals__O__Z(x$26))
+    } else {
+      var jsx$3 = false
+    };
+    if (jsx$3) {
+      var x$27 = this.extraProperties$1;
+      var x$28 = other.extraProperties$1;
+      var jsx$2 = ((x$27 === null) ? (x$28 === null) : x$27.equals__O__Z(x$28))
+    } else {
+      var jsx$2 = false
+    };
+    if (jsx$2) {
+      var x$29 = this.forceProperties$1;
+      var x$30 = other.forceProperties$1;
+      var jsx$1 = ((x$29 === null) ? (x$30 === null) : $f_sc_GenMapLike__equals__O__Z(x$29, x$30))
+    } else {
+      var jsx$1 = false
+    };
+    if (jsx$1) {
+      return (this.defaultConfiguration$1 === other.defaultConfiguration$1)
+    } else {
+      return false
+    }
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.withDependencyManagement__Lcoursier_core_Project__Lcoursier_core_Project = (function(project) {
+  var this$1 = project.parent$1;
+  if (this$1.isEmpty__Z()) {
+    var this$2 = $m_s_None$()
+  } else {
+    var arg1 = this$1.get__O();
+    var key = $as_T2(arg1);
+    var this$2 = this.projectCache$1.get__O__s_Option(key)
+  };
+  if (this$2.isEmpty__Z()) {
+    var this$3 = $m_s_None$()
+  } else {
+    var arg1$1 = this$2.get__O();
+    var x$26 = $as_T2(arg1$1);
+    var this$3 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$26.$$und2__O()).properties$1)
+  };
+  var parentProperties0 = $as_sc_Seq((this$3.isEmpty__Z() ? $as_sc_Seq($m_sc_Seq$().apply__sc_Seq__sc_GenTraversable($m_sci_Nil$())) : this$3.get__O()));
+  var approxProperties = parentProperties0.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2).$$plus$plus__sc_GenTraversableOnce__sci_Map($m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project));
+  var profiles0 = $m_Lcoursier_core_Resolution$().profiles__Lcoursier_core_Project__sci_Map__Lcoursier_core_Activation$Os__s_Option__s_Option__sc_Seq(project, approxProperties, this.osInfo$1, this.jdkVersion$1, this.userActivations$1);
+  var jsx$4 = project.properties$1;
+  var this$4 = $m_sc_Seq$();
+  var jsx$3 = $as_sc_TraversableLike(parentProperties0.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$4, this$4.ReusableCBFInstance$2));
+  var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+    return (function(x$27$2) {
+      var x$27 = $as_Lcoursier_core_Profile(x$27$2);
+      return x$27.properties$1
+    })
+  })(this));
+  var this$5 = $m_sc_Seq$();
+  var jsx$1 = $as_sc_GenTraversableOnce(profiles0.flatMap__F1__scg_CanBuildFrom__O(jsx$2, this$5.ReusableCBFInstance$2));
+  var this$6 = $m_sc_Seq$();
+  var properties = $as_sc_Seq(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$6.ReusableCBFInstance$2));
+  var project0 = this.withFinalProperties__p1__Lcoursier_core_Project__Lcoursier_core_Project(new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project.module$1, project.version$1, project.dependencies$1, project.configurations$1, project.parent$1, project.dependencyManagement$1, properties, project.profiles$1, project.versions$1, project.snapshotVersioning$1, project.packagingOpt$1, project.relocated$1, project.actualVersionOpt$1, project.publications$1, project.info$1));
+  var propertiesMap0 = project0.properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2);
+  var jsx$9 = $m_Lcoursier_core_Resolution$();
+  var x$29 = project0.dependencies$1;
+  var jsx$8 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
+    return (function(x$28$2) {
+      var x$28 = $as_Lcoursier_core_Profile(x$28$2);
+      return x$28.dependencies$1
+    })
+  })(this));
+  var this$7 = $m_sc_Seq$();
+  var jsx$7 = $as_sc_SeqLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$8, this$7.ReusableCBFInstance$2));
+  var this$8 = $m_sc_Seq$();
+  var jsx$6 = $as_sc_TraversableLike(jsx$7.$$plus$colon__O__scg_CanBuildFrom__O(x$29, this$8.ReusableCBFInstance$2));
+  var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1, propertiesMap0$1) {
+    return (function(x$30$2) {
+      var x$30 = $as_sc_Seq(x$30$2);
+      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$30, propertiesMap0$1)
+    })
+  })(this, propertiesMap0));
+  var this$9 = $m_sc_Seq$();
+  var dependencies0 = jsx$9.addDependencies__sc_Seq__sc_Seq($as_sc_Seq(jsx$6.map__F1__scg_CanBuildFrom__O(jsx$5, this$9.ReusableCBFInstance$2)));
+  var jsx$14 = $m_Lcoursier_core_Resolution$();
+  var x$32 = project0.dependencyManagement$1;
+  var jsx$13 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$7$1) {
+    return (function(x$31$2) {
+      var x$31 = $as_Lcoursier_core_Profile(x$31$2);
+      return x$31.dependencyManagement$1
+    })
+  })(this));
+  var this$10 = $m_sc_Seq$();
+  var jsx$12 = $as_sc_SeqLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$13, this$10.ReusableCBFInstance$2));
+  var this$11 = $m_sc_Seq$();
+  var jsx$11 = $as_sc_TraversableLike(jsx$12.$$plus$colon__O__scg_CanBuildFrom__O(x$32, this$11.ReusableCBFInstance$2));
+  var jsx$10 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$8$1, propertiesMap0$2) {
+    return (function(x$33$2) {
+      var x$33 = $as_sc_Seq(x$33$2);
+      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$33, propertiesMap0$2)
+    })
+  })(this, propertiesMap0));
+  var this$12 = $m_sc_Seq$();
+  var dependenciesMgmt0 = jsx$14.addDependencies__sc_Seq__sc_Seq($as_sc_Seq(jsx$11.map__F1__scg_CanBuildFrom__O(jsx$10, this$12.ReusableCBFInstance$2)));
+  var jsx$20 = new $c_Lcoursier_core_Resolution$$anonfun$5().init___Lcoursier_core_Resolution(this);
+  var this$13 = $m_sc_Seq$();
+  var jsx$19 = $as_sc_TraversableLike(dependencies0.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$20, this$13.ReusableCBFInstance$2));
+  var jsx$18 = new $c_Lcoursier_core_Resolution$$anonfun$6().init___Lcoursier_core_Resolution(this);
+  var this$14 = $m_sc_Seq$();
+  var jsx$17 = $as_sc_GenTraversableOnce(dependenciesMgmt0.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$18, this$14.ReusableCBFInstance$2));
+  var this$15 = $m_sc_Seq$();
+  var jsx$16 = $as_sc_TraversableLike(jsx$19.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$17, this$15.ReusableCBFInstance$2));
+  var xo = project0.parent$1;
+  var jsx$15 = xo.toList__sci_List();
+  var this$17 = $m_sc_Seq$();
+  var deps0 = $as_sc_Seq(jsx$16.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$15, this$17.ReusableCBFInstance$2));
+  var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$9$1) {
+    return (function(key$3$2) {
+      var key$3 = $as_T2(key$3$2);
+      return this$9$1.projectCache$1.contains__O__Z(key$3)
+    })
+  })(this));
+  var deps = $as_sc_Seq(deps0.filterImpl__F1__Z__O(p, false));
+  var jsx$21 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$10$1) {
+    return (function(x$34$2) {
+      var x$34 = $as_T2(x$34$2);
+      return $as_Lcoursier_core_Project($as_T2(this$10$1.projectCache$1.apply__O__O(x$34)).$$und2__O())
+    })
+  })(this));
+  var this$18 = $m_sc_Seq$();
+  var projs = $as_sc_Seq(deps.map__F1__scg_CanBuildFrom__O(jsx$21, this$18.ReusableCBFInstance$2));
+  var x$37 = project0.dependencyManagement$1;
+  var jsx$28 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$11$1) {
+    return (function(x$35$2) {
+      var x$35 = $as_Lcoursier_core_Profile(x$35$2);
+      return x$35.dependencyManagement$1
+    })
+  })(this));
+  var this$19 = $m_sc_Seq$();
+  var jsx$27 = $as_sc_TraversableLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$28, this$19.ReusableCBFInstance$2));
+  var jsx$26 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$12$1) {
+    return (function(x$36$2) {
+      var x$36 = $as_Lcoursier_core_Project(x$36$2);
+      return x$36.dependencyManagement$1
+    })
+  })(this));
+  var this$20 = $m_sc_Seq$();
+  var jsx$25 = $as_sc_GenTraversableOnce(projs.map__F1__scg_CanBuildFrom__O(jsx$26, this$20.ReusableCBFInstance$2));
+  var this$21 = $m_sc_Seq$();
+  var jsx$24 = $as_sc_SeqLike(jsx$27.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$25, this$21.ReusableCBFInstance$2));
+  var this$22 = $m_sc_Seq$();
+  var jsx$23 = $as_sc_TraversableLike(jsx$24.$$plus$colon__O__scg_CanBuildFrom__O(x$37, this$22.ReusableCBFInstance$2));
+  var jsx$22 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$13$1, propertiesMap0$3) {
+    return (function(x$38$2) {
+      var x$38 = $as_sc_Seq(x$38$2);
+      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(x$38, propertiesMap0$3)
+    })
+  })(this, propertiesMap0));
+  var this$23 = $m_sc_Seq$();
+  var depMgmt = $as_sci_Map($as_sc_TraversableOnce(jsx$23.map__F1__scg_CanBuildFrom__O(jsx$22, this$23.ReusableCBFInstance$2)).foldLeft__O__F2__O($m_sci_Map$EmptyMap$(), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$14$1) {
+    return (function(dict$2, deps$2$2) {
+      var dict = $as_sci_Map(dict$2);
+      var deps$2 = $as_sc_Seq(deps$2$2);
+      return $m_Lcoursier_core_Resolution$DepMgmt$().addSeq__sci_Map__sc_Seq__sci_Map(dict, deps$2)
+    })
+  })(this))));
+  var depsSet = deps.toSet__sci_Set();
+  var this$25 = project0.packagingOpt$1;
+  if (this$25.isEmpty__Z()) {
+    var packagingOpt = $m_s_None$()
+  } else {
+    var arg1$2 = this$25.get__O();
+    var x$39 = $as_Lcoursier_core_Type(arg1$2).value$1;
+    var packagingOpt = new $c_s_Some().init___O(new $c_Lcoursier_core_Type().init___T(($m_Lcoursier_core_Type$(), $m_Lcoursier_core_Resolution$().substituteProps__T__sci_Map__T(x$39, propertiesMap0))))
+  };
+  var this$27 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project0.module$1, project0.version$1, project0.dependencies$1, project0.configurations$1, project0.parent$1, project0.dependencyManagement$1, project0.properties$1, project0.profiles$1, project0.versions$1, project0.snapshotVersioning$1, packagingOpt, project0.relocated$1, project0.actualVersionOpt$1, project0.publications$1, project0.info$1);
+  var version = $m_Lcoursier_core_Resolution$().substituteProps__T__sci_Map__T(project0.version$1, propertiesMap0);
+  var this$37 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$27.module$1, version, this$27.dependencies$1, this$27.configurations$1, this$27.parent$1, this$27.dependencyManagement$1, this$27.properties$1, this$27.profiles$1, this$27.versions$1, this$27.snapshotVersioning$1, this$27.packagingOpt$1, this$27.relocated$1, this$27.actualVersionOpt$1, this$27.publications$1, this$27.info$1);
+  var p$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$16$1, depsSet$1) {
+    return (function(x0$1$2) {
+      var x0$1 = $as_T2(x0$1$2);
+      if ((x0$1 !== null)) {
+        var config = $as_Lcoursier_core_Configuration(x0$1.$$und1__O()).value$1;
+        var dep = $as_Lcoursier_core_Dependency(x0$1.$$und2__O());
+        if ((config === $m_Lcoursier_core_Configuration$().import$1)) {
+          var elem = dep.moduleVersion__T2();
+          return depsSet$1.contains__O__Z(elem)
+        } else {
+          return false
+        }
+      } else {
+        throw new $c_s_MatchError().init___O(x0$1)
+      }
+    })
+  })(this, depsSet));
+  var jsx$32 = $as_sc_TraversableLike(dependencies0.filterImpl__F1__Z__O(p$1, true));
+  var this$28 = project0.parent$1;
+  if (this$28.isEmpty__Z()) {
+    var jsx$30 = true
+  } else {
+    var arg1$3 = this$28.get__O();
+    var key$4 = $as_T2(arg1$3);
+    var jsx$30 = this.projectCache$1.contains__O__Z(key$4)
+  };
+  if (jsx$30) {
+    var xo$1 = this$28
+  } else {
+    var xo$1 = $m_s_None$()
+  };
+  var this$30 = xo$1.toList__sci_List();
+  var f = (function(this$18$1) {
+    return (function(x$41$2) {
+      var x$41 = $as_T2(x$41$2);
+      return $as_Lcoursier_core_Project($as_T2(this$18$1.projectCache$1.apply__O__O(x$41)).$$und2__O()).dependencies$1
+    })
+  })(this);
+  var this$31 = $m_sc_Seq$();
+  var bf = this$31.ReusableCBFInstance$2;
+  if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
+    if ((this$30 === $m_sci_Nil$())) {
+      var jsx$31 = $m_sci_Nil$()
+    } else {
+      var rest = this$30;
+      var found = new $c_sr_BooleanRef().init___Z(false);
+      var h = new $c_sr_ObjectRef().init___O(null);
+      var t = new $c_sr_ObjectRef().init___O(null);
+      while ((rest !== $m_sci_Nil$())) {
+        var arg1$4 = rest.head__O();
+        $as_sc_GenTraversableOnce(f(arg1$4)).seq__sc_TraversableOnce().foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, found$1, h$1, t$1) {
+          return (function(b$2) {
+            if ((!found$1.elem$1)) {
+              h$1.elem$1 = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
+              t$1.elem$1 = $as_sci_$colon$colon(h$1.elem$1);
+              found$1.elem$1 = true
+            } else {
+              var nx = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
+              $as_sci_$colon$colon(t$1.elem$1).tl$5 = nx;
+              t$1.elem$1 = nx
+            }
+          })
+        })(this$30, found, h, t)));
+        rest = $as_sci_List(rest.tail__O())
+      };
+      var jsx$31 = ((!found.elem$1) ? $m_sci_Nil$() : $as_sci_$colon$colon(h.elem$1))
+    }
+  } else {
+    $m_sci_List$();
+    var b = new $c_scm_ListBuffer().init___();
+    var these = this$30;
+    while ((!these.isEmpty__Z())) {
+      var arg1$5 = these.head__O();
+      var xs = $as_sc_GenTraversableOnce(f(arg1$5)).seq__sc_TraversableOnce();
+      b.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer(xs);
+      these = $as_sci_List(these.tail__O())
+    };
+    var jsx$31 = b.toList__sci_List()
+  };
+  var jsx$29 = $as_sc_GenTraversableOnce(jsx$31);
+  var this$36 = $m_sc_Seq$();
+  var dependencies = $as_sc_Seq(jsx$32.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$29, this$36.ReusableCBFInstance$2));
+  var this$40 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$37.module$1, this$37.version$1, dependencies, this$37.configurations$1, this$37.parent$1, this$37.dependencyManagement$1, this$37.properties$1, this$37.profiles$1, this$37.versions$1, this$37.snapshotVersioning$1, this$37.packagingOpt$1, this$37.relocated$1, this$37.actualVersionOpt$1, this$37.publications$1, this$37.info$1);
+  var this$38 = new $c_sc_MapLike$DefaultValuesIterable().init___sc_MapLike(depMgmt);
+  var this$39 = this$38.$$outer$3.valuesIterator__sc_Iterator().toStream__sci_Stream();
+  var p$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$19$1, depsSet$2) {
+    return (function(x0$2$2) {
+      var x0$2 = $as_T2(x0$2$2);
+      if ((x0$2 !== null)) {
+        var config$1 = $as_Lcoursier_core_Configuration(x0$2.$$und1__O()).value$1;
+        var dep$1 = $as_Lcoursier_core_Dependency(x0$2.$$und2__O());
+        if ((config$1 === $m_Lcoursier_core_Configuration$().import$1)) {
+          var elem$1 = dep$1.moduleVersion__T2();
+          return depsSet$2.contains__O__Z(elem$1)
+        } else {
+          return false
+        }
+      } else {
+        throw new $c_s_MatchError().init___O(x0$2)
+      }
+    })
+  })(this, depsSet));
+  var dependencyManagement = this$39.filterImpl__F1__Z__sci_Stream(p$2, true);
+  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$40.module$1, this$40.version$1, this$40.dependencies$1, this$40.configurations$1, this$40.parent$1, dependencyManagement, this$40.properties$1, this$40.profiles$1, this$40.versions$1, this$40.snapshotVersioning$1, this$40.packagingOpt$1, this$40.relocated$1, this$40.actualVersionOpt$1, this$40.publications$1, this$40.info$1)
+});
+$c_Lcoursier_core_Resolution.prototype.nextDependenciesAndConflicts__T3 = (function() {
+  return (((8 & this.bitmap$0$1) === 0) ? this.nextDependenciesAndConflicts$lzycompute__p1__T3() : this.nextDependenciesAndConflicts$1)
+});
+$c_Lcoursier_core_Resolution.prototype.productElement__I__O = (function(n) {
+  switch (n) {
+    case 0: {
+      return this.rootDependencies$1;
+      break
+    }
+    case 1: {
+      return this.dependencySet$1;
+      break
+    }
+    case 2: {
+      return this.forceVersions$1;
+      break
+    }
+    case 3: {
+      return this.conflicts$1;
+      break
+    }
+    case 4: {
+      return this.projectCache$1;
+      break
+    }
+    case 5: {
+      return this.errorCache$1;
+      break
+    }
+    case 6: {
+      return this.finalDependenciesCache$1;
+      break
+    }
+    case 7: {
+      return this.filter$1;
+      break
+    }
+    case 8: {
+      return this.reconciliation$1;
+      break
+    }
+    case 9: {
+      return this.osInfo$1;
+      break
+    }
+    case 10: {
+      return this.jdkVersion$1;
+      break
+    }
+    case 11: {
+      return this.userActivations$1;
+      break
+    }
+    case 12: {
+      return this.mapDependencies$1;
+      break
+    }
+    case 13: {
+      return this.extraProperties$1;
+      break
+    }
+    case 14: {
+      return this.forceProperties$1;
+      break
+    }
+    case 15: {
+      return new $c_Lcoursier_core_Configuration().init___T(this.defaultConfiguration$1);
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.isDone$lzycompute__p1__Z = (function() {
+  if (((64 & this.bitmap$0$1) === 0)) {
+    this.isDone$1 = (this.missingFromCache__sci_Set().isEmpty__Z() && this.isFixPoint$1__p1__Z());
+    this.bitmap$0$1 = (64 | this.bitmap$0$1)
+  };
+  return this.isDone$1
+});
+$c_Lcoursier_core_Resolution.prototype.hashCode$lzycompute__p1__I = (function() {
+  if (((2 & this.bitmap$0$1) === 0)) {
+    var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.core.Resolution")) | 0);
+    code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.tuple__p1__T16())) | 0);
+    this.hashCode$1 = $imul(37, code);
+    this.bitmap$0$1 = (2 | this.bitmap$0$1)
+  };
+  return this.hashCode$1
+});
+$c_Lcoursier_core_Resolution.prototype.nextNoMissingUnsafe__p1__Lcoursier_core_Resolution = (function() {
+  return (((1024 & this.bitmap$0$1) === 0) ? this.nextNoMissingUnsafe$lzycompute__p1__Lcoursier_core_Resolution() : this.nextNoMissingUnsafe$1)
+});
+$c_Lcoursier_core_Resolution.prototype.toString__T = (function() {
+  var b = new $c_jl_StringBuilder().init___T("Resolution(");
+  var obj = this.rootDependencies$1;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.dependencySet$1;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$2 = this.forceVersions$1;
+  var str$2 = ("" + obj$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$3 = this.conflicts$1;
+  var str$3 = ("" + obj$3);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$3);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$4 = this.projectCache$1;
+  var str$4 = ("" + obj$4);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$4);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$5 = this.errorCache$1;
+  var str$5 = ("" + obj$5);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$5);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$6 = this.finalDependenciesCache$1;
+  var str$6 = ("" + obj$6);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$6);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$7 = this.filter$1;
+  var str$7 = ("" + obj$7);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$7);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$8 = this.reconciliation$1;
+  var str$8 = ("" + obj$8);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$8);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$9 = this.osInfo$1;
+  var str$9 = ("" + obj$9);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$9);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$10 = this.jdkVersion$1;
+  var str$10 = ("" + obj$10);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$10);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$11 = this.userActivations$1;
+  var str$11 = ("" + obj$11);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$11);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$12 = this.mapDependencies$1;
+  var str$12 = ("" + obj$12);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$12);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$13 = this.extraProperties$1;
+  var str$13 = ("" + obj$13);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$13);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$14 = this.forceProperties$1;
+  var str$14 = ("" + obj$14);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$14);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$15 = new $c_Lcoursier_core_Configuration().init___T(this.defaultConfiguration$1);
+  var str$15 = ("" + obj$15);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$15);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Resolution.prototype.dependencies$lzycompute__p1__sci_Set = (function() {
+  if (((1 & this.bitmap$0$1) === 0)) {
+    this.dependencies$1 = this.dependencySet$1.set$1;
+    this.bitmap$0$1 = (1 | this.bitmap$0$1)
+  };
+  return this.dependencies$1
+});
+$c_Lcoursier_core_Resolution.prototype.configsOf__p1__Lcoursier_core_Dependency__sci_Set = (function(dep) {
+  var this$1 = this.projectCache$1.get__O__s_Option(dep.moduleVersion__T2());
+  if (this$1.isEmpty__Z()) {
+    var this$2 = $m_s_None$()
+  } else {
+    var arg1 = this$1.get__O();
+    var x$10 = $as_T2(arg1);
+    var this$2 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$10.$$und2__O()).configurations$1.keySet__sci_Set())
+  };
+  return $as_sci_Set((this$2.isEmpty__Z() ? $m_sci_Set$EmptySet$() : this$2.get__O()))
+});
+$c_Lcoursier_core_Resolution.prototype.nextDependenciesAndConflicts$lzycompute__p1__T3 = (function() {
+  if (((8 & this.bitmap$0$1) === 0)) {
+    var jsx$7 = $m_Lcoursier_core_Resolution$();
+    var jsx$6 = this.rootDependencies$1;
+    var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(x$12$2) {
+        var x$12 = $as_Lcoursier_core_Dependency(x$12$2);
+        return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$withDefaultConfig__Lcoursier_core_Dependency__T__Lcoursier_core_Dependency(x$12, $this.defaultConfiguration$1)
+      })
+    })(this));
+    var this$1 = $m_sc_Seq$();
+    var jsx$4 = $as_sc_TraversableLike(jsx$6.map__F1__scg_CanBuildFrom__O(jsx$5, this$1.ReusableCBFInstance$2));
+    var jsx$3 = this.dependencySet$1.minimizedSet__sci_Set();
+    var this$2 = $m_sc_Seq$();
+    var jsx$2 = $as_sc_TraversableLike(jsx$4.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$3, this$2.ReusableCBFInstance$2));
+    var jsx$1 = this.transitiveDependencies__sc_Seq();
+    var this$3 = $m_sc_Seq$();
+    this.nextDependenciesAndConflicts$1 = jsx$7.merge__sc_Seq__sci_Map__s_Option__Z__T3($as_sc_Seq(jsx$2.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)), this.forceVersions$1, this.reconciliation$1, ($m_Lcoursier_core_Resolution$(), false));
+    this.bitmap$0$1 = (8 | this.bitmap$0$1)
+  };
+  return this.nextDependenciesAndConflicts$1
+});
+$c_Lcoursier_core_Resolution.prototype.withFinalProperties__p1__Lcoursier_core_Project__Lcoursier_core_Project = (function(project) {
+  var properties = $m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project);
+  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project.module$1, project.version$1, project.dependencies$1, project.configurations$1, project.parent$1, project.dependencyManagement$1, properties, project.profiles$1, project.versions$1, project.snapshotVersioning$1, project.packagingOpt$1, project.relocated$1, project.actualVersionOpt$1, project.publications$1, project.info$1)
+});
+$c_Lcoursier_core_Resolution.prototype.dependencyManagementMissing__Lcoursier_core_Project__sci_Set = (function(project) {
+  var jsx$2 = this.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set(project);
+  var array = [project.moduleVersion__T2()];
+  if (($uI(array.length) === 0)) {
+    var jsx$1 = $m_sci_Set$EmptySet$()
+  } else {
+    var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_Set$EmptySet$());
+    var i = 0;
+    var len = $uI(array.length);
+    while ((i < len)) {
+      var index = i;
+      var arg1 = array[index];
+      b.$$plus$eq__O__scm_SetBuilder(arg1);
+      i = ((1 + i) | 0)
+    };
+    var jsx$1 = b.elems$1
+  };
+  return this.helper$3__p1__sci_Set__sci_Set__sci_Set__sci_Set(jsx$2, $as_sci_Set(jsx$1), $m_sci_Set$EmptySet$())
+});
+$c_Lcoursier_core_Resolution.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Resolution))
+});
+$c_Lcoursier_core_Resolution.prototype.dependencyManagementRequirements__Lcoursier_core_Project__sci_Set = (function(project) {
+  var this$1 = project.parent$1;
+  if ((!this$1.isEmpty__Z())) {
+    var arg1 = this$1.get__O();
+    var par = $as_T2(arg1);
+    var parentFound = (this.projectCache$1.contains__O__Z(par) || this.errorCache$1.contains__O__Z(par));
+    var needsParent = (!parentFound)
+  } else {
+    var needsParent = false
+  };
+  if (needsParent) {
+    var xo = project.parent$1;
+    var this$3 = xo.toList__sci_List();
+    var this$4 = $m_sci_Set$();
+    var cbf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$4);
+    return $as_sci_Set($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$3, cbf))
+  } else {
+    var this$5 = project.parent$1;
+    if (this$5.isEmpty__Z()) {
+      var this$6 = $m_s_None$()
+    } else {
+      var arg1$1 = this$5.get__O();
+      var key = $as_T2(arg1$1);
+      var this$6 = this.projectCache$1.get__O__s_Option(key)
+    };
+    if (this$6.isEmpty__Z()) {
+      var this$7 = $m_s_None$()
+    } else {
+      var arg1$2 = this$6.get__O();
+      var x$23 = $as_T2(arg1$2);
+      var this$7 = new $c_s_Some().init___O($as_Lcoursier_core_Project(x$23.$$und2__O()).properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2))
+    };
+    var parentProperties0 = $as_sci_Map((this$7.isEmpty__Z() ? $as_sci_Map($m_s_Predef$().Map$2.apply__sc_Seq__sc_GenMap($m_sci_Nil$())) : this$7.get__O()));
+    var approxProperties = parentProperties0.$$plus$plus__sc_GenTraversableOnce__sci_Map($m_Lcoursier_core_Resolution$().projectProperties__Lcoursier_core_Project__sc_Seq(project));
+    var jsx$4 = $m_Lcoursier_core_Resolution$().profiles__Lcoursier_core_Project__sci_Map__Lcoursier_core_Activation$Os__s_Option__s_Option__sc_Seq(project, approxProperties, this.osInfo$1, this.jdkVersion$1, this.userActivations$1);
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
+      return (function(p$2) {
+        var p = $as_Lcoursier_core_Profile(p$2);
+        var jsx$3 = p.dependencies$1;
+        var jsx$2 = p.dependencyManagement$1;
+        var this$8 = $m_sc_Seq$();
+        return $as_sc_Seq(jsx$3.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$2, this$8.ReusableCBFInstance$2))
+      })
+    })(this));
+    var this$9 = $m_sc_Seq$();
+    var profileDependencies = $as_sc_Seq(jsx$4.flatMap__F1__scg_CanBuildFrom__O(jsx$1, this$9.ReusableCBFInstance$2));
+    var jsx$10 = $m_Lcoursier_core_Resolution$();
+    var jsx$9 = project.dependencies$1;
+    var jsx$8 = project.dependencyManagement$1;
+    var this$10 = $m_sc_Seq$();
+    var jsx$7 = $as_sc_TraversableLike(jsx$9.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$8, this$10.ReusableCBFInstance$2));
+    var this$11 = $m_sc_Seq$();
+    var jsx$6 = jsx$10.withProperties__sc_Seq__sci_Map__sc_Seq($as_sc_Seq(jsx$7.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(profileDependencies, this$11.ReusableCBFInstance$2)), approxProperties);
+    var jsx$5 = new $c_Lcoursier_core_Resolution$$anonfun$4().init___Lcoursier_core_Resolution(this);
+    var this$12 = $m_sc_Seq$();
+    var modules = $as_sc_Seq(jsx$6.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$5, this$12.ReusableCBFInstance$2));
+    return modules.toSet__sci_Set()
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.reverseDependencies__sci_Map = (function() {
+  return (((128 & this.bitmap$0$1) === 0) ? this.reverseDependencies$lzycompute__p1__sci_Map() : this.reverseDependencies$1)
+});
+$c_Lcoursier_core_Resolution.prototype.remainingDependencies$lzycompute__p1__sci_Set = (function() {
+  if (((256 & this.bitmap$0$1) === 0)) {
+    var jsx$4 = this.rootDependencies$1;
+    var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(x$21$2) {
+        var x$21 = $as_Lcoursier_core_Dependency(x$21$2);
+        return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$withDefaultConfig__Lcoursier_core_Dependency__T__Lcoursier_core_Dependency(x$21, $this.defaultConfiguration$1)
+      })
+    })(this));
+    var this$1 = $m_sc_Seq$();
+    var jsx$2 = $as_sc_TraversableLike(jsx$4.map__F1__scg_CanBuildFrom__O(jsx$3, this$1.ReusableCBFInstance$2));
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2) {
+      return (function(dep$2) {
+        var dep = $as_Lcoursier_core_Dependency(dep$2);
+        return new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, "", dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1)
+      })
+    })(this));
+    var this$3 = $m_sc_Seq$();
+    var rootDependencies0 = $as_sc_TraversableOnce(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$3.ReusableCBFInstance$2)).toSet__sci_Set();
+    var filteredReverseDependencies = this.helper$2__p1__sci_Map__sci_Set__sci_Map(this.reverseDependencies__sci_Map(), rootDependencies0);
+    this.remainingDependencies$1 = $as_sci_Set(rootDependencies0.$$plus$plus__sc_GenTraversableOnce__sc_Set(filteredReverseDependencies.keySet__sc_Set()));
+    this.bitmap$0$1 = (256 | this.bitmap$0$1)
+  };
+  return this.remainingDependencies$1
+});
+$c_Lcoursier_core_Resolution.prototype.isDone__Z = (function() {
+  return (((64 & this.bitmap$0$1) === 0) ? this.isDone$lzycompute__p1__Z() : this.isDone$1)
+});
+$c_Lcoursier_core_Resolution.prototype.dependencies__sci_Set = (function() {
+  return (((1 & this.bitmap$0$1) === 0) ? this.dependencies$lzycompute__p1__sci_Set() : this.dependencies$1)
+});
+$c_Lcoursier_core_Resolution.prototype.tuple__p1__T16 = (function() {
+  return new $c_T16().init___O__O__O__O__O__O__O__O__O__O__O__O__O__O__O__O(this.rootDependencies$1, this.dependencySet$1, this.forceVersions$1, this.conflicts$1, this.projectCache$1, this.errorCache$1, this.finalDependenciesCache$1, this.filter$1, this.reconciliation$1, this.osInfo$1, this.jdkVersion$1, this.userActivations$1, this.mapDependencies$1, this.extraProperties$1, this.forceProperties$1, new $c_Lcoursier_core_Configuration().init___T(this.defaultConfiguration$1))
+});
+$c_Lcoursier_core_Resolution.prototype.nextNoMissingUnsafe$lzycompute__p1__Lcoursier_core_Resolution = (function() {
+  if (((1024 & this.bitmap$0$1) === 0)) {
+    var x1 = this.nextDependenciesAndConflicts__T3();
+    if ((x1 === null)) {
+      throw new $c_s_MatchError().init___O(x1)
+    };
+    var newConflicts = $as_sc_Seq(x1.$$und1$1);
+    var x$1 = this.dependencySet$1.setValues__sci_Set__Lcoursier_core_DependencySet($as_sci_Set(this.newDependencies__sci_Set().$$plus$plus__sc_GenTraversableOnce__sc_Set(newConflicts)));
+    var x$2 = newConflicts.toSet__sci_Set();
+    var x$3 = this.rootDependencies$1;
+    var x$4 = this.errorCache$1;
+    this.nextNoMissingUnsafe$1 = this.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution(x$3, x$1, x$2, x$4);
+    this.bitmap$0$1 = (1024 | this.bitmap$0$1)
+  };
+  return this.nextNoMissingUnsafe$1
+});
+$c_Lcoursier_core_Resolution.prototype.transitiveDependencies__sc_Seq = (function() {
+  return (((4 & this.bitmap$0$1) === 0) ? this.transitiveDependencies$lzycompute__p1__sc_Seq() : this.transitiveDependencies$1)
+});
+$c_Lcoursier_core_Resolution.prototype.transitiveDependencies$lzycompute__p1__sc_Seq = (function() {
+  if (((4 & this.bitmap$0$1) === 0)) {
+    var this$1 = this.dependencySet$1.minimizedSet__sci_Set();
+    var xs = this.conflicts$1;
+    var this$3 = $as_sc_TraversableOnce($f_scg_Subtractable__$$minus$minus__sc_GenTraversableOnce__scg_Subtractable(this$1, xs)).toVector__sci_Vector();
+    $m_sci_Vector$();
+    $m_sc_IndexedSeq$();
+    $m_sci_Vector$();
+    var b = new $c_sci_VectorBuilder().init___();
+    var this$5 = this$3.iterator__sci_VectorIterator();
+    while (this$5.$$undhasNext$2) {
+      var arg1 = this$5.next__O();
+      var dep = $as_Lcoursier_core_Dependency(arg1);
+      var xs$1 = this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep).seq__sc_TraversableOnce();
+      $as_sci_VectorBuilder($f_scg_Growable__$$plus$plus$eq__sc_TraversableOnce__scg_Growable(b, xs$1))
+    };
+    this.transitiveDependencies$1 = b.result__sci_Vector();
+    this.bitmap$0$1 = (4 | this.bitmap$0$1)
+  };
+  return this.transitiveDependencies$1
+});
+$c_Lcoursier_core_Resolution.prototype.helper$2__p1__sci_Map__sci_Set__sci_Map = (function(reverseDeps, rootDependencies0$1) {
+  _helper: while (true) {
+    var this$1 = reverseDeps;
+    var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, rootDependencies0$1$1) {
+      return (function(kv$2) {
+        var kv = $as_T2(kv$2);
+        if ($as_sc_SeqLike(kv.$$und2__O()).isEmpty__Z()) {
+          var elem = kv.$$und1__O();
+          return (!rootDependencies0$1$1.contains__O__Z(elem))
+        } else {
+          return false
+        }
+      })
+    })(this, rootDependencies0$1));
+    var x1 = $f_sc_TraversableLike__partition__F1__T2(this$1, p);
+    if ((x1 === null)) {
+      throw new $c_s_MatchError().init___O(x1)
+    };
+    var toRemove = $as_sci_Map(x1.$$und1__O());
+    var remaining = $as_sci_Map(x1.$$und2__O());
+    if (toRemove.isEmpty__Z()) {
+      return reverseDeps
+    } else {
+      var this$5 = remaining.mapValues__F1__sci_Map(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, remaining$2, rootDependencies0$1$2) {
+        return (function(broughtBy$2) {
+          var broughtBy = $as_sci_Vector(broughtBy$2);
+          $m_sci_Vector$();
+          var b = new $c_sci_VectorBuilder().init___();
+          var this$4 = broughtBy.iterator__sci_VectorIterator();
+          while (this$4.$$undhasNext$2) {
+            var arg1 = this$4.next__O();
+            var x = $as_Lcoursier_core_Dependency(arg1);
+            if (((remaining$2.contains__O__Z(x) || rootDependencies0$1$2.contains__O__Z(x)) !== false)) {
+              b.$$plus$eq__O__sci_VectorBuilder(arg1)
+            }
+          };
+          return b.result__sci_Vector()
+        })
+      })(this, remaining, rootDependencies0$1))).iterator__sc_Iterator();
+      var b$1 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
+      while (this$5.hasNext__Z()) {
+        var arg1$1 = this$5.next__O();
+        b$1.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1$1))
+      };
+      reverseDeps = $as_sci_Map(b$1.elems$1);
+      continue _helper
+    }
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.addToErrorCache__sc_Iterable__Lcoursier_core_Resolution = (function(entries) {
+  var x$1 = this.errorCache$1.$$plus$plus__sc_GenTraversableOnce__sci_Map(entries);
+  var x$2 = this.rootDependencies$1;
+  var x$3 = this.dependencySet$1;
+  var x$4 = this.conflicts$1;
+  return this.copyWithCache__p1__sc_Seq__Lcoursier_core_DependencySet__sci_Set__sci_Map__Lcoursier_core_Resolution(x$2, x$3, x$4, x$1)
+});
+$c_Lcoursier_core_Resolution.prototype.reverseDependencies$lzycompute__p1__sci_Map = (function() {
+  if (((128 & this.bitmap$0$1) === 0)) {
+    var x1 = this.nextDependenciesAndConflicts__T3();
+    if ((x1 === null)) {
+      throw new $c_s_MatchError().init___O(x1)
+    };
+    var updatedConflicts = $as_sc_Seq(x1.$$und1$1);
+    var updatedDeps = $as_sc_Seq(x1.$$und2$1);
+    var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(dep$2) {
+        var dep = $as_Lcoursier_core_Dependency(dep$2);
+        var jsx$3 = $this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep);
+        var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, dep$1) {
+          return (function(trDep$2) {
+            var trDep = $as_Lcoursier_core_Dependency(trDep$2);
+            var self = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(trDep.module$1, "", trDep.configuration$1, trDep.exclusions$1, trDep.publication$1, trDep.optional$1, trDep.transitive$1);
+            var y = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep$1.module$1, "", dep$1.configuration$1, dep$1.exclusions$1, dep$1.publication$1, dep$1.optional$1, dep$1.transitive$1);
+            return new $c_T2().init___O__O(self, y)
+          })
+        })($this, dep));
+        var this$3 = $m_sc_Seq$();
+        return $as_sc_Seq(jsx$3.map__F1__scg_CanBuildFrom__O(jsx$2, this$3.ReusableCBFInstance$2))
+      })
+    })(this));
+    var this$4 = $m_sc_Seq$();
+    var trDepsSeq = $as_sc_Seq(updatedDeps.flatMap__F1__scg_CanBuildFrom__O(jsx$1, this$4.ReusableCBFInstance$2));
+    var this$5 = $m_sc_Seq$();
+    var jsx$5 = $as_sc_TraversableLike(updatedDeps.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(updatedConflicts, this$5.ReusableCBFInstance$2));
+    var jsx$4 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
+      return (function(dep$3$2) {
+        var dep$3 = $as_Lcoursier_core_Dependency(dep$3$2);
+        return new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep$3.module$1, "", dep$3.configuration$1, dep$3.exclusions$1, dep$3.publication$1, dep$3.optional$1, dep$3.transitive$1)
+      })
+    })(this));
+    var this$6 = $m_sc_Seq$();
+    var knownDeps = $as_sc_TraversableOnce(jsx$5.map__F1__scg_CanBuildFrom__O(jsx$4, this$6.ReusableCBFInstance$2)).toSet__sci_Set();
+    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+      return (function(x$18$2) {
+        var x$18 = $as_T2(x$18$2);
+        return $as_Lcoursier_core_Dependency(x$18.$$und1__O())
+      })
+    })(this));
+    var this$8 = $f_sc_TraversableLike__groupBy__F1__sci_Map(trDepsSeq, f).mapValues__F1__sci_Map(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+      return (function(x$19$2) {
+        var x$19 = $as_sc_Seq(x$19$2);
+        var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2) {
+          return (function(x$20$2) {
+            var x$20 = $as_T2(x$20$2);
+            return $as_Lcoursier_core_Dependency(x$20.$$und2__O())
+          })
+        })(this$4$1));
+        var this$7 = $m_sc_Seq$();
+        return $as_sc_TraversableOnce(x$19.map__F1__scg_CanBuildFrom__O(jsx$6, this$7.ReusableCBFInstance$2)).toVector__sci_Vector()
+      })
+    })(this))).filterKeys__F1__sci_Map(knownDeps);
+    $m_sci_Vector$();
+    var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
+    var this$10 = $as_sci_Vector($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$8, cbf));
+    var b = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
+    var this$12 = this$10.iterator__sci_VectorIterator();
+    while (this$12.$$undhasNext$2) {
+      var arg1 = this$12.next__O();
+      b.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1))
+    };
+    this.reverseDependencies$1 = $as_sci_Map(b.elems$1);
+    this.bitmap$0$1 = (128 | this.bitmap$0$1)
+  };
+  return this.reverseDependencies$1
+});
+$c_Lcoursier_core_Resolution.prototype.isFixPoint$1__p1__Z = (function() {
+  var x1 = this.nextDependenciesAndConflicts__T3();
+  if ((x1 === null)) {
+    throw new $c_s_MatchError().init___O(x1)
+  };
+  var nextConflicts = $as_sc_Seq(x1.$$und1$1);
+  var x = this.dependencies__sci_Set();
+  var x$2 = this.newDependencies__sci_Set().$$plus$plus__sc_GenTraversableOnce__sc_Set(nextConflicts);
+  if (((x === null) ? (x$2 === null) : $f_sc_GenSetLike__equals__O__Z(x, x$2))) {
+    var x$3 = this.conflicts$1;
+    var x$4 = nextConflicts.toSet__sci_Set();
+    return ((x$3 === null) ? (x$4 === null) : $f_sc_GenSetLike__equals__O__Z(x$3, x$4))
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq = (function(dep) {
+  if (dep.transitive$1) {
+    var deps = $as_sc_Seq(this.finalDependenciesCache$1.getOrElse__O__F0__O(dep, new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, dep$1) {
+      return (function() {
+        return $as_sc_Seq($this.finalDependenciesCache0$1.get__O__O(dep$1))
+      })
+    })(this, dep))));
+    if ((deps === null)) {
+      var x1 = this.projectCache$1.get__O__s_Option(dep.moduleVersion__T2());
+      if ((x1 instanceof $c_s_Some)) {
+        var x2 = $as_s_Some(x1);
+        var p3 = $as_T2(x2.value$2);
+        if ((p3 !== null)) {
+          var proj = $as_Lcoursier_core_Project(p3.$$und2__O());
+          var this$2 = $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$finalDependencies__Lcoursier_core_Dependency__Lcoursier_core_Project__T__sc_Seq(dep, proj, this.defaultConfiguration$1);
+          var this$1 = this.filter$1;
+          var p = $as_F1((this$1.isEmpty__Z() ? new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
+            return (function(dep$2) {
+              var dep$3 = $as_Lcoursier_core_Dependency(dep$2);
+              return $m_Lcoursier_core_Resolution$().defaultFilter__Lcoursier_core_Dependency__Z(dep$3)
+            })
+          })(this)) : this$1.get__O()));
+          var res0 = $as_sc_Seq(this$2.filterImpl__F1__Z__O(p, false));
+          var this$3 = this.mapDependencies$1;
+          if (this$3.isEmpty__Z()) {
+            var res = res0
+          } else {
+            var arg1 = this$3.get__O();
+            var x$9 = $as_F1(arg1);
+            var this$4 = $m_sc_Seq$();
+            var res = $as_sc_Seq(res0.map__F1__scg_CanBuildFrom__O(x$9, this$4.ReusableCBFInstance$2))
+          };
+          this.finalDependenciesCache0$1.put__O__O__O(dep, res);
+          return res
+        }
+      };
+      var x = $m_s_None$();
+      if ((x === x1)) {
+        return $m_sci_Nil$()
+      };
+      throw new $c_s_MatchError().init___O(x1)
+    } else {
+      return deps
+    }
+  } else {
+    return $m_sci_Nil$()
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.hashCode__I = (function() {
+  return (((2 & this.bitmap$0$1) === 0) ? this.hashCode$lzycompute__p1__I() : this.hashCode$1)
+});
+$c_Lcoursier_core_Resolution.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_s_Product$$anon$1().init___s_Product(this)
+});
+$c_Lcoursier_core_Resolution.prototype.updated__p1__Lcoursier_core_Dependency__Z__Z__Lcoursier_core_Dependency = (function(dep, withRetainedVersions, withFallbackConfig) {
+  if (withRetainedVersions) {
+    var version = $as_T($as_sci_Map(this.nextDependenciesAndConflicts__T3().$$und3$1).getOrElse__O__F0__O(dep.module$1, new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function($this, dep$1) {
+      return (function() {
+        return dep$1.version$1
+      })
+    })(this, dep))));
+    var dep0 = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, version, dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1)
+  } else {
+    var dep0 = dep
+  };
+  return (withFallbackConfig ? $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$fallbackConfigIfNecessary__Lcoursier_core_Dependency__sci_Set__Lcoursier_core_Dependency(dep0, this.configsOf__p1__Lcoursier_core_Dependency__sci_Set(dep0)) : dep0)
+});
+$c_Lcoursier_core_Resolution.prototype.minDependencies__sci_Set = (function() {
+  var this$2 = this.dependencySet$1.minimizedSet__sci_Set();
+  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+    return (function(dep$2) {
+      var dep = $as_Lcoursier_core_Dependency(dep$2);
+      return $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$fallbackConfigIfNecessary__Lcoursier_core_Dependency__sci_Set__Lcoursier_core_Dependency(dep, $this.configsOf__p1__Lcoursier_core_Dependency__sci_Set(dep))
+    })
+  })(this));
+  var this$1 = $m_sci_Set$();
+  var bf = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$1);
+  return $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf))
+});
+$c_Lcoursier_core_Resolution.prototype.nextIfNoMissing__Lcoursier_core_Resolution = (function() {
+  var _$this = this;
+  _nextIfNoMissing: while (true) {
+    var missing = _$this.missingFromCache__sci_Set();
+    if (missing.isEmpty__Z()) {
+      var next0 = _$this.nextNoMissingUnsafe__p1__Lcoursier_core_Resolution();
+      var x$3 = _$this;
+      if (((next0 === null) ? (x$3 === null) : next0.equals__O__Z(x$3))) {
+        return _$this
+      } else {
+        _$this = next0;
+        continue _nextIfNoMissing
+      }
+    } else {
+      return _$this
+    }
+  }
+});
+$c_Lcoursier_core_Resolution.prototype.newDependencies$lzycompute__p1__sci_Set = (function() {
+  if (((512 & this.bitmap$0$1) === 0)) {
+    var remainingDependencies0 = this.remainingDependencies__sci_Set();
+    this.newDependencies$1 = $as_sc_TraversableOnce($as_sc_TraversableLike(this.nextDependenciesAndConflicts__T3().$$und2$1).filter__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, remainingDependencies0$1) {
+      return (function(dep$2) {
+        var dep = $as_Lcoursier_core_Dependency(dep$2);
+        var elem = new $c_Lcoursier_core_Dependency().init___Lcoursier_core_Module__T__T__sci_Set__Lcoursier_core_Publication__Z__Z(dep.module$1, "", dep.configuration$1, dep.exclusions$1, dep.publication$1, dep.optional$1, dep.transitive$1);
+        return remainingDependencies0$1.contains__O__Z(elem)
+      })
+    })(this, remainingDependencies0)))).toSet__sci_Set();
+    this.bitmap$0$1 = (512 | this.bitmap$0$1)
+  };
+  return this.newDependencies$1
+});
+$c_Lcoursier_core_Resolution.prototype.missingFromCache__sci_Set = (function() {
+  return (((32 & this.bitmap$0$1) === 0) ? this.missingFromCache$lzycompute__p1__sci_Set() : this.missingFromCache$1)
+});
+$c_Lcoursier_core_Resolution.prototype.remainingDependencies__sci_Set = (function() {
+  return (((256 & this.bitmap$0$1) === 0) ? this.remainingDependencies$lzycompute__p1__sci_Set() : this.remainingDependencies$1)
+});
+function $as_Lcoursier_core_Resolution(obj) {
+  return (((obj instanceof $c_Lcoursier_core_Resolution) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Resolution"))
+}
+function $isArrayOf_Lcoursier_core_Resolution(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Resolution)))
+}
+function $asArrayOf_Lcoursier_core_Resolution(obj, depth) {
+  return (($isArrayOf_Lcoursier_core_Resolution(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Resolution;", depth))
+}
+var $d_Lcoursier_core_Resolution = new $TypeData().initClass({
+  Lcoursier_core_Resolution: 0
+}, false, "coursier.core.Resolution", {
+  Lcoursier_core_Resolution: 1,
+  O: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lcoursier_core_Resolution.prototype.$classData = $d_Lcoursier_core_Resolution;
+/** @constructor */
+function $c_Lcoursier_core_ResolutionProcess() {
+  $c_O.call(this)
+}
+$c_Lcoursier_core_ResolutionProcess.prototype = new $h_O();
+$c_Lcoursier_core_ResolutionProcess.prototype.constructor = $c_Lcoursier_core_ResolutionProcess;
+/** @constructor */
+function $h_Lcoursier_core_ResolutionProcess() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_ResolutionProcess.prototype = $c_Lcoursier_core_ResolutionProcess.prototype;
+$c_Lcoursier_core_ResolutionProcess.prototype.productPrefix__T = (function() {
+  return ""
+});
+$c_Lcoursier_core_ResolutionProcess.prototype.run__F1__I__Lcoursier_util_Monad__O = (function(fetch, maxIterations, F) {
+  var _$this = this;
+  _run: while (true) {
+    if ((maxIterations === 0)) {
+      return F.point__O__O(_$this.current__Lcoursier_core_Resolution())
+    } else {
+      var maxIterations0 = ((maxIterations > 0) ? (((-1) + maxIterations) | 0) : maxIterations);
+      var x1 = _$this;
+      if ((x1 instanceof $c_Lcoursier_core_Done)) {
+        var x2 = $as_Lcoursier_core_Done(x1);
+        return F.point__O__O(x2.resolution$2)
+      } else if ((x1 instanceof $c_Lcoursier_core_Missing)) {
+        var x3 = $as_Lcoursier_core_Missing(x1);
+        return F.bind__O__F1__O($m_Lcoursier_core_ResolutionProcess$().fetchAll__sc_Seq__F1__Lcoursier_util_Monad__O(x3.missing$2, fetch, F), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, x3$1, fetch$1, maxIterations0$1, F$1) {
+          return (function(result$2) {
+            var result = $as_sci_Vector(result$2);
+            return x3$1.next0__sc_Seq__Lcoursier_core_ResolutionProcess(result).run__F1__I__Lcoursier_util_Monad__O(fetch$1, maxIterations0$1, F$1)
+          })
+        })(_$this, x3, fetch, maxIterations0, F)))
+      } else if ((x1 instanceof $c_Lcoursier_core_Continue)) {
+        var x4 = $as_Lcoursier_core_Continue(x1);
+        var temp$_$this = x4.nextNoCont__Lcoursier_core_ResolutionProcess();
+        _$this = temp$_$this;
+        maxIterations = maxIterations0;
+        continue _run
+      } else {
+        throw new $c_s_MatchError().init___O(x1)
+      }
+    }
+  }
+});
+$c_Lcoursier_core_ResolutionProcess.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_s_Product$$anon$1().init___s_Product(this)
+});
+function $as_Lcoursier_core_ResolutionProcess(obj) {
+  return (((obj instanceof $c_Lcoursier_core_ResolutionProcess) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.ResolutionProcess"))
+}
+function $isArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_ResolutionProcess)))
+}
+function $asArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) {
+  return (($isArrayOf_Lcoursier_core_ResolutionProcess(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.ResolutionProcess;", depth))
+}
+/** @constructor */
 function $c_Lcoursier_core_SnapshotVersion() {
   $c_O.call(this);
   this.classifier$1 = null;
@@ -51809,528 +51440,6 @@ var $d_Lcoursier_core_Versions$DateTime = new $TypeData().initClass({
   Ljava_io_Serializable: 1
 });
 $c_Lcoursier_core_Versions$DateTime.prototype.$classData = $d_Lcoursier_core_Versions$DateTime;
-/** @constructor */
-function $c_Lcoursier_maven_MavenRepository() {
-  $c_O.call(this);
-  this.root$1 = null;
-  this.changing$1 = null;
-  this.sbtAttrStub$1 = false;
-  this.authentication$1 = null;
-  this.versionsCheckHasModule$1 = false;
-  this.useSaxParser$1 = false
-}
-$c_Lcoursier_maven_MavenRepository.prototype = new $h_O();
-$c_Lcoursier_maven_MavenRepository.prototype.constructor = $c_Lcoursier_maven_MavenRepository;
-/** @constructor */
-function $h_Lcoursier_maven_MavenRepository() {
-  /*<skip>*/
-}
-$h_Lcoursier_maven_MavenRepository.prototype = $c_Lcoursier_maven_MavenRepository.prototype;
-$c_Lcoursier_maven_MavenRepository.prototype.snapshotVersioning__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, fetch, F) {
-  var x1 = this.snapshotVersioningArtifact__Lcoursier_core_Module__T__s_Option(module, version);
-  var x = $m_s_None$();
-  if ((x === x1)) {
-    var jsx$1 = F.point__O__O(($m_s_package$(), new $c_s_util_Left().init___O("Not supported")))
-  } else if ((x1 instanceof $c_s_Some)) {
-    var x2 = $as_s_Some(x1);
-    var artifact = $as_Lcoursier_util_Artifact(x2.value$2);
-    var elem = $as_Lcoursier_util_EitherT(fetch.apply__O__O(artifact)).run$1;
-    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(eitherStr$2) {
-        var eitherStr = $as_s_util_Either(eitherStr$2);
-        var this$2 = new $c_s_util_Either$RightProjection().init___s_util_Either(eitherStr);
-        var x1$1 = this$2.e$1;
-        if ((x1$1 instanceof $c_s_util_Right)) {
-          var x2$1 = $as_s_util_Right(x1$1);
-          var b = x2$1.value$2;
-          var str = $as_T(b);
-          var this$3 = $m_Lcoursier_core_compatibility_package$().xmlParseDom__T__s_util_Either(str);
-          var this$4 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$3);
-          var x1$2 = this$4.e$1;
-          if ((x1$2 instanceof $c_s_util_Right)) {
-            var x2$2 = $as_s_util_Right(x1$2);
-            var b$1 = x2$2.value$2;
-            var xml = $as_Lcoursier_util_Xml$Node(b$1);
-            var this$7 = ((xml.label__T() === "metadata") ? ($m_s_package$(), new $c_s_util_Right().init___O((void 0))) : ($m_s_package$(), new $c_s_util_Left().init___O("Metadata not found")));
-            var this$8 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$7);
-            var x1$3 = this$8.e$1;
-            if ((x1$3 instanceof $c_s_util_Right)) {
-              var x2$3 = $as_s_util_Right(x1$3);
-              var b$2 = x2$3.value$2;
-              $asUnit(b$2);
-              var this$9 = $m_Lcoursier_maven_Pom$().snapshotVersioning__Lcoursier_util_Xml$Node__s_util_Either(xml);
-              var this$10 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$9);
-              var x1$4 = this$10.e$1;
-              if ((x1$4 instanceof $c_s_util_Right)) {
-                var x2$4 = $as_s_util_Right(x1$4);
-                var b$3 = x2$4.value$2;
-                var snapshotVersioning = $as_Lcoursier_core_SnapshotVersioning(b$3);
-                return new $c_s_util_Right().init___O(snapshotVersioning)
-              } else {
-                return this$10.e$1
-              }
-            } else {
-              return this$8.e$1
-            }
-          } else {
-            return this$4.e$1
-          }
-        } else {
-          return this$2.e$1
-        }
-      })
-    })(this));
-    var jsx$1 = $f_Lcoursier_util_Monad__map__O__F1__O(F, elem, f)
-  } else {
-    var jsx$1;
-    throw new $c_s_MatchError().init___O(x1)
-  };
-  return new $c_Lcoursier_util_EitherT().init___O(jsx$1)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.versionsArtifact__p1__Lcoursier_core_Module__Lcoursier_util_Artifact = (function(module) {
-  var x = module.organization$1;
-  var this$2 = new $c_sci_StringOps().init___T(x);
-  var xs = $f_sci_StringLike__split__C__AT(this$2, 46);
-  var this$8 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
-  var jsx$1 = $m_sc_Seq$();
-  var array = [$m_Lcoursier_maven_MavenRepository$().dirModuleName__Lcoursier_core_Module__Z__T(module, this.sbtAttrStub$1), "maven-metadata.xml"];
-  var that = jsx$1.apply__sc_Seq__sc_GenTraversable(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array));
-  var this$7 = $m_sc_Seq$();
-  var bf = this$7.ReusableCBFInstance$2;
-  var path = $as_sc_Seq($f_sc_TraversableLike__$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(this$8, that, bf));
-  var jsx$3 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var jsx$2 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var url = this.urlFor__sc_Seq__Z__T(path, false);
-  var checksumUrls$1 = $m_sci_Map$EmptyMap$();
-  var checksumUrls = $m_sci_Map$EmptyMap$();
-  var extra = $m_sci_Map$EmptyMap$();
-  var authentication = $m_s_None$();
-  var y = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option("", checksumUrls, extra, false, false, authentication);
-  var array$1 = [new $c_T2().init___O__O("cache-errors", y)];
-  var this$18 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-  var i = 0;
-  var len = $uI(array$1.length);
-  while ((i < len)) {
-    var index = i;
-    var arg1 = array$1[index];
-    this$18.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1));
-    i = ((1 + i) | 0)
-  };
-  var extra$1 = $as_sci_Map(this$18.elems$1);
-  var authentication$1 = this.authentication$1;
-  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls$1, extra$1, true, false, authentication$1);
-  var underlying$1 = jsx$2.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
-  var artifact = jsx$3.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1);
-  return artifact
-});
-$c_Lcoursier_maven_MavenRepository.prototype.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, versioningValue, fetch, F) {
-  var projectArtifact0 = this.projectArtifact__Lcoursier_core_Module__T__s_Option__Lcoursier_util_Artifact(module, version, versioningValue);
-  return $as_Lcoursier_util_EitherT(fetch.apply__O__O(projectArtifact0)).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$1, version$1) {
-    return (function(str$2) {
-      var str = $as_T(str$2);
-      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(($this.useSaxParser$1 ? $m_Lcoursier_maven_MavenRepository$().parseRawPomSax__T__s_util_Either(str) : $m_Lcoursier_maven_MavenRepository$().parseRawPomDom__T__s_util_Either(str)))).map__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, version$3) {
-        return (function(proj0$2) {
-          var proj0 = $as_Lcoursier_core_Project(proj0$2);
-          var jsx$3 = $m_Lcoursier_maven_Pom$();
-          var actualVersionOpt = new $c_s_Some().init___O(version$3);
-          var this$1 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(proj0.module$1, proj0.version$1, proj0.dependencies$1, proj0.configurations$1, proj0.parent$1, proj0.dependencyManagement$1, proj0.properties$1, proj0.profiles$1, proj0.versions$1, proj0.snapshotVersioning$1, proj0.packagingOpt$1, proj0.relocated$1, actualVersionOpt, proj0.publications$1, proj0.info$1);
-          var configurations = $m_Lcoursier_maven_MavenRepository$().defaultConfigurations$1;
-          var jsx$2 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$1.module$1, this$1.version$1, this$1.dependencies$1, configurations, this$1.parent$1, this$1.dependencyManagement$1, this$1.properties$1, this$1.profiles$1, this$1.versions$1, this$1.snapshotVersioning$1, this$1.packagingOpt$1, this$1.relocated$1, this$1.actualVersionOpt$1, this$1.publications$1, this$1.info$1);
-          var array = [new $c_Lcoursier_core_Configuration().init___T($m_Lcoursier_core_Configuration$().empty$1), new $c_Lcoursier_core_Configuration().init___T($m_Lcoursier_core_Configuration$().default$1)];
-          if (($uI(array.length) === 0)) {
-            var jsx$1 = $m_sci_Set$EmptySet$()
-          } else {
-            var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_Set$EmptySet$());
-            var i = 0;
-            var len = $uI(array.length);
-            while ((i < len)) {
-              var index = i;
-              var arg1 = array[index];
-              b.$$plus$eq__O__scm_SetBuilder(arg1);
-              i = ((1 + i) | 0)
-            };
-            var jsx$1 = b.elems$1
-          };
-          return jsx$3.addOptionalDependenciesInConfig__Lcoursier_core_Project__sci_Set__T__Lcoursier_core_Project(jsx$2, $as_sci_Set(jsx$1), $m_Lcoursier_core_Configuration$().optional$1)
-        })
-      })($this, version$1)), F$1)
-    })
-  })(this, F, version)), F)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.snapshotVersioningArtifact__Lcoursier_core_Module__T__s_Option = (function(module, version) {
-  var jsx$1 = this.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq(module, version);
-  var this$1 = $m_sc_Seq$();
-  var path = $as_sc_Seq(jsx$1.$$colon$plus__O__scg_CanBuildFrom__O("maven-metadata.xml", this$1.ReusableCBFInstance$2));
-  var jsx$3 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var jsx$2 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var url = this.urlFor__sc_Seq__Z__T(path, false);
-  var checksumUrls = $m_sci_Map$EmptyMap$();
-  var extra = $m_sci_Map$EmptyMap$();
-  var authentication = this.authentication$1;
-  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, true, false, authentication);
-  var underlying$1 = jsx$2.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
-  var artifact = jsx$3.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1);
-  return new $c_s_Some().init___O(artifact)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.equals__O__Z = (function(obj) {
-  if ((obj instanceof $c_Lcoursier_maven_MavenRepository)) {
-    var x2 = $as_Lcoursier_maven_MavenRepository(obj);
-    if ((this.root$1 === x2.root$1)) {
-      var x = this.changing$1;
-      var x$2 = x2.changing$1;
-      var jsx$2 = ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
-    } else {
-      var jsx$2 = false
-    };
-    if ((jsx$2 && (this.sbtAttrStub$1 === x2.sbtAttrStub$1))) {
-      var x$3 = this.authentication$1;
-      var x$4 = x2.authentication$1;
-      var jsx$1 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
-    } else {
-      var jsx$1 = false
-    };
-    if (jsx$1) {
-      return (this.versionsCheckHasModule$1 === x2.versionsCheckHasModule$1)
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-});
-$c_Lcoursier_maven_MavenRepository.prototype.projectArtifact__Lcoursier_core_Module__T__s_Option__Lcoursier_util_Artifact = (function(module, version, versioningValue) {
-  var jsx$3 = this.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq(module, version);
-  var jsx$2 = module.name$1;
-  var jsx$1 = (versioningValue.isEmpty__Z() ? version : versioningValue.get__O());
-  var this$1 = $m_sc_Seq$();
-  var path = $as_sc_Seq(jsx$3.$$colon$plus__O__scg_CanBuildFrom__O((((jsx$2 + "-") + jsx$1) + ".pom"), this$1.ReusableCBFInstance$2));
-  var jsx$5 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var jsx$4 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
-  var url = this.urlFor__sc_Seq__Z__T(path, false);
-  var checksumUrls = $m_sci_Map$EmptyMap$();
-  var extra = $m_sci_Map$EmptyMap$();
-  var this$4 = this.changing$1;
-  var changing = $uZ((this$4.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().isSnapshot__T__Z(version) : this$4.get__O()));
-  var authentication = this.authentication$1;
-  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, changing, false, authentication);
-  var underlying$1 = jsx$4.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
-  return jsx$5.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.toString__T = (function() {
-  return (((((((((("MavenRepository(" + this.root$1) + ", ") + this.changing$1) + ", ") + this.sbtAttrStub$1) + ", ") + this.authentication$1) + ", ") + this.versionsCheckHasModule$1) + ")")
-});
-$c_Lcoursier_maven_MavenRepository.prototype.modulePath__p1__Lcoursier_core_Module__sc_Seq = (function(module) {
-  var x = module.organization$1;
-  var this$2 = new $c_sci_StringOps().init___T(x);
-  var xs = $f_sci_StringLike__split__C__AT(this$2, 46);
-  var this$6 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
-  var elem = $m_Lcoursier_maven_MavenRepository$().dirModuleName__Lcoursier_core_Module__Z__T(module, this.sbtAttrStub$1);
-  var this$5 = $m_sc_Seq$();
-  var bf = this$5.ReusableCBFInstance$2;
-  return $as_sc_Seq($f_sc_SeqLike__$$colon$plus__O__scg_CanBuildFrom__O(this$6, elem, bf))
-});
-$c_Lcoursier_maven_MavenRepository.prototype.withSnapshotVersioning$1__p1__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module$1, version$2, fetch$1, F$2) {
-  return this.snapshotVersioning__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, version$2, fetch$1, F$2).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$2$1, module$1$1, version$2$1, fetch$1$1) {
-    return (function(snapshotVersioning$2) {
-      var snapshotVersioning = $as_Lcoursier_core_SnapshotVersioning(snapshotVersioning$2);
-      var this$1 = $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().jar$1);
-      var this$2 = (this$1.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().pom$1) : this$1);
-      var versioningOption = (this$2.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().empty$1) : this$2);
-      var x = $m_s_None$();
-      if ((x === versioningOption)) {
-        return new $c_Lcoursier_util_EitherT().init___O(F$2$1.point__O__O(($m_s_package$(), new $c_s_util_Left().init___O("No snapshot versioning value found"))))
-      } else if ((versioningOption instanceof $c_s_Some)) {
-        var x2 = $as_s_Some(versioningOption);
-        return $this.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$1, version$2$1, x2, fetch$1$1, F$2$1).map__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, snapshotVersioning$1) {
-          return (function(x$8$2) {
-            var x$8 = $as_Lcoursier_core_Project(x$8$2);
-            var snapshotVersioning$3 = new $c_s_Some().init___O(snapshotVersioning$1);
-            return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(x$8.module$1, x$8.version$1, x$8.dependencies$1, x$8.configurations$1, x$8.parent$1, x$8.dependencyManagement$1, x$8.properties$1, x$8.profiles$1, x$8.versions$1, snapshotVersioning$3, x$8.packagingOpt$1, x$8.relocated$1, x$8.actualVersionOpt$1, x$8.publications$1, x$8.info$1)
-          })
-        })($this, snapshotVersioning)), F$2$1)
-      } else {
-        throw new $c_s_MatchError().init___O(versioningOption)
-      }
-    })
-  })(this, F$2, module$1, version$2, fetch$1)), F$2)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.copy0__p1__T__s_Option__Z__s_Option__Z__Lcoursier_maven_MavenRepository = (function(root, changing, sbtAttrStub, authentication, versionsCheckHasModule) {
-  return new $c_Lcoursier_maven_MavenRepository().init___T__s_Option__Z__s_Option__Z($m_Lcoursier_maven_MavenRepository$().coursier$maven$MavenRepository$$actualRoot__T__T(root), changing, sbtAttrStub, authentication, versionsCheckHasModule)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.init___T__s_Option__Z__s_Option__Z = (function(root, changing, sbtAttrStub, authentication, versionsCheckHasModule) {
-  this.root$1 = root;
-  this.changing$1 = changing;
-  this.sbtAttrStub$1 = sbtAttrStub;
-  this.authentication$1 = authentication;
-  this.versionsCheckHasModule$1 = versionsCheckHasModule;
-  this.useSaxParser$1 = true;
-  return this
-});
-$c_Lcoursier_maven_MavenRepository.prototype.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq = (function(module, version) {
-  var jsx$2 = this.modulePath__p1__Lcoursier_core_Module__sc_Seq(module);
-  var jsx$1 = $m_Lcoursier_maven_MavenRepository$().toBaseVersion__T__T(version);
-  var this$1 = $m_sc_Seq$();
-  return $as_sc_Seq(jsx$2.$$colon$plus__O__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
-});
-$c_Lcoursier_maven_MavenRepository.prototype.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, fetch, F) {
-  var res = F.bind__O__F1__O(this.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module, version, $m_s_None$(), fetch, F).run$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, version$1, F$1, module$1, fetch$1) {
-    return (function(eitherProj$2) {
-      var eitherProj = $as_s_util_Either(eitherProj$2);
-      if ((eitherProj.isLeft__Z() && $m_Lcoursier_maven_MavenRepository$().isSnapshot__T__Z(version$1))) {
-        var elem = $this.withSnapshotVersioning$1__p1__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, version$1, fetch$1, F$1).run$1;
-        var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, eitherProj$1) {
-          return (function(eitherProj0$2) {
-            var eitherProj0 = $as_s_util_Either(eitherProj0$2);
-            return (eitherProj0.isLeft__Z() ? eitherProj$1 : eitherProj0)
-          })
-        })($this, eitherProj));
-        return $f_Lcoursier_util_Monad__map__O__F1__O(F$1, elem, f)
-      } else {
-        return F$1.point__O__O(eitherProj)
-      }
-    })
-  })(this, version, F, module, fetch)));
-  var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, version$2) {
-    return (function(x$9$2) {
-      var x$9 = $as_s_util_Either(x$9$2);
-      var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(x$9);
-      var x1 = this$1.e$1;
-      if ((x1 instanceof $c_s_util_Right)) {
-        var x2 = $as_s_util_Right(x1);
-        var b = x2.value$2;
-        var proj = $as_Lcoursier_core_Project(b);
-        var actualVersionOpt = new $c_s_Some().init___O(version$2);
-        return new $c_s_util_Right().init___O(new $c_T2().init___O__O(this$2, new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(proj.module$1, proj.version$1, proj.dependencies$1, proj.configurations$1, proj.parent$1, proj.dependencyManagement$1, proj.properties$1, proj.profiles$1, proj.versions$1, proj.snapshotVersioning$1, proj.packagingOpt$1, proj.relocated$1, actualVersionOpt, proj.publications$1, proj.info$1)))
-      } else {
-        return this$1.e$1
-      }
-    })
-  })(this, version));
-  return new $c_Lcoursier_util_EitherT().init___O($f_Lcoursier_util_Monad__map__O__F1__O(F, res, f$1))
-});
-$c_Lcoursier_maven_MavenRepository.prototype.fetchVersions__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, fetch, F) {
-  var artifact = this.versionsArtifact__p1__Lcoursier_core_Module__Lcoursier_util_Artifact(module);
-  var elem = $as_Lcoursier_util_EitherT(fetch.apply__O__O(artifact)).run$1;
-  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, artifact$1) {
-    return (function(eitherStr$2) {
-      var eitherStr = $as_s_util_Either(eitherStr$2);
-      var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(eitherStr);
-      var x1 = this$1.e$1;
-      if ((x1 instanceof $c_s_util_Right)) {
-        var x2 = $as_s_util_Right(x1);
-        var b = x2.value$2;
-        var str = $as_T(b);
-        var this$2 = $m_Lcoursier_core_compatibility_package$().xmlParseDom__T__s_util_Either(str);
-        var this$3 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$2);
-        var x1$1 = this$3.e$1;
-        if ((x1$1 instanceof $c_s_util_Right)) {
-          var x2$1 = $as_s_util_Right(x1$1);
-          var b$1 = x2$1.value$2;
-          var xml = $as_Lcoursier_util_Xml$Node(b$1);
-          var this$6 = ((xml.label__T() === "metadata") ? ($m_s_package$(), new $c_s_util_Right().init___O((void 0))) : ($m_s_package$(), new $c_s_util_Left().init___O("Metadata not found")));
-          var this$7 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$6);
-          var x1$2 = this$7.e$1;
-          if ((x1$2 instanceof $c_s_util_Right)) {
-            var x2$2 = $as_s_util_Right(x1$2);
-            var b$2 = x2$2.value$2;
-            $asUnit(b$2);
-            var this$8 = $m_Lcoursier_maven_Pom$().versions__Lcoursier_util_Xml$Node__s_util_Either(xml);
-            var this$9 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$8);
-            var x1$3 = this$9.e$1;
-            if ((x1$3 instanceof $c_s_util_Right)) {
-              var x2$3 = $as_s_util_Right(x1$3);
-              var b$3 = x2$3.value$2;
-              var versions = $as_Lcoursier_core_Versions(b$3);
-              return new $c_s_util_Right().init___O(new $c_T2().init___O__O(versions, artifact$1.url$1))
-            } else {
-              return this$9.e$1
-            }
-          } else {
-            return this$7.e$1
-          }
-        } else {
-          return this$3.e$1
-        }
-      } else {
-        return this$1.e$1
-      }
-    })
-  })(this, artifact));
-  var viaMetadata = new $c_Lcoursier_util_EitherT().init___O($f_Lcoursier_util_Monad__map__O__F1__O(F, elem, f));
-  var this$10 = this.changing$1;
-  if (this$10.isEmpty__Z()) {
-    var jsx$1 = true
-  } else {
-    var arg1 = this$10.get__O();
-    var x$7 = $uZ(arg1);
-    var jsx$1 = (!x$7)
-  };
-  if (((jsx$1 && module.attributes$1.contains__O__Z("scalaVersion")) && module.attributes$1.contains__O__Z("sbtVersion"))) {
-    return this.versionsFromListing__p1__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module, fetch, F).orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3$1, viaMetadata$1) {
-      return (function() {
-        return viaMetadata$1
-      })
-    })(this, viaMetadata)), F)
-  } else {
-    return viaMetadata
-  }
-});
-$c_Lcoursier_maven_MavenRepository.prototype.artifactFor__T__Z__Lcoursier_util_Artifact = (function(url, changing) {
-  var checksumUrls = $m_sci_Map$EmptyMap$();
-  var extra = $m_sci_Map$EmptyMap$();
-  var authentication = this.authentication$1;
-  return new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, changing, false, authentication)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.hashCode__I = (function() {
-  var code = ((17 + $m_sr_Statics$().anyHash__O__I("coursier.maven.MavenRepository")) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.root$1)) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.changing$1)) | 0);
-  code = (($imul(37, code) + (this.sbtAttrStub$1 ? 1231 : 1237)) | 0);
-  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.authentication$1)) | 0);
-  code = (($imul(37, code) + (this.versionsCheckHasModule$1 ? 1231 : 1237)) | 0);
-  return $imul(37, code)
-});
-$c_Lcoursier_maven_MavenRepository.prototype.completeOpt__F1__Lcoursier_util_Monad__s_Some = (function(fetch, evidence$1) {
-  return new $c_s_Some().init___O(new $c_Lcoursier_maven_MavenComplete().init___Lcoursier_maven_MavenRepository__F1__Lcoursier_util_Monad(this, fetch, evidence$1))
-});
-$c_Lcoursier_maven_MavenRepository.prototype.urlFor__sc_Seq__Z__T = (function(path, isDir) {
-  var b = new $c_scm_StringBuilder().init___T(this.root$1);
-  b.$$plus$eq__C__scm_StringBuilder(47);
-  var it = path.iterator__sc_Iterator();
-  var isFirst = true;
-  while (it.hasNext__Z()) {
-    if ((!isDir)) {
-      if (isFirst) {
-        isFirst = false
-      } else {
-        b.$$plus$eq__C__scm_StringBuilder(47)
-      }
-    };
-    b.$$plus$plus$eq__T__scm_StringBuilder($as_T(it.next__O()));
-    if (isDir) {
-      b.$$plus$eq__C__scm_StringBuilder(47)
-    }
-  };
-  return b.underlying$5.java$lang$StringBuilder$$content$f
-});
-$c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, fetch, F) {
-  var listingUrl = (this.urlFor__sc_Seq__Z__T(this.modulePath__p1__Lcoursier_core_Module__sc_Seq(module), false) + "/");
-  var listingArtifact = this.artifactFor__T__Z__Lcoursier_util_Artifact(listingUrl, true);
-  return $as_Lcoursier_util_EitherT(fetch.apply__O__O(listingArtifact)).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, listingUrl$1, F$1) {
-    return (function(listing$2) {
-      var listing = $as_T(listing$2);
-      var this$1 = $m_Lcoursier_util_WebPage$().listFiles__T__T__sc_Iterator(listingUrl$1, listing);
-      $m_sci_Vector$();
-      var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
-      var files = $as_sci_Vector($f_sc_TraversableOnce__to__scg_CanBuildFrom__O(this$1, cbf));
-      var this$3 = $m_Lcoursier_util_WebPage$().listDirectories__T__T__sc_Iterator(listingUrl$1, listing);
-      $m_sci_Vector$();
-      var cbf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
-      var rawVersions = $as_sci_Vector($f_sc_TraversableOnce__to__scg_CanBuildFrom__O(this$3, cbf$1));
-      if ($f_sc_SeqLike__contains__O__Z(files, "maven-metadata.xml")) {
-        $m_s_package$();
-        var res$1 = new $c_s_util_Left().init___O("maven-metadata.xml found, not listing version from directory listing")
-      } else if ($f_sc_SeqLike__isEmpty__Z(rawVersions)) {
-        $m_s_package$();
-        var value = ("No versions found at " + listingUrl$1);
-        var res$1 = new $c_s_util_Left().init___O(value)
-      } else {
-        $m_sci_Vector$();
-        var bf = $m_sc_IndexedSeq$().ReusableCBF$6;
-        var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(rawVersions, bf);
-        var this$8 = rawVersions.iterator__sci_VectorIterator();
-        while (this$8.$$undhasNext$2) {
-          var arg1 = this$8.next__O();
-          var x$3 = $as_T(arg1);
-          b.$$plus$eq__O__scm_Builder(new $c_Lcoursier_core_Version().init___T(x$3))
-        };
-        var parsedVersions = $as_sci_Vector(b.result__O());
-        $m_sci_Vector$();
-        var b$1 = new $c_sci_VectorBuilder().init___();
-        var this$10 = parsedVersions.iterator__sci_VectorIterator();
-        while (this$10.$$undhasNext$2) {
-          var arg1$1 = this$10.next__O();
-          var x$4 = $as_Lcoursier_core_Version(arg1$1);
-          var this$11 = x$4.items__sci_Vector();
-          var this$12 = this$11.iterator__sci_VectorIterator();
-          var res = true;
-          while ((res && this$12.$$undhasNext$2)) {
-            var arg1$2 = this$12.next__O();
-            var x0$1 = $as_Lcoursier_core_Version$Item(arg1$2);
-            if ((!(x0$1 instanceof $c_Lcoursier_core_Version$Tag))) {
-              res = true
-            } else {
-              var x2 = $as_Lcoursier_core_Version$Tag(x0$1);
-              res = (!x2.isPreRelease__Z())
-            }
-          };
-          if ((res !== false)) {
-            b$1.$$plus$eq__O__sci_VectorBuilder(arg1$1)
-          }
-        };
-        var nonPreVersions = b$1.result__sci_Vector();
-        if ($f_sc_SeqLike__isEmpty__Z(nonPreVersions)) {
-          $m_s_package$();
-          var value$1 = ("Found only pre-versions at " + listingUrl$1);
-          var res$1 = new $c_s_util_Left().init___O(value$1)
-        } else {
-          var this$14 = $m_s_math_Ordering$();
-          var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-          var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$14, evidence$1);
-          var latest = $as_Lcoursier_core_Version($f_sc_TraversableOnce__max__s_math_Ordering__O(nonPreVersions, cmp));
-          $m_s_package$();
-          $m_Lcoursier_core_Versions$();
-          var latest$1 = latest.repr$1;
-          var release = latest.repr$1;
-          $m_sci_Vector$();
-          var bf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
-          var b$2 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(nonPreVersions, bf$1);
-          var this$16 = nonPreVersions.iterator__sci_VectorIterator();
-          while (this$16.$$undhasNext$2) {
-            var arg1$3 = this$16.next__O();
-            var x$5 = $as_Lcoursier_core_Version(arg1$3);
-            b$2.$$plus$eq__O__scm_Builder(x$5.repr$1)
-          };
-          var available = $as_sc_TraversableOnce(b$2.result__O()).toList__sci_List();
-          var lastUpdated = $m_s_None$();
-          var value$2 = new $c_Lcoursier_core_Versions().init___T__T__sci_List__s_Option(latest$1, release, available, lastUpdated);
-          var res$1 = new $c_s_util_Right().init___O(value$2)
-        }
-      };
-      var this$19 = new $c_s_util_Either$RightProjection().init___s_util_Either(res$1);
-      var x1 = this$19.e$1;
-      if ((x1 instanceof $c_s_util_Right)) {
-        var x2$1 = $as_s_util_Right(x1);
-        var b$3 = x2$1.value$2;
-        var x$6 = $as_Lcoursier_core_Versions(b$3);
-        var jsx$1 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(x$6, listingUrl$1))
-      } else {
-        var jsx$1 = this$19.e$1
-      };
-      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(jsx$1))
-    })
-  })(this, listingUrl, F)), F)
-});
-function $as_Lcoursier_maven_MavenRepository(obj) {
-  return (((obj instanceof $c_Lcoursier_maven_MavenRepository) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.maven.MavenRepository"))
-}
-function $isArrayOf_Lcoursier_maven_MavenRepository(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_maven_MavenRepository)))
-}
-function $asArrayOf_Lcoursier_maven_MavenRepository(obj, depth) {
-  return (($isArrayOf_Lcoursier_maven_MavenRepository(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.maven.MavenRepository;", depth))
-}
-var $d_Lcoursier_maven_MavenRepository = new $TypeData().initClass({
-  Lcoursier_maven_MavenRepository: 0
-}, false, "coursier.maven.MavenRepository", {
-  Lcoursier_maven_MavenRepository: 1,
-  O: 1,
-  Lcoursier_core_Repository: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1,
-  Lcoursier_core_ArtifactSource: 1
-});
-$c_Lcoursier_maven_MavenRepository.prototype.$classData = $d_Lcoursier_maven_MavenRepository;
 /** @constructor */
 function $c_Lcoursier_util_Artifact() {
   $c_O.call(this);
@@ -56244,6 +55353,197 @@ var $d_Lcoursier_cache_AlwaysDownload$$anonfun$$nestedInanonfun$fetch$2$1 = new 
 });
 $c_Lcoursier_cache_AlwaysDownload$$anonfun$$nestedInanonfun$fetch$2$1.prototype.$classData = $d_Lcoursier_cache_AlwaysDownload$$anonfun$$nestedInanonfun$fetch$2$1;
 /** @constructor */
+function $c_Lcoursier_core_Continue() {
+  $c_Lcoursier_core_ResolutionProcess.call(this);
+  this.current$2 = null;
+  this.cont$2 = null
+}
+$c_Lcoursier_core_Continue.prototype = new $h_Lcoursier_core_ResolutionProcess();
+$c_Lcoursier_core_Continue.prototype.constructor = $c_Lcoursier_core_Continue;
+/** @constructor */
+function $h_Lcoursier_core_Continue() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_Continue.prototype = $c_Lcoursier_core_Continue.prototype;
+$c_Lcoursier_core_Continue.prototype.init___Lcoursier_core_Resolution__F1 = (function(current, cont) {
+  this.current$2 = current;
+  this.cont$2 = cont;
+  return this
+});
+$c_Lcoursier_core_Continue.prototype.productArity__I = (function() {
+  return 2
+});
+$c_Lcoursier_core_Continue.prototype.nextNoCont__Lcoursier_core_ResolutionProcess = (function() {
+  var _$this = this;
+  _nextNoCont: while (true) {
+    var this$1 = _$this;
+    var x1 = $as_Lcoursier_core_ResolutionProcess(this$1.cont$2.apply__O__O(this$1.current$2));
+    if ((x1 instanceof $c_Lcoursier_core_Continue)) {
+      var x2 = $as_Lcoursier_core_Continue(x1);
+      _$this = x2;
+      continue _nextNoCont
+    } else {
+      return x1
+    }
+  }
+});
+$c_Lcoursier_core_Continue.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Continue(obj);
+    var x = this.current$2;
+    var x$2 = other.current$2;
+    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
+      var x$3 = this.cont$2;
+      var x$4 = other.cont$2;
+      return ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
+    } else {
+      return false
+    }
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_core_Continue.prototype.productElement__I__O = (function(n) {
+  switch (n) {
+    case 0: {
+      return this.current$2;
+      break
+    }
+    case 1: {
+      return this.cont$2;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+});
+$c_Lcoursier_core_Continue.prototype.toString__T = (function() {
+  var b = new $c_jl_StringBuilder().init___T("Continue(");
+  var obj = this.current$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.cont$2;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Continue.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Continue))
+});
+$c_Lcoursier_core_Continue.prototype.hashCode__I = (function() {
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Continue")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.current$2)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.cont$2)) | 0);
+  return $imul(37, code)
+});
+$c_Lcoursier_core_Continue.prototype.current__Lcoursier_core_Resolution = (function() {
+  return this.current$2
+});
+function $as_Lcoursier_core_Continue(obj) {
+  return (((obj instanceof $c_Lcoursier_core_Continue) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Continue"))
+}
+function $isArrayOf_Lcoursier_core_Continue(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Continue)))
+}
+function $asArrayOf_Lcoursier_core_Continue(obj, depth) {
+  return (($isArrayOf_Lcoursier_core_Continue(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Continue;", depth))
+}
+var $d_Lcoursier_core_Continue = new $TypeData().initClass({
+  Lcoursier_core_Continue: 0
+}, false, "coursier.core.Continue", {
+  Lcoursier_core_Continue: 1,
+  Lcoursier_core_ResolutionProcess: 1,
+  O: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lcoursier_core_Continue.prototype.$classData = $d_Lcoursier_core_Continue;
+/** @constructor */
+function $c_Lcoursier_core_Done() {
+  $c_Lcoursier_core_ResolutionProcess.call(this);
+  this.resolution$2 = null
+}
+$c_Lcoursier_core_Done.prototype = new $h_Lcoursier_core_ResolutionProcess();
+$c_Lcoursier_core_Done.prototype.constructor = $c_Lcoursier_core_Done;
+/** @constructor */
+function $h_Lcoursier_core_Done() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_Done.prototype = $c_Lcoursier_core_Done.prototype;
+$c_Lcoursier_core_Done.prototype.productArity__I = (function() {
+  return 1
+});
+$c_Lcoursier_core_Done.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Done(obj);
+    var x = this.resolution$2;
+    var x$2 = other.resolution$2;
+    return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_core_Done.prototype.productElement__I__O = (function(n) {
+  switch (n) {
+    case 0: {
+      return this.resolution$2;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+});
+$c_Lcoursier_core_Done.prototype.toString__T = (function() {
+  var b = new $c_jl_StringBuilder().init___T("Done(");
+  var obj = this.resolution$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Done.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Done))
+});
+$c_Lcoursier_core_Done.prototype.init___Lcoursier_core_Resolution = (function(resolution) {
+  this.resolution$2 = resolution;
+  return this
+});
+$c_Lcoursier_core_Done.prototype.hashCode__I = (function() {
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Done")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.resolution$2)) | 0);
+  return $imul(37, code)
+});
+$c_Lcoursier_core_Done.prototype.current__Lcoursier_core_Resolution = (function() {
+  return this.resolution$2
+});
+function $as_Lcoursier_core_Done(obj) {
+  return (((obj instanceof $c_Lcoursier_core_Done) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Done"))
+}
+function $isArrayOf_Lcoursier_core_Done(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Done)))
+}
+function $asArrayOf_Lcoursier_core_Done(obj, depth) {
+  return (($isArrayOf_Lcoursier_core_Done(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Done;", depth))
+}
+var $d_Lcoursier_core_Done = new $TypeData().initClass({
+  Lcoursier_core_Done: 0
+}, false, "coursier.core.Done", {
+  Lcoursier_core_Done: 1,
+  Lcoursier_core_ResolutionProcess: 1,
+  O: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lcoursier_core_Done.prototype.$classData = $d_Lcoursier_core_Done;
+/** @constructor */
 function $c_Lcoursier_core_Latest$Integration$() {
   $c_Lcoursier_core_Latest.call(this)
 }
@@ -56399,6 +55699,410 @@ function $m_Lcoursier_core_Latest$Stable$() {
   };
   return $n_Lcoursier_core_Latest$Stable$
 }
+/** @constructor */
+function $c_Lcoursier_core_Missing() {
+  $c_Lcoursier_core_ResolutionProcess.call(this);
+  this.missing$2 = null;
+  this.current$2 = null;
+  this.cont$2 = null
+}
+$c_Lcoursier_core_Missing.prototype = new $h_Lcoursier_core_ResolutionProcess();
+$c_Lcoursier_core_Missing.prototype.constructor = $c_Lcoursier_core_Missing;
+/** @constructor */
+function $h_Lcoursier_core_Missing() {
+  /*<skip>*/
+}
+$h_Lcoursier_core_Missing.prototype = $c_Lcoursier_core_Missing.prototype;
+$c_Lcoursier_core_Missing.prototype.order$1__p2__sci_Map__sci_List__sci_List = (function(map, acc) {
+  _order: while (true) {
+    if (map.isEmpty__Z()) {
+      return acc.reverse__sci_List()
+    } else {
+      var this$2 = map;
+      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+        return (function(x$5$2) {
+          var x$5 = $as_T2(x$5$2);
+          return $as_sc_TraversableOnce(x$5.$$und2__O()).size__I()
+        })
+      })(this));
+      var this$1 = $m_sci_Iterable$();
+      var bf = this$1.ReusableCBFInstance$2;
+      var min = $uI($as_sc_TraversableOnce($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf)).min__s_math_Ordering__O($m_s_math_Ordering$Int$()));
+      var this$3 = map;
+      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, min$1) {
+        return (function(x0$1$2) {
+          var x0$1 = $as_T2(x0$1$2);
+          if ((x0$1 !== null)) {
+            var v = $as_sci_Set(x0$1.$$und2__O());
+            return (v.size__I() === min$1)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$1)
+          }
+        })
+      })(this, min));
+      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
+      if ((x1 === null)) {
+        throw new $c_s_MatchError().init___O(x1)
+      };
+      var toAdd = $as_sci_Map(x1.$$und1__O());
+      var remaining = $as_sci_Map(x1.$$und2__O());
+      var this$4 = toAdd.keySet__sc_Set();
+      var z = acc;
+      var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1) {
+        return (function(x$7$2, x$8$2) {
+          var x$7 = $as_sci_List(x$7$2);
+          var x$8 = $as_T2(x$8$2);
+          return new $c_sci_$colon$colon().init___O__sci_List(x$8, x$7)
+        })
+      })(this));
+      var acc0 = $as_sci_List($f_sc_TraversableOnce__foldLeft__O__F2__O(this$4, z, op));
+      var this$6 = remaining.keySet__sci_Set();
+      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+        return (function(x$9$2) {
+          var x$9 = $as_T2(x$9$2);
+          return $as_T2(x$9.$$und1__O())
+        })
+      })(this));
+      var this$5 = $m_sci_Set$();
+      var bf$1 = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$5);
+      var remainingKeys = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$6, f$1, bf$1));
+      var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1, remainingKeys$1) {
+        return (function(x0$2$2) {
+          var x0$2 = $as_T2(x0$2$2);
+          if ((x0$2 !== null)) {
+            var k = $as_T2(x0$2.$$und1__O());
+            var v$1 = $as_sci_Set(x0$2.$$und2__O());
+            var y = v$1.intersect__sc_GenSet__O(remainingKeys$1);
+            return new $c_T2().init___O__O(k, y)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$2)
+          }
+        })
+      })(this, remainingKeys));
+      var this$9 = $m_sci_Map$();
+      var bf$2 = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$9);
+      var map0 = $as_sci_Map($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(remaining, f$2, bf$2));
+      map = map0;
+      acc = acc0;
+      continue _order
+    }
+  }
+});
+$c_Lcoursier_core_Missing.prototype.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess = (function(res, successes$1) {
+  var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, res$1) {
+    return (function(x0$1$2) {
+      var x0$1 = $as_T2(x0$1$2);
+      if ((x0$1 !== null)) {
+        var modVer = $as_T2(x0$1.$$und1__O());
+        return (!res$1.projectCache$1.contains__O__Z(modVer))
+      } else {
+        throw new $c_s_MatchError().init___O(x0$1)
+      }
+    })
+  })(this, res));
+  var remainingSuccesses = $as_sc_Seq(successes$1.filterImpl__F1__Z__O(p, false));
+  var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, res$2) {
+    return (function(x0$2$2) {
+      var x0$2 = $as_T2(x0$2$2);
+      if ((x0$2 !== null)) {
+        var p3 = $as_T2(x0$2.$$und2__O());
+        if ((p3 !== null)) {
+          var proj = $as_Lcoursier_core_Project(p3.$$und2__O());
+          var y = res$2.dependencyManagementMissing__Lcoursier_core_Project__sci_Set(proj);
+          return new $c_T2().init___O__O(x0$2, y)
+        }
+      };
+      throw new $c_s_MatchError().init___O(x0$2)
+    })
+  })(this, res));
+  var this$4 = $m_sc_Seq$();
+  var depMgmtMissing0 = $as_sc_Seq(remainingSuccesses.map__F1__scg_CanBuildFrom__O(jsx$1, this$4.ReusableCBFInstance$2));
+  var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
+    return (function(x$1$2) {
+      var x$1 = $as_T2(x$1$2);
+      return $as_sci_Set(x$1.$$und2__O())
+    })
+  })(this));
+  var this$5 = $m_sc_Seq$();
+  var this$7 = $as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$2, this$5.ReusableCBFInstance$2));
+  var z = $m_sci_Set$EmptySet$();
+  var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$4$1) {
+    return (function(x$2$2, x$3$2) {
+      var x$2 = $as_sci_Set(x$2$2);
+      var x$3 = $as_sci_Set(x$3$2);
+      return $as_sci_Set(x$2.$$plus$plus__sc_GenTraversableOnce__sc_Set(x$3))
+    })
+  })(this));
+  var depMgmtMissing = $as_sci_Set(this$7.foldLeft__O__F2__O(z, op));
+  if (depMgmtMissing.isEmpty__Z()) {
+    var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
+      return (function(x$4$2) {
+        var x$4 = $as_T2(x$4$2);
+        return $as_T2($as_T2(x$4.$$und1__O()).$$und1__O())
+      })
+    })(this));
+    var this$8 = $m_sc_Seq$();
+    var modVer$1 = $as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$3, this$8.ReusableCBFInstance$2)).toSet__sci_Set();
+    var jsx$4 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$6$1, modVer$2) {
+      return (function(x0$3$2) {
+        var x0$3 = $as_T2(x0$3$2);
+        if ((x0$3 !== null)) {
+          var k = $as_T2(x0$3.$$und1__O());
+          var v = $as_sci_Set(x0$3.$$und2__O());
+          var y$1 = v.intersect__sc_GenSet__O(modVer$2);
+          return new $c_T2().init___O__O(k, y$1)
+        } else {
+          throw new $c_s_MatchError().init___O(x0$3)
+        }
+      })
+    })(this, modVer$1));
+    var this$11 = $m_sc_Seq$();
+    var orderedSuccesses = this.order$1__p2__sci_Map__sci_List__sci_List($as_sc_TraversableOnce(depMgmtMissing0.map__F1__scg_CanBuildFrom__O(jsx$4, this$11.ReusableCBFInstance$2)).toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2), $m_sci_Nil$());
+    var acc = res;
+    var these = orderedSuccesses;
+    while ((!these.isEmpty__Z())) {
+      var arg1 = acc;
+      var arg2 = these.head__O();
+      var x0$4 = $as_Lcoursier_core_Resolution(arg1);
+      var x1$1 = $as_T2(arg2);
+      var x1 = new $c_T2().init___O__O(x0$4, x1$1);
+      matchEnd5: {
+        var acc$1 = $as_Lcoursier_core_Resolution(x1.$$und1$f);
+        var p2 = $as_T2(x1.$$und2$f);
+        if ((p2 !== null)) {
+          var modVer0 = $as_T2(p2.$$und1__O());
+          var p3$1 = $as_T2(p2.$$und2__O());
+          if ((p3$1 !== null)) {
+            var source = $as_Lcoursier_core_ArtifactSource(p3$1.$$und1__O());
+            var proj$1 = $as_Lcoursier_core_Project(p3$1.$$und2__O());
+            var y$2 = new $c_T2().init___O__O(source, proj$1);
+            var array = [new $c_T2().init___O__O(modVer0, y$2)];
+            var pf = new $c_Lcoursier_core_Resolution$$anonfun$3().init___Lcoursier_core_Resolution(acc$1);
+            $m_sc_Seq$();
+            $m_sjs_js_WrappedArray$();
+            var array$1 = [];
+            var i = 0;
+            var len = $uI(array.length);
+            while ((i < len)) {
+              var index = i;
+              var arg1$1 = array[index];
+              var $default = $m_s_PartialFunction$().scala$PartialFunction$$fallback$undpf$f;
+              var z$1 = pf.applyOrElse__T2__F1__O($as_T2(arg1$1), $default);
+              if ((!$m_s_PartialFunction$().scala$PartialFunction$$fallbackOccurred__O__Z(z$1))) {
+                array$1.push(z$1)
+              };
+              i = ((1 + i) | 0)
+            };
+            var assertion = ($uI(array$1.length) === 0);
+            if ((!assertion)) {
+              var b = new $c_scm_StringBuilder().init___();
+              var elem$1 = false;
+              elem$1 = true;
+              b.append__T__scm_StringBuilder("");
+              var i$1 = 0;
+              var len$1 = $uI(array$1.length);
+              while ((i$1 < len$1)) {
+                var index$1 = i$1;
+                var arg1$2 = array$1[index$1];
+                if (elem$1) {
+                  b.append__O__scm_StringBuilder(arg1$2);
+                  elem$1 = false
+                } else {
+                  b.append__T__scm_StringBuilder(", ");
+                  b.append__O__scm_StringBuilder(arg1$2)
+                };
+                i$1 = ((1 + i$1) | 0)
+              };
+              b.append__T__scm_StringBuilder("");
+              throw new $c_jl_AssertionError().init___O((("assertion failed: " + "Projects already added in resolution: ") + b.underlying$5.java$lang$StringBuilder$$content$f))
+            };
+            var jsx$5 = acc$1.finalDependenciesCache$1;
+            var this$20 = $m_sc_JavaConverters$();
+            var m = acc$1.finalDependenciesCache0$1;
+            var finalDependenciesCache = jsx$5.$$plus$plus__sc_GenTraversableOnce__sci_Map($as_sc_GenTraversableOnce($f_sc_convert_DecorateAsScala__mapAsScalaConcurrentMapConverter__ju_concurrent_ConcurrentMap__sc_convert_Decorators$AsScala(this$20, m).asScala__O()));
+            var this$26 = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(acc$1.rootDependencies$1, acc$1.dependencySet$1, acc$1.forceVersions$1, acc$1.conflicts$1, acc$1.projectCache$1, acc$1.errorCache$1, finalDependenciesCache, acc$1.filter$1, acc$1.reconciliation$1, acc$1.osInfo$1, acc$1.jdkVersion$1, acc$1.userActivations$1, acc$1.mapDependencies$1, acc$1.extraProperties$1, acc$1.forceProperties$1, acc$1.defaultConfiguration$1);
+            var jsx$10 = acc$1.projectCache$1;
+            $m_sc_Seq$();
+            $m_sjs_js_WrappedArray$();
+            var b$1 = new $c_sjs_js_WrappedArray().init___();
+            var x1$2 = $uI(array.length);
+            switch (x1$2) {
+              case (-1): {
+                break
+              }
+            };
+            var i$2 = 0;
+            var len$2 = $uI(array.length);
+            while ((i$2 < len$2)) {
+              var index$2 = i$2;
+              var arg1$3 = array[index$2];
+              var x0$1$1 = $as_T2(arg1$3);
+              matchEnd4$1: {
+                var elem;
+                if ((x0$1$1 !== null)) {
+                  var modVer$3 = $as_T2(x0$1$1.$$und1__O());
+                  var p2$1 = $as_T2(x0$1$1.$$und2__O());
+                  if ((p2$1 !== null)) {
+                    var s = $as_Lcoursier_core_ArtifactSource(p2$1.$$und1__O());
+                    var p$1 = $as_Lcoursier_core_Project(p2$1.$$und2__O());
+                    var jsx$9 = acc$1.extraProperties$1;
+                    var this$23 = p$1.properties$1;
+                    var p$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
+                      return (function(kv$2) {
+                        var kv = $as_T2(kv$2);
+                        return (!$this$1.forceProperties$1.contains__O__Z(kv.$$und1__O()))
+                      })
+                    })(acc$1));
+                    var jsx$8 = $as_sc_GenTraversableOnce(this$23.filterImpl__F1__Z__O(p$2, false));
+                    var this$24 = $m_sc_Seq$();
+                    var jsx$7 = $as_sc_TraversableLike(jsx$9.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$8, this$24.ReusableCBFInstance$2));
+                    var jsx$6 = acc$1.forceProperties$1;
+                    var this$25 = $m_sc_Seq$();
+                    var properties = $as_sc_Seq(jsx$7.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$6, this$25.ReusableCBFInstance$2));
+                    var p0 = acc$1.withDependencyManagement__Lcoursier_core_Project__Lcoursier_core_Project(new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(p$1.module$1, p$1.version$1, p$1.dependencies$1, p$1.configurations$1, p$1.parent$1, p$1.dependencyManagement$1, properties, p$1.profiles$1, p$1.versions$1, p$1.snapshotVersioning$1, p$1.packagingOpt$1, p$1.relocated$1, p$1.actualVersionOpt$1, p$1.publications$1, p$1.info$1));
+                    var elem = new $c_T2().init___O__O(modVer$3, new $c_T2().init___O__O(s, p0));
+                    break matchEnd4$1
+                  }
+                };
+                throw new $c_s_MatchError().init___O(x0$1$1)
+              };
+              b$1.array$6.push(elem);
+              i$2 = ((1 + i$2) | 0)
+            };
+            var projectCache = jsx$10.$$plus$plus__sc_GenTraversableOnce__sci_Map(b$1);
+            acc = new $c_Lcoursier_core_Resolution().init___sc_Seq__Lcoursier_core_DependencySet__sci_Map__sci_Set__sci_Map__sci_Map__sci_Map__s_Option__s_Option__Lcoursier_core_Activation$Os__s_Option__s_Option__s_Option__sc_Seq__sci_Map__T(this$26.rootDependencies$1, this$26.dependencySet$1, this$26.forceVersions$1, this$26.conflicts$1, projectCache, this$26.errorCache$1, this$26.finalDependenciesCache$1, this$26.filter$1, this$26.reconciliation$1, this$26.osInfo$1, this$26.jdkVersion$1, this$26.userActivations$1, this$26.mapDependencies$1, this$26.extraProperties$1, this$26.forceProperties$1, this$26.defaultConfiguration$1);
+            break matchEnd5
+          }
+        };
+        throw new $c_s_MatchError().init___O(x1)
+      };
+      these = $as_sc_LinearSeqOptimized(these.tail__O())
+    };
+    var res0 = $as_Lcoursier_core_Resolution(acc);
+    var cont = this.cont$2;
+    return new $c_Lcoursier_core_Continue().init___Lcoursier_core_Resolution__F1(res0, cont)
+  } else {
+    var missing = $f_sc_SetLike__toSeq__sc_Seq(depMgmtMissing);
+    var cont$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$8$1, successes$1$1) {
+      return (function(res$2$2) {
+        var res$2$1 = $as_Lcoursier_core_Resolution(res$2$2);
+        return this$8$1.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess(res$2$1, successes$1$1)
+      })
+    })(this, successes$1));
+    return new $c_Lcoursier_core_Missing().init___sc_Seq__Lcoursier_core_Resolution__F1(missing, res, cont$1)
+  }
+});
+$c_Lcoursier_core_Missing.prototype.productArity__I = (function() {
+  return 3
+});
+$c_Lcoursier_core_Missing.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Missing(obj);
+    var x = this.missing$2;
+    var x$2 = other.missing$2;
+    if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
+      var x$3 = this.current$2;
+      var x$4 = other.current$2;
+      var jsx$1 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
+    } else {
+      var jsx$1 = false
+    };
+    if (jsx$1) {
+      var x$5 = this.cont$2;
+      var x$6 = other.cont$2;
+      return ((x$5 === null) ? (x$6 === null) : x$5.equals__O__Z(x$6))
+    } else {
+      return false
+    }
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_core_Missing.prototype.productElement__I__O = (function(n) {
+  switch (n) {
+    case 0: {
+      return this.missing$2;
+      break
+    }
+    case 1: {
+      return this.current$2;
+      break
+    }
+    case 2: {
+      return this.cont$2;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+});
+$c_Lcoursier_core_Missing.prototype.next0__sc_Seq__Lcoursier_core_ResolutionProcess = (function(results) {
+  var jsx$1 = new $c_Lcoursier_core_Missing$$anonfun$1().init___Lcoursier_core_Missing(this);
+  var this$1 = $m_sc_Seq$();
+  var errors = $as_sc_Seq(results.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2));
+  var jsx$2 = new $c_Lcoursier_core_Missing$$anonfun$2().init___Lcoursier_core_Missing(this);
+  var this$2 = $m_sc_Seq$();
+  var successes = $as_sc_Seq(results.collect__s_PartialFunction__scg_CanBuildFrom__O(jsx$2, this$2.ReusableCBFInstance$2));
+  var current0 = this.current$2.addToErrorCache__sc_Iterable__Lcoursier_core_Resolution(errors);
+  return this.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess(current0, successes)
+});
+$c_Lcoursier_core_Missing.prototype.toString__T = (function() {
+  var b = new $c_jl_StringBuilder().init___T("Missing(");
+  var obj = this.missing$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.current$2;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$2 = this.cont$2;
+  var str$2 = ("" + obj$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Missing.prototype.init___sc_Seq__Lcoursier_core_Resolution__F1 = (function(missing, current, cont) {
+  this.missing$2 = missing;
+  this.current$2 = current;
+  this.cont$2 = cont;
+  return this
+});
+$c_Lcoursier_core_Missing.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Missing))
+});
+$c_Lcoursier_core_Missing.prototype.current__Lcoursier_core_Resolution = (function() {
+  return this.current$2
+});
+$c_Lcoursier_core_Missing.prototype.hashCode__I = (function() {
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Missing")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.missing$2)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.current$2)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.cont$2)) | 0);
+  return $imul(37, code)
+});
+function $as_Lcoursier_core_Missing(obj) {
+  return (((obj instanceof $c_Lcoursier_core_Missing) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Missing"))
+}
+function $isArrayOf_Lcoursier_core_Missing(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_core_Missing)))
+}
+function $asArrayOf_Lcoursier_core_Missing(obj, depth) {
+  return (($isArrayOf_Lcoursier_core_Missing(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.Missing;", depth))
+}
+var $d_Lcoursier_core_Missing = new $TypeData().initClass({
+  Lcoursier_core_Missing: 0
+}, false, "coursier.core.Missing", {
+  Lcoursier_core_Missing: 1,
+  Lcoursier_core_ResolutionProcess: 1,
+  O: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_Lcoursier_core_Missing.prototype.$classData = $d_Lcoursier_core_Missing;
 /** @constructor */
 function $c_Lcoursier_core_Missing$$anonfun$1() {
   $c_sr_AbstractPartialFunction.call(this)
@@ -59036,6 +58740,102 @@ var $d_Ljapgolly_scalajs_react_vdom_TagMod$Composite = new $TypeData().initClass
 });
 $c_Ljapgolly_scalajs_react_vdom_TagMod$Composite.prototype.$classData = $d_Ljapgolly_scalajs_react_vdom_TagMod$Composite;
 /** @constructor */
+function $c_T16() {
+  $c_O.call(this);
+  this.$$und1$1 = null;
+  this.$$und2$1 = null;
+  this.$$und3$1 = null;
+  this.$$und4$1 = null;
+  this.$$und5$1 = null;
+  this.$$und6$1 = null;
+  this.$$und7$1 = null;
+  this.$$und8$1 = null;
+  this.$$und9$1 = null;
+  this.$$und10$1 = null;
+  this.$$und11$1 = null;
+  this.$$und12$1 = null;
+  this.$$und13$1 = null;
+  this.$$und14$1 = null;
+  this.$$und15$1 = null;
+  this.$$und16$1 = null
+}
+$c_T16.prototype = new $h_O();
+$c_T16.prototype.constructor = $c_T16;
+/** @constructor */
+function $h_T16() {
+  /*<skip>*/
+}
+$h_T16.prototype = $c_T16.prototype;
+$c_T16.prototype.init___O__O__O__O__O__O__O__O__O__O__O__O__O__O__O__O = (function(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) {
+  this.$$und1$1 = _1;
+  this.$$und2$1 = _2;
+  this.$$und3$1 = _3;
+  this.$$und4$1 = _4;
+  this.$$und5$1 = _5;
+  this.$$und6$1 = _6;
+  this.$$und7$1 = _7;
+  this.$$und8$1 = _8;
+  this.$$und9$1 = _9;
+  this.$$und10$1 = _10;
+  this.$$und11$1 = _11;
+  this.$$und12$1 = _12;
+  this.$$und13$1 = _13;
+  this.$$und14$1 = _14;
+  this.$$und15$1 = _15;
+  this.$$und16$1 = _16;
+  return this
+});
+$c_T16.prototype.productPrefix__T = (function() {
+  return "Tuple16"
+});
+$c_T16.prototype.productArity__I = (function() {
+  return 16
+});
+$c_T16.prototype.equals__O__Z = (function(x$1) {
+  if ((this === x$1)) {
+    return true
+  } else if ((x$1 instanceof $c_T16)) {
+    var Tuple16$1 = $as_T16(x$1);
+    return ((((((((((((((($m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und1$1, Tuple16$1.$$und1$1) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und2$1, Tuple16$1.$$und2$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und3$1, Tuple16$1.$$und3$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und4$1, Tuple16$1.$$und4$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und5$1, Tuple16$1.$$und5$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und6$1, Tuple16$1.$$und6$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und7$1, Tuple16$1.$$und7$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und8$1, Tuple16$1.$$und8$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und9$1, Tuple16$1.$$und9$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und10$1, Tuple16$1.$$und10$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und11$1, Tuple16$1.$$und11$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und12$1, Tuple16$1.$$und12$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und13$1, Tuple16$1.$$und13$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und14$1, Tuple16$1.$$und14$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und15$1, Tuple16$1.$$und15$1)) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.$$und16$1, Tuple16$1.$$und16$1))
+  } else {
+    return false
+  }
+});
+$c_T16.prototype.productElement__I__O = (function(n) {
+  return $f_s_Product16__productElement__I__O(this, n)
+});
+$c_T16.prototype.toString__T = (function() {
+  return (((((((((((((((((((((((((((((((("(" + this.$$und1$1) + ",") + this.$$und2$1) + ",") + this.$$und3$1) + ",") + this.$$und4$1) + ",") + this.$$und5$1) + ",") + this.$$und6$1) + ",") + this.$$und7$1) + ",") + this.$$und8$1) + ",") + this.$$und9$1) + ",") + this.$$und10$1) + ",") + this.$$und11$1) + ",") + this.$$und12$1) + ",") + this.$$und13$1) + ",") + this.$$und14$1) + ",") + this.$$und15$1) + ",") + this.$$und16$1) + ")")
+});
+$c_T16.prototype.hashCode__I = (function() {
+  var this$2 = $m_s_util_hashing_MurmurHash3$();
+  return this$2.productHash__s_Product__I__I(this, (-889275714))
+});
+$c_T16.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+});
+function $as_T16(obj) {
+  return (((obj instanceof $c_T16) || (obj === null)) ? obj : $throwClassCastException(obj, "scala.Tuple16"))
+}
+function $isArrayOf_T16(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.T16)))
+}
+function $asArrayOf_T16(obj, depth) {
+  return (($isArrayOf_T16(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lscala.Tuple16;", depth))
+}
+var $d_T16 = new $TypeData().initClass({
+  T16: 0
+}, false, "scala.Tuple16", {
+  T16: 1,
+  O: 1,
+  s_Product16: 1,
+  s_Product: 1,
+  s_Equals: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1
+});
+$c_T16.prototype.$classData = $d_T16;
+/** @constructor */
 function $c_T2() {
   $c_O.call(this);
   this.$$und1$f = null;
@@ -61625,6 +61425,591 @@ var $d_Lcoursier_core_Version = new $TypeData().initClass({
   Ljava_io_Serializable: 1
 });
 $c_Lcoursier_core_Version.prototype.$classData = $d_Lcoursier_core_Version;
+/** @constructor */
+function $c_Lcoursier_maven_MavenRepository() {
+  $c_O.call(this);
+  this.root$1 = null;
+  this.authentication$1 = null;
+  this.changing$1 = null;
+  this.sbtAttrStub$1 = false;
+  this.versionsCheckHasModule$1 = false;
+  this.useSaxParser$1 = false
+}
+$c_Lcoursier_maven_MavenRepository.prototype = new $h_O();
+$c_Lcoursier_maven_MavenRepository.prototype.constructor = $c_Lcoursier_maven_MavenRepository;
+/** @constructor */
+function $h_Lcoursier_maven_MavenRepository() {
+  /*<skip>*/
+}
+$h_Lcoursier_maven_MavenRepository.prototype = $c_Lcoursier_maven_MavenRepository.prototype;
+$c_Lcoursier_maven_MavenRepository.prototype.snapshotVersioning__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, fetch, F) {
+  var x1 = this.snapshotVersioningArtifact__Lcoursier_core_Module__T__s_Option(module, version);
+  var x = $m_s_None$();
+  if ((x === x1)) {
+    var jsx$1 = F.point__O__O(($m_s_package$(), new $c_s_util_Left().init___O("Not supported")))
+  } else if ((x1 instanceof $c_s_Some)) {
+    var x2 = $as_s_Some(x1);
+    var artifact = $as_Lcoursier_util_Artifact(x2.value$2);
+    var elem = $as_Lcoursier_util_EitherT(fetch.apply__O__O(artifact)).run$1;
+    var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+      return (function(eitherStr$2) {
+        var eitherStr = $as_s_util_Either(eitherStr$2);
+        var this$2 = new $c_s_util_Either$RightProjection().init___s_util_Either(eitherStr);
+        var x1$1 = this$2.e$1;
+        if ((x1$1 instanceof $c_s_util_Right)) {
+          var x2$1 = $as_s_util_Right(x1$1);
+          var b = x2$1.value$2;
+          var str = $as_T(b);
+          var this$3 = $m_Lcoursier_core_compatibility_package$().xmlParseDom__T__s_util_Either(str);
+          var this$4 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$3);
+          var x1$2 = this$4.e$1;
+          if ((x1$2 instanceof $c_s_util_Right)) {
+            var x2$2 = $as_s_util_Right(x1$2);
+            var b$1 = x2$2.value$2;
+            var xml = $as_Lcoursier_util_Xml$Node(b$1);
+            var this$7 = ((xml.label__T() === "metadata") ? ($m_s_package$(), new $c_s_util_Right().init___O((void 0))) : ($m_s_package$(), new $c_s_util_Left().init___O("Metadata not found")));
+            var this$8 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$7);
+            var x1$3 = this$8.e$1;
+            if ((x1$3 instanceof $c_s_util_Right)) {
+              var x2$3 = $as_s_util_Right(x1$3);
+              var b$2 = x2$3.value$2;
+              $asUnit(b$2);
+              var this$9 = $m_Lcoursier_maven_Pom$().snapshotVersioning__Lcoursier_util_Xml$Node__s_util_Either(xml);
+              var this$10 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$9);
+              var x1$4 = this$10.e$1;
+              if ((x1$4 instanceof $c_s_util_Right)) {
+                var x2$4 = $as_s_util_Right(x1$4);
+                var b$3 = x2$4.value$2;
+                var snapshotVersioning = $as_Lcoursier_core_SnapshotVersioning(b$3);
+                return new $c_s_util_Right().init___O(snapshotVersioning)
+              } else {
+                return this$10.e$1
+              }
+            } else {
+              return this$8.e$1
+            }
+          } else {
+            return this$4.e$1
+          }
+        } else {
+          return this$2.e$1
+        }
+      })
+    })(this));
+    var jsx$1 = $f_Lcoursier_util_Monad__map__O__F1__O(F, elem, f)
+  } else {
+    var jsx$1;
+    throw new $c_s_MatchError().init___O(x1)
+  };
+  return new $c_Lcoursier_util_EitherT().init___O(jsx$1)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.versionsArtifact__p1__Lcoursier_core_Module__Lcoursier_util_Artifact = (function(module) {
+  var x = module.organization$1;
+  var this$2 = new $c_sci_StringOps().init___T(x);
+  var xs = $f_sci_StringLike__split__C__AT(this$2, 46);
+  var this$8 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
+  var jsx$1 = $m_sc_Seq$();
+  var array = [$m_Lcoursier_maven_MavenRepository$().dirModuleName__Lcoursier_core_Module__Z__T(module, this.sbtAttrStub$1), "maven-metadata.xml"];
+  var that = jsx$1.apply__sc_Seq__sc_GenTraversable(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array));
+  var this$7 = $m_sc_Seq$();
+  var bf = this$7.ReusableCBFInstance$2;
+  var path = $as_sc_Seq($f_sc_TraversableLike__$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(this$8, that, bf));
+  var jsx$3 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var jsx$2 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var url = this.urlFor__sc_Seq__Z__T(path, false);
+  var checksumUrls$1 = $m_sci_Map$EmptyMap$();
+  var checksumUrls = $m_sci_Map$EmptyMap$();
+  var extra = $m_sci_Map$EmptyMap$();
+  var authentication = $m_s_None$();
+  var y = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option("", checksumUrls, extra, false, false, authentication);
+  var array$1 = [new $c_T2().init___O__O("cache-errors", y)];
+  var this$18 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
+  var i = 0;
+  var len = $uI(array$1.length);
+  while ((i < len)) {
+    var index = i;
+    var arg1 = array$1[index];
+    this$18.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1));
+    i = ((1 + i) | 0)
+  };
+  var extra$1 = $as_sci_Map(this$18.elems$1);
+  var authentication$1 = this.authentication$1;
+  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls$1, extra$1, true, false, authentication$1);
+  var underlying$1 = jsx$2.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
+  var artifact = jsx$3.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1);
+  return artifact
+});
+$c_Lcoursier_maven_MavenRepository.prototype.productPrefix__T = (function() {
+  return ""
+});
+$c_Lcoursier_maven_MavenRepository.prototype.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, versioningValue, fetch, F) {
+  var projectArtifact0 = this.projectArtifact__Lcoursier_core_Module__T__s_Option__Lcoursier_util_Artifact(module, version, versioningValue);
+  return $as_Lcoursier_util_EitherT(fetch.apply__O__O(projectArtifact0)).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$1, version$1) {
+    return (function(str$2) {
+      var str = $as_T(str$2);
+      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(($this.useSaxParser$1 ? $m_Lcoursier_maven_MavenRepository$().parseRawPomSax__T__s_util_Either(str) : $m_Lcoursier_maven_MavenRepository$().parseRawPomDom__T__s_util_Either(str)))).map__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, version$3) {
+        return (function(proj0$2) {
+          var proj0 = $as_Lcoursier_core_Project(proj0$2);
+          var jsx$3 = $m_Lcoursier_maven_Pom$();
+          var actualVersionOpt = new $c_s_Some().init___O(version$3);
+          var this$1 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(proj0.module$1, proj0.version$1, proj0.dependencies$1, proj0.configurations$1, proj0.parent$1, proj0.dependencyManagement$1, proj0.properties$1, proj0.profiles$1, proj0.versions$1, proj0.snapshotVersioning$1, proj0.packagingOpt$1, proj0.relocated$1, actualVersionOpt, proj0.publications$1, proj0.info$1);
+          var configurations = $m_Lcoursier_maven_MavenRepository$().defaultConfigurations$1;
+          var jsx$2 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$1.module$1, this$1.version$1, this$1.dependencies$1, configurations, this$1.parent$1, this$1.dependencyManagement$1, this$1.properties$1, this$1.profiles$1, this$1.versions$1, this$1.snapshotVersioning$1, this$1.packagingOpt$1, this$1.relocated$1, this$1.actualVersionOpt$1, this$1.publications$1, this$1.info$1);
+          var array = [new $c_Lcoursier_core_Configuration().init___T($m_Lcoursier_core_Configuration$().empty$1), new $c_Lcoursier_core_Configuration().init___T($m_Lcoursier_core_Configuration$().default$1)];
+          if (($uI(array.length) === 0)) {
+            var jsx$1 = $m_sci_Set$EmptySet$()
+          } else {
+            var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_Set$EmptySet$());
+            var i = 0;
+            var len = $uI(array.length);
+            while ((i < len)) {
+              var index = i;
+              var arg1 = array[index];
+              b.$$plus$eq__O__scm_SetBuilder(arg1);
+              i = ((1 + i) | 0)
+            };
+            var jsx$1 = b.elems$1
+          };
+          return jsx$3.addOptionalDependenciesInConfig__Lcoursier_core_Project__sci_Set__T__Lcoursier_core_Project(jsx$2, $as_sci_Set(jsx$1), $m_Lcoursier_core_Configuration$().optional$1)
+        })
+      })($this, version$1)), F$1)
+    })
+  })(this, F, version)), F)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.productArity__I = (function() {
+  return 5
+});
+$c_Lcoursier_maven_MavenRepository.prototype.snapshotVersioningArtifact__Lcoursier_core_Module__T__s_Option = (function(module, version) {
+  var jsx$1 = this.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq(module, version);
+  var this$1 = $m_sc_Seq$();
+  var path = $as_sc_Seq(jsx$1.$$colon$plus__O__scg_CanBuildFrom__O("maven-metadata.xml", this$1.ReusableCBFInstance$2));
+  var jsx$3 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var jsx$2 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var url = this.urlFor__sc_Seq__Z__T(path, false);
+  var checksumUrls = $m_sci_Map$EmptyMap$();
+  var extra = $m_sci_Map$EmptyMap$();
+  var authentication = this.authentication$1;
+  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, true, false, authentication);
+  var underlying$1 = jsx$2.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
+  var artifact = jsx$3.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1);
+  return new $c_s_Some().init___O(artifact)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_maven_MavenRepository(obj);
+    if ((this.root$1 === other.root$1)) {
+      var x = this.authentication$1;
+      var x$2 = other.authentication$1;
+      var jsx$2 = ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
+    } else {
+      var jsx$2 = false
+    };
+    if (jsx$2) {
+      var x$3 = this.changing$1;
+      var x$4 = other.changing$1;
+      var jsx$1 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
+    } else {
+      var jsx$1 = false
+    };
+    if ((jsx$1 && (this.sbtAttrStub$1 === other.sbtAttrStub$1))) {
+      return (this.versionsCheckHasModule$1 === other.versionsCheckHasModule$1)
+    } else {
+      return false
+    }
+  } else {
+    return false
+  }
+});
+$c_Lcoursier_maven_MavenRepository.prototype.productElement__I__O = (function(n) {
+  switch (n) {
+    case 0: {
+      return this.root$1;
+      break
+    }
+    case 1: {
+      return this.authentication$1;
+      break
+    }
+    case 2: {
+      return this.changing$1;
+      break
+    }
+    case 3: {
+      return this.sbtAttrStub$1;
+      break
+    }
+    case 4: {
+      return this.versionsCheckHasModule$1;
+      break
+    }
+    default: {
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
+    }
+  }
+});
+$c_Lcoursier_maven_MavenRepository.prototype.projectArtifact__Lcoursier_core_Module__T__s_Option__Lcoursier_util_Artifact = (function(module, version, versioningValue) {
+  var jsx$3 = this.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq(module, version);
+  var jsx$2 = module.name$1;
+  var jsx$1 = (versioningValue.isEmpty__Z() ? version : versioningValue.get__O());
+  var this$1 = $m_sc_Seq$();
+  var path = $as_sc_Seq(jsx$3.$$colon$plus__O__scg_CanBuildFrom__O((((jsx$2 + "-") + jsx$1) + ".pom"), this$1.ReusableCBFInstance$2));
+  var jsx$5 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var jsx$4 = $m_Lcoursier_core_Repository$ArtifactExtensions$();
+  var url = this.urlFor__sc_Seq__Z__T(path, false);
+  var checksumUrls = $m_sci_Map$EmptyMap$();
+  var extra = $m_sci_Map$EmptyMap$();
+  var this$4 = this.changing$1;
+  var changing = $uZ((this$4.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().isSnapshot__T__Z(version) : this$4.get__O()));
+  var authentication = this.authentication$1;
+  var underlying = new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, changing, false, authentication);
+  var underlying$1 = jsx$4.withDefaultChecksums$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying);
+  return jsx$5.withDefaultSignature$extension__Lcoursier_util_Artifact__Lcoursier_util_Artifact(underlying$1)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.toString__T = (function() {
+  var b = new $c_jl_StringBuilder().init___T("MavenRepository(");
+  var obj = this.root$1;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.authentication$1;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$2 = this.changing$1;
+  var str$2 = ("" + obj$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var b$1 = this.sbtAttrStub$1;
+  var str$3 = ("" + b$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$3);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var b$2 = this.versionsCheckHasModule$1;
+  var str$4 = ("" + b$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$4);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_maven_MavenRepository.prototype.modulePath__p1__Lcoursier_core_Module__sc_Seq = (function(module) {
+  var x = module.organization$1;
+  var this$2 = new $c_sci_StringOps().init___T(x);
+  var xs = $f_sci_StringLike__split__C__AT(this$2, 46);
+  var this$6 = new $c_scm_WrappedArray$ofRef().init___AO(xs);
+  var elem = $m_Lcoursier_maven_MavenRepository$().dirModuleName__Lcoursier_core_Module__Z__T(module, this.sbtAttrStub$1);
+  var this$5 = $m_sc_Seq$();
+  var bf = this$5.ReusableCBFInstance$2;
+  return $as_sc_Seq($f_sc_SeqLike__$$colon$plus__O__scg_CanBuildFrom__O(this$6, elem, bf))
+});
+$c_Lcoursier_maven_MavenRepository.prototype.withSnapshotVersioning$1__p1__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module$1, version$2, fetch$1, F$2) {
+  return this.snapshotVersioning__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, version$2, fetch$1, F$2).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$2$1, module$1$1, version$2$1, fetch$1$1) {
+    return (function(snapshotVersioning$2) {
+      var snapshotVersioning = $as_Lcoursier_core_SnapshotVersioning(snapshotVersioning$2);
+      var this$1 = $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().jar$1);
+      var this$2 = (this$1.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().pom$1) : this$1);
+      var versioningOption = (this$2.isEmpty__Z() ? $m_Lcoursier_maven_MavenRepository$().mavenVersioning__Lcoursier_core_SnapshotVersioning__T__T__s_Option(snapshotVersioning, $m_Lcoursier_core_Classifier$().empty$1, $m_Lcoursier_core_Extension$().empty$1) : this$2);
+      var x = $m_s_None$();
+      if ((x === versioningOption)) {
+        return new $c_Lcoursier_util_EitherT().init___O(F$2$1.point__O__O(($m_s_package$(), new $c_s_util_Left().init___O("No snapshot versioning value found"))))
+      } else if ((versioningOption instanceof $c_s_Some)) {
+        var x2 = $as_s_Some(versioningOption);
+        return $this.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1$1, version$2$1, x2, fetch$1$1, F$2$1).map__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1, snapshotVersioning$1) {
+          return (function(x$8$2) {
+            var x$8 = $as_Lcoursier_core_Project(x$8$2);
+            var snapshotVersioning$3 = new $c_s_Some().init___O(snapshotVersioning$1);
+            return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(x$8.module$1, x$8.version$1, x$8.dependencies$1, x$8.configurations$1, x$8.parent$1, x$8.dependencyManagement$1, x$8.properties$1, x$8.profiles$1, x$8.versions$1, snapshotVersioning$3, x$8.packagingOpt$1, x$8.relocated$1, x$8.actualVersionOpt$1, x$8.publications$1, x$8.info$1)
+          })
+        })($this, snapshotVersioning)), F$2$1)
+      } else {
+        throw new $c_s_MatchError().init___O(versioningOption)
+      }
+    })
+  })(this, F$2, module$1, version$2, fetch$1)), F$2)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_maven_MavenRepository))
+});
+$c_Lcoursier_maven_MavenRepository.prototype.moduleVersionPath__p1__Lcoursier_core_Module__T__sc_Seq = (function(module, version) {
+  var jsx$2 = this.modulePath__p1__Lcoursier_core_Module__sc_Seq(module);
+  var jsx$1 = $m_Lcoursier_maven_MavenRepository$().toBaseVersion__T__T(version);
+  var this$1 = $m_sc_Seq$();
+  return $as_sc_Seq(jsx$2.$$colon$plus__O__scg_CanBuildFrom__O(jsx$1, this$1.ReusableCBFInstance$2))
+});
+$c_Lcoursier_maven_MavenRepository.prototype.init___T__s_Option__s_Option__Z__Z = (function(root, authentication, changing, sbtAttrStub, versionsCheckHasModule) {
+  this.root$1 = root;
+  this.authentication$1 = authentication;
+  this.changing$1 = changing;
+  this.sbtAttrStub$1 = sbtAttrStub;
+  this.versionsCheckHasModule$1 = versionsCheckHasModule;
+  this.useSaxParser$1 = true;
+  return this
+});
+$c_Lcoursier_maven_MavenRepository.prototype.find__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, fetch, F) {
+  var res = F.bind__O__F1__O(this.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module, version, $m_s_None$(), fetch, F).run$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, version$1, F$1, module$1, fetch$1) {
+    return (function(eitherProj$2) {
+      var eitherProj = $as_s_util_Either(eitherProj$2);
+      if ((eitherProj.isLeft__Z() && $m_Lcoursier_maven_MavenRepository$().isSnapshot__T__Z(version$1))) {
+        var elem = $this.withSnapshotVersioning$1__p1__Lcoursier_core_Module__T__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module$1, version$1, fetch$1, F$1).run$1;
+        var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, eitherProj$1) {
+          return (function(eitherProj0$2) {
+            var eitherProj0 = $as_s_util_Either(eitherProj0$2);
+            return (eitherProj0.isLeft__Z() ? eitherProj$1 : eitherProj0)
+          })
+        })($this, eitherProj));
+        return $f_Lcoursier_util_Monad__map__O__F1__O(F$1, elem, f)
+      } else {
+        return F$1.point__O__O(eitherProj)
+      }
+    })
+  })(this, version, F, module, fetch)));
+  var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, version$2) {
+    return (function(x$9$2) {
+      var x$9 = $as_s_util_Either(x$9$2);
+      var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(x$9);
+      var x1 = this$1.e$1;
+      if ((x1 instanceof $c_s_util_Right)) {
+        var x2 = $as_s_util_Right(x1);
+        var b = x2.value$2;
+        var proj = $as_Lcoursier_core_Project(b);
+        var actualVersionOpt = new $c_s_Some().init___O(version$2);
+        return new $c_s_util_Right().init___O(new $c_T2().init___O__O(this$2, new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(proj.module$1, proj.version$1, proj.dependencies$1, proj.configurations$1, proj.parent$1, proj.dependencyManagement$1, proj.properties$1, proj.profiles$1, proj.versions$1, proj.snapshotVersioning$1, proj.packagingOpt$1, proj.relocated$1, actualVersionOpt, proj.publications$1, proj.info$1)))
+      } else {
+        return this$1.e$1
+      }
+    })
+  })(this, version));
+  return new $c_Lcoursier_util_EitherT().init___O($f_Lcoursier_util_Monad__map__O__F1__O(F, res, f$1))
+});
+$c_Lcoursier_maven_MavenRepository.prototype.fetchVersions__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, fetch, F) {
+  var artifact = this.versionsArtifact__p1__Lcoursier_core_Module__Lcoursier_util_Artifact(module);
+  var elem = $as_Lcoursier_util_EitherT(fetch.apply__O__O(artifact)).run$1;
+  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, artifact$1) {
+    return (function(eitherStr$2) {
+      var eitherStr = $as_s_util_Either(eitherStr$2);
+      var this$1 = new $c_s_util_Either$RightProjection().init___s_util_Either(eitherStr);
+      var x1 = this$1.e$1;
+      if ((x1 instanceof $c_s_util_Right)) {
+        var x2 = $as_s_util_Right(x1);
+        var b = x2.value$2;
+        var str = $as_T(b);
+        var this$2 = $m_Lcoursier_core_compatibility_package$().xmlParseDom__T__s_util_Either(str);
+        var this$3 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$2);
+        var x1$1 = this$3.e$1;
+        if ((x1$1 instanceof $c_s_util_Right)) {
+          var x2$1 = $as_s_util_Right(x1$1);
+          var b$1 = x2$1.value$2;
+          var xml = $as_Lcoursier_util_Xml$Node(b$1);
+          var this$6 = ((xml.label__T() === "metadata") ? ($m_s_package$(), new $c_s_util_Right().init___O((void 0))) : ($m_s_package$(), new $c_s_util_Left().init___O("Metadata not found")));
+          var this$7 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$6);
+          var x1$2 = this$7.e$1;
+          if ((x1$2 instanceof $c_s_util_Right)) {
+            var x2$2 = $as_s_util_Right(x1$2);
+            var b$2 = x2$2.value$2;
+            $asUnit(b$2);
+            var this$8 = $m_Lcoursier_maven_Pom$().versions__Lcoursier_util_Xml$Node__s_util_Either(xml);
+            var this$9 = new $c_s_util_Either$RightProjection().init___s_util_Either(this$8);
+            var x1$3 = this$9.e$1;
+            if ((x1$3 instanceof $c_s_util_Right)) {
+              var x2$3 = $as_s_util_Right(x1$3);
+              var b$3 = x2$3.value$2;
+              var versions = $as_Lcoursier_core_Versions(b$3);
+              return new $c_s_util_Right().init___O(new $c_T2().init___O__O(versions, artifact$1.url$1))
+            } else {
+              return this$9.e$1
+            }
+          } else {
+            return this$7.e$1
+          }
+        } else {
+          return this$3.e$1
+        }
+      } else {
+        return this$1.e$1
+      }
+    })
+  })(this, artifact));
+  var viaMetadata = new $c_Lcoursier_util_EitherT().init___O($f_Lcoursier_util_Monad__map__O__F1__O(F, elem, f));
+  var this$10 = this.changing$1;
+  if (this$10.isEmpty__Z()) {
+    var jsx$1 = true
+  } else {
+    var arg1 = this$10.get__O();
+    var x$7 = $uZ(arg1);
+    var jsx$1 = (!x$7)
+  };
+  if (((jsx$1 && module.attributes$1.contains__O__Z("scalaVersion")) && module.attributes$1.contains__O__Z("sbtVersion"))) {
+    return this.versionsFromListing__p1__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(module, fetch, F).orElse__F0__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3$1, viaMetadata$1) {
+      return (function() {
+        return viaMetadata$1
+      })
+    })(this, viaMetadata)), F)
+  } else {
+    return viaMetadata
+  }
+});
+$c_Lcoursier_maven_MavenRepository.prototype.artifactFor__T__Z__Lcoursier_util_Artifact = (function(url, changing) {
+  var checksumUrls = $m_sci_Map$EmptyMap$();
+  var extra = $m_sci_Map$EmptyMap$();
+  var authentication = this.authentication$1;
+  return new $c_Lcoursier_util_Artifact().init___T__sci_Map__sci_Map__Z__Z__s_Option(url, checksumUrls, extra, changing, false, authentication)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.hashCode__I = (function() {
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("MavenRepository")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.root$1)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.authentication$1)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.changing$1)) | 0);
+  code = (($imul(37, code) + (this.sbtAttrStub$1 ? 1231 : 1237)) | 0);
+  code = (($imul(37, code) + (this.versionsCheckHasModule$1 ? 1231 : 1237)) | 0);
+  return $imul(37, code)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.init___T = (function(root) {
+  $c_Lcoursier_maven_MavenRepository.prototype.init___T__s_Option__s_Option__Z__Z.call(this, root, $m_s_None$(), $m_s_None$(), true, true);
+  return this
+});
+$c_Lcoursier_maven_MavenRepository.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_s_Product$$anon$1().init___s_Product(this)
+});
+$c_Lcoursier_maven_MavenRepository.prototype.completeOpt__F1__Lcoursier_util_Monad__s_Some = (function(fetch, evidence$1) {
+  return new $c_s_Some().init___O(new $c_Lcoursier_maven_MavenComplete().init___Lcoursier_maven_MavenRepository__F1__Lcoursier_util_Monad(this, fetch, evidence$1))
+});
+$c_Lcoursier_maven_MavenRepository.prototype.urlFor__sc_Seq__Z__T = (function(path, isDir) {
+  var b = new $c_scm_StringBuilder().init___T(this.root$1);
+  b.$$plus$eq__C__scm_StringBuilder(47);
+  var it = path.iterator__sc_Iterator();
+  var isFirst = true;
+  while (it.hasNext__Z()) {
+    if ((!isDir)) {
+      if (isFirst) {
+        isFirst = false
+      } else {
+        b.$$plus$eq__C__scm_StringBuilder(47)
+      }
+    };
+    b.$$plus$plus$eq__T__scm_StringBuilder($as_T(it.next__O()));
+    if (isDir) {
+      b.$$plus$eq__C__scm_StringBuilder(47)
+    }
+  };
+  return b.underlying$5.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_core_Module__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, fetch, F) {
+  var listingUrl = (this.urlFor__sc_Seq__Z__T(this.modulePath__p1__Lcoursier_core_Module__sc_Seq(module), false) + "/");
+  var listingArtifact = this.artifactFor__T__Z__Lcoursier_util_Artifact(listingUrl, true);
+  return $as_Lcoursier_util_EitherT(fetch.apply__O__O(listingArtifact)).flatMap__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, listingUrl$1, F$1) {
+    return (function(listing$2) {
+      var listing = $as_T(listing$2);
+      var this$1 = $m_Lcoursier_util_WebPage$().listFiles__T__T__sc_Iterator(listingUrl$1, listing);
+      $m_sci_Vector$();
+      var cbf = $m_sc_IndexedSeq$().ReusableCBF$6;
+      var files = $as_sci_Vector($f_sc_TraversableOnce__to__scg_CanBuildFrom__O(this$1, cbf));
+      var this$3 = $m_Lcoursier_util_WebPage$().listDirectories__T__T__sc_Iterator(listingUrl$1, listing);
+      $m_sci_Vector$();
+      var cbf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
+      var rawVersions = $as_sci_Vector($f_sc_TraversableOnce__to__scg_CanBuildFrom__O(this$3, cbf$1));
+      if ($f_sc_SeqLike__contains__O__Z(files, "maven-metadata.xml")) {
+        $m_s_package$();
+        var res$1 = new $c_s_util_Left().init___O("maven-metadata.xml found, not listing version from directory listing")
+      } else if ($f_sc_SeqLike__isEmpty__Z(rawVersions)) {
+        $m_s_package$();
+        var value = ("No versions found at " + listingUrl$1);
+        var res$1 = new $c_s_util_Left().init___O(value)
+      } else {
+        $m_sci_Vector$();
+        var bf = $m_sc_IndexedSeq$().ReusableCBF$6;
+        var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(rawVersions, bf);
+        var this$8 = rawVersions.iterator__sci_VectorIterator();
+        while (this$8.$$undhasNext$2) {
+          var arg1 = this$8.next__O();
+          var x$3 = $as_T(arg1);
+          b.$$plus$eq__O__scm_Builder(new $c_Lcoursier_core_Version().init___T(x$3))
+        };
+        var parsedVersions = $as_sci_Vector(b.result__O());
+        $m_sci_Vector$();
+        var b$1 = new $c_sci_VectorBuilder().init___();
+        var this$10 = parsedVersions.iterator__sci_VectorIterator();
+        while (this$10.$$undhasNext$2) {
+          var arg1$1 = this$10.next__O();
+          var x$4 = $as_Lcoursier_core_Version(arg1$1);
+          var this$11 = x$4.items__sci_Vector();
+          var this$12 = this$11.iterator__sci_VectorIterator();
+          var res = true;
+          while ((res && this$12.$$undhasNext$2)) {
+            var arg1$2 = this$12.next__O();
+            var x0$1 = $as_Lcoursier_core_Version$Item(arg1$2);
+            if ((!(x0$1 instanceof $c_Lcoursier_core_Version$Tag))) {
+              res = true
+            } else {
+              var x2 = $as_Lcoursier_core_Version$Tag(x0$1);
+              res = (!x2.isPreRelease__Z())
+            }
+          };
+          if ((res !== false)) {
+            b$1.$$plus$eq__O__sci_VectorBuilder(arg1$1)
+          }
+        };
+        var nonPreVersions = b$1.result__sci_Vector();
+        if ($f_sc_SeqLike__isEmpty__Z(nonPreVersions)) {
+          $m_s_package$();
+          var value$1 = ("Found only pre-versions at " + listingUrl$1);
+          var res$1 = new $c_s_util_Left().init___O(value$1)
+        } else {
+          var this$14 = $m_s_math_Ordering$();
+          var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
+          var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$14, evidence$1);
+          var latest = $as_Lcoursier_core_Version($f_sc_TraversableOnce__max__s_math_Ordering__O(nonPreVersions, cmp));
+          $m_s_package$();
+          $m_Lcoursier_core_Versions$();
+          var latest$1 = latest.repr$1;
+          var release = latest.repr$1;
+          $m_sci_Vector$();
+          var bf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
+          var b$2 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(nonPreVersions, bf$1);
+          var this$16 = nonPreVersions.iterator__sci_VectorIterator();
+          while (this$16.$$undhasNext$2) {
+            var arg1$3 = this$16.next__O();
+            var x$5 = $as_Lcoursier_core_Version(arg1$3);
+            b$2.$$plus$eq__O__scm_Builder(x$5.repr$1)
+          };
+          var available = $as_sc_TraversableOnce(b$2.result__O()).toList__sci_List();
+          var lastUpdated = $m_s_None$();
+          var value$2 = new $c_Lcoursier_core_Versions().init___T__T__sci_List__s_Option(latest$1, release, available, lastUpdated);
+          var res$1 = new $c_s_util_Right().init___O(value$2)
+        }
+      };
+      var this$19 = new $c_s_util_Either$RightProjection().init___s_util_Either(res$1);
+      var x1 = this$19.e$1;
+      if ((x1 instanceof $c_s_util_Right)) {
+        var x2$1 = $as_s_util_Right(x1);
+        var b$3 = x2$1.value$2;
+        var x$6 = $as_Lcoursier_core_Versions(b$3);
+        var jsx$1 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(x$6, listingUrl$1))
+      } else {
+        var jsx$1 = this$19.e$1
+      };
+      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(jsx$1))
+    })
+  })(this, listingUrl, F)), F)
+});
+function $as_Lcoursier_maven_MavenRepository(obj) {
+  return (((obj instanceof $c_Lcoursier_maven_MavenRepository) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.maven.MavenRepository"))
+}
+function $isArrayOf_Lcoursier_maven_MavenRepository(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.Lcoursier_maven_MavenRepository)))
+}
+function $asArrayOf_Lcoursier_maven_MavenRepository(obj, depth) {
+  return (($isArrayOf_Lcoursier_maven_MavenRepository(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.maven.MavenRepository;", depth))
+}
+var $d_Lcoursier_maven_MavenRepository = new $TypeData().initClass({
+  Lcoursier_maven_MavenRepository: 0
+}, false, "coursier.maven.MavenRepository", {
+  Lcoursier_maven_MavenRepository: 1,
+  O: 1,
+  Lcoursier_core_Repository: 1,
+  s_Serializable: 1,
+  Ljava_io_Serializable: 1,
+  Lcoursier_core_ArtifactSource: 1,
+  s_Product: 1,
+  s_Equals: 1
+});
+$c_Lcoursier_maven_MavenRepository.prototype.$classData = $d_Lcoursier_maven_MavenRepository;
 /** @constructor */
 function $c_Ljava_io_PrintStream() {
   $c_Ljava_io_FilterOutputStream.call(this);
