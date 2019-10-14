@@ -63,7 +63,7 @@ object IvyTests extends TestSuite {
     'changing - {
       "-SNAPSHOT suffix" - {
 
-        val dep = Dependency.of(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+        val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar))
 
@@ -81,7 +81,7 @@ object IvyTests extends TestSuite {
 
       "-SNAPSHOT suffix" - {
 
-        val dep = Dependency.of(mod"com.example:a_2.11", "0.2.0.SNAPSHOT")
+        val dep = Dependency(mod"com.example:a_2.11", "0.2.0.SNAPSHOT")
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar))
 
@@ -100,7 +100,7 @@ object IvyTests extends TestSuite {
 
     'testArtifacts - {
 
-      val dep = Dependency.of(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+      val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
         .withTransitive(false)
         .withAttributes(Attributes())
 

@@ -49,7 +49,7 @@ object Dependencies {
     }.run.map(_.right.map { modVers =>
       modVers.toList.map {
         case (mod, ver) =>
-          coursier.Dependency.of(mod, ver)
+          coursier.Dependency(mod, ver)
       }
     })
   }

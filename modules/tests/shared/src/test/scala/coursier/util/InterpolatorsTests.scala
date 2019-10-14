@@ -26,12 +26,12 @@ object InterpolatorsTests extends TestSuite {
     'dependency - {
       * - {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val expected = Dependency.of(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")
+        val expected = Dependency(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")
         assert(dep == expected)
       }
       * - {
         val dep = dep"org.scalatest:scalatest_2.12:3.0.1:test"
-        val expected = Dependency.of(Module(org"org.scalatest", name"scalatest_2.12"), "3.0.1")
+        val expected = Dependency(Module(org"org.scalatest", name"scalatest_2.12"), "3.0.1")
           .withConfiguration(Configuration.test)
         assert(dep == expected)
       }
