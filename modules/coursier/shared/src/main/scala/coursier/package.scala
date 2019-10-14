@@ -20,22 +20,9 @@ package object coursier {
   object Dependency {
     def apply(
       module: Module,
-      version: String,
-      configuration: Configuration = Configuration.empty,
-      attributes: Attributes = Attributes(),
-      exclusions: Set[(Organization, ModuleName)] = Set.empty,
-      optional: Boolean = false,
-      transitive: Boolean = true
+      version: String
     ): Dependency =
-      core.Dependency(
-        module,
-        version,
-        configuration,
-        exclusions,
-        attributes,
-        optional,
-        transitive
-      )
+      core.Dependency(module, version)
   }
 
   type Attributes = core.Attributes
