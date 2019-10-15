@@ -341,7 +341,7 @@ object PomParser {
   ) ++ propertyHandlers(
     "properties" :: "project" :: Nil,
     (s, k, v) => {
-      s.properties += k -> v
+      s.properties += k -> v.trim
     }
   ) ++ profileHandlers(
     "profile" :: "profiles" :: "project" :: Nil,
