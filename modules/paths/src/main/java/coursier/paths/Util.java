@@ -59,26 +59,13 @@ public class Util {
         return resolved;
     }
 
-    private static boolean createDirectories0(Path path) throws IOException {
+    public static void createDirectories(Path path) throws IOException {
         try {
             Files.createDirectories(path);
-            return true;
         } catch (FileAlreadyExistsException ex) {
-            return false;
+            // Files.createDirectories does that check too, but with LinkOptions.NOFOLLOW_LINKS
+            if (!Files.isDirectory(path))
+                throw ex;
         }
-    }
-
-    public static void createDirectories(Path path) throws IOException {
-        int max = path.getNameCount();
-        int count = 0;
-        boolean success = false;
-
-        while (!success && count < max) {
-            success = createDirectories0(path);
-            count += 1;
-        }
-
-        if (!success)
-          Files.createDirectories(path);
     }
 }
