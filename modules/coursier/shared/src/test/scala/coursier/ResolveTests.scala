@@ -786,7 +786,7 @@ object ResolveTests extends TestSuite {
             dep"org.kie:kie-api:7.27.0.Final",
             dep"org.kie.server:kie-server-api:7.27.0.Final",
             dep"org.kie.server:kie-server-client:7.27.0.Final"
-           )
+          )
           .future()
       }
 
