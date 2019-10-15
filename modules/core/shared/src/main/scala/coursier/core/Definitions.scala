@@ -319,6 +319,11 @@ object Info {
   def attributes: Attributes = Attributes(`type`, classifier)
 }
 
+object Publication {
+  def empty: Publication =
+    Publication("", Type.empty, Extension.empty, Classifier.empty)
+}
+
 trait ArtifactSource {
   def artifacts(
     dependency: Dependency,
