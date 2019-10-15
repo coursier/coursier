@@ -142,10 +142,10 @@ object StringInterpolators {
                 _root_.coursier.core.Configuration(${dep.configuration.value}),
                 _root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls),
                 _root_.coursier.core.Publication(
-                  "",
-                  _root_.coursier.core.Type(${dep.attributes.`type`.value}),
-                  _root_.coursier.core.Extension.empty,
-                  _root_.coursier.core.Classifier(${dep.attributes.classifier.value})
+                  ${dep.publication.name},
+                  _root_.coursier.core.Type(${dep.publication.`type`.value}),
+                  _root_.coursier.core.Extension(${dep.publication.ext.value}),
+                  _root_.coursier.core.Classifier(${dep.publication.classifier.value})
                 ),
                 ${dep.optional},
                 ${dep.transitive}

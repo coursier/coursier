@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.core.{Configuration, Reconciliation}
+import coursier.core.{Configuration, Extension, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
@@ -723,6 +723,60 @@ object ResolveTests extends TestSuite {
       }
 
       await(validateDependencies(res))
+    }
+
+    "source artifact type if sources classifier" - async {
+      val dep = dep"org.apache.commons:commons-compress:1.5,classifier=sources"
+      assert(dep.publication.classifier == Classifier("sources"))
+
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val depArtifacts = res.dependencyArtifacts(Some(Seq(Classifier.sources)))
+
+      val urls = depArtifacts.map(_._3.url).toSet
+      val expectedUrls = Set(
+        "https://repo1.maven.org/maven2/org/tukaani/xz/1.2/xz-1.2-sources.jar",
+        "https://repo1.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5-sources.jar"
+      )
+      assert(urls == expectedUrls)
+
+      val pubTypes = depArtifacts.map(_._2.`type`).toSet
+      val expectedPubTypes = Set(Type.source)
+      assert(pubTypes == expectedPubTypes)
+    }
+
+    "user-supplied artifact type" - async {
+      val dep = dep"io.grpc:protoc-gen-grpc-java:1.23.0,classifier=linux-x86_64,ext=exe,type=protoc-plugin"
+      assert(dep.publication.`type` == Type("protoc-plugin"))
+      assert(dep.publication.ext == Extension("exe"))
+      assert(dep.publication.classifier == Classifier("linux-x86_64"))
+
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val depArtifacts = res.dependencyArtifacts()
+      assert(depArtifacts.lengthCompare(1) == 0)
+
+      val (_, pub, artifact) = depArtifacts.head
+
+      val url = artifact.url
+      val expectedUrl = "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
+      assert(artifact.url == expectedUrl)
+
+      assert(pub.`type` == Type("protoc-plugin"))
+      assert(pub.ext == Extension("exe"))
+      assert(pub.classifier == Classifier("linux-x86_64"))
     }
   }
 }
