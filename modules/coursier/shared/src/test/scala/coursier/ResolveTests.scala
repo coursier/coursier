@@ -782,11 +782,15 @@ object ResolveTests extends TestSuite {
     "new line in properties" - async {
       val res = await {
         resolve
-          .addDependencies(dep"org.kie:kie-api:7.27.0.Final")
-          .addDependencies(dep"org.kie.server:kie-server-api:7.27.0.Final")
-          .addDependencies(dep"org.kie.server:kie-server-client:7.27.0.Final")
+          .addDependencies(
+            dep"org.kie:kie-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-client:7.27.0.Final"
+           )
+          .future()
+      }
 
+      await(validateDependencies(res))
     }
-    await(validateDependencies(res))
   }
 }
