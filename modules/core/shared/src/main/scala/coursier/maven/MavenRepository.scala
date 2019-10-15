@@ -471,10 +471,14 @@ object MavenRepository {
             else
               dependency.attributes.classifier
 
-          val tpe = packagingTpeMap.getOrElse(
-            (classifier, ext),
-            MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
-          )
+          val tpe =
+            if (dependency.publication.`type`.isEmpty)
+              packagingTpeMap.getOrElse(
+                (classifier, ext),
+                MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+              )
+            else
+              type0
 
           Publication(
             name,
