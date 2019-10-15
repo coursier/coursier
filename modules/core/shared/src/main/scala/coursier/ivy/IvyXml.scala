@@ -129,7 +129,7 @@ object IvyXml {
           .right.getOrElse(type0.asExtension)
         val confs = node
           .attribute("conf")
-          .fold(_ => Seq(Configuration.all), _.split(',').toSeq.map(Configuration(_)))
+          .fold(_ => Seq(), _.split(',').toSeq.map(Configuration(_)))
         val classifier = node.attribute("classifier")
           .right.map(Classifier(_))
           .right.getOrElse(Classifier.empty)
