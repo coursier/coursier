@@ -4,10 +4,11 @@ import coursier.util.InMemoryRepository
 import utest._
 
 import scala.async.Async.{async, await}
+import coursier.ivy.IvyRepository
 
 object ArtifactsTests extends TestSuite {
 
-  import TestHelpers.{ec, cache}
+  import TestHelpers.{ec, cache, handmadeMetadataBase}
 
   val tests = Tests {
 
@@ -155,6 +156,69 @@ object ArtifactsTests extends TestSuite {
       )
 
       assert(urls == expectedUrls)
+    }
+
+    "Take Ivy dependency artifacts into account" - {
+      "to maven" - async {
+
+        val res = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(dep"com.fake:lib1:1.7.27")
+            .withRepositories(Seq(
+              MavenRepository(handmadeMetadataBase + "/fake-maven"),
+              IvyRepository.parse(handmadeMetadataBase + "/fake-ivy/[defaultPattern]").fold(sys.error, identity)
+            ))
+            .withCache(cache)
+            .future()
+        }
+
+        val artifacts = await {
+          Artifacts()
+            .withResolutions(Seq(res))
+            .withCache(cache)
+            .future()
+        }
+
+        val urls = artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
+
+        val expectedUrls = Seq(
+          "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
+          "file:///handmade-metadata//fake-maven/com/fake/lib2/1.3.4/lib2-1.3.4-core.jar"
+        )
+
+        assert(urls == expectedUrls)
+      }
+
+      "to ivy" - async {
+
+        val res = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(dep"com.fake:lib1:1.7.27")
+            .withRepositories(Seq(
+              IvyRepository.parse(handmadeMetadataBase + "/fake-ivy/[defaultPattern]").fold(sys.error, identity)
+            ))
+            .withCache(cache)
+            .future()
+        }
+
+        val artifacts = await {
+          Artifacts()
+            .withResolutions(Seq(res))
+            .withCache(cache)
+            .future()
+        }
+
+        val urls = artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
+
+        val expectedUrls = Seq(
+          "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
+          "file:///handmade-metadata//fake-ivy/com.fake/lib2/1.3.4/jars/lib2-core.jar"
+        )
+
+        assert(urls == expectedUrls)
+      }
     }
   }
 
