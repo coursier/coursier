@@ -126,7 +126,10 @@ object Resolution {
     ok
   }
 
-  def substituteProps(s: String, properties: Map[String, String]): String = {
+  def substituteProps(s: String, properties: Map[String, String]): String =
+    substituteProps(s, properties, trim = false)
+
+  def substituteProps(s: String, properties: Map[String, String], trim: Boolean): String = {
 
     // this method is called _very_ often, hence the micro-optimization
 
@@ -167,7 +170,8 @@ object Resolution {
           case None =>
             b.append(s, dolIdx, idx)
           case Some(v) =>
-            b.append(v)
+            val v0 = if (trim) v.trim else v
+            b.append(v0)
         }
       }
     }
@@ -186,8 +190,10 @@ object Resolution {
     properties: Map[String, String]
   ): Seq[(Configuration, Dependency)] = {
 
+    def substituteTrimmedProps(s: String) =
+      substituteProps(s, properties, trim = true)
     def substituteProps0(s: String) =
-      substituteProps(s, properties)
+      substituteProps(s, properties, trim = false)
 
     dependencies.map {
       case (config, dep) =>
@@ -197,7 +203,7 @@ object Resolution {
               .withOrganization(dep.module.organization.map(substituteProps0))
               .withName(dep.module.name.map(substituteProps0))
           )
-          .withVersion(substituteProps0(dep.version))
+          .withVersion(substituteTrimmedProps(dep.version))
           .withAttributes(
             dep.attributes
               .withType(dep.attributes.`type`.map(substituteProps0))
