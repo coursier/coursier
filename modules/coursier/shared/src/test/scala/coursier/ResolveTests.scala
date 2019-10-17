@@ -778,5 +778,19 @@ object ResolveTests extends TestSuite {
       assert(pub.ext == Extension("exe"))
       assert(pub.classifier == Classifier("linux-x86_64"))
     }
+
+    "new line in properties" - async {
+      val res = await {
+        resolve
+          .addDependencies(
+            dep"org.kie:kie-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-client:7.27.0.Final"
+          )
+          .future()
+      }
+
+      await(validateDependencies(res))
+    }
   }
 }
