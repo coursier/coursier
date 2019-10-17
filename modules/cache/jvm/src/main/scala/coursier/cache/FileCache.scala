@@ -40,8 +40,10 @@ import dataclass.data
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize
 )(implicit
-  S: Sync[F]
+  sync: Sync[F]
 ) extends Cache[F] {
+
+  private def S = sync
 
   private lazy val allCredentials0 =
     credentials.flatMap(_.get())

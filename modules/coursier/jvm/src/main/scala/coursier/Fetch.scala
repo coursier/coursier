@@ -34,8 +34,8 @@ import dataclass.data
     resolve.throughOpt
   def transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] =
     resolve.transformFetcherOpt
-  def S: Sync[F] =
-    resolve.S
+  def sync: Sync[F] =
+    resolve.sync
 
   def classifiers: Set[Classifier] =
     artifacts.classifiers
@@ -48,6 +48,8 @@ import dataclass.data
 
   def classpathOrder: Boolean =
     artifacts.classpathOrder
+
+  private def S = resolve.sync
 
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 

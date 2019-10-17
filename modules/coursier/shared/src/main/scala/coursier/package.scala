@@ -17,35 +17,12 @@ package object coursier {
   val ModuleName = core.ModuleName
 
   type Dependency = core.Dependency
-  object Dependency extends Serializable {
-    def of(
+  object Dependency {
+    def apply(
       module: Module,
       version: String
     ): Dependency =
-      core.Dependency(
-        module,
-        version
-      )
-
-    @deprecated("Use of instead, then the with* methods on Dependency", "2.0.0-RC3")
-    def apply(
-      module: Module,
-      version: String,
-      configuration: Configuration = Configuration.empty,
-      attributes: Attributes = Attributes(),
-      exclusions: Set[(Organization, ModuleName)] = Set.empty,
-      optional: Boolean = false,
-      transitive: Boolean = true
-    ): Dependency =
-      core.Dependency(
-        module,
-        version,
-        configuration,
-        exclusions,
-        attributes,
-        optional,
-        transitive
-      )
+      core.Dependency(module, version)
   }
 
   type Attributes = core.Attributes

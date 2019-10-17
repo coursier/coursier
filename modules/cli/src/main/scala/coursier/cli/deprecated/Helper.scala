@@ -180,7 +180,7 @@ class Helper(
       res
         .collect { case Right(l) => l }
         .flatten
-        .map { case (mod, ver) => (Dependency.of(mod, ver), Map[String, String]()) }
+        .map { case (mod, ver) => (Dependency(mod, ver), Map[String, String]()) }
         .toList
     }
 
@@ -896,7 +896,7 @@ class Helper(
             case (t, l) =>
               t -> l.map {
                 case (mod, ver) =>
-                  Dependency.of(mod, ver)
+                  Dependency(mod, ver)
                     .withConfiguration(Configuration.runtime)
                     .withAttributes(Attributes())
               }

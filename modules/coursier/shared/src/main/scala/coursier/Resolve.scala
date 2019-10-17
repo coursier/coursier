@@ -26,27 +26,31 @@ import dataclass.{data, since}
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None
-)(implicit S: Sync[F]) {
+)(implicit
+  sync: Sync[F]
+) {
 
-    private def through: F[Resolution] => F[Resolution] =
-      throughOpt.getOrElse(identity[F[Resolution]])
-    private def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
-      transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
+  private def S = sync
 
-    def finalDependencies: Seq[Dependency] = {
+  private def through: F[Resolution] => F[Resolution] =
+    throughOpt.getOrElse(identity[F[Resolution]])
+  private def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
+    transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
 
-      val filter = Exclusions(resolutionParams.exclusions)
+  def finalDependencies: Seq[Dependency] = {
 
-      dependencies
-        .filter { dep =>
-          filter(dep.module.organization, dep.module.name)
-        }
-        .map { dep =>
-          dep.withExclusions(
-            Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
-          )
-        }
-    }
+    val filter = Exclusions(resolutionParams.exclusions)
+
+    dependencies
+      .filter { dep =>
+        filter(dep.module.organization, dep.module.name)
+      }
+      .map { dep =>
+        dep.withExclusions(
+          Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
+        )
+      }
+  }
 
   def finalRepositories: F[Seq[Repository]] =
     S.map(allMirrors) { mirrors0 =>

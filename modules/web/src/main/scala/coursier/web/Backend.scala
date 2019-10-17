@@ -238,7 +238,7 @@ final class Backend($: BackendScope[_, State]) {
   def addModule(e: raw.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency.of(Module(org"", name""), "")
+      val modules = state.modules :+ Dependency(Module(org"", name""), "")
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,

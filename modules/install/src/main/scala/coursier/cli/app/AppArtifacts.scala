@@ -80,7 +80,7 @@ object AppArtifacts {
           desc.sharedDependencies.map { m =>
             val module = m.module(scalaVersion)
             val ver = res.resolution.retainedVersions.getOrElse(module, "_")
-            Dependency.of(module, ver)
+            Dependency(module, ver)
           }
         )
         val l = coursier.Artifacts.artifacts0(

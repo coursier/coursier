@@ -13,8 +13,10 @@ import dataclass.data
   scalaBinaryVersionOpt: Option[String] = None,
   input: String = ""
 )(implicit
-  F: Sync[F]
+  sync: Sync[F]
 ) {
+
+  private def F = sync
 
   def addRepositories(repository: Repository*): Complete[F] =
     withRepositories(repositories ++ repository)

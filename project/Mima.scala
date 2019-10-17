@@ -49,7 +49,9 @@ object Mima {
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      val versions = binaryCompatibilityVersions.filter(_ != "2.0.0-RC3-4")
+      val versions = binaryCompatibilityVersions
+        .filter(_ != "2.0.0-RC3-4")
+        .filter(_ != "2.0.0-RC4")
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
       }
@@ -106,10 +108,6 @@ object Mima {
     import com.typesafe.tools.mima.core.ProblemFilters._
 
     mimaBinaryIssueFilters ++= Seq(
-      exclude[IncompatibleSignatureProblem]("coursier.interop.LowPriorityCatsImplicits.coursierGatherFromCats"),
-      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierSyncFromCats"),
-      exclude[IncompatibleSignatureProblem]("coursier.interop.cats.coursierGatherFromCats"),
-      exclude[IncompatibleSignatureProblem]("coursier.interop.PlatformCatsImplicits.coursierSyncFromCats")
     )
   }
 
