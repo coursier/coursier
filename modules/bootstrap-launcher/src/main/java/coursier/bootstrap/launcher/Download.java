@@ -158,7 +158,16 @@ class Download {
             });
         }
 
-        String clearLine = "\033[2K";
+        boolean useAnsiOutput = coursier.paths.Util.useAnsiOutput();
+        String clearLine;
+        String up;
+        if (useAnsiOutput) {
+            clearLine = "\033[2K";
+            up = "\033[1A";
+        } else {
+            clearLine = "";
+            up = "";
+        }
 
         try {
             while (localURLs.size() < urls.size()) {
@@ -167,7 +176,6 @@ class Download {
                     URL url = future.get();
                     localURLs.add(url);
                     int nowMissing = urls.size() - localURLs.size();
-                    String up = "\033[1A";
                     System.err.print(clearLine + "Downloaded " + (missingURLs.size() - nowMissing) + " missing file(s) / " + missingURLs.size() + "\n" + up);
                 } catch (ExecutionException ex) {
                     // Error message already printed from the Callable above

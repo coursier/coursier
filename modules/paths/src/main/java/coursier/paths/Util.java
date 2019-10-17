@@ -68,4 +68,39 @@ public class Util {
                 throw ex;
         }
     }
+
+    private static volatile Boolean useAnsiOutput0 = null;
+    private static boolean computeUseAnsiOutput() {
+
+        if (System.console() == null)
+            return false;
+
+        if (System.getenv("INSIDE_EMACS") != null)
+            return false;
+
+        if (System.getenv("CI") != null)
+            return false;
+
+        boolean disableViaEnv;
+        String envProgress = System.getenv("COURSIER_PROGRESS");
+        if (envProgress != null && (envProgress.equalsIgnoreCase("true") || envProgress.equalsIgnoreCase("enable") || envProgress.equalsIgnoreCase("1"))) {
+            disableViaEnv = false;
+        } else if (envProgress != null && (envProgress.equalsIgnoreCase("false") || envProgress.equalsIgnoreCase("disable") || envProgress.equalsIgnoreCase("0"))) {
+            disableViaEnv = true;
+        } else {
+            disableViaEnv = System.getenv("COURSIER_NO_TERM") != null;
+        }
+
+        if (disableViaEnv)
+            return false;
+
+        return true;
+    }
+
+    public static boolean useAnsiOutput() {
+        if (useAnsiOutput0 == null) {
+            useAnsiOutput0 = new Boolean(computeUseAnsiOutput());
+        }
+        return useAnsiOutput0.booleanValue();
+    }
 }
