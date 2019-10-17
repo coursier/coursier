@@ -26,7 +26,11 @@ import dataclass.{data, since}
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None
-)(implicit S: Sync[F]) {
+)(implicit
+  sync: Sync[F]
+) {
+
+  private def S = sync
 
     private def through: F[Resolution] => F[Resolution] =
       throughOpt.getOrElse(identity[F[Resolution]])

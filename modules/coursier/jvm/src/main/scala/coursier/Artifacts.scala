@@ -22,7 +22,11 @@ import dataclass.data
   otherCaches: Seq[Cache[F]] = Nil,
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
   classpathOrder: Boolean = true
-)(implicit S: Sync[F]) {
+)(implicit
+  sync: Sync[F]
+) {
+
+  private def S = sync
 
   private def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
     l => extraArtifactsSeq.flatMap(_(l))
