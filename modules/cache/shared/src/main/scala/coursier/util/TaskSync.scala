@@ -6,6 +6,8 @@ trait TaskSync extends Sync[Task] {
   def bind[A, B](elem: Task[A])(f: A => Task[B]) =
     elem.flatMap(f)
 
+  override def map[A, B](elem: Task[A])(f: A => B): F[B] =
+    elem.map(f)
   def gather[A](elems: Seq[Task[A]]) =
     Task(implicit ec => Future.sequence(elems.map(_.value(ec))))
   def delay[A](a: => A) = Task.delay(a)
