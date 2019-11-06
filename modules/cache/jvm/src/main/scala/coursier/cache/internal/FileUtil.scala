@@ -33,7 +33,7 @@ object FileUtil {
     }
   }
 
-  def withContent(is: InputStream, f: (Array[Byte], Int) => Unit, bufferSize: Int = 16384): Unit = {
+  def withContent(is: InputStream, f: WithContent, bufferSize: Int = 16384): Unit = {
     val data = Array.ofDim[Byte](bufferSize)
 
     var nRead = is.read(data, 0, data.length)
@@ -41,6 +41,14 @@ object FileUtil {
       f(data, nRead)
       nRead = is.read(data, 0, data.length)
     }
+  }
+
+  trait WithContent {
+    def apply(arr: Array[Byte], z: Int): Unit
+  }
+
+  class UpdateDigest(md: java.security.MessageDigest) extends FileUtil.WithContent {
+    def apply(arr: Array[Byte], z: Int): Unit = md.update(arr, 0, z)
   }
 
 }
