@@ -685,7 +685,7 @@ import dataclass.data
                 var is: FileInputStream = null
                 try {
                   is = new FileInputStream(localFile0)
-                  FileUtil.withContent(is, new FileContent.UpdateDigest(md))
+                  FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
                 } finally is.close()
 
                 val digest = md.digest()
