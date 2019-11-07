@@ -6,7 +6,7 @@ trait TaskSync extends Sync[Task] {
   def bind[A, B](elem: Task[A])(f: A => Task[B]) =
     elem.flatMap(f)
 
-  override def map[A, B](elem: Task[A])(f: A => B): F[B] =
+  override def map[A, B](elem: Task[A])(f: A => B): Task[B] =
     elem.map(f)
   def gather[A](elems: Seq[Task[A]]) =
     Task(implicit ec => Future.sequence(elems.map(_.value(ec))))
