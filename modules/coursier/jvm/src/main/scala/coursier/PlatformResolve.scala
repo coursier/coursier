@@ -8,10 +8,12 @@ import coursier.parse.RepositoryParser
 abstract class PlatformResolve {
 
   protected def defaultMirrorConfFiles = {
-    val configDir = coursier.paths.CoursierPaths.configDirectory()
-    val propFile = new File(configDir, "mirror.properties")
-    // Warn if propFile has group and others read permissions?
-    Seq(MirrorConfFile(propFile.getAbsolutePath, optional = true))
+    val files = Seq(coursier.paths.Mirror.defaultConfigFile()) ++
+      Option(coursier.paths.Mirror.extraConfigFile()).toSeq
+    files.map { f =>
+      // Warn if f has group and others read permissions?
+      MirrorConfFile(f.getAbsolutePath, optional = true)
+    }
   }
 
   lazy val defaultRepositories: Seq[Repository] = {
