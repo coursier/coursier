@@ -61,6 +61,11 @@ final case class ResolveOptions(
           previous ++ app.exclusions.filterNot(previous.toSet)
         },
         native = app.launcherType == "scala-native"
+      ),
+      resolutionOptions = resolutionOptions.copy(
+        scalaVersion = resolutionOptions.scalaVersion.orElse(
+          app.scalaVersion
+        )
       )
     )
 }
