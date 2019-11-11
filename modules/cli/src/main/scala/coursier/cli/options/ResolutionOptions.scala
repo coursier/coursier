@@ -145,7 +145,7 @@ final case class ResolutionOptions(
           .withProperties(extraProperties)
           .withForcedProperties(forcedProperties)
           .withProfiles(profiles)
-          .withScalaVersionOpt(scalaVersion)
+          .withScalaVersionOpt(scalaVersion.map(_.trim).filter(_.nonEmpty))
           .withForceScalaVersionOpt(forceScalaVersion)
           .withTypelevel(typelevel)
           .withRules(rules)

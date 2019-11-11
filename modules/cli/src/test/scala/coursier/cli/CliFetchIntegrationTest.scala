@@ -1330,4 +1330,55 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
     assert(pomPath.exists())
     assert(pomSha1Path.exists())
   }
+
+  "Scala version range" should "work with fully cross-versioned dependencies" in {
+    val resolutionOpt = ResolutionOptions(
+      scalaVersion = Some("2.12.+")
+    )
+    val resolveOpt = ResolveOptions(
+      resolutionOptions = resolutionOpt
+    )
+    val options = FetchOptions(resolveOptions = resolveOpt)
+    val params = paramsOrThrow(options)
+    val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:::ammonite:1.8.1"))
+      .unsafeRun()(ec)
+    val expectedFiles = Set(
+      "ammonite-interp-api_2.12.10-1.8.1.jar",
+      "ammonite-interp_2.12.10-1.8.1.jar",
+      "ammonite-ops_2.12-1.8.1.jar",
+      "ammonite-repl-api_2.12.10-1.8.1.jar",
+      "ammonite-repl_2.12.10-1.8.1.jar",
+      "ammonite-runtime_2.12.10-1.8.1.jar",
+      "ammonite-terminal_2.12-1.8.1.jar",
+      "ammonite-util_2.12-1.8.1.jar",
+      "ammonite_2.12.10-1.8.1.jar",
+      "fansi_2.12-0.2.7.jar",
+      "fastparse_2.12-2.1.3.jar",
+      "geny_2.12-0.1.8.jar",
+      "interface-0.0.8.jar",
+      "javaparser-core-3.2.5.jar",
+      "javassist-3.21.0-GA.jar",
+      "jline-reader-3.6.2.jar",
+      "jline-terminal-3.6.2.jar",
+      "jline-terminal-jna-3.6.2.jar",
+      "jna-4.2.2.jar",
+      "os-lib_2.12-0.4.2.jar",
+      "pprint_2.12-0.5.6.jar",
+      "requests_2.12-0.2.0.jar",
+      "scala-collection-compat_2.12-2.1.2.jar",
+      "scala-compiler-2.12.10.jar",
+      "scala-library-2.12.10.jar",
+      "scala-reflect-2.12.10.jar",
+      "scala-xml_2.12-1.2.0.jar",
+      "scalaparse_2.12-2.1.3.jar",
+      "scopt_2.12-3.7.1.jar",
+      "sourcecode_2.12-0.1.8.jar",
+      "ujson_2.12-0.8.0.jar",
+      "upack_2.12-0.8.0.jar",
+      "upickle-core_2.12-0.8.0.jar",
+      "upickle-implicits_2.12-0.8.0.jar",
+      "upickle_2.12-0.8.0.jar"
+    )
+    assert(files.map(_._2.getName).toSet.equals(expectedFiles))
+  }
 }
