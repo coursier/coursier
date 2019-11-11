@@ -31,7 +31,7 @@ object Deps {
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def jansi = "org.fusesource.jansi" % "jansi" % "1.18"
-  def jlineTerminalJansi = "org.jline" % "jline-terminal-jansi" % "3.13.0"
+  def jlineTerminalJansi = "org.jline" % "jline-terminal-jansi" % "3.13.1"
   def jsoup = "org.jsoup" % "jsoup" % "1.12.1"
   def junit = "junit" % "junit" % "4.12"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -39,7 +39,7 @@ object Deps {
   // staying before 3.14.0 to the URLStreamHandlerFactory implementation
   def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
   def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
-  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.28"
+  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.29"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
 
