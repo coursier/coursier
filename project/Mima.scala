@@ -52,6 +52,7 @@ object Mima {
       val versions = binaryCompatibilityVersions
         .filter(_ != "2.0.0-RC3-4")
         .filter(_ != "2.0.0-RC4")
+        .filter(_ != "2.0.0-RC4-1")
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
       }
