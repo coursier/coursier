@@ -10,7 +10,10 @@ final case class BootstrapParams(
   sharedLaunch: SharedLaunchParams,
   nativeBootstrap: NativeLauncherParams,
   specific: BootstrapSpecificParams
-)
+) {
+  lazy val fork: Boolean =
+    sharedLaunch.fork.getOrElse(SharedLaunchParams.defaultFork)
+}
 
 object BootstrapParams {
   def apply(options: BootstrapOptions): ValidatedNel[String, BootstrapParams] = {

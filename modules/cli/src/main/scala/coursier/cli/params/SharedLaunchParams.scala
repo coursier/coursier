@@ -15,7 +15,7 @@ final case class SharedLaunchParams(
   mainClassOpt: Option[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
-  fork: Boolean
+  fork: Option[Boolean]
 ) {
   def fetch: FetchParams =
     FetchParams(
@@ -28,7 +28,7 @@ final case class SharedLaunchParams(
 
 object SharedLaunchParams {
 
-  private def defaultFork: Boolean =
+  def defaultFork: Boolean =
     sys.props
       .get("org.graalvm.nativeimage.imagecode")
       .contains("runtime")
@@ -59,8 +59,6 @@ object SharedLaunchParams {
       Paths.get(p)
     }
 
-    val fork = options.fork.getOrElse(defaultFork)
-
     (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
       (resolve, artifact, sharedLoader, properties) =>
         SharedLaunchParams(
@@ -70,7 +68,7 @@ object SharedLaunchParams {
           mainClassOpt,
           properties,
           extraJars,
-          fork
+          options.fork
         )
     }
   }

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 public class Mirror {
 
@@ -23,12 +24,12 @@ public class Mirror {
   public static File defaultConfigFile() throws IOException {
 
     String fromEnv = System.getenv("COURSIER_MIRRORS");
-    if (fromEnv != null) {
+    if (fromEnv != null && !fromEnv.isEmpty()) {
       return new File(fromEnv);
     }
 
     String fromProps = System.getProperty("coursier.mirrors");
-    if (fromProps != null) {
+    if (fromProps != null && !fromProps.isEmpty()) {
       return new File(fromProps);
     }
 
@@ -109,8 +110,8 @@ public class Mirror {
         throw new MirrorPropertiesException("Property " + prefix + ".from not found");
       }
 
-      List<String> froms = new ArrayList<>(Arrays.asList(rawFrom.split(";")));
-      for (String rawFrom0: rawFrom.split(";")) {
+      List<String> froms = new ArrayList<>();
+      for (String rawFrom0: rawFrom.split(Pattern.quote(";"))) {
         if (!rawFrom0.isEmpty()) {
           if (rawFrom0.charAt(rawFrom0.length() - 1) == '/')
             froms.add(rawFrom0.substring(0, rawFrom0.length() - 1));

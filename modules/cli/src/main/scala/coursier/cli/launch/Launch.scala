@@ -14,6 +14,7 @@ import coursier.cli.params.{ArtifactParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.Resolution
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.annotation.tailrec
@@ -237,15 +238,25 @@ object Launch extends CaseApp[LaunchOptions] {
           s"$name.version" -> v
         }
 
-        val jcp =
-          if (params.shared.sharedLoader.loaderNames.isEmpty)
-            Seq("java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
-          else
-            Nil
-
         opt.toSeq ++ params.shared.properties
       }
       f <- Task.fromEither {
+
+        val (jlp, jepExtraJar) =
+          if (params.jep) {
+            val jepLocation = Jep.location()
+            if (params.shared.resolve.output.verbosity >= 1)
+              System.err.println(s"Found jep location: $jepLocation")
+            val jepJar = Jep.jar(jepLocation)
+            if (params.shared.resolve.output.verbosity >= 1)
+              System.err.println(s"Found jep JAR: $jepJar")
+            val props = Seq(
+              "java.library.path" -> jepLocation.getAbsolutePath
+            )
+
+            (props, Some(jepJar))
+          } else
+            (Nil, None)
 
         val hierarchy = loaderHierarchy(
           res,
@@ -254,7 +265,7 @@ object Launch extends CaseApp[LaunchOptions] {
           platformOpt,
           params.shared.sharedLoader,
           params.shared.artifact,
-          params.shared.extraJars.map(_.toFile),
+          params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq,
           params.shared.resolve.classpathOrder
         )
 
@@ -271,11 +282,11 @@ object Launch extends CaseApp[LaunchOptions] {
         val properties0 = {
           val m = new java.util.LinkedHashMap[String, String]
           // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
-          for ((k, v) <- jcp.iterator ++ props.iterator)
+          for ((k, v) <- jcp.iterator ++ jlp.iterator ++ props.iterator)
             m.put(k, v)
           val m0 = coursier.paths.Util.expandProperties(m)
           // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
-          if (params.shared.fork && props.forall(_._1 != "java.class.path"))
+          if (params.fork && props.forall(_._1 != "java.class.path"))
             m0.remove("java.class.path")
           val b = new ListBuffer[(String, String)]
           m0.forEach(
@@ -287,7 +298,7 @@ object Launch extends CaseApp[LaunchOptions] {
           b.result()
         }
 
-        if (params.shared.fork)
+        if (params.fork)
           launchFork(hierarchy, mainClass, userArgs, properties0, params.shared.resolve.output.verbosity)
             .right.map(f => () => Some(f()))
         else
