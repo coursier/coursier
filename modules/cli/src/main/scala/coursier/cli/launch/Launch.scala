@@ -237,12 +237,6 @@ object Launch extends CaseApp[LaunchOptions] {
           s"$name.version" -> v
         }
 
-        val jcp =
-          if (params.shared.sharedLoader.loaderNames.isEmpty)
-            Seq("java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
-          else
-            Nil
-
         opt.toSeq ++ params.shared.properties
       }
       f <- Task.fromEither {
