@@ -8,6 +8,7 @@ import coursier.util.ModuleMatchers
 import utest._
 
 import scala.async.Async.{async, await}
+import coursier.core.Activation
 
 object ResolveTests extends TestSuite {
 
@@ -16,6 +17,10 @@ object ResolveTests extends TestSuite {
   private val resolve = Resolve()
     .noMirrors
     .withCache(cache)
+    .withResolutionParams(
+      ResolutionParams()
+        .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+    )
 
   val tests = Tests {
 
@@ -791,6 +796,23 @@ object ResolveTests extends TestSuite {
       }
 
       await(validateDependencies(res))
+    }
+
+    "pom project.packaging property" - async {
+      val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      // The one we're interested in here
+      val backendImplUrl = "https://repo1.maven.org/maven2/org/nd4j/nd4j-backend-impls/1.0.0-beta4/nd4j-backend-impls-1.0.0-beta4-macosx-x86_64.pom"
+      val urls = res.dependencyArtifacts().map(_._3.url).toSet
+
+      assert(urls.contains(backendImplUrl))
     }
   }
 }

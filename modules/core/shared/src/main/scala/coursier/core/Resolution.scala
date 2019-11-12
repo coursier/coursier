@@ -414,12 +414,6 @@ object Resolution {
 
   def projectProperties(project: Project): Seq[(String, String)] = {
 
-    // vague attempt at recovering the POM packaging tag
-    val packagingOpt = project.publications.collectFirst {
-      case (Configuration.compile, pub) =>
-        pub.`type`
-    }
-
     // FIXME The extra properties should only be added for Maven projects, not Ivy ones
     val properties0 = project.properties ++ Seq(
       // some artifacts seem to require these (e.g. org.jmock:jmock-legacy:2.5.1)
@@ -434,7 +428,7 @@ object Resolution {
       "project.groupId"     -> project.module.organization.value,
       "project.artifactId"  -> project.module.name.value,
       "project.version"     -> project.actualVersion
-    ) ++ packagingOpt.toSeq.map { packaging =>
+    ) ++ project.packagingOpt.toSeq.map { packaging =>
       "project.packaging"   -> packaging.value
     } ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
