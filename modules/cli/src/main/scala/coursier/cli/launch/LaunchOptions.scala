@@ -10,7 +10,9 @@ final case class LaunchOptions(
   @Recurse
     sharedOptions: SharedLaunchOptions = SharedLaunchOptions(),
 
-  json: Boolean = false // move to SharedLaunchOptions? (and handle it from the other commands too)
+  json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
+
+  jep: Boolean = false
 ) {
   def addApp(app: RawAppDescriptor): LaunchOptions =
     copy(
