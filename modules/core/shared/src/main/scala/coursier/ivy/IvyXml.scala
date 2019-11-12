@@ -184,10 +184,13 @@ object IvyXml {
 
       val publicationsOpt = publicationsNodeOpt.map(publications)
 
-      val description = infoNode.children
-        .find(_.label == "description")
+      val descriptionNodeOpt = infoNode.children.find(_.label == "description")
+
+      val description = descriptionNodeOpt
         .map(_.textContent.trim)
         .getOrElse("")
+
+      val homePage = descriptionNodeOpt.flatMap(_.attribute("homepage").right.toOption).getOrElse("")
 
       val licenses = infoNode.children
         .filter(_.label == "license")
@@ -229,7 +232,7 @@ object IvyXml {
         },
         Info(
           description,
-          "",
+          homePage,
           licenses,
           Nil,
           publicationDate,
