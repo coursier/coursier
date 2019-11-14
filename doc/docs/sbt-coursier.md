@@ -15,6 +15,11 @@ The sbt plugin can be enabled either on a per-project basis (recommended), or gl
 It mainly overrides the `update`, `updateClassifiers`, and `updateSbtClassifiers` tasks. It does
 not handle publishing for now.
 
+> Note that if you are using sbt 1.3.x or later, you shouldn't need to add
+sbt-coursier to your build, except in [very specific cases](#sbt-13x).
+sbt 1.3.x ships with coursier support
+out-of-the-box. That support is enabled by default.
+
 ## Setup
 
 ### Per project
@@ -60,3 +65,27 @@ Add the following to `~/.sbt/1.0/global.sbt`,
 // Work around for https://github.com/coursier/coursier/issues/450
 classpathTypes += "maven-plugin"
 ```
+
+#### sbt 1.3.x
+
+sbt 1.3.x ships with coursier support out-of-the-box, and that support
+is enabled by default. You shouldn't need to add sbt-coursier to sbt
+1.3.x builds in most cases.
+
+You may want to add it anyway:
+- if your build or some of your plugins directly access coursier-specific
+keys
+- if you want your build to use a coursier release newer that the one sbt
+depends on.
+
+Note that in the first case, you may want to consider migrating to
+the [sbt librarymanagement API](https://github.com/sbt/librarymanagement),
+by using the `dependencyResolution` sbt key rather that accessing
+coursier-specific keys.
+
+In the second case, you'll have to use the
+[coursier-based sbt launcher](https://github.com/coursier/sbt-launcher),
+via [its custom sbt-extras launcher](https://github.com/coursier/sbt-extras)
+for example. Then add sbt-coursier to your build, or its sister plugin,
+sbt-lm-coursier, whose implementation is much closer to the coursier-support
+in sbt itself.
