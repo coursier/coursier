@@ -5,6 +5,7 @@ import coursier.cache.Cache
 import coursier.core.Repository
 import coursier.util.Sync
 import dataclass.data
+import coursier.util.Task
 
 @data class Complete[F[_]](
   cache: Cache[F],
@@ -75,6 +76,9 @@ import dataclass.data
 }
 
 object Complete {
+
+  def apply(): Complete[Task] =
+    Complete(Cache.default)
 
   def scalaBinaryVersion(scalaVersion: String): String =
     if (scalaVersion.contains("-M") || scalaVersion.contains("-RC"))
