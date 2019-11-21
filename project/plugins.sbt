@@ -7,7 +7,7 @@ plugins_(
   "com.typesafe.sbt"   % "sbt-native-packager"      % "1.5.0",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
-  "org.scala-js"       % "sbt-scalajs"              % "0.6.29",
+  "org.scala-js"       % "sbt-scalajs"              % "0.6.31",
   "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.14.0",
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1",
 )
