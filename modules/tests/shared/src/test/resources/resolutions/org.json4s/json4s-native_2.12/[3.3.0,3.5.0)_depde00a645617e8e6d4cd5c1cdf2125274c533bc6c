@@ -1,9 +1,0 @@
-org.scala-lang:scala-library:2.12.8:default
-org.json4s:json4s-ast_2.12:3.5.0.RC1:default
-org.json4s:json4s-scalap_2.12:3.5.0.RC1:default
-com.thoughtworks.paranamer:paranamer:2.8:default
-org.scala-lang.modules:scala-xml_2.12:1.0.6:default
-org.json4s:json4s-core_2.12:3.5.0.RC1:default
-org.json4s:json4s-native_2.12:3.5.0.RC1:default
-org.scala-lang:scala-reflect:2.12.8:default
-org.scala-lang:scala-compiler:2.12.8:default

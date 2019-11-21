@@ -95,6 +95,13 @@ object PomParser {
 
     var description = ""
     var url = ""
+    val licenses = Nil // TODO
+    val developers = Nil // TODO
+    val publication = Option.empty[Versions.DateTime] // TODO
+    var scmOpt = Option.empty[Info.Scm]
+    var scmUrl = Option.empty[String]
+    var scmConnection = Option.empty[String]
+    var scmDeveloperConnection = Option.empty[String]
 
     var packagingOpt = Option.empty[Type]
 
@@ -186,7 +193,7 @@ object PomParser {
         val extraAttrsMap = extraAttrs
           .map {
             case (mod, ver) =>
-              (mod.copy(attributes = Map.empty), ver) -> mod.attributes
+              (mod.withAttributes(Map.empty), ver) -> mod.attributes
           }
           .toMap
 
@@ -196,10 +203,9 @@ object PomParser {
           if (relocationGroupIdOpt.nonEmpty || relocationArtifactIdOpt.nonEmpty || relocationVersionOpt.nonEmpty)
             Some {
               Configuration.empty -> Dependency(
-                projModule.copy(
-                  organization = relocationGroupIdOpt.getOrElse(projModule.organization),
-                  name = relocationArtifactIdOpt.getOrElse(projModule.name)
-                ),
+                projModule
+                  .withOrganization(relocationGroupIdOpt.getOrElse(projModule.organization))
+                  .withName(relocationArtifactIdOpt.getOrElse(projModule.name)),
                 relocationVersionOpt.getOrElse(finalVersion),
                 Configuration.empty,
                 Set.empty[(Organization, ModuleName)],
@@ -217,7 +223,7 @@ object PomParser {
           (relocationDependencyOpt.toList ::: dependencies.toList).map {
             case (config, dep0) =>
               val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-                dep0.copy(module = dep0.module.copy(attributes = attrs))
+                dep0.withModule(dep0.module.withAttributes(attrs))
               )
               config -> dep
           },
@@ -235,10 +241,10 @@ object PomParser {
           Info(
             description,
             url,
-            Nil, // TODO
-            Nil, // TODO
-            None,
-            None
+            licenses,
+            developers,
+            publication,
+            scmOpt
           )
         )
       }
@@ -341,6 +347,11 @@ object PomParser {
     "profile" :: "profiles" :: "project" :: Nil,
     (s, p) => {
       s.profiles += p
+    }
+  ) ++ scmHandlers(
+    "scm" :: "project" :: Nil,
+    (s, scm) => {
+      s.scmOpt = Some(scm)
     }
   )
 
@@ -548,4 +559,31 @@ object PomParser {
     }
     .toMap
 
+  private def scmHandlers(prefix: List[String], add: (State, Info.Scm) => Unit) =
+    Seq(
+      new SectionHandler(prefix) {
+        def start(state: State) = {
+        }
+        def end(state: State) = {
+          val d = Info.Scm(
+            url = state.scmUrl,
+            connection = state.scmConnection,
+            developerConnection = state.scmDeveloperConnection
+          )
+          add(state, d)
+        }
+      },
+      content("url" :: prefix) {
+        (state, content) =>
+          state.scmUrl = Some(content)
+      },
+      content("connection" :: prefix) {
+        (state, content) =>
+          state.scmConnection = Some(content)
+      },
+      content("developerConnection" :: prefix) {
+        (state, content) =>
+          state.scmDeveloperConnection = Some(content)
+      }
+    )
 }

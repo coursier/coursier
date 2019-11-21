@@ -3,6 +3,37 @@ import Aliases._
 import Settings.{crossProject, project, _}
 import Publish._
 
+lazy val warn = {
+  try {
+    Thread.currentThread()
+      .getContextClassLoader
+      .loadClass("coursier.Resolve")
+  } catch {
+    case _: ClassNotFoundException =>
+      val (red, reset) =
+        if (sys.env.contains("CI") || java.lang.Boolean.getBoolean("sbt.log.noformat"))
+          ("", "")
+	else
+	  (scala.Console.YELLOW, scala.Console.RESET)
+
+      System.err.println(
+        s"""$red
+           |Warning: It seems you're using the default sbt launcher.
+           |The coursier build currently requires using the coursier-based
+           |sbt-launcher (https://github.com/coursier/sbt-launcher).
+           |Use
+           |  ./sbt
+           |to run the coursier-based launcher instead.
+           |$reset""".stripMargin
+      )
+ }
+}
+
+version := {
+  warn
+  version.value
+}
+
 lazy val getSbtCoursierVersion = settingKey[String]("")
 
 getSbtCoursierVersion := {
@@ -37,7 +68,8 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
     coursierPrefix,
     Mima.previousArtifacts,
     Mima.utilFilters,
-    dontPublishScalaJsIn("2.11")
+    dontPublishScalaJsIn("2.11"),
+    libs += Deps.dataClass % Provided
   )
 
 lazy val utilJvm = util.jvm
@@ -70,7 +102,8 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     coursierPrefix,
     Mima.previousArtifacts,
     Mima.coreFilters,
-    dontPublishScalaJsIn("2.11")
+    dontPublishScalaJsIn("2.11"),
+    libs += Deps.dataClass % Provided
   )
 
 lazy val coreJvm = core.jvm
@@ -156,6 +189,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     shared,
     coursierPrefix,
     utest,
+    libs += Deps.dataClass % Provided,
     libs ++= {
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
         case Some((2, 12)) =>
@@ -206,7 +240,7 @@ lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
     Mima.previousArtifacts,
-    onlyIn("2.11", "2.12"), // not there yet for 2.13.0-RC1
+    Mima.catsInteropFilters,
     dontPublishScalaJsIn("2.11")
   )
 
@@ -286,36 +320,10 @@ lazy val install = project("install")
 
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, install, publish)
-  .enablePlugins(ContrabandPlugin, JlinkPlugin, PackPlugin)
+  .enablePlugins(JlinkPlugin, PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
-    // does this really work?
-    skipGeneration in generateContrabands := {
-      !isSbv("2.12").value
-    },
-    managedSourceDirectories.in(Compile) ++= {
-      val baseDir = baseDirectory.value
-      if (isSbv("2.12").value)
-        Seq(baseDir / "src" / "main" / "contraband-scala")
-      else
-        Nil
-    },
-    sourceManaged.in(Compile, generateContrabands) := {
-      val baseDir = baseDirectory.value
-      val previous = sourceManaged.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
-        baseDir / "src" / "main" / "contraband-scala"
-      else
-        previous
-    },
-    contrabandSource.in(Compile, generateContrabands) := {
-      val current = contrabandSource.in(Compile, generateContrabands).value
-      if (isSbv("2.12").value)
-        current
-      else
-        current / "foo"
-    },
     coursierPrefix,
     addBootstrapJarResourceInTests,
     libs ++= {
@@ -365,8 +373,8 @@ lazy val `cli-graalvm` = project("cli-graalvm")
     },
     mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
     libs ++= Seq(
-      "org.bouncycastle" % "bcprov-jdk15on" % "1.63",
-      "org.bouncycastle" % "bcpkix-jdk15on" % "1.63"
+      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
+      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
     )
   )
 
@@ -481,7 +489,8 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     utest,
     libs ++= Seq(
       Deps.scalaAsync.value % Test,
-      Deps.cross.argonautShapeless.value
+      Deps.cross.argonautShapeless.value,
+      Deps.dataClass % Provided
     )
   )
 

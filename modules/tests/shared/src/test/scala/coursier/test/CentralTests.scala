@@ -251,12 +251,10 @@ abstract class CentralTests extends TestSuite {
     'optionalScope - {
 
       def intransitiveCompiler(config: Configuration) =
-        Dependency(
-          Module(org"org.scala-lang", name"scala-compiler"), "2.11.8",
-          configuration = config,
-          transitive = false,
-          attributes = Attributes(Type.jar)
-        )
+        Dependency(Module(org"org.scala-lang", name"scala-compiler"), "2.11.8")
+          .withConfiguration(config)
+          .withAttributes(Attributes(Type.jar))
+          .withTransitive(false)
 
       runner.withArtifacts(
         Seq(
@@ -343,9 +341,8 @@ abstract class CentralTests extends TestSuite {
       'tests - {
         async {
           val deps = Seq(
-            Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
-            )
+            Dependency(Module(org"org.apache.avro", name"avro"), "1.8.1")
+              .withAttributes(Attributes(Type.empty, Classifier.tests))
           )
           val res = await(runner.resolve(deps))
           val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
@@ -357,12 +354,9 @@ abstract class CentralTests extends TestSuite {
       'mixed - {
         async {
           val deps = Seq(
-            Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1"
-            ),
-            Dependency(
-              Module(org"org.apache.avro", name"avro"), "1.8.1", attributes = Attributes(Type.empty, Classifier.tests)
-            )
+            Dependency(Module(org"org.apache.avro", name"avro"), "1.8.1"),
+            Dependency(Module(org"org.apache.avro", name"avro"), "1.8.1")
+              .withAttributes(Attributes(Type.empty, Classifier.tests))
           )
           val res = await(runner.resolve(deps))
           val filenames: Set[String] = res.artifacts().map(_.url.split("/").last).toSet
@@ -602,7 +596,7 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver)
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.bundle))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.bundle))), Nil, None) { artifacts =>
 
         val jarOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
@@ -615,7 +609,7 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver, attributes = Attributes(Type.pom))), Nil, None) { artifacts =>
+      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.pom))), Nil, None) { artifacts =>
 
         val pomOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.pom =>

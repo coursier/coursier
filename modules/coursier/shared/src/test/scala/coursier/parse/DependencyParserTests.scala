@@ -1,6 +1,6 @@
 package coursier.parse
 
-import coursier.core.{Classifier, Configuration, Type}
+import coursier.core.{Classifier, Configuration, Extension, Publication, Type}
 import coursier.{Attributes, Dependency, moduleNameString, moduleString, organizationString}
 import utest._
 
@@ -56,6 +56,42 @@ object DependencyParserTests extends TestSuite {
           assert(dep.version == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
+      }
+    }
+
+    "extension" - {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.publication == Publication("", Type.empty, Extension("exe"), Classifier.empty))
+      }
+    }
+
+    "type" - {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,type=typetype", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.publication == Publication("", Type("typetype"), Extension.empty, Classifier.empty))
+      }
+    }
+
+    "extension and type" - {
+      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version == "1.7.4")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.publication == Publication("", Type("typetype"), Extension("exe"), Classifier.empty))
       }
     }
 
@@ -165,7 +201,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver", configuration = Configuration.empty),
+            Dependency(mod"org:name", "ver").withConfiguration(Configuration.empty),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -180,7 +216,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver", configuration = Configuration.empty),
+            Dependency(mod"org:name", "ver").withConfiguration(Configuration.empty),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -195,7 +231,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver", configuration = Configuration("conf")),
+            Dependency(mod"org:name", "ver").withConfiguration(Configuration("conf")),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty

@@ -72,10 +72,8 @@ class TestState {
         val str = inMemoryCache.fromCache(url)
         val p = MavenRepository.parseRawPomDom(str).right.get
         val p0 = Pom.addOptionalDependenciesInConfig(
-          p.copy(
-            actualVersionOpt = Some(v),
-            configurations = MavenRepository.defaultConfigurations
-          ),
+          p.withActualVersionOpt(Some(v))
+            .withConfigurations(MavenRepository.defaultConfigurations),
           Set(Configuration.empty, Configuration.default),
           Configuration.optional
         )

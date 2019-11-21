@@ -31,7 +31,8 @@ object NativeBuilder {
     val cliOrg = org"io.get-coursier"
     val cliName = ModuleName(s"coursier-cli_$sbv")
     val coursierVersion = coursier.util.Properties.version
-    val dep = Dependency(module, coursierVersion, exclusions = Set((cliOrg, cliName)))
+    val dep = Dependency(module, coursierVersion)
+      .withExclusions(Set((cliOrg, cliName)))
 
     val files = fetch
       .addDependencies(dep)

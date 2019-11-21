@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.core.{Configuration, Reconciliation}
+import coursier.core.{Activation, Configuration, Extension, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
@@ -16,6 +16,10 @@ object ResolveTests extends TestSuite {
   private val resolve = Resolve()
     .noMirrors
     .withCache(cache)
+    .withResolutionParams(
+      ResolutionParams()
+        .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+    )
 
   val tests = Tests {
 
@@ -364,7 +368,7 @@ object ResolveTests extends TestSuite {
 
         val res = await {
           resolve
-            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".copy(configuration = Configuration.defaultCompile))
+            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".withConfiguration(Configuration.defaultCompile))
             .future()
         }
 
@@ -723,6 +727,91 @@ object ResolveTests extends TestSuite {
       }
 
       await(validateDependencies(res))
+    }
+
+    "source artifact type if sources classifier" - async {
+      val dep = dep"org.apache.commons:commons-compress:1.5,classifier=sources"
+      assert(dep.publication.classifier == Classifier("sources"))
+
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val depArtifacts = res.dependencyArtifacts(Some(Seq(Classifier.sources)))
+
+      val urls = depArtifacts.map(_._3.url).toSet
+      val expectedUrls = Set(
+        "https://repo1.maven.org/maven2/org/tukaani/xz/1.2/xz-1.2-sources.jar",
+        "https://repo1.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5-sources.jar"
+      )
+      assert(urls == expectedUrls)
+
+      val pubTypes = depArtifacts.map(_._2.`type`).toSet
+      val expectedPubTypes = Set(Type.source)
+      assert(pubTypes == expectedPubTypes)
+    }
+
+    "user-supplied artifact type" - async {
+      val dep = dep"io.grpc:protoc-gen-grpc-java:1.23.0,classifier=linux-x86_64,ext=exe,type=protoc-plugin"
+      assert(dep.publication.`type` == Type("protoc-plugin"))
+      assert(dep.publication.ext == Extension("exe"))
+      assert(dep.publication.classifier == Classifier("linux-x86_64"))
+
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val depArtifacts = res.dependencyArtifacts()
+      assert(depArtifacts.lengthCompare(1) == 0)
+
+      val (_, pub, artifact) = depArtifacts.head
+
+      val url = artifact.url
+      val expectedUrl = "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
+      assert(artifact.url == expectedUrl)
+
+      assert(pub.`type` == Type("protoc-plugin"))
+      assert(pub.ext == Extension("exe"))
+      assert(pub.classifier == Classifier("linux-x86_64"))
+    }
+
+    "new line in properties" - async {
+      val res = await {
+        resolve
+          .addDependencies(
+            dep"org.kie:kie-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-api:7.27.0.Final",
+            dep"org.kie.server:kie-server-client:7.27.0.Final"
+          )
+          .future()
+      }
+
+      await(validateDependencies(res))
+    }
+
+    "pom project.packaging property" - async {
+      val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      // The one we're interested in here
+      val backendImplUrl = "https://repo1.maven.org/maven2/org/nd4j/nd4j-backend-impls/1.0.0-beta4/nd4j-backend-impls-1.0.0-beta4-macosx-x86_64.pom"
+      val urls = res.dependencyArtifacts().map(_._3.url).toSet
+
+      assert(urls.contains(backendImplUrl))
     }
   }
 }

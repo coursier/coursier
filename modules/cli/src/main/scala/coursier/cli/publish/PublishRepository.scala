@@ -37,11 +37,8 @@ object PublishRepository {
 
     def withAuthentication(auth: Authentication): Simple =
       copy(
-        snapshotRepo = snapshotRepo.copy(
-          authentication = Some(auth)
-        ),
-        readRepoOpt = readRepoOpt
-          .map(_.copy(authentication = Some(auth)))
+        snapshotRepo = snapshotRepo.withAuthentication(Some(auth)),
+        readRepoOpt = readRepoOpt.map(_.withAuthentication(Some(auth)))
       )
   }
 
@@ -105,40 +102,28 @@ object PublishRepository {
   final case class Sonatype(base: MavenRepository) extends PublishRepository {
 
     def snapshotRepo: MavenRepository =
-      base.copy(
-        root = s"${base.root}/content/repositories/snapshots"
-      )
+      base.withRoot(s"${base.root}/content/repositories/snapshots")
     def releaseRepo: MavenRepository =
-      base.copy(
-        root = s"$restBase/staging/deploy/maven2"
-      )
+      base.withRoot(s"$restBase/staging/deploy/maven2")
     def releaseRepoOf(repoId: String): MavenRepository =
-      base.copy(
-        root = s"$restBase/staging/deployByRepositoryId/$repoId"
-      )
+      base.withRoot(s"$restBase/staging/deployByRepositoryId/$repoId")
     def readSnapshotRepo: MavenRepository =
       snapshotRepo
     def readReleaseRepo: MavenRepository =
-      base.copy(
-        root = s"${base.root}/content/repositories/releases"
-      )
+      base.withRoot(s"${base.root}/content/repositories/releases")
 
     override def checkResultsRepo(isSnapshot: Boolean): MavenRepository =
       if (isSnapshot)
         super.checkResultsRepo(isSnapshot)
       else
-        base.copy(
-          root = s"${base.root}/content/repositories/public"
-        )
+        base.withRoot(s"${base.root}/content/repositories/public")
 
     def restBase: String =
       s"${base.root}/service/local"
 
     def withAuthentication(auth: Authentication): Sonatype =
       copy(
-        base = base.copy(
-          authentication = Some(auth)
-        )
+        base = base.withAuthentication(Some(auth))
       )
   }
 

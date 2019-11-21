@@ -301,4 +301,25 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     assert(output === expectedOutput)
   }
+
+  it should "resolve the main artifact first in classpath order" in {
+    val options = ResolveOptions(
+      classpathOrder = true
+    )
+    val args = RemainingArgs(
+      Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M9"),
+      Nil
+    )
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.task(params, pool, ps, ps, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, "UTF-8")
+    assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
+  }
 }

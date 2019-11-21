@@ -4,9 +4,10 @@ package core
 import coursier.util.{EitherT, Gather, Monad}
 
 import scala.annotation.tailrec
+import dataclass.data
 
 
-sealed abstract class ResolutionProcess {
+sealed abstract class ResolutionProcess extends Product with Serializable {
   def run[F[_]](
     fetch: ResolutionProcess.Fetch[F],
     maxIterations: Int = ResolutionProcess.defaultMaxIterations
@@ -54,32 +55,11 @@ sealed abstract class ResolutionProcess {
   def current: Resolution
 }
 
-final class Missing private (
-  val missing: Seq[(Module, String)],
-  val current: Resolution,
-  val cont: Resolution => ResolutionProcess
+@data class Missing(
+  missing: Seq[(Module, String)],
+  current: Resolution,
+  cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Missing =>
-        missing == other.missing &&
-          current == other.current &&
-          cont == other.cont
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    var code = 17 + "coursier.core.Missing".##
-    code = 37 * code + missing.##
-    code = 37 * code + current.##
-    code = 37 * code + cont.##
-    37 * code
-  }
-
-  override def toString: String =
-    s"Missing($missing, $current, $cont)"
-
 
   def next0(results: ResolutionProcess.MD): ResolutionProcess = {
 
@@ -150,38 +130,10 @@ final class Missing private (
 
 }
 
-object Missing {
-  def apply(
-    missing: Seq[(Module, String)],
-    current: Resolution,
-    cont: Resolution => ResolutionProcess
-  ): Missing =
-    new Missing(missing, current, cont)
-}
-
-final class Continue private (
-  val current: Resolution,
-  val cont: Resolution => ResolutionProcess
+@data class Continue(
+  current: Resolution,
+  cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Continue =>
-        current == other.current &&
-          cont == other.cont
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    var code = 17 + "coursier.core.Continue".##
-    code = 37 * code + current.##
-    code = 37 * code + cont.##
-    37 * code
-  }
-
-  override def toString: String =
-    s"Continue($current, $cont)"
-
 
   def next: ResolutionProcess = cont(current)
 
@@ -193,39 +145,9 @@ final class Continue private (
 
 }
 
-object Continue {
-  def apply(
-    current: Resolution,
-    cont: Resolution => ResolutionProcess
-  ): Continue =
-    new Continue(current, cont)
-}
-
-final class Done private (val resolution: Resolution) extends ResolutionProcess {
-
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Done =>
-        resolution == other.resolution
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    var code = 17 + "coursier.core.Done".##
-    code = 37 * code + resolution.##
-    37 * code
-  }
-
-  override def toString: String =
-    s"Done($resolution)"
-
+@data class Done(resolution: Resolution) extends ResolutionProcess {
 
   def current: Resolution = resolution
-}
-
-object Done {
-  def apply(resolution: Resolution): Done =
-    new Done(resolution)
 }
 
 object ResolutionProcess {
@@ -405,12 +327,12 @@ object ResolutionProcess {
           F.bind(lookups) { results =>
             EitherT(F.point(versionOrError(results, ver))).flatMap {
               case (v, repo) =>
-                (getLatest(v, repo, fetch) /: fetchs) (_ orElse getLatest(v, repo, _))
+                fetchs.foldLeft(getLatest(v, repo, fetch))(_ orElse getLatest(v, repo, _))
             }.run
           }
         }
       else
-        (get(fetch, intervalOpt = Some(ver)) /: fetchs)(_ orElse get(_, intervalOpt = Some(ver)))
+        fetchs.foldLeft(get(fetch, intervalOpt = Some(ver)))(_ orElse get(_, intervalOpt = Some(ver)))
     }
 
     if (version.contains("&")) {
@@ -435,7 +357,7 @@ object ResolutionProcess {
         case None =>
           val c = Parse.versionConstraint(version)
           if (c.interval == VersionInterval.zero)
-            (get(fetch) /: fetchs)(_ orElse get(_))
+            fetchs.foldLeft(get(fetch))(_ orElse get(_))
           else
             getLatest0(Left(c.interval))
       }

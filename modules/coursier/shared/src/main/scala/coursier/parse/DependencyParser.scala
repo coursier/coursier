@@ -1,6 +1,6 @@
 package coursier.parse
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Module, ModuleName, Organization, Type}
+import coursier.core.{Attributes, Classifier, Configuration, Dependency, Extension, Module, ModuleName, Organization, Publication, Type}
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
 
@@ -87,7 +87,7 @@ object DependencyParser {
   /*
    * Validates the parsed attributes.
    *
-   * Currently only "classifier" and "url" are allowed. If more are
+   * Currently only "classifier", "type", "extension", and "url" are allowed. If more are
    * added, they should be passed in via the second parameter
    *
    * @param attrs Attributes parsed
@@ -207,7 +207,9 @@ object DependencyParser {
 
     attrsOrErrors
       .collectFirst {
-        case Left(err) => Left(err)
+        case Left(err) =>
+          // FIXME We're dropping other errors here (use validation in return type?)
+          Left(err)
       }
       .getOrElse {
 
@@ -219,17 +221,26 @@ object DependencyParser {
 
         val parts = coords.split(":", -1)
 
-        // Only "classifier" and "url" attributes are allowed
-        val validAttrsKeys = Set("classifier", "url")
+        // Only attributes allowed
+        val validAttrsKeys = Set("classifier", "ext", "type", "url")
 
         validateAttributes(attrs, input, validAttrsKeys) match {
           case Some(err) => Left(err)
           case None =>
 
-            val attributes = attrs.get("classifier") match {
-              case Some(c) => Attributes(Type.empty, Classifier(c))
-              case None => Attributes(Type.empty, Classifier.empty)
-            }
+            val type0 = attrs
+              .get("type")
+              .map(Type(_))
+              .getOrElse(Type.empty)
+            val ext = attrs
+              .get("ext")
+              .map(Extension(_))
+              .getOrElse(Extension.empty)
+            val classifier = attrs
+              .get("classifier")
+              .map(Classifier(_))
+              .getOrElse(Classifier.empty)
+            val publication = Publication("", type0, ext, classifier)
 
             val extraDependencyParams: Map[String, String] = attrs.get("url") match {
                 case Some(url) => Map("url" -> url)
@@ -283,7 +294,7 @@ object DependencyParser {
                       version,
                       config,
                       Set.empty[(Organization, ModuleName)],
-                      attributes,
+                      publication,
                       optional = false,
                       transitive = true
                     )
@@ -314,7 +325,7 @@ object DependencyParser {
     *  or
     *   org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier" and "url attributes are
+    *  Currently only the "classifier", "type", "extension", and "url attributes are
     *  used, and others throw errors.
     */
   def dependencyParams(

@@ -17,35 +17,12 @@ package object coursier {
   val ModuleName = core.ModuleName
 
   type Dependency = core.Dependency
-  object Dependency extends Serializable {
-    def of(
+  object Dependency {
+    def apply(
       module: Module,
       version: String
     ): Dependency =
-      core.Dependency(
-        module,
-        version
-      )
-
-    @deprecated("Use of instead, then the with* methods on Dependency", "2.0.0-RC3")
-    def apply(
-      module: Module,
-      version: String,
-      configuration: Configuration = Configuration.empty,
-      attributes: Attributes = Attributes(),
-      exclusions: Set[(Organization, ModuleName)] = Set.empty,
-      optional: Boolean = false,
-      transitive: Boolean = true
-    ): Dependency =
-      core.Dependency(
-        module,
-        version,
-        configuration,
-        exclusions,
-        attributes,
-        optional,
-        transitive
-      )
+      core.Dependency(module, version)
   }
 
   type Attributes = core.Attributes
@@ -84,44 +61,12 @@ package object coursier {
 
   type Resolution = core.Resolution
   // ought to be replaced by just  val Resolution = core.Resolution
-  object Resolution extends Serializable {
+  object Resolution {
     val empty = apply()
     def apply(): Resolution =
       core.Resolution()
-
-    @deprecated("Call Resolution(), then call with* on it", "2.0.0-RC3")
-    def apply(
-      rootDependencies: Seq[Dependency],
-      dependencies: Set[Dependency] = Set.empty,
-      forceVersions: Map[Module, String] = Map.empty,
-      conflicts: Set[Dependency] = Set.empty,
-      projectCache: ProjectCache = Map.empty,
-      errorCache: Map[ModuleVersion, Seq[String]] = Map.empty,
-      finalDependencies: Map[Dependency, Seq[Dependency]] = Map.empty,
-      filter: Option[Dependency => Boolean] = None,
-      osInfo: Activation.Os = Activation.Os.fromProperties(sys.props.toMap),
-      jdkVersion: Option[Version] = sys.props.get("java.version").flatMap(Parse.version),
-      userActivations: Option[Map[String, Boolean]] = None,
-      mapDependencies: Option[Dependency => Dependency] = None,
-      extraProperties: Seq[(String, String)] = Nil,
-      forceProperties: Map[String, String] = Map.empty
-    ): Resolution =
-      core.Resolution(
-        rootDependencies,
-        DependencySet.empty.add(dependencies),
-        forceVersions,
-        conflicts,
-        projectCache,
-        errorCache,
-        finalDependencies,
-        filter,
-        osInfo,
-        jdkVersion,
-        userActivations,
-        mapDependencies,
-        extraProperties,
-        forceProperties
-      )
+    def apply(dependencies: Seq[Dependency]): Resolution =
+      core.Resolution().withRootDependencies(dependencies)
 
     def defaultTypes: Set[Type] = coursier.core.Resolution.defaultTypes
   }

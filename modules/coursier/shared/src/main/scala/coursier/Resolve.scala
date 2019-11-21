@@ -15,40 +15,42 @@ import coursier.util._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
+import dataclass.{data, since}
 
-final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[F]) {
+@data class Resolve[F[_]](
+  cache: Cache[F],
+  dependencies: Seq[Dependency] = Nil,
+  repositories: Seq[Repository] = Resolve.defaultRepositories,
+  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles0,
+  mirrors: Seq[Mirror] = Nil,
+  resolutionParams: ResolutionParams = ResolutionParams(),
+  throughOpt: Option[F[Resolution] => F[Resolution]] = None,
+  transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None
+)(implicit
+  sync: Sync[F]
+) {
 
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: Resolve[_] =>
-        params == other.params
-    }
+  private def S = sync
 
-  override def hashCode(): Int =
-    17 + params.##
+  private def through: F[Resolution] => F[Resolution] =
+    throughOpt.getOrElse(identity[F[Resolution]])
+  private def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
+    transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
 
-  override def toString: String =
-    s"Resolve($params)"
+  def finalDependencies: Seq[Dependency] = {
 
+    val filter = Exclusions(resolutionParams.exclusions)
 
-  def dependencies: Seq[Dependency] =
-    params.dependencies
-  def repositories: Seq[Repository] =
-    params.repositories
-  def mirrors: Seq[Mirror] =
-    params.mirrors
-  def mirrorConfFiles: Seq[MirrorConfFile] =
-    params.mirrorConfFiles
-  def resolutionParams: ResolutionParams =
-    params.resolutionParams
-  def cache: Cache[F] =
-    params.cache
-  def throughOpt: Option[F[Resolution] => F[Resolution]] =
-    params.throughOpt
-  def transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] =
-    params.transformFetcherOpt
-  def S: Sync[F] =
-    params.S
+    dependencies
+      .filter { dep =>
+        filter(dep.module.organization, dep.module.name)
+      }
+      .map { dep =>
+        dep.withExclusions(
+          Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
+        )
+      }
+  }
 
   def finalRepositories: F[Seq[Repository]] =
     S.map(allMirrors) { mirrors0 =>
@@ -65,57 +67,37 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
         .distinct
     }
 
-  private def withParams(params: Resolve.Params[F]): Resolve[F] =
-    new Resolve(params)
-
-
-  def withDependencies(dependencies: Seq[Dependency]): Resolve[F] =
-    withParams(params.copy(dependencies = dependencies))
   def addDependencies(dependencies: Dependency*): Resolve[F] =
-    withParams(params.copy(dependencies = params.dependencies ++ dependencies))
+    withDependencies(this.dependencies ++ dependencies)
 
-  def withRepositories(repositories: Seq[Repository]): Resolve[F] =
-    withParams(params.copy(repositories = repositories))
   def addRepositories(repositories: Repository*): Resolve[F] =
-    withParams(params.copy(repositories = params.repositories ++ repositories))
+    withRepositories(this.repositories ++ repositories)
 
   def noMirrors: Resolve[F] =
-    withParams(params.copy(
-      mirrors = Nil,
-      mirrorConfFiles = Nil
-    ))
+    withMirrors(Nil).withMirrorConfFiles(Nil)
 
-  def withMirrors(mirrors: Seq[Mirror]): Resolve[F] =
-    withParams(params.copy(mirrors = mirrors))
   def addMirrors(mirrors: Mirror*): Resolve[F] =
-    withParams(params.copy(mirrors = params.mirrors ++ mirrors))
+    withMirrors(this.mirrors ++ mirrors)
 
-  def withMirrorConfFiles(mirrorConfFiles: Seq[MirrorConfFile]): Resolve[F] =
-    withParams(params.copy(mirrorConfFiles = mirrorConfFiles))
   def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Resolve[F] =
-    withParams(params.copy(mirrorConfFiles = params.mirrorConfFiles ++ mirrorConfFiles))
+    withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
 
-  def withResolutionParams(resolutionParams: ResolutionParams): Resolve[F] =
-    withParams(params.copy(resolutionParams = resolutionParams))
   def mapResolutionParams(f: ResolutionParams => ResolutionParams): Resolve[F] =
-    withParams(params.copy(resolutionParams = f(resolutionParams)))
-
-  def withCache(cache: Cache[F]): Resolve[F] =
-    withParams(params.copy(cache = cache))
+    withResolutionParams(f(resolutionParams))
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Resolve[F] =
-    withParams(params.copy(throughOpt = Some(params.throughOpt.fold(f)(_ andThen f))))
+    withThroughOpt(Some(throughOpt.fold(f)(_ andThen f)))
   def noTransformResolution(): Resolve[F] =
-    withParams(params.copy(throughOpt = None))
+    withThroughOpt(None)
   def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Resolve[F] =
-    withParams(params.copy(throughOpt = fOpt))
+    withThroughOpt(fOpt)
 
   def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Resolve[F] =
-    withParams(params.copy(transformFetcherOpt = Some(params.transformFetcherOpt.fold(f)(_ andThen f))))
+    withTransformFetcherOpt(Some(transformFetcherOpt.fold(f)(_ andThen f)))
   def noTransformFetcher(): Resolve[F] =
-    withParams(params.copy(transformFetcherOpt = None))
+    withTransformFetcherOpt(None)
   def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
-    withParams(params.copy(transformFetcherOpt = fOpt))
+    withTransformFetcherOpt(fOpt)
 
   private def allMirrors0 =
     mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
@@ -125,17 +107,17 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
 
   private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
-    val fetchs = params.cache.fetchs
+    val fetchs = cache.fetchs
     S.map(finalRepositories)(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail)(S))
   }
 
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
 
-    val initialRes = Resolve.initialResolution(params.finalDependencies, params.resolutionParams)
+    val initialRes = Resolve.initialResolution(finalDependencies, resolutionParams)
 
     def run(res: Resolution): F[Resolution] = {
-      val t = Resolve.runProcess(res, fetch, params.resolutionParams.maxIterations, params.cache.loggerOpt)(S)
-      params.through(t)
+      val t = Resolve.runProcess(res, fetch, resolutionParams.maxIterations, cache.loggerOpt)(S)
+      through(t)
     }
 
     def validate0(res: Resolution): F[Resolution] =
@@ -184,9 +166,9 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
       }
 
     S.bind(S.bind(run(initialRes))(validate0)) { res0 =>
-      S.bind(recurseOnRules(res0, params.resolutionParams.actualRules)) {
+      S.bind(recurseOnRules(res0, resolutionParams.actualRules)) {
         case (res0, conflicts) =>
-          S.map(validateAllRules(res0, params.resolutionParams.actualRules)) { _ =>
+          S.map(validateAllRules(res0, resolutionParams.actualRules)) { _ =>
             (res0, conflicts)
           }
       }
@@ -195,7 +177,7 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 
   def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] =
     S.bind(fetchVia) { f =>
-      val fetchVia0 = params.transformFetcher(f)
+      val fetchVia0 = transformFetcher(f)
       ioWithConflicts0(fetchVia0)
     }
 
@@ -205,32 +187,17 @@ final class Resolve[F[_]] private[coursier] (private val params: Resolve.Params[
 }
 
 object Resolve extends PlatformResolve {
+  private def defaultMirrorConfFiles0 = defaultMirrorConfFiles
 
-  private[coursier] def defaultParams[F[_]](cache: Cache[F])(implicit S: Sync[F]) =
-    Params(
-      Nil,
-      defaultRepositories,
-      defaultMirrorConfFiles,
-      Nil,
-      ResolutionParams(),
-      cache,
-      None,
-      None,
-      S
-    )
-
-  // Ideally, cache shouldn't be passed here, and a default one should be created from S.
-  // But that would require changes in Sync or an extra typeclass (similar to Async in cats-effect)
-  // to allow to use the default cache on Scala.JS with a generic F.
-  def apply[F[_]](cache: Cache[F] = Cache.default)(implicit S: Sync[F]): Resolve[F] =
-    new Resolve(defaultParams(cache))
+  def apply(): Resolve[Task] =
+    Resolve(Cache.default)
 
   implicit class ResolveTaskOps(private val resolve: Resolve[Task]) extends AnyVal {
 
-    def future()(implicit ec: ExecutionContext = resolve.params.cache.ec): Future[Resolution] =
+    def future()(implicit ec: ExecutionContext = resolve.cache.ec): Future[Resolution] =
       resolve.io.future()
 
-    def either()(implicit ec: ExecutionContext = resolve.params.cache.ec): Either[ResolutionError, Resolution] = {
+    def either()(implicit ec: ExecutionContext = resolve.cache.ec): Either[ResolutionError, Resolution] = {
 
       val f = resolve
         .io
@@ -241,46 +208,11 @@ object Resolve extends PlatformResolve {
       Await.result(f, Duration.Inf)
     }
 
-    def run()(implicit ec: ExecutionContext = resolve.params.cache.ec): Resolution = {
+    def run()(implicit ec: ExecutionContext = resolve.cache.ec): Resolution = {
       val f = future()(ec)
       Await.result(f, Duration.Inf)
     }
 
-  }
-
-  private[coursier] final case class Params[F[_]](
-    dependencies: Seq[Dependency],
-    repositories: Seq[Repository],
-    mirrorConfFiles: Seq[MirrorConfFile],
-    mirrors: Seq[Mirror],
-    resolutionParams: ResolutionParams,
-    cache: Cache[F],
-    throughOpt: Option[F[Resolution] => F[Resolution]],
-    transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]],
-    S: Sync[F]
-  ) {
-    def through: F[Resolution] => F[Resolution] =
-      throughOpt.getOrElse(identity[F[Resolution]])
-    def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
-      transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
-
-    def finalDependencies: Seq[Dependency] = {
-
-      val filter = Exclusions(resolutionParams.exclusions)
-
-      dependencies
-        .filter { dep =>
-          filter(dep.module.organization, dep.module.name)
-        }
-        .map { dep =>
-          dep.copy(
-            exclusions = Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
-          )
-        }
-    }
-
-    override def toString: String =
-      productIterator.mkString("ResolveParams(", ", ", ")")
   }
 
   private[coursier] def initialResolution(

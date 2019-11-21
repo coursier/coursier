@@ -5,6 +5,7 @@ import java.net.{URL, URLConnection}
 
 import coursier.cache.{CacheUrl, FileCache}
 import coursier.core._
+import dataclass.data
 
 object InMemoryRepository {
 
@@ -120,10 +121,10 @@ object InMemoryRepository {
 
 }
 
-final class InMemoryRepository private (
-  val fallbacks: Map[(Module, String), (URL, Boolean)],
-  val localArtifactsShouldBeCached: Boolean,
-  val cacheOpt: Option[FileCache[Nothing]]
+@data class InMemoryRepository(
+  fallbacks: Map[(Module, String), (URL, Boolean)],
+  localArtifactsShouldBeCached: Boolean,
+  cacheOpt: Option[FileCache[Nothing]]
 ) extends Repository {
 
   def find[F[_]](

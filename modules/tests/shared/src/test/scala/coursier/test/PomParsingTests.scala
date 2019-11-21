@@ -21,10 +21,8 @@ object PomParsingTests extends TestSuite {
                    """
 
       val expected = Right(
-        Configuration.empty -> Dependency(
-          mod"comp:lib",
-          "2.1",
-          attributes = Attributes(classifier = Classifier("extra"))
+        Configuration.empty -> Dependency(mod"comp:lib", "2.1").withAttributes(
+          Attributes(classifier = Classifier("extra"))
         )
       )
 
@@ -290,7 +288,7 @@ object PomParsingTests extends TestSuite {
       val expected = Right(Project(
         Module(Organization("com.example"), ModuleName("awesome-project")),
         "1.0-SNAPSHOT"
-      ).copy(info = Info(
+      ).withInfo(Info(
         description = "",
         homePage = "https://example.com",
         licenses = Seq.empty,

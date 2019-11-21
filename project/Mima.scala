@@ -49,8 +49,10 @@ object Mima {
 
   lazy val previousArtifacts = Seq(
     mimaPreviousArtifacts := {
-      val sv = scalaVersion.value
       val versions = binaryCompatibilityVersions
+        .filter(_ != "2.0.0-RC3-4")
+        .filter(_ != "2.0.0-RC4")
+        .filter(_ != "2.0.0-RC4-1")
       versions.map { ver =>
         organization.value %%% moduleName.value % ver
       }
@@ -100,6 +102,14 @@ object Mima {
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded."))
       )
     }
+  }
+
+  lazy val catsInteropFilters = {
+    import com.typesafe.tools.mima.core._
+    import com.typesafe.tools.mima.core.ProblemFilters._
+
+    mimaBinaryIssueFilters ++= Seq(
+    )
   }
 
 }

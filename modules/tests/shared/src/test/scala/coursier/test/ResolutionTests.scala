@@ -49,13 +49,17 @@ object ResolutionTests extends TestSuite {
 
     Project(Module(org"acme", name"play-extra-no-config"), "2.4.1",
       Seq(
-        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1",
-          exclusions = Set((org"acme", name"config"))))),
+        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1")
+          .withExclusions(Set((org"acme", name"config")))
+      )
+    ),
 
     Project(Module(org"acme", name"play-extra-no-config-no"), "2.4.1",
       Seq(
-        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1",
-          exclusions = Set((org"*", name"config"))))),
+        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1")
+          .withExclusions(Set((org"*", name"config")))
+      )
+    ),
 
     Project(Module(org"acme", name"module-with-missing-pom"), "1.0.0",
       dependencyManagement = Seq(
@@ -69,8 +73,10 @@ object ResolutionTests extends TestSuite {
 
     Project(Module(org"se.ikea", name"parent"), "18.0",
       dependencyManagement = Seq(
-        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.0",
-          exclusions = Set((org"acme", name"play-json"))))),
+        Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.0")
+          .withExclusions(Set((org"acme", name"play-json")))
+      )
+    ),
 
     Project(Module(org"se.ikea", name"billy"), "18.0",
       dependencies = Seq(
@@ -92,8 +98,9 @@ object ResolutionTests extends TestSuite {
 
     Project(Module(org"com.mailapp", name"mail-client"), "2.1",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0",
-          exclusions = Set((org"*", name"$${crypto.name}")))),
+        Configuration.empty -> Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0")
+          .withExclusions(Set((org"*", name"$${crypto.name}")))
+      ),
       properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")),
 
     Project(Module(org"com.thoughtworks.paranamer", name"paranamer-parent"), "2.6",
@@ -194,8 +201,8 @@ object ResolutionTests extends TestSuite {
     // Must bring transitively an-org:a-name, as an optional dependency
     Project(Module(org"an-org", name"an-app"), "1.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.0", exclusions = Set((org"an-org", name"a-name"))),
-        Configuration.empty -> Dependency(Module(org"an-org", name"another-lib"), "1.0", optional = true))),
+        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
+        Configuration.empty -> Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true))),
 
     Project(Module(org"an-org", name"an-app"), "1.1",
       Seq(
@@ -238,7 +245,9 @@ object ResolutionTests extends TestSuite {
 
   )
 
-  val projectsMap = projects.map(p => p.moduleVersion -> p.copy(configurations = MavenRepository.defaultConfigurations)).toMap
+  val projectsMap = projects
+    .map(p => p.moduleVersion -> p.withConfigurations(MavenRepository.defaultConfigurations))
+    .toMap
   val testRepository = TestRepository(projectsMap)
 
   val repositories = Seq[Repository](
@@ -350,10 +359,10 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"acme", name"play-extra-no-config"), "2.4.1")
         val trDeps = Seq(
-          Dependency(Module(org"acme", name"play"), "2.4.1",
-            exclusions = Set((org"acme", name"config"))),
-          Dependency(Module(org"acme", name"play-json"), "2.4.0",
-            exclusions = Set((org"acme", name"config")))
+          Dependency(Module(org"acme", name"play"), "2.4.1")
+            .withExclusions(Set((org"acme", name"config"))),
+          Dependency(Module(org"acme", name"play-json"), "2.4.0")
+            .withExclusions(Set((org"acme", name"config")))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -370,10 +379,10 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"acme", name"play-extra-no-config-no"), "2.4.1")
         val trDeps = Seq(
-          Dependency(Module(org"acme", name"play"), "2.4.1",
-            exclusions = Set((org"*", name"config"))),
-          Dependency(Module(org"acme", name"play-json"), "2.4.0",
-            exclusions = Set((org"*", name"config")))
+          Dependency(Module(org"acme", name"play"), "2.4.1")
+            .withExclusions(Set((org"*", name"config"))),
+          Dependency(Module(org"acme", name"play-json"), "2.4.0")
+            .withExclusions(Set((org"*", name"config")))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -404,8 +413,8 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"se.ikea", name"billy"), "18.0")
         val trDeps = Seq(
-          Dependency(Module(org"acme", name"play"), "2.4.0",
-            exclusions = Set((org"acme", name"play-json")))
+          Dependency(Module(org"acme", name"play"), "2.4.0")
+            .withExclusions(Set((org"acme", name"play-json")))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -439,7 +448,7 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"com.mailapp", name"mail-client"), "2.1")
         val trDeps = Seq(
-          Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0", exclusions = Set((org"*", name"crypto"))))
+          Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0").withExclusions(Set((org"*", name"crypto"))))
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -547,9 +556,9 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"an-org", name"an-app"), "1.0")
         val trDeps = Seq(
-          Dependency(Module(org"an-org", name"a-lib"), "1.0", exclusions = Set((org"an-org", name"a-name"))),
-          Dependency(Module(org"an-org", name"another-lib"), "1.0", optional = true),
-          Dependency(Module(org"an-org", name"a-name"), "1.0", optional = true))
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
+          Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true),
+          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true))
         val res = await(resolve0(
           Seq(dep),
           filter = Some(_ => true)
@@ -567,11 +576,11 @@ object ResolutionTests extends TestSuite {
       async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.0"),
-          Dependency(Module(org"an-org", name"a-lib"), "1.0", optional = true))
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withOptional(true))
         val trDeps = Seq(
-          Dependency(Module(org"an-org", name"a-lib"), "1.0", exclusions = Set((org"an-org", name"a-name"))),
-          Dependency(Module(org"an-org", name"another-lib"), "1.0", optional = true),
-          Dependency(Module(org"an-org", name"a-name"), "1.0", optional = true))
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
+          Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true),
+          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true))
         val res = await(resolve0(
           deps,
           filter = Some(_ => true)

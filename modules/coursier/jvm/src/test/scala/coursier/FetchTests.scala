@@ -149,7 +149,7 @@ object FetchTests extends TestSuite {
             .addRepositories(m2Repo)
             .addDependencies(
               dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                .copy(configuration = Configuration.test)
+                .withConfiguration(Configuration.test)
             )
             .futureResult()
         }
@@ -175,7 +175,7 @@ object FetchTests extends TestSuite {
             .addRepositories(ivy2Repo)
             .addDependencies(
               dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                .copy(configuration = Configuration.test)
+                .withConfiguration(Configuration.test)
             )
             .futureResult()
         }

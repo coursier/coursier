@@ -2,6 +2,7 @@ package coursier.bootstrap.launcher;
 
 import coursier.bootstrap.launcher.jar.JarEntry;
 import coursier.bootstrap.launcher.jar.JarFile;
+import coursier.paths.Mirror.MirrorPropertiesException;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,7 +14,7 @@ class ResourcesClassLoaders extends ClassLoaders {
 
     private JarFile sourceJarFile;
 
-    ResourcesClassLoaders(JarFile sourceJarFile) {
+    ResourcesClassLoaders(JarFile sourceJarFile) throws MirrorPropertiesException, IOException  {
         super();
         this.sourceJarFile = sourceJarFile;
     }

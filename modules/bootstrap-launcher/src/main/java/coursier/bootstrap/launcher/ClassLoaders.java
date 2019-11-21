@@ -7,13 +7,17 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-class ClassLoaders {
+import coursier.paths.Mirror;
+import coursier.paths.Mirror.MirrorPropertiesException;
 
-    ClassLoaders() {
-    }
+class ClassLoaders {
 
     final static String resourceDir = "coursier/bootstrap/launcher/";
     final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
+    private final List<Mirror> mirrors = Mirror.load();
+
+    ClassLoaders() throws MirrorPropertiesException, IOException {
+    }
 
     List<URL> getURLs(String[] rawURLs) {
 
@@ -21,11 +25,12 @@ class ClassLoaders {
         List<URL> urls = new ArrayList<>();
 
         for (String urlStr : rawURLs) {
+            String urlStr0 = Mirror.transform(mirrors, urlStr);
             try {
-                URL url = URI.create(urlStr).toURL();
+                URL url = URI.create(urlStr0).toURL();
                 urls.add(url);
             } catch (Exception ex) {
-                String message = urlStr + ": " + ex.getMessage();
+                String message = urlStr0 + ": " + ex.getMessage();
                 errors.add(message);
             }
         }

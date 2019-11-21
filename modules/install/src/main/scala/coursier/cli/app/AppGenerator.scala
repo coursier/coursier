@@ -28,7 +28,7 @@ object AppGenerator {
     var is: FileInputStream = null
     try {
       is = new FileInputStream(f)
-      FileUtil.withContent(is, md.update(_, 0, _))
+      FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     } finally is.close()
 
     val b = md.digest()

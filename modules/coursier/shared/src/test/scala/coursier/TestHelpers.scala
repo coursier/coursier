@@ -25,7 +25,7 @@ object TestHelpers extends PlatformTestHelpers {
 
     val rootDep = res.rootDependencies.head
 
-    val isSimple = res.rootDependencies == Seq(Dependency(rootDep.module, rootDep.version, configuration = rootDep.configuration))
+    val isSimple = res.rootDependencies == Seq(Dependency(rootDep.module, rootDep.version).withConfiguration(rootDep.configuration))
 
     val attrPathPart =
       if (rootDep.module.attributes.isEmpty)

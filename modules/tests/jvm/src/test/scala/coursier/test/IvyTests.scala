@@ -12,9 +12,8 @@ object IvyTests extends TestSuite {
 
   // only tested on the JVM for lack of support of XML attributes in the platform-dependent XML stubs
 
-  val sbtRepo = ivy"https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/[defaultPattern]".copy(
-    dropInfoAttributes = true
-  )
+  val sbtRepo = ivy"https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/[defaultPattern]"
+    .withDropInfoAttributes(true)
 
   private val runner = new TestRunner
 
@@ -64,12 +63,9 @@ object IvyTests extends TestSuite {
     'changing - {
       "-SNAPSHOT suffix" - {
 
-        val dep = Dependency(
-          mod"com.example:a_2.11",
-          "0.1.0-SNAPSHOT",
-          transitive = false,
-          attributes = Attributes(Type.jar)
-        )
+        val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+          .withTransitive(false)
+          .withAttributes(Attributes(Type.jar))
 
         runner.withArtifacts(
           dep,
@@ -85,12 +81,9 @@ object IvyTests extends TestSuite {
 
       "-SNAPSHOT suffix" - {
 
-        val dep = Dependency(
-          mod"com.example:a_2.11",
-          "0.2.0.SNAPSHOT",
-          transitive = false,
-          attributes = Attributes(Type.jar)
-        )
+        val dep = Dependency(mod"com.example:a_2.11", "0.2.0.SNAPSHOT")
+          .withTransitive(false)
+          .withAttributes(Attributes(Type.jar))
 
         runner.withArtifacts(
           dep,
@@ -107,18 +100,15 @@ object IvyTests extends TestSuite {
 
     'testArtifacts - {
 
-      val dep = Dependency(
-        mod"com.example:a_2.11",
-        "0.1.0-SNAPSHOT",
-        transitive = false,
-        attributes = Attributes()
-      )
+      val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+        .withTransitive(false)
+        .withAttributes(Attributes())
 
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
       val testJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11-tests.jar"
 
       "no conf or classifier" - runner.withArtifacts(
-        dep = dep.copy(attributes = Attributes(Type.jar)),
+        dep = dep.withAttributes(Attributes(Type.jar)),
         extraRepos = Seq(repo),
         classifierOpt = None
       ) {
@@ -130,7 +120,7 @@ object IvyTests extends TestSuite {
 
       "test conf" - {
         "no attributes" - runner.withArtifacts(
-          dep = dep.copy(configuration = Configuration.test),
+          dep = dep.withConfiguration(Configuration.test),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>
@@ -140,7 +130,9 @@ object IvyTests extends TestSuite {
         }
 
         "attributes" - runner.withArtifacts(
-          dep = dep.copy(configuration = Configuration.test, attributes = Attributes(Type.jar)),
+          dep = dep
+            .withConfiguration(Configuration.test)
+            .withAttributes(Attributes(Type.jar)),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>
@@ -151,7 +143,7 @@ object IvyTests extends TestSuite {
       }
 
       "tests classifier" - {
-        val testsDep = dep.copy(attributes = Attributes(Type.jar, Classifier.tests))
+        val testsDep = dep.withAttributes(Attributes(Type.jar, Classifier.tests))
 
         * - runner.withArtifacts(
           deps = Seq(dep, testsDep),

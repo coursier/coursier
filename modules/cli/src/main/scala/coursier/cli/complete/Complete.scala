@@ -25,8 +25,8 @@ object Complete extends CaseApp[CompleteOptions] {
 
     val result = coursier.complete.Complete(cache)
       .withRepositories(params.repositories)
-      .withScalaVersion(params.scalaVersion)
-      .withScalaBinaryVersion(params.scalaBinaryVersion)
+      .withScalaBinaryVersionOpt(params.scalaBinaryVersion)
+      .withScalaVersionOpt(params.scalaVersion)
       .withInput(params.toComplete)
       .result()
       .unsafeRun()(ec)

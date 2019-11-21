@@ -3,6 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{Artifact, EitherT, Monad, WebPage}
+import dataclass._
 
 object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
@@ -78,94 +79,28 @@ object MavenRepository {
     } yield proj
 
 
-  def apply(
-    root: String,
-    changing: Option[Boolean] = None,
-    sbtAttrStub: Boolean = true,
-    authentication: Option[Authentication] = None
-  ): MavenRepository =
-    new MavenRepository(
-      actualRoot(root),
-      changing,
-      sbtAttrStub,
-      authentication,
-      versionsCheckHasModule = true
-    )
-
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
+  def apply(root: String): MavenRepository =
+    new MavenRepository(actualRoot(root))
+  def apply(root: String, authentication: Option[Authentication]): MavenRepository =
+    new MavenRepository(actualRoot(root), authentication)
 }
 
-final class MavenRepository private (
-  val root: String,
-  val changing: Option[Boolean],
+@data(apply = false) class MavenRepository(
+  root: String,
+  authentication: Option[Authentication] = None,
+  @since
+  changing: Option[Boolean] = None,
   /** Hackish hack for sbt plugins mainly - that's some totally ad hoc stuff… */
-  val sbtAttrStub: Boolean,
-  val authentication: Option[Authentication],
-  override val versionsCheckHasModule: Boolean
+  sbtAttrStub: Boolean = true,
+  @since
+  override val versionsCheckHasModule: Boolean = true
 ) extends Repository {
 
-  override def equals(obj: Any): Boolean =
-    obj match {
-      case other: MavenRepository =>
-        root == other.root &&
-          changing == other.changing &&
-          sbtAttrStub == other.sbtAttrStub &&
-          authentication == other.authentication &&
-          versionsCheckHasModule == other.versionsCheckHasModule
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    var code = 17 + "coursier.maven.MavenRepository".##
-    code = 37 * code + root.##
-    code = 37 * code + changing.##
-    code = 37 * code + sbtAttrStub.##
-    code = 37 * code + authentication.##
-    code = 37 * code + versionsCheckHasModule.##
-    37 * code
-  }
-
-  override def toString: String =
-    s"MavenRepository($root, $changing, $sbtAttrStub, $authentication, $versionsCheckHasModule)"
-
-  private def copy0(
-    root: String = root,
-    changing: Option[Boolean] = changing,
-    sbtAttrStub: Boolean = sbtAttrStub,
-    authentication: Option[Authentication] = authentication,
-    versionsCheckHasModule: Boolean = versionsCheckHasModule
-  ): MavenRepository =
-    new MavenRepository(
-      MavenRepository.actualRoot(root),
-      changing,
-      sbtAttrStub,
-      authentication,
-      versionsCheckHasModule
-    )
-
-  @deprecated("Use the with* methods instead", "2.0.0-RC3")
-  def copy(
-    root: String = root,
-    changing: Option[Boolean] = changing,
-    sbtAttrStub: Boolean = sbtAttrStub,
-    authentication: Option[Authentication] = authentication
-  ): MavenRepository =
-    copy0(root, changing, sbtAttrStub, authentication)
-
-  def withRoot(root: String): MavenRepository =
-    copy0(root = root)
-  def withChanging(changingOpt: Option[Boolean]): MavenRepository =
-    copy0(changing = changingOpt)
   def withChanging(changing: Boolean): MavenRepository =
-    copy0(changing = Some(changing))
-  def withSbtAttrStub(sbtAttrStub: Boolean): MavenRepository =
-    copy0(sbtAttrStub = sbtAttrStub)
-  def withAuthentication(authentication: Option[Authentication]): MavenRepository =
-    copy0(authentication = authentication)
-  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): MavenRepository =
-    copy0(versionsCheckHasModule = versionsCheckHasModule)
+    withChanging(Some(changing))
 
 
   import Repository._
@@ -384,7 +319,7 @@ final class MavenRepository private (
               )
             case versioning @ Some(_) =>
               findVersioning(module, version, versioning, fetch)
-                .map(_.copy(snapshotVersioning = Some(snapshotVersioning)))
+                .map(_.withSnapshotVersioning(Some(snapshotVersioning)))
           }
         }
 
@@ -401,7 +336,7 @@ final class MavenRepository private (
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.right.map(proj => (this, proj.copy(actualVersionOpt = Some(version)))))
+      F.map(res)(_.right.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =
@@ -431,10 +366,9 @@ final class MavenRepository private (
       proj0 <- EitherT(F.point[Either[String, Project]](if (useSaxParser) parseRawPomSax(str) else parseRawPomDom(str)))
     } yield
       Pom.addOptionalDependenciesInConfig(
-        proj0.copy(
-          actualVersionOpt = Some(version),
-          configurations = defaultConfigurations
-        ),
+        proj0
+          .withActualVersionOpt(Some(version))
+          .withConfigurations(defaultConfigurations),
         Set(Configuration.empty, Configuration.default),
         Configuration.optional
       )
@@ -489,8 +423,8 @@ final class MavenRepository private (
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      val artifact0 = artifact.copy(
-        extra = artifact.extra + ("metadata" -> metadataArtifact)
+      val artifact0 = artifact.withExtra(
+        artifact.extra + ("metadata" -> metadataArtifact)
       )
       (publication, artifact0)
     }
@@ -537,10 +471,14 @@ final class MavenRepository private (
             else
               dependency.attributes.classifier
 
-          val tpe = packagingTpeMap.getOrElse(
-            (classifier, ext),
-            MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
-          )
+          val tpe =
+            if (dependency.publication.`type`.isEmpty)
+              packagingTpeMap.getOrElse(
+                (classifier, ext),
+                MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+              )
+            else
+              type0
 
           Publication(
             name,

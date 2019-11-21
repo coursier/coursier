@@ -48,7 +48,7 @@ object AppArtifacts {
     }
 
     val resolutionParams = ResolutionParams()
-      .withScalaVersion(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+      .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
 
     val res: Fetch.Result = coursier.Fetch()
       .withDependencies(deps)

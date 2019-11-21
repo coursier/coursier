@@ -144,7 +144,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             params.dependency.platformOpt,
             params.output.verbosity,
             javaOrScalaDeps,
-            constraintOpt = params.resolution.scalaVersion.map { s =>
+            constraintOpt = params.resolution.scalaVersionOpt.map { s =>
               val reworked =
                 if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
                 else s
@@ -206,27 +206,31 @@ object Resolve extends CaseApp[ResolveOptions] {
     lift {
 
       val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError))
+      val params0 = params.copy(
+        resolution = params.resolution
+          .withScalaVersionOpt(params.resolution.scalaVersionOpt.map(_ => scalaVersion))
+      )
 
-      val scaladexDeps = unlift(handleScaladexDependencies(params, pool, scalaVersion))
+      val scaladexDeps = unlift(handleScaladexDependencies(params0, pool, scalaVersion))
 
       val deps0 = deps ++ scaladexDeps
 
-      Output.printDependencies(params.output, params.resolution, deps0, stdout, stderr)
+      Output.printDependencies(params0.output, params0.resolution, deps0, stdout, stderr)
 
       val (res, _, errors) = unlift {
         coursier.Resolve()
           .withDependencies(deps0)
           .withRepositories(repositories)
-          .withResolutionParams(params.resolution)
+          .withResolutionParams(params0.resolution)
           .withCache(
             cache
           )
           .transformResolution { t =>
-            if (params.benchmark == 0) t
-            else benchmark(math.abs(params.benchmark))(t)
+            if (params0.benchmark == 0) t
+            else benchmark(math.abs(params0.benchmark))(t)
           }
           .transformFetcher { f =>
-            if (params.output.verbosity >= 2) {
+            if (params0.output.verbosity >= 2) {
               modVers: Seq[(Module, String)] =>
                 val print = Task.delay {
                   Output.errPrintln(s"Getting ${modVers.length} project definition(s)")
@@ -240,7 +244,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(ex: ResolutionError) =>
-              if (force || params.output.forcePrint)
+              if (force || params0.output.forcePrint)
                 Task.point((ex.resolution, Nil, ex.errors))
               else
                 Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
@@ -253,11 +257,11 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val valid = errors.isEmpty
 
-      val outputToStdout = printOutput && (valid || params.output.forcePrint)
-      if (outputToStdout || params.output.verbosity >= 2) {
+      val outputToStdout = printOutput && (valid || params0.output.forcePrint)
+      if (outputToStdout || params0.output.verbosity >= 2) {
         Output.printResolutionResult(
           printResultStdout = outputToStdout,
-          params,
+          params0,
           scalaVersion,
           platformOpt,
           res,

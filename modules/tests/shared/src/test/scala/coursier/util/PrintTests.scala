@@ -26,14 +26,11 @@ object PrintTests extends TestSuite {
 
   val tests = Tests {
     'ignoreAttributes - {
-      val dep = Dependency(
-        mod"org:name",
-        "0.1",
-        configuration = Configuration("foo")
-      )
+      val dep = Dependency(mod"org:name", "0.1")
+        .withConfiguration(Configuration("foo"))
       val deps = Seq(
         dep,
-        dep.copy(attributes = Attributes(Type("fooz"), Classifier.empty))
+        dep.withAttributes(Attributes(Type("fooz"), Classifier.empty))
       )
 
       val res = Print.dependenciesUnknownConfigs(deps, Map(), printExclusions = false, reorder = true)

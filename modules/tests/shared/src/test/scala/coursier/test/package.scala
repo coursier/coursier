@@ -48,7 +48,7 @@ package object test {
           .projectCache
           .mapValues {
             case (s, p) =>
-              (s, p.copy(properties = p.properties.filter { case (k, _) => !projectProperties(k) }))
+              (s, p.withProperties(p.properties.filter { case (k, _) => !projectProperties(k) }))
           }
           .iterator
           .toMap

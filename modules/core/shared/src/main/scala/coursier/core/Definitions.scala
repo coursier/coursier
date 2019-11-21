@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.util.Artifact
+import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
   def map(f: String => String): Organization =
@@ -31,16 +32,15 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-final case class Module(
+@data class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
 ) {
 
-  def trim: Module = copy(
-    organization = organization.map(_.trim),
-    name = name.map(_.trim)
-  )
+  def trim: Module =
+    withOrganization(organization.map(_.trim))
+      .withName(name.map(_.trim))
 
   private def attributesStr = attributes.toSeq
     .sortBy { case (k, _) => k }
@@ -59,7 +59,7 @@ final case class Module(
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  override final lazy val hashCode = Module.unapply(this).get.hashCode()
+  override final lazy val hashCode = tuple.hashCode()
 }
 
 
@@ -181,7 +181,7 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-final case class Attributes(
+@data class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {
@@ -210,7 +210,7 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-final case class Project(
+@data class Project(
   module: Module,
   version: String,
   // First String is configuration (scope for Maven)
@@ -254,7 +254,7 @@ final case class Project(
 }
 
 /** Extra project info, not used during resolution */
-final case class Info(
+@data class Info(
   description: String,
   homePage: String,
   licenses: Seq[(String, Option[String])],
@@ -264,13 +264,13 @@ final case class Info(
 )
 
 object Info {
-  final case class Developer(
+  @data class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  final case class Scm(
+  @data class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
@@ -280,7 +280,7 @@ object Info {
 }
 
 // Maven-specific
-final case class Profile(
+@data class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
@@ -290,7 +290,7 @@ final case class Profile(
 )
 
 // Maven-specific
-final case class SnapshotVersion(
+@data class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value: String,
@@ -298,7 +298,7 @@ final case class SnapshotVersion(
 )
 
 // Maven-specific
-final case class SnapshotVersioning(
+@data class SnapshotVersioning(
   module: Module,
   version: String,
   latest: String,
@@ -310,13 +310,18 @@ final case class SnapshotVersioning(
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-final case class Publication(
+@data class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
   classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
+}
+
+object Publication {
+  def empty: Publication =
+    Publication("", Type.empty, Extension.empty, Classifier.empty)
 }
 
 trait ArtifactSource {

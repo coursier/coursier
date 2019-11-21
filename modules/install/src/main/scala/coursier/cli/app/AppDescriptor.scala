@@ -25,7 +25,7 @@ final case class AppDescriptor(
         if (dependencies.isEmpty)
           dependencies
         else {
-          val dep = dependencies.head.withUnderlyingDependency(dep => dep.copy(version = ver))
+          val dep = dependencies.head.withUnderlyingDependency(_.withVersion(ver))
           dep +: dependencies.tail
         }
       }

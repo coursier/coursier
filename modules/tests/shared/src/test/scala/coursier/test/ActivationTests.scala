@@ -135,8 +135,8 @@ object ActivationTests extends TestSuite {
     }
 
     'properties - {
-      val activation = Activation.empty.copy(
-        properties = Seq(
+      val activation = Activation.empty.withProperties(
+        Seq(
           "required" -> None,
           "requiredWithValue" -> Some("foo"),
           "requiredWithNegValue" -> Some("!bar")

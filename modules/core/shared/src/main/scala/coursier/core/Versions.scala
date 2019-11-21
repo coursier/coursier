@@ -1,6 +1,8 @@
 package coursier.core
 
-final case class Versions(
+import dataclass.data
+
+@data class Versions(
   latest: String,
   release: String,
   available: List[String],
@@ -76,14 +78,21 @@ final case class Versions(
 }
 
 object Versions {
-  final case class DateTime(
+  @data class DateTime(
     year: Int,
     month: Int,
     day: Int,
     hour: Int,
     minute: Int,
     second: Int
-  )
+  ) extends Ordered[DateTime] {
+    def compare(other: DateTime): Int = {
+      import Ordering.Implicits._
+      if (this == other) 0
+      else if (tuple < other.tuple) -1
+      else 1
+    }
+  }
 
   val empty = Versions("", "", Nil, None)
 }

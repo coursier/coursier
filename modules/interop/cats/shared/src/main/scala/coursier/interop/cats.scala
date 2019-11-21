@@ -15,7 +15,7 @@ object cats extends LowPriorityCatsImplicits {
 
 abstract class LowPriorityCatsImplicits extends PlatformCatsImplicits {
 
-  implicit def coursierGatherFromCats[F[_], F0[_]](implicit N: _root_.cats.Monad[F], cs: _root_.cats.Parallel[F, F0]): Gather[F] =
+  implicit def coursierGatherFromCats[F[_], F0[_]](implicit N: _root_.cats.Monad[F], cs: _root_.cats.Parallel.Aux[F, F0]): Gather[F] =
     new Gather[F] {
       def point[A](a: A) = N.pure(a)
       def bind[A, B](elem: F[A])(f: A => F[B]) = N.flatMap(elem)(f)

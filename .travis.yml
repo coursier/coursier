@@ -54,10 +54,10 @@ jobs:
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
       script: amm scripts/site.sc --publishLocal true
-    - name: "Pants"
-      before_script: pyenv global system 3.6.7
-      # Sanity check for Pants build path.
-      script: cd modules && ./pants run cli:coursier-cli -- fetch --help
+    # - name: "Pants"
+    # - before_script: pyenv global system 3.6.7
+    # - # Sanity check for Pants build path.
+    # - script: cd modules && ./pants run cli:coursier-cli -- fetch --help
     - stage: release-snapshot
       env: DUMMY_PROGUARD=1
       script: sbt ci-release
@@ -102,6 +102,7 @@ jobs:
       osx_image: xcode9.4
       jdk: openjdk9
       before_install:
+        - brew update
         - brew install jq
       script: scripts/travis-native-image.sh
     - stage: upload-launchers

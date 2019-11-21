@@ -2,6 +2,7 @@ package coursier.params
 
 import coursier.core.Repository
 import coursier.maven.MavenRepository
+import dataclass.data
 
 /**
   * Assumes Maven repository roots listed in `from` are mirrored at `to`.
@@ -10,32 +11,12 @@ import coursier.maven.MavenRepository
   * at `to`. Only _Maven_ repositories, not Ivy ones for example. See [[TreeMirror]] to mirror both types
   * of repository.
   */
-final class MavenMirror private(
-  val from: Seq[String],
-  val to: String
+@data class MavenMirror(
+  from: Seq[String],
+  to: String
 ) extends Mirror {
 
   private val matchesAll = from.contains("*")
-
-  override def equals(o: Any): Boolean =
-    o match {
-      case x: MavenMirror => (this.from == x.from) && (this.to == x.to)
-      case _ => false
-    }
-
-  override def hashCode: Int =
-    37 * (37 * (17 + "coursier.params.MavenMirror".##) + from.##) + to.##
-
-  override def toString: String =
-    "MavenMirror(" + from + ", " + to + ")"
-
-  private[this] def copy(from: Seq[String] = from, to: String = to): MavenMirror =
-    new MavenMirror(from, to)
-
-  def withFrom(from: Seq[String]): MavenMirror =
-    copy(from = from)
-  def withTo(to: String): MavenMirror =
-    copy(to = to)
 
   def matches(repo: Repository): Option[Repository] =
     repo match {
@@ -60,6 +41,6 @@ object MavenMirror {
       else
         from.map(_.stripSuffix("/"))
 
-    new MavenMirror(from0, to.stripSuffix("/"))
+    MavenMirror(from0, to.stripSuffix("/"))
   }
 }

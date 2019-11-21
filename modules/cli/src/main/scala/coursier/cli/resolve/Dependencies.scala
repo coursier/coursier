@@ -106,8 +106,8 @@ object Dependencies {
     exclude: Set[(Organization, ModuleName)],
     perModuleExclude: Map[Module, Set[Module]],
   ): Dependency =
-    dep.copy(
-      exclusions = dep.exclusions |
+    dep.withExclusions(
+      dep.exclusions |
         perModuleExclude.getOrElse(dep.module, Set()).map { m => (m.organization, m.name) } |
         exclude
     )

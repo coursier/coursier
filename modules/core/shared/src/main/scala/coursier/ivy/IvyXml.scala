@@ -57,7 +57,18 @@ object IvyXml {
     node.children
       .filter(_.label == "dependency")
       .flatMap { node =>
-        // artifact and include sub-nodes are ignored here
+        // "include" sub-nodes are ignored here
+
+        val artifacts = node
+          .children
+          .filter(_.label == "artifact")
+          .map(publication)
+
+        val publications =
+          if (artifacts.isEmpty)
+            Seq(Publication.empty)
+          else
+            artifacts
 
         val excludes = node
           .children
@@ -81,6 +92,12 @@ object IvyXml {
 
         val allConfsExcludes = excludes.getOrElse(Configuration.all, Set.empty)
 
+        val attr = node.attributesFromNamespace(attributesNamespace)
+        val transitive = node.attribute("transitive") match {
+          case Right("false") => false
+          case _ => true
+        }
+
         for {
           org <- node
             .attribute("org")
@@ -97,43 +114,43 @@ object IvyXml {
           version <- node.attribute("rev").right.toOption.toSeq
           rawConf <- node.attribute("conf").right.toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
+          pub <- publications
         } yield {
-          val attr = node.attributesFromNamespace(attributesNamespace)
-          val transitive = node.attribute("transitive") match {
-            case Right("false") => false
-            case _ => true
-          }
-
           fromConf -> Dependency(
             Module(org, name, attr.toMap),
             version,
             toConf,
             allConfsExcludes ++ excludes.getOrElse(fromConf, Set.empty),
-            Attributes.empty, // should come from possible artifact nodes
+            pub, // should come from possible artifact nodes
             optional = false,
             transitive = transitive
           )
         }
       }
 
+  private def publication(node: Node): Publication = {
+    val name = node.attribute("name").right.getOrElse("")
+    val type0 = node.attribute("type")
+      .right.map(Type(_))
+      .right.getOrElse(Type.jar)
+    val ext = node.attribute("ext")
+      .right.map(Extension(_))
+      .right.getOrElse(type0.asExtension)
+    val classifier = node.attribute("classifier")
+      .right.map(Classifier(_))
+      .right.getOrElse(Classifier.empty)
+    Publication(name, type0, ext, classifier)
+  }
+
   private def publications(node: Node): Map[Configuration, Seq[Publication]] =
     node.children
       .filter(_.label == "artifact")
       .flatMap { node =>
-        val name = node.attribute("name").right.getOrElse("")
-        val type0 = node.attribute("type")
-          .right.map(Type(_))
-          .right.getOrElse(Type.jar)
-        val ext = node.attribute("ext")
-          .right.map(Extension(_))
-          .right.getOrElse(type0.asExtension)
+        val pub = publication(node)
         val confs = node
           .attribute("conf")
           .fold(_ => Seq(Configuration.all), _.split(',').toSeq.map(Configuration(_)))
-        val classifier = node.attribute("classifier")
-          .right.map(Classifier(_))
-          .right.getOrElse(Classifier.empty)
-        confs.map(_ -> Publication(name, type0, ext, classifier))
+        confs.map(_ -> pub)
       }
       .groupBy { case (conf, _) => conf }
       .map { case (conf, l) => conf -> l.map { case (_, p) => p } }
@@ -167,10 +184,13 @@ object IvyXml {
 
       val publicationsOpt = publicationsNodeOpt.map(publications)
 
-      val description = infoNode.children
-        .find(_.label == "description")
+      val descriptionNodeOpt = infoNode.children.find(_.label == "description")
+
+      val description = descriptionNodeOpt
         .map(_.textContent.trim)
         .getOrElse("")
+
+      val homePage = descriptionNodeOpt.flatMap(_.attribute("homepage").right.toOption).getOrElse("")
 
       val licenses = infoNode.children
         .filter(_.label == "license")
@@ -212,7 +232,7 @@ object IvyXml {
         },
         Info(
           description,
-          "",
+          homePage,
           licenses,
           Nil,
           publicationDate,

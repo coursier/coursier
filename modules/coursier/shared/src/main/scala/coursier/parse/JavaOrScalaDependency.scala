@@ -24,9 +24,9 @@ object JavaOrScalaDependency {
   def apply(mod: JavaOrScalaModule, dep: Dependency): JavaOrScalaDependency =
     mod match {
       case j: JavaOrScalaModule.JavaModule =>
-        JavaDependency(dep.copy(module = j.module), Set.empty)
+        JavaDependency(dep.withModule(j.module), Set.empty)
       case s: JavaOrScalaModule.ScalaModule =>
-        ScalaDependency(dep.copy(module = s.baseModule), s.fullCrossVersion, withPlatformSuffix = false, Set.empty)
+        ScalaDependency(dep.withModule(s.baseModule), s.fullCrossVersion, withPlatformSuffix = false, Set.empty)
     }
 
   final case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule]) extends JavaOrScalaDependency {
@@ -67,19 +67,15 @@ object JavaOrScalaDependency {
 
       val newName = baseDependency.module.name.value + platformSuffix + scalaSuffix
 
-      baseDependency.copy(
-        module = baseDependency.module.copy(
-          name = ModuleName(newName)
-        )
-      )
+      baseDependency.withModule(baseDependency.module.withName(ModuleName(newName)))
     }
 
     def withPlatform(platformSuffix: String): ScalaDependency =
       if (withPlatformSuffix)
         withUnderlyingDependency { dep =>
-          dep.copy(
-            module = dep.module.copy(
-              name = ModuleName(dep.module.name.value + platformSuffix)
+          dep.withModule(
+            dep.module.withName(
+              ModuleName(dep.module.name.value + platformSuffix)
             )
           )
         }

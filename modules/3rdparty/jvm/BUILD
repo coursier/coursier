@@ -253,3 +253,10 @@ jar_library(
         scala_jar("io.monadless", "monadless-stdlib", "0.0.13"),
     ],
 )
+
+jar_library(
+    name = "data-class",
+    jars = [
+        scala_jar("io.github.alexarchambault", "data-class", "0.1.1"),
+    ],
+)

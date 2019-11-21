@@ -38,10 +38,10 @@ object Publish extends CaseApp[PublishOptions] {
       // TODO Accept .\ too on Windows?
       if (!repo.root.contains("://") && repo.root.contains(File.separatorChar)) {
         val p = Paths.get(repo.root).toAbsolutePath
-        (FileUpload(p), FileDownload(p), repo.copy(root = "."), true)
+        (FileUpload(p), FileDownload(p), repo.withRoot("."), true)
       } else if (repo.root.startsWith("file:")) {
         val p = Paths.get(new URI(repo.root)).toAbsolutePath
-        (FileUpload(p), FileDownload(p), repo.copy(root = "."), true)
+        (FileUpload(p), FileDownload(p), repo.withRoot("."), true)
       } else if (repo.root.startsWith("http://") || repo.root.startsWith("https://")) {
         val pool = Sync.fixedThreadPool(if (parallel) 4 else 1) // sizing, shutdown, …
         val upload =

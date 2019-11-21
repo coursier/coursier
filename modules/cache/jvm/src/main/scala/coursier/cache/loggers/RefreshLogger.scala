@@ -39,22 +39,8 @@ object RefreshLogger {
     new RefreshLogger(writer, display)
 
 
-  lazy val defaultFallbackMode: Boolean = {
-    val env0 = sys.env.get("COURSIER_PROGRESS").map(_.toLowerCase).collect {
-      case "true"  | "enable"  | "1" => true
-      case "false" | "disable" | "0" => false
-    }
-    def compatibilityEnv = sys.env.get("COURSIER_NO_TERM").nonEmpty
-
-    def nonInteractive = System.console() == null
-
-    def insideEmacs = sys.env.contains("INSIDE_EMACS")
-    def ci = sys.env.contains("CI")
-
-    val env = env0.fold(compatibilityEnv)(!_)
-
-    env || nonInteractive || insideEmacs || ci
-  }
+  lazy val defaultFallbackMode: Boolean =
+    !coursier.paths.Util.useAnsiOutput()
 
 
   private class UpdateDisplayRunnable(out: Writer, val display: RefreshDisplay) extends Runnable {

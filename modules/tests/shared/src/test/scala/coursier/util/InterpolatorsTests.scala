@@ -31,11 +31,8 @@ object InterpolatorsTests extends TestSuite {
       }
       * - {
         val dep = dep"org.scalatest:scalatest_2.12:3.0.1:test"
-        val expected = Dependency(
-          Module(org"org.scalatest", name"scalatest_2.12"),
-          "3.0.1",
-          configuration = Configuration.test
-        )
+        val expected = Dependency(Module(org"org.scalatest", name"scalatest_2.12"), "3.0.1")
+          .withConfiguration(Configuration.test)
         assert(dep == expected)
       }
     }

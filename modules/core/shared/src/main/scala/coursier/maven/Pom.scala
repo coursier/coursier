@@ -240,7 +240,7 @@ object Pom {
       val extraAttrsMap = extraAttrs
         .map {
           case (mod, ver) =>
-            (mod.copy(attributes = Map.empty), ver) -> mod.attributes
+            (mod.withAttributes(Map.empty), ver) -> mod.attributes
         }
         .toMap
 
@@ -291,7 +291,7 @@ object Pom {
           )).filter(scm => scm.url.isDefined || scm.connection.isDefined || scm.developerConnection.isDefined)
         }
 
-      val finalProjModule = projModule.copy(organization = groupId)
+      val finalProjModule = projModule.withOrganization(groupId)
 
       val relocationDependencyOpt = pom
         .children
@@ -310,10 +310,9 @@ object Pom {
           val relocatedVersion = text(n, "version", "").right.getOrElse(version)
 
           Configuration.empty -> Dependency(
-            finalProjModule.copy(
-              organization = relocatedGroupId,
-              name = relocatedArtifactId
-            ),
+            finalProjModule
+              .withOrganization(relocatedGroupId)
+              .withName(relocatedArtifactId),
             relocatedVersion,
             Configuration.empty,
             Set.empty[(Organization, ModuleName)],
@@ -329,7 +328,7 @@ object Pom {
         (relocationDependencyOpt.toSeq ++ deps).map {
           case (config, dep0) =>
             val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-              dep0.copy(module = dep0.module.copy(attributes = attrs))
+              dep0.withModule(dep0.module.withAttributes(attrs))
             )
             config -> dep
         },
@@ -601,15 +600,14 @@ object Pom {
 
     val optionalDeps = proj.dependencies.collect {
       case (conf, dep) if dep.optional && fromConfigs(conf) =>
-        optionalConfig -> dep.copy(optional = false)
+        optionalConfig -> dep.withOptional(false)
     }
 
     val configurations = proj.configurations +
       (optionalConfig -> (proj.configurations.getOrElse(optionalConfig, Nil) ++ fromConfigs.filter(_.nonEmpty)).distinct)
 
-    proj.copy(
-      configurations = configurations,
-      dependencies = proj.dependencies ++ optionalDeps
-    )
+    proj
+      .withConfigurations(configurations)
+      .withDependencies(proj.dependencies ++ optionalDeps)
   }
 }
