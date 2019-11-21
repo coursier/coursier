@@ -1,6 +1,6 @@
 package coursier
 
-import coursier.core.{Configuration, Extension, Reconciliation}
+import coursier.core.{Activation, Configuration, Extension, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
@@ -8,7 +8,6 @@ import coursier.util.ModuleMatchers
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.core.Activation
 
 object ResolveTests extends TestSuite {
 

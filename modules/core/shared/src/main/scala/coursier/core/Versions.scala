@@ -85,7 +85,14 @@ object Versions {
     hour: Int,
     minute: Int,
     second: Int
-  )
+  ) extends Ordered[DateTime] {
+    def compare(other: DateTime): Int = {
+      import Ordering.Implicits._
+      if (this == other) 0
+      else if (tuple < other.tuple) -1
+      else 1
+    }
+  }
 
   val empty = Versions("", "", Nil, None)
 }
