@@ -12,7 +12,7 @@ plugins_(
   "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1",
 )
 
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC5-1")
-addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.0.0-RC5-1")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC5-2")
+addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.0.0-RC5-2")
 
 def plugins_(modules: ModuleID*) = modules.map(addSbtPlugin)
