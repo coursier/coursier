@@ -12382,7 +12382,7 @@ var $linkingInfo = {
 
   "assumingES6": false,
 
-  "linkerVersion": "0.6.29",
+  "linkerVersion": "0.6.31",
   "globalThis": this
 };
 $g["Object"]["freeze"]($linkingInfo);
@@ -13828,30 +13828,6 @@ function $isArrayOf_ju_Map$Entry(obj, depth) {
 }
 function $asArrayOf_ju_Map$Entry(obj, depth) {
   return (($isArrayOf_ju_Map$Entry(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.Map$Entry;", depth))
-}
-function $is_ju_regex_GroupStartMap$NodeType(obj) {
-  return (!(!((obj && obj.$classData) && obj.$classData.ancestors.ju_regex_GroupStartMap$NodeType)))
-}
-function $as_ju_regex_GroupStartMap$NodeType(obj) {
-  return (($is_ju_regex_GroupStartMap$NodeType(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$NodeType"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$NodeType(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$NodeType)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$NodeType(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$NodeType(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$NodeType;", depth))
-}
-function $is_ju_regex_GroupStartMap$OriginalRegex(obj) {
-  return (!(!((obj && obj.$classData) && obj.$classData.ancestors.ju_regex_GroupStartMap$OriginalRegex)))
-}
-function $as_ju_regex_GroupStartMap$OriginalRegex(obj) {
-  return (($is_ju_regex_GroupStartMap$OriginalRegex(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$OriginalRegex"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$OriginalRegex(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$OriginalRegex)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$OriginalRegex(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$OriginalRegex(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$OriginalRegex;", depth))
 }
 function $f_s_Proxy__equals__O__Z($thiz, that) {
   return ((that !== null) && (((that === $thiz) || (that === $thiz.self__O())) || $objectEquals(that, $thiz.self__O())))
@@ -15346,7 +15322,9 @@ $c_Lcoursier_core_Parse$.prototype.withFallbackConfig__T__s_Option = (function(c
   var o7 = new $c_s_Some().init___O(x1);
   if (((o7.value$2 !== null) && ($as_sc_SeqLike(o7.value$2).lengthCompare__I__I(1) === 0))) {
     var m = $as_s_util_matching_Regex$Match($as_sc_SeqLike(o7.value$2).apply__I__O(0));
-    $m_s_Predef$().assert__Z__V((m.matcher$1.groupCount__I() === 2));
+    var jsx$1 = $m_s_Predef$();
+    var this$3 = m.matcher$1;
+    jsx$1.assert__Z__V(($m_ju_regex_Matcher$().java$util$regex$Matcher$$getGroupCount__sjs_js_RegExp$ExecResult__ju_regex_Pattern__I(this$3.lastMatch$1, this$3.pattern0$1) === 2));
     var beginIndex = m.start__I__I(1);
     var endIndex = m.end__I__I(1);
     var main = $as_T(config.substring(beginIndex, endIndex));
@@ -26824,1125 +26802,385 @@ function $m_ju_Formatter$() {
   return $n_ju_Formatter$
 }
 /** @constructor */
-function $c_ju_regex_GroupStartMap() {
+function $c_ju_regex_GroupStartMapper() {
   $c_O.call(this);
-  this.mapping$1 = null
+  this.pattern$1 = null;
+  this.flags$1 = null;
+  this.node$1 = null;
+  this.groupCount$1 = 0;
+  this.allMatchingRegex$1 = null
 }
-$c_ju_regex_GroupStartMap.prototype = new $h_O();
-$c_ju_regex_GroupStartMap.prototype.constructor = $c_ju_regex_GroupStartMap;
+$c_ju_regex_GroupStartMapper.prototype = new $h_O();
+$c_ju_regex_GroupStartMapper.prototype.constructor = $c_ju_regex_GroupStartMapper;
 /** @constructor */
-function $h_ju_regex_GroupStartMap() {
+function $h_ju_regex_GroupStartMapper() {
   /*<skip>*/
 }
-$h_ju_regex_GroupStartMap.prototype = $c_ju_regex_GroupStartMap.prototype;
-$c_ju_regex_GroupStartMap.prototype.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3 = (function(node, remaining, nextGroupIndex, pattern$1) {
-  var x1 = this.parse$1__p1__I__I__T__T3(remaining, nextGroupIndex, pattern$1);
-  if ((x1 === null)) {
-    throw new $c_s_MatchError().init___O(x1)
+$h_ju_regex_GroupStartMapper.prototype = $c_ju_regex_GroupStartMapper.prototype;
+$c_ju_regex_GroupStartMapper.prototype.apply__T__I__sjs_js_Array = (function(string, start) {
+  this.allMatchingRegex$1.lastIndex = start;
+  var allMatchResult = this.allMatchingRegex$1.exec(string);
+  if ((allMatchResult === null)) {
+    throw new $c_jl_AssertionError().init___O((((((("[Internal error] Executed '" + this.allMatchingRegex$1) + "' on ") + ((("'" + string) + "' at position ") + start)) + ", got an error.\n") + ((("Original pattern '" + this.pattern$1) + "' with flags '") + this.flags$1)) + "' did match however."))
   };
-  var siblings = $as_sc_Seq(x1.$$und1$1);
-  var finalRemaining = $uI(x1.$$und2$1);
-  var finalGroupIndex = $uI(x1.$$und3$1);
-  var this$1 = $m_sc_Seq$();
-  return new $c_T3().init___O__O__O(this.simplify$1__p1__sc_Seq__sc_Seq($as_sc_Seq(siblings.$$plus$colon__O__scg_CanBuildFrom__O(node, this$1.ReusableCBFInstance$2))), finalRemaining, finalGroupIndex)
+  var len = ((1 + this.groupCount$1) | 0);
+  var groupStartMap = new $g.Array(len);
+  var i = 0;
+  while ((i !== len)) {
+    groupStartMap[i] = (-1);
+    i = ((1 + i) | 0)
+  };
+  this.node$1.propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(allMatchResult, groupStartMap, start);
+  return groupStartMap
 });
-$c_ju_regex_GroupStartMap.prototype.parseRegex__p1__T__ju_regex_GroupStartMap$Node = (function(pattern) {
-  var x1 = $as_sc_Seq(this.parse$1__p1__I__I__T__T3(0, 1, pattern).$$und1$1);
-  var x = $m_sci_Nil$();
-  if (x.equals__O__Z(x1)) {
-    return $m_ju_regex_GroupStartMap$Node$().apply__T__ju_regex_GroupStartMap$Node("")
-  };
-  $m_sc_Seq$();
-  var o9 = new $c_s_Some().init___O(x1);
-  if (((o9.value$2 !== null) && ($as_sc_SeqLike(o9.value$2).lengthCompare__I__I(1) === 0))) {
-    var n = $as_ju_regex_GroupStartMap$Node($as_sc_SeqLike(o9.value$2).apply__I__O(0));
-    return n
-  };
-  return $m_ju_regex_GroupStartMap$Node$().apply__sc_Seq__ju_regex_GroupStartMap$Node(x1)
+$c_ju_regex_GroupStartMapper.prototype.init___T__T__ju_regex_GroupStartMapper$Node__I__sjs_js_RegExp = (function(pattern, flags, node, groupCount, allMatchingRegex) {
+  this.pattern$1 = pattern;
+  this.flags$1 = flags;
+  this.node$1 = node;
+  this.groupCount$1 = groupCount;
+  this.allMatchingRegex$1 = allMatchingRegex;
+  return this
 });
-$c_ju_regex_GroupStartMap.prototype.positionEndSquareBracket$1__p1__I__T__I = (function(pIndex, pattern$1) {
-  _positionEndSquareBracket: while (true) {
-    if (($uI(pattern$1.length) <= pIndex)) {
-      return pIndex
-    } else {
-      var index = pIndex;
-      if ((((65535 & $uI(pattern$1.charCodeAt(index))) === 92) && ($uI(pattern$1.length) > 1))) {
-        pIndex = ((2 + pIndex) | 0);
-        continue _positionEndSquareBracket
-      } else {
-        var index$1 = pIndex;
-        if (((65535 & $uI(pattern$1.charCodeAt(index$1))) === 93)) {
-          return ((1 + pIndex) | 0)
-        } else {
-          pIndex = ((1 + pIndex) | 0);
-          continue _positionEndSquareBracket
-        }
-      }
+var $d_ju_regex_GroupStartMapper = new $TypeData().initClass({
+  ju_regex_GroupStartMapper: 0
+}, false, "java.util.regex.GroupStartMapper", {
+  ju_regex_GroupStartMapper: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper.prototype.$classData = $d_ju_regex_GroupStartMapper;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$() {
+  $c_O.call(this)
+}
+$c_ju_regex_GroupStartMapper$.prototype = new $h_O();
+$c_ju_regex_GroupStartMapper$.prototype.constructor = $c_ju_regex_GroupStartMapper$;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$.prototype = $c_ju_regex_GroupStartMapper$.prototype;
+$c_ju_regex_GroupStartMapper$.prototype.init___ = (function() {
+  return this
+});
+$c_ju_regex_GroupStartMapper$.prototype.apply__T__T__ju_regex_GroupStartMapper = (function(pattern, flags) {
+  var parser = new $c_ju_regex_GroupStartMapper$Parser().init___T(pattern);
+  var node = parser.parseInsideParensAndClosingParen__p1__ju_regex_GroupStartMapper$Node();
+  node.setNewGroup__I__I(1);
+  var allMatchingRegex = new $g.RegExp(node.buildRegex__sjs_js_Array__T(parser.groupNodeMap$1), flags);
+  return new $c_ju_regex_GroupStartMapper().init___T__T__ju_regex_GroupStartMapper$Node__I__sjs_js_RegExp(pattern, flags, node, parser.parsedGroupCount__I(), allMatchingRegex)
+});
+var $d_ju_regex_GroupStartMapper$ = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$: 0
+}, false, "java.util.regex.GroupStartMapper$", {
+  ju_regex_GroupStartMapper$: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$.prototype.$classData = $d_ju_regex_GroupStartMapper$;
+var $n_ju_regex_GroupStartMapper$ = (void 0);
+function $m_ju_regex_GroupStartMapper$() {
+  if ((!$n_ju_regex_GroupStartMapper$)) {
+    $n_ju_regex_GroupStartMapper$ = new $c_ju_regex_GroupStartMapper$().init___()
+  };
+  return $n_ju_regex_GroupStartMapper$
+}
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$Node() {
+  $c_O.call(this);
+  this.newGroup$1 = 0
+}
+$c_ju_regex_GroupStartMapper$Node.prototype = new $h_O();
+$c_ju_regex_GroupStartMapper$Node.prototype.constructor = $c_ju_regex_GroupStartMapper$Node;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$Node() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$Node.prototype = $c_ju_regex_GroupStartMapper$Node.prototype;
+$c_ju_regex_GroupStartMapper$Node.prototype.propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I = (function(matchResult, groupStartMap, start) {
+  var value = matchResult[this.newGroup$1];
+  if ((value === (void 0))) {
+    var end = (-1)
+  } else {
+    var matched = $as_T(value);
+    var end = ((start + $uI(matched.length)) | 0)
+  };
+  this.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V(matchResult, groupStartMap, start, end);
+  return end
+});
+$c_ju_regex_GroupStartMapper$Node.prototype.propagateFromEnd__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I = (function(matchResult, groupStartMap, end) {
+  var value = matchResult[this.newGroup$1];
+  if ((value === (void 0))) {
+    var start = (-1)
+  } else {
+    var matched = $as_T(value);
+    var start = ((end - $uI(matched.length)) | 0)
+  };
+  this.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V(matchResult, groupStartMap, start, end);
+  return start
+});
+$c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  this.newGroup$1 = newGroupIndex;
+  return ((1 + newGroupIndex) | 0)
+});
+function $as_ju_regex_GroupStartMapper$Node(obj) {
+  return (((obj instanceof $c_ju_regex_GroupStartMapper$Node) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMapper$Node"))
+}
+function $isArrayOf_ju_regex_GroupStartMapper$Node(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMapper$Node)))
+}
+function $asArrayOf_ju_regex_GroupStartMapper$Node(obj, depth) {
+  return (($isArrayOf_ju_regex_GroupStartMapper$Node(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMapper$Node;", depth))
+}
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$Parser() {
+  $c_O.call(this);
+  this.pattern$1 = null;
+  this.pIndex$1 = 0;
+  this.groupNodeMap$1 = null
+}
+$c_ju_regex_GroupStartMapper$Parser.prototype = new $h_O();
+$c_ju_regex_GroupStartMapper$Parser.prototype.constructor = $c_ju_regex_GroupStartMapper$Parser;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$Parser() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$Parser.prototype = $c_ju_regex_GroupStartMapper$Parser.prototype;
+$c_ju_regex_GroupStartMapper$Parser.prototype.completeSequence$1__p1__sjs_js_Array__ju_regex_GroupStartMapper$Node = (function(sequence) {
+  var x1 = $uI(sequence.length);
+  switch (x1) {
+    case 0: {
+      return new $c_ju_regex_GroupStartMapper$LeafRegexNode().init___T("");
+      break
+    }
+    case 1: {
+      return $as_ju_regex_GroupStartMapper$Node(sequence[0]);
+      break
+    }
+    default: {
+      return new $c_ju_regex_GroupStartMapper$SequenceNode().init___sjs_js_Array(sequence)
     }
   }
 });
-$c_ju_regex_GroupStartMap.prototype.simplify$1__p1__sc_Seq__sc_Seq = (function(nodes) {
-  _simplify: while (true) {
-    var x1 = nodes;
-    var o28 = $m_s_package$().$$plus$colon$1.unapply__sc_SeqLike__s_Option(x1);
-    if ((!o28.isEmpty__Z())) {
-      var p3 = $as_ju_regex_GroupStartMap$Node($as_T2(o28.get__O()).$$und1__O());
-      var p4 = $as_sc_Seq($as_T2(o28.get__O()).$$und2__O());
-      var o27 = $m_ju_regex_GroupStartMap$UnwrappedRegexLeaf$().unapply__ju_regex_GroupStartMap$Node__s_Option(p3);
-      if ((!o27.isEmpty__Z())) {
-        var r1 = $as_T(o27.get__O());
-        var o26 = $m_s_package$().$$plus$colon$1.unapply__sc_SeqLike__s_Option(p4);
-        if ((!o26.isEmpty__Z())) {
-          var p7 = $as_ju_regex_GroupStartMap$Node($as_T2(o26.get__O()).$$und1__O());
-          var tail = $as_sc_Seq($as_T2(o26.get__O()).$$und2__O());
-          var o25 = $m_ju_regex_GroupStartMap$UnwrappedRegexLeaf$().unapply__ju_regex_GroupStartMap$Node__s_Option(p7);
-          if ((!o25.isEmpty__Z())) {
-            var r2 = $as_T(o25.get__O());
-            if (((((!$m_ju_regex_GroupStartMap$().java$util$regex$GroupStartMap$$isBackReference__T__Z(r1)) && (r1 !== "|")) && (!$m_ju_regex_GroupStartMap$().java$util$regex$GroupStartMap$$isBackReference__T__Z(r2))) && (r2 !== "|"))) {
-              var x$13 = $m_ju_regex_GroupStartMap$Node$().apply__T__ju_regex_GroupStartMap$Node((("" + r1) + r2));
-              var this$1 = $m_sc_Seq$();
-              nodes = $as_sc_Seq(tail.$$plus$colon__O__scg_CanBuildFrom__O(x$13, this$1.ReusableCBFInstance$2));
-              continue _simplify
-            }
-          }
-        }
-      }
-    };
-    var o33 = $m_s_package$().$$plus$colon$1.unapply__sc_SeqLike__s_Option(x1);
-    if ((!o33.isEmpty__Z())) {
-      var n = $as_ju_regex_GroupStartMap$Node($as_T2(o33.get__O()).$$und1__O());
-      var p10 = $as_sc_Seq($as_T2(o33.get__O()).$$und2__O());
-      var o32 = $m_s_package$().$$plus$colon$1.unapply__sc_SeqLike__s_Option(p10);
-      if ((!o32.isEmpty__Z())) {
-        var p12 = $as_ju_regex_GroupStartMap$Node($as_T2(o32.get__O()).$$und1__O());
-        var tail$2 = $as_sc_Seq($as_T2(o32.get__O()).$$und2__O());
-        var o31 = $m_ju_regex_GroupStartMap$Node$().unapply__ju_regex_GroupStartMap$Node__s_Option(p12);
-        if ((!o31.isEmpty__Z())) {
-          var p14 = $as_ju_regex_GroupStartMap$OriginalRegex($as_T2(o31.get__O()).$$und1__O());
-          var p15 = $as_ju_regex_GroupStartMap$NodeType($as_T2(o31.get__O()).$$und2__O());
-          if ((p14 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-            var x16 = $as_ju_regex_GroupStartMap$OriginallyWrapped(p14);
-            var o30 = $m_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$().unapply__ju_regex_GroupStartMap$OriginallyWrapped__s_Option(x16);
-            if ((!o30.isEmpty__Z())) {
-              var modifier = $as_T(o30.get__O());
-              if ((p15 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-                var x18 = $as_ju_regex_GroupStartMap$RegexLeaf(p15);
-                var p19 = x18.regex$1;
-                if ((p19 === "")) {
-                  var o13 = $m_ju_regex_GroupStartMap$Node$().unapply__ju_regex_GroupStartMap$Node__s_Option(n);
-                  if ((!o13.isEmpty__Z())) {
-                    var p3$2 = $as_ju_regex_GroupStartMap$OriginalRegex($as_T2(o13.get__O()).$$und1__O());
-                    var m = $as_ju_regex_GroupStartMap$NodeType($as_T2(o13.get__O()).$$und2__O());
-                    if ((p3$2 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-                      var x4 = $as_ju_regex_GroupStartMap$OriginallyWrapped(p3$2);
-                      var left = x4.left$1;
-                      var right = x4.right$1;
-                      var originalGroup = new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T(left, (("" + right) + modifier));
-                      var x$14 = new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup, m);
-                      var this$3 = $m_sc_Seq$();
-                      nodes = $as_sc_Seq(tail$2.$$plus$colon__O__scg_CanBuildFrom__O(x$14, this$3.ReusableCBFInstance$2));
-                      continue _simplify
-                    }
-                  };
-                  var o15 = $m_ju_regex_GroupStartMap$Node$().unapply__ju_regex_GroupStartMap$Node__s_Option(n);
-                  if ((!o15.isEmpty__Z())) {
-                    var p6 = $as_ju_regex_GroupStartMap$OriginalRegex($as_T2(o15.get__O()).$$und1__O());
-                    if ((p6 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-                      var originalGroup$1 = new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T("", modifier);
-                      var jsx$1 = $m_sc_Seq$();
-                      var array = [n];
-                      var nodeType = new $c_ju_regex_GroupStartMap$ParentNode().init___sc_Seq($as_sc_Seq(jsx$1.apply__sc_Seq__sc_GenTraversable(new $c_sjs_js_WrappedArray().init___sjs_js_Array(array))));
-                      var x$15 = new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup$1, nodeType);
-                      var this$7 = $m_sc_Seq$();
-                      nodes = $as_sc_Seq(tail$2.$$plus$colon__O__scg_CanBuildFrom__O(x$15, this$7.ReusableCBFInstance$2));
-                      continue _simplify
-                    }
-                  };
-                  throw new $c_s_MatchError().init___O(n)
-                }
-              }
-            }
-          }
-        }
-      }
-    };
-    return nodes
-  }
+$c_ju_regex_GroupStartMapper$Parser.prototype.parsedGroupCount__I = (function() {
+  return (((-1) + $uI(this.groupNodeMap$1.length)) | 0)
 });
-$c_ju_regex_GroupStartMap.prototype.parse$1__p1__I__I__T__T3 = (function(pIndex, nextGroupIndex, pattern$1) {
-  if ((pIndex >= $uI(pattern$1.length))) {
-    return new $c_T3().init___O__O__O($m_sc_Seq$().apply__sc_Seq__sc_GenTraversable($m_sci_Nil$()), pIndex, nextGroupIndex)
-  } else {
-    var x1 = (65535 & $uI(pattern$1.charCodeAt(pIndex)));
+$c_ju_regex_GroupStartMapper$Parser.prototype.loop$1__p1__I__I = (function(pIndex) {
+  _loop: while (true) {
+    var thiz = this.pattern$1;
+    var index = pIndex;
+    var x1 = (65535 & $uI(thiz.charCodeAt(index)));
     switch (x1) {
-      case 40: {
-        if (($uI(pattern$1.length) >= ((3 + pIndex) | 0))) {
-          var index = ((1 + pIndex) | 0);
-          var jsx$2 = ((65535 & $uI(pattern$1.charCodeAt(index))) === 63)
-        } else {
-          var jsx$2 = false
-        };
-        if (jsx$2) {
-          var index$1 = ((2 + pIndex) | 0);
-          if (((65535 & $uI(pattern$1.charCodeAt(index$1))) === 61)) {
-            var jsx$1 = true
-          } else {
-            var index$2 = ((2 + pIndex) | 0);
-            var jsx$1 = ((65535 & $uI(pattern$1.charCodeAt(index$2))) === 33)
-          }
-        } else {
-          var jsx$1 = false
-        };
-        if (jsx$1) {
-          var x1$2 = this.parse$1__p1__I__I__T__T3(((3 + pIndex) | 0), nextGroupIndex, pattern$1);
-          if ((x1$2 === null)) {
-            throw new $c_s_MatchError().init___O(x1$2)
-          };
-          var parsed = $as_sc_Seq(x1$2.$$und1$1);
-          var remaining = $uI(x1$2.$$und2$1);
-          var newNextGroupIndex = $uI(x1$2.$$und3$1);
-          var remaining1 = this.parseClosingParenthesis$1__p1__I__I(remaining);
-          var index$3 = ((2 + pIndex) | 0);
-          var c = (65535 & $uI(pattern$1.charCodeAt(index$3)));
-          var originalGroup = new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T(("(?" + new $c_jl_Character().init___C(c)), ")");
-          var nodeType = $m_ju_regex_GroupStartMap$CreateParentNode$().apply__sc_Seq__ju_regex_GroupStartMap$NodeType(parsed);
-          return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3(new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup, nodeType), remaining1, newNextGroupIndex, pattern$1)
-        } else {
-          if (($uI(pattern$1.length) < ((3 + pIndex) | 0))) {
-            var jsx$4 = true
-          } else {
-            var index$4 = ((1 + pIndex) | 0);
-            var jsx$4 = ((65535 & $uI(pattern$1.charCodeAt(index$4))) !== 63)
-          };
-          if (jsx$4) {
-            var jsx$3 = true
-          } else {
-            var index$5 = ((2 + pIndex) | 0);
-            var jsx$3 = ((65535 & $uI(pattern$1.charCodeAt(index$5))) !== 58)
-          };
-          if (jsx$3) {
-            var x1$3 = this.parse$1__p1__I__I__T__T3(((1 + pIndex) | 0), ((1 + nextGroupIndex) | 0), pattern$1);
-            if ((x1$3 === null)) {
-              throw new $c_s_MatchError().init___O(x1$3)
-            };
-            var parsed$3 = $as_sc_Seq(x1$3.$$und1$1);
-            var remaining$3 = $uI(x1$3.$$und2$1);
-            var newNextGroupIndex$3 = $uI(x1$3.$$und3$1);
-            var remaining1$2 = this.parseClosingParenthesis$1__p1__I__I(remaining$3);
-            var originalGroup$1 = new $c_ju_regex_GroupStartMap$OriginallyGroupped().init___I(nextGroupIndex);
-            var nodeType$1 = $m_ju_regex_GroupStartMap$CreateParentNode$().apply__sc_Seq__ju_regex_GroupStartMap$NodeType(parsed$3);
-            return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3(new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup$1, nodeType$1).simplify__ju_regex_GroupStartMap$Node(), remaining1$2, newNextGroupIndex$3, pattern$1)
-          } else {
-            if (($uI(pattern$1.length) >= ((3 + pIndex) | 0))) {
-              var index$6 = ((1 + pIndex) | 0);
-              var jsx$6 = ((65535 & $uI(pattern$1.charCodeAt(index$6))) === 63)
-            } else {
-              var jsx$6 = false
-            };
-            if (jsx$6) {
-              var index$7 = ((2 + pIndex) | 0);
-              var jsx$5 = ((65535 & $uI(pattern$1.charCodeAt(index$7))) === 58)
-            } else {
-              var jsx$5 = false
-            };
-            if (jsx$5) {
-              var x1$4 = this.parse$1__p1__I__I__T__T3(((3 + pIndex) | 0), nextGroupIndex, pattern$1);
-              if ((x1$4 === null)) {
-                throw new $c_s_MatchError().init___O(x1$4)
-              };
-              var parsedNodes = $as_sc_Seq(x1$4.$$und1$1);
-              var remaining$5 = $uI(x1$4.$$und2$1);
-              var newNextGroupIndex$5 = $uI(x1$4.$$und3$1);
-              var remaining1$3 = this.parseClosingParenthesis$1__p1__I__I(remaining$5);
-              return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3($m_ju_regex_GroupStartMap$Node$().apply__sc_Seq__ju_regex_GroupStartMap$Node(parsedNodes).simplify__ju_regex_GroupStartMap$Node(), remaining1$3, newNextGroupIndex$5, pattern$1)
-            } else {
-              return this.default$1__p1__T__I__I__T3(pattern$1, pIndex, nextGroupIndex)
-            }
-          }
-        };
-        break
-      }
-      case 41: {
-        return new $c_T3().init___O__O__O($m_sc_Seq$().apply__sc_Seq__sc_GenTraversable($m_sci_Nil$()), pIndex, nextGroupIndex);
-        break
-      }
       case 92: {
-        if (($uI(pattern$1.length) >= ((2 + pIndex) | 0))) {
-          var index$8 = ((1 + pIndex) | 0);
-          var c$1 = (65535 & $uI(pattern$1.charCodeAt(index$8)));
-          if (((c$1 >= 48) && (c$1 <= 57))) {
-            var nextIndex = this.positionAfterLastDigit$1__p1__I__T__I(((1 + pIndex) | 0), pattern$1)
-          } else {
-            var nextIndex = ((2 + pIndex) | 0)
-          };
-          var regexPart = $as_T(pattern$1.substring(pIndex, nextIndex));
-          return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3($m_ju_regex_GroupStartMap$Node$().apply__T__ju_regex_GroupStartMap$Node(regexPart), nextIndex, nextGroupIndex, pattern$1)
-        } else {
-          return this.default$1__p1__T__I__I__T3(pattern$1, pIndex, nextGroupIndex)
-        };
+        pIndex = ((2 + pIndex) | 0);
+        continue _loop;
         break
       }
-      case 43:
-      case 42:
-      case 63: {
-        if (($uI(pattern$1.length) >= ((2 + pIndex) | 0))) {
-          var index$9 = ((1 + pIndex) | 0);
-          var jsx$7 = ((65535 & $uI(pattern$1.charCodeAt(index$9))) === 63)
-        } else {
-          var jsx$7 = false
-        };
-        if (jsx$7) {
-          var nextIndex$2 = ((2 + pIndex) | 0)
-        } else {
-          var nextIndex$2 = ((1 + pIndex) | 0)
-        };
-        var repeater = $as_T(pattern$1.substring(pIndex, nextIndex$2));
-        var originalGroup$2 = new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T("", repeater);
-        var nodeType$2 = new $c_ju_regex_GroupStartMap$RegexLeaf().init___T("");
-        return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3(new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup$2, nodeType$2), nextIndex$2, nextGroupIndex, pattern$1);
-        break
-      }
-      case 123: {
-        var nextIndex$3 = this.positionEndNextBrace$1__p1__I__T__I(((1 + pIndex) | 0), pattern$1);
-        var repeater$2 = $as_T(pattern$1.substring(pIndex, nextIndex$3));
-        var originalGroup$3 = new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T("", repeater$2);
-        var nodeType$3 = new $c_ju_regex_GroupStartMap$RegexLeaf().init___T("");
-        return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3(new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup$3, nodeType$3), nextIndex$3, nextGroupIndex, pattern$1);
-        break
-      }
-      case 91: {
-        var remaining$7 = this.positionEndSquareBracket$1__p1__I__T__I(((1 + pIndex) | 0), pattern$1);
-        var inside = $as_T(pattern$1.substring(pIndex, remaining$7));
-        return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3($m_ju_regex_GroupStartMap$Node$().apply__T__ju_regex_GroupStartMap$Node(inside), remaining$7, nextGroupIndex, pattern$1);
+      case 93: {
+        return ((1 + pIndex) | 0);
         break
       }
       default: {
-        return this.default$1__p1__T__I__I__T3(pattern$1, pIndex, nextGroupIndex)
-      }
-    }
-  }
-});
-$c_ju_regex_GroupStartMap.prototype.parseClosingParenthesis$1__p1__I__I = (function(pIndex) {
-  return ((1 + pIndex) | 0)
-});
-$c_ju_regex_GroupStartMap.prototype.positionEndNextBrace$1__p1__I__T__I = (function(pIndex, pattern$1) {
-  _positionEndNextBrace: while (true) {
-    if (($uI(pattern$1.length) <= pIndex)) {
-      return pIndex
-    } else {
-      var index = pIndex;
-      if (((65535 & $uI(pattern$1.charCodeAt(index))) === 125)) {
-        return ((1 + pIndex) | 0)
-      } else {
         pIndex = ((1 + pIndex) | 0);
-        continue _positionEndNextBrace
+        continue _loop
       }
     }
   }
 });
-$c_ju_regex_GroupStartMap.prototype.init___T__I__ju_regex_Pattern = (function(string, start, pattern) {
-  var node = this.parseRegex__p1__T__ju_regex_GroupStartMap$Node(pattern.jsPattern__T());
-  var flags = pattern.jsFlags__T();
-  node.setNewGroup__I__I(1);
-  var groupNodeMap = node.getGroupNodeMap__sci_Map();
-  var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-    return (function(kv$2) {
-      var kv = $as_T2(kv$2);
-      return new $c_s_Tuple2$mcII$sp().init___I__I(kv.$$und1$mcI$sp__I(), $as_ju_regex_GroupStartMap$Node(kv.$$und2__O()).newGroup$1)
-    })
-  })(this));
-  var this$1 = $m_sci_Map$();
-  var bf = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$1);
-  node.transformGroupNumber__sci_Map__ju_regex_GroupStartMap$Node($as_sci_Map($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(groupNodeMap, f, bf)));
-  var allMatchingRegexStr = node.buildRegex__T();
-  var allMatchingRegex = new $g.RegExp(allMatchingRegexStr, flags);
-  allMatchingRegex.lastIndex = start;
-  var allMatchResult = allMatchingRegex.exec(string);
-  if ((allMatchResult === null)) {
-    throw $m_sjsr_package$().unwrapJavaScriptException__jl_Throwable__O(new $c_jl_Exception().init___T((((((("[Internal error] Executed '" + allMatchingRegex) + "' on ") + ((("'" + string) + "' at position ") + start)) + ", got an error.\n") + ("Original pattern '" + pattern)) + "' did match however.")))
-  };
-  node.setMatch__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, allMatchResult$1) {
-    return (function(x$2) {
-      var x = $uI(x$2);
-      var value = allMatchResult$1[x];
-      return $as_T(((value === (void 0)) ? null : value))
-    })
-  })(this, allMatchResult)));
-  node.setStartReturnEnd__I__I(start);
-  var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
-    return (function(kv$3$2) {
-      var kv$3 = $as_T2(kv$3$2);
-      return new $c_s_Tuple2$mcII$sp().init___I__I(kv$3.$$und1$mcI$sp__I(), $as_ju_regex_GroupStartMap$Node(kv$3.$$und2__O()).start$1)
-    })
-  })(this));
-  var this$8 = $m_sci_Map$();
-  var bf$1 = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$8);
-  this.mapping$1 = $as_F1($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(groupNodeMap, f$1, bf$1));
+$c_ju_regex_GroupStartMapper$Parser.prototype.init___T = (function(pattern0) {
+  this.pattern$1 = (("" + pattern0) + new $c_jl_Character().init___C(41));
+  this.pIndex$1 = 0;
+  this.groupNodeMap$1 = [null];
   return this
 });
-$c_ju_regex_GroupStartMap.prototype.default$1__p1__T__I__I__T3 = (function(pattern$1, pIndex$1, nextGroupIndex$1) {
-  var e = (65535 & $uI(pattern$1.charCodeAt(pIndex$1)));
-  return this.addSiblings$1__p1__ju_regex_GroupStartMap$Node__I__I__T__T3($m_ju_regex_GroupStartMap$Node$().apply__T__ju_regex_GroupStartMap$Node(("" + new $c_jl_Character().init___C(e))), ((1 + pIndex$1) | 0), nextGroupIndex$1, pattern$1)
-});
-$c_ju_regex_GroupStartMap.prototype.positionAfterLastDigit$1__p1__I__T__I = (function(pIndex, pattern$1) {
-  _positionAfterLastDigit: while (true) {
-    if ((pIndex < $uI(pattern$1.length))) {
-      var index = pIndex;
-      var c = (65535 & $uI(pattern$1.charCodeAt(index)));
-      var jsx$1 = ((c >= 48) && (c <= 57))
-    } else {
-      var jsx$1 = false
-    };
-    if (jsx$1) {
-      pIndex = ((1 + pIndex) | 0);
-      continue _positionAfterLastDigit
-    } else {
-      return pIndex
-    }
-  }
-});
-var $d_ju_regex_GroupStartMap = new $TypeData().initClass({
-  ju_regex_GroupStartMap: 0
-}, false, "java.util.regex.GroupStartMap", {
-  ju_regex_GroupStartMap: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap.prototype.$classData = $d_ju_regex_GroupStartMap;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$.prototype.constructor = $c_ju_regex_GroupStartMap$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$.prototype = $c_ju_regex_GroupStartMap$.prototype;
-$c_ju_regex_GroupStartMap$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$.prototype.apply__T__I__ju_regex_Pattern__F1 = (function(string, start, pattern) {
-  return new $c_ju_regex_GroupStartMap().init___T__I__ju_regex_Pattern(string, start, pattern).mapping$1
-});
-$c_ju_regex_GroupStartMap$.prototype.java$util$regex$GroupStartMap$$isBackReference__T__Z = (function(r) {
-  var len = $uI(r.length);
-  if (((len < 2) || ((65535 & $uI(r.charCodeAt(0))) !== 92))) {
-    return false
-  };
-  var i = 1;
-  while ((i !== len)) {
-    var index = i;
-    var c = (65535 & $uI(r.charCodeAt(index)));
-    if ((!((c >= 48) && (c <= 57)))) {
-      return false
-    };
-    i = ((1 + i) | 0)
-  };
-  return true
-});
-var $d_ju_regex_GroupStartMap$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$: 0
-}, false, "java.util.regex.GroupStartMap$", {
-  ju_regex_GroupStartMap$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$.prototype.$classData = $d_ju_regex_GroupStartMap$;
-var $n_ju_regex_GroupStartMap$ = (void 0);
-function $m_ju_regex_GroupStartMap$() {
-  if ((!$n_ju_regex_GroupStartMap$)) {
-    $n_ju_regex_GroupStartMap$ = new $c_ju_regex_GroupStartMap$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$BackReferenceLeaf$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype.constructor = $c_ju_regex_GroupStartMap$BackReferenceLeaf$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$BackReferenceLeaf$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype = $c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype;
-$c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype.unapply__ju_regex_GroupStartMap$RegexLeaf__s_Option = (function(leaf) {
-  var r = leaf.regex$1;
-  if ($m_ju_regex_GroupStartMap$().java$util$regex$GroupStartMap$$isBackReference__T__Z(r)) {
-    var this$3 = $m_jl_Integer$();
-    var s = $as_T(r.substring(1));
-    return new $c_s_Some().init___O(this$3.parseInt__T__I__I(s, 10))
-  } else {
-    return $m_s_None$()
-  }
-});
-var $d_ju_regex_GroupStartMap$BackReferenceLeaf$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$BackReferenceLeaf$: 0
-}, false, "java.util.regex.GroupStartMap$BackReferenceLeaf$", {
-  ju_regex_GroupStartMap$BackReferenceLeaf$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$BackReferenceLeaf$.prototype.$classData = $d_ju_regex_GroupStartMap$BackReferenceLeaf$;
-var $n_ju_regex_GroupStartMap$BackReferenceLeaf$ = (void 0);
-function $m_ju_regex_GroupStartMap$BackReferenceLeaf$() {
-  if ((!$n_ju_regex_GroupStartMap$BackReferenceLeaf$)) {
-    $n_ju_regex_GroupStartMap$BackReferenceLeaf$ = new $c_ju_regex_GroupStartMap$BackReferenceLeaf$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$BackReferenceLeaf$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$CreateParentNode$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$CreateParentNode$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$CreateParentNode$.prototype.constructor = $c_ju_regex_GroupStartMap$CreateParentNode$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$CreateParentNode$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$CreateParentNode$.prototype = $c_ju_regex_GroupStartMap$CreateParentNode$.prototype;
-$c_ju_regex_GroupStartMap$CreateParentNode$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$CreateParentNode$.prototype.apply__sc_Seq__ju_regex_GroupStartMap$NodeType = (function(children) {
-  var $in = children.toList__sci_List();
-  var $in$1 = $in;
-  var res = $m_sci_Nil$();
-  var acc = $m_sci_Nil$();
-  var disjuncts;
-  _splitWhereAux: while (true) {
-    var x1 = $in$1;
-    var x$2 = $m_sci_Nil$();
-    if ((!x$2.equals__O__Z(x1))) {
-      if ((x1 instanceof $c_sci_$colon$colon)) {
-        var x2 = $as_sci_$colon$colon(x1);
-        var head = x2.head$5;
-        var tail = x2.tl$5;
-        var c = $as_ju_regex_GroupStartMap$Node(head);
-        var x = c.nodeType$1;
-        var x$2$1 = new $c_ju_regex_GroupStartMap$RegexLeaf().init___T("|");
-        if (((x !== null) && x.equals__O__Z(x$2$1))) {
-          var x$2$2 = acc.reverse__sci_List();
-          var this$2 = res;
-          var temp$res = new $c_sci_$colon$colon().init___O__sci_List(x$2$2, this$2);
-          var temp$acc = $m_sci_Nil$();
-          $in$1 = tail;
-          res = temp$res;
-          acc = temp$acc;
-          continue _splitWhereAux
+$c_ju_regex_GroupStartMapper$Parser.prototype.parseInsideParensAndClosingParen__p1__ju_regex_GroupStartMapper$Node = (function() {
+  var alternatives = [];
+  var sequence = [];
+  while (true) {
+    var thiz = this.pattern$1;
+    var index = this.pIndex$1;
+    var x1 = (65535 & $uI(thiz.charCodeAt(index)));
+    switch (x1) {
+      case 124: {
+        alternatives.push(this.completeSequence$1__p1__sjs_js_Array__ju_regex_GroupStartMapper$Node(sequence));
+        sequence = [];
+        this.pIndex$1 = ((1 + this.pIndex$1) | 0);
+        var baseNode = null;
+        break
+      }
+      case 41: {
+        var baseNode;
+        this.pIndex$1 = ((1 + this.pIndex$1) | 0);
+        var lastAlternative = this.completeSequence$1__p1__sjs_js_Array__ju_regex_GroupStartMapper$Node(sequence);
+        if (($uI(alternatives.length) === 0)) {
+          return lastAlternative
+        } else {
+          alternatives.push(lastAlternative);
+          return new $c_ju_regex_GroupStartMapper$AlternativesNode().init___sjs_js_Array(alternatives)
         };
-        var this$3 = acc;
-        var temp$acc$2 = new $c_sci_$colon$colon().init___O__sci_List(head, this$3);
-        $in$1 = tail;
-        acc = temp$acc$2;
-        continue _splitWhereAux
-      };
-      throw new $c_s_MatchError().init___O(x1)
-    };
-    var x$1 = acc.reverse__sci_List();
-    var this$1 = res;
-    var disjuncts = new $c_sci_$colon$colon().init___O__sci_List(x$1, this$1).reverse__sci_List();
-    break
-  };
-  if (($f_sc_LinearSeqOptimized__length__I(disjuncts) === 1)) {
-    return new $c_ju_regex_GroupStartMap$ParentNode().init___sc_Seq(children)
-  } else {
-    var f = (function(this$2$1) {
-      return (function(x$4$2) {
-        var x$4 = $as_sci_List(x$4$2);
-        return $m_ju_regex_GroupStartMap$Node$().apply__sc_Seq__ju_regex_GroupStartMap$Node(x$4)
-      })
-    })(this);
-    var this$4 = $m_sci_List$();
-    var bf = this$4.ReusableCBFInstance$2;
-    if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-      if ((disjuncts === $m_sci_Nil$())) {
-        var jsx$1 = $m_sci_Nil$()
-      } else {
-        var arg1 = disjuncts.head__O();
-        var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1), $m_sci_Nil$());
-        var t = h;
-        var rest = $as_sci_List(disjuncts.tail__O());
-        while ((rest !== $m_sci_Nil$())) {
-          var arg1$1 = rest.head__O();
-          var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$1), $m_sci_Nil$());
-          t.tl$5 = nx;
-          t = nx;
-          rest = $as_sci_List(rest.tail__O())
+        break
+      }
+      case 40: {
+        var thiz$1 = this.pattern$1;
+        var beginIndex = ((1 + this.pIndex$1) | 0);
+        var endIndex = ((3 + this.pIndex$1) | 0);
+        var indicator = $as_T(thiz$1.substring(beginIndex, endIndex));
+        if (((indicator === "?=") || (indicator === "?!"))) {
+          this.pIndex$1 = ((3 + this.pIndex$1) | 0);
+          var inner = this.parseInsideParensAndClosingParen__p1__ju_regex_GroupStartMapper$Node();
+          var baseNode = new $c_ju_regex_GroupStartMapper$ZeroLengthTestNode().init___T__ju_regex_GroupStartMapper$Node(indicator, inner)
+        } else if ((indicator === "?:")) {
+          this.pIndex$1 = ((3 + this.pIndex$1) | 0);
+          var inner$2 = this.parseInsideParensAndClosingParen__p1__ju_regex_GroupStartMapper$Node();
+          var baseNode = inner$2
+        } else {
+          this.pIndex$1 = ((1 + this.pIndex$1) | 0);
+          var groupIndex = $uI(this.groupNodeMap$1.length);
+          this.groupNodeMap$1.push(null);
+          var inner$3 = this.parseInsideParensAndClosingParen__p1__ju_regex_GroupStartMapper$Node();
+          var groupNode = new $c_ju_regex_GroupStartMapper$GroupNode().init___I__ju_regex_GroupStartMapper$Node(groupIndex, inner$3);
+          this.groupNodeMap$1[groupIndex] = groupNode;
+          var baseNode = groupNode
         };
-        var jsx$1 = h
+        break
       }
-    } else {
-      var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(disjuncts, bf);
-      var these = disjuncts;
-      while ((!these.isEmpty__Z())) {
-        var arg1$2 = these.head__O();
-        b.$$plus$eq__O__scm_Builder(f(arg1$2));
-        these = $as_sci_List(these.tail__O())
-      };
-      var jsx$1 = b.result__O()
-    };
-    return new $c_ju_regex_GroupStartMap$DisjunctNode().init___sc_Seq($as_sc_Seq(jsx$1))
-  }
-});
-var $d_ju_regex_GroupStartMap$CreateParentNode$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$CreateParentNode$: 0
-}, false, "java.util.regex.GroupStartMap$CreateParentNode$", {
-  ju_regex_GroupStartMap$CreateParentNode$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$CreateParentNode$.prototype.$classData = $d_ju_regex_GroupStartMap$CreateParentNode$;
-var $n_ju_regex_GroupStartMap$CreateParentNode$ = (void 0);
-function $m_ju_regex_GroupStartMap$CreateParentNode$() {
-  if ((!$n_ju_regex_GroupStartMap$CreateParentNode$)) {
-    $n_ju_regex_GroupStartMap$CreateParentNode$ = new $c_ju_regex_GroupStartMap$CreateParentNode$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$CreateParentNode$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$Node() {
-  $c_O.call(this);
-  this.originalGroup$1 = null;
-  this.nodeType$1 = null;
-  this.newGroup$1 = 0;
-  this.matched$1 = null;
-  this.start$1 = 0
-}
-$c_ju_regex_GroupStartMap$Node.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$Node.prototype.constructor = $c_ju_regex_GroupStartMap$Node;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$Node() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$Node.prototype = $c_ju_regex_GroupStartMap$Node.prototype;
-$c_ju_regex_GroupStartMap$Node.prototype.setEndReturnStart__I__I = (function(newEnd) {
-  var x1 = this.originalGroup$1;
-  matchEnd5: {
-    var jsx$1;
-    if ((x1 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-      var x2 = $as_ju_regex_GroupStartMap$OriginallyWrapped(x1);
-      if ($m_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$().unapply__ju_regex_GroupStartMap$OriginallyWrapped__Z(x2)) {
-        var jsx$1 = newEnd;
-        break matchEnd5
+      case 92: {
+        var thiz$2 = this.pattern$1;
+        var index$1 = ((1 + this.pIndex$1) | 0);
+        var c = (65535 & $uI(thiz$2.charCodeAt(index$1)));
+        if (((c >= 48) && (c <= 57))) {
+          var startIndex = this.pIndex$1;
+          this.pIndex$1 = ((2 + this.pIndex$1) | 0);
+          while (true) {
+            var thiz$3 = this.pattern$1;
+            var index$2 = this.pIndex$1;
+            var c$1 = (65535 & $uI(thiz$3.charCodeAt(index$2)));
+            if (((c$1 >= 48) && (c$1 <= 57))) {
+              this.pIndex$1 = ((1 + this.pIndex$1) | 0)
+            } else {
+              break
+            }
+          };
+          var this$8 = $m_jl_Integer$();
+          var thiz$4 = this.pattern$1;
+          var beginIndex$1 = ((1 + startIndex) | 0);
+          var endIndex$1 = this.pIndex$1;
+          var s = $as_T(thiz$4.substring(beginIndex$1, endIndex$1));
+          var baseNode = new $c_ju_regex_GroupStartMapper$BackReferenceNode().init___I(this$8.parseInt__T__I__I(s, 10))
+        } else {
+          var thiz$5 = this.pattern$1;
+          var beginIndex$2 = this.pIndex$1;
+          var endIndex$2 = ((2 + this.pIndex$1) | 0);
+          var e = $as_T(thiz$5.substring(beginIndex$2, endIndex$2));
+          this.pIndex$1 = ((2 + this.pIndex$1) | 0);
+          var baseNode = new $c_ju_regex_GroupStartMapper$LeafRegexNode().init___T(e)
+        };
+        break
+      }
+      case 91: {
+        var startIndex$2 = this.pIndex$1;
+        this.pIndex$1 = this.loop$1__p1__I__I(((1 + startIndex$2) | 0));
+        var thiz$6 = this.pattern$1;
+        var endIndex$3 = this.pIndex$1;
+        var regex = $as_T(thiz$6.substring(startIndex$2, endIndex$3));
+        var baseNode = new $c_ju_regex_GroupStartMapper$LeafRegexNode().init___T(regex);
+        break
+      }
+      default: {
+        var thiz$7 = this.pattern$1;
+        var beginIndex$3 = this.pIndex$1;
+        var endIndex$4 = ((1 + this.pIndex$1) | 0);
+        var e$2 = $as_T(thiz$7.substring(beginIndex$3, endIndex$4));
+        this.pIndex$1 = ((1 + this.pIndex$1) | 0);
+        var baseNode = new $c_ju_regex_GroupStartMapper$LeafRegexNode().init___T(e$2)
       }
     };
-    if ((this.matched$1 === null)) {
-      var jsx$1 = (-1)
-    } else {
-      var thiz = this.matched$1;
-      var jsx$1 = ((newEnd - $uI(thiz.length)) | 0)
-    }
-  };
-  this.start$1 = jsx$1;
-  this.propagateStart__V();
-  return this.start$1
-});
-$c_ju_regex_GroupStartMap$Node.prototype.buildRegex__T = (function() {
-  var this$1 = this.originalGroup$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-    var x2 = $as_ju_regex_GroupStartMap$OriginallyGroupped(this$1);
-    var number = x2.number$1;
-    var leftRegex = "("
-  } else {
-    if ((!(this$1 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped))) {
-      throw new $c_s_MatchError().init___O(this$1)
-    };
-    var x3 = $as_ju_regex_GroupStartMap$OriginallyWrapped(this$1);
-    var left = x3.left$1;
-    var leftRegex = ("((?:" + left)
-  };
-  var this$2 = this.nodeType$1;
-  if ((this$2 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    var x2$1 = $as_ju_regex_GroupStartMap$RegexLeaf(this$2);
-    var regex = x2$1.regex$1;
-    var jsx$1 = regex
-  } else if ((this$2 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3$1 = $as_ju_regex_GroupStartMap$ParentNode(this$2);
-    var children = x3$1.children$1;
-    var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-      return (function(x$9$2) {
-        var x$9 = $as_ju_regex_GroupStartMap$Node(x$9$2);
-        return x$9.buildRegex__T()
-      })
-    })(this));
-    var this$3 = $m_sc_Seq$();
-    var jsx$1 = (("(?:" + $as_sc_TraversableOnce(children.map__F1__scg_CanBuildFrom__O(jsx$2, this$3.ReusableCBFInstance$2)).mkString__T()) + ")")
-  } else {
-    if ((!(this$2 instanceof $c_ju_regex_GroupStartMap$DisjunctNode))) {
-      throw new $c_s_MatchError().init___O(this$2)
-    };
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$2);
-    var children$2 = x4.children$1;
-    var jsx$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-      return (function(x$10$2) {
-        var x$10 = $as_ju_regex_GroupStartMap$Node(x$10$2);
-        return x$10.buildRegex__T()
-      })
-    })(this));
-    var this$4 = $m_sc_Seq$();
-    var jsx$1 = (("(?:" + $as_sc_TraversableOnce(children$2.map__F1__scg_CanBuildFrom__O(jsx$3, this$4.ReusableCBFInstance$2)).mkString__T__T("|")) + ")")
-  };
-  var middleRegex = $as_T(jsx$1);
-  var this$5 = this.originalGroup$1;
-  if ((this$5 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-    var x2$2 = $as_ju_regex_GroupStartMap$OriginallyGroupped(this$5);
-    var number$1 = x2$2.number$1;
-    var rightRegex = ")"
-  } else {
-    if ((!(this$5 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped))) {
-      throw new $c_s_MatchError().init___O(this$5)
-    };
-    var x3$2 = $as_ju_regex_GroupStartMap$OriginallyWrapped(this$5);
-    var right$1 = x3$2.right$1;
-    var rightRegex = ((")" + right$1) + ")")
-  };
-  return ((leftRegex + middleRegex) + rightRegex)
-});
-$c_ju_regex_GroupStartMap$Node.prototype.toString__T = (function() {
-  return (((("Node(" + this.originalGroup$1) + ", ") + this.nodeType$1) + ")")
-});
-$c_ju_regex_GroupStartMap$Node.prototype.transformGroupNumber__sci_Map__ju_regex_GroupStartMap$Node = (function(mapping) {
-  var rc8 = false;
-  var x2 = null;
-  var x1 = this.nodeType$1;
-  matchEnd9: {
-    if ((x1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-      rc8 = true;
-      x2 = $as_ju_regex_GroupStartMap$RegexLeaf(x1);
-      var o12 = $m_ju_regex_GroupStartMap$BackReferenceLeaf$().unapply__ju_regex_GroupStartMap$RegexLeaf__s_Option(x2);
-      if ((!o12.isEmpty__Z())) {
-        var reference = $uI(o12.get__O());
-        var this$1 = mapping.get__O__s_Option(reference);
-        this.nodeType$1 = new $c_ju_regex_GroupStartMap$RegexLeaf().init___T(("\\" + (this$1.isEmpty__Z() ? 0 : this$1.get__O())));
-        break matchEnd9
-      }
-    };
-    if (rc8) {
-      break matchEnd9
-    };
-    if ((x1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-      var x5 = $as_ju_regex_GroupStartMap$ParentNode(x1);
-      var children = x5.children$1;
-      children.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, mapping$1) {
-        return (function(x$5$2) {
-          var x$5 = $as_ju_regex_GroupStartMap$Node(x$5$2);
-          return x$5.transformGroupNumber__sci_Map__ju_regex_GroupStartMap$Node(mapping$1)
-        })
-      })(this, mapping)));
-      break matchEnd9
-    };
-    if ((x1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode)) {
-      var x6 = $as_ju_regex_GroupStartMap$DisjunctNode(x1);
-      var children$2 = x6.children$1;
-      children$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3, mapping$2) {
-        return (function(x$6$2) {
-          var x$6 = $as_ju_regex_GroupStartMap$Node(x$6$2);
-          return x$6.transformGroupNumber__sci_Map__ju_regex_GroupStartMap$Node(mapping$2)
-        })
-      })(this, mapping)));
-      break matchEnd9
-    };
-    throw new $c_s_MatchError().init___O(x1)
-  };
-  return this
-});
-$c_ju_regex_GroupStartMap$Node.prototype.end__I = (function() {
-  var jsx$2 = this.start$1;
-  if ((this.matched$1 === null)) {
-    var jsx$1 = 0
-  } else {
-    var thiz = this.matched$1;
-    var jsx$1 = $uI(thiz.length)
-  };
-  return ((jsx$2 + jsx$1) | 0)
-});
-$c_ju_regex_GroupStartMap$Node.prototype.setMatch__F1__V = (function(stringForGroupNumber) {
-  this.matched$1 = $as_T(stringForGroupNumber.apply__O__O(this.newGroup$1));
-  var this$1 = this.nodeType$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    $as_ju_regex_GroupStartMap$RegexLeaf(this$1)
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3 = $as_ju_regex_GroupStartMap$ParentNode(this$1);
-    var children = x3.children$1;
-    children.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, stringForGroupNumber$1) {
-      return (function(x$7$2) {
-        var x$7 = $as_ju_regex_GroupStartMap$Node(x$7$2);
-        x$7.setMatch__F1__V(stringForGroupNumber$1)
-      })
-    })(this, stringForGroupNumber)))
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode)) {
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$1);
-    var children$2 = x4.children$1;
-    children$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, stringForGroupNumber$1$1) {
-      return (function(x$8$2) {
-        var x$8 = $as_ju_regex_GroupStartMap$Node(x$8$2);
-        x$8.setMatch__F1__V(stringForGroupNumber$1$1)
-      })
-    })(this, stringForGroupNumber)))
-  } else {
-    throw new $c_s_MatchError().init___O(this$1)
-  }
-});
-$c_ju_regex_GroupStartMap$Node.prototype.getGroupNodeMap__sci_Map = (function() {
-  var this$1 = this.originalGroup$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-    var x2 = $as_ju_regex_GroupStartMap$OriginallyGroupped(this$1);
-    var number = x2.number$1;
-    var array = [new $c_T2().init___O__O(number, this)];
-    var this$5 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
-    var i = 0;
-    var len = $uI(array.length);
-    while ((i < len)) {
-      var index = i;
-      var arg1 = array[index];
-      this$5.$$plus$eq__T2__scm_MapBuilder($as_T2(arg1));
-      i = ((1 + i) | 0)
-    };
-    var thisGroupNodeMap = $as_sci_Map(this$5.elems$1)
-  } else {
-    if ((!(this$1 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped))) {
-      throw new $c_s_MatchError().init___O(this$1)
-    };
-    var x3 = $as_ju_regex_GroupStartMap$OriginallyWrapped(this$1);
-    var thisGroupNodeMap = $as_sci_Map($m_sci_Map$().apply__sc_Seq__sc_GenMap($m_sci_Nil$()))
-  };
-  var this$6 = this.nodeType$1;
-  if ((this$6 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    var x2$1 = $as_ju_regex_GroupStartMap$RegexLeaf(this$6);
-    var childGroupNodeMap = $as_sci_Map($m_sci_Map$().apply__sc_Seq__sc_GenMap($m_sci_Nil$()))
-  } else if ((this$6 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3$1 = $as_ju_regex_GroupStartMap$ParentNode(this$6);
-    var children = x3$1.children$1;
-    var childGroupNodeMap = $as_sci_Map(children.foldLeft__O__F2__O($m_sci_Map$().apply__sc_Seq__sc_GenMap($m_sci_Nil$()), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this) {
-      return (function(x0$1$2, x1$1$2) {
-        var x0$1 = $as_sci_Map(x0$1$2);
-        var x1$1 = $as_ju_regex_GroupStartMap$Node(x1$1$2);
-        return x0$1.$$plus$plus__sc_GenTraversableOnce__sci_Map(x1$1.getGroupNodeMap__sci_Map())
-      })
-    })(this))))
-  } else {
-    if ((!(this$6 instanceof $c_ju_regex_GroupStartMap$DisjunctNode))) {
-      throw new $c_s_MatchError().init___O(this$6)
-    };
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$6);
-    var children$2 = x4.children$1;
-    var childGroupNodeMap = $as_sci_Map(children$2.foldLeft__O__F2__O($m_sci_Map$().apply__sc_Seq__sc_GenMap($m_sci_Nil$()), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1) {
-      return (function(x0$2$2, x1$2$2) {
-        var x0$2 = $as_sci_Map(x0$2$2);
-        var x1$2 = $as_ju_regex_GroupStartMap$Node(x1$2$2);
-        return x0$2.$$plus$plus__sc_GenTraversableOnce__sci_Map(x1$2.getGroupNodeMap__sci_Map())
-      })
-    })(this))))
-  };
-  return thisGroupNodeMap.$$plus$plus__sc_GenTraversableOnce__sci_Map(childGroupNodeMap)
-});
-$c_ju_regex_GroupStartMap$Node.prototype.propagateStart__V = (function() {
-  var this$1 = this.nodeType$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    $as_ju_regex_GroupStartMap$RegexLeaf(this$1)
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3 = $as_ju_regex_GroupStartMap$ParentNode(this$1);
-    var children = x3.children$1;
-    $uI(children.foldLeft__O__F2__O(this.start$1, new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this) {
-      return (function(x0$1$2, x1$1$2) {
-        var x0$1 = $uI(x0$1$2);
-        var x1$1 = $as_ju_regex_GroupStartMap$Node(x1$1$2);
-        return x1$1.setStartReturnEnd__I__I(x0$1)
-      })
-    })(this))))
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode)) {
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$1);
-    var children$2 = x4.children$1;
-    children$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-      return (function(x0$2$2) {
-        var x0$2 = $as_ju_regex_GroupStartMap$Node(x0$2$2);
-        return x0$2.setStartReturnEnd__I__I($this$1.start$1)
-      })
-    })(this)))
-  } else {
-    throw new $c_s_MatchError().init___O(this$1)
-  }
-});
-$c_ju_regex_GroupStartMap$Node.prototype.init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType = (function(originalGroup, nodeType) {
-  this.originalGroup$1 = originalGroup;
-  this.nodeType$1 = nodeType;
-  this.newGroup$1 = 0;
-  this.matched$1 = "";
-  this.start$1 = 0;
-  return this
-});
-$c_ju_regex_GroupStartMap$Node.prototype.setNewGroup__I__I = (function(index) {
-  this.newGroup$1 = index;
-  var this$1 = this.nodeType$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    var x2 = $as_ju_regex_GroupStartMap$RegexLeaf(this$1);
-    return ((1 + index) | 0)
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3 = $as_ju_regex_GroupStartMap$ParentNode(this$1);
-    var children = x3.children$1;
-    return $uI(children.foldLeft__O__F2__O(((1 + index) | 0), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this) {
-      return (function(x0$1$2, x1$1$2) {
-        var x0$1 = $uI(x0$1$2);
-        var x1$1 = $as_ju_regex_GroupStartMap$Node(x1$1$2);
-        return x1$1.setNewGroup__I__I(x0$1)
-      })
-    })(this))))
-  } else {
-    if ((!(this$1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode))) {
-      throw new $c_s_MatchError().init___O(this$1)
-    };
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$1);
-    var children$2 = x4.children$1;
-    return $uI(children$2.foldLeft__O__F2__O(((1 + index) | 0), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this$1) {
-      return (function(x0$2$2, x1$2$2) {
-        var x0$2 = $uI(x0$2$2);
-        var x1$2 = $as_ju_regex_GroupStartMap$Node(x1$2$2);
-        return x1$2.setNewGroup__I__I(x0$2)
-      })
-    })(this))))
-  }
-});
-$c_ju_regex_GroupStartMap$Node.prototype.propagateEnd__V = (function() {
-  var this$1 = this.nodeType$1;
-  if ((this$1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    $as_ju_regex_GroupStartMap$RegexLeaf(this$1)
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var x3 = $as_ju_regex_GroupStartMap$ParentNode(this$1);
-    var children = x3.children$1;
-    $uI(children.foldRight__O__F2__O(this.end__I(), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function($this) {
-      return (function(x0$1$2, x1$1$2) {
-        var x0$1 = $as_ju_regex_GroupStartMap$Node(x0$1$2);
-        var x1$1 = $uI(x1$1$2);
-        return x0$1.setEndReturnStart__I__I(x1$1)
-      })
-    })(this))))
-  } else if ((this$1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode)) {
-    var x4 = $as_ju_regex_GroupStartMap$DisjunctNode(this$1);
-    var children$2 = x4.children$1;
-    children$2.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1) {
-      return (function(x0$2$2) {
-        var x0$2 = $as_ju_regex_GroupStartMap$Node(x0$2$2);
-        return x0$2.setEndReturnStart__I__I($this$1.end__I())
-      })
-    })(this)))
-  } else {
-    throw new $c_s_MatchError().init___O(this$1)
-  }
-});
-$c_ju_regex_GroupStartMap$Node.prototype.simplify__ju_regex_GroupStartMap$Node = (function() {
-  var o17 = $m_ju_regex_GroupStartMap$Node$().unapply__ju_regex_GroupStartMap$Node__s_Option(this);
-  if ((!o17.isEmpty__Z())) {
-    var p3 = $as_ju_regex_GroupStartMap$OriginalRegex($as_T2(o17.get__O()).$$und1__O());
-    var p4 = $as_ju_regex_GroupStartMap$NodeType($as_T2(o17.get__O()).$$und2__O());
-    if ((p3 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-      var x5 = $as_ju_regex_GroupStartMap$OriginallyGroupped(p3);
-      var nextGroupIndex = x5.number$1;
-      if ((p4 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-        var x6 = $as_ju_regex_GroupStartMap$ParentNode(p4);
-        var p7 = x6.children$1;
-        $m_sc_Seq$();
-        var o16 = new $c_s_Some().init___O(p7);
-        if (((o16.value$2 !== null) && ($as_sc_SeqLike(o16.value$2).lengthCompare__I__I(1) === 0))) {
-          var p9 = $as_ju_regex_GroupStartMap$Node($as_sc_SeqLike(o16.value$2).apply__I__O(0));
-          var o15 = $m_ju_regex_GroupStartMap$UnwrappedRegexLeaf$().unapply__ju_regex_GroupStartMap$Node__s_Option(p9);
-          if ((!o15.isEmpty__Z())) {
-            var regex = $as_T(o15.get__O());
-            var originalGroup = new $c_ju_regex_GroupStartMap$OriginallyGroupped().init___I(nextGroupIndex);
-            var nodeType = new $c_ju_regex_GroupStartMap$RegexLeaf().init___T(regex);
-            return new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(originalGroup, nodeType)
+    if ((baseNode !== null)) {
+      var thiz$8 = this.pattern$1;
+      var index$3 = this.pIndex$1;
+      var x1$2 = (65535 & $uI(thiz$8.charCodeAt(index$3)));
+      switch (x1$2) {
+        case 43:
+        case 42:
+        case 63: {
+          var startIndex$3 = this.pIndex$1;
+          var thiz$9 = this.pattern$1;
+          var index$4 = ((1 + startIndex$3) | 0);
+          if (((65535 & $uI(thiz$9.charCodeAt(index$4))) === 63)) {
+            this.pIndex$1 = ((2 + this.pIndex$1) | 0)
+          } else {
+            this.pIndex$1 = ((1 + this.pIndex$1) | 0)
+          };
+          var thiz$10 = this.pattern$1;
+          var endIndex$5 = this.pIndex$1;
+          var repeater = $as_T(thiz$10.substring(startIndex$3, endIndex$5));
+          $uI(sequence.push(new $c_ju_regex_GroupStartMapper$RepeatedNode().init___ju_regex_GroupStartMapper$Node__T(baseNode, repeater)));
+          break
+        }
+        case 123: {
+          var startIndex$4 = this.pIndex$1;
+          var thiz$11 = this.pattern$1;
+          var fromIndex = ((1 + startIndex$4) | 0);
+          this.pIndex$1 = ((1 + $uI(thiz$11.indexOf("}", fromIndex))) | 0);
+          var thiz$12 = this.pattern$1;
+          var index$5 = this.pIndex$1;
+          if (((65535 & $uI(thiz$12.charCodeAt(index$5))) === 63)) {
+            this.pIndex$1 = ((1 + this.pIndex$1) | 0)
+          };
+          var thiz$13 = this.pattern$1;
+          var endIndex$6 = this.pIndex$1;
+          var repeater$2 = $as_T(thiz$13.substring(startIndex$4, endIndex$6));
+          $uI(sequence.push(new $c_ju_regex_GroupStartMapper$RepeatedNode().init___ju_regex_GroupStartMapper$Node__T(baseNode, repeater$2)));
+          break
+        }
+        default: {
+          var sequenceLen = $uI(sequence.length);
+          if ((((sequenceLen !== 0) && (baseNode instanceof $c_ju_regex_GroupStartMapper$LeafRegexNode)) && (sequence[(((-1) + sequenceLen) | 0)] instanceof $c_ju_regex_GroupStartMapper$LeafRegexNode))) {
+            var fused = new $c_ju_regex_GroupStartMapper$LeafRegexNode().init___T((("" + $as_ju_regex_GroupStartMapper$LeafRegexNode(sequence[(((-1) + sequenceLen) | 0)]).regex$2) + $as_ju_regex_GroupStartMapper$LeafRegexNode(baseNode).regex$2));
+            sequence[(((-1) + sequenceLen) | 0)] = fused
+          } else {
+            $uI(sequence.push(baseNode))
           }
         }
       }
     }
-  };
-  return this
+  }
 });
-$c_ju_regex_GroupStartMap$Node.prototype.setStartReturnEnd__I__I = (function(offset) {
-  this.start$1 = ((this.matched$1 === null) ? (-1) : offset);
-  var x1 = this.originalGroup$1;
-  matchEnd6: {
-    if ((x1 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-      var x2 = $as_ju_regex_GroupStartMap$OriginallyWrapped(x1);
-      var o9 = $m_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$().unapply__ju_regex_GroupStartMap$OriginallyWrapped__s_Option(x2);
-      if ((!o9.isEmpty__Z())) {
-        this.propagateEnd__V();
-        break matchEnd6
-      }
-    };
-    this.propagateStart__V()
-  };
-  var x1$2 = this.originalGroup$1;
-  if ((x1$2 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-    var x2$2 = $as_ju_regex_GroupStartMap$OriginallyWrapped(x1$2);
-    if ($m_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$().unapply__ju_regex_GroupStartMap$OriginallyWrapped__Z(x2$2)) {
-      return offset
-    }
-  };
-  return this.end__I()
-});
-function $as_ju_regex_GroupStartMap$Node(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$Node) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$Node"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$Node(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$Node)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$Node(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$Node(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$Node;", depth))
-}
-var $d_ju_regex_GroupStartMap$Node = new $TypeData().initClass({
-  ju_regex_GroupStartMap$Node: 0
-}, false, "java.util.regex.GroupStartMap$Node", {
-  ju_regex_GroupStartMap$Node: 1,
+var $d_ju_regex_GroupStartMapper$Parser = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$Parser: 0
+}, false, "java.util.regex.GroupStartMapper$Parser", {
+  ju_regex_GroupStartMapper$Parser: 1,
   O: 1
 });
-$c_ju_regex_GroupStartMap$Node.prototype.$classData = $d_ju_regex_GroupStartMap$Node;
+$c_ju_regex_GroupStartMapper$Parser.prototype.$classData = $d_ju_regex_GroupStartMapper$Parser;
 /** @constructor */
-function $c_ju_regex_GroupStartMap$Node$() {
+function $c_ju_regex_Matcher$() {
   $c_O.call(this)
 }
-$c_ju_regex_GroupStartMap$Node$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$Node$.prototype.constructor = $c_ju_regex_GroupStartMap$Node$;
+$c_ju_regex_Matcher$.prototype = new $h_O();
+$c_ju_regex_Matcher$.prototype.constructor = $c_ju_regex_Matcher$;
 /** @constructor */
-function $h_ju_regex_GroupStartMap$Node$() {
+function $h_ju_regex_Matcher$() {
   /*<skip>*/
 }
-$h_ju_regex_GroupStartMap$Node$.prototype = $c_ju_regex_GroupStartMap$Node$.prototype;
-$c_ju_regex_GroupStartMap$Node$.prototype.init___ = (function() {
+$h_ju_regex_Matcher$.prototype = $c_ju_regex_Matcher$.prototype;
+$c_ju_regex_Matcher$.prototype.init___ = (function() {
   return this
 });
-$c_ju_regex_GroupStartMap$Node$.prototype.apply__T__ju_regex_GroupStartMap$Node = (function(regex) {
-  return new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T("", ""), new $c_ju_regex_GroupStartMap$RegexLeaf().init___T(regex))
+$c_ju_regex_Matcher$.prototype.java$util$regex$Matcher$$getGroupCount__sjs_js_RegExp$ExecResult__ju_regex_Pattern__I = (function(lastMatch, pattern) {
+  return ((lastMatch !== null) ? (((-1) + $uI(lastMatch.length)) | 0) : pattern.groupCount__I())
 });
-$c_ju_regex_GroupStartMap$Node$.prototype.unapply__ju_regex_GroupStartMap$Node__s_Option = (function(n) {
-  return new $c_s_Some().init___O(new $c_T2().init___O__O(n.originalGroup$1, n.nodeType$1))
-});
-$c_ju_regex_GroupStartMap$Node$.prototype.apply__sc_Seq__ju_regex_GroupStartMap$Node = (function(nodes) {
-  return new $c_ju_regex_GroupStartMap$Node().init___ju_regex_GroupStartMap$OriginalRegex__ju_regex_GroupStartMap$NodeType(new $c_ju_regex_GroupStartMap$OriginallyWrapped().init___T__T("", ""), $m_ju_regex_GroupStartMap$CreateParentNode$().apply__sc_Seq__ju_regex_GroupStartMap$NodeType(nodes))
-});
-var $d_ju_regex_GroupStartMap$Node$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$Node$: 0
-}, false, "java.util.regex.GroupStartMap$Node$", {
-  ju_regex_GroupStartMap$Node$: 1,
+var $d_ju_regex_Matcher$ = new $TypeData().initClass({
+  ju_regex_Matcher$: 0
+}, false, "java.util.regex.Matcher$", {
+  ju_regex_Matcher$: 1,
   O: 1
 });
-$c_ju_regex_GroupStartMap$Node$.prototype.$classData = $d_ju_regex_GroupStartMap$Node$;
-var $n_ju_regex_GroupStartMap$Node$ = (void 0);
-function $m_ju_regex_GroupStartMap$Node$() {
-  if ((!$n_ju_regex_GroupStartMap$Node$)) {
-    $n_ju_regex_GroupStartMap$Node$ = new $c_ju_regex_GroupStartMap$Node$().init___()
+$c_ju_regex_Matcher$.prototype.$classData = $d_ju_regex_Matcher$;
+var $n_ju_regex_Matcher$ = (void 0);
+function $m_ju_regex_Matcher$() {
+  if ((!$n_ju_regex_Matcher$)) {
+    $n_ju_regex_Matcher$ = new $c_ju_regex_Matcher$().init___()
   };
-  return $n_ju_regex_GroupStartMap$Node$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype.constructor = $c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype = $c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype;
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype.unapply__ju_regex_GroupStartMap$OriginallyWrapped__Z = (function(e) {
-  return (((e.left$1 === "(?!") || (e.left$1 === "(?=")) && (e.right$1 === ")"))
-});
-var $d_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$OriginallyWrapped$Absolute$: 0
-}, false, "java.util.regex.GroupStartMap$OriginallyWrapped$Absolute$", {
-  ju_regex_GroupStartMap$OriginallyWrapped$Absolute$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$.prototype.$classData = $d_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$;
-var $n_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$ = (void 0);
-function $m_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$() {
-  if ((!$n_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$)) {
-    $n_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$ = new $c_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$OriginallyWrapped$Absolute$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype.constructor = $c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype = $c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype;
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype.unapply__ju_regex_GroupStartMap$OriginallyWrapped__s_Option = (function(e) {
-  return (((e.left$1 === "") && $m_ju_regex_GroupStartMap$OriginallyWrapped$().isRepeatModifier__T__Z(e.right$1)) ? new $c_s_Some().init___O(e.right$1) : $m_s_None$())
-});
-var $d_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$OriginallyWrapped$Repeater$: 0
-}, false, "java.util.regex.GroupStartMap$OriginallyWrapped$Repeater$", {
-  ju_regex_GroupStartMap$OriginallyWrapped$Repeater$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$.prototype.$classData = $d_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$;
-var $n_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$ = (void 0);
-function $m_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$() {
-  if ((!$n_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$)) {
-    $n_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$ = new $c_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$OriginallyWrapped$Repeater$
-}
-/** @constructor */
-function $c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype.constructor = $c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$UnwrappedRegexLeaf$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype = $c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype;
-$c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype.unapply__ju_regex_GroupStartMap$Node__s_Option = (function(n) {
-  var o15 = $m_ju_regex_GroupStartMap$Node$().unapply__ju_regex_GroupStartMap$Node__s_Option(n);
-  if ((!o15.isEmpty__Z())) {
-    var p3 = $as_ju_regex_GroupStartMap$OriginalRegex($as_T2(o15.get__O()).$$und1__O());
-    var p4 = $as_ju_regex_GroupStartMap$NodeType($as_T2(o15.get__O()).$$und2__O());
-    if ((p3 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-      var x5 = $as_ju_regex_GroupStartMap$OriginallyWrapped(p3);
-      var p6 = x5.left$1;
-      var p7 = x5.right$1;
-      if (((p6 === "") && ((p7 === "") && (p4 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)))) {
-        var x8 = $as_ju_regex_GroupStartMap$RegexLeaf(p4);
-        var r = x8.regex$1;
-        return new $c_s_Some().init___O(r)
-      }
-    }
-  };
-  return $m_s_None$()
-});
-var $d_ju_regex_GroupStartMap$UnwrappedRegexLeaf$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$UnwrappedRegexLeaf$: 0
-}, false, "java.util.regex.GroupStartMap$UnwrappedRegexLeaf$", {
-  ju_regex_GroupStartMap$UnwrappedRegexLeaf$: 1,
-  O: 1
-});
-$c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$.prototype.$classData = $d_ju_regex_GroupStartMap$UnwrappedRegexLeaf$;
-var $n_ju_regex_GroupStartMap$UnwrappedRegexLeaf$ = (void 0);
-function $m_ju_regex_GroupStartMap$UnwrappedRegexLeaf$() {
-  if ((!$n_ju_regex_GroupStartMap$UnwrappedRegexLeaf$)) {
-    $n_ju_regex_GroupStartMap$UnwrappedRegexLeaf$ = new $c_ju_regex_GroupStartMap$UnwrappedRegexLeaf$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$UnwrappedRegexLeaf$
+  return $n_ju_regex_Matcher$
 }
 /** @constructor */
 function $c_s_DeprecatedConsole() {
@@ -28867,37 +28105,20 @@ $c_s_util_hashing_MurmurHash3.prototype.arrayHash$mZc$sp__AZ__I__I = (function(a
   };
   return this.finalizeHash__I__I__I(h, a.u.length)
 });
+$c_s_util_hashing_MurmurHash3.prototype.arrayHash$mBc$sp__AB__I__I = (function(a, seed) {
+  var h = seed;
+  var i = 0;
+  while ((i < a.u.length)) {
+    h = this.mix__I__I__I(h, a.get(i));
+    i = ((1 + i) | 0)
+  };
+  return this.finalizeHash__I__I__I(h, a.u.length)
+});
 $c_s_util_hashing_MurmurHash3.prototype.mix__I__I__I = (function(hash, data) {
   var h = this.mixLast__I__I__I(hash, data);
   var i = h;
   h = ((i << 13) | ((i >>> 19) | 0));
   return (((-430675100) + $imul(5, h)) | 0)
-});
-$c_s_util_hashing_MurmurHash3.prototype.bytesHash__AB__I__I = (function(data, seed) {
-  var len = data.u.length;
-  var h = seed;
-  var i = 0;
-  while ((len >= 4)) {
-    var k = (255 & data.get(i));
-    k = (k | ((255 & data.get(((1 + i) | 0))) << 8));
-    k = (k | ((255 & data.get(((2 + i) | 0))) << 16));
-    k = (k | ((255 & data.get(((3 + i) | 0))) << 24));
-    h = this.mix__I__I__I(h, k);
-    i = ((4 + i) | 0);
-    len = (((-4) + len) | 0)
-  };
-  var k$2 = 0;
-  if ((len === 3)) {
-    k$2 = (k$2 ^ ((255 & data.get(((2 + i) | 0))) << 16))
-  };
-  if ((len >= 2)) {
-    k$2 = (k$2 ^ ((255 & data.get(((1 + i) | 0))) << 8))
-  };
-  if ((len >= 1)) {
-    k$2 = (k$2 ^ (255 & data.get(i)));
-    h = this.mixLast__I__I__I(h, k$2)
-  };
-  return this.finalizeHash__I__I__I(h, data.u.length)
 });
 $c_s_util_hashing_MurmurHash3.prototype.avalanche__p1__I__I = (function(hash) {
   var h = hash;
@@ -29094,15 +28315,6 @@ function $h_sc_$plus$colon$() {
 $h_sc_$plus$colon$.prototype = $c_sc_$plus$colon$.prototype;
 $c_sc_$plus$colon$.prototype.init___ = (function() {
   return this
-});
-$c_sc_$plus$colon$.prototype.unapply__sc_SeqLike__s_Option = (function(t) {
-  if (t.isEmpty__Z()) {
-    return $m_s_None$()
-  } else {
-    var self = t.head__O();
-    var y = t.tail__O();
-    return new $c_s_Some().init___O(new $c_T2().init___O__O(self, y))
-  }
 });
 var $d_sc_$plus$colon$ = new $TypeData().initClass({
   sc_$plus$colon$: 0
@@ -34628,6 +33840,290 @@ $c_ju_concurrent_ConcurrentHashMap$InnerHashMap$AbstractCHMIterator.prototype.in
   return this
 });
 /** @constructor */
+function $c_ju_regex_GroupStartMapper$AlternativesNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.alternatives$2 = null
+}
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.constructor = $c_ju_regex_GroupStartMapper$AlternativesNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$AlternativesNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$AlternativesNode.prototype = $c_ju_regex_GroupStartMapper$AlternativesNode.prototype;
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  var len = $uI(this.alternatives$2.length);
+  var i = 0;
+  while ((i !== len)) {
+    $as_ju_regex_GroupStartMapper$Node(this.alternatives$2[i]).propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, start);
+    i = ((1 + i) | 0)
+  }
+});
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  var nextIndex = $c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I.call(this, newGroupIndex);
+  var len = $uI(this.alternatives$2.length);
+  var i = 0;
+  while ((i !== len)) {
+    nextIndex = $as_ju_regex_GroupStartMapper$Node(this.alternatives$2[i]).setNewGroup__I__I(nextIndex);
+    i = ((1 + i) | 0)
+  };
+  return nextIndex
+});
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.init___sjs_js_Array = (function(alternatives) {
+  this.alternatives$2 = alternatives;
+  return this
+});
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  var result = "(";
+  var len = $uI(this.alternatives$2.length);
+  var i = 0;
+  while ((i !== len)) {
+    if ((i !== 0)) {
+      result = (result + "|")
+    };
+    result = (("" + result) + $as_ju_regex_GroupStartMapper$Node(this.alternatives$2[i]).buildRegex__sjs_js_Array__T(groupNodeMap));
+    i = ((1 + i) | 0)
+  };
+  return (result + ")")
+});
+var $d_ju_regex_GroupStartMapper$AlternativesNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$AlternativesNode: 0
+}, false, "java.util.regex.GroupStartMapper$AlternativesNode", {
+  ju_regex_GroupStartMapper$AlternativesNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$AlternativesNode.prototype.$classData = $d_ju_regex_GroupStartMapper$AlternativesNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$BackReferenceNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.groupNumber$2 = 0
+}
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype.constructor = $c_ju_regex_GroupStartMapper$BackReferenceNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$BackReferenceNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$BackReferenceNode.prototype = $c_ju_regex_GroupStartMapper$BackReferenceNode.prototype;
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype.init___I = (function(groupNumber) {
+  this.groupNumber$2 = groupNumber;
+  return this
+});
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  /*<skip>*/
+});
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  var newGroupNumber = ((this.groupNumber$2 >= $uI(groupNodeMap.length)) ? 0 : $as_ju_regex_GroupStartMapper$Node(groupNodeMap[this.groupNumber$2]).newGroup$1);
+  return (("(\\" + newGroupNumber) + ")")
+});
+var $d_ju_regex_GroupStartMapper$BackReferenceNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$BackReferenceNode: 0
+}, false, "java.util.regex.GroupStartMapper$BackReferenceNode", {
+  ju_regex_GroupStartMapper$BackReferenceNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$BackReferenceNode.prototype.$classData = $d_ju_regex_GroupStartMapper$BackReferenceNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$GroupNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.number$2 = 0;
+  this.inner$2 = null
+}
+$c_ju_regex_GroupStartMapper$GroupNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.constructor = $c_ju_regex_GroupStartMapper$GroupNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$GroupNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$GroupNode.prototype = $c_ju_regex_GroupStartMapper$GroupNode.prototype;
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.init___I__ju_regex_GroupStartMapper$Node = (function(number, inner) {
+  this.number$2 = number;
+  this.inner$2 = inner;
+  return this
+});
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  groupStartMap[this.number$2] = start;
+  this.inner$2.propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, start)
+});
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  return this.inner$2.setNewGroup__I__I($c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I.call(this, newGroupIndex))
+});
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  return (("(" + this.inner$2.buildRegex__sjs_js_Array__T(groupNodeMap)) + ")")
+});
+var $d_ju_regex_GroupStartMapper$GroupNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$GroupNode: 0
+}, false, "java.util.regex.GroupStartMapper$GroupNode", {
+  ju_regex_GroupStartMapper$GroupNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$GroupNode.prototype.$classData = $d_ju_regex_GroupStartMapper$GroupNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$LeafRegexNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.regex$2 = null
+}
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype.constructor = $c_ju_regex_GroupStartMapper$LeafRegexNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$LeafRegexNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$LeafRegexNode.prototype = $c_ju_regex_GroupStartMapper$LeafRegexNode.prototype;
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  /*<skip>*/
+});
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype.init___T = (function(regex) {
+  this.regex$2 = regex;
+  return this
+});
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  return (("(" + this.regex$2) + ")")
+});
+function $as_ju_regex_GroupStartMapper$LeafRegexNode(obj) {
+  return (((obj instanceof $c_ju_regex_GroupStartMapper$LeafRegexNode) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMapper$LeafRegexNode"))
+}
+function $isArrayOf_ju_regex_GroupStartMapper$LeafRegexNode(obj, depth) {
+  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMapper$LeafRegexNode)))
+}
+function $asArrayOf_ju_regex_GroupStartMapper$LeafRegexNode(obj, depth) {
+  return (($isArrayOf_ju_regex_GroupStartMapper$LeafRegexNode(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMapper$LeafRegexNode;", depth))
+}
+var $d_ju_regex_GroupStartMapper$LeafRegexNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$LeafRegexNode: 0
+}, false, "java.util.regex.GroupStartMapper$LeafRegexNode", {
+  ju_regex_GroupStartMapper$LeafRegexNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$LeafRegexNode.prototype.$classData = $d_ju_regex_GroupStartMapper$LeafRegexNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$RepeatedNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.inner$2 = null;
+  this.repeater$2 = null
+}
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.constructor = $c_ju_regex_GroupStartMapper$RepeatedNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$RepeatedNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$RepeatedNode.prototype = $c_ju_regex_GroupStartMapper$RepeatedNode.prototype;
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.init___ju_regex_GroupStartMapper$Node__T = (function(inner, repeater) {
+  this.inner$2 = inner;
+  this.repeater$2 = repeater;
+  return this
+});
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  this.inner$2.propagateFromEnd__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, end)
+});
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  return this.inner$2.setNewGroup__I__I($c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I.call(this, newGroupIndex))
+});
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  return ((("(" + this.inner$2.buildRegex__sjs_js_Array__T(groupNodeMap)) + this.repeater$2) + ")")
+});
+var $d_ju_regex_GroupStartMapper$RepeatedNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$RepeatedNode: 0
+}, false, "java.util.regex.GroupStartMapper$RepeatedNode", {
+  ju_regex_GroupStartMapper$RepeatedNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$RepeatedNode.prototype.$classData = $d_ju_regex_GroupStartMapper$RepeatedNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$SequenceNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.sequence$2 = null
+}
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.constructor = $c_ju_regex_GroupStartMapper$SequenceNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$SequenceNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$SequenceNode.prototype = $c_ju_regex_GroupStartMapper$SequenceNode.prototype;
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  var len = $uI(this.sequence$2.length);
+  var i = 0;
+  var nextStart = start;
+  while ((i !== len)) {
+    nextStart = $as_ju_regex_GroupStartMapper$Node(this.sequence$2[i]).propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, nextStart);
+    i = ((1 + i) | 0)
+  }
+});
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  var nextIndex = $c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I.call(this, newGroupIndex);
+  var len = $uI(this.sequence$2.length);
+  var i = 0;
+  while ((i !== len)) {
+    nextIndex = $as_ju_regex_GroupStartMapper$Node(this.sequence$2[i]).setNewGroup__I__I(nextIndex);
+    i = ((1 + i) | 0)
+  };
+  return nextIndex
+});
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.init___sjs_js_Array = (function(sequence) {
+  this.sequence$2 = sequence;
+  return this
+});
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  var result = "(";
+  var len = $uI(this.sequence$2.length);
+  var i = 0;
+  while ((i !== len)) {
+    result = (("" + result) + $as_ju_regex_GroupStartMapper$Node(this.sequence$2[i]).buildRegex__sjs_js_Array__T(groupNodeMap));
+    i = ((1 + i) | 0)
+  };
+  return (result + ")")
+});
+var $d_ju_regex_GroupStartMapper$SequenceNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$SequenceNode: 0
+}, false, "java.util.regex.GroupStartMapper$SequenceNode", {
+  ju_regex_GroupStartMapper$SequenceNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$SequenceNode.prototype.$classData = $d_ju_regex_GroupStartMapper$SequenceNode;
+/** @constructor */
+function $c_ju_regex_GroupStartMapper$ZeroLengthTestNode() {
+  $c_ju_regex_GroupStartMapper$Node.call(this);
+  this.indicator$2 = null;
+  this.inner$2 = null
+}
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype = new $h_ju_regex_GroupStartMapper$Node();
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.constructor = $c_ju_regex_GroupStartMapper$ZeroLengthTestNode;
+/** @constructor */
+function $h_ju_regex_GroupStartMapper$ZeroLengthTestNode() {
+  /*<skip>*/
+}
+$h_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype = $c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype;
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
+  this.inner$2.propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, start)
+});
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
+  return this.inner$2.setNewGroup__I__I($c_ju_regex_GroupStartMapper$Node.prototype.setNewGroup__I__I.call(this, newGroupIndex))
+});
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.buildRegex__sjs_js_Array__T = (function(groupNodeMap) {
+  return ((("((" + this.indicator$2) + this.inner$2.buildRegex__sjs_js_Array__T(groupNodeMap)) + "))")
+});
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.init___T__ju_regex_GroupStartMapper$Node = (function(indicator, inner) {
+  this.indicator$2 = indicator;
+  this.inner$2 = inner;
+  return this
+});
+var $d_ju_regex_GroupStartMapper$ZeroLengthTestNode = new $TypeData().initClass({
+  ju_regex_GroupStartMapper$ZeroLengthTestNode: 0
+}, false, "java.util.regex.GroupStartMapper$ZeroLengthTestNode", {
+  ju_regex_GroupStartMapper$ZeroLengthTestNode: 1,
+  ju_regex_GroupStartMapper$Node: 1,
+  O: 1
+});
+$c_ju_regex_GroupStartMapper$ZeroLengthTestNode.prototype.$classData = $d_ju_regex_GroupStartMapper$ZeroLengthTestNode;
+/** @constructor */
 function $c_ju_regex_Matcher() {
   $c_O.call(this);
   this.pattern0$1 = null;
@@ -34639,7 +34135,6 @@ function $c_ju_regex_Matcher() {
   this.lastMatch$1 = null;
   this.lastMatchIsValid$1 = false;
   this.canStillFind$1 = false;
-  this.lastGroupCount$1 = null;
   this.appendPos$1 = 0;
   this.startOfGroupCache$1 = null
 }
@@ -34670,7 +34165,7 @@ $c_ju_regex_Matcher.prototype.find__Z = (function() {
     } else {
       this.canStillFind$1 = false
     };
-    this.startOfGroupCache$1 = $m_s_None$();
+    this.startOfGroupCache$1 = null;
     return (this.lastMatch$1 !== null)
   } else {
     return false
@@ -34687,7 +34182,7 @@ $c_ju_regex_Matcher.prototype.group__I__T = (function(group) {
   return $as_T(((value === (void 0)) ? null : value))
 });
 $c_ju_regex_Matcher.prototype.start__I__I = (function(group) {
-  return ((group === 0) ? this.start__I() : this.startOfGroup__p1__F1().apply$mcII$sp__I__I(group))
+  return ((group === 0) ? this.start__I() : $uI(this.startOfGroup__p1__sjs_js_Array()[group]))
 });
 $c_ju_regex_Matcher.prototype.matches__Z = (function() {
   this.reset__ju_regex_Matcher();
@@ -34708,27 +34203,11 @@ $c_ju_regex_Matcher.prototype.matches__Z = (function() {
   };
   return (this.lastMatch$1 !== null)
 });
-$c_ju_regex_Matcher.prototype.groupCount__I = (function() {
-  if ((this.lastMatch$1 !== null)) {
-    return (((-1) + $uI(this.lastMatch$1.length)) | 0)
-  } else {
-    var x1 = this.lastGroupCount$1;
-    if ((x1 instanceof $c_s_Some)) {
-      var x2 = $as_s_Some(x1);
-      var n = $uI(x2.value$2);
-      return n
-    } else {
-      var x = $m_s_None$();
-      if ((x === x1)) {
-        var groupCountRegex = new $g.RegExp(("|" + this.pattern0$1.jsPattern__T()));
-        var newGroupCount = (((-1) + $uI(groupCountRegex.exec("").length)) | 0);
-        this.lastGroupCount$1 = new $c_s_Some().init___O(newGroupCount);
-        return newGroupCount
-      } else {
-        throw new $c_s_MatchError().init___O(x1)
-      }
-    }
-  }
+$c_ju_regex_Matcher.prototype.startOfGroup__p1__sjs_js_Array = (function() {
+  if ((this.startOfGroupCache$1 === null)) {
+    this.startOfGroupCache$1 = this.pattern0$1.groupStartMapper__ju_regex_GroupStartMapper().apply__T__I__sjs_js_Array(this.inputstr$1, this.start__I())
+  };
+  return this.startOfGroupCache$1
 });
 $c_ju_regex_Matcher.prototype.appendTail__jl_StringBuffer__jl_StringBuffer = (function(sb) {
   var thiz = this.inputstr$1;
@@ -34753,9 +34232,7 @@ $c_ju_regex_Matcher.prototype.init___ju_regex_Pattern__jl_CharSequence__I__I = (
   this.lastMatch$1 = null;
   this.lastMatchIsValid$1 = false;
   this.canStillFind$1 = true;
-  this.lastGroupCount$1 = $m_s_None$();
   this.appendPos$1 = 0;
-  this.startOfGroupCache$1 = $m_s_None$();
   return this
 });
 $c_ju_regex_Matcher.prototype.appendReplacement__jl_StringBuffer__T__ju_regex_Matcher = (function(sb, replacement) {
@@ -34811,17 +34288,6 @@ $c_ju_regex_Matcher.prototype.appendReplacement__jl_StringBuffer__T__ju_regex_Ma
   this.appendPos$1 = this.end__I();
   return this
 });
-$c_ju_regex_Matcher.prototype.startOfGroup__p1__F1 = (function() {
-  var this$1 = this.startOfGroupCache$1;
-  if (this$1.isEmpty__Z()) {
-    var mapping = $m_ju_regex_GroupStartMap$().apply__T__I__ju_regex_Pattern__F1(this.inputstr$1, this.start__I(), this.pattern0$1);
-    this.startOfGroupCache$1 = new $c_s_Some().init___O(mapping);
-    var jsx$1 = mapping
-  } else {
-    var jsx$1 = this$1.get__O()
-  };
-  return $as_F1(jsx$1)
-});
 $c_ju_regex_Matcher.prototype.replaceAll__T__T = (function(replacement) {
   this.reset__ju_regex_Matcher();
   var sb = new $c_jl_StringBuffer().init___();
@@ -34856,7 +34322,7 @@ $c_ju_regex_Matcher.prototype.reset__ju_regex_Matcher = (function() {
   this.lastMatchIsValid$1 = false;
   this.canStillFind$1 = true;
   this.appendPos$1 = 0;
-  this.startOfGroupCache$1 = $m_s_None$();
+  this.startOfGroupCache$1 = null;
   return this
 });
 var $d_ju_regex_Matcher = new $TypeData().initClass({
@@ -35232,7 +34698,8 @@ $c_s_util_matching_Regex$Match.prototype.end__I = (function() {
 });
 $c_s_util_matching_Regex$Match.prototype.ends$lzycompute__p1__AI = (function() {
   if (((((2 & this.bitmap$0$1) << 24) >> 24) === 0)) {
-    var end = this.matcher$1.groupCount__I();
+    var this$2 = this.matcher$1;
+    var end = $m_ju_regex_Matcher$().java$util$regex$Matcher$$getGroupCount__sjs_js_RegExp$ExecResult__ju_regex_Pattern__I(this$2.lastMatch$1, this$2.pattern0$1);
     var isEmpty$4 = (end < 0);
     if (isEmpty$4) {
       var scala$collection$immutable$Range$$numRangeElements$4 = 0
@@ -35267,10 +34734,10 @@ $c_s_util_matching_Regex$Match.prototype.ends$lzycompute__p1__AI = (function() {
         i = ((1 + i) | 0)
       }
     };
-    var this$10 = b.result__sci_Vector();
-    var len = this$10.length__I();
+    var this$11 = b.result__sci_Vector();
+    var len = this$11.length__I();
     var result = $newArrayObject($d_I.getArrayOf(), [len]);
-    $f_sc_TraversableOnce__copyToArray__O__I__V(this$10, result, 0);
+    $f_sc_TraversableOnce__copyToArray__O__I__V(this$11, result, 0);
     this.ends$1 = result;
     this.bitmap$0$1 = (((2 | this.bitmap$0$1) << 24) >> 24)
   };
@@ -35293,7 +34760,8 @@ $c_s_util_matching_Regex$Match.prototype.starts__p1__AI = (function() {
 });
 $c_s_util_matching_Regex$Match.prototype.starts$lzycompute__p1__AI = (function() {
   if (((((1 & this.bitmap$0$1) << 24) >> 24) === 0)) {
-    var end = this.matcher$1.groupCount__I();
+    var this$2 = this.matcher$1;
+    var end = $m_ju_regex_Matcher$().java$util$regex$Matcher$$getGroupCount__sjs_js_RegExp$ExecResult__ju_regex_Pattern__I(this$2.lastMatch$1, this$2.pattern0$1);
     var isEmpty$4 = (end < 0);
     if (isEmpty$4) {
       var scala$collection$immutable$Range$$numRangeElements$4 = 0
@@ -35328,10 +34796,10 @@ $c_s_util_matching_Regex$Match.prototype.starts$lzycompute__p1__AI = (function()
         i = ((1 + i) | 0)
       }
     };
-    var this$10 = b.result__sci_Vector();
-    var len = this$10.length__I();
+    var this$11 = b.result__sci_Vector();
+    var len = this$11.length__I();
     var result = $newArrayObject($d_I.getArrayOf(), [len]);
-    $f_sc_TraversableOnce__copyToArray__O__I__V(this$10, result, 0);
+    $f_sc_TraversableOnce__copyToArray__O__I__V(this$11, result, 0);
     this.starts$1 = result;
     this.bitmap$0$1 = (((1 | this.bitmap$0$1) << 24) >> 24)
   };
@@ -35722,9 +35190,6 @@ $c_sci_List$$anon$1.prototype.init___ = (function() {
 $c_sci_List$$anon$1.prototype.apply__O__O = (function(x) {
   return this
 });
-$c_sci_List$$anon$1.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this)
-});
 $c_sci_List$$anon$1.prototype.toString__T = (function() {
   return "<function1>"
 });
@@ -35851,9 +35316,6 @@ function $h_sr_AbstractFunction1() {
   /*<skip>*/
 }
 $h_sr_AbstractFunction1.prototype = $c_sr_AbstractFunction1.prototype;
-$c_sr_AbstractFunction1.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.apply__O__O(v1))
-});
 $c_sr_AbstractFunction1.prototype.toString__T = (function() {
   return "<function1>"
 });
@@ -38639,29 +38101,181 @@ $c_Lcoursier_core_Version$.prototype.isBuildMetadata__Lcoursier_core_Version$Ite
   return (item instanceof $c_Lcoursier_core_Version$BuildMetadata)
 });
 $c_Lcoursier_core_Version$.prototype.listCompare__sci_Vector__sci_Vector__I = (function(first0, second0) {
-  $m_sci_Vector$();
-  var b = new $c_sci_VectorBuilder().init___();
-  var this$2 = first0.iterator__sci_VectorIterator();
-  while (this$2.$$undhasNext$2) {
-    var arg1 = this$2.next__O();
-    var item = $as_Lcoursier_core_Version$Item(arg1);
-    if (($m_Lcoursier_core_Version$().isBuildMetadata__Lcoursier_core_Version$Item__Z(item) !== true)) {
-      b.$$plus$eq__O__sci_VectorBuilder(arg1)
-    }
+  var f = (function($this) {
+    return (function(item$2) {
+      var item = $as_Lcoursier_core_Version$Item(item$2);
+      return $m_Lcoursier_core_Version$().isBuildMetadata__Lcoursier_core_Version$Item__Z(item)
+    })
+  })(this);
+  if ((first0 instanceof $c_sci_List)) {
+    var x2 = $as_sci_List(first0);
+    var l = x2;
+    var l$1 = l;
+    x: {
+      var result;
+      _noneIn: while (true) {
+        if (l$1.isEmpty__Z()) {
+          var result = $m_sci_Nil$();
+          break
+        } else {
+          var h = l$1.head__O();
+          var t = $as_sci_List(l$1.tail__O());
+          if (($uZ(f(h)) === true)) {
+            l$1 = t;
+            continue _noneIn
+          };
+          var start = l$1;
+          var remaining = t;
+          var remaining$1 = remaining;
+          _allIn: while (true) {
+            if (remaining$1.isEmpty__Z()) {
+              var result = start;
+              break x
+            } else {
+              var x$2 = remaining$1.head__O();
+              if (($uZ(f(x$2)) !== true)) {
+                remaining$1 = $as_sci_List(remaining$1.tail__O());
+                continue _allIn
+              };
+              var firstMiss = remaining$1;
+              var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+              var toProcess = $as_sci_List(start.tail__O());
+              var currentLast = newHead;
+              while ((toProcess !== firstMiss)) {
+                var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                currentLast.tl$5 = newElem;
+                currentLast = newElem;
+                toProcess = $as_sci_List(toProcess.tail__O())
+              };
+              var next = $as_sci_List(firstMiss.tail__O());
+              var nextToCopy = next;
+              while ((!next.isEmpty__Z())) {
+                var head = next.head__O();
+                if (($uZ(f(head)) !== true)) {
+                  next = $as_sci_List(next.tail__O())
+                } else {
+                  while ((nextToCopy !== next)) {
+                    var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                    currentLast.tl$5 = newElem$2;
+                    currentLast = newElem$2;
+                    nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                  };
+                  nextToCopy = $as_sci_List(next.tail__O());
+                  next = $as_sci_List(next.tail__O())
+                }
+              };
+              if ((!nextToCopy.isEmpty__Z())) {
+                currentLast.tl$5 = nextToCopy
+              };
+              var result = newHead;
+              break x
+            }
+          }
+        }
+      }
+    };
+    var jsx$1 = result
+  } else {
+    $m_sci_Vector$();
+    var b = new $c_sci_VectorBuilder().init___();
+    var this$2 = first0.iterator__sci_VectorIterator();
+    while (this$2.$$undhasNext$2) {
+      var arg1 = this$2.next__O();
+      if (($uZ(f(arg1)) !== true)) {
+        b.$$plus$eq__O__sci_VectorBuilder(arg1)
+      }
+    };
+    var jsx$1 = b.result__sci_Vector()
   };
-  var first = b.result__sci_Vector();
-  $m_sci_Vector$();
-  var b$1 = new $c_sci_VectorBuilder().init___();
-  var this$4 = second0.iterator__sci_VectorIterator();
-  while (this$4.$$undhasNext$2) {
-    var arg1$1 = this$4.next__O();
-    var item$3 = $as_Lcoursier_core_Version$Item(arg1$1);
-    if (($m_Lcoursier_core_Version$().isBuildMetadata__Lcoursier_core_Version$Item__Z(item$3) !== true)) {
-      b$1.$$plus$eq__O__sci_VectorBuilder(arg1$1)
-    }
+  var first = $as_sci_Vector(jsx$1);
+  var f$1 = (function(this$2$1) {
+    return (function(item$3$2) {
+      var item$3 = $as_Lcoursier_core_Version$Item(item$3$2);
+      return $m_Lcoursier_core_Version$().isBuildMetadata__Lcoursier_core_Version$Item__Z(item$3)
+    })
+  })(this);
+  if ((second0 instanceof $c_sci_List)) {
+    var x2$1 = $as_sci_List(second0);
+    var l$2 = x2$1;
+    var l$3 = l$2;
+    x$2: {
+      var result$1;
+      _noneIn$1: while (true) {
+        if (l$3.isEmpty__Z()) {
+          var result$1 = $m_sci_Nil$();
+          break
+        } else {
+          var h$1 = l$3.head__O();
+          var t$1 = $as_sci_List(l$3.tail__O());
+          if (($uZ(f$1(h$1)) === true)) {
+            l$3 = t$1;
+            continue _noneIn$1
+          };
+          var start$1 = l$3;
+          var remaining$2 = t$1;
+          var remaining$3 = remaining$2;
+          _allIn$1: while (true) {
+            if (remaining$3.isEmpty__Z()) {
+              var result$1 = start$1;
+              break x$2
+            } else {
+              var x$2$1 = remaining$3.head__O();
+              if (($uZ(f$1(x$2$1)) !== true)) {
+                remaining$3 = $as_sci_List(remaining$3.tail__O());
+                continue _allIn$1
+              };
+              var firstMiss$1 = remaining$3;
+              var newHead$1 = new $c_sci_$colon$colon().init___O__sci_List(start$1.head__O(), $m_sci_Nil$());
+              var toProcess$1 = $as_sci_List(start$1.tail__O());
+              var currentLast$1 = newHead$1;
+              while ((toProcess$1 !== firstMiss$1)) {
+                var newElem$1 = new $c_sci_$colon$colon().init___O__sci_List(toProcess$1.head__O(), $m_sci_Nil$());
+                currentLast$1.tl$5 = newElem$1;
+                currentLast$1 = newElem$1;
+                toProcess$1 = $as_sci_List(toProcess$1.tail__O())
+              };
+              var next$1 = $as_sci_List(firstMiss$1.tail__O());
+              var nextToCopy$1 = next$1;
+              while ((!next$1.isEmpty__Z())) {
+                var head$1 = next$1.head__O();
+                if (($uZ(f$1(head$1)) !== true)) {
+                  next$1 = $as_sci_List(next$1.tail__O())
+                } else {
+                  while ((nextToCopy$1 !== next$1)) {
+                    var newElem$2$1 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy$1.head__O(), $m_sci_Nil$());
+                    currentLast$1.tl$5 = newElem$2$1;
+                    currentLast$1 = newElem$2$1;
+                    nextToCopy$1 = $as_sci_List(nextToCopy$1.tail__O())
+                  };
+                  nextToCopy$1 = $as_sci_List(next$1.tail__O());
+                  next$1 = $as_sci_List(next$1.tail__O())
+                }
+              };
+              if ((!nextToCopy$1.isEmpty__Z())) {
+                currentLast$1.tl$5 = nextToCopy$1
+              };
+              var result$1 = newHead$1;
+              break x$2
+            }
+          }
+        }
+      }
+    };
+    var jsx$2 = result$1
+  } else {
+    $m_sci_Vector$();
+    var b$1 = new $c_sci_VectorBuilder().init___();
+    var this$4 = second0.iterator__sci_VectorIterator();
+    while (this$4.$$undhasNext$2) {
+      var arg1$1 = this$4.next__O();
+      if (($uZ(f$1(arg1$1)) !== true)) {
+        b$1.$$plus$eq__O__sci_VectorBuilder(arg1$1)
+      }
+    };
+    var jsx$2 = b$1.result__sci_Vector()
   };
-  var second = b$1.result__sci_Vector();
-  inlinereturn$47: {
+  var second = $as_sci_Vector(jsx$2);
+  inlinereturn$67: {
     $m_sci_Vector$();
     var b$2 = new $c_sci_VectorBuilder().init___();
     var it = first.iterator__sci_VectorIterator();
@@ -38670,13 +38284,13 @@ $c_Lcoursier_core_Version$.prototype.listCompare__sci_Vector__sci_Vector__I = (f
       var item$4 = $as_Lcoursier_core_Version$Item(x);
       if ((!$m_Lcoursier_core_Version$().isNumericOrMinMax__p1__Lcoursier_core_Version$Item__Z(item$4))) {
         var num1 = b$2.result__sci_Vector();
-        break inlinereturn$47
+        break inlinereturn$67
       };
       b$2.$$plus$eq__O__sci_VectorBuilder(x)
     };
     var num1 = b$2.result__sci_Vector()
   };
-  inlinereturn$61: {
+  inlinereturn$81: {
     $m_sci_Vector$();
     var b$3 = new $c_sci_VectorBuilder().init___();
     var it$1 = second.iterator__sci_VectorIterator();
@@ -38685,27 +38299,27 @@ $c_Lcoursier_core_Version$.prototype.listCompare__sci_Vector__sci_Vector__I = (f
       var item$5 = $as_Lcoursier_core_Version$Item(x$1);
       if ((!$m_Lcoursier_core_Version$().isNumericOrMinMax__p1__Lcoursier_core_Version$Item__Z(item$5))) {
         var num2 = b$3.result__sci_Vector();
-        break inlinereturn$61
+        break inlinereturn$81
       };
       b$3.$$plus$eq__O__sci_VectorBuilder(x$1)
     };
     var num2 = b$3.result__sci_Vector()
   };
   var x1 = new $c_s_Tuple2$mcII$sp().init___I__I(num1.length__I(), num2.length__I());
-  var x$2 = x1.$$und1$mcI$sp$f;
+  var x$3 = x1.$$und1$mcI$sp$f;
   var y = x1.$$und2$mcI$sp$f;
-  if ((x$2 === y)) {
+  if ((x$3 === y)) {
     return this.listCompare0__p1__sci_Vector__sci_Vector__I(first, second)
   };
-  var x$2$1 = x1.$$und1$mcI$sp$f;
+  var x$2$2 = x1.$$und1$mcI$sp$f;
   var y$2 = x1.$$und2$mcI$sp$f;
-  if ((x$2$1 > y$2)) {
-    return this.listCompare0__p1__sci_Vector__sci_Vector__I(first, this.padNum$1__p1__sci_Vector__I__I__sci_Vector(second, y$2, x$2$1))
+  if ((x$2$2 > y$2)) {
+    return this.listCompare0__p1__sci_Vector__sci_Vector__I(first, this.padNum$1__p1__sci_Vector__I__I__sci_Vector(second, y$2, x$2$2))
   };
-  var x$3 = x1.$$und1$mcI$sp$f;
+  var x$3$1 = x1.$$und1$mcI$sp$f;
   var y$3 = x1.$$und2$mcI$sp$f;
-  if ((x$3 < y$3)) {
-    return this.listCompare0__p1__sci_Vector__sci_Vector__I(this.padNum$1__p1__sci_Vector__I__I__sci_Vector(first, x$3, y$3), second)
+  if ((x$3$1 < y$3)) {
+    return this.listCompare0__p1__sci_Vector__sci_Vector__I(this.padNum$1__p1__sci_Vector__I__I__sci_Vector(first, x$3$1, y$3), second)
   };
   throw new $c_s_MatchError().init___O(x1)
 });
@@ -40651,7 +40265,7 @@ $c_ju_AbstractCollection.prototype.toString__T = (function() {
     if (first) {
       first = false
     } else {
-      result = (result + ",")
+      result = (result + ", ")
     };
     result = (("" + result) + __self.next__O())
   };
@@ -40764,44 +40378,14 @@ $c_ju_concurrent_atomic_AtomicReference.prototype.init___O = (function(value) {
   return this
 });
 /** @constructor */
-function $c_ju_regex_GroupStartMap$OriginallyWrapped$() {
-  $c_O.call(this)
-}
-$c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype.constructor = $c_ju_regex_GroupStartMap$OriginallyWrapped$;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$OriginallyWrapped$() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$OriginallyWrapped$.prototype = $c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype;
-$c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype.init___ = (function() {
-  return this
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype.isRepeatModifier__T__Z = (function(modifier) {
-  return (((((((modifier === "?") || (modifier === "??")) || (modifier === "*")) || (modifier === "+")) || (modifier === "*?")) || (modifier === "+?")) || (($uI(modifier.length) >= 0) && ($as_T(modifier.substring(0, $uI("{".length))) === "{")))
-});
-var $d_ju_regex_GroupStartMap$OriginallyWrapped$ = new $TypeData().initClass({
-  ju_regex_GroupStartMap$OriginallyWrapped$: 0
-}, false, "java.util.regex.GroupStartMap$OriginallyWrapped$", {
-  ju_regex_GroupStartMap$OriginallyWrapped$: 1,
-  O: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped$.prototype.$classData = $d_ju_regex_GroupStartMap$OriginallyWrapped$;
-var $n_ju_regex_GroupStartMap$OriginallyWrapped$ = (void 0);
-function $m_ju_regex_GroupStartMap$OriginallyWrapped$() {
-  if ((!$n_ju_regex_GroupStartMap$OriginallyWrapped$)) {
-    $n_ju_regex_GroupStartMap$OriginallyWrapped$ = new $c_ju_regex_GroupStartMap$OriginallyWrapped$().init___()
-  };
-  return $n_ju_regex_GroupStartMap$OriginallyWrapped$
-}
-/** @constructor */
 function $c_ju_regex_Pattern() {
   $c_O.call(this);
+  this.groupCount$1 = 0;
+  this.groupStartMapper$1 = null;
   this.jsRegExp$1 = null;
   this.$$undpattern$1 = null;
-  this.$$undflags$1 = 0
+  this.$$undflags$1 = 0;
+  this.bitmap$0$1 = 0
 }
 $c_ju_regex_Pattern.prototype = new $h_O();
 $c_ju_regex_Pattern.prototype.constructor = $c_ju_regex_Pattern;
@@ -40810,14 +40394,33 @@ function $h_ju_regex_Pattern() {
   /*<skip>*/
 }
 $h_ju_regex_Pattern.prototype = $c_ju_regex_Pattern.prototype;
+$c_ju_regex_Pattern.prototype.jsFlags__p1__T = (function() {
+  return ((($uZ(this.jsRegExp$1.global) ? "g" : "") + ($uZ(this.jsRegExp$1.ignoreCase) ? "i" : "")) + ($uZ(this.jsRegExp$1.multiline) ? "m" : ""))
+});
+$c_ju_regex_Pattern.prototype.jsPattern__p1__T = (function() {
+  return $as_T(this.jsRegExp$1.source)
+});
+$c_ju_regex_Pattern.prototype.groupStartMapper__ju_regex_GroupStartMapper = (function() {
+  return (((((2 & this.bitmap$0$1) << 24) >> 24) === 0) ? this.groupStartMapper$lzycompute__p1__ju_regex_GroupStartMapper() : this.groupStartMapper$1)
+});
+$c_ju_regex_Pattern.prototype.groupStartMapper$lzycompute__p1__ju_regex_GroupStartMapper = (function() {
+  if (((((2 & this.bitmap$0$1) << 24) >> 24) === 0)) {
+    this.groupStartMapper$1 = $m_ju_regex_GroupStartMapper$().apply__T__T__ju_regex_GroupStartMapper(this.jsPattern__p1__T(), this.jsFlags__p1__T());
+    this.bitmap$0$1 = (((2 | this.bitmap$0$1) << 24) >> 24)
+  };
+  return this.groupStartMapper$1
+});
+$c_ju_regex_Pattern.prototype.toString__T = (function() {
+  return this.$$undpattern$1
+});
 $c_ju_regex_Pattern.prototype.init___sjs_js_RegExp__T__I = (function(jsRegExp, _pattern, _flags) {
   this.jsRegExp$1 = jsRegExp;
   this.$$undpattern$1 = _pattern;
   this.$$undflags$1 = _flags;
   return this
 });
-$c_ju_regex_Pattern.prototype.toString__T = (function() {
-  return this.$$undpattern$1
+$c_ju_regex_Pattern.prototype.groupCount__I = (function() {
+  return (((((1 & this.bitmap$0$1) << 24) >> 24) === 0) ? this.groupCount$lzycompute__p1__I() : this.groupCount$1)
 });
 $c_ju_regex_Pattern.prototype.split__jl_CharSequence__I__AT = (function(input, limit) {
   var inputStr = $objectToString(input);
@@ -40863,15 +40466,16 @@ $c_ju_regex_Pattern.prototype.split__jl_CharSequence__I__AT = (function(input, l
     }
   }
 });
-$c_ju_regex_Pattern.prototype.jsPattern__T = (function() {
-  return $as_T(this.jsRegExp$1.source)
-});
-$c_ju_regex_Pattern.prototype.jsFlags__T = (function() {
-  return ((($uZ(this.jsRegExp$1.global) ? "g" : "") + ($uZ(this.jsRegExp$1.ignoreCase) ? "i" : "")) + ($uZ(this.jsRegExp$1.multiline) ? "m" : ""))
+$c_ju_regex_Pattern.prototype.groupCount$lzycompute__p1__I = (function() {
+  if (((((1 & this.bitmap$0$1) << 24) >> 24) === 0)) {
+    this.groupCount$1 = (((-1) + $uI(new $g.RegExp(("|" + this.jsPattern__p1__T())).exec("").length)) | 0);
+    this.bitmap$0$1 = (((1 | this.bitmap$0$1) << 24) >> 24)
+  };
+  return this.groupCount$1
 });
 $c_ju_regex_Pattern.prototype.newJSRegExp__sjs_js_RegExp = (function() {
   var r = new $g.RegExp(this.jsRegExp$1);
-  return ((r !== this.jsRegExp$1) ? r : new $g.RegExp(this.jsPattern__T(), this.jsFlags__T()))
+  return ((r !== this.jsRegExp$1) ? r : new $g.RegExp(this.jsPattern__p1__T(), this.jsFlags__p1__T()))
 });
 var $d_ju_regex_Pattern = new $TypeData().initClass({
   ju_regex_Pattern: 0
@@ -41840,7 +41444,7 @@ $c_s_util_matching_Regex$.prototype.init___ = (function() {
 $c_s_util_matching_Regex$.prototype.scala$util$matching$Regex$$extractGroupsFromMatcher__ju_regex_Matcher__s_Option = (function(m) {
   $m_sci_List$();
   var res = $m_sci_Nil$();
-  var index = m.groupCount__I();
+  var index = $m_ju_regex_Matcher$().java$util$regex$Matcher$$getGroupCount__sjs_js_RegExp$ExecResult__ju_regex_Pattern__I(m.lastMatch$1, m.pattern0$1);
   while ((index > 0)) {
     var this$2 = res;
     var x = m.group__I__T(index);
@@ -42697,9 +42301,6 @@ $c_sr_AbstractPartialFunction.prototype.apply__O__O = (function(x) {
 });
 $c_sr_AbstractPartialFunction.prototype.runWith__F1__F1 = (function(action) {
   return $f_s_PartialFunction__runWith__F1__F1(this, action)
-});
-$c_sr_AbstractPartialFunction.prototype.apply$mcII$sp__I__I = (function(x) {
-  return $uI(this.applyOrElse__O__F1__O(x, $m_s_PartialFunction$().empty$undpf$1))
 });
 $c_sr_AbstractPartialFunction.prototype.toString__T = (function() {
   return "<function1>"
@@ -44726,9 +44327,6 @@ function $h_s_Predef$$eq$colon$eq() {
   /*<skip>*/
 }
 $h_s_Predef$$eq$colon$eq.prototype = $c_s_Predef$$eq$colon$eq.prototype;
-$c_s_Predef$$eq$colon$eq.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return v1
-});
 $c_s_Predef$$eq$colon$eq.prototype.toString__T = (function() {
   return "<function1>"
 });
@@ -44743,9 +44341,6 @@ function $h_s_Predef$$less$colon$less() {
   /*<skip>*/
 }
 $h_s_Predef$$less$colon$less.prototype = $c_s_Predef$$less$colon$less.prototype;
-$c_s_Predef$$less$colon$less.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return v1
-});
 $c_s_Predef$$less$colon$less.prototype.toString__T = (function() {
   return "<function1>"
 });
@@ -49569,17 +49164,93 @@ $c_Lcoursier_core_Resolution.prototype.helper$2__p1__sci_Map__sci_Set__sci_Map =
       var this$5 = remaining.mapValues__F1__sci_Map(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2, remaining$2, rootDependencies0$1$2) {
         return (function(broughtBy$2) {
           var broughtBy = $as_sci_Vector(broughtBy$2);
-          $m_sci_Vector$();
-          var b = new $c_sci_VectorBuilder().init___();
-          var this$4 = broughtBy.iterator__sci_VectorIterator();
-          while (this$4.$$undhasNext$2) {
-            var arg1 = this$4.next__O();
-            var x = $as_Lcoursier_core_Dependency(arg1);
-            if (((remaining$2.contains__O__Z(x) || rootDependencies0$1$2.contains__O__Z(x)) !== false)) {
-              b.$$plus$eq__O__sci_VectorBuilder(arg1)
-            }
+          var f = (function($this$1, remaining$1, rootDependencies0$1$3) {
+            return (function(x$2) {
+              var x = $as_Lcoursier_core_Dependency(x$2);
+              return (remaining$1.contains__O__Z(x) || rootDependencies0$1$3.contains__O__Z(x))
+            })
+          })(this$2, remaining$2, rootDependencies0$1$2);
+          if ((broughtBy instanceof $c_sci_List)) {
+            var x2 = $as_sci_List(broughtBy);
+            var l = x2;
+            var l$1 = l;
+            x$1: {
+              var result;
+              _noneIn: while (true) {
+                if (l$1.isEmpty__Z()) {
+                  var result = $m_sci_Nil$();
+                  break
+                } else {
+                  var h = l$1.head__O();
+                  var t = $as_sci_List(l$1.tail__O());
+                  if (($uZ(f(h)) === false)) {
+                    l$1 = t;
+                    continue _noneIn
+                  };
+                  var start = l$1;
+                  var remaining$3 = t;
+                  var remaining$4 = remaining$3;
+                  _allIn: while (true) {
+                    if (remaining$4.isEmpty__Z()) {
+                      var result = start;
+                      break x$1
+                    } else {
+                      var x$2$1 = remaining$4.head__O();
+                      if (($uZ(f(x$2$1)) !== false)) {
+                        remaining$4 = $as_sci_List(remaining$4.tail__O());
+                        continue _allIn
+                      };
+                      var firstMiss = remaining$4;
+                      var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+                      var toProcess = $as_sci_List(start.tail__O());
+                      var currentLast = newHead;
+                      while ((toProcess !== firstMiss)) {
+                        var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                        currentLast.tl$5 = newElem;
+                        currentLast = newElem;
+                        toProcess = $as_sci_List(toProcess.tail__O())
+                      };
+                      var next = $as_sci_List(firstMiss.tail__O());
+                      var nextToCopy = next;
+                      while ((!next.isEmpty__Z())) {
+                        var head = next.head__O();
+                        if (($uZ(f(head)) !== false)) {
+                          next = $as_sci_List(next.tail__O())
+                        } else {
+                          while ((nextToCopy !== next)) {
+                            var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                            currentLast.tl$5 = newElem$2;
+                            currentLast = newElem$2;
+                            nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                          };
+                          nextToCopy = $as_sci_List(next.tail__O());
+                          next = $as_sci_List(next.tail__O())
+                        }
+                      };
+                      if ((!nextToCopy.isEmpty__Z())) {
+                        currentLast.tl$5 = nextToCopy
+                      };
+                      var result = newHead;
+                      break x$1
+                    }
+                  }
+                }
+              }
+            };
+            var jsx$1 = result
+          } else {
+            $m_sci_Vector$();
+            var b = new $c_sci_VectorBuilder().init___();
+            var this$4 = broughtBy.iterator__sci_VectorIterator();
+            while (this$4.$$undhasNext$2) {
+              var arg1 = this$4.next__O();
+              if (($uZ(f(arg1)) !== false)) {
+                b.$$plus$eq__O__sci_VectorBuilder(arg1)
+              }
+            };
+            var jsx$1 = b.result__sci_Vector()
           };
-          return b.result__sci_Vector()
+          return $as_sci_Vector(jsx$1)
         })
       })(this, remaining, rootDependencies0$1))).iterator__sc_Iterator();
       var b$1 = new $c_scm_MapBuilder().init___sc_GenMap($m_sci_Map$EmptyMap$());
@@ -51015,18 +50686,93 @@ $c_Lcoursier_core_Versions.prototype.latestStableOpt__p1__s_Option = (function()
   var this$9 = new $c_s_Some().init___O(this.available$1);
   var arg1$4 = this$9.value$2;
   var x$17 = $as_sci_List(arg1$4);
-  $m_sci_List$();
-  var b = new $c_scm_ListBuffer().init___();
-  var these = x$17;
-  while ((!these.isEmpty__Z())) {
-    var arg1$5 = these.head__O();
-    var ver$1 = $as_T(arg1$5);
-    if ((this.isStable$1__p1__T__Z(ver$1) !== false)) {
-      b.$$plus$eq__O__scm_ListBuffer(arg1$5)
+  var f = (function($this) {
+    return (function(ver$2) {
+      var ver$1 = $as_T(ver$2);
+      return $this.isStable$1__p1__T__Z(ver$1)
+    })
+  })(this);
+  if ((x$17 !== null)) {
+    var l = x$17;
+    var l$1 = l;
+    x: {
+      var result;
+      _noneIn: while (true) {
+        if (l$1.isEmpty__Z()) {
+          var result = $m_sci_Nil$();
+          break
+        } else {
+          var h = l$1.head__O();
+          var t = $as_sci_List(l$1.tail__O());
+          if (($uZ(f(h)) === false)) {
+            l$1 = t;
+            continue _noneIn
+          };
+          var start = l$1;
+          var remaining = t;
+          var remaining$1 = remaining;
+          _allIn: while (true) {
+            if (remaining$1.isEmpty__Z()) {
+              var result = start;
+              break x
+            } else {
+              var x$2 = remaining$1.head__O();
+              if (($uZ(f(x$2)) !== false)) {
+                remaining$1 = $as_sci_List(remaining$1.tail__O());
+                continue _allIn
+              };
+              var firstMiss = remaining$1;
+              var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+              var toProcess = $as_sci_List(start.tail__O());
+              var currentLast = newHead;
+              while ((toProcess !== firstMiss)) {
+                var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                currentLast.tl$5 = newElem;
+                currentLast = newElem;
+                toProcess = $as_sci_List(toProcess.tail__O())
+              };
+              var next = $as_sci_List(firstMiss.tail__O());
+              var nextToCopy = next;
+              while ((!next.isEmpty__Z())) {
+                var head = next.head__O();
+                if (($uZ(f(head)) !== false)) {
+                  next = $as_sci_List(next.tail__O())
+                } else {
+                  while ((nextToCopy !== next)) {
+                    var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                    currentLast.tl$5 = newElem$2;
+                    currentLast = newElem$2;
+                    nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                  };
+                  nextToCopy = $as_sci_List(next.tail__O());
+                  next = $as_sci_List(next.tail__O())
+                }
+              };
+              if ((!nextToCopy.isEmpty__Z())) {
+                currentLast.tl$5 = nextToCopy
+              };
+              var result = newHead;
+              break x
+            }
+          }
+        }
+      }
     };
-    these = $as_sci_List(these.tail__O())
+    var jsx$3 = result
+  } else {
+    $m_sci_List$();
+    var b = new $c_scm_ListBuffer().init___();
+    var these = x$17;
+    while ((!these.isEmpty__Z())) {
+      var arg1$5 = these.head__O();
+      if (($uZ(f(arg1$5)) !== false)) {
+        b.$$plus$eq__O__scm_ListBuffer(arg1$5)
+      };
+      these = $as_sci_List(these.tail__O())
+    };
+    var jsx$3 = b.toList__sci_List()
   };
-  var this$11 = new $c_s_Some().init___O(b.toList__sci_List());
+  var this$11 = new $c_s_Some().init___O(jsx$3);
   var arg1$6 = this$11.value$2;
   var x$18 = $as_sci_List(arg1$6);
   if ($f_sc_TraversableOnce__nonEmpty__Z(x$18)) {
@@ -51039,7 +50785,7 @@ $c_Lcoursier_core_Versions.prototype.latestStableOpt__p1__s_Option = (function()
   } else {
     var arg1$7 = this$12.get__O();
     var x$19 = $as_sci_List(arg1$7);
-    var f = (function($this) {
+    var f$1 = (function($this$1) {
       return (function(x$20$2) {
         var x$20 = $as_T(x$20$2);
         return new $c_Lcoursier_core_Version().init___T(x$20)
@@ -51049,35 +50795,35 @@ $c_Lcoursier_core_Versions.prototype.latestStableOpt__p1__s_Option = (function()
     var bf = this$13.ReusableCBFInstance$2;
     if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
       if ((x$19 === $m_sci_Nil$())) {
-        var jsx$4 = $m_sci_Nil$()
+        var jsx$5 = $m_sci_Nil$()
       } else {
         var arg1$8 = x$19.head__O();
-        var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$8), $m_sci_Nil$());
-        var t = h;
+        var h$1 = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$8), $m_sci_Nil$());
+        var t$1 = h$1;
         var rest = $as_sci_List(x$19.tail__O());
         while ((rest !== $m_sci_Nil$())) {
           var arg1$9 = rest.head__O();
-          var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$9), $m_sci_Nil$());
-          t.tl$5 = nx;
-          t = nx;
+          var nx = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$9), $m_sci_Nil$());
+          t$1.tl$5 = nx;
+          t$1 = nx;
           rest = $as_sci_List(rest.tail__O())
         };
-        var jsx$4 = h
+        var jsx$5 = h$1
       }
     } else {
       var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(x$19, bf);
       var these$1 = x$19;
       while ((!these$1.isEmpty__Z())) {
         var arg1$10 = these$1.head__O();
-        b$1.$$plus$eq__O__scm_Builder(f(arg1$10));
+        b$1.$$plus$eq__O__scm_Builder(f$1(arg1$10));
         these$1 = $as_sci_List(these$1.tail__O())
       };
-      var jsx$4 = b$1.result__O()
+      var jsx$5 = b$1.result__O()
     };
-    var jsx$3 = $as_sc_TraversableOnce(jsx$4);
+    var jsx$4 = $as_sc_TraversableOnce(jsx$5);
     var this$14 = $m_s_math_Ordering$();
     var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-    var latestFromAvailable = new $c_s_Some().init___O($as_Lcoursier_core_Version(jsx$3.max__s_math_Ordering__O(new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$14, evidence$1))).repr$1)
+    var latestFromAvailable = new $c_s_Some().init___O($as_Lcoursier_core_Version(jsx$4.max__s_math_Ordering__O(new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$14, evidence$1))).repr$1)
   };
   var this$15 = (releaseOpt.isEmpty__Z() ? latestOpt : releaseOpt);
   return (this$15.isEmpty__Z() ? latestFromAvailable : this$15)
@@ -51123,18 +50869,93 @@ $c_Lcoursier_core_Versions.prototype.latestReleaseOpt__p1__s_Option = (function(
   var this$8 = new $c_s_Some().init___O(this.available$1);
   var arg1$3 = this$8.value$2;
   var x$9 = $as_sci_List(arg1$3);
-  $m_sci_List$();
-  var b = new $c_scm_ListBuffer().init___();
-  var these = x$9;
-  while ((!these.isEmpty__Z())) {
-    var arg1$4 = these.head__O();
-    var x$10 = $as_T(arg1$4);
-    if (((!$m_sjsr_RuntimeString$().endsWith__T__T__Z(x$10, "SNAPSHOT")) !== false)) {
-      b.$$plus$eq__O__scm_ListBuffer(arg1$4)
+  var f = (function($this) {
+    return (function(x$10$2) {
+      var x$10 = $as_T(x$10$2);
+      return (!$m_sjsr_RuntimeString$().endsWith__T__T__Z(x$10, "SNAPSHOT"))
+    })
+  })(this);
+  if ((x$9 !== null)) {
+    var l = x$9;
+    var l$1 = l;
+    x: {
+      var result;
+      _noneIn: while (true) {
+        if (l$1.isEmpty__Z()) {
+          var result = $m_sci_Nil$();
+          break
+        } else {
+          var h = l$1.head__O();
+          var t = $as_sci_List(l$1.tail__O());
+          if (($uZ(f(h)) === false)) {
+            l$1 = t;
+            continue _noneIn
+          };
+          var start = l$1;
+          var remaining = t;
+          var remaining$1 = remaining;
+          _allIn: while (true) {
+            if (remaining$1.isEmpty__Z()) {
+              var result = start;
+              break x
+            } else {
+              var x$2 = remaining$1.head__O();
+              if (($uZ(f(x$2)) !== false)) {
+                remaining$1 = $as_sci_List(remaining$1.tail__O());
+                continue _allIn
+              };
+              var firstMiss = remaining$1;
+              var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+              var toProcess = $as_sci_List(start.tail__O());
+              var currentLast = newHead;
+              while ((toProcess !== firstMiss)) {
+                var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                currentLast.tl$5 = newElem;
+                currentLast = newElem;
+                toProcess = $as_sci_List(toProcess.tail__O())
+              };
+              var next = $as_sci_List(firstMiss.tail__O());
+              var nextToCopy = next;
+              while ((!next.isEmpty__Z())) {
+                var head = next.head__O();
+                if (($uZ(f(head)) !== false)) {
+                  next = $as_sci_List(next.tail__O())
+                } else {
+                  while ((nextToCopy !== next)) {
+                    var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                    currentLast.tl$5 = newElem$2;
+                    currentLast = newElem$2;
+                    nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                  };
+                  nextToCopy = $as_sci_List(next.tail__O());
+                  next = $as_sci_List(next.tail__O())
+                }
+              };
+              if ((!nextToCopy.isEmpty__Z())) {
+                currentLast.tl$5 = nextToCopy
+              };
+              var result = newHead;
+              break x
+            }
+          }
+        }
+      }
     };
-    these = $as_sci_List(these.tail__O())
+    var jsx$2 = result
+  } else {
+    $m_sci_List$();
+    var b = new $c_scm_ListBuffer().init___();
+    var these = x$9;
+    while ((!these.isEmpty__Z())) {
+      var arg1$4 = these.head__O();
+      if (($uZ(f(arg1$4)) !== false)) {
+        b.$$plus$eq__O__scm_ListBuffer(arg1$4)
+      };
+      these = $as_sci_List(these.tail__O())
+    };
+    var jsx$2 = b.toList__sci_List()
   };
-  var this$10 = new $c_s_Some().init___O(b.toList__sci_List());
+  var this$10 = new $c_s_Some().init___O(jsx$2);
   var arg1$5 = this$10.value$2;
   var x$11 = $as_sci_List(arg1$5);
   if ($f_sc_TraversableOnce__nonEmpty__Z(x$11)) {
@@ -51147,7 +50968,7 @@ $c_Lcoursier_core_Versions.prototype.latestReleaseOpt__p1__s_Option = (function(
   } else {
     var arg1$6 = this$11.get__O();
     var x$12 = $as_sci_List(arg1$6);
-    var f = (function($this) {
+    var f$1 = (function($this$1) {
       return (function(x$13$2) {
         var x$13 = $as_T(x$13$2);
         return new $c_Lcoursier_core_Version().init___T(x$13)
@@ -51157,35 +50978,35 @@ $c_Lcoursier_core_Versions.prototype.latestReleaseOpt__p1__s_Option = (function(
     var bf = this$12.ReusableCBFInstance$2;
     if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
       if ((x$12 === $m_sci_Nil$())) {
-        var jsx$3 = $m_sci_Nil$()
+        var jsx$4 = $m_sci_Nil$()
       } else {
         var arg1$7 = x$12.head__O();
-        var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$7), $m_sci_Nil$());
-        var t = h;
+        var h$1 = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$7), $m_sci_Nil$());
+        var t$1 = h$1;
         var rest = $as_sci_List(x$12.tail__O());
         while ((rest !== $m_sci_Nil$())) {
           var arg1$8 = rest.head__O();
-          var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$8), $m_sci_Nil$());
-          t.tl$5 = nx;
-          t = nx;
+          var nx = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$8), $m_sci_Nil$());
+          t$1.tl$5 = nx;
+          t$1 = nx;
           rest = $as_sci_List(rest.tail__O())
         };
-        var jsx$3 = h
+        var jsx$4 = h$1
       }
     } else {
       var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(x$12, bf);
       var these$1 = x$12;
       while ((!these$1.isEmpty__Z())) {
         var arg1$9 = these$1.head__O();
-        b$1.$$plus$eq__O__scm_Builder(f(arg1$9));
+        b$1.$$plus$eq__O__scm_Builder(f$1(arg1$9));
         these$1 = $as_sci_List(these$1.tail__O())
       };
-      var jsx$3 = b$1.result__O()
+      var jsx$4 = b$1.result__O()
     };
-    var jsx$2 = $as_sc_TraversableOnce(jsx$3);
+    var jsx$3 = $as_sc_TraversableOnce(jsx$4);
     var this$13 = $m_s_math_Ordering$();
     var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-    var latestFromAvailable = new $c_s_Some().init___O($as_Lcoursier_core_Version(jsx$2.max__s_math_Ordering__O(new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$13, evidence$1))).repr$1)
+    var latestFromAvailable = new $c_s_Some().init___O($as_Lcoursier_core_Version(jsx$3.max__s_math_Ordering__O(new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$13, evidence$1))).repr$1)
   };
   var this$14 = (releaseOpt.isEmpty__Z() ? latestOpt : releaseOpt);
   return (this$14.isEmpty__Z() ? latestFromAvailable : this$14)
@@ -52883,9 +52704,6 @@ $c_s_PartialFunction$$anon$1.prototype.apply__O__O = (function(v1) {
 $c_s_PartialFunction$$anon$1.prototype.runWith__F1__F1 = (function(action) {
   return $m_s_PartialFunction$().scala$PartialFunction$$constFalse$f
 });
-$c_s_PartialFunction$$anon$1.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.apply__O__sr_Nothing$(v1))
-});
 $c_s_PartialFunction$$anon$1.prototype.toString__T = (function() {
   return "<function1>"
 });
@@ -53537,6 +53355,7 @@ $c_sc_Iterator$$anon$11.prototype.hasNext__Z = (function() {
   return true
 });
 $c_sc_Iterator$$anon$11.prototype.nextCur__p2__V = (function() {
+  this.cur$2 = null;
   this.cur$2 = $as_sc_GenTraversableOnce(this.f$4$2.apply__O__O(this.$$outer$2.next__O())).toIterator__sc_Iterator()
 });
 var $d_sc_Iterator$$anon$11 = new $TypeData().initClass({
@@ -58710,9 +58529,6 @@ $h_T2.prototype = $c_T2.prototype;
 $c_T2.prototype.productPrefix__T = (function() {
   return "Tuple2"
 });
-$c_T2.prototype.$$und1$mcI$sp__I = (function() {
-  return $uI(this.$$und1__O())
-});
 $c_T2.prototype.productArity__I = (function() {
   return 2
 });
@@ -59265,387 +59081,6 @@ function $h_ju_IllegalFormatException() {
   /*<skip>*/
 }
 $h_ju_IllegalFormatException.prototype = $c_ju_IllegalFormatException.prototype;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$DisjunctNode() {
-  $c_O.call(this);
-  this.children$1 = null
-}
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.constructor = $c_ju_regex_GroupStartMap$DisjunctNode;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$DisjunctNode() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$DisjunctNode.prototype = $c_ju_regex_GroupStartMap$DisjunctNode.prototype;
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.productPrefix__T = (function() {
-  return "DisjunctNode"
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.productArity__I = (function() {
-  return 1
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_ju_regex_GroupStartMap$DisjunctNode)) {
-    var DisjunctNode$1 = $as_ju_regex_GroupStartMap$DisjunctNode(x$1);
-    var x = this.children$1;
-    var x$2 = DisjunctNode$1.children$1;
-    return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
-  } else {
-    return false
-  }
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
-    case 0: {
-      return this.children$1;
-      break
-    }
-    default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
-    }
-  }
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.init___sc_Seq = (function(children) {
-  this.children$1 = children;
-  return this
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
-});
-function $as_ju_regex_GroupStartMap$DisjunctNode(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$DisjunctNode) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$DisjunctNode"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$DisjunctNode(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$DisjunctNode)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$DisjunctNode(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$DisjunctNode(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$DisjunctNode;", depth))
-}
-var $d_ju_regex_GroupStartMap$DisjunctNode = new $TypeData().initClass({
-  ju_regex_GroupStartMap$DisjunctNode: 0
-}, false, "java.util.regex.GroupStartMap$DisjunctNode", {
-  ju_regex_GroupStartMap$DisjunctNode: 1,
-  O: 1,
-  ju_regex_GroupStartMap$NodeType: 1,
-  s_Product: 1,
-  s_Equals: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$DisjunctNode.prototype.$classData = $d_ju_regex_GroupStartMap$DisjunctNode;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$OriginallyGroupped() {
-  $c_O.call(this);
-  this.number$1 = 0
-}
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.constructor = $c_ju_regex_GroupStartMap$OriginallyGroupped;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$OriginallyGroupped() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$OriginallyGroupped.prototype = $c_ju_regex_GroupStartMap$OriginallyGroupped.prototype;
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.productPrefix__T = (function() {
-  return "OriginallyGroupped"
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.productArity__I = (function() {
-  return 1
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped)) {
-    var OriginallyGroupped$1 = $as_ju_regex_GroupStartMap$OriginallyGroupped(x$1);
-    return (this.number$1 === OriginallyGroupped$1.number$1)
-  } else {
-    return false
-  }
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
-    case 0: {
-      return this.number$1;
-      break
-    }
-    default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
-    }
-  }
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.init___I = (function(number) {
-  this.number$1 = number;
-  return this
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.hashCode__I = (function() {
-  var acc = (-889275714);
-  acc = $m_sr_Statics$().mix__I__I__I(acc, this.number$1);
-  return $m_sr_Statics$().finalizeHash__I__I__I(acc, 1)
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
-});
-function $as_ju_regex_GroupStartMap$OriginallyGroupped(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$OriginallyGroupped) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$OriginallyGroupped"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$OriginallyGroupped(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$OriginallyGroupped)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$OriginallyGroupped(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$OriginallyGroupped(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$OriginallyGroupped;", depth))
-}
-var $d_ju_regex_GroupStartMap$OriginallyGroupped = new $TypeData().initClass({
-  ju_regex_GroupStartMap$OriginallyGroupped: 0
-}, false, "java.util.regex.GroupStartMap$OriginallyGroupped", {
-  ju_regex_GroupStartMap$OriginallyGroupped: 1,
-  O: 1,
-  ju_regex_GroupStartMap$OriginalRegex: 1,
-  s_Product: 1,
-  s_Equals: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$OriginallyGroupped.prototype.$classData = $d_ju_regex_GroupStartMap$OriginallyGroupped;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$OriginallyWrapped() {
-  $c_O.call(this);
-  this.left$1 = null;
-  this.right$1 = null
-}
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.constructor = $c_ju_regex_GroupStartMap$OriginallyWrapped;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$OriginallyWrapped() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$OriginallyWrapped.prototype = $c_ju_regex_GroupStartMap$OriginallyWrapped.prototype;
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.init___T__T = (function(left, right) {
-  this.left$1 = left;
-  this.right$1 = right;
-  return this
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.productPrefix__T = (function() {
-  return "OriginallyWrapped"
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.productArity__I = (function() {
-  return 2
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped)) {
-    var OriginallyWrapped$1 = $as_ju_regex_GroupStartMap$OriginallyWrapped(x$1);
-    return ((this.left$1 === OriginallyWrapped$1.left$1) && (this.right$1 === OriginallyWrapped$1.right$1))
-  } else {
-    return false
-  }
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
-    case 0: {
-      return this.left$1;
-      break
-    }
-    case 1: {
-      return this.right$1;
-      break
-    }
-    default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
-    }
-  }
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
-});
-function $as_ju_regex_GroupStartMap$OriginallyWrapped(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$OriginallyWrapped) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$OriginallyWrapped"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$OriginallyWrapped(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$OriginallyWrapped)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$OriginallyWrapped(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$OriginallyWrapped(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$OriginallyWrapped;", depth))
-}
-var $d_ju_regex_GroupStartMap$OriginallyWrapped = new $TypeData().initClass({
-  ju_regex_GroupStartMap$OriginallyWrapped: 0
-}, false, "java.util.regex.GroupStartMap$OriginallyWrapped", {
-  ju_regex_GroupStartMap$OriginallyWrapped: 1,
-  O: 1,
-  ju_regex_GroupStartMap$OriginalRegex: 1,
-  s_Product: 1,
-  s_Equals: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$OriginallyWrapped.prototype.$classData = $d_ju_regex_GroupStartMap$OriginallyWrapped;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$ParentNode() {
-  $c_O.call(this);
-  this.children$1 = null
-}
-$c_ju_regex_GroupStartMap$ParentNode.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$ParentNode.prototype.constructor = $c_ju_regex_GroupStartMap$ParentNode;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$ParentNode() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$ParentNode.prototype = $c_ju_regex_GroupStartMap$ParentNode.prototype;
-$c_ju_regex_GroupStartMap$ParentNode.prototype.productPrefix__T = (function() {
-  return "ParentNode"
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.productArity__I = (function() {
-  return 1
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_ju_regex_GroupStartMap$ParentNode)) {
-    var ParentNode$1 = $as_ju_regex_GroupStartMap$ParentNode(x$1);
-    var x = this.children$1;
-    var x$2 = ParentNode$1.children$1;
-    return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
-  } else {
-    return false
-  }
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
-    case 0: {
-      return this.children$1;
-      break
-    }
-    default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
-    }
-  }
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.init___sc_Seq = (function(children) {
-  this.children$1 = children;
-  return this
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
-});
-function $as_ju_regex_GroupStartMap$ParentNode(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$ParentNode) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$ParentNode"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$ParentNode(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$ParentNode)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$ParentNode(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$ParentNode(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$ParentNode;", depth))
-}
-var $d_ju_regex_GroupStartMap$ParentNode = new $TypeData().initClass({
-  ju_regex_GroupStartMap$ParentNode: 0
-}, false, "java.util.regex.GroupStartMap$ParentNode", {
-  ju_regex_GroupStartMap$ParentNode: 1,
-  O: 1,
-  ju_regex_GroupStartMap$NodeType: 1,
-  s_Product: 1,
-  s_Equals: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$ParentNode.prototype.$classData = $d_ju_regex_GroupStartMap$ParentNode;
-/** @constructor */
-function $c_ju_regex_GroupStartMap$RegexLeaf() {
-  $c_O.call(this);
-  this.regex$1 = null
-}
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype = new $h_O();
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.constructor = $c_ju_regex_GroupStartMap$RegexLeaf;
-/** @constructor */
-function $h_ju_regex_GroupStartMap$RegexLeaf() {
-  /*<skip>*/
-}
-$h_ju_regex_GroupStartMap$RegexLeaf.prototype = $c_ju_regex_GroupStartMap$RegexLeaf.prototype;
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.productPrefix__T = (function() {
-  return "RegexLeaf"
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.productArity__I = (function() {
-  return 1
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_ju_regex_GroupStartMap$RegexLeaf)) {
-    var RegexLeaf$1 = $as_ju_regex_GroupStartMap$RegexLeaf(x$1);
-    return (this.regex$1 === RegexLeaf$1.regex$1)
-  } else {
-    return false
-  }
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
-    case 0: {
-      return this.regex$1;
-      break
-    }
-    default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
-    }
-  }
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.init___T = (function(regex) {
-  this.regex$1 = regex;
-  return this
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
-});
-function $as_ju_regex_GroupStartMap$RegexLeaf(obj) {
-  return (((obj instanceof $c_ju_regex_GroupStartMap$RegexLeaf) || (obj === null)) ? obj : $throwClassCastException(obj, "java.util.regex.GroupStartMap$RegexLeaf"))
-}
-function $isArrayOf_ju_regex_GroupStartMap$RegexLeaf(obj, depth) {
-  return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.ju_regex_GroupStartMap$RegexLeaf)))
-}
-function $asArrayOf_ju_regex_GroupStartMap$RegexLeaf(obj, depth) {
-  return (($isArrayOf_ju_regex_GroupStartMap$RegexLeaf(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Ljava.util.regex.GroupStartMap$RegexLeaf;", depth))
-}
-var $d_ju_regex_GroupStartMap$RegexLeaf = new $TypeData().initClass({
-  ju_regex_GroupStartMap$RegexLeaf: 0
-}, false, "java.util.regex.GroupStartMap$RegexLeaf", {
-  ju_regex_GroupStartMap$RegexLeaf: 1,
-  O: 1,
-  ju_regex_GroupStartMap$NodeType: 1,
-  s_Product: 1,
-  s_Equals: 1,
-  s_Serializable: 1,
-  Ljava_io_Serializable: 1
-});
-$c_ju_regex_GroupStartMap$RegexLeaf.prototype.$classData = $d_ju_regex_GroupStartMap$RegexLeaf;
 /** @constructor */
 function $c_s_None$() {
   $c_s_Option.call(this)
@@ -60490,16 +59925,37 @@ function $f_sc_TraversableLike__headOption__s_Option($thiz) {
   return ($thiz.isEmpty__Z() ? $m_s_None$() : new $c_s_Some().init___O($thiz.head__O()))
 }
 function $f_sc_TraversableLike__filterImpl__F1__Z__O($thiz, p, isFlipped) {
-  var b = $thiz.newBuilder__scm_Builder();
-  $thiz.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, p$1, isFlipped$1, b$1) {
-    return (function(x$2) {
-      return (($uZ(p$1.apply__O__O(x$2)) !== isFlipped$1) ? b$1.$$plus$eq__O__scm_Builder(x$2) : (void 0))
-    })
-  })($thiz, p, isFlipped, b)));
-  return b.result__O()
+  if (($thiz instanceof $c_sci_List)) {
+    var x2 = $as_sci_List($thiz);
+    return $f_sc_TraversableLike__filterImplList__psc_TraversableLike__sci_List__F1__Z__sci_List($thiz, x2, p, isFlipped)
+  } else {
+    var b = $thiz.newBuilder__scm_Builder();
+    $thiz.foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, p$1, isFlipped$1, b$1) {
+      return (function(x$2) {
+        return (($uZ(p$1.apply__O__O(x$2)) !== isFlipped$1) ? b$1.$$plus$eq__O__scm_Builder(x$2) : (void 0))
+      })
+    })($thiz, p, isFlipped, b)));
+    return b.result__O()
+  }
 }
 function $f_sc_TraversableLike__lastOption__s_Option($thiz) {
   return ($thiz.isEmpty__Z() ? $m_s_None$() : new $c_s_Some().init___O($thiz.last__O()))
+}
+function $f_sc_TraversableLike__allIn$1__psc_TraversableLike__sci_List__sci_List__F1__Z__sci_List($thiz, start, remaining, p$2, isFlipped$2) {
+  _allIn: while (true) {
+    if (remaining.isEmpty__Z()) {
+      return start
+    } else {
+      var x$2 = remaining.head__O();
+      if (($uZ(p$2.apply__O__O(x$2)) !== isFlipped$2)) {
+        remaining = $as_sci_List(remaining.tail__O());
+        continue _allIn
+      } else {
+        var firstMiss = remaining;
+        return $f_sc_TraversableLike__partialFill$1__psc_TraversableLike__sci_List__sci_List__F1__Z__sci_List($thiz, start, firstMiss, p$2, isFlipped$2)
+      }
+    }
+  }
 }
 function $f_sc_TraversableLike__$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O($thiz, that, bf) {
   var b = bf.apply__O__scm_Builder($thiz.repr__O());
@@ -60510,6 +59966,24 @@ function $f_sc_TraversableLike__$$plus$plus__sc_GenTraversableOnce__scg_CanBuild
   b.$$plus$plus$eq__sc_TraversableOnce__scg_Growable($thiz.thisCollection__sc_Traversable());
   b.$$plus$plus$eq__sc_TraversableOnce__scg_Growable(that.seq__sc_TraversableOnce());
   return b.result__O()
+}
+function $f_sc_TraversableLike__noneIn$1__psc_TraversableLike__sci_List__F1__Z__sci_List($thiz, l, p$2, isFlipped$2) {
+  _noneIn: while (true) {
+    if (l.isEmpty__Z()) {
+      return $m_sci_Nil$()
+    } else {
+      var h = l.head__O();
+      var t = $as_sci_List(l.tail__O());
+      if (($uZ(p$2.apply__O__O(h)) !== isFlipped$2)) {
+        var start = l;
+        var remaining = t;
+        return $f_sc_TraversableLike__allIn$1__psc_TraversableLike__sci_List__sci_List__F1__Z__sci_List($thiz, start, remaining, p$2, isFlipped$2)
+      } else {
+        l = t;
+        continue _noneIn
+      }
+    }
+  }
 }
 function $f_sc_TraversableLike__partition__F1__T2($thiz, p) {
   var l = $thiz.newBuilder__scm_Builder();
@@ -60536,6 +60010,11 @@ function $f_sc_TraversableLike__tail__O($thiz) {
     throw new $c_jl_UnsupportedOperationException().init___T("empty.tail")
   };
   return $thiz.drop__I__O(1)
+}
+function $f_sc_TraversableLike__filterImplList__psc_TraversableLike__sci_List__F1__Z__sci_List($thiz, self, p, isFlipped) {
+  var l = self;
+  var result = $f_sc_TraversableLike__noneIn$1__psc_TraversableLike__sci_List__F1__Z__sci_List($thiz, l, p, isFlipped);
+  return result
 }
 function $f_sc_TraversableLike__groupBy__F1__sci_Map($thiz, f) {
   var m = new $c_scm_HashMap().init___();
@@ -60584,6 +60063,38 @@ function $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom
   var b = bf$1.apply__O__scm_Builder($thiz.repr__O());
   $f_scm_Builder__sizeHint__sc_TraversableLike__V(b, $thiz);
   return b
+}
+function $f_sc_TraversableLike__partialFill$1__psc_TraversableLike__sci_List__sci_List__F1__Z__sci_List($thiz, origStart, firstMiss, p$2, isFlipped$2) {
+  var newHead = new $c_sci_$colon$colon().init___O__sci_List(origStart.head__O(), $m_sci_Nil$());
+  var toProcess = $as_sci_List(origStart.tail__O());
+  var currentLast = newHead;
+  while ((toProcess !== firstMiss)) {
+    var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+    currentLast.tl$5 = newElem;
+    currentLast = newElem;
+    toProcess = $as_sci_List(toProcess.tail__O())
+  };
+  var next = $as_sci_List(firstMiss.tail__O());
+  var nextToCopy = next;
+  while ((!next.isEmpty__Z())) {
+    var head = next.head__O();
+    if (($uZ(p$2.apply__O__O(head)) !== isFlipped$2)) {
+      next = $as_sci_List(next.tail__O())
+    } else {
+      while ((nextToCopy !== next)) {
+        var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+        currentLast.tl$5 = newElem$2;
+        currentLast = newElem$2;
+        nextToCopy = $as_sci_List(nextToCopy.tail__O())
+      };
+      nextToCopy = $as_sci_List(next.tail__O());
+      next = $as_sci_List(next.tail__O())
+    }
+  };
+  if ((!nextToCopy.isEmpty__Z())) {
+    currentLast.tl$5 = nextToCopy
+  };
+  return newHead
 }
 function $f_sc_TraversableLike__collect__s_PartialFunction__scg_CanBuildFrom__O($thiz, pf, bf) {
   var b = bf.apply__O__scm_Builder($thiz.repr__O());
@@ -62008,30 +61519,106 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
           b.$$plus$eq__O__scm_Builder(new $c_Lcoursier_core_Version().init___T(x$3))
         };
         var parsedVersions = $as_sci_Vector(b.result__O());
-        $m_sci_Vector$();
-        var b$1 = new $c_sci_VectorBuilder().init___();
-        var this$10 = parsedVersions.iterator__sci_VectorIterator();
-        while (this$10.$$undhasNext$2) {
-          var arg1$1 = this$10.next__O();
-          var x$4 = $as_Lcoursier_core_Version(arg1$1);
-          var this$11 = x$4.items__sci_Vector();
-          var this$12 = this$11.iterator__sci_VectorIterator();
-          var res = true;
-          while ((res && this$12.$$undhasNext$2)) {
-            var arg1$2 = this$12.next__O();
-            var x0$1 = $as_Lcoursier_core_Version$Item(arg1$2);
-            if ((!(x0$1 instanceof $c_Lcoursier_core_Version$Tag))) {
-              res = true
-            } else {
-              var x2 = $as_Lcoursier_core_Version$Tag(x0$1);
-              res = (!x2.isPreRelease__Z())
+        var f = (function(this$2$1) {
+          return (function(x$4$2) {
+            var x$4 = $as_Lcoursier_core_Version(x$4$2);
+            var this$9 = x$4.items__sci_Vector();
+            var this$10 = this$9.iterator__sci_VectorIterator();
+            var res = true;
+            while ((res && this$10.$$undhasNext$2)) {
+              var arg1$1 = this$10.next__O();
+              var x0$1 = $as_Lcoursier_core_Version$Item(arg1$1);
+              if ((!(x0$1 instanceof $c_Lcoursier_core_Version$Tag))) {
+                res = true
+              } else {
+                var x2 = $as_Lcoursier_core_Version$Tag(x0$1);
+                res = (!x2.isPreRelease__Z())
+              }
+            };
+            return res
+          })
+        })($this);
+        if ((parsedVersions instanceof $c_sci_List)) {
+          var x2$1 = $as_sci_List(parsedVersions);
+          var l = x2$1;
+          var l$1 = l;
+          x: {
+            var result;
+            _noneIn: while (true) {
+              if (l$1.isEmpty__Z()) {
+                var result = $m_sci_Nil$();
+                break
+              } else {
+                var h = l$1.head__O();
+                var t = $as_sci_List(l$1.tail__O());
+                if (($uZ(f(h)) === false)) {
+                  l$1 = t;
+                  continue _noneIn
+                };
+                var start = l$1;
+                var remaining = t;
+                var remaining$1 = remaining;
+                _allIn: while (true) {
+                  if (remaining$1.isEmpty__Z()) {
+                    var result = start;
+                    break x
+                  } else {
+                    var x$2 = remaining$1.head__O();
+                    if (($uZ(f(x$2)) !== false)) {
+                      remaining$1 = $as_sci_List(remaining$1.tail__O());
+                      continue _allIn
+                    };
+                    var firstMiss = remaining$1;
+                    var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+                    var toProcess = $as_sci_List(start.tail__O());
+                    var currentLast = newHead;
+                    while ((toProcess !== firstMiss)) {
+                      var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                      currentLast.tl$5 = newElem;
+                      currentLast = newElem;
+                      toProcess = $as_sci_List(toProcess.tail__O())
+                    };
+                    var next = $as_sci_List(firstMiss.tail__O());
+                    var nextToCopy = next;
+                    while ((!next.isEmpty__Z())) {
+                      var head = next.head__O();
+                      if (($uZ(f(head)) !== false)) {
+                        next = $as_sci_List(next.tail__O())
+                      } else {
+                        while ((nextToCopy !== next)) {
+                          var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                          currentLast.tl$5 = newElem$2;
+                          currentLast = newElem$2;
+                          nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                        };
+                        nextToCopy = $as_sci_List(next.tail__O());
+                        next = $as_sci_List(next.tail__O())
+                      }
+                    };
+                    if ((!nextToCopy.isEmpty__Z())) {
+                      currentLast.tl$5 = nextToCopy
+                    };
+                    var result = newHead;
+                    break x
+                  }
+                }
+              }
             }
           };
-          if ((res !== false)) {
-            b$1.$$plus$eq__O__sci_VectorBuilder(arg1$1)
-          }
+          var jsx$1 = result
+        } else {
+          $m_sci_Vector$();
+          var b$1 = new $c_sci_VectorBuilder().init___();
+          var this$12 = parsedVersions.iterator__sci_VectorIterator();
+          while (this$12.$$undhasNext$2) {
+            var arg1$2 = this$12.next__O();
+            if (($uZ(f(arg1$2)) !== false)) {
+              b$1.$$plus$eq__O__sci_VectorBuilder(arg1$2)
+            }
+          };
+          var jsx$1 = b$1.result__sci_Vector()
         };
-        var nonPreVersions = b$1.result__sci_Vector();
+        var nonPreVersions = $as_sci_Vector(jsx$1);
         if ($f_sc_SeqLike__isEmpty__Z(nonPreVersions)) {
           $m_s_package$();
           var value$1 = ("Found only pre-versions at " + listingUrl$1);
@@ -62063,14 +61650,14 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
       var this$19 = new $c_s_util_Either$RightProjection().init___s_util_Either(res$1);
       var x1 = this$19.e$1;
       if ((x1 instanceof $c_s_util_Right)) {
-        var x2$1 = $as_s_util_Right(x1);
-        var b$3 = x2$1.value$2;
+        var x2$2 = $as_s_util_Right(x1);
+        var b$3 = x2$2.value$2;
         var x$6 = $as_Lcoursier_core_Versions(b$3);
-        var jsx$1 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(x$6, listingUrl$1))
+        var jsx$2 = new $c_s_util_Right().init___O(new $c_T2().init___O__O(x$6, listingUrl$1))
       } else {
-        var jsx$1 = this$19.e$1
+        var jsx$2 = this$19.e$1
       };
-      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(jsx$1))
+      return new $c_Lcoursier_util_EitherT().init___O(F$1.point__O__O(jsx$2))
     })
   })(this, listingUrl, F)), F)
 });
@@ -63715,9 +63302,6 @@ function $h_s_Tuple2$mcII$sp() {
   /*<skip>*/
 }
 $h_s_Tuple2$mcII$sp.prototype = $c_s_Tuple2$mcII$sp.prototype;
-$c_s_Tuple2$mcII$sp.prototype.$$und1$mcI$sp__I = (function() {
-  return this.$$und1$mcI$sp$f
-});
 $c_s_Tuple2$mcII$sp.prototype.init___I__I = (function(_1$mcI$sp, _2$mcI$sp) {
   this.$$und1$mcI$sp$f = _1$mcI$sp;
   this.$$und2$mcI$sp$f = _2$mcI$sp;
@@ -69000,9 +68584,6 @@ $c_sc_AbstractSeq.prototype.runWith__F1__F1 = (function(action) {
 $c_sc_AbstractSeq.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenSeqLike__equals__O__Z(this, that)
 });
-$c_sc_AbstractSeq.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.apply__O__O(v1))
-});
 $c_sc_AbstractSeq.prototype.$$colon$plus__O__scg_CanBuildFrom__O = (function(elem, bf) {
   return $f_sc_SeqLike__$$colon$plus__O__scg_CanBuildFrom__O(this, elem, bf)
 });
@@ -69089,9 +68670,6 @@ $c_sc_AbstractMap.prototype.runWith__F1__F1 = (function(action) {
 $c_sc_AbstractMap.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenMapLike__equals__O__Z(this, that)
 });
-$c_sc_AbstractMap.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.apply__O__O(v1))
-});
 $c_sc_AbstractMap.prototype.getOrElse__O__F0__O = (function(key, $default) {
   return $f_sc_MapLike__getOrElse__O__F0__O(this, key, $default)
 });
@@ -69113,13 +68691,13 @@ $c_sc_AbstractMap.prototype.addString__scm_StringBuilder__T__T__T__scm_StringBui
 $c_sc_AbstractMap.prototype.isDefinedAt__O__Z = (function(key) {
   return this.contains__O__Z(key)
 });
+$c_sc_AbstractMap.prototype.applyOrElse__O__F1__O = (function(x, $default) {
+  return $f_sc_MapLike__applyOrElse__O__F1__O(this, x, $default)
+});
 $c_sc_AbstractMap.prototype.hashCode__I = (function() {
   var this$1 = $m_s_util_hashing_MurmurHash3$();
   var xs = this.seq__sc_Map();
   return this$1.unorderedHash__sc_TraversableOnce__I__I(xs, this$1.mapSeed$2)
-});
-$c_sc_AbstractMap.prototype.applyOrElse__O__F1__O = (function(x, $default) {
-  return $f_sc_MapLike__applyOrElse__O__F1__O(this, x, $default)
 });
 $c_sc_AbstractMap.prototype.newBuilder__scm_Builder = (function() {
   return new $c_scm_MapBuilder().init___sc_GenMap(this.empty__sc_Map())
@@ -69143,9 +68721,6 @@ $c_sc_AbstractSet.prototype.isEmpty__Z = (function() {
 });
 $c_sc_AbstractSet.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenSetLike__equals__O__Z(this, that)
-});
-$c_sc_AbstractSet.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.contains__O__Z(v1))
 });
 $c_sc_AbstractSet.prototype.toString__T = (function() {
   return $f_sc_TraversableLike__toString__T(this)
@@ -70821,9 +70396,6 @@ $c_sci_TreeSet.prototype.flatMap__F1__scg_CanBuildFrom__O = (function(f, bf) {
 $c_sci_TreeSet.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenSetLike__equals__O__Z(this, that)
 });
-$c_sci_TreeSet.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI(this.contains__O__Z(v1))
-});
 $c_sci_TreeSet.prototype.mkString__T__T = (function(sep) {
   return $f_sc_TraversableOnce__mkString__T__T__T__T(this, "", sep, "")
 });
@@ -70917,8 +70489,8 @@ $c_sci_TreeSet.prototype.sizeHintIfCheap__I = (function() {
 $c_sci_TreeSet.prototype.partition__F1__T2 = (function(p) {
   return $f_sc_TraversableLike__partition__F1__T2(this, p)
 });
-$c_sci_TreeSet.prototype.min__s_math_Ordering__O = (function(cmp) {
-  return $f_sc_TraversableOnce__min__s_math_Ordering__O(this, cmp)
+$c_sci_TreeSet.prototype.min__s_math_Ordering__O = (function(ord) {
+  return (((ord === this.ordering$1) && $f_sc_TraversableOnce__nonEmpty__Z(this)) ? this.head__O() : $f_sc_TraversableOnce__min__s_math_Ordering__O(this, ord))
 });
 $c_sci_TreeSet.prototype.compare__O__O__I = (function(k0, k1) {
   return this.ordering$1.compare__O__O__I(k0, k1)
@@ -70941,8 +70513,8 @@ $c_sci_TreeSet.prototype.tail__O = (function() {
 $c_sci_TreeSet.prototype.addString__scm_StringBuilder__T__T__T__scm_StringBuilder = (function(b, start, sep, end) {
   return $f_sc_TraversableOnce__addString__scm_StringBuilder__T__T__T__scm_StringBuilder(this, b, start, sep, end)
 });
-$c_sci_TreeSet.prototype.max__s_math_Ordering__O = (function(cmp) {
-  return $f_sc_TraversableOnce__max__s_math_Ordering__O(this, cmp)
+$c_sci_TreeSet.prototype.max__s_math_Ordering__O = (function(ord) {
+  return (((ord === this.ordering$1) && $f_sc_TraversableOnce__nonEmpty__Z(this)) ? this.last__O() : $f_sc_TraversableOnce__max__s_math_Ordering__O(this, ord))
 });
 $c_sci_TreeSet.prototype.toSet__sci_Set = (function() {
   return $f_sci_Set__toSet__sci_Set(this)
@@ -72413,9 +71985,6 @@ $c_sci_TreeMap.prototype.flatMap__F1__scg_CanBuildFrom__O = (function(f, bf) {
 $c_sci_TreeMap.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenMapLike__equals__O__Z(this, that)
 });
-$c_sci_TreeMap.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI($f_sc_MapLike__apply__O__O(this, v1))
-});
 $c_sci_TreeMap.prototype.mkString__T__T = (function(sep) {
   return $f_sc_TraversableOnce__mkString__T__T__T__T(this, "", sep, "")
 });
@@ -72432,11 +72001,11 @@ $c_sci_TreeMap.prototype.getOrElse__O__F0__O = (function(key, $default) {
 $c_sci_TreeMap.prototype.$$plus__T2__sci_Map = (function(kv) {
   return this.updated__O__O__sci_TreeMap(kv.$$und1__O(), kv.$$und2__O())
 });
-$c_sci_TreeMap.prototype.companion__scg_GenericCompanion = (function() {
-  return $m_sci_Iterable$()
-});
 $c_sci_TreeMap.prototype.toString__T = (function() {
   return $f_sc_TraversableLike__toString__T(this)
+});
+$c_sci_TreeMap.prototype.companion__scg_GenericCompanion = (function() {
+  return $m_sci_Iterable$()
 });
 $c_sci_TreeMap.prototype.last__T2 = (function() {
   var greatest = $m_sci_RedBlackTree$().greatest__sci_RedBlackTree$Tree__sci_RedBlackTree$Tree(this.tree$1);
@@ -73011,16 +72580,92 @@ $c_sci_HashSet$HashSetCollision1.prototype.removed0__O__I__I__sci_HashSet = (fun
 });
 $c_sci_HashSet$HashSetCollision1.prototype.intersect0__sci_HashSet__I__Asci_HashSet__I__sci_HashSet = (function(that, level, buffer, offset0) {
   var this$1 = this.ks$6;
-  var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_ListSet$EmptyListSet$());
-  var this$3 = this$1.reverseList$1__p4__sci_List();
-  var this$4 = new $c_sc_LinearSeqLike$$anon$1().init___sc_LinearSeqLike(this$3);
-  while (this$4.hasNext__Z()) {
-    var arg1 = this$4.next__O();
-    if ((that.get0__O__I__I__Z(arg1, this.hash$6, level) !== false)) {
-      b.$$plus$eq__O__scm_SetBuilder(arg1)
-    }
+  var f = (function($this, that$1, level$1) {
+    return (function(x$1$2) {
+      return that$1.get0__O__I__I__Z(x$1$2, $this.hash$6, level$1)
+    })
+  })(this, that, level);
+  if ((this$1 instanceof $c_sci_List)) {
+    var x2 = $as_sci_List(this$1);
+    var l = x2;
+    var l$1 = l;
+    x: {
+      var result;
+      _noneIn: while (true) {
+        if (l$1.isEmpty__Z()) {
+          var result = $m_sci_Nil$();
+          break
+        } else {
+          var h = l$1.head__O();
+          var t = $as_sci_List(l$1.tail__O());
+          if (($uZ(f(h)) === false)) {
+            l$1 = t;
+            continue _noneIn
+          };
+          var start = l$1;
+          var remaining = t;
+          var remaining$1 = remaining;
+          _allIn: while (true) {
+            if (remaining$1.isEmpty__Z()) {
+              var result = start;
+              break x
+            } else {
+              var x$2 = remaining$1.head__O();
+              if (($uZ(f(x$2)) !== false)) {
+                remaining$1 = $as_sci_List(remaining$1.tail__O());
+                continue _allIn
+              };
+              var firstMiss = remaining$1;
+              var newHead = new $c_sci_$colon$colon().init___O__sci_List(start.head__O(), $m_sci_Nil$());
+              var toProcess = $as_sci_List(start.tail__O());
+              var currentLast = newHead;
+              while ((toProcess !== firstMiss)) {
+                var newElem = new $c_sci_$colon$colon().init___O__sci_List(toProcess.head__O(), $m_sci_Nil$());
+                currentLast.tl$5 = newElem;
+                currentLast = newElem;
+                toProcess = $as_sci_List(toProcess.tail__O())
+              };
+              var next = $as_sci_List(firstMiss.tail__O());
+              var nextToCopy = next;
+              while ((!next.isEmpty__Z())) {
+                var head = next.head__O();
+                if (($uZ(f(head)) !== false)) {
+                  next = $as_sci_List(next.tail__O())
+                } else {
+                  while ((nextToCopy !== next)) {
+                    var newElem$2 = new $c_sci_$colon$colon().init___O__sci_List(nextToCopy.head__O(), $m_sci_Nil$());
+                    currentLast.tl$5 = newElem$2;
+                    currentLast = newElem$2;
+                    nextToCopy = $as_sci_List(nextToCopy.tail__O())
+                  };
+                  nextToCopy = $as_sci_List(next.tail__O());
+                  next = $as_sci_List(next.tail__O())
+                }
+              };
+              if ((!nextToCopy.isEmpty__Z())) {
+                currentLast.tl$5 = nextToCopy
+              };
+              var result = newHead;
+              break x
+            }
+          }
+        }
+      }
+    };
+    var jsx$1 = result
+  } else {
+    var b = new $c_scm_SetBuilder().init___sc_Set($m_sci_ListSet$EmptyListSet$());
+    var this$3 = this$1.reverseList$1__p4__sci_List();
+    var this$4 = new $c_sc_LinearSeqLike$$anon$1().init___sc_LinearSeqLike(this$3);
+    while (this$4.hasNext__Z()) {
+      var arg1 = this$4.next__O();
+      if (($uZ(f(arg1)) !== false)) {
+        b.$$plus$eq__O__scm_SetBuilder(arg1)
+      }
+    };
+    var jsx$1 = b.elems$1
   };
-  var ks1 = $as_sci_ListSet(b.elems$1);
+  var ks1 = $as_sci_ListSet(jsx$1);
   var x1 = ks1.size__I();
   if ((x1 === 0)) {
     return null
@@ -74904,11 +74549,11 @@ $c_sci_Stream$Cons.prototype.sameElements__sc_GenIterable__Z = (function(that) {
     return $f_sc_LinearSeqOptimized__sameElements__sc_GenIterable__Z(this, that)
   }
 });
-$c_sci_Stream$Cons.prototype.tailDefined__Z = (function() {
-  return (this.tlGen$5 === null)
-});
 $c_sci_Stream$Cons.prototype.isEmpty__Z = (function() {
   return false
+});
+$c_sci_Stream$Cons.prototype.tailDefined__Z = (function() {
+  return (this.tlGen$5 === null)
 });
 $c_sci_Stream$Cons.prototype.consEq$1__p5__sci_Stream$Cons__sci_Stream$Cons__Z = (function(a, b) {
   _consEq: while (true) {
@@ -75007,17 +74652,17 @@ function $h_sci_Stream$Empty$() {
   /*<skip>*/
 }
 $h_sci_Stream$Empty$.prototype = $c_sci_Stream$Empty$.prototype;
-$c_sci_Stream$Empty$.prototype.init___ = (function() {
-  return this
-});
 $c_sci_Stream$Empty$.prototype.head__O = (function() {
   this.head__sr_Nothing$()
 });
-$c_sci_Stream$Empty$.prototype.tailDefined__Z = (function() {
-  return false
+$c_sci_Stream$Empty$.prototype.init___ = (function() {
+  return this
 });
 $c_sci_Stream$Empty$.prototype.isEmpty__Z = (function() {
   return true
+});
+$c_sci_Stream$Empty$.prototype.tailDefined__Z = (function() {
+  return false
 });
 $c_sci_Stream$Empty$.prototype.tail__sr_Nothing$ = (function() {
   throw new $c_jl_UnsupportedOperationException().init___T("tail of empty stream")
@@ -76633,9 +76278,6 @@ $c_scm_AbstractSet.prototype.isEmpty__Z = (function() {
 $c_scm_AbstractSet.prototype.equals__O__Z = (function(that) {
   return $f_sc_GenSetLike__equals__O__Z(this, that)
 });
-$c_scm_AbstractSet.prototype.apply$mcII$sp__I__I = (function(v1) {
-  return $uI($f_scm_FlatHashTable__containsElem__O__Z(this, v1))
-});
 $c_scm_AbstractSet.prototype.toString__T = (function() {
   return $f_sc_TraversableLike__toString__T(this)
 });
@@ -77509,7 +77151,7 @@ $c_scm_WrappedArray$ofByte.prototype.array__O = (function() {
 $c_scm_WrappedArray$ofByte.prototype.hashCode__I = (function() {
   var this$1 = $m_s_util_hashing_MurmurHash3$();
   var data = this.array$6;
-  return this$1.bytesHash__AB__I__I(data, this$1.seqSeed$2)
+  return this$1.arrayHash$mBc$sp__AB__I__I(data, this$1.seqSeed$2)
 });
 $c_scm_WrappedArray$ofByte.prototype.init___AB = (function(array) {
   this.array$6 = array;
@@ -78658,9 +78300,7 @@ $c_scm_ListBuffer.prototype.remove__I__O = (function(n) {
   if (((n < 0) || (n >= this.len$6))) {
     throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
   };
-  if (this.exported$6) {
-    this.copy__p6__V()
-  };
+  this.ensureUnaliased__p6__V();
   var old = this.scala$collection$mutable$ListBuffer$$start$6.head__O();
   if ((n === 0)) {
     this.scala$collection$mutable$ListBuffer$$start$6 = $as_sci_List(this.scala$collection$mutable$ListBuffer$$start$6.tail__O())
@@ -78681,9 +78321,7 @@ $c_scm_ListBuffer.prototype.remove__I__O = (function(n) {
   return old
 });
 $c_scm_ListBuffer.prototype.$$minus$eq__O__scm_ListBuffer = (function(elem) {
-  if (this.exported$6) {
-    this.copy__p6__V()
-  };
+  this.ensureUnaliased__p6__V();
   if ((!this.isEmpty__Z())) {
     if ($m_sr_BoxesRunTime$().equals__O__O__Z(this.scala$collection$mutable$ListBuffer$$start$6.head__O(), elem)) {
       this.scala$collection$mutable$ListBuffer$$start$6 = $as_sci_List(this.scala$collection$mutable$ListBuffer$$start$6.tail__O());
@@ -78731,9 +78369,7 @@ $c_scm_ListBuffer.prototype.prependToList__sci_List__sci_List = (function(xs) {
   if (this.isEmpty__Z()) {
     return xs
   } else {
-    if (this.exported$6) {
-      this.copy__p6__V()
-    };
+    this.ensureUnaliased__p6__V();
     this.last0$6.tl$5 = xs;
     return this.toList__sci_List()
   }
@@ -78747,17 +78383,14 @@ $c_scm_ListBuffer.prototype.addString__scm_StringBuilder__T__T__T__scm_StringBui
   return $f_sc_TraversableOnce__addString__scm_StringBuilder__T__T__T__scm_StringBuilder(this$1, b, start, sep, end)
 });
 $c_scm_ListBuffer.prototype.$$plus$eq__O__scm_ListBuffer = (function(x) {
-  if (this.exported$6) {
-    this.copy__p6__V()
-  };
-  if (this.isEmpty__Z()) {
-    this.last0$6 = new $c_sci_$colon$colon().init___O__sci_List(x, $m_sci_Nil$());
-    this.scala$collection$mutable$ListBuffer$$start$6 = this.last0$6
+  this.ensureUnaliased__p6__V();
+  var last1 = new $c_sci_$colon$colon().init___O__sci_List(x, $m_sci_Nil$());
+  if ((this.len$6 === 0)) {
+    this.scala$collection$mutable$ListBuffer$$start$6 = last1
   } else {
-    var last1 = this.last0$6;
-    this.last0$6 = new $c_sci_$colon$colon().init___O__sci_List(x, $m_sci_Nil$());
-    last1.tl$5 = this.last0$6
+    this.last0$6.tl$5 = last1
   };
+  this.last0$6 = last1;
   this.len$6 = ((1 + this.len$6) | 0);
   return this
 });
@@ -78813,6 +78446,11 @@ $c_scm_ListBuffer.prototype.clear__V = (function() {
   this.last0$6 = null;
   this.exported$6 = false;
   this.len$6 = 0
+});
+$c_scm_ListBuffer.prototype.ensureUnaliased__p6__V = (function() {
+  if (this.exported$6) {
+    this.copy__p6__V()
+  }
 });
 $c_scm_ListBuffer.prototype.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer = (function(xs) {
   _$plus$plus$eq: while (true) {
