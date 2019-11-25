@@ -35,7 +35,7 @@ object Deps {
   def jsoup = "org.jsoup" % "jsoup" % "1.12.1"
   def junit = "junit" % "junit" % "4.12"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
-  def mavenModel = "org.apache.maven" % "maven-model" % "3.6.2"
+  def mavenModel = "org.apache.maven" % "maven-model" % "3.6.3"
   // staying before 3.14.0 to the URLStreamHandlerFactory implementation
   def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
   def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
