@@ -244,8 +244,14 @@ class RefreshLogger(
     updateRunnable.update()
   }
 
-  override def downloadedArtifact(url: String, success: Boolean): Unit =
-    updateRunnable.removeEntry(url, success, s"Downloaded $url\n")(x => x)
+  override def downloadedArtifact(url: String, success: Boolean): Unit = {
+    val msg =
+      if (success)
+        s"Downloaded $url\n"
+      else
+        s"Failed to download $url\n"
+    updateRunnable.removeEntry(url, success, msg)(x => x)
+  }
 
   override def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit =
     updateRunnable.newEntry(

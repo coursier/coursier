@@ -519,6 +519,7 @@ object Settings {
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
       proguardOptions.in(Proguard) ++= Seq(
+        "-dontnote",
         "-dontwarn",
         "-repackageclasses coursier.bootstrap.launcher",
         s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",

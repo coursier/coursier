@@ -14,8 +14,10 @@ final class SimpleDownloadLogger(out: PrintStream, verbosity: Int) extends Downl
       val msg =
         if (size.isEmpty)
           s"Not found : $url (ignored)"
-        else
+        else if (errorOpt.isEmpty)
           s"Downloaded $url"
+        else
+          s"Failed to download $url"
       out.println(msg)
     } else if (verbosity >= 1) {
       if (size.nonEmpty)
