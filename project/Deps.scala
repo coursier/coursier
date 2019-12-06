@@ -66,7 +66,7 @@ object Deps {
     def fastParse = setting {
       "com.lihaoyi" %%% "fastparse" % versions.fastParse.value
     }
-    def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.7")
+    def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.8")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "0.9.5")
     def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.3.1")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
