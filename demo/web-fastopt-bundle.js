@@ -45699,7 +45699,7 @@ function $h_Lcoursier_core_Activation() {
 }
 $h_Lcoursier_core_Activation.prototype = $c_Lcoursier_core_Activation.prototype;
 $c_Lcoursier_core_Activation.prototype.productPrefix__T = (function() {
-  return ""
+  return "Activation"
 });
 $c_Lcoursier_core_Activation.prototype.productArity__I = (function() {
   return 3
@@ -45896,7 +45896,7 @@ function $h_Lcoursier_core_Activation$Os() {
 }
 $h_Lcoursier_core_Activation$Os.prototype = $c_Lcoursier_core_Activation$Os.prototype;
 $c_Lcoursier_core_Activation$Os.prototype.productPrefix__T = (function() {
-  return ""
+  return "Os"
 });
 $c_Lcoursier_core_Activation$Os.prototype.productArity__I = (function() {
   return 4
@@ -46099,7 +46099,7 @@ function $h_Lcoursier_core_Attributes() {
 }
 $h_Lcoursier_core_Attributes.prototype = $c_Lcoursier_core_Attributes.prototype;
 $c_Lcoursier_core_Attributes.prototype.productPrefix__T = (function() {
-  return ""
+  return "Attributes"
 });
 $c_Lcoursier_core_Attributes.prototype.init___T__T = (function(type, classifier) {
   this.type$1 = type;
@@ -46321,7 +46321,7 @@ function $h_Lcoursier_core_Dependency() {
 }
 $h_Lcoursier_core_Dependency.prototype = $c_Lcoursier_core_Dependency.prototype;
 $c_Lcoursier_core_Dependency.prototype.productPrefix__T = (function() {
-  return ""
+  return "Dependency"
 });
 $c_Lcoursier_core_Dependency.prototype.productArity__I = (function() {
   return 7
@@ -46821,7 +46821,7 @@ function $h_Lcoursier_core_Info() {
 }
 $h_Lcoursier_core_Info.prototype = $c_Lcoursier_core_Info.prototype;
 $c_Lcoursier_core_Info.prototype.productPrefix__T = (function() {
-  return ""
+  return "Info"
 });
 $c_Lcoursier_core_Info.prototype.productArity__I = (function() {
   return 6
@@ -46980,7 +46980,7 @@ function $h_Lcoursier_core_Info$Developer() {
 }
 $h_Lcoursier_core_Info$Developer.prototype = $c_Lcoursier_core_Info$Developer.prototype;
 $c_Lcoursier_core_Info$Developer.prototype.productPrefix__T = (function() {
-  return ""
+  return "Developer"
 });
 $c_Lcoursier_core_Info$Developer.prototype.productArity__I = (function() {
   return 3
@@ -47082,7 +47082,7 @@ function $h_Lcoursier_core_Info$Scm() {
 }
 $h_Lcoursier_core_Info$Scm.prototype = $c_Lcoursier_core_Info$Scm.prototype;
 $c_Lcoursier_core_Info$Scm.prototype.productPrefix__T = (function() {
-  return ""
+  return "Scm"
 });
 $c_Lcoursier_core_Info$Scm.prototype.productArity__I = (function() {
   return 3
@@ -47226,7 +47226,7 @@ function $h_Lcoursier_core_Module() {
 }
 $h_Lcoursier_core_Module.prototype = $c_Lcoursier_core_Module.prototype;
 $c_Lcoursier_core_Module.prototype.productPrefix__T = (function() {
-  return ""
+  return "Module"
 });
 $c_Lcoursier_core_Module.prototype.repr__T = (function() {
   return ((this.organization$1 + ":") + this.nameWithAttributes__T())
@@ -47503,7 +47503,7 @@ function $h_Lcoursier_core_Profile() {
 }
 $h_Lcoursier_core_Profile.prototype = $c_Lcoursier_core_Profile.prototype;
 $c_Lcoursier_core_Profile.prototype.productPrefix__T = (function() {
-  return ""
+  return "Profile"
 });
 $c_Lcoursier_core_Profile.prototype.productArity__I = (function() {
   return 6
@@ -47684,7 +47684,7 @@ function $h_Lcoursier_core_Project() {
 }
 $h_Lcoursier_core_Project.prototype = $c_Lcoursier_core_Project.prototype;
 $c_Lcoursier_core_Project.prototype.productPrefix__T = (function() {
-  return ""
+  return "Project"
 });
 $c_Lcoursier_core_Project.prototype.productArity__I = (function() {
   return 15
@@ -48006,7 +48006,7 @@ function $h_Lcoursier_core_Publication() {
 }
 $h_Lcoursier_core_Publication.prototype = $c_Lcoursier_core_Publication.prototype;
 $c_Lcoursier_core_Publication.prototype.productPrefix__T = (function() {
-  return ""
+  return "Publication"
 });
 $c_Lcoursier_core_Publication.prototype.productArity__I = (function() {
   return 4
@@ -48284,7 +48284,7 @@ $c_Lcoursier_core_Resolution.prototype.missingFromCache$lzycompute__p1__sci_Set 
   return this.missingFromCache$1
 });
 $c_Lcoursier_core_Resolution.prototype.productPrefix__T = (function() {
-  return ""
+  return "Resolution"
 });
 $c_Lcoursier_core_Resolution.prototype.dependenciesOf__Lcoursier_core_Dependency__Z__Z__sc_Seq = (function(dep, withRetainedVersions, withFallbackConfig) {
   var deps = this.finalDependencies0__p1__Lcoursier_core_Dependency__sc_Seq(dep);
@@ -49503,9 +49503,6 @@ function $h_Lcoursier_core_ResolutionProcess() {
   /*<skip>*/
 }
 $h_Lcoursier_core_ResolutionProcess.prototype = $c_Lcoursier_core_ResolutionProcess.prototype;
-$c_Lcoursier_core_ResolutionProcess.prototype.productPrefix__T = (function() {
-  return ""
-});
 $c_Lcoursier_core_ResolutionProcess.prototype.run__F1__I__Lcoursier_util_Monad__O = (function(fetch, maxIterations, F) {
   var _$this = this;
   _run: while (true) {
@@ -49565,7 +49562,7 @@ function $h_Lcoursier_core_SnapshotVersion() {
 }
 $h_Lcoursier_core_SnapshotVersion.prototype = $c_Lcoursier_core_SnapshotVersion.prototype;
 $c_Lcoursier_core_SnapshotVersion.prototype.productPrefix__T = (function() {
-  return ""
+  return "SnapshotVersion"
 });
 $c_Lcoursier_core_SnapshotVersion.prototype.productArity__I = (function() {
   return 4
@@ -49701,7 +49698,7 @@ $c_Lcoursier_core_SnapshotVersioning.prototype.init___Lcoursier_core_Module__T__
   return this
 });
 $c_Lcoursier_core_SnapshotVersioning.prototype.productPrefix__T = (function() {
-  return ""
+  return "SnapshotVersioning"
 });
 $c_Lcoursier_core_SnapshotVersioning.prototype.productArity__I = (function() {
   return 9
@@ -49945,7 +49942,7 @@ $c_Lcoursier_core_VersionConstraint.prototype.init___Lcoursier_core_VersionInter
   return this
 });
 $c_Lcoursier_core_VersionConstraint.prototype.productPrefix__T = (function() {
-  return ""
+  return "VersionConstraint"
 });
 $c_Lcoursier_core_VersionConstraint.prototype.productArity__I = (function() {
   return 2
@@ -50113,7 +50110,7 @@ function $h_Lcoursier_core_VersionInterval() {
 }
 $h_Lcoursier_core_VersionInterval.prototype = $c_Lcoursier_core_VersionInterval.prototype;
 $c_Lcoursier_core_VersionInterval.prototype.productPrefix__T = (function() {
-  return ""
+  return "VersionInterval"
 });
 $c_Lcoursier_core_VersionInterval.prototype.repr__T = (function() {
   var jsx$3 = $m_sc_Seq$();
@@ -50523,7 +50520,7 @@ function $h_Lcoursier_core_Versions() {
 }
 $h_Lcoursier_core_Versions.prototype = $c_Lcoursier_core_Versions.prototype;
 $c_Lcoursier_core_Versions.prototype.productPrefix__T = (function() {
-  return ""
+  return "Versions"
 });
 $c_Lcoursier_core_Versions.prototype.productArity__I = (function() {
   return 4
@@ -51192,7 +51189,7 @@ function $h_Lcoursier_util_Artifact() {
 }
 $h_Lcoursier_util_Artifact.prototype = $c_Lcoursier_util_Artifact.prototype;
 $c_Lcoursier_util_Artifact.prototype.productPrefix__T = (function() {
-  return ""
+  return "Artifact"
 });
 $c_Lcoursier_util_Artifact.prototype.productArity__I = (function() {
   return 6
@@ -55096,6 +55093,9 @@ function $h_Lcoursier_core_Continue() {
   /*<skip>*/
 }
 $h_Lcoursier_core_Continue.prototype = $c_Lcoursier_core_Continue.prototype;
+$c_Lcoursier_core_Continue.prototype.productPrefix__T = (function() {
+  return "Continue"
+});
 $c_Lcoursier_core_Continue.prototype.init___Lcoursier_core_Resolution__F1 = (function(current, cont) {
   this.current$2 = current;
   this.cont$2 = cont;
@@ -55206,6 +55206,9 @@ function $h_Lcoursier_core_Done() {
   /*<skip>*/
 }
 $h_Lcoursier_core_Done.prototype = $c_Lcoursier_core_Done.prototype;
+$c_Lcoursier_core_Done.prototype.productPrefix__T = (function() {
+  return "Done"
+});
 $c_Lcoursier_core_Done.prototype.productArity__I = (function() {
   return 1
 });
@@ -55444,81 +55447,6 @@ function $h_Lcoursier_core_Missing() {
   /*<skip>*/
 }
 $h_Lcoursier_core_Missing.prototype = $c_Lcoursier_core_Missing.prototype;
-$c_Lcoursier_core_Missing.prototype.order$1__p2__sci_Map__sci_List__sci_List = (function(map, acc) {
-  _order: while (true) {
-    if (map.isEmpty__Z()) {
-      return acc.reverse__sci_List()
-    } else {
-      var this$2 = map;
-      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
-        return (function(x$5$2) {
-          var x$5 = $as_T2(x$5$2);
-          return $as_sc_TraversableOnce(x$5.$$und2__O()).size__I()
-        })
-      })(this));
-      var this$1 = $m_sci_Iterable$();
-      var bf = this$1.ReusableCBFInstance$2;
-      var min = $uI($as_sc_TraversableOnce($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf)).min__s_math_Ordering__O($m_s_math_Ordering$Int$()));
-      var this$3 = map;
-      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, min$1) {
-        return (function(x0$1$2) {
-          var x0$1 = $as_T2(x0$1$2);
-          if ((x0$1 !== null)) {
-            var v = $as_sci_Set(x0$1.$$und2__O());
-            return (v.size__I() === min$1)
-          } else {
-            throw new $c_s_MatchError().init___O(x0$1)
-          }
-        })
-      })(this, min));
-      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
-      if ((x1 === null)) {
-        throw new $c_s_MatchError().init___O(x1)
-      };
-      var toAdd = $as_sci_Map(x1.$$und1__O());
-      var remaining = $as_sci_Map(x1.$$und2__O());
-      var this$4 = toAdd.keySet__sc_Set();
-      var z = acc;
-      var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1) {
-        return (function(x$7$2, x$8$2) {
-          var x$7 = $as_sci_List(x$7$2);
-          var x$8 = $as_T2(x$8$2);
-          return new $c_sci_$colon$colon().init___O__sci_List(x$8, x$7)
-        })
-      })(this));
-      var acc0 = $as_sci_List($f_sc_TraversableOnce__foldLeft__O__F2__O(this$4, z, op));
-      var this$6 = remaining.keySet__sci_Set();
-      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
-        return (function(x$9$2) {
-          var x$9 = $as_T2(x$9$2);
-          return $as_T2(x$9.$$und1__O())
-        })
-      })(this));
-      var this$5 = $m_sci_Set$();
-      var bf$1 = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$5);
-      var remainingKeys = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$6, f$1, bf$1));
-      var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1, remainingKeys$1) {
-        return (function(x0$2$2) {
-          var x0$2 = $as_T2(x0$2$2);
-          if ((x0$2 !== null)) {
-            var k = $as_T2(x0$2.$$und1__O());
-            var v$1 = $as_sci_Set(x0$2.$$und2__O());
-            var y = v$1.intersect__sc_GenSet__O(remainingKeys$1);
-            return new $c_T2().init___O__O(k, y)
-          } else {
-            throw new $c_s_MatchError().init___O(x0$2)
-          }
-        })
-      })(this, remainingKeys));
-      var this$9 = $m_sci_Map$();
-      var bf$2 = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$9);
-      var map0 = $as_sci_Map($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(remaining, f$2, bf$2));
-      map = map0;
-      acc = acc0;
-      continue _order
-    }
-  }
-});
 $c_Lcoursier_core_Missing.prototype.cont0$1__p2__Lcoursier_core_Resolution__sc_Seq__Lcoursier_core_ResolutionProcess = (function(res, successes$1) {
   var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, res$1) {
     return (function(x0$1$2) {
@@ -55722,6 +55650,84 @@ $c_Lcoursier_core_Missing.prototype.cont0$1__p2__Lcoursier_core_Resolution__sc_S
     })(this, successes$1));
     return new $c_Lcoursier_core_Missing().init___sc_Seq__Lcoursier_core_Resolution__F1(missing, res, cont$1)
   }
+});
+$c_Lcoursier_core_Missing.prototype.order$1__p2__sci_Map__sci_List__sci_List = (function(map, acc) {
+  _order: while (true) {
+    if (map.isEmpty__Z()) {
+      return acc.reverse__sci_List()
+    } else {
+      var this$2 = map;
+      var f = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
+        return (function(x$5$2) {
+          var x$5 = $as_T2(x$5$2);
+          return $as_sc_TraversableOnce(x$5.$$und2__O()).size__I()
+        })
+      })(this));
+      var this$1 = $m_sci_Iterable$();
+      var bf = this$1.ReusableCBFInstance$2;
+      var min = $uI($as_sc_TraversableOnce($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$2, f, bf)).min__s_math_Ordering__O($m_s_math_Ordering$Int$()));
+      var this$3 = map;
+      var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, min$1) {
+        return (function(x0$1$2) {
+          var x0$1 = $as_T2(x0$1$2);
+          if ((x0$1 !== null)) {
+            var v = $as_sci_Set(x0$1.$$und2__O());
+            return (v.size__I() === min$1)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$1)
+          }
+        })
+      })(this, min));
+      var x1 = $f_sc_TraversableLike__partition__F1__T2(this$3, p);
+      if ((x1 === null)) {
+        throw new $c_s_MatchError().init___O(x1)
+      };
+      var toAdd = $as_sci_Map(x1.$$und1__O());
+      var remaining = $as_sci_Map(x1.$$und2__O());
+      var this$4 = toAdd.keySet__sc_Set();
+      var z = acc;
+      var op = new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$3$1) {
+        return (function(x$7$2, x$8$2) {
+          var x$7 = $as_sci_List(x$7$2);
+          var x$8 = $as_T2(x$8$2);
+          return new $c_sci_$colon$colon().init___O__sci_List(x$8, x$7)
+        })
+      })(this));
+      var acc0 = $as_sci_List($f_sc_TraversableOnce__foldLeft__O__F2__O(this$4, z, op));
+      var this$6 = remaining.keySet__sci_Set();
+      var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
+        return (function(x$9$2) {
+          var x$9 = $as_T2(x$9$2);
+          return $as_T2(x$9.$$und1__O())
+        })
+      })(this));
+      var this$5 = $m_sci_Set$();
+      var bf$1 = new $c_scg_GenSetFactory$$anon$1().init___scg_GenSetFactory(this$5);
+      var remainingKeys = $as_sci_Set($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(this$6, f$1, bf$1));
+      var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1, remainingKeys$1) {
+        return (function(x0$2$2) {
+          var x0$2 = $as_T2(x0$2$2);
+          if ((x0$2 !== null)) {
+            var k = $as_T2(x0$2.$$und1__O());
+            var v$1 = $as_sci_Set(x0$2.$$und2__O());
+            var y = v$1.intersect__sc_GenSet__O(remainingKeys$1);
+            return new $c_T2().init___O__O(k, y)
+          } else {
+            throw new $c_s_MatchError().init___O(x0$2)
+          }
+        })
+      })(this, remainingKeys));
+      var this$9 = $m_sci_Map$();
+      var bf$2 = new $c_scg_GenMapFactory$MapCanBuildFrom().init___scg_GenMapFactory(this$9);
+      var map0 = $as_sci_Map($f_sc_TraversableLike__map__F1__scg_CanBuildFrom__O(remaining, f$2, bf$2));
+      map = map0;
+      acc = acc0;
+      continue _order
+    }
+  }
+});
+$c_Lcoursier_core_Missing.prototype.productPrefix__T = (function() {
+  return "Missing"
 });
 $c_Lcoursier_core_Missing.prototype.productArity__I = (function() {
   return 3
@@ -60889,7 +60895,7 @@ function $h_Lcoursier_core_Versions$DateTime() {
 }
 $h_Lcoursier_core_Versions$DateTime.prototype = $c_Lcoursier_core_Versions$DateTime.prototype;
 $c_Lcoursier_core_Versions$DateTime.prototype.productPrefix__T = (function() {
-  return ""
+  return "DateTime"
 });
 $c_Lcoursier_core_Versions$DateTime.prototype.productArity__I = (function() {
   return 6
@@ -61146,7 +61152,7 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsArtifact__p1__Lcoursier_cor
   return artifact
 });
 $c_Lcoursier_maven_MavenRepository.prototype.productPrefix__T = (function() {
-  return ""
+  return "MavenRepository"
 });
 $c_Lcoursier_maven_MavenRepository.prototype.findVersioning__Lcoursier_core_Module__T__s_Option__F1__Lcoursier_util_Monad__Lcoursier_util_EitherT = (function(module, version, versioningValue, fetch, F) {
   var projectArtifact0 = this.projectArtifact__Lcoursier_core_Module__T__s_Option__Lcoursier_util_Artifact(module, version, versioningValue);
