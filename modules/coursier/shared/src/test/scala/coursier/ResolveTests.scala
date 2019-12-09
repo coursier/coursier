@@ -830,5 +830,39 @@ object ResolveTests extends TestSuite {
 
       assert(urls.contains(pomUrl))
     }
+
+    "child property substitution in parent POM" - async {
+      val deps = Seq(
+        dep"org.bytedeco:mkl-platform:2019.5-1.5.2",
+        dep"org.bytedeco:mkl-platform-redist:2019.5-1.5.2"
+      )
+      val res = await {
+        resolve
+          .addDependencies(deps: _*)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val urls = res.dependencyArtifacts().map(_._3.url).toSet
+      val expectedUrls = Set(
+        "https://repo1.maven.org/maven2/org/bytedeco/javacpp/1.5.2/javacpp-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform-redist/2019.5-1.5.2/mkl-platform-redist-2019.5-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform/2019.5-1.5.2/mkl-platform-2019.5-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-macosx-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-macosx-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2.jar"
+      )
+
+      assert(urls == expectedUrls)
+    }
   }
 }

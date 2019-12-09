@@ -38,7 +38,7 @@ org.bytedeco:mkl-dnn:0.18.1-1.5:default
 org.bytedeco:mkl-dnn:0.18.1-1.5:default
 org.bytedeco:mkl-dnn:0.18.1-1.5:default
 org.bytedeco:mkl-dnn:0.18.1-1.5:default
-org.nd4j:nd4j-backend-impls:1.0.0-beta4:default
+org.nd4j:nd4j-native:1.0.0-beta4:default
 org.bytedeco:javacpp:1.5:default
 org.nd4j:nd4j-native-api:1.0.0-beta4:default
 org.nd4j:nd4j-api:1.0.0-beta4:default

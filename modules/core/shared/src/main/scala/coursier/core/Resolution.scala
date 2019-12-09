@@ -182,44 +182,50 @@ object Resolution {
       b.toString
   }
 
-  /**
-   * Substitutes `properties` in `dependencies`.
-   */
   def withProperties(
     dependencies: Seq[(Configuration, Dependency)],
     properties: Map[String, String]
-  ): Seq[(Configuration, Dependency)] = {
+  ): Seq[(Configuration, Dependency)] =
+    dependencies.map(withProperties(_, properties))
+
+  /**
+   * Substitutes `properties` in `dependencies`.
+   */
+  private def withProperties(
+    configDep: (Configuration, Dependency),
+    properties: Map[String, String]
+  ): (Configuration, Dependency) = {
+
+    val (config, dep) = configDep
 
     def substituteTrimmedProps(s: String) =
       substituteProps(s, properties, trim = true)
     def substituteProps0(s: String) =
       substituteProps(s, properties, trim = false)
 
-    dependencies.map {
-      case (config, dep) =>
-        val dep0 = dep
-          .withModule(
-            dep.module
-              .withOrganization(dep.module.organization.map(substituteProps0))
-              .withName(dep.module.name.map(substituteProps0))
-          )
-          .withVersion(substituteTrimmedProps(dep.version))
-          .withAttributes(
-            dep.attributes
-              .withType(dep.attributes.`type`.map(substituteProps0))
-              .withClassifier(dep.attributes.classifier.map(substituteProps0))
-          )
-          .withConfiguration(dep.configuration.map(substituteProps0))
-          .withExclusions(
-            dep.exclusions.map {
-              case (org, name) =>
-                (org.map(substituteProps0), name.map(substituteProps0))
-            }
-          )
-        // FIXME The content of the optional tag may also be a property in
-        // the original POM. Maybe not parse it that earlier?
-        config.map(substituteProps0) -> dep0
-    }
+    val dep0 = dep
+      .withModule(
+        dep.module
+          .withOrganization(dep.module.organization.map(substituteProps0))
+          .withName(dep.module.name.map(substituteProps0))
+      )
+      .withVersion(substituteTrimmedProps(dep.version))
+      .withAttributes(
+        dep.attributes
+          .withType(dep.attributes.`type`.map(substituteProps0))
+          .withClassifier(dep.attributes.classifier.map(substituteProps0))
+      )
+      .withConfiguration(dep.configuration.map(substituteProps0))
+      .withExclusions(
+        dep.exclusions.map {
+          case (org, name) =>
+            (org.map(substituteProps0), name.map(substituteProps0))
+        }
+      )
+
+    // FIXME The content of the optional tag may also be a property in
+    // the original POM. Maybe not parse it that earlier?
+    config.map(substituteProps0) -> dep0
   }
 
   /**
@@ -474,6 +480,15 @@ object Resolution {
       res
   }
 
+  private def parents(
+    project: Project,
+    projectCache: ((Module, String)) => Option[Project]
+  ): Stream[Project] =
+    project.parent.flatMap(projectCache) match {
+      case None => Stream.empty
+      case Some(parent) => parent #:: parents(parent, projectCache)
+    }
+
   /**
    * Get the dependencies of `project`, knowing that it came from dependency
    * `from` (that is, `from.module == project.module`).
@@ -484,16 +499,22 @@ object Resolution {
   private def finalDependencies(
     from: Dependency,
     project: Project,
-    defaultConfiguration: Configuration
+    defaultConfiguration: Configuration,
+    projectCache: ((Module, String)) => Option[Project]
   ): Seq[Dependency] = {
 
     // section numbers in the comments refer to withDependencyManagement
 
-    val properties = project.properties.toMap
+    val parentProperties0 = parents(project, projectCache)
+      .toVector
+      .flatMap(_.properties)
+
+    val project0 = withFinalProperties(project.withProperties(parentProperties0 ++ project.properties))
+    val properties = project0.properties.toMap
 
     val (actualConfig, configurations) = withParentConfigurations(
       if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
-      project.configurations
+      project0.configurations
     )
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
@@ -504,8 +525,8 @@ object Resolution {
       // 2.1 & 2.2
       depsWithDependencyManagement(
         // 1.7
-        withProperties(project.dependencies, properties),
-        withProperties(project.dependencyManagement, properties)
+        withProperties(project0.dependencies, properties),
+        withProperties(project0.dependencyManagement, properties)
       ),
       from.exclusions
     )
@@ -623,6 +644,9 @@ object Resolution {
         dep
     }
 
+  private def withFinalProperties(project: Project): Project =
+    project.withProperties(projectProperties(project))
+
 }
 
 
@@ -717,7 +741,7 @@ object Resolution {
       if (deps == null)
         projectCache.get(dep.moduleVersion) match {
           case Some((_, proj)) =>
-            val res0 = finalDependencies(dep, proj, defaultConfiguration).filter(filter getOrElse defaultFilter)
+            val res0 = finalDependencies(dep, proj, defaultConfiguration, k => projectCache.get(k).map(_._2)).filter(filter getOrElse defaultFilter)
             val res = mapDependencies.fold(res0)(res0.map(_))
             finalDependenciesCache0.put(dep, res)
             res
@@ -959,26 +983,30 @@ object Resolution {
       project.parent.toSet
     else {
 
-      val parentProperties0 = project
-        .parent
-        .flatMap(projectCache.get)
-        .map(_._2.properties.toMap)
-        .getOrElse(Map())
+      val parentProperties0 = parents(project, k => projectCache.get(k).map(_._2))
+        .toVector
+        .flatMap(_.properties)
 
-      val approxProperties = parentProperties0 ++ projectProperties(project)
+      // 1.1 (see above)
+      val approxProperties = parentProperties0.toMap ++ projectProperties(project)
 
-      val profileDependencies =
-        profiles(
-          project,
-          approxProperties,
-          osInfo,
-          jdkVersion,
-          userActivations
-        ).flatMap(p => p.dependencies ++ p.dependencyManagement)
+      val profiles0 = profiles(
+        project,
+        approxProperties,
+        osInfo,
+        jdkVersion,
+        userActivations
+      )
+
+      val profileDependencies = profiles0.flatMap(p => p.dependencies ++ p.dependencyManagement)
+
+      val project0 = project.withProperties(project.properties ++ profiles0.flatMap(_.properties)) // belongs to 1.5 & 1.6
+
+      val propertiesMap0 = withFinalProperties(project0.withProperties(parentProperties0 ++ project0.properties)).properties.toMap
 
       val modules = withProperties(
-        project.dependencies ++ project.dependencyManagement ++ profileDependencies,
-        approxProperties
+        project0.dependencies ++ project0.dependencyManagement ++ profileDependencies,
+        propertiesMap0
       ).collect {
         case (Configuration.`import`, dep) => dep.moduleVersion
       }
@@ -1030,9 +1058,6 @@ object Resolution {
     )
   }
 
-  private def withFinalProperties(project: Project): Project =
-    project.withProperties(projectProperties(project))
-
   /**
    * Add dependency management / inheritance related items to `project`,
    * from what's available in cache.
@@ -1074,11 +1099,9 @@ object Resolution {
 
     // A bit fragile, but seems to work
 
-    val parentProperties0 = project
-      .parent
-      .flatMap(projectCache.get)
-      .map(_._2.properties)
-      .getOrElse(Seq())
+    val parentProperties0 = parents(project, k => projectCache.get(k).map(_._2))
+      .toVector
+      .flatMap(_.properties)
 
     // 1.1 (see above)
     val approxProperties = parentProperties0.toMap ++ projectProperties(project)
@@ -1094,56 +1117,67 @@ object Resolution {
     // 1.2 made from Pom.scala (TODO look at the very details?)
 
     // 1.3 & 1.4 (if only vaguely so)
-    val project0 = withFinalProperties(
-      project.withProperties(
-        parentProperties0 ++ project.properties ++ profiles0.flatMap(_.properties) // belongs to 1.5 & 1.6
-      )
-    )
+    val project0 = project.withProperties(project.properties ++ profiles0.flatMap(_.properties)) // belongs to 1.5 & 1.6
 
-    val propertiesMap0 = project0.properties.toMap
+    val propertiesMap0 = withFinalProperties(project0.withProperties(parentProperties0 ++ project0.properties)).properties.toMap
 
-    val dependencies0 = addDependencies(
-      (project0.dependencies +: profiles0.map(_.dependencies)).map(withProperties(_, propertiesMap0))
-    )
-    val dependenciesMgmt0 = addDependencies(
-      (project0.dependencyManagement +: profiles0.map(_.dependencyManagement)).map(withProperties(_, propertiesMap0))
-    )
+    val (importDeps, standardDeps) = {
 
-    val deps0 =
-      dependencies0.collect {
-        case (Configuration.`import`, dep) =>
-          dep.moduleVersion
-      } ++
-      dependenciesMgmt0.collect {
-        case (Configuration.`import`, dep) =>
-          dep.moduleVersion
-      } ++
+      val dependencies0 = addDependencies((project0.dependencies +: profiles0.map(_.dependencies)))
+
+      val (importDeps0, standardDeps0) = dependencies0
+        .map { dep =>
+          val dep0 = withProperties(dep, propertiesMap0)
+          if (dep0._1 == Configuration.`import`)
+            (dep0._2 :: Nil, Nil)
+          else
+            (Nil, dep :: Nil) // not dep0 (properties with be substituted later)
+        }
+        .unzip
+
+      (importDeps0.flatten, standardDeps0.flatten)
+    }
+
+    val importDepsMgmt = {
+
+      val dependenciesMgmt0 = addDependencies((project0.dependencyManagement +: profiles0.map(_.dependencyManagement)))
+
+      dependenciesMgmt0.flatMap { dep =>
+        val (conf0, dep0) = withProperties(dep, propertiesMap0)
+        if (conf0 == Configuration.`import`)
+          dep0 :: Nil
+        else
+          Nil
+      }
+    }
+
+
+    val parentDeps =
+      importDeps.map(_.moduleVersion) ++
+      importDepsMgmt.map(_.moduleVersion) ++
       project0.parent // belongs to 1.5 & 1.6
 
-    val deps = deps0.filter(projectCache.contains)
+    val retainedParentDeps = parentDeps.filter(projectCache.contains)
 
-    val projs = deps
-      .map(projectCache(_)._2)
+    val retainedParentProjects = retainedParentDeps.map(projectCache(_)._2)
 
     val depMgmt = (
       project0.dependencyManagement +: (
         profiles0.map(_.dependencyManagement) ++
-        projs.map(_.dependencyManagement)
+        retainedParentProjects.map { p =>
+          withProperties(p.dependencyManagement, withFinalProperties(p).properties.toMap)
+        }
       )
     )
-      .map(withProperties(_, propertiesMap0))
       .foldLeft(Map.empty[DepMgmt.Key, (Configuration, Dependency)])(DepMgmt.addSeq)
 
-    val depsSet = deps.toSet
+    val retainedParentDepsSet = retainedParentDeps.toSet
 
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
       .withVersion(substituteProps(project0.version, propertiesMap0))
       .withDependencies(
-        dependencies0
-          .filterNot{case (config, dep) =>
-            config == Configuration.`import` && depsSet(dep.moduleVersion)
-          } ++
+        standardDeps ++
         project0.parent  // belongs to 1.5 & 1.6
           .filter(projectCache.contains)
           .toSeq
@@ -1152,7 +1186,7 @@ object Resolution {
       .withDependencyManagement(
         depMgmt.values.toSeq
           .filterNot{case (config, dep) =>
-            config == Configuration.`import` && depsSet(dep.moduleVersion)
+            config == Configuration.`import`
           }
       )
   }
