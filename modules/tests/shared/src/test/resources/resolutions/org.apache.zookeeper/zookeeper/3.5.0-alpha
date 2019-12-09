@@ -1,0 +1,7 @@
+org.apache.zookeeper:zookeeper:3.5.0-alpha:default
+org.slf4j:slf4j-api:1.7.5:default
+org.slf4j:slf4j-log4j12:1.7.5:default
+commons-cli:commons-cli:1.2:default
+log4j:log4j:1.2.17:default
+io.netty:netty:3.7.0.Final:default
+net.java.dev.javacc:javacc:5.0:default

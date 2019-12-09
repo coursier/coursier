@@ -797,7 +797,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
     }
 
-    "pom project.packaging property" - async {
+    "default value for pom project.packaging property" - async {
       val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
       val res = await {
         resolve
@@ -807,11 +807,62 @@ object ResolveTests extends TestSuite {
 
       await(validateDependencies(res))
 
+      val urls = res.dependencyArtifacts().map(_._3.url)
+      val wrongUrls = urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
+
+      assert(urls.nonEmpty)
+      assert(wrongUrls.isEmpty)
+    }
+
+    "pom project.packaging property" - async {
+      val dep = dep"org.apache.zookeeper:zookeeper:3.5.0-alpha"
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
       // The one we're interested in here
-      val backendImplUrl = "https://repo1.maven.org/maven2/org/nd4j/nd4j-backend-impls/1.0.0-beta4/nd4j-backend-impls-1.0.0-beta4-macosx-x86_64.pom"
+      val pomUrl = "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
       val urls = res.dependencyArtifacts().map(_._3.url).toSet
 
-      assert(urls.contains(backendImplUrl))
+      assert(urls.contains(pomUrl))
+    }
+
+    "child property substitution in parent POM" - async {
+      val deps = Seq(
+        dep"org.bytedeco:mkl-platform:2019.5-1.5.2",
+        dep"org.bytedeco:mkl-platform-redist:2019.5-1.5.2"
+      )
+      val res = await {
+        resolve
+          .addDependencies(deps: _*)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val urls = res.dependencyArtifacts().map(_._3.url).toSet
+      val expectedUrls = Set(
+        "https://repo1.maven.org/maven2/org/bytedeco/javacpp/1.5.2/javacpp-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform-redist/2019.5-1.5.2/mkl-platform-redist-2019.5-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform/2019.5-1.5.2/mkl-platform-2019.5-1.5.2.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-linux-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-macosx-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-macosx-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86_64-redist.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2-windows-x86_64.jar",
+        "https://repo1.maven.org/maven2/org/bytedeco/mkl/2019.5-1.5.2/mkl-2019.5-1.5.2.jar"
+      )
+
+      assert(urls == expectedUrls)
     }
   }
 }

@@ -1,6 +1,7 @@
 package coursier.cli
 
 import java.io.{ByteArrayOutputStream, PrintStream}
+import java.nio.charset.StandardCharsets
 
 import caseapp.core.RemainingArgs
 import cats.data.Validated
@@ -321,5 +322,31 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val output = new String(stdout.toByteArray, "UTF-8")
     assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
+  }
+
+  it should "print candidate artifact URLs" in {
+    val options = ResolveOptions(
+      candidateUrls = true
+    )
+    val args = RemainingArgs(Seq("com.github.alexarchambault:case-app_2.13:2.0.0-M9"), Nil)
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.task(params, pool, ps, ps, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
+    val expectedOutput =
+      """https://repo1.maven.org/maven2/com/github/alexarchambault/case-app_2.13/2.0.0-M9/case-app_2.13-2.0.0-M9.jar
+        |https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
+        |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
+        |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-annotations_2.13/2.0.0-M9/case-app-annotations_2.13-2.0.0-M9.jar
+        |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-util_2.13/2.0.0-M9/case-app-util_2.13-2.0.0-M9.jar
+        |""".stripMargin
+
+    assert(output == expectedOutput)
   }
 }

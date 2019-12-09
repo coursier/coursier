@@ -1,5 +1,4 @@
 org.nd4j:nd4j-native:0.5.0:default
-org.nd4j:nd4j-backend-impls:0.5.0:default
 org.nd4j:nd4j-native-api:0.5.0:default
 org.nd4j:nd4j-api:0.5.0:default
 org.nd4j:nd4j-buffer:0.5.0:default
