@@ -798,7 +798,7 @@ object ResolveTests extends TestSuite {
     }
 
     "pom project.packaging property" - async {
-      val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+      val dep = dep"org.apache.zookeeper:zookeeper:3.5.0-alpha"
       val res = await {
         resolve
           .addDependencies(dep)
@@ -808,10 +808,10 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
 
       // The one we're interested in here
-      val backendImplUrl = "https://repo1.maven.org/maven2/org/nd4j/nd4j-backend-impls/1.0.0-beta4/nd4j-backend-impls-1.0.0-beta4-macosx-x86_64.pom"
+      val pomUrl = "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
       val urls = res.dependencyArtifacts().map(_._3.url).toSet
 
-      assert(urls.contains(backendImplUrl))
+      assert(urls.contains(pomUrl))
     }
   }
 }
