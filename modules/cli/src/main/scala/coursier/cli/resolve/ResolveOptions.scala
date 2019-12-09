@@ -23,6 +23,8 @@ final case class ResolveOptions(
   @Help("Print what depends on the passed modules")
   @Value("org:name")
     whatDependsOn: List[String] = Nil,
+  @Help("Print candidate artifact URLs")
+    candidateUrls: Boolean = false,
 
   @Help("Print conflicts")
     conflicts: Boolean = false,

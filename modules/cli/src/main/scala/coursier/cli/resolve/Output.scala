@@ -11,6 +11,8 @@ import coursier.util.{ModuleMatcher, Print}
 
 object Output {
 
+  private val nl = sys.props("line.separator")
+
   def errPrintln(s: String) = Console.err.println(s)
 
   def printDependencies(
@@ -22,7 +24,7 @@ object Output {
   ): Unit =
     if (outputParams.verbosity >= 1) {
       stderr.println(
-        s"  Dependencies:\n" +
+        s"  Dependencies:$nl" +
           Print.dependenciesUnknownConfigs(
             deps,
             Map.empty,
@@ -80,7 +82,11 @@ object Output {
               stderr.println("No conflict found.")
             ""
           } else
-            messages.mkString("\n")
+            messages.mkString(nl)
+        } else if (params.candidateUrls) {
+          // TODO Allow to filter on classifiers / artifact types
+          val urls = res.dependencyArtifacts().map(_._3.url)
+          urls.mkString(nl)
         } else
           Print.dependenciesUnknownConfigs(
             if (params.classpathOrder) res.orderedDependencies else res.minDependencies.toVector,

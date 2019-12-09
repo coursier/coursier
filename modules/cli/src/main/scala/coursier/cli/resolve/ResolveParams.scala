@@ -17,6 +17,7 @@ final case class ResolveParams(
   tree: Boolean,
   reverseTree: Boolean,
   whatDependsOn: Seq[JavaOrScalaModule],
+  candidateUrls: Boolean,
   conflicts: Boolean,
   classpathOrder: Boolean
 ) {
@@ -41,13 +42,14 @@ object ResolveParams {
     val whatDependsOnV = options.whatDependsOn.traverse(
       ModuleParser.javaOrScalaModule(_).toValidatedNel
     )
+    val candidateUrls = options.candidateUrls
 
     val conflicts = options.conflicts
 
     val printCheck =
-      if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts).count(identity) > 1)
+      if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts, candidateUrls).count(identity) > 1)
         Validated.invalidNel(
-          "Cannot specify several options among --tree, --reverse-tree, --what-depends-on, --conflicts"
+          "Cannot specify several options among --tree, --reverse-tree, --what-depends-on, --conflicts, --candidate-urls"
         )
       else
         Validated.validNel(())
@@ -73,6 +75,7 @@ object ResolveParams {
           tree,
           reverseTree,
           whatDependsOn,
+          candidateUrls,
           conflicts,
           classpathOrder
         )
