@@ -797,6 +797,23 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
     }
 
+    "default value for pom project.packaging property" - async {
+      val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+      val res = await {
+        resolve
+          .addDependencies(dep)
+          .future()
+      }
+
+      await(validateDependencies(res))
+
+      val urls = res.dependencyArtifacts().map(_._3.url)
+      val wrongUrls = urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
+
+      assert(urls.nonEmpty)
+      assert(wrongUrls.isEmpty)
+    }
+
     "pom project.packaging property" - async {
       val dep = dep"org.apache.zookeeper:zookeeper:3.5.0-alpha"
       val res = await {
