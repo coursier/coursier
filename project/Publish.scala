@@ -38,10 +38,11 @@ object Publish {
     }
   )
 
-  def dontPublishScalaJsIn(sbv: String*) = Seq(
+  def dontPublishIn(sbv: String*) = Seq(
     publishArtifact := {
-      (!ScalaJSPlugin.autoImport.isScalaJSProject.value || !sbv.contains(scalaBinaryVersion.value)) &&
-        publishArtifact.value
+      val previous = publishArtifact.value
+      val sbv0 = scalaBinaryVersion.value
+      !sbv.contains(sbv0) && previous
     },
     mimaPreviousArtifacts := {
       val previous = mimaPreviousArtifacts.value
