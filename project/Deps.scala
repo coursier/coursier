@@ -39,7 +39,7 @@ object Deps {
   // staying before 3.14.0 to the URLStreamHandlerFactory implementation
   def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
   def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
-  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.29"
+  def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.30"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
 
