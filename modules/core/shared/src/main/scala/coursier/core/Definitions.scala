@@ -317,6 +317,8 @@ object Info {
   classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
+  def isEmpty: Boolean =
+    name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 }
 
 object Publication {
