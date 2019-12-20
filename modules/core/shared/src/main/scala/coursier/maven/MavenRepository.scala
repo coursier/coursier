@@ -423,10 +423,9 @@ object MavenRepository {
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      val artifact0 = artifact.withExtra(
+      artifact.withExtra(
         artifact.extra + ("metadata" -> metadataArtifact)
       )
-      (publication, artifact0)
     }
 
     lazy val defaultPublications = {
@@ -480,16 +479,25 @@ object MavenRepository {
             else
               type0
 
+          val optional = dependency.publication.isEmpty
+
           Publication(
             name,
             tpe,
             ext,
             classifier
-          )
+          ) -> optional
       }
 
-      (packagingPublicationOpt.toSeq ++ extraPubs)
-        .distinct
+      val allPubs = packagingPublicationOpt.map(_ -> true).toSeq ++ extraPubs
+      val optional = allPubs
+        .groupBy(_._1)
+        .mapValues(_.map(_._2).forall(identity))
+        .iterator
+        .toMap
+      allPubs.map(_._1).distinct.map { pub =>
+        (pub, optional(pub))
+      }
     }
 
     overrideClassifiers
@@ -510,12 +518,16 @@ object MavenRepository {
                 tpe,
                 ext,
                 classifier
-              )
+              ) -> true
             )
           }
         }
       }
-      .map(artifactWithExtra)
+      .map {
+        case (pub, opt) =>
+          val a = artifactWithExtra(pub).withOptional(opt)
+          (pub, a)
+      }
   }
 
   def artifacts(

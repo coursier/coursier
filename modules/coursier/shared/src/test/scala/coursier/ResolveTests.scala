@@ -864,5 +864,21 @@ object ResolveTests extends TestSuite {
 
       assert(urls == expectedUrls)
     }
+
+    "Artifacts with classifier are non optional" - async {
+      val dep = dep"io.netty:netty-transport-native-epoll:4.1.44.Final,classifier=woops"
+      val res = await {
+        resolve.addDependencies(dep).future()
+      }
+
+      await(validateDependencies(res))
+
+      val artifacts = res.dependencyArtifacts()
+      val expectedUrl = "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
+      val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
+        sys.error(s"Expected artifact with URL $expectedUrl")
+      }
+      assert(!woopsArtifact.optional)
+    }
   }
 }

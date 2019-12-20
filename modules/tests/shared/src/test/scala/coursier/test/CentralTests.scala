@@ -662,13 +662,13 @@ abstract class CentralTests extends TestSuite {
 
       * - runner.resolutionCheck(mod, ver)
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type.jar)) { artifacts =>
+      * - runner.withArtifacts(mod, ver) { artifacts =>
         val mainArtifactOpt = artifacts.find(_.url == mainUrl)
         assert(mainArtifactOpt.nonEmpty)
         assert(mainArtifactOpt.forall(_.optional))
       }
 
-      * - runner.withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", Attributes(Type.jar), transitive = true) { artifacts =>
+      * - runner.withArtifacts(Module(org"com.lihaoyi", name"scalatags_2.12"), "0.6.2", transitive = true) { artifacts =>
 
         val urls = artifacts.map(_.url).toSet
 
