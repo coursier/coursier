@@ -14,7 +14,7 @@ object Deps {
       else "2.1.3"
     }
     def http4s = "0.18.24"
-    def okhttp = "3.13.1"
+    def okhttp = "3.14.5"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
   }
