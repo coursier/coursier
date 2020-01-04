@@ -3,8 +3,8 @@ package coursier.paths;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import io.github.soc.directories.ProjectDirectories;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Computes Coursier's directories according to the standard
@@ -19,7 +19,6 @@ public final class CoursierPaths {
     }
 
     private static final Object coursierDirectoriesLock = new Object();
-    private static ProjectDirectories coursierDirectories0;
 
     private static final Object cacheDirectoryLock = new Object();
     private static volatile File cacheDirectory0 = null;
@@ -41,24 +40,12 @@ public final class CoursierPaths {
         if (path != null)
           return path;
 
-        File baseXdgDir = new File(coursierDirectories().cacheDir);
-        File xdgDir = new File(baseXdgDir, "v1");
-        String xdgPath = xdgDir.getAbsolutePath();
-
-        if (baseXdgDir.isDirectory())
-            path = xdgPath;
-
-        if (path == null) {
-            File coursierDotFile = new File(System.getProperty("user.home") + "/.coursier");
-            if (coursierDotFile.isDirectory())
-                path = System.getProperty("user.home") + "/.coursier/cache/v1/";
-        }
-
-        if (path == null) {
-            path = xdgPath;
-            Util.createDirectories(xdgDir.toPath());
-        }
-
+        String xdgCache = System.getenv("XDG_CACHE_HOME");
+        Path defaultCacheDir = Paths.get(System.getProperty("user.home")).resolve(".cache");
+        Path baseCacheDir = xdgCache == null? defaultCacheDir: Paths.get(xdgCache);
+        Path cacheDir = baseCacheDir.resolve("coursier").resolve("v1").toAbsolutePath();
+        path = cacheDir.toString();
+        Util.createDirectories(cacheDir);
         return path;
     }
 
@@ -74,18 +61,6 @@ public final class CoursierPaths {
         return cacheDirectory0;
     }
 
-    private static ProjectDirectories coursierDirectories() throws IOException {
-
-        if (coursierDirectories0 == null)
-            synchronized (coursierDirectoriesLock) {
-                if (coursierDirectories0 == null) {
-                    coursierDirectories0 = ProjectDirectories.from(null, null, "Coursier");
-                }
-            }
-
-        return coursierDirectories0;
-    }
-
     private static String computeConfigDirectory() throws IOException {
         String path = System.getenv("COURSIER_CONFIG_DIR");
 
@@ -95,7 +70,11 @@ public final class CoursierPaths {
         if (path != null)
           return path;
 
-        return coursierDirectories().configDir;
+        String xdgConfig = System.getenv("XDG_CONFIG_HOME");
+        Path defaultConfigDir = Paths.get(System.getProperty("user.home")).resolve(".config");
+        Path baseConfigDir = xdgConfig == null? defaultConfigDir: Paths.get(xdgConfig);
+        Path configDir = baseConfigDir.resolve("coursier").toAbsolutePath();
+        return configDir.toString();
     }
 
     public static File configDirectory() throws IOException {
@@ -119,7 +98,11 @@ public final class CoursierPaths {
         if (path != null)
           return path;
 
-        return coursierDirectories().dataLocalDir;
+        String xdgData = System.getenv("XDG_DATA_HOME");
+        Path defaultDataDir = Paths.get(System.getProperty("user.home")).resolve(".local").resolve("share");
+        Path baseDataDir = xdgData == null? defaultDataDir: Paths.get(xdgData);
+        Path dataDir = baseDataDir.resolve("coursier").toAbsolutePath();
+        return dataDir.toString();
     }
 
     public static File dataLocalDirectory() throws IOException {

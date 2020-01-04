@@ -152,8 +152,7 @@ lazy val paths = project("paths")
   .disablePlugins(MimaPlugin)
   .settings(
     pureJava,
-    dontPublish,
-    addDirectoriesSources
+    dontPublish
   )
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
@@ -633,6 +632,5 @@ lazy val addBootstrapJarResourceInTests = Seq(
 )
 
 lazy val addPathsSources = Seq(
-  addDirectoriesSources,
   unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(Compile).in(paths).value
 )

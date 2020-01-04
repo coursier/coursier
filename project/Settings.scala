@@ -482,25 +482,6 @@ object Settings {
     }
   }
 
-  // Using directly the sources of directories, rather than depending on it.
-  // This is required to use it from the bootstrap module, whose jar is launched as is (so shouldn't require dependencies).
-  // This is done for the other use of it too, from the cache module, not to have to manage two ways of depending on it.
-  lazy val addDirectoriesSources = {
-    unmanagedSourceDirectories.in(Compile) += {
-      val baseDir = baseDirectory.in(LocalRootProject).value
-      val directoriesDir = baseDir / "modules" / "directories" / "src" / "main" / "java"
-      if (!directoriesDir.exists())
-        gitLock.synchronized {
-          if (!directoriesDir.exists()) {
-            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/directories")
-            runCommand(cmd, baseDir)
-          }
-        }
-
-      directoriesDir
-    }
-  }
-
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
     val extra =
