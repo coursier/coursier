@@ -13,7 +13,7 @@ object Deps {
       if (sv.startsWith("2.11.")) "2.1.2"
       else "2.1.3"
     }
-    def http4s = "0.18.17"
+    def http4s = "0.18.24"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
