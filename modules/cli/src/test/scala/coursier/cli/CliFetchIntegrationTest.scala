@@ -1353,7 +1353,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       "ammonite-util_2.12-1.8.1.jar",
       "ammonite_2.12.10-1.8.1.jar",
       "fansi_2.12-0.2.7.jar",
-      "fastparse_2.12-2.1.3.jar",
+      "fastparse_2.12-2.2.2.jar",
       "geny_2.12-0.1.8.jar",
       "interface-0.0.8.jar",
       "javaparser-core-3.2.5.jar",
