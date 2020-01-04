@@ -1188,7 +1188,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       "com/lihaoyi/os-lib_2.12/0.2.6/os-lib_2.12-0.2.6.jar",
       "com/lihaoyi/pprint_2.12/0.5.3/pprint_2.12-0.5.3.jar",
       "com/lihaoyi/scalaparse_2.12/2.0.5/scalaparse_2.12-2.0.5.jar",
-      "com/lihaoyi/scalatags_2.12/0.6.7/scalatags_2.12-0.6.7.jar",
+      "com/lihaoyi/scalatags_2.12/0.6.8/scalatags_2.12-0.6.7.jar",
       "com/lihaoyi/sourcecode_2.12/0.1.5/sourcecode_2.12-0.1.5.jar",
       "com/lihaoyi/ujson_2.12/0.7.1/ujson_2.12-0.7.1.jar",
       "com/lihaoyi/upack_2.12/0.7.1/upack_2.12-0.7.1.jar",

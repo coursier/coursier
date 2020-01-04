@@ -1056,7 +1056,7 @@ abstract class CentralTests extends TestSuite {
         "com.lihaoyi:geny_2.12:0.1.5",
         "com.lihaoyi:os-lib_2.12:0.2.6",
         "com.lihaoyi:scalaparse_2.12:2.0.5",
-        "com.lihaoyi:scalatags_2.12:0.6.7",
+        "com.lihaoyi:scalatags_2.12:0.6.8",
         "com.lihaoyi:sourcecode_2.12:0.1.5",
         "com.lihaoyi:ujson_2.12:0.7.1",
         "com.lihaoyi:upack_2.12:0.7.1",
