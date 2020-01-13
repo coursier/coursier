@@ -82,7 +82,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shading("coursier.core.shaded"),
     utest,
     libs ++= Seq(
-      Deps.fastParse.value % "shaded",
+      Deps.fastParse % "shaded",
       Deps.scalaXml
     ),
     shadeNamespaces ++= Set(
@@ -122,7 +122,7 @@ lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
     dontPublish,
     hasITs,
     coursierPrefix,
-    libs += Deps.scalaAsync.value,
+    libs += Deps.scalaAsync,
     utest,
     sharedTestResources
   )
@@ -141,7 +141,7 @@ lazy val `proxy-tests` = project("proxy-tests")
     coursierPrefix,
     libs ++= Seq(
       Deps.dockerClient,
-      Deps.scalaAsync.value,
+      Deps.scalaAsync,
       Deps.slf4JNop
     ),
     utest,
@@ -197,7 +197,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
             Deps.http4sBlazeServer % Test,
             Deps.http4sDsl % Test,
             Deps.logbackClassic % Test,
-            Deps.scalaAsync.value % Test
+            Deps.scalaAsync % Test
           )
         case _ =>
           Nil
@@ -466,7 +466,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.core.shaded"), // shading only fastparse, that core shades too, so shading things under the same namespace
-    libs += Deps.fastParse.value % "shaded",
+    libs += Deps.fastParse % "shaded",
     shadeNamespaces ++= Set(
       "fastparse",
       "sourcecode"
@@ -488,7 +488,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     publishGeneratedSources,
     utest,
     libs ++= Seq(
-      Deps.scalaAsync.value % Test,
+      Deps.scalaAsync % Test,
       Deps.cross.argonautShapeless.value,
       Deps.dataClass % Provided
     )

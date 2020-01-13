@@ -8,11 +8,7 @@ object Deps {
 
   private object versions {
     def argonautShapeless = "1.2.0-M11"
-    def fastParse = setting {
-      val sv = scalaVersion.value
-      if (sv.startsWith("2.11.")) "2.1.2"
-      else "2.1.3"
-    }
+    def fastParse = "2.1.3"
     def http4s = "0.18.24"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
@@ -25,9 +21,7 @@ object Deps {
   def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.1"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def emoji = "com.lightbend" %% "emoji" % "1.2.1"
-  def fastParse = setting {
-    "com.lihaoyi" %% "fastparse" % versions.fastParse.value
-  }
+  def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def jansi = "org.fusesource.jansi" % "jansi" % "1.18"
@@ -43,13 +37,7 @@ object Deps {
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
 
-  def scalaAsync = Def.setting {
-    val sv = scalaVersion.value
-    val ver =
-      if (sv.startsWith("2.11.")) "0.9.7"
-      else "0.10.0"
-    "org.scala-lang.modules" %% "scala-async" % ver
-  }
+  def scalaAsync = "org.scala-lang.modules" %% "scala-async" % "0.10.0"
   def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
   def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
@@ -63,20 +51,12 @@ object Deps {
 
     def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % versions.argonautShapeless)
     def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.0.0")
-    def fastParse = setting {
-      "com.lihaoyi" %%% "fastparse" % versions.fastParse.value
-    }
+    def fastParse = setting("com.lihaoyi" %%% "fastparse" % versions.fastParse)
     def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.8")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "0.9.6")
     def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.3.1")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
-    def utest = setting {
-      val sv = scalaVersion.value
-      val ver =
-        if (sv.startsWith("2.11.")) "0.6.7"
-        else "0.6.9"
-      "com.lihaoyi" %%% "utest" % ver
-    }
+    def utest = setting("com.lihaoyi" %%% "utest" % "0.6.9")
   }
 
   def proguardVersion = "6.1.1"
