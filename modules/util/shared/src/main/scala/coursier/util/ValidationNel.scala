@@ -5,9 +5,9 @@ final case class ValidationNel[L, R](either: Either[::[L], R]) {
   def isSuccess: Boolean =
     either.isRight
   def map[S](f: R => S): ValidationNel[L, S] =
-    ValidationNel(either.right.map(f))
+    ValidationNel(either.map(f))
   def flatMap[S](f: R => ValidationNel[L, S]): ValidationNel[L, S] =
-    ValidationNel(either.right.flatMap(r => f(r).either))
+    ValidationNel(either.flatMap(r => f(r).either))
 
   def zip[R1](other: ValidationNel[L, R1]): ValidationNel[L, (R, R1)] =
     (either, other.either) match {

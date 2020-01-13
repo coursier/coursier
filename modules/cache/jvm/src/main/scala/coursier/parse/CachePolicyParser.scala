@@ -36,7 +36,7 @@ object CachePolicyParser {
         case "default" if default.nonEmpty =>
           ValidationNel.success(default.getOrElse(Nil))
         case other =>
-          ValidationNel.fromEither(cachePolicy(other).right.map(Seq(_)))
+          ValidationNel.fromEither(cachePolicy(other).map(Seq(_)))
       }
       .map(_.flatten)
 

@@ -132,7 +132,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   }
 
   private def appDescriptor(raw: RawAppDescriptor) = {
-    val appDesc = raw.appDescriptor.toEither.right.get
+    val appDesc = raw.appDescriptor.toOption.get
     val descRepr = raw.repr.getBytes(StandardCharsets.UTF_8)
     (appDesc, descRepr)
   }
