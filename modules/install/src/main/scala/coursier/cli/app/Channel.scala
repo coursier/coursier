@@ -76,7 +76,7 @@ object Channel {
         case _ => Left(s"Malformed github channel '$s'")
       }
 
-      orgNameBranchOrError.right.map {
+      orgNameBranchOrError.map {
         case (org, name, branch) =>
           val path0 =
             if (path.endsWith("/"))
@@ -87,10 +87,9 @@ object Channel {
           FromUrl(url)
       }
     } else
-      ModuleParser.javaOrScalaModule(s)
-        .right.flatMap {
-          case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
-          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
-        }
+      ModuleParser.javaOrScalaModule(s).flatMap {
+        case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
+        case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
+      }
 
 }

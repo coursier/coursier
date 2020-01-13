@@ -60,11 +60,11 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
           if (response != null)
             response.body().close()
         }
-      }.toEither.right.flatMap(identity)
+      }.toEither.flatMap(identity)
 
       logger.downloadedIfExists(
         url,
-        res.right.toOption.flatMap(_.map(_._2.length)),
+        res.toOption.flatMap(_.map(_._2.length)),
         res.left.toOption.map(e => new Download.Error.DownloadError(url, e))
       )
 

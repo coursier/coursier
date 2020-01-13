@@ -83,7 +83,7 @@ object AppGenerator {
         val content = FileUtil.readFully(zf.getInputStream(ent))
         val e = RawAppDescriptor.parse(new String(content, StandardCharsets.UTF_8))
           .left.map(err => new ErrorParsingAppDescription(s"$from!$jsonDescFilePath", err))
-          .right.flatMap { r =>
+          .flatMap { r =>
             r.appDescriptor
               .toEither
               .left.map { errors =>
@@ -114,7 +114,7 @@ object AppGenerator {
         val content = FileUtil.readFully(zf.getInputStream(ent))
         val e = RawSource.parse(new String(content, StandardCharsets.UTF_8))
           .left.map(err => new ErrorParsingSource(s"$f!$jsonSourceFilePath", err))
-          .right.flatMap { r =>
+          .flatMap { r =>
             r.source
               .toEither
               .left.map { errors =>

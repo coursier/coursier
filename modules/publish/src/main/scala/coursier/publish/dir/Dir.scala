@@ -125,7 +125,7 @@ object Dir {
     for {
       logger0 <- before
       a <- fileSet(dir, logger0).attempt
-      _ <- after(a.right.toOption.fold(0)(_.elements.length), logger0)
+      _ <- after(a.toOption.fold(0)(_.elements.length), logger0)
       fs <- Task.fromEither(a)
     } yield fs
   }

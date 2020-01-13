@@ -136,7 +136,7 @@ object FetchTests extends TestSuite {
       val ivy2Local = new File(base, "http/ivy.abc.com").toURI.toASCIIString
 
       val m2Repo = MavenRepository(m2Local)
-      val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").right.get
+      val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").toOption.get
 
       val fetch0 = Fetch()
         .noMirrors
@@ -251,7 +251,7 @@ object FetchTests extends TestSuite {
             .noMirrors
             .withRepositories(Seq(
               Repositories.central,
-              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").right.get
+              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
             ))
             .addDependencies(dep"test:a_2.12:1.0.0")
             .addArtifactTypes(artifactTypes: _*)

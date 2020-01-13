@@ -22,30 +22,30 @@ object RepositoryParserTests extends TestSuite {
   val tests = Tests {
     "bintray-ivy:" - {
       val obtained = RepositoryParser.repository("bintray-ivy:scalameta/maven")
-      assert(obtained.right.exists(isIvyRepo))
+      assert(obtained.exists(isIvyRepo))
     }
     "bintray:" - {
       val obtained = RepositoryParser.repository("bintray:scalameta/maven")
-      assert(obtained.right.exists(isMavenRepo))
+      assert(obtained.exists(isMavenRepo))
     }
 
     "sbt-plugin:" - {
       val res = RepositoryParser.repository("sbt-plugin:releases")
-      assert(res.right.exists(isIvyRepo))
+      assert(res.exists(isIvyRepo))
     }
 
     "typesafe:ivy-" - {
       val res = RepositoryParser.repository("typesafe:ivy-releases")
-      assert(res.right.exists(isIvyRepo))
+      assert(res.exists(isIvyRepo))
     }
     "typesafe:" - {
       val res = RepositoryParser.repository("typesafe:releases")
-      assert(res.right.exists(isMavenRepo))
+      assert(res.exists(isMavenRepo))
     }
 
     "jitpack" - {
       val res = RepositoryParser.repository("jitpack")
-      assert(res.right.exists(isMavenRepo))
+      assert(res.exists(isMavenRepo))
     }
 
     "ivy with metadata" - {
@@ -56,7 +56,7 @@ object RepositoryParserTests extends TestSuite {
 
       val repo = s"ivy:$mainPattern|$metadataPattern"
 
-      val expected = IvyRepository.parse(mainPattern, Some(metadataPattern)).right.get
+      val expected = IvyRepository.parse(mainPattern, Some(metadataPattern)).toOption.get
 
       val res = RepositoryParser.repository(repo)
       assert(res == Right(expected))

@@ -163,28 +163,27 @@ object PomParser {
         }
 
       for {
-        finalGroupId <- groupIdOpt.toRight("No organization found").right
-        artifactId <- artifactIdOpt.toRight("No artifactId found").right
-        finalVersion <- versionOpt.toRight("No version found").right
+        finalGroupId <- groupIdOpt.toRight("No organization found")
+        artifactId <- artifactIdOpt.toRight("No artifactId found")
+        finalVersion <- versionOpt.toRight("No version found")
 
         _ <- {
           if (parentModuleOpt.exists(_.organization.value.isEmpty))
             Left("Parent organization missing")
           else
             Right(())
-        }.right
+        }
 
         _ <- {
           if (parentModuleOpt.nonEmpty && parentVersion.isEmpty)
             Left("No parent version found")
           else
             Right(())
-        }.right
+        }
 
         extraAttrs <- properties0
           .collectFirst { case ("extraDependencyAttributes", s) => Pom.extraAttributes(s) }
           .getOrElse(Right(Map.empty))
-          .right
 
       } yield {
 
