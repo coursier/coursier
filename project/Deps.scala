@@ -8,7 +8,7 @@ object Deps {
 
   private object versions {
     def argonautShapeless = "1.2.0-M11"
-    def fastParse = "2.1.3"
+    def fastParse = "2.2.3"
     def http4s = "0.18.24"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
