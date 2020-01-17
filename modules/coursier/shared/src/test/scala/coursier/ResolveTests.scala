@@ -905,5 +905,15 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, params))
       }
     }
+
+    "parent properties of import scope dependency" - async {
+      val res = await {
+        resolve
+          .addDependencies(dep"com.yahoo.athenz:athenz-zts-java-client-core:1.8.43")
+          .addRepositories(mvn"https://yahoo.bintray.com/maven")
+          .future()
+      }
+      await(validateDependencies(res))
+    }
   }
 }
