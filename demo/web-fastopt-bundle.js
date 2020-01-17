@@ -48566,27 +48566,58 @@ $c_Lcoursier_core_Resolution.prototype.withDependencyManagement__Lcoursier_core_
   })(this));
   var this$28 = $m_sc_Seq$();
   var retainedParentProjects = $as_sc_Seq(retainedParentDeps.map__F1__scg_CanBuildFrom__O(jsx$20, this$28.ReusableCBFInstance$2));
-  var x$50 = project0.dependencyManagement$1;
-  var jsx$25 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$12$1) {
+  var x$52 = project0.dependencyManagement$1;
+  var jsx$26 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$12$1) {
     return (function(x$49$2) {
       var x$49 = $as_Lcoursier_core_Profile(x$49$2);
       return x$49.dependencyManagement$1
     })
   })(this));
   var this$29 = $m_sc_Seq$();
-  var jsx$24 = $as_sc_TraversableLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$25, this$29.ReusableCBFInstance$2));
+  var jsx$25 = $as_sc_TraversableLike(profiles0.map__F1__scg_CanBuildFrom__O(jsx$26, this$29.ReusableCBFInstance$2));
   var jsx$23 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$13$1) {
     return (function(p$2) {
       var p$1 = $as_Lcoursier_core_Project(p$2);
-      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(p$1.dependencyManagement$1, $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$withFinalProperties__Lcoursier_core_Project__Lcoursier_core_Project(p$1).properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2))
+      var this$31 = $m_Lcoursier_core_Resolution$().coursier$core$Resolution$$parents__Lcoursier_core_Project__F1__sci_Stream(p$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2) {
+        return (function(k$2$1) {
+          var k$1 = $as_T2(k$2$1);
+          var this$30 = $this$2.projectCache$1.get__O__s_Option(k$1);
+          if (this$30.isEmpty__Z()) {
+            return $m_s_None$()
+          } else {
+            var arg1$3 = this$30.get__O();
+            var x$50 = $as_T2(arg1$3);
+            return new $c_s_Some().init___O($as_Lcoursier_core_Project(x$50.$$und2__O()))
+          }
+        })
+      })(this$13$1)));
+      $m_sci_Vector$();
+      var cbf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
+      var this$34 = $as_sci_Vector($f_sc_TraversableLike__to__scg_CanBuildFrom__O(this$31, cbf$1));
+      $m_sci_Vector$();
+      $m_sc_IndexedSeq$();
+      $m_sci_Vector$();
+      var b$2 = new $c_sci_VectorBuilder().init___();
+      var this$36 = this$34.iterator__sci_VectorIterator();
+      while (this$36.$$undhasNext$2) {
+        var arg1$4 = this$36.next__O();
+        var x$51 = $as_Lcoursier_core_Project(arg1$4);
+        var xs$1 = x$51.properties$1.seq__sc_TraversableOnce();
+        $as_sci_VectorBuilder($f_scg_Growable__$$plus$plus$eq__sc_TraversableOnce__scg_Growable(b$2, xs$1))
+      };
+      var parentProperties0$1 = b$2.result__sci_Vector();
+      var jsx$24 = $m_Lcoursier_core_Resolution$();
+      var properties$2 = $as_sc_Seq(parentProperties0$1.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(p$1.properties$1, ($m_sci_Vector$(), $m_sc_IndexedSeq$().ReusableCBF$6)));
+      var props = jsx$24.coursier$core$Resolution$$withFinalProperties__Lcoursier_core_Project__Lcoursier_core_Project(new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(p$1.module$1, p$1.version$1, p$1.dependencies$1, p$1.configurations$1, p$1.parent$1, p$1.dependencyManagement$1, properties$2, p$1.profiles$1, p$1.versions$1, p$1.snapshotVersioning$1, p$1.packagingOpt$1, p$1.relocated$1, p$1.actualVersionOpt$1, p$1.publications$1, p$1.info$1)).properties$1.toMap__s_Predef$$less$colon$less__sci_Map($m_s_Predef$().singleton$und$less$colon$less$2);
+      return $m_Lcoursier_core_Resolution$().withProperties__sc_Seq__sci_Map__sc_Seq(p$1.dependencyManagement$1, props)
     })
   })(this));
-  var this$30 = $m_sc_Seq$();
-  var jsx$22 = $as_sc_GenTraversableOnce(retainedParentProjects.map__F1__scg_CanBuildFrom__O(jsx$23, this$30.ReusableCBFInstance$2));
-  var this$31 = $m_sc_Seq$();
-  var jsx$21 = $as_sc_SeqLike(jsx$24.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$22, this$31.ReusableCBFInstance$2));
-  var this$32 = $m_sc_Seq$();
-  var depMgmt = $as_sci_Map($as_sc_TraversableOnce(jsx$21.$$plus$colon__O__scg_CanBuildFrom__O(x$50, this$32.ReusableCBFInstance$2)).foldLeft__O__F2__O($m_sci_Map$EmptyMap$(), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$14$1) {
+  var this$38 = $m_sc_Seq$();
+  var jsx$22 = $as_sc_GenTraversableOnce(retainedParentProjects.map__F1__scg_CanBuildFrom__O(jsx$23, this$38.ReusableCBFInstance$2));
+  var this$39 = $m_sc_Seq$();
+  var jsx$21 = $as_sc_SeqLike(jsx$25.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$22, this$39.ReusableCBFInstance$2));
+  var this$40 = $m_sc_Seq$();
+  var depMgmt = $as_sci_Map($as_sc_TraversableOnce(jsx$21.$$plus$colon__O__scg_CanBuildFrom__O(x$52, this$40.ReusableCBFInstance$2)).foldLeft__O__F2__O($m_sci_Map$EmptyMap$(), new $c_sjsr_AnonFunction2().init___sjs_js_Function2((function(this$14$1) {
     return (function(dict$2, deps$2) {
       var dict = $as_sci_Map(dict$2);
       var deps = $as_sc_Seq(deps$2);
@@ -48594,88 +48625,88 @@ $c_Lcoursier_core_Resolution.prototype.withDependencyManagement__Lcoursier_core_
     })
   })(this))));
   retainedParentDeps.toSet__sci_Set();
-  var this$34 = project0.packagingOpt$1;
-  if (this$34.isEmpty__Z()) {
+  var this$42 = project0.packagingOpt$1;
+  if (this$42.isEmpty__Z()) {
     var packagingOpt = $m_s_None$()
   } else {
-    var arg1$3 = this$34.get__O();
-    var x$51 = $as_Lcoursier_core_Type(arg1$3).value$1;
+    var arg1$5 = this$42.get__O();
+    var x$53 = $as_Lcoursier_core_Type(arg1$5).value$1;
     $m_Lcoursier_core_Type$();
-    var this$36 = $m_Lcoursier_core_Resolution$();
-    var packagingOpt = new $c_s_Some().init___O(new $c_Lcoursier_core_Type().init___T(this$36.substituteProps__T__sci_Map__Z__T(x$51, propertiesMap0, false)))
+    var this$44 = $m_Lcoursier_core_Resolution$();
+    var packagingOpt = new $c_s_Some().init___O(new $c_Lcoursier_core_Type().init___T(this$44.substituteProps__T__sci_Map__Z__T(x$53, propertiesMap0, false)))
   };
-  var this$38 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project0.module$1, project0.version$1, project0.dependencies$1, project0.configurations$1, project0.parent$1, project0.dependencyManagement$1, project0.properties$1, project0.profiles$1, project0.versions$1, project0.snapshotVersioning$1, packagingOpt, project0.relocated$1, project0.actualVersionOpt$1, project0.publications$1, project0.info$1);
-  var this$37 = $m_Lcoursier_core_Resolution$();
+  var this$46 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(project0.module$1, project0.version$1, project0.dependencies$1, project0.configurations$1, project0.parent$1, project0.dependencyManagement$1, project0.properties$1, project0.profiles$1, project0.versions$1, project0.snapshotVersioning$1, packagingOpt, project0.relocated$1, project0.actualVersionOpt$1, project0.publications$1, project0.info$1);
+  var this$45 = $m_Lcoursier_core_Resolution$();
   var s = project0.version$1;
-  var version = this$37.substituteProps__T__sci_Map__Z__T(s, propertiesMap0, false);
-  var this$48 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$38.module$1, version, this$38.dependencies$1, this$38.configurations$1, this$38.parent$1, this$38.dependencyManagement$1, this$38.properties$1, this$38.profiles$1, this$38.versions$1, this$38.snapshotVersioning$1, this$38.packagingOpt$1, this$38.relocated$1, this$38.actualVersionOpt$1, this$38.publications$1, this$38.info$1);
-  var this$39 = project0.parent$1;
-  if (this$39.isEmpty__Z()) {
-    var jsx$27 = true
+  var version = this$45.substituteProps__T__sci_Map__Z__T(s, propertiesMap0, false);
+  var this$56 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$46.module$1, version, this$46.dependencies$1, this$46.configurations$1, this$46.parent$1, this$46.dependencyManagement$1, this$46.properties$1, this$46.profiles$1, this$46.versions$1, this$46.snapshotVersioning$1, this$46.packagingOpt$1, this$46.relocated$1, this$46.actualVersionOpt$1, this$46.publications$1, this$46.info$1);
+  var this$47 = project0.parent$1;
+  if (this$47.isEmpty__Z()) {
+    var jsx$28 = true
   } else {
-    var arg1$4 = this$39.get__O();
-    var key$3 = $as_T2(arg1$4);
-    var jsx$27 = this.projectCache$1.contains__O__Z(key$3)
+    var arg1$6 = this$47.get__O();
+    var key$3 = $as_T2(arg1$6);
+    var jsx$28 = this.projectCache$1.contains__O__Z(key$3)
   };
-  if (jsx$27) {
-    var xo$1 = this$39
+  if (jsx$28) {
+    var xo$1 = this$47
   } else {
     var xo$1 = $m_s_None$()
   };
-  var this$41 = xo$1.toList__sci_List();
+  var this$49 = xo$1.toList__sci_List();
   var f = (function(this$17$1) {
-    return (function(x$53$2) {
-      var x$53 = $as_T2(x$53$2);
-      return $as_Lcoursier_core_Project($as_T2(this$17$1.projectCache$1.apply__O__O(x$53)).$$und2__O()).dependencies$1
+    return (function(x$55$2) {
+      var x$55 = $as_T2(x$55$2);
+      return $as_Lcoursier_core_Project($as_T2(this$17$1.projectCache$1.apply__O__O(x$55)).$$und2__O()).dependencies$1
     })
   })(this);
-  var this$42 = $m_sc_Seq$();
-  var bf$1 = this$42.ReusableCBFInstance$2;
-  if ((bf$1 === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$41 === $m_sci_Nil$())) {
-      var jsx$28 = $m_sci_Nil$()
+  var this$50 = $m_sc_Seq$();
+  var bf$2 = this$50.ReusableCBFInstance$2;
+  if ((bf$2 === $m_sci_List$().ReusableCBFInstance$2)) {
+    if ((this$49 === $m_sci_Nil$())) {
+      var jsx$29 = $m_sci_Nil$()
     } else {
-      var rest = this$41;
+      var rest = this$49;
       var found = new $c_sr_BooleanRef().init___Z(false);
       var h = new $c_sr_ObjectRef().init___O(null);
       var t = new $c_sr_ObjectRef().init___O(null);
       while ((rest !== $m_sci_Nil$())) {
-        var arg1$5 = rest.head__O();
-        $as_sc_GenTraversableOnce(f(arg1$5)).seq__sc_TraversableOnce().foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$2, found$1, h$1, t$1) {
-          return (function(b$2) {
+        var arg1$7 = rest.head__O();
+        $as_sc_GenTraversableOnce(f(arg1$7)).seq__sc_TraversableOnce().foreach__F1__V(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$3, found$1, h$1, t$1) {
+          return (function(b$2$1) {
             if ((!found$1.elem$1)) {
-              h$1.elem$1 = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
+              h$1.elem$1 = new $c_sci_$colon$colon().init___O__sci_List(b$2$1, $m_sci_Nil$());
               t$1.elem$1 = $as_sci_$colon$colon(h$1.elem$1);
               found$1.elem$1 = true
             } else {
-              var nx = new $c_sci_$colon$colon().init___O__sci_List(b$2, $m_sci_Nil$());
+              var nx = new $c_sci_$colon$colon().init___O__sci_List(b$2$1, $m_sci_Nil$());
               $as_sci_$colon$colon(t$1.elem$1).tl$5 = nx;
               t$1.elem$1 = nx
             }
           })
-        })(this$41, found, h, t)));
+        })(this$49, found, h, t)));
         rest = $as_sci_List(rest.tail__O())
       };
-      var jsx$28 = ((!found.elem$1) ? $m_sci_Nil$() : $as_sci_$colon$colon(h.elem$1))
+      var jsx$29 = ((!found.elem$1) ? $m_sci_Nil$() : $as_sci_$colon$colon(h.elem$1))
     }
   } else {
     $m_sci_List$();
     var b$3 = new $c_scm_ListBuffer().init___();
-    var these = this$41;
+    var these = this$49;
     while ((!these.isEmpty__Z())) {
-      var arg1$6 = these.head__O();
-      var xs$1 = $as_sc_GenTraversableOnce(f(arg1$6)).seq__sc_TraversableOnce();
-      b$3.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer(xs$1);
+      var arg1$8 = these.head__O();
+      var xs$2 = $as_sc_GenTraversableOnce(f(arg1$8)).seq__sc_TraversableOnce();
+      b$3.$$plus$plus$eq__sc_TraversableOnce__scm_ListBuffer(xs$2);
       these = $as_sci_List(these.tail__O())
     };
-    var jsx$28 = b$3.toList__sci_List()
+    var jsx$29 = b$3.toList__sci_List()
   };
-  var jsx$26 = $as_sc_GenTraversableOnce(jsx$28);
-  var this$47 = $m_sc_Seq$();
-  var dependencies = $as_sc_Seq(standardDeps.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$26, this$47.ReusableCBFInstance$2));
-  var this$51 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$48.module$1, this$48.version$1, dependencies, this$48.configurations$1, this$48.parent$1, this$48.dependencyManagement$1, this$48.properties$1, this$48.profiles$1, this$48.versions$1, this$48.snapshotVersioning$1, this$48.packagingOpt$1, this$48.relocated$1, this$48.actualVersionOpt$1, this$48.publications$1, this$48.info$1);
-  var this$49 = new $c_sc_MapLike$DefaultValuesIterable().init___sc_MapLike(depMgmt);
-  var this$50 = this$49.$$outer$3.valuesIterator__sc_Iterator().toStream__sci_Stream();
+  var jsx$27 = $as_sc_GenTraversableOnce(jsx$29);
+  var this$55 = $m_sc_Seq$();
+  var dependencies = $as_sc_Seq(standardDeps.$$plus$plus__sc_GenTraversableOnce__scg_CanBuildFrom__O(jsx$27, this$55.ReusableCBFInstance$2));
+  var this$59 = new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$56.module$1, this$56.version$1, dependencies, this$56.configurations$1, this$56.parent$1, this$56.dependencyManagement$1, this$56.properties$1, this$56.profiles$1, this$56.versions$1, this$56.snapshotVersioning$1, this$56.packagingOpt$1, this$56.relocated$1, this$56.actualVersionOpt$1, this$56.publications$1, this$56.info$1);
+  var this$57 = new $c_sc_MapLike$DefaultValuesIterable().init___sc_MapLike(depMgmt);
+  var this$58 = this$57.$$outer$3.valuesIterator__sc_Iterator().toStream__sci_Stream();
   var p$3 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$18$1) {
     return (function(x0$1$2) {
       var x0$1 = $as_T2(x0$1$2);
@@ -48687,8 +48718,8 @@ $c_Lcoursier_core_Resolution.prototype.withDependencyManagement__Lcoursier_core_
       }
     })
   })(this));
-  var dependencyManagement = this$50.filterImpl__F1__Z__sci_Stream(p$3, true);
-  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$51.module$1, this$51.version$1, this$51.dependencies$1, this$51.configurations$1, this$51.parent$1, dependencyManagement, this$51.properties$1, this$51.profiles$1, this$51.versions$1, this$51.snapshotVersioning$1, this$51.packagingOpt$1, this$51.relocated$1, this$51.actualVersionOpt$1, this$51.publications$1, this$51.info$1)
+  var dependencyManagement = this$58.filterImpl__F1__Z__sci_Stream(p$3, true);
+  return new $c_Lcoursier_core_Project().init___Lcoursier_core_Module__T__sc_Seq__sci_Map__s_Option__sc_Seq__sc_Seq__sc_Seq__s_Option__s_Option__s_Option__Z__s_Option__sc_Seq__Lcoursier_core_Info(this$59.module$1, this$59.version$1, this$59.dependencies$1, this$59.configurations$1, this$59.parent$1, dependencyManagement, this$59.properties$1, this$59.profiles$1, this$59.versions$1, this$59.snapshotVersioning$1, this$59.packagingOpt$1, this$59.relocated$1, this$59.actualVersionOpt$1, this$59.publications$1, this$59.info$1)
 });
 $c_Lcoursier_core_Resolution.prototype.nextDependenciesAndConflicts__T3 = (function() {
   return (((8 & this.bitmap$0$1) === 0) ? this.nextDependenciesAndConflicts$lzycompute__p1__T3() : this.nextDependenciesAndConflicts$1)
