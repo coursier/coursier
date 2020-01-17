@@ -23,7 +23,7 @@ object SinglePackageParams {
     // FIXME This does some I/O (not reflected in return type)
 
     def fileExtensionV(path: String): ValidatedNel[String, (Path, String)] =
-      fileV(path).withEither(_.right.flatMap { p =>
+      fileV(path).withEither(_.flatMap { p =>
         val name = p.getFileName.toString
         val idx = name.lastIndexOf('.')
         if (idx < 0)

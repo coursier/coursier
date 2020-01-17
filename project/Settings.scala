@@ -229,15 +229,7 @@ object Settings {
           case "2.12" => sbt10Version
           case _ => sbtVersion.in(pluginCrossBuild).value
         }
-      },
-      resolvers ++= Seq(
-        // Still necessary?
-        // added so that 2.12 artifacts of the other modules can be found by
-        // the too-naive-for-now inter-project resolver of the coursier sbt plugin
-        Resolver.sonatypeRepo("snapshots"),
-        // added for sbt-scripted to be fine even with ++2.11.x
-        Resolver.typesafeIvyRepo("releases")
-      )
+      }
     )
 
   def shading(namespace: String) =

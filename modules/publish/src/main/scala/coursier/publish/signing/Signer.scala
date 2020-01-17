@@ -90,7 +90,7 @@ trait Signer {
               }
             }
           } yield res
-      }.map(_.right.map { elements =>
+      }.map(_.map { elements =>
         FileSet(elements.reverse)
       })
 

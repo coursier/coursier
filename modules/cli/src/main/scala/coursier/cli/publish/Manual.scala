@@ -42,8 +42,8 @@ object Manual {
 
             val pomOrError =
               for {
-                _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
-                proj <- coursier.maven.Pom.project(xml).right
+                _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+                proj <- coursier.maven.Pom.project(xml)
               } yield proj
 
             pomOrError match {
@@ -72,7 +72,7 @@ object Manual {
     }
 
   def manualPackageFileSet(params: SinglePackageParams, metadata: MetadataParams, now: Instant): Either[PublishError.InvalidArguments, FileSet] =
-    pomModuleVersion(params, metadata, now).right.map {
+    pomModuleVersion(params, metadata, now).map {
       case (pom, org, name, ver) =>
 
         val dir = Path(org.value.split('.').toSeq ++ Seq(name.value, ver))

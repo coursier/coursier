@@ -87,7 +87,7 @@ object Launch extends CaseApp[LaunchOptions] {
           case e: ClassNotFoundException =>
             Left(new LaunchException.MainClassNotFound(mainClass, e))
           }
-      }.right
+      }
       method <- {
         try {
           val m = cls.getMethod("main", classOf[Array[String]])
@@ -97,7 +97,7 @@ object Launch extends CaseApp[LaunchOptions] {
           case e: NoSuchMethodException =>
             Left(new LaunchException.MainMethodNotFound(cls, e))
         }
-      }.right
+      }
       _ <- {
         val isStatic = Modifier.isStatic(method.getModifiers)
         if (isStatic)
@@ -212,7 +212,7 @@ object Launch extends CaseApp[LaunchOptions] {
         // to the first app dependency only if the app is specified first.
         val nameModVerOpt = dependencyArgs
           .headOption
-          .flatMap(DependencyParser.javaOrScalaDependencyParams(_).right.toOption)
+          .flatMap(DependencyParser.javaOrScalaDependencyParams(_).toOption)
           .map(_._1)
           .flatMap {
             case j: JavaOrScalaDependency.JavaDependency =>
@@ -300,10 +300,10 @@ object Launch extends CaseApp[LaunchOptions] {
 
         if (params.fork)
           launchFork(hierarchy, mainClass, userArgs, properties0, params.shared.resolve.output.verbosity)
-            .right.map(f => () => Some(f()))
+            .map(f => () => Some(f()))
         else
           launch(hierarchy, mainClass, userArgs, properties0)
-          .right.map(f => { () => f(); None })
+          .map(f => { () => f(); None })
       }
     } yield (mainClass, f)
 

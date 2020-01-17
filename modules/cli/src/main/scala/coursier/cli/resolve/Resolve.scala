@@ -312,7 +312,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           repositories,
           cache,
           actualId
-        ).right.map(_._2)
+        ).map(_._2)
         desc <- RawAppDescriptor.parse(new String(b, StandardCharsets.UTF_8))
       } yield overrideVersionOpt.fold(desc)(desc.overrideVersion)
 

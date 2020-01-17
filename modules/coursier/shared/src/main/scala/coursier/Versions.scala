@@ -31,7 +31,7 @@ import dataclass.data
         mod <- moduleOpt.toSeq
         repo <- repositories
       } yield {
-        F.map(repo.versions(mod, cache.fetch).run)(repo -> _.right.map(_._1))
+        F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
       }
     )
 
@@ -85,6 +85,6 @@ object Versions {
     results: Seq[(Repository, Either[String, coursier.core.Versions])]
   ) {
     def versions: coursier.core.Versions =
-      merge(results.flatMap(_._2.right.toSeq).toVector)
+      merge(results.flatMap(_._2.toSeq).toVector)
   }
 }

@@ -17,7 +17,6 @@ object Traverse {
               case Right(r) => Right(b += r)
             }
         }
-        .right
         .map(_.result())
 
     def validationNelTraverse[L, R](f: T => ValidationNel[L, R]): ValidationNel[L, Seq[R]] = {
@@ -42,7 +41,6 @@ object Traverse {
             case h :: t => ::(h, t)
           }
         }
-        .right
         .map(_.result())
 
       ValidationNel(e)

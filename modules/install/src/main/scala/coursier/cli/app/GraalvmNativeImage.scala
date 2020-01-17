@@ -90,7 +90,7 @@ object GraalvmNativeImage {
         }
     }
 
-    res.right.map { _ =>
+    res.map { _ =>
       if (shellPrependOptions.nonEmpty) {
         // https://stackoverflow.com/a/246128/3714539
         val launcher =

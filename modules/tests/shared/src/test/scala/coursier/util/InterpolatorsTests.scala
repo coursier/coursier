@@ -48,7 +48,7 @@ object InterpolatorsTests extends TestSuite {
     "ivy repository" - {
       * - {
         val repo = ivy"https://foo.com/a/b/c/[defaultPattern]"
-        val expectedRepo = IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").right.toOption.get
+        val expectedRepo = IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").toOption.get
         assert(repo == expectedRepo)
         assert(repo.pattern.chunks.endsWith(Pattern.default.chunks))
       }

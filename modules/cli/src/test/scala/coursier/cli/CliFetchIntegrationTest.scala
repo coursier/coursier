@@ -632,7 +632,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       // fetch with different artifact url
       Fetch.task(
@@ -663,7 +663,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
       Fetch.task(
@@ -694,7 +694,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
@@ -733,7 +733,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
@@ -808,7 +808,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
 
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
@@ -859,7 +859,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
       val params = paramsOrThrow(options)
 
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       assertThrows[Exception]({
         Fetch.task(
@@ -886,7 +886,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
       val params = paramsOrThrow(options)
 
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
@@ -914,7 +914,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
@@ -946,7 +946,7 @@ class CliFetchIntegrationTest extends FlatSpec with CliTestLib with Matchers {
       val params = paramsOrThrow(options)
 
       // encode path to different jar than requested
-      val externalUrl = encode("http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+      val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
       Fetch.task(
         params,
