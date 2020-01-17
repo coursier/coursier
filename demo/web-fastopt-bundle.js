@@ -7985,14 +7985,16 @@ function bytesToUuid(buf, offset) {
   var i = offset || 0;
   var bth = byteToHex;
   // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-  return ([bth[buf[i++]], bth[buf[i++]], 
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]]]).join('');
+  return ([
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]]
+  ]).join('');
 }
 
 module.exports = bytesToUuid;
@@ -45695,7 +45697,19 @@ $c_Lcoursier_core_Activation.prototype.fromJdk$1__p1__s_Option__Z = (function(jd
       var versions = $as_sc_Seq(x3.value$2);
       if ((!jdkVersion$1.isEmpty__Z())) {
         var arg1$2 = jdkVersion$1.get__O();
-        return versions.contains__O__Z(arg1$2)
+        var v = $as_Lcoursier_core_Version(arg1$2);
+        return versions.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, v$1) {
+          return (function(v0$2) {
+            var v0 = $as_Lcoursier_core_Version(v0$2);
+            if (((v$1 === null) ? (v0 === null) : v$1.equals__O__Z(v0))) {
+              return true
+            } else {
+              var thiz = v$1.repr$1;
+              var prefix = (v0.repr$1 + ".");
+              return (($uI(thiz.length) >= 0) && ($as_T(thiz.substring(0, $uI(prefix.length))) === prefix))
+            }
+          })
+        })(this, v)))
       } else {
         return false
       }
@@ -82977,7 +82991,7 @@ var _clockseq;
 var _lastMSecs = 0;
 var _lastNSecs = 0;
 
-// See https://github.com/broofa/node-uuid for API details
+// See https://github.com/uuidjs/uuid for API details
 function v1(options, buf, offset) {
   var i = buf && offset || 0;
   var b = buf || [];
