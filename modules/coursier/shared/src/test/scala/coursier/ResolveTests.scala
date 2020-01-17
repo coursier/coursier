@@ -19,6 +19,7 @@ object ResolveTests extends TestSuite {
     .withResolutionParams(
       ResolutionParams()
         .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+        .withJdkVersion("1.8.0_121")
     )
 
   val tests = Tests {
