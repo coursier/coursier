@@ -38,7 +38,12 @@ import dataclass.data
       case Left(itv) =>
         jdkVersion.exists(itv.contains)
       case Right(versions) =>
-        jdkVersion.exists(versions.contains)
+        // Per the Maven doc (https://maven.apache.org/guides/introduction/introduction-to-profiles.html),
+        // we should only check if the JDK version starts with any of the passed versions.
+        // We do things a little more strictly here, enforcing either the exact same JDK
+        // version, or a JDK version starting with one of the passed versions plus '.',
+        // so that '1.8' matches JDK versions '1.8' or '1.8.1', but not '1.80'…
+        jdkVersion.exists(v => versions.exists(v0 => v == v0 || v.repr.startsWith(v0.repr + ".")))
     }
 
     !isEmpty && fromProperties && fromOs && fromJdk

@@ -19,6 +19,7 @@ object ResolveTests extends TestSuite {
     .withResolutionParams(
       ResolutionParams()
         .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+        .withJdkVersion("1.8.0_121")
     )
 
   val tests = Tests {
@@ -879,6 +880,30 @@ object ResolveTests extends TestSuite {
         sys.error(s"Expected artifact with URL $expectedUrl")
       }
       assert(!woopsArtifact.optional)
+    }
+
+    "JDK profile activation" - {
+      val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
+      "JDK 1.8" - async {
+        val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
+      "JDK 11" - async {
+        val params = resolve.resolutionParams.withJdkVersion("11.0.5")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
     }
   }
 }
