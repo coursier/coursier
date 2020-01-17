@@ -880,5 +880,29 @@ object ResolveTests extends TestSuite {
       }
       assert(!woopsArtifact.optional)
     }
+
+    "JDK profile activation" - {
+      val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
+      "JDK 1.8" - async {
+        val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
+      "JDK 11" - async {
+        val params = resolve.resolutionParams.withJdkVersion("11.0.5")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
+    }
   }
 }
