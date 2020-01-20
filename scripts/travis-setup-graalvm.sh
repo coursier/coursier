@@ -1,28 +1,37 @@
-export JABBA_HOME="$HOME/.jabba" GRAALVM_JDK="graalvm@19.0.2"
+export JABBA_HOME="$HOME/.jabba"
+
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-  # doesn't work yet (even locally)
 
-  choco install -y mingw windows-sdk-7.1 vcbuildtools
-  # find "/C/Program Files/Microsoft SDKs/Windows/v7.1" | sort
-  export PATH="/C/Program Files/Microsoft SDKs/Windows/v7.1/Bin/x64:/C/Program Files/Microsoft SDKs/Windows/v7.1/Bin:$PATH"
-  curl -Lo graalvm.zip https://github.com/oracle/graal/releases/download/vm-19.1.1/graalvm-ce-windows-amd64-19.1.1.zip
+  choco install -y windows-sdk-7.1 vcbuildtools kb2519277
+
+  # temporary workaround for https://github.com/oracle/graal/issues/1876
+  # (should be fixed in GraalVM 20.0)
+  cp "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/advapi32.lib" "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/stdc++.lib"
+
+  curl -Lo graalvm.zip https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-windows-amd64-19.3.1.zip
   unzip graalvm.zip
-  GRAALVM_HOME="$(pwd)/graalvm-ce-19.1.1"
+  rm -f graalvm.zip
+  JAVA_HOME="$(pwd)/graalvm-ce-java8-19.3.1"
 
-  # no JDK on Travis CI Windows, using graal's java too
-  export PATH="$GRAALVM_HOME/bin:$PATH"
-  export NATIVE_IMAGE="$GRAALVM_HOME/bin/native-image.cmd"
 else
-  curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash
-  source "$HOME/.jabba/jabba.sh"
-  "$JABBA_HOME/bin/jabba" install "$GRAALVM_JDK"
-  GRAALVM_HOME="$JABBA_HOME/jdk/$GRAALVM_JDK"
+
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    GRAALVM_HOME="$GRAALVM_HOME/Contents/Home"
+    JDK_URL="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz"
+  else
+    JDK_URL="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz"
   fi
 
-  "$GRAALVM_HOME/bin/gu" install native-image
+  curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash
+  source "$HOME/.jabba/jabba.sh"
+  "$JABBA_HOME/bin/jabba" install "graalvm@19.3.0-8=tgz+$JDK_URL"
+  JAVA_HOME="$JABBA_HOME/jdk/graalvm@19.3.0-8"
+
+  if [[ "$(uname)" == "Darwin" ]]; then
+    JAVA_HOME="$JAVA_HOME/Contents/Home"
+  fi
+
 fi
 
-export GRAALVM_HOME
+export JAVA_HOME
+export PATH="$JAVA_HOME/bin:$PATH"

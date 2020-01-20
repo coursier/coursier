@@ -3,6 +3,7 @@ plugins_(
   "com.eed3si9n"       % "sbt-assembly"             % "0.14.10",
   "com.geirsson"       % "sbt-ci-release"           % "1.5.0",
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
+  "org.scalameta"      % "sbt-mdoc"                 % "2.1.1",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.6.1",
   "com.typesafe.sbt"   % "sbt-native-packager"      % "1.6.0",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",

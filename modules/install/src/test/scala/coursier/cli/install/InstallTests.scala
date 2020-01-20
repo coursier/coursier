@@ -371,7 +371,18 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       cache,
       tmpDir,
       launcher,
-      graalvmParamsOpt = sys.env.get("GRAALVM_HOME").map(GraalvmParams(_, Nil))
+      graalvmParamsOpt = Option(System.getenv("GRAALVM_HOME"))
+        .orElse {
+          val isGraalVM = Option(System.getProperty("java.vm.name"))
+            .map(_.toLowerCase(Locale.ROOT))
+            .exists(_.contains("graal"))
+          if (isGraalVM)
+            Option(System.getenv("JAVA_HOME"))
+              .orElse(Option(System.getProperty("java.home")))
+          else
+            None
+        }
+        .map(GraalvmParams(_, Nil))
     )
 
     assert(created)

@@ -485,6 +485,32 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
 
+lazy val docs = project("docs")
+  .in(file("doc"))
+  .enablePlugins(MdocPlugin)
+  .dependsOn(coursierJvm, catsJvm)
+  .settings(
+    shared,
+    mdocIn := file("doc/docs"),
+    mdocOut := file("doc/processed-docs"),
+    mdocVariables := {
+      def extraSbt(v: String) =
+        if (v.endsWith("SNAPSHOT"))
+          """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
+        else
+          ""
+      val version0 = version.value
+      val sv = scalaVersion.value
+      Map(
+        "VERSION" -> version0,
+        "EXTRA_SBT" -> extraSbt(version0),
+        "PLUGIN_VERSION" -> sbtCoursierVersion,
+        "PLUGIN_EXTRA_SBT" -> extraSbt(sbtCoursierVersion),
+        "SCALA_VERSION" -> sv
+      )
+    }
+  )
+
 lazy val jvm = project("jvm")
   .dummy
   .aggregate(
