@@ -24,7 +24,7 @@ object Input {
     if (params.singlePackage.`package`)
       Task.fromEither(
         Manual.manualPackageFileSet(params.singlePackage, params.metadata, now)
-          .right.map(Some(_))
+          .map(Some(_))
       )
     else
       Task.point(None)

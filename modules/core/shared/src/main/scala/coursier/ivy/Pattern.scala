@@ -23,7 +23,6 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
                 ValidationNel.fromEither(
                   PropertiesPattern(alt)
                     .substituteProperties(properties)
-                    .right
                     .map(_.chunks.toVector)
                 )
               case None =>
@@ -35,7 +34,6 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
         ValidationNel.fromEither(
           PropertiesPattern(l)
             .substituteProperties(properties)
-            .right
             .map(l => Seq(Pattern.Chunk.Opt(l.chunks: _*)))
         )
 

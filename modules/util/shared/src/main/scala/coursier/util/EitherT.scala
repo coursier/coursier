@@ -4,7 +4,7 @@ final case class EitherT[F[_], L, R](run: F[Either[L, R]]) {
 
   def map[S](f: R => S)(implicit M: Monad[F]): EitherT[F, L, S] =
     EitherT(
-      M.map(run)(e => e.right.map(f))
+      M.map(run)(e => e.map(f))
     )
 
   def flatMap[S](f: R => EitherT[F, L, S])(implicit M: Monad[F]): EitherT[F, L, S] =

@@ -438,7 +438,7 @@ import dataclass.data
                     hostnameVerifierOpt,
                     logger,
                     maxRedirections
-                  ).right.toOption.flatten
+                  ).toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, currentLen, watching = true)
@@ -458,7 +458,7 @@ import dataclass.data
                     hostnameVerifierOpt,
                     logger,
                     maxRedirections
-                  ).right.toOption.flatten
+                  ).toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, len, watching = true)
@@ -772,7 +772,7 @@ import dataclass.data
         }
 
         val ((f, _), res) = results.head
-        res.right.flatMap { _ =>
+        res.flatMap { _ =>
           checksum match {
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs

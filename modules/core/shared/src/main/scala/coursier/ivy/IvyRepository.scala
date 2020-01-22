@@ -137,7 +137,7 @@ import dataclass._
           p.name,
           p.ext,
           Some(p.classifier).filter(_.nonEmpty)
-        )).right.toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
+        )).toSeq.toList.map(p -> _) // FIXME Validation errors are ignored
       }
 
       retainedWithUrl.map {
@@ -186,7 +186,6 @@ import dataclass._
       case Some(listingPattern) =>
         val listingUrl = listingPattern
           .substituteVariables(variables)
-          .right
           .flatMap { s =>
             if (s.endsWith("/"))
               Right(s)
@@ -256,7 +255,7 @@ import dataclass._
       for {
         url <- metadataPattern.substituteVariables(
           variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
-        ).right
+        )
       } yield {
         var artifact = artifactFor(
           url,
@@ -277,9 +276,9 @@ import dataclass._
       proj0 <- EitherT(
         F.point {
           for {
-            xml <- compatibility.xmlParseDom(ivy).right
-            _ <- (if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")).right
-            proj <- IvyXml.project(xml).right
+            xml <- compatibility.xmlParseDom(ivy)
+            _ <- (if (xml.label == "ivy-module") Right(()) else Left("Module definition not found"))
+            proj <- IvyXml.project(xml)
           } yield proj
         }
       )
@@ -340,15 +339,13 @@ object IvyRepository {
   ): Either[String, IvyRepository] =
 
     for {
-      propertiesPattern <- PropertiesPattern.parse(pattern).right
+      propertiesPattern <- PropertiesPattern.parse(pattern)
       metadataPropertiesPatternOpt <- metadataPatternOpt
-        .fold[Either[String, Option[PropertiesPattern]]](Right(None))(PropertiesPattern.parse(_).right.map(Some(_)))
-        .right
+        .fold[Either[String, Option[PropertiesPattern]]](Right(None))(PropertiesPattern.parse(_).map(Some(_)))
 
-      pattern <- propertiesPattern.substituteProperties(properties).right
+      pattern <- propertiesPattern.substituteProperties(properties)
       metadataPatternOpt <- metadataPropertiesPatternOpt
-        .fold[Either[String, Option[Pattern]]](Right(None))(_.substituteProperties(properties).right.map(Some(_)))
-        .right
+        .fold[Either[String, Option[Pattern]]](Right(None))(_.substituteProperties(properties).map(Some(_)))
 
     } yield
       IvyRepository(

@@ -2,7 +2,8 @@ package coursier
 
 import java.io.File
 
-import coursier.core.{Configuration, Extension}
+import coursier.core.{Activation, Configuration, Extension}
+import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import utest._
 
@@ -12,16 +13,23 @@ object FetchTests extends TestSuite {
 
   import TestHelpers.{ec, cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
 
+  private val fetch = Fetch()
+    .noMirrors
+    .withCache(cache)
+    .withResolutionParams(
+      ResolutionParams()
+        .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+        .withJdkVersion("1.8.0_121")
+    )
+
   val tests = Tests {
 
     'artifactTypes - {
       'default - async {
 
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .futureResult()
         }
 
@@ -32,10 +40,8 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.sources)
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .withClassifiers(classifiers)
             .futureResult()
         }
@@ -48,10 +54,8 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.sources)
         val mainArtifacts = true
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .withClassifiers(classifiers)
             .withMainArtifacts(mainArtifacts)
             .futureResult()
@@ -64,10 +68,8 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.javadoc)
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .withClassifiers(classifiers)
             .futureResult()
         }
@@ -80,10 +82,8 @@ object FetchTests extends TestSuite {
         val classifiers = Set(Classifier.javadoc)
         val mainArtifacts = true
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .withClassifiers(classifiers)
             .withMainArtifacts(mainArtifacts)
             .futureResult()
@@ -96,10 +96,8 @@ object FetchTests extends TestSuite {
 
         val classifiers = Set(Classifier.javadoc, Classifier.sources)
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withCache(cache)
             .withClassifiers(classifiers)
             .futureResult()
         }
@@ -113,10 +111,8 @@ object FetchTests extends TestSuite {
           //
 
           val res = await {
-            Fetch()
-              .noMirrors
+            fetch
               .addDependencies(dep"org.eclipse.jetty.orbit:javax.servlet:3.0.0.v201112011016")
-              .withCache(cache)
               .futureResult()
           }
 
@@ -136,11 +132,9 @@ object FetchTests extends TestSuite {
       val ivy2Local = new File(base, "http/ivy.abc.com").toURI.toASCIIString
 
       val m2Repo = MavenRepository(m2Local)
-      val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").right.get
+      val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").toOption.get
 
-      val fetch0 = Fetch()
-        .noMirrors
-        .withCache(cache)
+      val fetch0 = fetch
         .withRepositories(Seq(Repositories.central))
 
       'm2Local - async {
@@ -199,9 +193,7 @@ object FetchTests extends TestSuite {
 
     'properties - {
 
-      val fetch0 = Fetch()
-        .noMirrors
-        .withCache(cache)
+      val fetch0 = fetch
         .withRepositories(Seq(
           Repositories.central,
           mvn"http://repository.splicemachine.com/nexus/content/groups/public",
@@ -247,15 +239,14 @@ object FetchTests extends TestSuite {
         val artifactTypes = Seq(Type("info"))
 
         val res = await {
-          Fetch()
-            .noMirrors
+          fetch
+            .withCache(cacheWithHandmadeMetadata)
             .withRepositories(Seq(
               Repositories.central,
-              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").right.get
+              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
             ))
             .addDependencies(dep"test:a_2.12:1.0.0")
             .addArtifactTypes(artifactTypes: _*)
-            .withCache(cacheWithHandmadeMetadata)
             .futureResult()
         }
 
@@ -269,10 +260,8 @@ object FetchTests extends TestSuite {
     'subset - async {
 
       val res = await {
-        Fetch()
-          .noMirrors
+        fetch
           .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
-          .withCache(cache)
           .addRepositories(Repositories.jitpack)
           .futureResult()
       }

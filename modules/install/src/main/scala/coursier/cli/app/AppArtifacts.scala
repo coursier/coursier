@@ -146,7 +146,7 @@ object AppArtifacts {
         }
     }
 
-    t.right.map {
+    t.map {
       case (scalaVersion, pfVerOpt) =>
         val l = javaOrScalaDeps
           .map(pfVerOpt.fold[JavaOrScalaDependency => JavaOrScalaDependency](identity)(pfVer => _.withPlatform(pfVer)))

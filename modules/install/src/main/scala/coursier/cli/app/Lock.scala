@@ -43,7 +43,6 @@ object Lock {
             }
           }
       }
-      .right
       .map { entries =>
         Lock(entries.toSet)
       }
