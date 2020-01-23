@@ -2,6 +2,7 @@ package coursier
 
 import coursier.cache.Cache
 import coursier.core.Version
+import coursier.params.Mirror
 import coursier.util.{Sync, Task}
 import dataclass.data
 
@@ -24,16 +25,37 @@ import dataclass.data
   def versions(): F[coursier.core.Versions] =
     F.map(result())(_.versions)
 
+  def finalRepositories: F[Seq[Repository]] =
+    F.map(allMirrors) { mirrors0 =>
+      repositories
+        .map { repo =>
+          val it = mirrors0
+            .iterator
+            .flatMap(_.matches(repo).iterator)
+          if (it.hasNext)
+            it.next()
+          else
+            repo
+        }
+        .distinct
+    }
+
+  def allMirrors: F[Seq[Mirror]] =
+    F.delay(Versions.defaultMirrorConfFiles0.flatMap(_.mirrors()))
+
   def result(): F[Versions.Result] = {
 
-    val t = F.gather(
-      for {
-        mod <- moduleOpt.toSeq
-        repo <- repositories
-      } yield {
-        F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
+    val t =
+      F.bind(finalRepositories) { repositories =>
+        F.gather(
+          for {
+            mod <- moduleOpt.toSeq
+            repo <- repositories
+          } yield {
+            F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
+          }
+        )
       }
-    )
 
     val t0 = cache.loggerOpt.fold(t) { logger =>
       F.bind(F.delay(logger.init())) { _ =>
@@ -51,7 +73,8 @@ import dataclass.data
   }
 }
 
-object Versions {
+object Versions extends PlatformResolve {
+  private def defaultMirrorConfFiles0 = defaultMirrorConfFiles
 
   def apply(): Versions[Task] =
     Versions(Cache.default)
