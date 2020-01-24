@@ -4,12 +4,13 @@ import coursier.cache.Cache
 import coursier.core.Version
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
-import dataclass.data
+import dataclass._
 
 @data class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
+  @since
   mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
   mirrors: Seq[Mirror] = Nil
 )(implicit
