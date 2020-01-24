@@ -53,19 +53,7 @@ import dataclass.{data, since}
   }
 
   def finalRepositories: F[Seq[Repository]] =
-    S.map(allMirrors) { mirrors0 =>
-      repositories
-        .map { repo =>
-          val it = mirrors0
-            .iterator
-            .flatMap(_.matches(repo).iterator)
-          if (it.hasNext)
-            it.next()
-          else
-            repo
-        }
-        .distinct
-    }
+    S.map(allMirrors)(Mirror.replace(repositories, _))
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)

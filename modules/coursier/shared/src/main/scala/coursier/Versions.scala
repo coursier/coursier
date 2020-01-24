@@ -37,19 +37,7 @@ import dataclass.data
     F.map(result())(_.versions)
 
   def finalRepositories: F[Seq[Repository]] =
-    F.map(allMirrors) { mirrors0 =>
-      repositories
-        .map { repo =>
-          val it = mirrors0
-            .iterator
-            .flatMap(_.matches(repo).iterator)
-          if (it.hasNext)
-            it.next()
-          else
-            repo
-        }
-        .distinct
-    }
+    F.map(allMirrors)(Mirror.replace(repositories, _))
 
   private def allMirrors0 =
     mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
