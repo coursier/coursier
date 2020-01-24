@@ -2,13 +2,17 @@ package coursier
 
 import coursier.cache.Cache
 import coursier.core.Version
+import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
-import dataclass.data
+import dataclass._
 
 @data class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
-  repositories: Seq[Repository] = Resolve.defaultRepositories
+  repositories: Seq[Repository] = Resolve.defaultRepositories,
+  @since
+  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
+  mirrors: Seq[Mirror] = Nil
 )(implicit
   sync: Sync[F]
 ) {
@@ -18,22 +22,43 @@ import dataclass.data
   def addRepositories(repository: Repository*): Versions[F] =
     withRepositories(repositories ++ repository)
 
+  def noMirrors: Versions[F] =
+    withMirrors(Nil).withMirrorConfFiles(Nil)
+
+  def addMirrors(mirrors: Mirror*): Versions[F] =
+    withMirrors(this.mirrors ++ mirrors)
+
+  def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Versions[F] =
+    withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
+
   def withModule(module: Module): Versions[F] =
     withModuleOpt(Some(module))
 
   def versions(): F[coursier.core.Versions] =
     F.map(result())(_.versions)
 
+  def finalRepositories: F[Seq[Repository]] =
+    F.map(allMirrors)(Mirror.replace(repositories, _))
+
+  private def allMirrors0 =
+    mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
+
+  def allMirrors: F[Seq[Mirror]] =
+    F.delay(allMirrors0)
+
   def result(): F[Versions.Result] = {
 
-    val t = F.gather(
-      for {
-        mod <- moduleOpt.toSeq
-        repo <- repositories
-      } yield {
-        F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
+    val t =
+      F.bind(finalRepositories) { repositories =>
+        F.gather(
+          for {
+            mod <- moduleOpt.toSeq
+            repo <- repositories
+          } yield {
+            F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
+          }
+        )
       }
-    )
 
     val t0 = cache.loggerOpt.fold(t) { logger =>
       F.bind(F.delay(logger.init())) { _ =>
