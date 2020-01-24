@@ -99,7 +99,9 @@ object Mima {
 
       Seq(
         // ignore shaded-stuff related errors
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded."))
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded.")),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.Versions.apply"),
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.Versions.this")
       )
     }
   }
