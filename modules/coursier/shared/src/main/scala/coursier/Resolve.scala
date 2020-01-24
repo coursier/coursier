@@ -21,7 +21,7 @@ import dataclass.{data, since}
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles0,
+  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
   mirrors: Seq[Mirror] = Nil,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
@@ -187,7 +187,6 @@ import dataclass.{data, since}
 }
 
 object Resolve extends PlatformResolve {
-  private def defaultMirrorConfFiles0 = defaultMirrorConfFiles
 
   def apply(): Resolve[Task] =
     Resolve(Cache.default)

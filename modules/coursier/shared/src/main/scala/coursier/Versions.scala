@@ -88,6 +88,7 @@ import dataclass.data
 }
 
 object Versions {
+
   def apply(): Versions[Task] =
     Versions(Cache.default)
 
