@@ -2,14 +2,16 @@ package coursier
 
 import coursier.cache.Cache
 import coursier.core.Version
-import coursier.params.Mirror
+import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import dataclass.data
 
 @data class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
-  repositories: Seq[Repository] = Resolve.defaultRepositories
+  repositories: Seq[Repository] = Resolve.defaultRepositories,
+  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
+  mirrors: Seq[Mirror] = Nil
 )(implicit
   sync: Sync[F]
 ) {
@@ -18,6 +20,15 @@ import dataclass.data
 
   def addRepositories(repository: Repository*): Versions[F] =
     withRepositories(repositories ++ repository)
+
+  def noMirrors: Versions[F] =
+    withMirrors(Nil).withMirrorConfFiles(Nil)
+
+  def addMirrors(mirrors: Mirror*): Versions[F] =
+    withMirrors(this.mirrors ++ mirrors)
+
+  def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Versions[F] =
+    withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
 
   def withModule(module: Module): Versions[F] =
     withModuleOpt(Some(module))
@@ -40,8 +51,11 @@ import dataclass.data
         .distinct
     }
 
+  private def allMirrors0 =
+    mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
+
   def allMirrors: F[Seq[Mirror]] =
-    F.delay(Versions.defaultMirrorConfFiles0.flatMap(_.mirrors()))
+    F.delay(allMirrors0)
 
   def result(): F[Versions.Result] = {
 
@@ -73,9 +87,7 @@ import dataclass.data
   }
 }
 
-object Versions extends PlatformResolve {
-  private def defaultMirrorConfFiles0 = defaultMirrorConfFiles
-
+object Versions {
   def apply(): Versions[Task] =
     Versions(Cache.default)
 
