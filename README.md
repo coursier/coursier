@@ -10,7 +10,7 @@
 
 See the [website](https://get-coursier.io) for more details.
 
-## Code of conduct
+## Code of Conduct
 
 The coursier project welcomes contributions from anybody wishing to participate.
 All code or documentation that is provided must be licensed with the same
