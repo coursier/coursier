@@ -17,9 +17,7 @@ object DependencyParser {
     defaultScalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, Dependency] =
-    dependencyParams(input, defaultScalaVersion, defaultConfiguration)
-      .right
-      .map(_._1)
+    dependencyParams(input, defaultScalaVersion, defaultConfiguration).map(_._1)
 
   def dependencies(
     inputs: Seq[String],
@@ -61,12 +59,10 @@ object DependencyParser {
     parts match {
       case Array(org, rawName, version) =>
         ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
-           .right
-           .map((_, version))
+          .map((_, version))
 
       case Array(org, "", rawName, version) =>
         ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
-          .right
           .map((_, version))
 
       case _ =>
@@ -284,10 +280,9 @@ object DependencyParser {
                 Left(s"Malformed dependency: $input")
             }
 
-            parts0.right.flatMap {
+            parts0.flatMap {
               case (org, rawName, version, config, orgNameSep, withPlatformSuffix) =>
                 ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName")
-                  .right
                   .map { mod =>
                     val dep = Dependency(
                       dummyModule,
@@ -333,11 +328,10 @@ object DependencyParser {
     defaultScalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, (Dependency, Map[String, String])] =
-    javaOrScalaDependencyParams(input, defaultConfiguration)
-      .right.map {
-        case (dep, params) =>
-          (dep.dependency(defaultScalaVersion), params)
-      }
+    javaOrScalaDependencyParams(input, defaultConfiguration).map {
+      case (dep, params) =>
+        (dep.dependency(defaultScalaVersion), params)
+    }
 
   def dependenciesParams(
     inputs: Seq[String],

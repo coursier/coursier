@@ -241,12 +241,10 @@ object PublishParams {
               if (Files.isRegularFile(default))
                 Conf.load(default)
                   .left.map(NonEmptyList.of(_))
-                  .right
                   .map(Some(_))
               else if (Files.isRegularFile(projectDefault))
                 Conf.load(projectDefault)
                   .left.map(NonEmptyList.of(_))
-                  .right
                   .map(Some(_))
               else
                 Right(None)
@@ -258,7 +256,6 @@ object PublishParams {
               if (Files.isRegularFile(p))
                 Conf.load(p)
                   .left.map(NonEmptyList.of(_))
-                  .right
                   .map(Some(_))
               else
                 Left(NonEmptyList.of(s"Conf file $c is not a file"))

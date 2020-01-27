@@ -52,7 +52,7 @@ import coursier.util.Task
       F.map(F.gather(
         completers.map {
           case (repo, c) =>
-            F.map(c.complete(input0))(e => repo -> e.right.map(_.completions))
+            F.map(c.complete(input0))(e => repo -> e.map(_.completions))
         }
       ))((input0, _))
     }
@@ -92,6 +92,6 @@ object Complete {
   ) {
     def from: Int = input.from
     def completions: Seq[String] =
-      results.flatMap(_._2.right.toSeq.flatten)
+      results.flatMap(_._2.toSeq.flatten)
   }
 }

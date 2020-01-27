@@ -120,12 +120,11 @@ package object compatibility {
 
     val content = xmlPreprocess(s)
 
-    def parse =
+    val parse =
       try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
-    parse.right
-      .map(xmlFromElem)
+    parse.map(xmlFromElem)
   }
 
   def xmlFromElem(elem: Elem): Xml.Node = {
@@ -171,8 +170,7 @@ package object compatibility {
       try Right(scala.xml.XML.loadString(content))
       catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
 
-    parse.right
-      .map(xmlFromElem)
+    parse.map(xmlFromElem)
   }
 
   def encodeURIComponent(s: String): String =

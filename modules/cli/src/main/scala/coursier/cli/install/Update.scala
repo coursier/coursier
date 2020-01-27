@@ -72,7 +72,7 @@ object Update extends CaseApp[UpdateOptions] {
         } yield {
           val e = RawAppDescriptor.parse(new String(a, StandardCharsets.UTF_8))
             .left.map(err => new AppGenerator.ErrorParsingAppDescription(path, err))
-            .right.flatMap { r =>
+            .flatMap { r =>
               r.appDescriptor
                 .toEither
                 .left.map { errors =>

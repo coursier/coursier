@@ -1165,7 +1165,11 @@ object Resolution {
       project0.dependencyManagement +: (
         profiles0.map(_.dependencyManagement) ++
         retainedParentProjects.map { p =>
-          withProperties(p.dependencyManagement, withFinalProperties(p).properties.toMap)
+          val parentProperties0 = parents(p, k => projectCache.get(k).map(_._2))
+            .toVector
+            .flatMap(_.properties)
+          val props = withFinalProperties(p.withProperties(parentProperties0 ++ p.properties)).properties.toMap
+          withProperties(p.dependencyManagement, props)
         }
       )
     )

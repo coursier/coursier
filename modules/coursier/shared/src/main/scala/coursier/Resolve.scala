@@ -21,7 +21,7 @@ import dataclass.{data, since}
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles0,
+  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
   mirrors: Seq[Mirror] = Nil,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
@@ -53,19 +53,7 @@ import dataclass.{data, since}
   }
 
   def finalRepositories: F[Seq[Repository]] =
-    S.map(allMirrors) { mirrors0 =>
-      repositories
-        .map { repo =>
-          val it = mirrors0
-            .iterator
-            .flatMap(_.matches(repo).iterator)
-          if (it.hasNext)
-            it.next()
-          else
-            repo
-        }
-        .distinct
-    }
+    S.map(allMirrors)(Mirror.replace(repositories, _))
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)
@@ -187,7 +175,6 @@ import dataclass.{data, since}
 }
 
 object Resolve extends PlatformResolve {
-  private def defaultMirrorConfFiles0 = defaultMirrorConfFiles
 
   def apply(): Resolve[Task] =
     Resolve(Cache.default)

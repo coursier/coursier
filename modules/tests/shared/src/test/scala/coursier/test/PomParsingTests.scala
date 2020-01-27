@@ -26,7 +26,7 @@ object PomParsingTests extends TestSuite {
         )
       )
 
-      val result = Pom.dependency(xmlParseDom(depNode).right.get)
+      val result = Pom.dependency(xmlParseDom(depNode).toOption.get)
 
       assert(result == expected)
     }
@@ -39,7 +39,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("profile1", None, Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -54,7 +54,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -70,7 +70,7 @@ object PomParsingTests extends TestSuite {
 
       val expected = Right(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -86,7 +86,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
       val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> None)), Nil, Nil, Map.empty))
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -104,7 +104,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
       val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> Some("yes"))), Nil, Nil, Map.empty))
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -133,7 +133,7 @@ object PomParsingTests extends TestSuite {
         Map.empty
       ))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -164,7 +164,7 @@ object PomParsingTests extends TestSuite {
         Map.empty
       ))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -187,7 +187,7 @@ object PomParsingTests extends TestSuite {
         Map("first.prop" -> "value1")
       ))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -210,7 +210,7 @@ object PomParsingTests extends TestSuite {
         Map("first.prop" -> "value1")
       ))
 
-      val result = Pom.profile(xmlParseDom(profileNode).right.get)
+      val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
@@ -251,7 +251,7 @@ object PomParsingTests extends TestSuite {
       val parsed = core.compatibility.xmlParseDom(properties)
       assert(parsed.isRight)
 
-      val node = parsed.right.get
+      val node = parsed.toOption.get
       assert(node.label == "properties")
 
       val children = node.children.collect { case elem if elem.isElement => elem }
@@ -259,7 +259,7 @@ object PomParsingTests extends TestSuite {
 
       assert(props0.isRight)
 
-      val props = props0.right.getOrElse(???).toMap
+      val props = props0.getOrElse(???).toMap
 
       assert(props.contains("commons.release.2.desc"))
       assert(props.contains("commons.osgi.export"))
@@ -301,7 +301,7 @@ object PomParsingTests extends TestSuite {
         )
       ))))
 
-      val result = Pom.project(xmlParseDom(profileNode).right.get)
+      val result = Pom.project(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }

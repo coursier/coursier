@@ -46,7 +46,7 @@ object Dependencies {
         modVers0
       } else
         modVers
-    }.run.map(_.right.map { modVers =>
+    }.run.map(_.map { modVers =>
       modVers.toList.map {
         case (mod, ver) =>
           coursier.Dependency(mod, ver)

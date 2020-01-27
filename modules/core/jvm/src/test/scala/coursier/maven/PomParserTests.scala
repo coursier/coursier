@@ -21,7 +21,7 @@ object PomParserTests extends TestSuite {
           |</project>""".stripMargin
       )
       assert(success.isRight)
-      val scm = success.right.get.info.scm
+      val scm = success.toOption.get.info.scm
       assert(scm.isEmpty)
     }
 
@@ -39,7 +39,7 @@ object PomParserTests extends TestSuite {
           |</project>""".stripMargin
       )
       assert(success.isRight)
-      val scm = success.right.get.info.scm
+      val scm = success.toOption.get.info.scm
       assert(scm.exists(_.url.isEmpty))
       assert(scm.exists(_.connection.isEmpty))
       assert(scm.exists(_.developerConnection.isEmpty))
@@ -62,7 +62,7 @@ object PomParserTests extends TestSuite {
           |</project>""".stripMargin
       )
       assert(success.isRight)
-      val scm = success.right.get.info.scm
+      val scm = success.toOption.get.info.scm
       assert(scm.exists(_.url.contains("https://github.com/coursier/coursier")))
       assert(scm.exists(_.connection.contains("scm:git:git@github.com:coursier/coursier.git")))
       assert(scm.exists(_.developerConnection.contains("foo")))

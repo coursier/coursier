@@ -7,7 +7,7 @@ import coursier.parse.RepositoryParser
 
 abstract class PlatformResolve {
 
-  protected def defaultMirrorConfFiles = {
+  def defaultMirrorConfFiles: Seq[MirrorConfFile] = {
     val files = Seq(coursier.paths.Mirror.defaultConfigFile()) ++
       Option(coursier.paths.Mirror.extraConfigFile()).toSeq
     files.map { f =>

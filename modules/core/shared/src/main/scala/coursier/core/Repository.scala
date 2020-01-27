@@ -145,7 +145,6 @@ object Repository {
       val check =
         F.map(org(orgInput)) { res =>
           res
-            .right
             .toOption
             .exists { res =>
               res.completions.contains(orgInput.input) ||
@@ -169,7 +168,6 @@ object Repository {
     private def hasName(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Boolean] =
       F.map(name(nameInput)) { res =>
         res
-          .right
           .toOption
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }

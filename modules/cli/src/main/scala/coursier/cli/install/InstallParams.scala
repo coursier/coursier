@@ -86,7 +86,7 @@ object InstallParams {
     val addChannelsV = options.addChannel.traverse { s =>
       val e = Channel.parse(s)
         .left.map(NonEmptyList.one)
-        .right.map(c => (s, c))
+        .map(c => (s, c))
       Validated.fromEither(e)
     }
 

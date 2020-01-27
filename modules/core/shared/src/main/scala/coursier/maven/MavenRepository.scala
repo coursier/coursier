@@ -73,9 +73,9 @@ object MavenRepository {
 
   private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
     for {
-      xml <- compatibility.xmlParseDom(str).right
-      _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found")).right
-      proj <- Pom.project(xml).right
+      xml <- compatibility.xmlParseDom(str)
+      _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+      proj <- Pom.project(xml)
     } yield proj
 
 
@@ -246,7 +246,7 @@ object MavenRepository {
           }
         }
 
-      EitherT(F.point(res.right.map((_, listingUrl))))
+      EitherT(F.point(res.map((_, listingUrl))))
     }
   }
 
@@ -261,10 +261,10 @@ object MavenRepository {
       val artifact = versionsArtifact(module)
       F.map(fetch(artifact).run) { eitherStr =>
         for {
-          str <- eitherStr.right
-          xml <- compatibility.xmlParseDom(str).right
-          _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
-          versions <- Pom.versions(xml).right
+          str <- eitherStr
+          xml <- compatibility.xmlParseDom(str)
+          _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+          versions <- Pom.versions(xml)
         } yield (versions, artifact.url)
       }
     }
@@ -288,10 +288,10 @@ object MavenRepository {
         case Some(artifact) =>
           F.map(fetch(artifact).run) { eitherStr =>
             for {
-              str <- eitherStr.right
-              xml <- compatibility.xmlParseDom(str).right
-              _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found")).right
-              snapshotVersioning <- Pom.snapshotVersioning(xml).right
+              str <- eitherStr
+              xml <- compatibility.xmlParseDom(str)
+              _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+              snapshotVersioning <- Pom.snapshotVersioning(xml)
             } yield snapshotVersioning
           }
       }
@@ -336,7 +336,7 @@ object MavenRepository {
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.right.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
+      F.map(res)(_.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =
@@ -423,10 +423,9 @@ object MavenRepository {
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      val artifact0 = artifact.withExtra(
+      artifact.withExtra(
         artifact.extra + ("metadata" -> metadataArtifact)
       )
-      (publication, artifact0)
     }
 
     lazy val defaultPublications = {
@@ -480,16 +479,25 @@ object MavenRepository {
             else
               type0
 
+          val optional = dependency.publication.isEmpty
+
           Publication(
             name,
             tpe,
             ext,
             classifier
-          )
+          ) -> optional
       }
 
-      (packagingPublicationOpt.toSeq ++ extraPubs)
-        .distinct
+      val allPubs = packagingPublicationOpt.map(_ -> true).toSeq ++ extraPubs
+      val optional = allPubs
+        .groupBy(_._1)
+        .mapValues(_.map(_._2).forall(identity))
+        .iterator
+        .toMap
+      allPubs.map(_._1).distinct.map { pub =>
+        (pub, optional(pub))
+      }
     }
 
     overrideClassifiers
@@ -510,12 +518,16 @@ object MavenRepository {
                 tpe,
                 ext,
                 classifier
-              )
+              ) -> true
             )
           }
         }
       }
-      .map(artifactWithExtra)
+      .map {
+        case (pub, opt) =>
+          val a = artifactWithExtra(pub).withOptional(opt)
+          (pub, a)
+      }
   }
 
   def artifacts(

@@ -30,7 +30,7 @@ object ModuleParser {
         Left(s"malformed module: $s")
     }
 
-    values.right.flatMap {
+    values.flatMap {
       case (org, rawName, scalaFullVerOpt) =>
 
         val splitName = rawName.split(';')
@@ -67,7 +67,7 @@ object ModuleParser {
     * `defaultScalaVersion` is `"2.11.x"`, org::name is equivalent to org:name_2.11.
     */
   def module(s: String, defaultScalaVersion: String): Either[String, Module] =
-    javaOrScalaModule(s).right.map(_.module(defaultScalaVersion))
+    javaOrScalaModule(s).map(_.module(defaultScalaVersion))
 
 
   def javaOrScalaModules(

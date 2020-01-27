@@ -22,8 +22,7 @@ abstract class Rule extends Product with Serializable {
           case RuleResolution.Warn =>
             Right(Left(c))
           case RuleResolution.TryResolve =>
-            tryResolve(res, c)
-              .right.map(r => Right(Some(r)))
+            tryResolve(res, c).map(r => Right(Some(r)))
         }
     }
 

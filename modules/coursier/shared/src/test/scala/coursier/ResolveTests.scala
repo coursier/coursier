@@ -19,6 +19,7 @@ object ResolveTests extends TestSuite {
     .withResolutionParams(
       ResolutionParams()
         .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+        .withJdkVersion("1.8.0_121")
     )
 
   val tests = Tests {
@@ -863,6 +864,56 @@ object ResolveTests extends TestSuite {
       )
 
       assert(urls == expectedUrls)
+    }
+
+    "Artifacts with classifier are non optional" - async {
+      val dep = dep"io.netty:netty-transport-native-epoll:4.1.44.Final,classifier=woops"
+      val res = await {
+        resolve.addDependencies(dep).future()
+      }
+
+      await(validateDependencies(res))
+
+      val artifacts = res.dependencyArtifacts()
+      val expectedUrl = "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
+      val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
+        sys.error(s"Expected artifact with URL $expectedUrl")
+      }
+      assert(!woopsArtifact.optional)
+    }
+
+    "JDK profile activation" - {
+      val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
+      "JDK 1.8" - async {
+        val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
+      "JDK 11" - async {
+        val params = resolve.resolutionParams.withJdkVersion("11.0.5")
+        val res = await {
+          resolve
+            .withResolutionParams(params)
+            .addDependencies(dep)
+            .future()
+        }
+        await(validateDependencies(res, params))
+      }
+    }
+
+    "parent properties of import scope dependency" - async {
+      val res = await {
+        resolve
+          .addDependencies(dep"com.yahoo.athenz:athenz-zts-java-client-core:1.8.43")
+          .addRepositories(mvn"https://yahoo.bintray.com/maven")
+          .future()
+      }
+      await(validateDependencies(res))
     }
   }
 }
