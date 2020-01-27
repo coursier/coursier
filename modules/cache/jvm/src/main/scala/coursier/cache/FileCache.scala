@@ -233,8 +233,7 @@ import dataclass.data
       }
     }
 
-    def shouldDownload(file: File, url: String): EitherT[F, ArtifactError, Boolean] = {
-
+    def shouldDownload(file: File, url: String, checkRemote: Boolean): EitherT[F, ArtifactError, Boolean] = {
       val errFile0 = errFile(file)
 
       def checkErrFile: EitherT[F, ArtifactError, Unit] =
@@ -286,7 +285,9 @@ import dataclass.data
               S.bind(checkNeeded) {
                 case false =>
                   S.point(Right(false))
-                case true =>
+                case true if !checkRemote =>
+                  S.point(Right(true))
+                case true if checkRemote =>
                   S.bind(check.run) {
                     case Right(false) =>
                       S.schedule(pool) {
@@ -587,7 +588,7 @@ import dataclass.data
             // )
             checkFileExists(file, url)
           } else {
-            def update = shouldDownload(file, url).flatMap {
+            def update = shouldDownload(file, url, checkRemote = true).flatMap {
               case true =>
                 remoteKeepErrors(file, url, keepHeaderChecksums)
               case false =>
@@ -603,7 +604,7 @@ import dataclass.data
                 }
               case CachePolicy.LocalOnlyIfValid =>
                 checkFileExists(file, url, log = false).flatMap { _ =>
-                  shouldDownload(file, url).flatMap {
+                  shouldDownload(file, url, checkRemote = false).flatMap {
                     case true =>
                       EitherT[F, ArtifactError, Unit](S.point(Left(new ArtifactError.FileTooOldOrNotFound(file.toString))))
                     case false =>
