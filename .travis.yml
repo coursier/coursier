@@ -73,7 +73,7 @@ jobs:
       os: windows
       language: bash
       before_script: source scripts/travis-setup-graalvm.sh
-      script: scripts/windows-native-image.bat
+      script: gpg --version && amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
     - stage: update-brew-formula
       script: scripts/update-brew-formula.sh
     - stage: update-website

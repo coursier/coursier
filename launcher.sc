@@ -176,6 +176,16 @@ def uploadAssembly(): Unit = {
 }
 
 @main
+def signDummyFiles(): Unit =
+  Sign(
+    Seq(
+      "build.sbt" -> "build.sbt"
+    ),
+    pgpPassphrase = pgpPassphrase,
+    pgpSecret = pgpSecret
+  )
+
+@main
 def uploadNativeImage(): Unit = {
   val token = if (dryRun) "" else ghToken()
   val initialLauncher0 = initialLauncher(None, None)
@@ -206,9 +216,16 @@ def uploadNativeImage(): Unit = {
     case other => ???
   }
 
+  val extension = Util.os match {
+    case "win" => ".exe"
+    case _ => ""
+  }
+
+  val actualDest = dest + extension
+
   val generatedFiles = Sign(
     Seq(
-      dest -> s"cs-$platformSuffix"
+      actualDest -> s"cs-$platformSuffix$extension"
     ),
     pgpPassphrase = pgpPassphrase,
     pgpSecret = pgpSecret

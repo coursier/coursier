@@ -177,6 +177,20 @@ def withTmpDir[T](prefix: String)(f: Path => T): T = {
   }
 }
 
+def withTmpFile[T](prefix: String, suffix: String, content: Array[Byte])(f: Path => T): T = {
+  var tmpFile: Path = null
+  try {
+    tmpFile = Files.createTempFile(prefix, suffix)
+    Files.write(tmpFile, content)
+    f(tmpFile)
+  } finally {
+    if (tmpFile != null) {
+      System.err.println(s"Deleting $tmpFile")
+      Files.deleteIfExists(tmpFile)
+    }
+  }
+}
+
 private def deleteRecursively(p: Path): Unit = {
   if (Files.isDirectory(p))
     p.toFile

@@ -27,21 +27,38 @@ def nativeImage(
 
   val cp = Util.output(cpCmd).trim
 
-  val cmd = Seq(
-    coursierLauncher,
-    "launch",
-    "org.graalvm.nativeimage:svm-driver:19.3.1",
-    "--",
-    "-cp", cp,
-    mainClass,
-    output
-  )
+  def run(extraNativeImageOpts: String*): Unit = {
 
-  val mem =
-    if (Util.os == "linux") "4g"
-    else "3g"
+    val cmd = Seq(
+      coursierLauncher,
+      "launch",
+      "org.graalvm.nativeimage:svm-driver:19.3.1",
+      "--",
+      "-cp", cp
+    ) ++ extraNativeImageOpts ++ Seq(
+      mainClass,
+      output
+    )
 
-  Util.run(cmd, Seq("JAVA_OPTS" -> s"-Xmx$mem"))
+    System.err.println("Running " + cmd.mkString(" "))
+
+    val mem =
+      if (Util.os == "linux") "4g"
+      else "3g"
+
+    Util.run(cmd, Seq("JAVA_OPTS" -> s"-Xmx$mem"))
+  }
+
+  if (Util.os == "win") {
+    // getting weird TLS-related linking errors without this
+    val javaSecurityOverrides =
+      """security.provider.3=what.we.put.here.doesnt.matter.ButThisHasToBeOverridden
+        |""".stripMargin.getBytes
+    Util.withTmpFile("java.security.overrides-", ".properties", javaSecurityOverrides) { path =>
+      run(s"-J-Djava.security.properties=$path")
+    }
+  } else
+    run()
 }
 
 /**

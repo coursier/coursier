@@ -161,12 +161,11 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.cache.shaded"),
-    shadeNamespaces ++= Set("org.fusesource", "org.jline"),
     shadeNamespaces ++= Set("io.github.soc"),
     addPathsSources,
     libraryDependencies ++= Seq(
-      Deps.jansi % "shaded",
-      Deps.jlineTerminalJansi % "shaded"
+      Deps.svm % Provided,
+      Deps.windowsAnsi
     )
   )
   .jsSettings(
@@ -346,26 +345,6 @@ lazy val cli = project("cli")
     executableScriptName := "coursier"
   )
 
-lazy val `cli-graalvm` = project("cli-graalvm")
-  .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
-  .settings(
-    shared,
-    onlyIn("2.12"),
-    coursierPrefix,
-    assemblyMergeStrategy.in(assembly) := {
-      case x if x == "module-info.class" || x.endsWith("/module-info.class") || x.endsWith("\\module-info.class") => MergeStrategy.discard
-      case x =>
-        val oldStrategy = assemblyMergeStrategy.in(assembly).value
-        oldStrategy(x)
-    },
-    mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
-    libs ++= Seq(
-      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
-      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
-    )
-  )
-
 lazy val `cli-native_03` = project("cli-native_03")
   .disablePlugins(MimaPlugin)
   .dependsOn(cli)
@@ -529,7 +508,6 @@ lazy val jvm = project("jvm")
     publish,
     install,
     cli,
-    `cli-graalvm`,
     okhttp,
     coursierJvm,
     `cli-native_03`,
@@ -580,7 +558,6 @@ lazy val `coursier-repo` = project("coursier-repo")
     publish,
     install,
     cli,
-    `cli-graalvm`,
     scalazJvm,
     scalazJs,
     web,

@@ -1,6 +1,5 @@
 
 plugins_(
-  "com.eed3si9n"       % "sbt-assembly"             % "0.14.10",
   "com.geirsson"       % "sbt-ci-release"           % "1.5.0",
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "org.scalameta"      % "sbt-mdoc"                 % "2.1.1",
