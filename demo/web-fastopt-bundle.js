@@ -12384,7 +12384,7 @@ var $linkingInfo = {
 
   "assumingES6": false,
 
-  "linkerVersion": "0.6.31",
+  "linkerVersion": "0.6.32",
   "globalThis": this
 };
 $g["Object"]["freeze"]($linkingInfo);
@@ -22802,9 +22802,9 @@ $c_Lcoursier_web_Main$.prototype.main__AT__V = (function(args) {
   var this$16 = $as_Ljava_io_PrintStream(this$15.outVar$2.v$1);
   this$16.java$lang$JSConsoleBasedPrintStream$$printString__T__V("Initialized\n")
 });
-$c_Lcoursier_web_Main$.prototype.main = (function(arg$1) {
-  var prep0 = $asArrayOf_T(arg$1, 1);
-  return this.$$js$exported$meth$main__AT__O(prep0)
+$c_Lcoursier_web_Main$.prototype.main = (function(arg) {
+  var prep = $asArrayOf_T(arg, 1);
+  return this.$$js$exported$meth$main__AT__O(prep)
 });
 var $d_Lcoursier_web_Main$ = new $TypeData().initClass({
   Lcoursier_web_Main$: 0
@@ -33260,9 +33260,9 @@ $c_jl_StackTraceElement.prototype.hashCode__I = (function() {
   var this$2 = this.methodName$1;
   return (jsx$1 ^ $m_sjsr_RuntimeString$().hashCode__T__I(this$2))
 });
-$c_jl_StackTraceElement.prototype.setColumnNumber = (function(arg$1) {
-  var prep0 = $uI(arg$1);
-  return this.$$js$exported$meth$setColumnNumber__I__O(prep0)
+$c_jl_StackTraceElement.prototype.setColumnNumber = (function(arg) {
+  var prep = $uI(arg);
+  return this.$$js$exported$meth$setColumnNumber__I__O(prep)
 });
 $c_jl_StackTraceElement.prototype.getColumnNumber = (function() {
   return this.$$js$exported$meth$getColumnNumber__O()
@@ -33803,7 +33803,10 @@ $c_ju_regex_GroupStartMapper$GroupNode.prototype.init___I__ju_regex_GroupStartMa
   return this
 });
 $c_ju_regex_GroupStartMapper$GroupNode.prototype.propagate__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I__V = (function(matchResult, groupStartMap, start, end) {
-  groupStartMap[this.number$2] = start;
+  var value = matchResult[this.newGroup$1];
+  if ((value !== (void 0))) {
+    groupStartMap[this.number$2] = start
+  };
   this.inner$2.propagateFromStart__sjs_js_RegExp$ExecResult__sjs_js_Array__I__I(matchResult, groupStartMap, start)
 });
 $c_ju_regex_GroupStartMapper$GroupNode.prototype.setNewGroup__I__I = (function(newGroupIndex) {
