@@ -57,6 +57,14 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
   } else
     cmd
 
+// Travis CI not masking secrets automatically on its Windows workers
+private def maskSecrets(input: String): String = {
+  var s = input
+  for (secret <- Seq("GH_TOKEN", "TMP_GH_TOKEN", "PGP_PASSPHRASE", "PGP_SECRET", "SONATYPE_USERNAME", "SONATYPE_PASSWORD").flatMap(n => Option(System.getenv(n)).toSeq).flatMap(s => Seq(s, s.replaceAllLiterally("\"", "\\\""))))
+    s = s.replaceAllLiterally(secret, "****")
+  s
+}
+
 /**
  * Tries to run a command.
  *
@@ -109,7 +117,7 @@ private def run(cmd: Seq[String], fromOpt: Option[File], extraEnv: Seq[(String, 
   val p = b.start()
   val retCode = p.waitFor()
   if (retCode != 0)
-    sys.error(s"Command ${b.command.asScala.mkString(" ")} exited with return code $retCode")
+    sys.error(s"Command ${maskSecrets(b.command.asScala.mkString(" "))} exited with return code $retCode")
 }
 
 /**
@@ -140,7 +148,7 @@ def output(cmd: Seq[String]): String = {
   if (retCode == 0)
     output
   else
-    sys.error(s"Command ${cmd0.mkString("\n")} exited with return code $retCode")
+    sys.error(s"Command ${maskSecrets(cmd0.mkString("\n"))} exited with return code $retCode")
 }
 
 /**
@@ -214,7 +222,7 @@ def withBgProcess[T](
   b.inheritIO()
   b.directory(dir)
 
-  System.err.println(s"Running ${cmd.mkString(" ")}")
+  System.err.println(s"Running ${maskSecrets(cmd.mkString(" "))}")
   val p = b.start()
 
   try f
