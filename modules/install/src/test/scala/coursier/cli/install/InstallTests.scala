@@ -353,47 +353,47 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     testRun()
   }
 
-  it should "generate a native echo launcher via native-image" in withTempDir { tmpDir =>
+  // it should "generate a native echo launcher via native-image" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central"),
-        launcherType = "graalvm-native-image"
-      )
-    )
+  //   val (appDesc, descRepr) = appDescriptor(
+  //     RawAppDescriptor(
+  //       dependencies = List("io.get-coursier:echo:1.0.2"),
+  //       repositories = List("central"),
+  //       launcherType = "graalvm-native-image"
+  //     )
+  //   )
 
-    val launcher = tmpDir.resolve("echo")
+  //   val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      cache,
-      tmpDir,
-      launcher,
-      graalvmParamsOpt = Option(System.getenv("GRAALVM_HOME"))
-        .orElse {
-          val isGraalVM = Option(System.getProperty("java.vm.name"))
-            .map(_.toLowerCase(Locale.ROOT))
-            .exists(_.contains("graal"))
-          if (isGraalVM)
-            Option(System.getenv("JAVA_HOME"))
-              .orElse(Option(System.getProperty("java.home")))
-          else
-            None
-        }
-        .map(GraalvmParams(_, Nil))
-    )
+  //   val created = AppGenerator.createOrUpdate(
+  //     Some((appDesc, descRepr)),
+  //     None,
+  //     cache,
+  //     tmpDir,
+  //     launcher,
+  //     graalvmParamsOpt = Option(System.getenv("GRAALVM_HOME"))
+  //       .orElse {
+  //         val isGraalVM = Option(System.getProperty("java.vm.name"))
+  //           .map(_.toLowerCase(Locale.ROOT))
+  //           .exists(_.contains("graal"))
+  //         if (isGraalVM)
+  //           Option(System.getenv("JAVA_HOME"))
+  //             .orElse(Option(System.getProperty("java.home")))
+  //         else
+  //           None
+  //       }
+  //       .map(GraalvmParams(_, Nil))
+  //   )
 
-    assert(created)
-    assert(Files.isRegularFile(launcher))
+  //   assert(created)
+  //   assert(Files.isRegularFile(launcher))
 
-    assertNativeExecutable(launcher.toFile)
+  //   assertNativeExecutable(launcher.toFile)
 
-    val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
-    val expectedOutput = "foo"
-    assert(output == expectedOutput)
-  }
+  //   val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+  //   val expectedOutput = "foo"
+  //   assert(output == expectedOutput)
+  // }
 
   // TODO
   //   should update launcher if the app description changes (change default main class?)
