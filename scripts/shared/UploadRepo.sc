@@ -47,6 +47,12 @@ def apply(
       if (dryRun)
         System.err.println("Dummy mode, not pushing changes")
       else {
+        // rebase on latest changes just in case
+        System.err.println(s"Fetch latest changes for $branch")
+        Util.run(Seq("git", "fetch", "origin"), tmpDir0)
+        System.err.println(s"Rebasing on latest changes for $branch if needed")
+        Util.run(Seq("git", "rebase", s"origin/$branch"), tmpDir0)
+
         System.err.println("Pushing changes")
         Util.run(Seq("git", "push", "origin", branch), tmpDir0)
       }
