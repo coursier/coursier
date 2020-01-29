@@ -9,6 +9,9 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
     def candidates(name: String) =
       Iterator(name + ".bat", name + ".exe", name + ".cmd", name)
 
+    // necessary until we can benefit from https://www.oracle.com/technetwork/java/javase/8u231-relnotes-5592812.html#JDK-8221858
+    val tail = cmd.tail.map(arg => arg.replaceAllLiterally("\"", "\\\""))
+
     if (!cmd.head.contains("/") && !cmd.head.contains("\\")) {
       def pathDirectories = Option(System.getenv("PATH"))
         .getOrElse {
@@ -33,7 +36,7 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
           cmd.head
         }
 
-      fullPath +: cmd.tail
+      fullPath +: tail
     } else {
       val abs = new File(cmd.head).getAbsoluteFile
       val dir = abs.getParentFile
@@ -49,7 +52,7 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
           cmd.head
         }
 
-      fullPath +: cmd.tail
+      fullPath +: tail
     }
   } else
     cmd
