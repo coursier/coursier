@@ -43,7 +43,7 @@ def nativeImage(
     System.err.println("Running " + cmd.mkString(" "))
 
     val mem =
-      if (Util.os == "linux") "4g"
+      if (Util.os == "linux") "3584m"
       else "3g"
 
     Util.run(cmd, Seq("JAVA_OPTS" -> s"-Xmx$mem"))
