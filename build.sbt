@@ -161,25 +161,12 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.cache.shaded"),
-    shadeNamespaces ++= Set("org.fusesource", "org.jline"),
     shadeNamespaces ++= Set("io.github.soc"),
     addPathsSources,
     libraryDependencies ++= Seq(
-      Deps.jansi % "shaded",
-      Deps.jlineTerminalJansi % "shaded"
-    ),
-    packageBin.in(Compile) := {
-      // manually editing files under META-INF/services until sbt-shading does it automatically
-      val previous = packageBin.in(Compile).value
-      val new0 = new File(previous.getParentFile, s"${previous.getName.stripSuffix(".jar")}-edited.jar")
-      ZipUtil.addToZip(
-        previous,
-	new0,
-	Seq(
-	  "META-INF/services/org.jline.terminal.spi.JansiSupport" -> "coursier.cache.shaded.org.jline.terminal.spi.JansiSupport\n".getBytes("UTF-8"))
-      )
-      new0
-    }
+      Deps.svm % Provided,
+      Deps.windowsAnsi
+    )
   )
   .jsSettings(
     name := "fetch-js",
@@ -358,26 +345,6 @@ lazy val cli = project("cli")
     executableScriptName := "coursier"
   )
 
-lazy val `cli-graalvm` = project("cli-graalvm")
-  .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
-  .settings(
-    shared,
-    onlyIn("2.12"),
-    coursierPrefix,
-    assemblyMergeStrategy.in(assembly) := {
-      case x if x == "module-info.class" || x.endsWith("/module-info.class") || x.endsWith("\\module-info.class") => MergeStrategy.discard
-      case x =>
-        val oldStrategy = assemblyMergeStrategy.in(assembly).value
-        oldStrategy(x)
-    },
-    mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
-    libs ++= Seq(
-      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
-      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
-    )
-  )
-
 lazy val `cli-native_03` = project("cli-native_03")
   .disablePlugins(MimaPlugin)
   .dependsOn(cli)
@@ -497,6 +464,32 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
 
+lazy val docs = project("docs")
+  .in(file("doc"))
+  .enablePlugins(MdocPlugin)
+  .dependsOn(coursierJvm, catsJvm)
+  .settings(
+    shared,
+    mdocIn := file("doc/docs"),
+    mdocOut := file("doc/processed-docs"),
+    mdocVariables := {
+      def extraSbt(v: String) =
+        if (v.endsWith("SNAPSHOT"))
+          """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
+        else
+          ""
+      val version0 = version.value
+      val sv = scalaVersion.value
+      Map(
+        "VERSION" -> version0,
+        "EXTRA_SBT" -> extraSbt(version0),
+        "PLUGIN_VERSION" -> sbtCoursierVersion,
+        "PLUGIN_EXTRA_SBT" -> extraSbt(sbtCoursierVersion),
+        "SCALA_VERSION" -> sv
+      )
+    }
+  )
+
 lazy val jvm = project("jvm")
   .dummy
   .aggregate(
@@ -515,7 +508,6 @@ lazy val jvm = project("jvm")
     publish,
     install,
     cli,
-    `cli-graalvm`,
     okhttp,
     coursierJvm,
     `cli-native_03`,
@@ -566,7 +558,6 @@ lazy val `coursier-repo` = project("coursier-repo")
     publish,
     install,
     cli,
-    `cli-graalvm`,
     scalazJvm,
     scalazJs,
     web,
