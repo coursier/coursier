@@ -2,9 +2,6 @@ package coursier.cache.internal
 
 import java.io.{File, Writer}
 
-import org.fusesource.jansi.Ansi.{Erase, ansi}
-import org.jline.terminal.{Terminal => JLineTerminal, TerminalBuilder => JLineTerminalBuilder}
-
 import scala.util.Try
 
 object Terminal {
@@ -65,34 +62,39 @@ object Terminal {
     } else
       None
 
-  private def fromJLine(): (Int, Int) = {
-    var term: JLineTerminal = null
-    try {
-      term = JLineTerminalBuilder.terminal()
-      (term.getWidth, term.getHeight)
-    } finally {
-      if (term != null)
-        term.close()
-    }
-  }
+  private lazy val isWindows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
+
+  private def fromJLine(): Option[(Int, Int)] =
+    if (isWindows) {
+      val size = io.github.alexarchambault.windowsansi.WindowsAnsi.terminalSize()
+      Some((size.getWidth, size.getHeight))
+    } else
+      None
 
   def consoleDims(): (Int, Int) =
     consoleDimsFromTty()
-      .getOrElse(fromJLine())
+      .orElse(fromJLine())
+      .getOrElse {
+        // throw instead?
+        (80, 25)
+      }
 
   implicit class Ansi(val output: Writer) extends AnyVal {
+    private def control(n: Int, c: Char): Unit =
+      output.write("\u001b[" + n + c)
+
     /**
       * Move up `n` squares
       */
-    def up(n: Int): Unit = if (n > 0) output.write(ansi().cursorUp(n).toString)
+    def up(n: Int): Unit = if (n > 0) control(n, 'A')
     /**
       * Move down `n` squares
       */
-    def down(n: Int): Unit = if (n > 0) output.write(ansi().cursorDown(n).toString)
+    def down(n: Int): Unit = if (n > 0) control(n, 'B')
     /**
       * Move left `n` squares
       */
-    def left(n: Int): Unit = if (n > 0) output.write(ansi().cursorLeft(n).toString)
+    def left(n: Int): Unit = if (n > 0) control(n, 'D')
 
     /**
       * Clear the current line
@@ -101,14 +103,8 @@ object Terminal {
       * n=1: clear from cursor to start of line
       * n=2: clear entire line
       */
-    def clearLine(n: Int): Unit = {
-      val erase = n match {
-        case 0 => Erase.FORWARD
-        case 1 => Erase.BACKWARD
-        case _ => Erase.ALL
-      }
-      output.write(ansi().eraseLine(erase).toString)
-    }
+    def clearLine(n: Int): Unit =
+      control(n, 'K')
   }
 
 }

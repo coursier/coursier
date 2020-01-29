@@ -4,7 +4,7 @@ jdk: openjdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
 before_install:
-  - source scripts/website/setup-build-tools.sh
+  - source scripts/setup-cli-tools.sh
 script: scripts/travis.sh
 addons:
   apt:
@@ -15,20 +15,14 @@ stages:
     if: (branch = master AND type = push) AND (tag IS NOT present)
   - name: release
     if: tag IS present
-  - name: upload-launcher
+  - name: upload-jar-launchers
     if: tag IS present
-  - name: upload-launcher-gh-pages
+  - name: upload-native-launchers
     if: tag IS present
   - name: update-brew-formula
     if: tag IS present
-  - name: update-versioned-docs
-    if: tag IS present
   - name: update-website
     if: (branch = master AND type = push) OR (tag IS present)
-  - name: upload-launchers # TODO Move a bit up once this is deemed stable enough
-    if: tag IS present
-  - name: upload-launchers-to-repo
-    if: tag IS present
 jobs:
   include:
     - env: SCALA_VERSION=2.12 BOOTSTRAP=1
@@ -50,7 +44,7 @@ jobs:
       before_script: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
-      script: amm scripts/site.sc --publishLocal true
+      script: amm website.sc generate
     # - name: "Pants"
     # - before_script: pyenv global system 3.6.7
     # - # Sanity check for Pants build path.
@@ -61,56 +55,33 @@ jobs:
     - stage: release
       # publishLocal so that proguard and all compilation run before any publishing
       script: sbt +publishLocal ci-release
-    - stage: upload-launcher
-      env: REPO="coursier/coursier" NAME="coursier" CMD="./scripts/generate-launcher.sh -f --bat=true"
-      script: scripts/upload-launcher/upload-gh-release.sh
-    - stage: upload-launcher-gh-pages
-      env: REPO="coursier/coursier" NAME="coursier"
-      script: scripts/upload-launcher/upload-gh-pages.sh
+    - stage: upload-jar-launchers
+      script: amm launcher.sc uploadAllJars
+    - stage: upload-native-launchers
+      name: "Push Linux native image"
+      before_script: source scripts/travis-setup-graalvm.sh
+      script: amm launcher.sc uploadNativeImage
+    - stage: upload-native-launchers
+      name: "Push mac native image"
+      os: osx
+      osx_image: xcode9.4
+      jdk: openjdk9
+      before_script: source scripts/travis-setup-graalvm.sh
+      script: amm launcher.sc uploadNativeImage
+    - stage: upload-native-launchers
+      name: "Push Windows native image"
+      os: windows
+      language: bash
+      before_script: source scripts/travis-setup-graalvm.sh
+      script: gpg --version && amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
     - stage: update-brew-formula
-      env: REPO="coursier/coursier" FORMULA_REPO="coursier/homebrew-formulas" NAME=coursier TEMPLATE=scripts/coursier.rb.template
-      script: scripts/upload-launcher/update-brew-formula.sh
-    - stage: update-versioned-docs
-      env: WEBSITE_DIR=doc/website VERSIONED_DOCS_REPO=coursier/versioned-docs
-      script:
-        - amm scripts/site.sc --publishLocal true --npmInstall true --yarnRunBuild true
-        - scripts/website/versioned-docs.sh --update
+      script: scripts/update-brew-formula.sh
     - stage: update-website
-      env: WEBSITE_DIR=doc/website REPO=coursier/coursier VERSIONED_DOCS_REPO=coursier/versioned-docs
       name: "Push website"
       script:
         - npm install
         - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
-        - scripts/website/versioned-docs.sh
-        - amm scripts/site.sc --publishLocal true --npmInstall true --yarnRunBuild true --relativize true
-        - scripts/copy-demo.sh
-        - scripts/website/push-website.sh
-    - stage: upload-launchers
-      name: "Push assembly"
-      script: scripts/travis-assembly.sh
-    - stage: upload-launchers
-      name: "Push Linux graalvm launcher"
-      env: LAUNCHER_OS=x86_64-pc-linux
-      script: scripts/travis-native-image.sh
-    - stage: upload-launchers
-      name: "Push OS X graalvm launcher"
-      env: LAUNCHER_OS=x86_64-apple-darwin # vaguely like llvm target triple
-      os: osx
-      osx_image: xcode9.4
-      jdk: openjdk9
-      before_install:
-        - brew update
-        - brew install jq
-      script: scripts/travis-native-image.sh
-    - stage: upload-launchers
-      name: "Push Windows jlink launcher"
-      env: LAUNCHER_OS=x86_64-pc-win32
-      os: windows
-      language: bash
-      script: scripts/travis-jlink.sh
-    - stage: upload-launchers-to-repo
-      env: LAUNCHER_REPO="coursier/launchers" LAUNCHER_BRANCH="master" REPO="coursier/coursier" NAME="coursier coursier.asc coursier.bat coursier.bat.asc coursier.jar coursier.jar.asc cs-x86_64-apple-darwin cs-x86_64-apple-darwin.asc cs-x86_64-pc-linux cs-x86_64-pc-linux.asc standalone-x86_64-pc-win32.zip standalone-x86_64-pc-win32.zip.asc" # TODO Get those via the GitHub API?
-      script: scripts/upload-launcher/upload-gh-pages.sh
+        - amm website.sc updateWebsite
 branches:
   only:
   - master

@@ -99,8 +99,8 @@ public class Util {
 
     public static boolean useAnsiOutput() {
         if (useAnsiOutput0 == null) {
-            useAnsiOutput0 = new Boolean(computeUseAnsiOutput());
+            useAnsiOutput0 = computeUseAnsiOutput();
         }
-        return useAnsiOutput0.booleanValue();
+        return useAnsiOutput0;
     }
 }

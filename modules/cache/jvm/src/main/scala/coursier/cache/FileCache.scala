@@ -161,12 +161,13 @@ import dataclass.data
             }
           } catch {
             case NonFatal(e) =>
-              Left(
-                new ArtifactError.DownloadError(
-                  s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
-                  Some(e)
-                )
+              val ex = new ArtifactError.DownloadError(
+                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
+                Some(e)
               )
+              if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+                throw ex
+              Left(ex)
           } finally {
             if (conn != null)
               CacheUrl.closeConn(conn)
@@ -1012,12 +1013,13 @@ object FileCache {
             // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
             None
           case NonFatal(e) =>
-            Some(Left(
-              new ArtifactError.DownloadError(
-                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
-                Some(e)
-              )
-            ))
+            val ex = new ArtifactError.DownloadError(
+              s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+              Some(e)
+            )
+            if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+              throw ex
+            Some(Left(ex))
         }
 
       resOpt match {
