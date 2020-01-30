@@ -60,7 +60,6 @@ private def releaseId(
         }
     } catch {
       case NonFatal(e) =>
-        System.err.println(url)
         System.err.println(resp.body)
         throw e
     }

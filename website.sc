@@ -19,24 +19,6 @@ def generate() =
   Docusaurus.generate(docusaurusDir, "docs/mdoc")
 
 @main
-def updateVersionedDocs() = {
-
-  val token = if (dryRun) "" else ghToken()
-
-  val version = Version.latestFromTravisTag
-
-  generate()
-
-  Docusaurus.getOrUpdateVersionedDocs(
-    docusaurusDir,
-    "coursier/versioned-docs",
-    ghTokenOpt = Some(token),
-    newVersionOpt = Some(version),
-    dryRun = dryRun
-  )
-}
-
-@main
 def copyDemoFiles(): Unit = {
   Util.run(Seq("sbt", "web/fastOptJS::webpack"))
   val dest = new File(docusaurusDir, "build/coursier/demo")
@@ -62,7 +44,7 @@ def updateWebsite(): Unit = {
 
   val token = if (dryRun) "" else ghToken()
 
-  val version = Version.latestFromTravisTag
+  val versionOpt = Version.latestFromTravisTagOpt
 
   generate()
 
@@ -70,7 +52,7 @@ def updateWebsite(): Unit = {
     docusaurusDir,
     "coursier/versioned-docs",
     ghTokenOpt = Some(token),
-    newVersionOpt = Some(version),
+    newVersionOpt = versionOpt,
     dryRun = dryRun
   )
 

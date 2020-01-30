@@ -36,7 +36,7 @@ jobs:
     - env: SCALA_VERSION=2.12
       sudo: required
       services: docker
-      before_script: source scripts/travis-setup-graalvm.sh
+      before_script: source scripts/shared/travis-setup-graalvm.sh
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
       script: sbt scala212 test:compile testsJVM/test
@@ -59,20 +59,20 @@ jobs:
       script: amm launcher.sc uploadAllJars
     - stage: upload-native-launchers
       name: "Push Linux native image"
-      before_script: source scripts/travis-setup-graalvm.sh
+      before_script: source scripts/shared/travis-setup-graalvm.sh
       script: amm launcher.sc uploadNativeImage
     - stage: upload-native-launchers
       name: "Push mac native image"
       os: osx
       osx_image: xcode9.4
       jdk: openjdk9
-      before_script: source scripts/travis-setup-graalvm.sh
+      before_script: source scripts/shared/travis-setup-graalvm.sh
       script: amm launcher.sc uploadNativeImage
     - stage: upload-native-launchers
       name: "Push Windows native image"
       os: windows
       language: bash
-      before_script: source scripts/travis-setup-graalvm.sh
+      before_script: source scripts/shared/travis-setup-graalvm.sh
       script: gpg --version && amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
     - stage: update-brew-formula
       script: scripts/update-brew-formula.sh
