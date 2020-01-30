@@ -8,6 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>This plugin is meant to be used in conjunction with <a href=&quot;https://github.com/sbt/sbt-pgp&quot;>sbt-pgp</a>. <a href=&quot;https://github.com/sbt/sbt-pgp&quot;>sbt-pgp</a> has a <code>checkPgpSignatures</code> command, that can validate</p>
 ">
+  <meta name="docsearch:version" content="2.0.0-RC5-6">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="sbt-pgp-coursier · Coursier">
   <meta property="og:type" content="website">
@@ -29,6 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../versions"><h3>2.0.0-RC5-6</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -187,7 +189,7 @@
          <span><p>This plugin is meant to be used in conjunction with <a href="https://github.com/sbt/sbt-pgp">sbt-pgp</a>. <a href="https://github.com/sbt/sbt-pgp">sbt-pgp</a> has a <code>checkPgpSignatures</code> command, that can validate the PGP keys of your dependencies. sbt-pgp-coursier ensures coursier is used during the resolution triggered by <code>checkPgpSignatures</code>, that downloads PGP signatures in particular.</p> <h2><a class="anchor" aria-hidden="true" id="setup"></a><a href="index.html#setup" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Setup</h2> <p>Add sbt-pgp-coursier to <code>project/plugins.sbt</code>, with</p> <pre><code class="hljs css language-scala">addSbtPlugin(<span class="hljs-string">"io.get-coursier"</span> % <span class="hljs-string">"sbt-pgp-coursier"</span> % <span class="hljs-string">"2.0.0-RC5-3"</span>)
+            </svg></a>Setup</h2> <p>Add sbt-pgp-coursier to <code>project/plugins.sbt</code>, with</p> <pre><code class="hljs css language-scala">addSbtPlugin(<span class="hljs-string">"io.get-coursier"</span> % <span class="hljs-string">"sbt-pgp-coursier"</span> % <span class="hljs-string">"2.0.0-RC5-2"</span>)
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="usage"></a><a href="index.html#usage" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>

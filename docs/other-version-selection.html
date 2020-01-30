@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Version reconciliation · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p>This page aims at describing how versions are reconciled in coursier,</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC5-6">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="Version reconciliation · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p>This page aims at describing how versions are reconciled in coursier,</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../versions"><h3>2.0.0-RC5-6</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class=""><a href="../../docs/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/other-version-selection.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">Version reconciliation</h1>
+       </header>
+       <article>
+        <div>
+         <span><p>This page aims at describing how versions are reconciled in coursier, in particular when version intervals are involved.</p> <p>Version reconciliation happens when two or more of your direct or transitive dependencies depend on different versions of the same module. Version reconciliation then either chooses one version for that module, or reports a conflict if it can't reconcile those versions.</p> <h2><a class="anchor" aria-hidden="true" id="algorithm"></a><a href="other-version-selection.html#algorithm" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Algorithm</h2> <p>Version reconciliation is handed several:</p> 
+          <ul> 
+           <li>specific versions, like <code>1.2.3</code> or <code>2.0.0-M2</code>, and / or</li> 
+           <li>version intervals, like <code>[1.0,2.0)</code> or <code>2.0+</code>.</li> 
+          </ul> <p>Here, we're going to ignore:</p> 
+          <ul> 
+           <li><code>latest.*</code> versions like <code>latest.release</code> or <code>latest.integration</code>, that are handled via different mechansims, and</li> 
+           <li>unions of intervals, like <code>[1.0,1.2),[1.3,1.4)</code>, that are currently unsupported in coursier (only the last interval is retained, all the others are discarded).</li> 
+          </ul> <p>From several specific versions and / or version intervals, version reconciliation results in either:</p> 
+          <ul> 
+           <li>a conflict if the input versions can't be reconciled, or</li> 
+           <li>a single resulting specific version, or</li> 
+           <li>a single resulting version interval.</li> 
+          </ul> <p>That output is calculated the following way:</p> 
+          <ul> 
+           <li>Take the intersection of the input intervals. If it's empty (the intervals don't overlap), there's a conflict. If there are no input intervals, assume the intersection is <code>(,)</code> (interval matching all versions).</li> 
+           <li>Then look at specific versions: 
+            <ul> 
+             <li>Ignore the specific versions below the interval.</li> 
+             <li>If there are specific versions above the interval, there's a conflict.</li> 
+             <li>If there are specific versions in the interval, take the highest as result.</li> 
+             <li>If there are no specific versions in or above the interval, take the interval as result.</li> 
+            </ul></li> 
+          </ul> <p>Note that if the result is in interval, and no other reconciliation happens down the line, the highest version in the interval ends up being selected.</p> <p>On the other hand, if the result is a specific version, that version ends up being selected. In a way, a specific version like <code>1.2</code> is loosely equivalent to an interval <code>[1.2,)</code>, except that depending on <code>1.2</code> will result in <code>1.2</code> being selected, whereas depending on <code>[1.2,)</code> will result in the highest available version &gt;= <code>1.2</code> being selected.</p> <p>To clarify, the examples below illustrate what happens in a number of cases.</p> <h2><a class="anchor" aria-hidden="true" id="examples"></a><a href="other-version-selection.html#examples" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Examples</h2> <h3><a class="anchor" aria-hidden="true" id="non-overlapping-intervals"></a><a href="other-version-selection.html#non-overlapping-intervals" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Non-overlapping intervals</h3> <p>If you depend on both <code>[1.0,2.0)</code> and <code>[3.0,4.0)</code>, there's a conflict.</p> <p>If you depend on <code>[1.0,2.0)</code>, <code>[1.5,2.5)</code>, and <code>[2.0,3.0)</code>, there's a conflict (no intersection shared by all three intervals).</p> <h3><a class="anchor" aria-hidden="true" id="specific-versions-below-interval-are-ignored"></a><a href="other-version-selection.html#specific-versions-below-interval-are-ignored" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Specific versions below interval are ignored</h3> <p>If you depend on <code>[1.0,2.0)</code> and <code>0.9</code>, <code>0.9</code> is ignored. It is assumed a version in the <code>[1.0,2.0)</code> range will be fine where <code>0.9</code> is needed.</p> <p>If you depend no <code>[1.0,3.0)</code>, <code>[2.0,4.0)</code>, and <code>1.3</code>, the intersection of the intervals is <code>[2.0,3.0)</code>, and <code>1.3</code> is ignored.</p> <h3><a class="anchor" aria-hidden="true" id="specific-versions-above-the-intervals-result-in-a-conflict"></a><a href="other-version-selection.html#specific-versions-above-the-intervals-result-in-a-conflict" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Specific versions above the intervals result in a conflict</h3> <p>If you depend on <code>[1.0,2.0)</code> and <code>2.2</code>, there's a conflict. Versions in <code>[1.0,2.0)</code> are below <code>2.2</code>, and it is assumed a version below <code>2.2</code> cannot be fine where <code>2.2</code> is needed.</p> <p>If you depend on <code>[1.0,2.0)</code>, <code>[1.4,3.0)</code>, and <code>2.1</code>, there's a conflict. The intersection of the intervals is <code>[1.4,2.0)</code>, and <code>2.1</code> is above it, which results in a conflict.</p> <h3><a class="anchor" aria-hidden="true" id="specific-versions-in-interval-are-preferred"></a><a href="other-version-selection.html#specific-versions-in-interval-are-preferred" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Specific versions in interval are preferred</h3> <p>If you depend on <code>[1.0,2.0)</code> and <code>1.4</code>, version reconciliation results in <code>1.4</code>. As there's a dependency on <code>1.4</code>, it is preferred over other versions in <code>[1.0,2.0)</code>.</p> <p>If you depend on <code>[1.0,2.0)</code>, <code>1.4</code>, and <code>1.6</code>, version reconciliation chooses <code>1.6</code>. It is assumed <code>1.6</code> is fine where <code>1.4</code> is needed, and <code>1.6</code> is in <code>[1.0,2.0)</code>.</p> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext"></div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="other-version-selection.html#algorithm">Algorithm</a></li>
+      <li><a href="other-version-selection.html#examples">Examples</a>
+       <ul class="toc-headings">
+        <li><a href="other-version-selection.html#non-overlapping-intervals">Non-overlapping intervals</a></li>
+        <li><a href="other-version-selection.html#specific-versions-below-interval-are-ignored">Specific versions below interval are ignored</a></li>
+        <li><a href="other-version-selection.html#specific-versions-above-the-intervals-result-in-a-conflict">Specific versions above the intervals result in a conflict</a></li>
+        <li><a href="other-version-selection.html#specific-versions-in-interval-are-preferred">Specific versions in interval are preferred</a></li>
+       </ul></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5><a href="../../docs/overview">Docs</a></h5>
+      <a href="../../docs/overview">Overview</a>
+      <a href="../../docs/cli-overview">Install CLI</a>
+      <a href="../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2020 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>
