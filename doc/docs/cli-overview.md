@@ -40,9 +40,8 @@ the launcher is available as an asset on the GitHub release page, e.g.
 
 ### brew
 
-Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
+Alternatively on macOS, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
 ```bash
-$ brew tap coursier/formulas
 $ brew install coursier/formulas/coursier
 ```
 
