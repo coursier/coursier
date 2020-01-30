@@ -21,3 +21,16 @@ def latestFromTravisTag: String = {
   else
     sys.error(s"TRAVIS_TAG ('$tag') doesn't start with 'v'")
 }
+
+/**
+ * Latest version according to environment variable `TRAVIS_TAG` if it is set
+ */
+def latestFromTravisTagOpt: Option[String] = {
+  val tagOpt = sys.env.get("TRAVIS_TAG")
+  tagOpt.map { tag =>
+    if (tag.startsWith("v"))
+      tag.stripPrefix("v")
+    else
+      sys.error(s"TRAVIS_TAG ('$tag') doesn't start with 'v'")
+  }
+}
