@@ -62,6 +62,7 @@ def generate(
 def getOrUpdateVersionedDocs(
   docusaurusDir: File,
   repo: String,
+  branch: String,
   ghTokenOpt: Option[String],
   newVersionOpt: Option[String],
   dryRun: Boolean
@@ -72,7 +73,7 @@ def getOrUpdateVersionedDocs(
   Util.withTmpDir("versioned-docs") { dest =>
     // FIXME The few "cp" commands make this not runnable on Windows I guess…
 
-    Util.run(Seq("git", "clone", remote, "-b", "master", dest.toString))
+    Util.run(Seq("git", "clone", remote, "-b", branch, dest.toString))
 
     val versionedDocsDir = dest.resolve("versioned_docs")
     if (Files.exists(versionedDocsDir))
@@ -107,7 +108,7 @@ def getOrUpdateVersionedDocs(
       if (dryRun)
         System.err.println(s"Would have pushed new docs to $repo")
       else
-        Util.run(Seq("git", "push", "origin", "master"), dest.toFile)
+        Util.run(Seq("git", "push", "origin", branch), dest.toFile)
     }
   }
 }

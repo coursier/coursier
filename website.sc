@@ -26,12 +26,14 @@ def copyDemoFiles(): Unit = {
 
   Files.copy(
     Paths.get("modules/web/target/scala-2.12/scalajs-bundler/main/web-fastopt-bundle.js"),
-    dest.toPath.resolve("web-fastopt-bundle.js")
+    dest.toPath.resolve("web-fastopt-bundle.js"),
+    java.nio.file.StandardCopyOption.REPLACE_EXISTING
   )
 
   Files.copy(
     Paths.get("modules/web/target/scala-2.12/classes/bundle.js"),
-    dest.toPath.resolve("bundle.js")
+    dest.toPath.resolve("bundle.js"),
+    java.nio.file.StandardCopyOption.REPLACE_EXISTING
   )
 
   val indexHtml = new String(Files.readAllBytes(Paths.get("modules/web/target/scala-2.12/classes/index.html")), "UTF-8")
@@ -51,6 +53,7 @@ def updateWebsite(): Unit = {
   Docusaurus.getOrUpdateVersionedDocs(
     docusaurusDir,
     "coursier/versioned-docs",
+    "master",
     ghTokenOpt = Some(token),
     newVersionOpt = versionOpt,
     dryRun = dryRun
