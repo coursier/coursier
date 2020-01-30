@@ -307,7 +307,7 @@ lazy val install = project("install")
 
 lazy val cli = project("cli")
   .dependsOn(bootstrap, coursierJvm, install, publish)
-  .enablePlugins(JlinkPlugin, PackPlugin)
+  .enablePlugins(PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
@@ -328,21 +328,7 @@ lazy val cli = project("cli")
         Seq()
     },
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    // not to get launchers for each sub-command in the jlink package
-    discoveredMainClasses.in(Compile) := Seq("coursier.cli.Coursier"),
-    onlyIn("2.12"),
-    jlinkIgnoreMissingDependency := JlinkIgnore.everything,
-    jlinkOptions := Seq(
-      "--no-header-files",
-      "--no-man-pages",
-      "--strip-debug",
-      "--add-modules", jlinkModules.value.mkString(","),
-      "--output", target.in(jlinkBuildImage).value.getAbsolutePath
-    ),
-    maintainer := developers.value.head.email,
-    packageName.in(Universal) := "standalone",
-    topLevelDirectory.in(Universal) := Some(s"coursier-${version.value}"),
-    executableScriptName := "coursier"
+    onlyIn("2.12")
   )
 
 lazy val `cli-native_03` = project("cli-native_03")
