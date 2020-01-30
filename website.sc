@@ -44,20 +44,30 @@ def copyDemoFiles(): Unit = {
 @main
 def updateWebsite(): Unit = {
 
+  val versionedDocsRepo = "coursier/versioned-docs"
+  val versionedDocsBranch = "master"
+
   val token = if (dryRun) "" else ghToken()
 
   val versionOpt = Version.latestFromTravisTagOpt
 
+  Docusaurus.getVersionedDocs(
+    docusaurusDir,
+    versionedDocsRepo,
+    versionedDocsBranch
+  )
+
   generate()
 
-  Docusaurus.getOrUpdateVersionedDocs(
-    docusaurusDir,
-    "coursier/versioned-docs",
-    "master",
-    ghTokenOpt = Some(token),
-    newVersionOpt = versionOpt,
-    dryRun = dryRun
-  )
+  for (v <- versionOpt)
+    Docusaurus.updateVersionedDocs(
+      docusaurusDir,
+      versionedDocsRepo,
+      versionedDocsBranch,
+      ghTokenOpt = Some(token),
+      newVersion = v,
+      dryRun = dryRun
+    )
 
   copyDemoFiles()
 

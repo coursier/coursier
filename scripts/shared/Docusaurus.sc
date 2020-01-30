@@ -55,20 +55,14 @@ def generate(
 
 /**
  * Adds versioned docs from remote repo to local docusaurus directory.
- *
- * Optionally, marks a new version and pushes the updated versioned docs
- * to the remote repo.
  */
-def getOrUpdateVersionedDocs(
+def getVersionedDocs(
   docusaurusDir: File,
   repo: String,
-  branch: String,
-  ghTokenOpt: Option[String],
-  newVersionOpt: Option[String],
-  dryRun: Boolean
+  branch: String
 ): Unit = {
 
-  val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
+  val remote = s"https://github.com/$repo.git"
 
   Util.withTmpDir("versioned-docs") { dest =>
     // FIXME The few "cp" commands make this not runnable on Windows I guess…
@@ -86,30 +80,50 @@ def getOrUpdateVersionedDocs(
     val versionsJson = dest.resolve("versions.json")
     if (Files.exists(versionsJson))
       Util.run(Seq("cp", versionsJson.toString, docusaurusDir.getAbsolutePath + "/"))
+  }
+}
 
-    for (v <- newVersionOpt) {
-      // TODO Check if v is already in versions.json
+/**
+ * Marks a new version and pushes the updated versioned docs
+ * to the remote repo.
+ */
+def updateVersionedDocs(
+  docusaurusDir: File,
+  repo: String,
+  branch: String,
+  ghTokenOpt: Option[String],
+  newVersion: String,
+  dryRun: Boolean
+): Unit = {
 
-      // FIXME We don't necessarily run on Travis CI
-      Util.run(Seq("git", "config", "user.name", "Travis-CI"), dest.toFile)
-      Util.run(Seq("git", "config", "user.email", "invalid@travis-ci.com"), dest.toFile)
+  val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
 
-      Util.run(Seq("yarn", "run", "version", v), docusaurusDir)
+  Util.withTmpDir("versioned-docs") { dest =>
+    // FIXME The few "cp" commands make this not runnable on Windows I guess…
 
-      val toCopy = docusaurusDir 
-        .listFiles()
-        .filter(_.getName.startsWith("version"))
+    Util.run(Seq("git", "clone", remote, "-b", branch, dest.toString))
 
-      if (toCopy.nonEmpty)
-        Util.run(Seq("cp", "-R") ++ toCopy.map(_.getAbsolutePath) ++ Seq(dest.toString))
+    // TODO Check if newVersion is already in versions.json
 
-      Util.run(Seq("git", "add") ++ toCopy.map(_.getName), dest.toFile)
-      Util.run(Seq("git", "commit", "-m", s"Add doc for $v"), dest.toFile)
-      if (dryRun)
-        System.err.println(s"Would have pushed new docs to $repo")
-      else
-        Util.run(Seq("git", "push", "origin", branch), dest.toFile)
-    }
+    // FIXME We don't necessarily run on Travis CI
+    Util.run(Seq("git", "config", "user.name", "Travis-CI"), dest.toFile)
+    Util.run(Seq("git", "config", "user.email", "invalid@travis-ci.com"), dest.toFile)
+
+    Util.run(Seq("yarn", "run", "version", newVersion), docusaurusDir)
+
+    val toCopy = docusaurusDir
+      .listFiles()
+      .filter(_.getName.startsWith("version"))
+
+    if (toCopy.nonEmpty)
+      Util.run(Seq("cp", "-R") ++ toCopy.map(_.getAbsolutePath) ++ Seq(dest.toString))
+
+    Util.run(Seq("git", "add") ++ toCopy.map(_.getName), dest.toFile)
+    Util.run(Seq("git", "commit", "-m", s"Add doc for $newVersion"), dest.toFile)
+    if (dryRun)
+      System.err.println(s"Would have pushed new docs to $repo")
+    else
+      Util.run(Seq("git", "push", "origin", branch), dest.toFile)
   }
 }
 
