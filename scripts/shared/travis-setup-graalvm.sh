@@ -1,5 +1,3 @@
-export JABBA_HOME="$HOME/.jabba"
-
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 
   choco install -y windows-sdk-7.1 vcbuildtools kb2519277
@@ -15,6 +13,7 @@ if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 
 else
 
+  export JABBA_HOME="$HOME/.jabba"
 
   if [[ "$(uname)" == "Darwin" ]]; then
     JDK_URL="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz"
@@ -23,9 +22,9 @@ else
   fi
 
   curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash
-  source "$HOME/.jabba/jabba.sh"
-  "$JABBA_HOME/bin/jabba" install "graalvm@19.3.0-8=tgz+$JDK_URL"
-  JAVA_HOME="$JABBA_HOME/jdk/graalvm@19.3.0-8"
+  source "$JABBA_HOME/jabba.sh"
+  "$JABBA_HOME/bin/jabba" install "graalvm@19.3.1-8=tgz+$JDK_URL"
+  JAVA_HOME="$JABBA_HOME/jdk/graalvm@19.3.1-8"
 
   if [[ "$(uname)" == "Darwin" ]]; then
     JAVA_HOME="$JAVA_HOME/Contents/Home"
