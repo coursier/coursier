@@ -26,7 +26,7 @@ def latestFromTravisTag: String = {
  * Latest version according to environment variable `TRAVIS_TAG` if it is set
  */
 def latestFromTravisTagOpt: Option[String] = {
-  val tagOpt = sys.env.get("TRAVIS_TAG")
+  val tagOpt = sys.env.get("TRAVIS_TAG").filter(_.nonEmpty)
   tagOpt.map { tag =>
     if (tag.startsWith("v"))
       tag.stripPrefix("v")
