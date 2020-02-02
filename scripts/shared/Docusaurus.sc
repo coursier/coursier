@@ -16,10 +16,12 @@ def generate(
   npmInstall: Option[Boolean] = None,
   yarnRunBuild: Boolean = true,
   watch: Boolean = false,
-  relativize: Boolean = true
+  relativize: java.lang.Boolean = null
 ): Unit = {
 
-  assert(!(watch && relativize), "Cannot specify both --watch and --relativize")
+  assert(!(watch && Option(relativize).contains(true)), "Cannot specify both --watch and --relativize")
+
+  val relativize0 = Option(relativize).fold(!watch)(b => b)
 
   val yarnRunBuildIn =
     if (yarnRunBuild)
@@ -48,7 +50,7 @@ def generate(
     Util.run(Seq("sbt", sbtMdocCommand))
     for (d <- yarnRunBuildIn)
       Util.run(Seq("yarn", "run", "build"), d)
-    if (relativize)
+    if (relativize0)
       Relativize.relativize(docusaurusDir.toPath.resolve("build"))
   }
 }

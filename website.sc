@@ -15,6 +15,17 @@ private def ghToken() = Option(System.getenv("GH_TOKEN")).getOrElse {
 private val dryRun = false
 
 @main
+def watch() = {
+  generate()
+
+  Docusaurus.generate(
+    docusaurusDir,
+    "docs/mdoc",
+    watch = true
+  )
+}
+
+@main
 def generate() =
   Docusaurus.generate(docusaurusDir, "docs/mdoc")
 
