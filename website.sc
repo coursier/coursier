@@ -16,6 +16,8 @@ private val dryRun = false
 
 @main
 def watch() = {
+
+  // generate website once so that `yarn run start` starts with a valid website
   generate()
 
   Docusaurus.generate(
