@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<h1><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;cli&quot;></a><a href=&quot;#cli&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>CLI</h1>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC5-6">
+  <meta name="docsearch:version" content="2.0.0-RC6">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Overview · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../../versions"><h3>2.0.0-RC5-6</h3></a>
+     <a href="../../../versions"><h3>2.0.0-RC6</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -194,24 +194,47 @@
            <li><a href="../../../docs/cli-fetch">fetch the artifacts</a> of one or more dependencies,</li> 
            <li><a href="../../../docs/cli-launch">run applications from dependencies</a>, and</li> 
            <li><a href="../../../docs/cli-bootstrap">generate convenient launchers to run them</a> among others.</li> 
-          </ul> <p>See below for its <a href="index.html#installation">installation</a>, <a href="index.html#usage">its basic usage</a>, and click on the links above or on the left for more details about each of its commands.</p> <h2><a class="anchor" aria-hidden="true" id="installation"></a><a href="index.html#installation" aria-hidden="true" class="hash-link">
+          </ul> <p>See below for its <a href="index.html#native-launcher">installation</a>, <a href="index.html#usage">its basic usage</a>, and click on the links above or on the left for more details about each of its commands.</p> <h2><a class="anchor" aria-hidden="true" id="native-launcher"></a><a href="index.html#native-launcher" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Installation</h2> <h3><a class="anchor" aria-hidden="true" id="curl"></a><a href="index.html#curl" aria-hidden="true" class="hash-link">
+            </svg></a>Native launcher</h2> 
+          <blockquote> 
+           <p>The commands below install the native launcher as <code>cs</code>, which can be substituted to <code>coursier</code> in the various examples on this website.</p> 
+          </blockquote> <h3><a class="anchor" aria-hidden="true" id="linux"></a><a href="index.html#linux" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>curl</h3> <p>Download and run its launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo coursier https://git.io/coursier-cli &amp;&amp;
-    chmod +x coursier &amp;&amp;
-    ./coursier --<span class="hljs-built_in">help</span>
-</code></pre> <p>The launcher itself weights only 17 kB and can be easily embedded as is in other projects. It downloads the artifacts required to launch coursier on the first run.</p> <p>The short URL <a href="https://git.io/coursier-cli">https://git.io/coursier-cli</a> redirects to <a href="https://github.com/coursier/coursier/raw/gh-pages/coursier">https://github.com/coursier/coursier/raw/gh-pages/coursier</a>. From version <code>1.0.0-RC1</code> to <code>1.1.0-M9</code>, <code>gh-pages</code> in the latter URL can be replaced by the tag of a specific version, to download the launcher of that exact version, like <a href="https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier">https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier</a>. For versions <code>1.1.0-M9</code> and later, the launcher is available as an asset on the GitHub release page, e.g. <a href="https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier">https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier</a>.</p> <h3><a class="anchor" aria-hidden="true" id="brew"></a><a href="index.html#brew" aria-hidden="true" class="hash-link">
+            </svg></a>Linux</h3> <p>On Linux, download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-linux &amp;&amp;
+    chmod +x cs &amp;&amp;
+    ./cs --<span class="hljs-built_in">help</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="macos"></a><a href="index.html#macos" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>brew</h3> <p>Alternatively on OS X, install it via homebrew, that puts the <code>coursier</code> launcher directly in your PATH,</p> <pre><code class="hljs css language-bash">$ brew tap coursier/formulas
-$ brew install coursier/formulas/coursier
+            </svg></a>macOS</h3> <p>Download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-macos &amp;&amp;
+    chmod +x cs &amp;&amp;
+    xattr -d com.apple.quarantine cs &amp;&amp;
+    ./cs --<span class="hljs-built_in">help</span>
+</code></pre> <p>Note the <code>xattr</code> command to circumvent notarization on macOS Catalina.</p> <p>Alternatively, the native launcher can be installed via <a href="https://brew.sh">homebrew</a> with</p> <pre><code class="hljs css language-bash">$ brew install coursier/formulas/coursier
+$ cs --<span class="hljs-built_in">help</span>
 </code></pre> <h3><a class="anchor" aria-hidden="true" id="windows"></a><a href="index.html#windows" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Windows</h3> <p>Install and run coursier from the current directory at the Windows prompt, with</p> <pre><code class="hljs css language-bat">&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
+            </svg></a>Windows</h3> <p>On Windows, use</p> <pre><code class="hljs css language-bash">&gt; bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe <span class="hljs-string">"%cd%\cs.exe"</span>
+&gt; .\cs --<span class="hljs-built_in">help</span>
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="jar-based-launcher"></a><a href="index.html#jar-based-launcher" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>JAR-based launcher</h2> <h3><a class="anchor" aria-hidden="true" id="linux-macos"></a><a href="index.html#linux-macos" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Linux / macOS</h3> <p>In case you run into any issue with the <a href="index.html#native-launcher">native launcher</a>, a JAR-based launcher is available.</p> <p>Download and run it with</p> <pre><code class="hljs css language-bash">$ curl -Lo coursier https://git.io/coursier-cli &amp;&amp;
+    chmod +x coursier &amp;&amp;
+    ./coursier --<span class="hljs-built_in">help</span>
+</code></pre> <p>Note that the JAR-based launcher requires Java 8 or later to run. That is, a command like <code>java -version</code> should print a version &gt;= 8.</p> <p>The JAR-based launcher weights only about 25 kB and can be easily embedded as is in other projects. It downloads the artifacts required to launch coursier on the first run.</p> <p>Alternatively, on macOS, the JAR-based launcher can be installed via <a href="https://brew.sh">homebrew</a> with</p> <pre><code class="hljs css language-bash">$ brew install coursier/formulas/coursier
+$ coursier --<span class="hljs-built_in">help</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="windows-1"></a><a href="index.html#windows-1" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Windows</h3> <p>Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with</p> <pre><code class="hljs css language-bat">&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
 &gt; bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "<span class="hljs-variable">%cd%</span>\coursier.bat"
 </code></pre> <p>You can then run coursier from the same directory, like</p> <pre><code class="hljs css language-bat">&gt; coursier resolve io.circe:circe-core_2.<span class="hljs-number">12</span>:<span class="hljs-number">0</span>.<span class="hljs-number">10</span>.<span class="hljs-number">0</span>
 </code></pre> <h3><a class="anchor" aria-hidden="true" id="arch-linux"></a><a href="index.html#arch-linux" aria-hidden="true" class="hash-link">
@@ -239,7 +262,88 @@ cp scripts/_coursier ~/.zsh/completion/
 -r https://oss.sonatype.org/content/repositories/snapshots
 -r <span class="hljs-string">"ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"</span>
 </code></pre> <p><code>central</code> and <code>ivy2local</code> correspond to Maven Central and <code>~/.ivy2/local</code>. These are used by default unless the <code>--no-default</code> option is specified.</p> <p>Repositories starting with <code>ivy:</code> are assumed to be Ivy repositories, specified with an Ivy pattern, like <code>ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]</code>. Else, a Maven repository is assumed.</p> <p>To set credentials for a repository, pass a user and password in its URL, like</p> <pre><code class="hljs css language-bash">-r https://user:pass@nexus.corp.com/content/repositories/releases
-</code></pre> </span>
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="launcher-urls"></a><a href="index.html#launcher-urls" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Launcher URLs</h2> <h3><a class="anchor" aria-hidden="true" id="latest-launchers"></a><a href="index.html#latest-launchers" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Latest launchers</h3> <p>The various <a href="https://git.io">git.io</a> shortened URLs above redirect to the latest launchers from the <a href="https://github.com/coursier/launchers">launchers repository</a>:</p> 
+          <table> 
+           <thead> 
+            <tr>
+             <th>OS</th>
+             <th>Short URL</th>
+             <th>redirects to</th>
+            </tr> 
+           </thead> 
+           <tbody> 
+            <tr>
+             <td>Linux</td>
+             <td><a href="https://git.io/coursier-cli-linux">https://git.io/coursier-cli-linux</a></td>
+             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux">https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux</a></td>
+            </tr> 
+            <tr>
+             <td>macOS</td>
+             <td><a href="https://git.io/coursier-cli-macos">https://git.io/coursier-cli-macos</a></td>
+             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin">https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin</a></td>
+            </tr> 
+            <tr>
+             <td>Windows</td>
+             <td><a href="https://git.io/coursier-cli-windows-exe">https://git.io/coursier-cli-windows-exe</a></td>
+             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe">https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe</a></td>
+            </tr> 
+            <tr>
+             <td>Any (needs JVM)</td>
+             <td><a href="https://git.io/coursier-cli">https://git.io/coursier-cli</a></td>
+             <td><a href="https://github.com/coursier/coursier/raw/gh-pages/coursier">https://github.com/coursier/coursier/raw/gh-pages/coursier</a> (gh-pages branch of coursier repository rather than launchers repository)</td>
+            </tr> 
+            <tr>
+             <td>Any (needs JVM)</td>
+             <td></td>
+             <td><a href="https://github.com/coursier/launchers/raw/master/coursier">https://github.com/coursier/launchers/raw/master/coursier</a> (same launcher as above)</td>
+            </tr> 
+           </tbody> 
+          </table> <h3><a class="anchor" aria-hidden="true" id="specific-versions"></a><a href="index.html#specific-versions" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Specific versions</h3> <p>To download specific versions of the launcher, download them from GitHub release assets:</p> 
+          <table> 
+           <thead> 
+            <tr>
+             <th>OS</th>
+             <th>URL</th>
+             <th>Since version</th>
+            </tr> 
+           </thead> 
+           <tbody> 
+            <tr>
+             <td>Linux</td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-pc-linux</a></td>
+             <td><code>2.0.0-RC3-1</code></td>
+            </tr> 
+            <tr>
+             <td>macOS</td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-apple-darwin</a></td>
+             <td><code>2.0.0-RC3-1</code></td>
+            </tr> 
+            <tr>
+             <td>Windows</td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/cs-x86_64-pc-win32.exe</a></td>
+             <td><code>2.0.0-RC6</code></td>
+            </tr> 
+            <tr>
+             <td>Any (needs JVM)</td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/coursier">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6/coursier</a></td>
+             <td><code>1.1.0-M9</code></td>
+            </tr> 
+            <tr>
+             <td>Any (needs JVM)</td>
+             <td><a href="https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier">https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier</a> (up to version <code>1.1.0-M9</code>)</td>
+             <td><em>Invalid for newest versions</em></td>
+            </tr> 
+           </tbody> 
+          </table> </span>
         </div>
        </article>
       </div>
@@ -251,16 +355,26 @@ cp scripts/_coursier ~/.zsh/completion/
     </div>
     <nav class="onPageNav">
      <ul class="toc-headings">
-      <li><a href="index.html#installation">Installation</a>
+      <li><a href="index.html#native-launcher">Native launcher</a>
        <ul class="toc-headings">
-        <li><a href="index.html#curl">curl</a></li>
-        <li><a href="index.html#brew">brew</a></li>
+        <li><a href="index.html#linux">Linux</a></li>
+        <li><a href="index.html#macos">macOS</a></li>
         <li><a href="index.html#windows">Windows</a></li>
+       </ul></li>
+      <li><a href="index.html#jar-based-launcher">JAR-based launcher</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#linux-macos">Linux / macOS</a></li>
+        <li><a href="index.html#windows-1">Windows</a></li>
         <li><a href="index.html#arch-linux">Arch Linux</a></li>
         <li><a href="index.html#freebsd">FreeBSD</a></li>
         <li><a href="index.html#zsh-completions">zsh completions</a></li>
        </ul></li>
       <li><a href="index.html#usage">Usage</a></li>
+      <li><a href="index.html#launcher-urls">Launcher URLs</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#latest-launchers">Latest launchers</a></li>
+        <li><a href="index.html#specific-versions">Specific versions</a></li>
+       </ul></li>
      </ul>
     </nav>
    </div>
