@@ -1,8 +1,8 @@
 package coursier.cli.launch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.SharedLaunchOptions
+import coursier.install.RawAppDescriptor
 
 @ArgsName("org:name:version|app-name[:version]*")
 final case class LaunchOptions(

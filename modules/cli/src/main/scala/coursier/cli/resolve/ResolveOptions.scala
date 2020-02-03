@@ -1,8 +1,8 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
+import coursier.install.RawAppDescriptor
 
 @ArgsName("org:name:version|app-name[:version]*")
 final case class ResolveOptions(

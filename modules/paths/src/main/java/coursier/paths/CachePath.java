@@ -85,6 +85,10 @@ public class CachePath {
         return new File(dir, name + ".part");
     }
 
+    public static Path lockFile(Path path) {
+        return path.getParent().resolve(path.getFileName().toString() + ".lock");
+    }
+
     public static File lockFile(File file) {
         return new File(file.getParentFile(), file.getName() + ".lock");
     }

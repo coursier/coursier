@@ -10,12 +10,12 @@ import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.{AppArtifacts, Channel, RawAppDescriptor}
 import coursier.cli.install.Install
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
+import coursier.install.{AppArtifacts, Channel, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
@@ -327,10 +327,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           System.err.println(err)
           sys.exit(1)
         case Right(res) =>
-          res.copy(
-            name = res.name
-              .orElse(Some(actualId)) // kind of meh - so that the id can be picked as default output name by bootstrap
-          )
+          res.withName(res.name.orElse(Some(actualId))) // kind of meh - so that the id can be picked as default output name by bootstrap
       }
     }
 

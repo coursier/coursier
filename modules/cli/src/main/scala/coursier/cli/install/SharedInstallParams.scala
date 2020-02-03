@@ -5,8 +5,8 @@ import java.nio.file.{Path, Paths}
 import caseapp.Tag
 import cats.data.ValidatedNel
 import coursier.cache.CacheLogger
-import coursier.cli.app.GraalvmParams
 import coursier.cli.params.OutputParams
+import coursier.install.GraalvmParams
 import coursier.params.CacheParams
 
 import scala.concurrent.duration.Duration
@@ -39,12 +39,10 @@ object SharedInstallParams {
       case None => InstallParams.defaultDir
     }
 
-    val graalvmParamsOpt =
-      options.graalvmHome
-        .orElse(sys.env.get("GRAALVM_HOME"))
-        .map { home =>
-          GraalvmParams(home, options.graalvmOption)
-        }
+    val graalvmParams = {
+      val homeOpt = options.graalvmHome.orElse(sys.env.get("GRAALVM_HOME"))
+      GraalvmParams(homeOpt, options.graalvmOption)
+    }
 
     cacheParamsV.map { cacheParams =>
       SharedInstallParams(
@@ -53,7 +51,7 @@ object SharedInstallParams {
         progressBars,
         dir,
         options.forceUpdate,
-        graalvmParamsOpt
+        Some(graalvmParams)
       )
     }
   }

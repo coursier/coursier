@@ -89,7 +89,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
       "fastparse",
       "sourcecode"
     ),
-    generatePropertyFile
+    generatePropertyFile("coursier")
   )
   .jsSettings(
     libs ++= Seq(
@@ -256,12 +256,14 @@ lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher"
     proguardedBootstrap("coursier.bootstrap.launcher.ResourcesLauncher", resourceBased = true)
   )
 
-lazy val bootstrap = project("bootstrap")
+lazy val launcher = project("launcher")
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
     coursierPrefix,
-    addBootstrapJarAsResource
+    addBootstrapJarAsResource,
+    generatePropertyFile("coursier/launcher"),
+    libs += Deps.dataClass % Provided
   )
 
 lazy val benchmark = project("benchmark")
@@ -292,13 +294,14 @@ lazy val publish = project("publish")
 
 lazy val install = project("install")
   .disablePlugins(MimaPlugin)
-  .dependsOn(bootstrap, coursierJvm)
+  .dependsOn(coursierJvm, launcher)
   .settings(
     shared,
     coursierPrefix,
     libs ++= Seq(
       Deps.argonautShapeless,
       Deps.catsCore,
+      Deps.dataClass % Provided,
       Deps.scalatest % Test
     ),
     onlyIn("2.12"),
@@ -306,7 +309,7 @@ lazy val install = project("install")
   )
 
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, install, publish)
+  .dependsOn(coursierJvm, install, launcher, publish)
   .enablePlugins(PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
@@ -331,12 +334,12 @@ lazy val cli = project("cli")
     onlyIn("2.12")
   )
 
-lazy val `cli-native_03` = project("cli-native_03")
+lazy val `launcher-native_03` = project("launcher-native_03")
   .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
+  .dependsOn(launcher % Provided)
   .settings(
     shared,
-    name := "cli-native_0.3",
+    name := "launcher-native_0.3",
     moduleName := name.value,
     onlyPublishIn("2.12"),
     coursierPrefix,
@@ -348,12 +351,12 @@ lazy val `cli-native_03` = project("cli-native_03")
     }
   )
 
-lazy val `cli-native_040M2` = project("cli-native_040M2")
+lazy val `launcher-native_040M2` = project("launcher-native_040M2")
   .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
+  .dependsOn(launcher % Provided)
   .settings(
     shared,
-    name := "cli-native_0.4.0-M2",
+    name := "launcher-native_0.4.0-M2",
     moduleName := name.value,
     onlyPublishIn("2.12"),
     coursierPrefix,
@@ -489,15 +492,15 @@ lazy val jvm = project("jvm")
     catsJvm,
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
-    bootstrap,
+    launcher,
     benchmark,
     publish,
     install,
     cli,
     okhttp,
     coursierJvm,
-    `cli-native_03`,
-    `cli-native_040M2`
+    `launcher-native_03`,
+    `launcher-native_040M2`
   )
   .settings(
     shared,
@@ -539,7 +542,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     cacheJs,
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
-    bootstrap,
+    launcher,
     benchmark,
     publish,
     install,
@@ -550,8 +553,8 @@ lazy val `coursier-repo` = project("coursier-repo")
     okhttp,
     coursierJvm,
     coursierJs,
-    `cli-native_03`,
-    `cli-native_040M2`
+    `launcher-native_03`,
+    `launcher-native_040M2`
   )
   .settings(
     shared,

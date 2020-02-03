@@ -8,11 +8,11 @@ import java.util.concurrent.ExecutorService
 import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
-import coursier.cli.app.{MainClass, RawAppDescriptor}
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.Resolution
+import coursier.install.{MainClass, RawAppDescriptor}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -185,7 +185,7 @@ object Launch extends CaseApp[LaunchOptions] {
                 m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)\n" }.mkString +
                 "\n"
             )
-          MainClass.retainedMainClassOpt(m, mainDependencyOpt) match {
+          MainClass.retainedMainClassOpt(m, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))) match {
             case Some(c) =>
               Task.point(c)
             case None =>
@@ -396,9 +396,7 @@ object Launch extends CaseApp[LaunchOptions] {
 
       if (options.json) {
         val app = res._1.app
-        val app0 = app.copy(
-          dependencies = (res._2 ++ app.dependencies).toList
-        )
+        val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
         println(RawAppDescriptor.encoder(app0).spaces2)
         sys.exit(0)
       }
