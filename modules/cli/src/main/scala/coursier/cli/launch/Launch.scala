@@ -39,6 +39,7 @@ object Launch extends CaseApp[LaunchOptions] {
     hierarchy: Seq[(Option[String], Array[File])],
     mainClass: String,
     args: Seq[String],
+    javaOptions: Seq[String],
     properties: Seq[(String, String)],
     verbosity: Int
   ): Either[LaunchException, () => Int] =
@@ -47,6 +48,7 @@ object Launch extends CaseApp[LaunchOptions] {
 
         // Read JAVA_HOME if it's set? Allow users to change that command via CLI options?
         val cmd = Seq("java") ++
+          javaOptions ++
           properties.map { case (k, v) => s"-D$k=$v" } ++
           Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
           args
@@ -299,7 +301,7 @@ object Launch extends CaseApp[LaunchOptions] {
         }
 
         if (params.fork)
-          launchFork(hierarchy, mainClass, userArgs, properties0, params.shared.resolve.output.verbosity)
+          launchFork(hierarchy, mainClass, userArgs, params.javaOptions, properties0, params.shared.resolve.output.verbosity)
             .map(f => () => Some(f()))
         else
           launch(hierarchy, mainClass, userArgs, properties0)

@@ -15,7 +15,7 @@ final case class BootstrapSpecificOptions(
     hybrid: Option[Boolean] = None,
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
-  @Help("Set Java command-line options in the generated launcher.")
+  @Help("Add Java command-line options in the generated launcher.")
   @Value("option")
   @Short("J")
     javaOpt: List[String] = Nil,
