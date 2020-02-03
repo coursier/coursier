@@ -15,6 +15,8 @@ import Aliases._
 import ScalaVersion._
 import sbt.util.FileInfo
 import scalajsbundler.Npm
+import java.io.ByteArrayOutputStream
+import java.{util => ju}
 
 object Settings {
 
@@ -111,26 +113,47 @@ object Settings {
     autoScalaLibrary := false
   )
 
-  lazy val generatePropertyFile =
+  def generatePropertyFile(dir: String) =
     resourceGenerators.in(Compile) += Def.task {
       import sys.process._
 
-      val dir = classDirectory.in(Compile).value / "coursier"
+      val log = state.value.log
+
+      val dir0 = {
+        val d = classDirectory.in(Compile).value
+        // `d / dir` might be just fine here…
+        dir.split('/').filter(_.nonEmpty).foldLeft(d)(_ / _)
+      }
       val ver = version.value
 
-      val f = dir / "coursier.properties"
-      dir.mkdirs()
+      val f = dir0 / "coursier.properties"
+      dir0.mkdirs()
 
-      val p = new java.util.Properties
+      val props = Seq(
+        "version" -> ver,
+        "commit-hash" -> Seq("git", "rev-parse", "HEAD").!!.trim
+      )
 
-      p.setProperty("version", ver)
-      p.setProperty("commit-hash", Seq("git", "rev-parse", "HEAD").!!.trim)
+      val b = props
+        .map {
+          case (k, v) =>
+            assert(!v.contains("\n"), s"Invalid ${"\\n"} character in property $k")
+            s"$k=$v"
+        }
+        .mkString("\n")
+        .getBytes(StandardCharsets.UTF_8)
 
-      val w = new java.io.FileOutputStream(f)
-      p.store(w, "Coursier properties")
-      w.close()
+      val currentContentOpt = Some(f.toPath)
+        .filter(Files.exists(_))
+        .map(p => Files.readAllBytes(p))
 
-      state.value.log.info(s"Wrote $f")
+      if (currentContentOpt.forall(b0 => !ju.Arrays.equals(b, b0))) {
+        val w = new java.io.FileOutputStream(f)
+        w.write(b)
+        w.close()
+
+        log.info(s"Wrote $f")
+      }
 
       Nil
     }
