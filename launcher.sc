@@ -191,9 +191,6 @@ def uploadNativeImage(): Unit = {
   val initialLauncher0 = initialLauncher(None, None)
   val dest = "./cs"
   val version = Version.latestFromTravisTag
-  val q = "\""
-  val projs = Seq("bootstrap", "utilJVM", "coreJVM", "cacheJVM", "coursierJVM", "install", "publish", "cli")
-  Util.run(Seq("sbt", s"""set version in ThisBuild := $q$version$q""") ++ projs.map(p => s"$p/publishLocal"))
   GenerateLauncher.nativeImage(
     initialLauncher0,
     module = s"io.get-coursier::coursier-cli:$version",
