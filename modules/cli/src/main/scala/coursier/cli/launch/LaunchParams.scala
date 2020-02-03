@@ -6,7 +6,8 @@ import coursier.cli.params.SharedLaunchParams
 final case class LaunchParams(
   shared: SharedLaunchParams,
   javaOptions: Seq[String],
-  jep: Boolean
+  jep: Boolean,
+  fetchCacheIKnowWhatImDoing: Option[String]
 ) {
   lazy val fork: Boolean =
     shared.fork.getOrElse(jep || javaOptions.nonEmpty || SharedLaunchParams.defaultFork)
@@ -21,7 +22,8 @@ object LaunchParams {
       LaunchParams(
         shared,
         options.javaOpt,
-        options.jep
+        options.jep,
+        options.fetchCacheIKnowWhatImDoing
       )
     }
   }

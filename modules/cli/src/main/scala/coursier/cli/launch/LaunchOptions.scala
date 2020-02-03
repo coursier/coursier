@@ -15,6 +15,8 @@ final case class LaunchOptions(
   @Short("J")
     javaOpt: List[String] = Nil,
 
+  fetchCacheIKnowWhatImDoing: Option[String] = None,
+
   json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
 
   jep: Boolean = false

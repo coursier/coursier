@@ -100,6 +100,97 @@ object Resolve extends CaseApp[ResolveOptions] {
     result(0)
   }
 
+
+  private[cli] def depsAndReposOrError(
+    params: ResolveParams,
+    args: Seq[String],
+    cache: Cache[Task]
+  ) = {
+    import coursier.cli.util.MonadlessEitherThrowable._
+
+    lift {
+
+      val (javaOrScalaDeps, urlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          args,
+          params.dependency.intransitiveDependencies
+        )
+      }
+
+      val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          Nil,
+          params.dependency.sbtPluginDependencies
+        )
+      }
+
+      val (scalaVersion, platformOpt, deps) = unlift {
+        AppArtifacts.dependencies(
+          cache,
+          params.repositories.repositories,
+          params.dependency.platformOpt,
+          params.output.verbosity,
+          javaOrScalaDeps,
+          constraintOpt = params.resolution.scalaVersionOpt.map { s =>
+            val reworked =
+              if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
+              else s
+            coursier.core.Parse.versionConstraint(reworked)
+          }
+        ).left.map(err => new Exception(err))
+      }
+
+      val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
+        val m0 = m.map {
+          case ((mod, v), url) =>
+            ((mod.module(scalaVersion), v), (url, true))
+        }
+        InMemoryRepository(
+          m0,
+          params.cache.cacheLocalArtifacts
+        )
+      }
+
+      val deps0 = Dependencies.addExclusions(
+        deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
+        params.dependency.exclude.map { m =>
+          val m0 = m.module(scalaVersion)
+          (m0.organization, m0.name)
+        },
+        params.dependency.perModuleExclude.map {
+          case (k, s) =>
+            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+        }
+      )
+
+      // Prepend FallbackDependenciesRepository to the repository list
+      // so that dependencies with URIs are resolved against this repo
+      val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
+
+      unlift {
+        val invalidForced = extraRepoOpt
+          .map(_.fallbacks.toSeq)
+          .getOrElse(Nil)
+          .collect {
+            case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+              (mod, version)
+          }
+        if (invalidForced.isEmpty)
+          Right(())
+        else
+          Left(
+            new ResolveException(
+              s"Cannot force a version that is different from the one specified " +
+                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+            )
+          )
+      }
+
+      (deps0, repositories, scalaVersion, platformOpt)
+    }
+  }
+
+
   // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
   def task(
     params: ResolveParams,
@@ -118,94 +209,11 @@ object Resolve extends CaseApp[ResolveOptions] {
       inMemoryCache = params.benchmark != 0 && params.benchmarkCache
     )
 
-    val depsAndReposOrError = {
-      import coursier.cli.util.MonadlessEitherThrowable._
-
-      lift {
-
-        val (javaOrScalaDeps, urlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            args,
-            params.dependency.intransitiveDependencies
-          )
-        }
-
-        val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            Nil,
-            params.dependency.sbtPluginDependencies
-          )
-        }
-
-        val (scalaVersion, platformOpt, deps) = unlift {
-          AppArtifacts.dependencies(
-            cache,
-            params.repositories.repositories,
-            params.dependency.platformOpt,
-            params.output.verbosity,
-            javaOrScalaDeps,
-            constraintOpt = params.resolution.scalaVersionOpt.map { s =>
-              val reworked =
-                if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
-                else s
-              coursier.core.Parse.versionConstraint(reworked)
-            }
-          ).left.map(err => new Exception(err))
-        }
-
-        val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
-          val m0 = m.map {
-            case ((mod, v), url) =>
-              ((mod.module(scalaVersion), v), (url, true))
-          }
-          InMemoryRepository(
-            m0,
-            params.cache.cacheLocalArtifacts
-          )
-        }
-
-        val deps0 = Dependencies.addExclusions(
-          deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
-          params.dependency.exclude.map { m =>
-            val m0 = m.module(scalaVersion)
-            (m0.organization, m0.name)
-          },
-          params.dependency.perModuleExclude.map {
-            case (k, s) =>
-              k.module(scalaVersion) -> s.map(_.module(scalaVersion))
-          }
-        )
-
-        // Prepend FallbackDependenciesRepository to the repository list
-        // so that dependencies with URIs are resolved against this repo
-        val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
-
-        unlift {
-          val invalidForced = extraRepoOpt
-            .map(_.fallbacks.toSeq)
-            .getOrElse(Nil)
-            .collect {
-              case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
-                (mod, version)
-            }
-          if (invalidForced.isEmpty)
-            Right(())
-          else
-            Left(
-              new ResolveException(
-                s"Cannot force a version that is different from the one specified " +
-                  s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
-              )
-            )
-        }
-
-        (deps0, repositories, scalaVersion, platformOpt)
-      }
-    }
+    val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
 
     lift {
 
-      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError))
+      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
         resolution = params.resolution
           .withScalaVersionOpt(params.resolution.scalaVersionOpt.map(_ => scalaVersion))
@@ -222,9 +230,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .withDependencies(deps0)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
-          .withCache(
-            cache
-          )
+          .withCache(cache)
           .transformResolution { t =>
             if (params0.benchmark == 0) t
             else benchmark(math.abs(params0.benchmark))(t)
