@@ -3,6 +3,7 @@ import java.io.File
 import java.nio.file.{Files, Path}
 
 import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
 
 private def updateCommand(cmd: Seq[String]): Seq[String] =
   if (os == "win" && cmd.nonEmpty) {
@@ -183,7 +184,12 @@ def withTmpDir[T](prefix: String)(f: Path => T): T = {
   } finally {
     if (tmpDir != null) {
       System.err.println(s"Deleting $tmpDir")
-      deleteRecursively(tmpDir)
+      try deleteRecursively(tmpDir)
+      catch {
+        case NonFatal(e) =>
+          System.err.println(s"Warning: caught $e while deleting $tmpDir, ignoring it...")
+          e.printStackTrace()
+      }
     }
   }
 }
