@@ -19,6 +19,52 @@ import dataclass.data
 
 object AppArtifacts {
 
+  // TODO Change return type to Task[Option[String]] (and don't call unsafeRun via Resolve.run())
+  def retainedMainVersion(
+    desc: AppDescriptor,
+    cache: Cache[Task],
+    verbosity: Int
+  ): Option[String] = {
+
+    // FIXME A bit of duplication with apply below
+    val platformOpt = desc.launcherType match {
+      case LauncherType.ScalaNative => Some(Platform.Native)
+      case _ => None
+    }
+
+    val (scalaVersion, _, deps) = dependencies(
+      cache,
+      desc.repositories,
+      platformOpt,
+      verbosity,
+      desc.dependencies,
+      desc.scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
+    ) match {
+      case Left(err) => throw new Exception(err)
+      case Right(t) => t
+    }
+
+    val hasFullCrossVersionDeps = desc.dependencies.exists {
+      case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
+      case _ => false
+    }
+
+    val resolutionParams = ResolutionParams()
+      .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+
+    val res = coursier.Resolve()
+      .withDependencies(deps.take(1).map(_.withTransitive(false)))
+      .withRepositories(desc.repositories)
+      .withResolutionParams(resolutionParams)
+      .withCache(cache)
+      .run()
+
+    res.retainedVersions.get(deps.head.module)
+      .flatMap(v => res.projectCache.get((deps.head.module, v)))
+      .map(_._2.version)
+  }
+
+
   // TODO Change return type to Task[AppArtifacts] (and don't call unsafeRun)
   def apply(
     desc: AppDescriptor,
@@ -26,6 +72,7 @@ object AppArtifacts {
     verbosity: Int
   ): AppArtifacts = {
 
+    // FIXME A bit of duplication with retainedMainVersion above
     val platformOpt = desc.launcherType match {
       case LauncherType.ScalaNative => Some(Platform.Native)
       case _ => None

@@ -3,11 +3,13 @@ package coursier.install
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardCopyOption}
 import java.time.Instant
+import java.util.Locale
 
 import coursier.Fetch
-import coursier.cache.Cache
+import coursier.cache.{ArtifactError, Cache}
+import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
 import coursier.launcher.{AssemblyGenerator, BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Generator, NativeImageGenerator, Parameters, Preamble, ScalaNativeGenerator}
 import coursier.launcher.internal.{FileUtil, Windows}
@@ -91,7 +93,9 @@ object AppGenerator {
     verbosity: Int = 0,
     force: Boolean = false,
     graalvmParamsOpt: Option[GraalvmParams] = None,
-    coursierRepositories: Seq[Repository] = Nil
+    coursierRepositories: Seq[Repository] = Nil,
+    platform: Option[String] = AppGenerator.platform(),
+    platformExtensions: Seq[String] = AppGenerator.platformExtensions()
   ): Boolean = {
 
     val dest0 =
@@ -121,15 +125,61 @@ object AppGenerator {
           None
       }
 
-      val appArtifacts = AppArtifacts(desc, cache, verbosity)
+      val prebuiltOpt = desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).flatMap { pattern =>
+        val version = AppArtifacts.retainedMainVersion(desc, cache, verbosity)
+          .orElse(desc.mainVersionOpt)
+          .getOrElse("")
+        val baseUrl = pattern
+          .replaceAllLiterally("${version}", version)
+          .replaceAllLiterally("${platform}", platform.getOrElse(""))
+        val urls = platformExtensions.map(ext => baseUrl + ext) ++ Seq(baseUrl)
+
+        val iterator = urls.iterator.flatMap { url =>
+          if (verbosity >= 2)
+            System.err.println(s"Checking prebuilt launcher at $url")
+          // FIXME Make this changing all the time? Allow to change that?
+          val artifact = Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
+          cache.loggerOpt.foreach(_.init())
+          val maybeFile =
+            try cache.file(artifact).run.unsafeRun()(cache.ec)
+            finally cache.loggerOpt.foreach(_.stop())
+          maybeFile match {
+            case Left(e: ArtifactError.NotFound) =>
+              if (verbosity >= 2)
+                System.err.println(s"No prebuilt launcher found at $url")
+              Iterator.empty
+            case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
+            case Right(f) =>
+              if (verbosity >= 1) {
+                val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
+                System.err.println(s"Found prebuilt launcher at $url ($size)")
+              }
+              Iterator.single((artifact, f))
+          }
+        }
+
+        if (iterator.hasNext)
+          Some(iterator.next())
+        else
+          None
+      }
+
+      val appArtifacts = prebuiltOpt match {
+        case None =>
+          AppArtifacts(desc, cache, verbosity)
+        case Some(_) =>
+          AppArtifacts()
+      }
 
       val lock0 = {
-        val artifacts = appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet)
+        val artifacts = prebuiltOpt.map(Seq(_)).getOrElse {
+          appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet)
+        }
         ArtifactsLock.ofArtifacts(artifacts)
       }
 
       val sharedLockOpt =
-        if (appArtifacts.shared.isEmpty)
+        if (appArtifacts.shared.isEmpty || prebuiltOpt.nonEmpty)
           None
         else
           Some(ArtifactsLock.ofArtifacts(appArtifacts.shared))
@@ -166,92 +216,108 @@ object AppGenerator {
 
       (tmpDest, tmpAux) =>
         if (shouldUpdate) {
-          val params = desc.launcherType match {
-            case LauncherType.DummyJar =>
-              Parameters.Bootstrap(Nil, mainClass)
-                .withPreamble(
-                  Preamble()
-                    .withJavaOpts(desc.javaOptions)
-                )
-                .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                .withDeterministic(true)
-                .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                .withExtraZipEntries(infoEntries)
 
-            case _: LauncherType.BootstrapLike =>
-              val isStandalone = desc.launcherType != LauncherType.Bootstrap
-              val sharedContentOpt =
-                if (appArtifacts.shared.isEmpty) None
-                else {
-                  val entries = appArtifacts.shared.map {
-                    case (a, f) =>
-                      classpathEntry(a, f, forceResource = isStandalone)
-                  }
+          val genDest =
+            if (desc.launcherType.isNative) tmpAux
+            else tmpDest
 
-                  Some(ClassLoaderContent(entries))
-                }
-              val mainContent = ClassLoaderContent(
-                appArtifacts.fetchResult.artifacts.map {
-                  case (a, f) =>
-                    classpathEntry(a, f, forceResource = isStandalone)
-                }
-              )
+          prebuiltOpt match {
+            case None =>
+              val params = desc.launcherType match {
+                case LauncherType.DummyJar =>
+                  Parameters.Bootstrap(Nil, mainClass)
+                    .withPreamble(
+                      Preamble()
+                        .withJavaOpts(desc.javaOptions)
+                    )
+                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+                    .withDeterministic(true)
+                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+                    .withExtraZipEntries(infoEntries)
 
-              Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
-                .withPreamble(
-                  Preamble()
-                    .withJavaOpts(desc.javaOptions)
-                )
-                .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                .withDeterministic(true)
-                .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                .withExtraZipEntries(infoEntries)
+                case _: LauncherType.BootstrapLike =>
+                  val isStandalone = desc.launcherType != LauncherType.Bootstrap
+                  val sharedContentOpt =
+                    if (appArtifacts.shared.isEmpty) None
+                    else {
+                      val entries = appArtifacts.shared.map {
+                        case (a, f) =>
+                          classpathEntry(a, f, forceResource = isStandalone)
+                      }
 
-            case LauncherType.Assembly =>
+                      Some(ClassLoaderContent(entries))
+                    }
+                  val mainContent = ClassLoaderContent(
+                    appArtifacts.fetchResult.artifacts.map {
+                      case (a, f) =>
+                        classpathEntry(a, f, forceResource = isStandalone)
+                    }
+                  )
 
-              assert(appArtifacts.shared.isEmpty) // just in case
+                  Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
+                    .withPreamble(
+                      Preamble()
+                        .withJavaOpts(desc.javaOptions)
+                    )
+                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+                    .withDeterministic(true)
+                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+                    .withExtraZipEntries(infoEntries)
 
-              // FIXME Allow to adjust merge rules?
-              Parameters.Assembly()
-                .withPreamble(
-                  Preamble()
-                    .withJavaOpts(desc.javaOptions)
-                )
-                .withFiles(appArtifacts.fetchResult.files)
-                .withMainClass(mainClass)
-                .withExtraZipEntries(infoEntries)
+                case LauncherType.Assembly =>
 
-            case LauncherType.DummyNative =>
-              Parameters.DummyNative()
+                  assert(appArtifacts.shared.isEmpty) // just in case
 
-            case LauncherType.GraalvmNativeImage =>
+                  // FIXME Allow to adjust merge rules?
+                  Parameters.Assembly()
+                    .withPreamble(
+                      Preamble()
+                        .withJavaOpts(desc.javaOptions)
+                    )
+                    .withFiles(appArtifacts.fetchResult.files)
+                    .withMainClass(mainClass)
+                    .withExtraZipEntries(infoEntries)
 
-              assert(appArtifacts.shared.isEmpty) // just in case
+                case LauncherType.DummyNative =>
+                  Parameters.DummyNative()
 
-              val fetch = simpleFetch(cache, coursierRepositories)
+                case LauncherType.GraalvmNativeImage =>
 
-              Parameters.NativeImage(mainClass)
-                .withFetch(Some(fetch))
-                .withGraalvmHome(graalvmParamsOpt.flatMap(_.home).map(new File(_)))
-                .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
-                .withJars(appArtifacts.fetchResult.files)
-                .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
-                .withVerbosity(verbosity)
+                  assert(appArtifacts.shared.isEmpty) // just in case
 
-            case LauncherType.ScalaNative =>
+                  val fetch = simpleFetch(cache, coursierRepositories)
 
-              assert(appArtifacts.shared.isEmpty) // just in case
+                  Parameters.NativeImage(mainClass)
+                    .withFetch(Some(fetch))
+                    .withGraalvmHome(graalvmParamsOpt.flatMap(_.home).map(new File(_)))
+                    .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
+                    .withJars(appArtifacts.fetchResult.files)
+                    .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
+                    .withVerbosity(verbosity)
 
-              val fetch = simpleFetch(cache, coursierRepositories)
-              val nativeVersion = appArtifacts.platformSuffixOpt
-                .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
-              // FIXME Allow options to be tweaked
-              val options = ScalaNative.ScalaNativeOptions()
+                case LauncherType.ScalaNative =>
 
-              Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-                .withJars(appArtifacts.fetchResult.files)
-                .withOptions(options)
-                .withVerbosity(verbosity)
+                  assert(appArtifacts.shared.isEmpty) // just in case
+
+                  val fetch = simpleFetch(cache, coursierRepositories)
+                  val nativeVersion = appArtifacts.platformSuffixOpt
+                    .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
+                  // FIXME Allow options to be tweaked
+                  val options = ScalaNative.ScalaNativeOptions()
+
+                  Parameters.ScalaNative(fetch, mainClass, nativeVersion)
+                    .withJars(appArtifacts.fetchResult.files)
+                    .withOptions(options)
+                    .withVerbosity(verbosity)
+              }
+
+              writing(genDest, verbosity, Some(currentTime)) {
+                Generator.generate(params, genDest)
+              }
+
+            case Some((_, prebuilt)) =>
+              Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
+              FileUtil.tryMakeExecutable(prebuilt.toPath)
           }
 
           if (desc.launcherType.isNative) {
@@ -268,13 +334,7 @@ object AppGenerator {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
             }
-            writing(tmpAux, verbosity, Some(currentTime)) {
-              Generator.generate(params, tmpAux)
-            }
-          } else
-            writing(tmpDest, verbosity, Some(currentTime)) {
-              Generator.generate(params, tmpDest)
-            }
+          }
         }
 
         shouldUpdate
@@ -286,6 +346,39 @@ object AppGenerator {
       sys.error(s"Could not acquire lock for $dest0")
     }
   }
+
+  def platformExtensions(os: String): Seq[String] = {
+
+    val os0 = os.toLowerCase(Locale.ROOT)
+
+    if (os0.contains("windows"))
+      Seq(".exe")
+    else
+      Nil
+  }
+
+  def platformExtensions(): Seq[String] =
+    Option(System.getProperty("os.name"))
+      .toSeq
+      .flatMap(platformExtensions(_))
+
+  def platform(os: String): Option[String] = {
+
+    val os0 = os.toLowerCase(Locale.ROOT)
+
+    if (os0.contains("linux"))
+      Some("x86_64-pc-linux")
+    else if (os0.contains("mac"))
+      Some("x86_64-apple-darwin")
+    else if (os0.contains("windows"))
+      Some("x86_64-pc-win32")
+    else
+      None
+  }
+
+  def platform(): Option[String] =
+    Option(System.getProperty("os.name"))
+      .flatMap(platform(_))
 
   sealed abstract class AppGeneratorException(message: String, cause: Throwable = null)
     extends Exception(message, cause)

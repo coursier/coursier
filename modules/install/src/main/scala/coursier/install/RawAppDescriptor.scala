@@ -22,7 +22,9 @@ import scala.language.implicitConversions
   properties: RawAppDescriptor.Properties = RawAppDescriptor.Properties(Nil),
   scalaVersion: Option[String] = None,
   name: Option[String] = None,
-  graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None
+  graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
+  @since
+  prebuilt: Option[String] = None
 ) {
   def isEmpty: Boolean =
     this == RawAppDescriptor(Nil)
@@ -92,26 +94,28 @@ import scala.language.implicitConversions
 
     (repositoriesV, dependenciesV, sharedDependenciesV, exclusionsV, launcherTypeV).mapN {
       (repositories, dependencies, sharedDependencies, exclusions, launcherType) =>
-        AppDescriptor(
-          repositories,
-          dependencies.map { dep =>
-            dep.withUnderlyingDependency { dep0 =>
-              dep0.withExclusions(dep0.exclusions ++ exclusions)
+        AppDescriptor()
+          .withRepositories(repositories)
+          .withDependencies {
+            dependencies.map { dep =>
+              dep.withUnderlyingDependency { dep0 =>
+                dep0.withExclusions(dep0.exclusions ++ exclusions)
+              }
             }
-          },
-          sharedDependencies,
-          launcherType,
-          classifiers0,
-          mainArtifacts,
-          artifactTypes0,
-          mainClassOpt,
-          defaultMainClassOpt,
-          javaOptions,
-          properties.props.sorted,
-          scalaVersion,
-          name,
-          graalvm.map(_.graalvmOptions)
-        )
+          }
+          .withSharedDependencies(sharedDependencies)
+          .withLauncherType(launcherType)
+          .withClassifiers(classifiers0)
+          .withMainArtifacts(mainArtifacts)
+          .withArtifactTypes(artifactTypes0)
+          .withMainClass(mainClassOpt)
+          .withDefaultMainClass(defaultMainClassOpt)
+          .withJavaOptions(javaOptions)
+          .withJavaProperties(properties.props.sorted)
+          .withScalaVersionOpt(scalaVersion)
+          .withNameOpt(name)
+          .withGraalvmOptions(graalvm.map(_.graalvmOptions))
+          .withPrebuiltLauncher(prebuilt)
     }
   }
   def repr: String =
@@ -215,7 +219,8 @@ object RawAppDescriptor {
     properties: Option[RawAppDescriptor.Properties] = None,
     scalaVersion: Option[String] = None,
     name: Option[String] = None,
-    graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None
+    graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
+    prebuilt: Option[String] = None
   ) {
     def get: RawAppDescriptor = {
       var d = RawAppDescriptor(dependencies)
@@ -229,6 +234,7 @@ object RawAppDescriptor {
         .withScalaVersion(scalaVersion)
         .withName(name)
         .withGraalvm(graalvm)
+        .withPrebuilt(prebuilt)
       for (t <- launcherType)
         d = d.withLauncherType(t)
       for (p <- properties)
@@ -251,7 +257,8 @@ object RawAppDescriptor {
       properties = Some(desc.properties),
       scalaVersion = desc.scalaVersion,
       name = desc.name,
-      graalvm = desc.graalvm
+      graalvm = desc.graalvm,
+      prebuilt = desc.prebuilt
     )
 
   implicit val encoder: EncodeJson[RawAppDescriptor] =

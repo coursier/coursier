@@ -386,5 +386,8 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   //   should use found main class if it is found, and ignore default main class in that case
   //   should generate a graalvm native image
   //   should update graalvm native image if a new version is available
+  //   should pick prebuilt launcher if available
+  //   should not pick prebuilt launcher if not available
+  //   should prefer to pick prebuilt launcher with ".exe" on Windows if available
 
 }

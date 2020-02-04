@@ -18,7 +18,9 @@ import dataclass._
   javaProperties: Seq[(String, String)] = Nil,
   scalaVersionOpt: Option[String] = None,
   nameOpt: Option[String] = None,
-  graalvmOptions: Option[AppDescriptor.GraalvmOptions] = None
+  graalvmOptions: Option[AppDescriptor.GraalvmOptions] = None,
+  @since
+  prebuiltLauncher: Option[String] = None
 ) {
   def overrideVersion(ver: String): AppDescriptor =
     withDependencies {
@@ -29,6 +31,8 @@ import dataclass._
         dep +: dependencies.tail
       }
     }
+  def mainVersionOpt: Option[String] =
+    dependencies.headOption.map(_.version)
 }
 
 object AppDescriptor {
