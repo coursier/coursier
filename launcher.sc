@@ -1,7 +1,4 @@
 
-import $ivy.`com.softwaremill.sttp.client::core:2.0.0-RC6`
-import $ivy.`com.lihaoyi::ujson:0.9.5`
-
 import $file.scripts.shared.GenerateLauncher
 import $file.scripts.shared.Sign
 import $file.scripts.shared.UploadGhRelease
