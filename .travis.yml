@@ -68,7 +68,7 @@ jobs:
       jdk: openjdk9
       before_script: source scripts/shared/travis-setup-graalvm.sh
       script: amm launcher.sc uploadNativeImage
-    - stage: upload-native-launchers
+    - stage: test
       name: "Push Windows native image"
       os: windows
       language: bash

@@ -49,7 +49,7 @@ private def initialLauncher(
 private val pgpPassphrase = Option(System.getenv("PGP_PASSPHRASE"))
 private val pgpSecret = Option(System.getenv("PGP_SECRET"))
 
-private val dryRun = false
+private val dryRun = true
 
 private def doWaitForSync(
   initialLauncher: String,
