@@ -6,14 +6,13 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.install.{Channel, RawAppDescriptor}
+import coursier.install.Channel
 import coursier.moduleString
 import coursier.core.Repository
 import coursier.parse.RepositoryParser
 
 final case class InstallParams(
   shared: SharedInstallParams,
-  rawAppDescriptor: RawAppDescriptor,
   channels: Seq[Channel],
   repositories: Seq[Repository],
   nameOpt: Option[String],
@@ -36,8 +35,6 @@ object InstallParams {
 
     val sharedV = SharedInstallParams(options.sharedInstallOptions)
 
-    val rawAppDescriptor = options.appOptions.rawAppDescriptor
-
     val channelsV = options
       .channel
       .traverse { s =>
@@ -53,7 +50,7 @@ object InstallParams {
         )
       else Nil
 
-    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.appOptions.repository))
+    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.repository))
 
     val defaultRepositories =
       if (options.defaultRepositories)
@@ -94,7 +91,6 @@ object InstallParams {
       (shared, channels, fileChannels, addChannels, repositories) =>
         InstallParams(
           shared,
-          rawAppDescriptor,
           (channels ++ fileChannels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
           defaultRepositories ++ repositories,
           nameOpt,

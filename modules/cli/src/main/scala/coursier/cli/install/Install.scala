@@ -77,25 +77,12 @@ object Install extends CaseApp[InstallOptions] {
     val pool = Sync.fixedThreadPool(params.shared.cache.parallel)
     val cache = params.shared.cache.cache(pool, params.shared.logger())
 
-    val fromArgs =
-      Some(params.rawAppDescriptor)
-        .filter(!_.isEmpty)
-        .map { desc =>
-          desc.appDescriptor.toEither match {
-            case Left(errors) =>
-              for (err <- errors.toList)
-                System.err.println(err)
-              sys.exit(1)
-            case Right(d) => (None, (desc.repr.getBytes(StandardCharsets.UTF_8), d))
-          }
-        }
-
     val fromIds = args.all.map { id =>
 
       if (params.channels.isEmpty) {
         System.err.println(s"Error: app id specified, but no channels passed")
         sys.exit(1)
-      } else if (params.rawAppDescriptor.withRepositories(Nil).isEmpty) {
+      } else {
 
         val (actualId, overrideVersionOpt) = {
           val idx = id.indexOf(':')
@@ -124,13 +111,6 @@ object Install extends CaseApp[InstallOptions] {
             val rawSource = RawSource(repositories, source.channel.repr, id)
             (Some((rawSource, source.withId(id))), (repr, overrideVersionOpt.fold(desc)(desc.overrideVersion)))
         }
-      } else {
-        import caseapp.core.util.NameOps._
-        val argNames = InstallAppOptions.help.args.filter(_.name.name != "repository").map(_.name.option)
-        System.err.println(
-          s"App description arguments (${argNames.mkString(", ")}) can only be specified along with standard dependencies, not with app ids"
-        )
-        sys.exit(1)
       }
     }
 
@@ -152,13 +132,13 @@ object Install extends CaseApp[InstallOptions] {
       Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
     }
 
-    if (fromArgs.isEmpty && fromIds.isEmpty) {
+    if (fromIds.isEmpty) {
       if (params.shared.verbosity >= 0 && params.installChannels.isEmpty)
         System.err.println("Nothing to install")
       sys.exit(0)
     }
 
-    for ((sourceOpt, (b, appDescriptor)) <- fromArgs.iterator ++ fromIds) {
+    for ((sourceOpt, (b, appDescriptor)) <- fromIds) {
 
       val name = params.nameOpt
         .orElse(appDescriptor.nameOpt)
