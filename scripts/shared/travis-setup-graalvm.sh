@@ -1,6 +1,7 @@
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 
-  choco install -y windows-sdk-7.1 vcbuildtools kb2519277
+  # https://github.com/oracle/graal/issues/1852#issuecomment-572892384
+  choco install -y visualstudio2017-workload-vctools
 
   # temporary workaround for https://github.com/oracle/graal/issues/1876
   # (should be fixed in GraalVM 20.0)
