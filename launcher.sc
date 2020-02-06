@@ -186,22 +186,33 @@ def signDummyFiles(): Unit =
   )
 
 @main
-def uploadNativeImage(): Unit = {
-  val token = if (dryRun) "" else ghToken()
+def generateNativeImage(
+  version: String = Version.latestFromTag,
+  output: String = "./cs",
+  allowIvy2Local: Boolean = true
+): Unit = {
   val initialLauncher0 = initialLauncher(None, None)
-  val dest = "./cs"
-  val version = Version.latestFromTravisTag
   GenerateLauncher.nativeImage(
     initialLauncher0,
     module = s"io.get-coursier::coursier-cli:$version",
-    extraArgs = Seq(
-      "--no-default",
-      "-r", "central",
-      "-r", "typesafe:ivy-releases",
-    ),
-    output = dest,
+    extraArgs =
+      (if (allowIvy2Local) Nil else Seq("--no-default")) ++
+      Seq(
+        "-r", "central",
+        "-r", "typesafe:ivy-releases",
+      ),
+    output = output,
     mainClass = "coursier.cli.Coursier"
   )
+}
+
+
+@main
+def uploadNativeImage(): Unit = {
+  val token = if (dryRun) "" else ghToken()
+  val dest = "./cs"
+  val version = Version.latestFromTravisTag
+  generateNativeImage(version, dest, allowIvy2Local = false)
 
   // TODO Check that we are on the right CPU too?
   val platformSuffix = Util.os match {

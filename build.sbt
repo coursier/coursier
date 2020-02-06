@@ -308,8 +308,26 @@ lazy val install = project("install")
     addBootstrapJarResourceInTests
   )
 
+lazy val jvm = project("jvm")
+  .disablePlugins(MimaPlugin)
+  .dependsOn(coursierJvm)
+  .settings(
+    shared,
+    coursierPrefix,
+    utest,
+    libs ++= Seq(
+      Deps.argonautShapeless,
+      Deps.dataClass % Provided,
+      Deps.jsoniterCore,
+      Deps.jsoniterMacros % Provided,
+      Deps.plexusArchiver,
+      Deps.plexusContainerDefault,
+      Deps.svm % Provided
+    )
+  )
+
 lazy val cli = project("cli")
-  .dependsOn(coursierJvm, install, launcher, publish)
+  .dependsOn(coursierJvm, install, jvm, launcher, publish)
   .enablePlugins(PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
@@ -479,7 +497,7 @@ lazy val docs = project("docs")
     }
   )
 
-lazy val jvm = project("jvm")
+lazy val jvmProjects = project("jvmProjects")
   .dummy
   .aggregate(
     utilJvm,
@@ -493,6 +511,7 @@ lazy val jvm = project("jvm")
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
     launcher,
+    jvm,
     benchmark,
     publish,
     install,
@@ -543,6 +562,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
     launcher,
+    jvm,
     benchmark,
     publish,
     install,

@@ -9,6 +9,7 @@ import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.install.{Install, InstallPath, Update}
+import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.publish.sonatype.Sonatype
@@ -79,19 +80,23 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Install.run(installOptions, args)
       case Inr(Inr(Inr(Inr(Inl(installPathOptions))))) =>
         InstallPath.run(installPathOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inl(javaOptions)))))) =>
+        Java.run(javaOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions))))))) =>
+        JavaHome.run(javaHomeOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))))) =>
         Publish.run(publishOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))))) =>
         Sonatype.run(sonatypeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
         cnil.impossible
     }
 
