@@ -87,13 +87,15 @@ object Output {
           // TODO Allow to filter on classifiers / artifact types
           val urls = res.dependencyArtifacts().map(_._3.url)
           urls.mkString(nl)
-        } else
+        } else {
+          val classpathOrder = params.classpathOrder.getOrElse(false)
           Print.dependenciesUnknownConfigs(
-            if (params.classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
+            if (classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
             res.projectCache.mapValues { case (_, p) => p },
             printExclusions = withExclusions,
-            reorder = !params.classpathOrder
+            reorder = !classpathOrder,
           )
+        }
 
       if (depsStr.nonEmpty) {
         if (printResultStdout)

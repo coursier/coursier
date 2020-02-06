@@ -30,7 +30,7 @@ final case class ResolveOptions(
     conflicts: Boolean = false,
 
   @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
-    classpathOrder: Boolean = false,
+    classpathOrder: Option[Boolean] = None,
 
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
