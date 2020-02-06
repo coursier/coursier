@@ -82,10 +82,10 @@ jobs:
         - npm install
         - export PATH="$PATH:$(pwd)/node_modules/bower/bin"
         - amm website.sc updateWebsite
-branches:
-  only:
-  - master
-  - /^v\d+\.\d+.*$/ # tagged versions
+# Only build if: master branch, a tag, or a fork
+if: branch = master
+    OR tag IS present
+    OR repo != coursier/coursier
 cache:
   directories:
   - $HOME/.m2
