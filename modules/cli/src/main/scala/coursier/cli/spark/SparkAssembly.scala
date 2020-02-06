@@ -7,22 +7,22 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.jar.JarFile
 
-import coursier.bootstrap.Assembly
 import coursier.cache.{CacheChecksum, CacheLocks, FileCache}
 import coursier.cli.deprecated.{CommonOptions, Helper}
 import coursier.core.Type
+import coursier.launcher.{AssemblyGenerator, MergeRule, Parameters}
 
 object SparkAssembly {
 
-  val assemblyRules = Seq[Assembly.Rule](
-    Assembly.Rule.Append("META-INF/services/org.apache.hadoop.fs.FileSystem"),
-    Assembly.Rule.Append("reference.conf"),
-    Assembly.Rule.AppendPattern("META-INF/services/.*"),
-    Assembly.Rule.Exclude("log4j.properties"),
-    Assembly.Rule.Exclude(JarFile.MANIFEST_NAME),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[sS][fF]"),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[dD][sS][aA]"),
-    Assembly.Rule.ExcludePattern("META-INF/.*\\.[rR][sS][aA]")
+  val assemblyRules = Seq[MergeRule](
+    MergeRule.Append("META-INF/services/org.apache.hadoop.fs.FileSystem"),
+    MergeRule.Append("reference.conf"),
+    MergeRule.AppendPattern("META-INF/services/.*"),
+    MergeRule.Exclude("log4j.properties"),
+    MergeRule.Exclude(JarFile.MANIFEST_NAME),
+    MergeRule.ExcludePattern("META-INF/.*\\.[sS][fF]"),
+    MergeRule.ExcludePattern("META-INF/.*\\.[dD][sS][aA]"),
+    MergeRule.ExcludePattern("META-INF/.*\\.[rR][sS][aA]")
   )
 
   def sparkBaseDependencies(
@@ -157,14 +157,12 @@ object SparkAssembly {
         Files.createDirectories(dest.toPath.getParent)
         val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
         // FIXME Acquire lock on tmpDest
-        var fos: FileOutputStream = null
-        try {
-          fos = new FileOutputStream(tmpDest)
-          Assembly.make(jars, fos, Nil, assemblyRules)
-        } finally {
-          if (fos != null)
-            fos.close()
-        }
+        AssemblyGenerator.generate(
+          Parameters.Assembly()
+            .withFiles(jars)
+            .withRules(assemblyRules),
+          tmpDest.toPath
+        )
         Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
         Right((dest, jars))
       }.left.map(_.describe)

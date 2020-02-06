@@ -6,10 +6,10 @@ import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
-import coursier.bootstrap.Bootstrap.resourceDir
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
 import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.ResolveOptions
+import coursier.launcher.BootstrapGenerator.resourceDir
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatestplus.junit.JUnitRunner

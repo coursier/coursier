@@ -4,6 +4,7 @@ import java.nio.file.Paths
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{Validated, ValidatedNel}
+import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 final case class NativeLauncherOptions(
 
@@ -34,13 +35,13 @@ final case class NativeLauncherOptions(
 
   @Help("Native compilation target directory")
   @Short("d")
-    nativeWorkDir: String = "native-target",
+    nativeWorkDir: Option[String] = None,
   @Help("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
 
 ) {
 
-  def params: ValidatedNel[String, NativeLauncherParams] = {
+  def params: ValidatedNel[String, ScalaNativeOptions] = {
 
     val gcOpt = nativeGc
       .map(_.trim)
@@ -75,26 +76,24 @@ final case class NativeLauncherOptions(
       .filter(_.nonEmpty)
       .map(Paths.get(_))
 
-    val workDir = Paths.get(nativeWorkDir)
+    val workDirOpt = nativeWorkDir.map(Paths.get(_))
     val keepWorkDir = nativeKeepWorkDir
 
     Validated.validNel(
-      NativeLauncherParams(
-        gcOpt,
-        modeOpt,
-        linkStubs,
-        clangOpt,
-        clangppOpt,
-        prependDefaultLinkingOptions,
-        linkingOptions,
-        prependDefaultCompileOptions,
-        compileOptions,
-        targetTripleOpt,
-        nativeLibOpt,
-        workDir,
-        keepWorkDir,
-        nativeVersion.map(_.trim).filter(_.nonEmpty)
-      )
+      ScalaNativeOptions()
+        .withGcOpt(gcOpt)
+        .withModeOpt(modeOpt)
+        .withLinkStubs(linkStubs)
+        .withClangOpt(clangOpt)
+        .withClangppOpt(clangppOpt)
+        .withPrependDefaultLinkingOptions(prependDefaultLinkingOptions)
+        .withLinkingOptions(linkingOptions)
+        .withPrependDefaultCompileOptions(prependDefaultCompileOptions)
+        .withCompileOptions(compileOptions)
+        .withTargetTripleOpt(targetTripleOpt)
+        .withNativeLibOpt(nativeLibOpt)
+        .withWorkDirOpt(workDirOpt)
+        .withKeepWorkDir(keepWorkDir)
     )
   }
 }

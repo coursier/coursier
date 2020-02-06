@@ -1,7 +1,7 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
+import coursier.install.RawAppDescriptor
 
 final case class InstallAppOptions(
 
@@ -26,24 +26,24 @@ final case class InstallAppOptions(
   scalaVersion: Option[String] = None
 ) {
   def rawAppDescriptor: RawAppDescriptor =
-    RawAppDescriptor(
-      dependency,
-      repository,
-      shared,
-      exclude,
-      `type`,
-      classifier,
-      artifactType,
-      mainClass,
-      javaOpt ++ property.map("-D" + _),
-      property.map { s =>
-        s.split("=", 2) match {
-          case Array(k, v) => k -> v
-          case Array(k) => k -> ""
+    RawAppDescriptor(dependency)
+      .withRepositories(repository)
+      .withShared(shared)
+      .withExclusions(exclude)
+      .withLauncherType(`type`)
+      .withClassifiers(classifier)
+      .withArtifactTypes(artifactType)
+      .withMainClass(mainClass)
+      .withJavaOptions(javaOpt ++ property.map("-D" + _))
+      .withProperties(
+        property.map { s =>
+          s.split("=", 2) match {
+            case Array(k, v) => k -> v
+            case Array(k) => k -> ""
+          }
         }
-      },
-      scalaVersion.map(_.trim).filter(_.nonEmpty)
-    )
+      )
+      .withScalaVersion(scalaVersion.map(_.trim).filter(_.nonEmpty))
 }
 
 object InstallAppOptions {

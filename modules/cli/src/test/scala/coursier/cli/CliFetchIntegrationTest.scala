@@ -17,10 +17,10 @@ import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
 import coursier.cache.FileCache
-import coursier.cli.app.MainClass
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, ResolveOptions}
+import coursier.install.MainClass
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.{FlatSpec, Matchers}
