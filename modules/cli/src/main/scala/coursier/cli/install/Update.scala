@@ -6,8 +6,8 @@ import java.time.Instant
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
-import coursier.cli.app.{AppGenerator, Channels, RawAppDescriptor}
 import coursier.cli.util.Guard
+import coursier.install.{AppGenerator, Channels, InfoFile, RawAppDescriptor}
 import coursier.util.Sync
 
 import scala.collection.JavaConverters._
@@ -66,17 +66,17 @@ object Update extends CaseApp[UpdateOptions] {
 
       val updatedDescOpt =
         for {
-          (s, _) <- AppGenerator.readSource(infoFile)
+          (s, _) <- InfoFile.readSource(infoFile)
           repositories = if (params.overrideRepositories) params.repositories else s.repositories
           (_, path, a) <- Channels.find(Seq(s.channel), s.id, cache, repositories)
         } yield {
           val e = RawAppDescriptor.parse(new String(a, StandardCharsets.UTF_8))
-            .left.map(err => new AppGenerator.ErrorParsingAppDescription(path, err))
+            .left.map(err => new InfoFile.ErrorParsingAppDescription(path, err))
             .flatMap { r =>
               r.appDescriptor
                 .toEither
                 .left.map { errors =>
-                  new AppGenerator.ErrorProcessingAppDescription(path, errors.toList.mkString(", "))
+                  new InfoFile.ErrorProcessingAppDescription(path, errors.toList.mkString(", "))
                 }
             }
           val desc = e.fold(throw _, identity)

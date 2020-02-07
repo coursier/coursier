@@ -12,43 +12,80 @@ The CLI of coursier allows to
 - [generate convenient launchers to run them](cli-bootstrap.md)
 among others.
 
-See below for its [installation](#installation), [its basic usage](#usage),
+See below for its [installation](#native-launcher), [its basic usage](#usage),
 and click on the links above or on the left for more details about each of
 its commands.
 
-## Installation
+## Native launcher
 
-### curl
+> The commands below install the native launcher as `cs`, which can be
+substituted to `coursier` in the various examples on this website.
 
-Download and run its launcher with
+### Linux
+
+On Linux, download and run the coursier launcher with
+```bash
+$ curl -Lo cs https://git.io/coursier-cli-linux &&
+    chmod +x cs &&
+    ./cs --help
+```
+
+### macOS
+
+Download and run the coursier launcher with
+```bash
+$ curl -Lo cs https://git.io/coursier-cli-macos &&
+    chmod +x cs &&
+    (xattr -d com.apple.quarantine cs || true) &&
+    ./cs --help
+```
+
+Note the `xattr` command to circumvent notarization on macOS Catalina.
+
+Alternatively, the native launcher can be installed via [homebrew](https://brew.sh) with
+```bash
+$ brew install coursier/formulas/coursier
+$ cs --help
+```
+
+### Windows
+
+On Windows, use
+```bash
+> bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
+> .\cs --help
+```
+
+## JAR-based launcher
+
+### Linux / macOS
+
+In case you run into any issue with the [native launcher](#native-launcher),
+a JAR-based launcher is available.
+
+Download and run it with
 ```bash
 $ curl -Lo coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
     ./coursier --help
 ```
 
-The launcher itself weights only 17 kB and can be easily embedded as is in other projects.
+Note that the JAR-based launcher requires Java 8 or later to run.
+That is, a command like `java -version` should print a version >= 8.
+
+The JAR-based launcher weights only about 25 kB and can be easily embedded
+as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
-The short URL <https://git.io/coursier-cli> redirects to
-<https://github.com/coursier/coursier/raw/gh-pages/coursier>.
-From version `1.0.0-RC1` to `1.1.0-M9`, `gh-pages` in the latter URL can be replaced by the
-tag of a specific version, to download the launcher of that exact version, like
-<https://github.com/coursier/coursier/raw/v1.1.0-M7/coursier>. For versions `1.1.0-M9` and later,
-the launcher is available as an asset on the GitHub release page, e.g.
-<https://github.com/coursier/coursier/releases/download/v1.1.0-M9/coursier>.
-
-### brew
-
-Alternatively on OS X, install it via homebrew, that puts the `coursier` launcher directly in your PATH,
+Alternatively, on macOS, the JAR-based launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
-$ brew tap coursier/formulas
 $ brew install coursier/formulas/coursier
+$ coursier --help
 ```
 
 ### Windows
 
-Install and run coursier from the current directory at the Windows prompt, with
+Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with
 ```bat
 > bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "%cd%\coursier"
 > bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "%cd%\coursier.bat"
@@ -116,3 +153,31 @@ To set credentials for a repository, pass a user and password in its URL, like
 ```bash
 -r https://user:pass@nexus.corp.com/content/repositories/releases
 ```
+
+## Launcher URLs
+
+### Latest launchers
+
+The various [git.io](https://git.io) shortened URLs above redirect
+to the latest launchers from the [launchers repository](https://github.com/coursier/launchers):
+
+|OS|Short URL|redirects to|
+|-|-|-|
+|Linux|<https://git.io/coursier-cli-linux>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux>|
+|macOS|<https://git.io/coursier-cli-macos>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin>|
+|Windows|<https://git.io/coursier-cli-windows-exe>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe>|
+|Any (needs JVM)|<https://git.io/coursier-cli>|<https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository)|
+|Any (needs JVM)| |<https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)|
+
+### Specific versions
+
+To download specific versions of the launcher, download them from GitHub release
+assets:
+
+|OS|URL|Since version|
+|-|-|-|
+|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux>|`2.0.0-RC3-1`|
+|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin>|`2.0.0-RC3-1`|
+|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.0-RC6`|
+|Any (needs JVM)|<https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>|`1.1.0-M9`|
+|Any (needs JVM)|<https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier> (up to version `1.1.0-M9`)|*Invalid for newest versions*|

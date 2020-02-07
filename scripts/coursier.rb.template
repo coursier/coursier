@@ -10,6 +10,12 @@ class Coursier < Formula
   sha256 "@LAUNCHER_SHA256@"
   bottle :unneeded
 
+  # https://stackoverflow.com/questions/10665072/homebrew-formula-download-two-url-packages/26744954#26744954
+  resource "jar-launcher" do
+    url "@JAR_LAUNCHER_URL@"
+    sha256 "@JAR_LAUNCHER_SHA256@"
+  end
+
   option "without-zsh-completions", "Disable zsh completion installation"
 
   depends_on :java => "1.8+"
@@ -21,12 +27,17 @@ class Coursier < Formula
       zsh_completion.install "completions/zsh/_coursier"
     end
 
-    bin.install 'coursier'
+    bin.install 'cs-x86_64-apple-darwin' => "cs"
+    resource("jar-launcher").stage { bin.install "coursier" }
   end
 
   test do
     ENV["COURSIER_CACHE"] = "#{testpath}/cache"
-    output = shell_output("#{bin}/coursier launch io.get-coursier:echo:1.0.2 -- foo")
+
+    output = shell_output("#{bin}/cs launch io.get-coursier:echo:1.0.2 -- foo")
     assert_equal ["foo\n"], output.lines
+
+    jar_output = shell_output("#{bin}/coursier launch io.get-coursier:echo:1.0.2 -- foo")
+    assert_equal ["foo\n"], jar_output.lines
   end
 end

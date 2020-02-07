@@ -7,9 +7,3 @@
 [submodule "modules/tests/handmade-metadata"]
 	path = modules/tests/handmade-metadata
 	url = https://github.com/coursier/handmade-metadata.git
-[submodule "scripts/website"]
-	path = scripts/website
-	url = https://github.com/coursier/docusaurus-mdoc-scripts.git
-[submodule "scripts/upload-launcher"]
-	path = scripts/upload-launcher
-	url = https://github.com/coursier/upload-launcher-scripts.git

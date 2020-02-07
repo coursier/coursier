@@ -10,7 +10,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
-import coursier.cli.app.{AppGenerator, GraalvmParams, RawAppDescriptor}
+import coursier.install.{AppGenerator, GraalvmParams, RawAppDescriptor}
 import coursier.util.{Sync, Task}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 
@@ -144,10 +144,8 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   it should "generate an echo launcher" in withTempDir { tmpDir =>
 
     val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central")
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+        .withRepositories(List("central"))
     )
 
     val launcher = tmpDir.resolve("echo")
@@ -178,11 +176,9 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   it should "generate an echo assembly" in withTempDir { tmpDir =>
 
     val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central"),
-        launcherType = "assembly"
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+        .withRepositories(List("central"))
+        .withLauncherType("assembly")
     )
 
     val launcher = tmpDir.resolve("echo")
@@ -208,11 +204,9 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   it should "generate an echo standalone launcher" in withTempDir { tmpDir =>
 
     val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central"),
-        launcherType = "standalone"
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+        .withRepositories(List("central"))
+        .withLauncherType("standalone")
     )
 
     val launcher = tmpDir.resolve("echo")
@@ -245,10 +239,8 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   it should "not update an already up-to-date launcher" in withTempDir { tmpDir =>
 
     val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central")
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+        .withRepositories(List("central"))
     )
 
     val launcher = tmpDir.resolve("echo")
@@ -289,11 +281,9 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   it should "update a launcher" in withTempDir { tmpDir =>
 
     val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.1"),
-        repositories = List("central"),
-        launcherType = "standalone" // easier to test
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
+        .withRepositories(List("central"))
+        .withLauncherType("standalone") // easier to test
     )
 
     val launcher = tmpDir.resolve("echo")
@@ -326,11 +316,9 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     testRun()
 
     val (newAppDesc, newDescRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"), // bump version
-        repositories = List("central"),
-        launcherType = "standalone" // easier to test
-      )
+      RawAppDescriptor(List("io.get-coursier:echo:1.0.2")) // bump version
+        .withRepositories(List("central"))
+        .withLauncherType("standalone") // easier to test
     )
 
     val updated = AppGenerator.createOrUpdate(
@@ -353,41 +341,53 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     testRun()
   }
 
-  it should "generate a native echo launcher via native-image" in withTempDir { tmpDir =>
+  // it should "generate a native echo launcher via native-image" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
-      RawAppDescriptor(
-        dependencies = List("io.get-coursier:echo:1.0.2"),
-        repositories = List("central"),
-        launcherType = "graalvm-native-image"
-      )
-    )
+  //   val (appDesc, descRepr) = appDescriptor(
+  //     RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+  //       .withRepositories(List("central"))
+  //       .withLauncherType("graalvm-native-image")
+  //   )
 
-    val launcher = tmpDir.resolve("echo")
+  //   val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      cache,
-      tmpDir,
-      launcher,
-      graalvmParamsOpt = sys.env.get("GRAALVM_HOME").map(GraalvmParams(_, Nil))
-    )
+  //   val created = AppGenerator.createOrUpdate(
+  //     Some((appDesc, descRepr)),
+  //     None,
+  //     cache,
+  //     tmpDir,
+  //     launcher,
+  //     graalvmParamsOpt = Option(System.getenv("GRAALVM_HOME"))
+  //       .orElse {
+  //         val isGraalVM = Option(System.getProperty("java.vm.name"))
+  //           .map(_.toLowerCase(Locale.ROOT))
+  //           .exists(_.contains("graal"))
+  //         if (isGraalVM)
+  //           Option(System.getenv("JAVA_HOME"))
+  //             .orElse(Option(System.getProperty("java.home")))
+  //         else
+  //           None
+  //       }
+  //       .map(GraalvmParams(_, Nil))
+  //   )
 
-    assert(created)
-    assert(Files.isRegularFile(launcher))
+  //   assert(created)
+  //   assert(Files.isRegularFile(launcher))
 
-    assertNativeExecutable(launcher.toFile)
+  //   assertNativeExecutable(launcher.toFile)
 
-    val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
-    val expectedOutput = "foo"
-    assert(output == expectedOutput)
-  }
+  //   val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+  //   val expectedOutput = "foo"
+  //   assert(output == expectedOutput)
+  // }
 
   // TODO
   //   should update launcher if the app description changes (change default main class?)
   //   should use found main class if it is found, and ignore default main class in that case
   //   should generate a graalvm native image
   //   should update graalvm native image if a new version is available
+  //   should pick prebuilt launcher if available
+  //   should not pick prebuilt launcher if not available
+  //   should prefer to pick prebuilt launcher with ".exe" on Windows if available
 
 }

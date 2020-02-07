@@ -5,10 +5,12 @@ import coursier.cli.params.SharedLaunchParams
 
 final case class LaunchParams(
   shared: SharedLaunchParams,
-  jep: Boolean
+  javaOptions: Seq[String],
+  jep: Boolean,
+  fetchCacheIKnowWhatImDoing: Option[String]
 ) {
   lazy val fork: Boolean =
-    shared.fork.getOrElse(jep || SharedLaunchParams.defaultFork)
+    shared.fork.getOrElse(jep || javaOptions.nonEmpty || SharedLaunchParams.defaultFork)
 }
 
 object LaunchParams {
@@ -19,7 +21,9 @@ object LaunchParams {
     sharedV.map { shared =>
       LaunchParams(
         shared,
-        options.jep
+        options.javaOpt,
+        options.jep,
+        options.fetchCacheIKnowWhatImDoing
       )
     }
   }
