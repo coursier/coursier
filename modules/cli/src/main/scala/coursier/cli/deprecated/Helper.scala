@@ -6,12 +6,12 @@ import java.net.{URL, URLClassLoader, URLDecoder}
 import coursier.{Attributes, Dependency, LocalRepositories, Repositories, Resolution, core}
 import coursier.cache._
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.MainClass
 import coursier.cli.launch.Launch
 import coursier.cli.options.SharedLoaderOptions
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.DeprecatedModuleRequirements
 import coursier.core.{Classifier, Configuration, Module, ModuleName, Organization, Publication, Repository, ResolutionProcess, Type}
+import coursier.install.MainClass
 import coursier.internal.Typelevel
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository

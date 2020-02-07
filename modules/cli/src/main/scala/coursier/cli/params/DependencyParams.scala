@@ -2,10 +2,10 @@ package coursier.cli.params
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.app.Platform
 import coursier.cli.options.DependencyOptions
 import coursier.cli.util.DeprecatedModuleRequirements0
 import coursier.core._
+import coursier.install.Platform
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
 import scala.io.Source

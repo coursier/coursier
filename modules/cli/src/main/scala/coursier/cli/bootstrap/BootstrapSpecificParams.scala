@@ -4,7 +4,8 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.bootstrap.{Assembly, LauncherBat}
+import coursier.launcher.MergeRule
+import coursier.launcher.internal.Windows
 
 final case class BootstrapSpecificParams(
   output: Path,
@@ -14,15 +15,22 @@ final case class BootstrapSpecificParams(
   javaOptions: Seq[String],
   assembly: Boolean,
   createBatFile: Boolean,
-  assemblyRules: Seq[Assembly.Rule],
+  assemblyRules: Seq[MergeRule],
   withPreamble: Boolean,
   deterministicOutput: Boolean,
   proguarded: Boolean,
   hybrid: Boolean,
   disableJarCheckingOpt: Option[Boolean]
 ) {
+  import BootstrapSpecificParams.BootstrapPackaging
   def batOutput: Path =
     output.getParent.resolve(output.getFileName.toString + ".bat")
+  def bootstrapPackaging: BootstrapPackaging =
+    BootstrapPackaging(
+      standalone,
+      hybrid,
+      embedFiles
+    )
 }
 
 object BootstrapSpecificParams {
@@ -49,7 +57,7 @@ object BootstrapSpecificParams {
         .getOrElse("bootstrap")
     }.toAbsolutePath
 
-    val createBatFile = options.bat.getOrElse(LauncherBat.isWindows)
+    val createBatFile = options.bat.getOrElse(Windows.isWindows)
 
     val rulesV = options.assemblyRule.traverse { s =>
       val idx = s.indexOf(':')
@@ -59,16 +67,16 @@ object BootstrapSpecificParams {
         val ruleName = s.substring(0, idx)
         val ruleValue = s.substring(idx + 1)
         ruleName match {
-          case "append" => Validated.validNel(Assembly.Rule.Append(ruleValue))
-          case "append-pattern" => Validated.validNel(Assembly.Rule.AppendPattern(ruleValue))
-          case "exclude" => Validated.validNel(Assembly.Rule.Exclude(ruleValue))
-          case "exclude-pattern" => Validated.validNel(Assembly.Rule.ExcludePattern(ruleValue))
+          case "append" => Validated.validNel(MergeRule.Append(ruleValue))
+          case "append-pattern" => Validated.validNel(MergeRule.AppendPattern(ruleValue))
+          case "exclude" => Validated.validNel(MergeRule.Exclude(ruleValue))
+          case "exclude-pattern" => Validated.validNel(MergeRule.ExcludePattern(ruleValue))
           case _ => Validated.invalidNel(s"Unrecognized rule name '$ruleName' in rule '$s'")
         }
       }
     }
 
-    val prependRules = if (options.defaultAssemblyRules) Assembly.defaultRules else Nil
+    val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
 
     val assembly = options.assembly.getOrElse(false)
     val standalone = options.standalone.getOrElse(false)
@@ -94,4 +102,10 @@ object BootstrapSpecificParams {
         )
     }
   }
+
+  final case class BootstrapPackaging(
+    standalone: Boolean,
+    hybrid: Boolean,
+    embedFiles: Boolean
+  )
 }

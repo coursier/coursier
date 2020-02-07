@@ -9,10 +9,11 @@ import java.util.Locale
 import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
 import coursier.cache.Cache
-import coursier.cli.app.{AppDescriptor, AppGenerator, Channel, Channels, RawAppDescriptor, RawSource, Source}
 import coursier.cli.util.Guard
 import coursier.core.Repository
+import coursier.install.{AppDescriptor, AppGenerator, Channel, Channels, RawAppDescriptor, RawSource, Source}
 import coursier.ivy.IvyRepository
+import coursier.launcher.internal.Windows
 import coursier.maven.MavenRepository
 import coursier.util.{Sync, Task}
 
@@ -56,8 +57,6 @@ object Install extends CaseApp[InstallOptions] {
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
 
-    Guard()
-
     val params = InstallParams(options).toEither match {
       case Left(errors) =>
         for (err <- errors.toList)
@@ -96,7 +95,7 @@ object Install extends CaseApp[InstallOptions] {
       if (params.channels.isEmpty) {
         System.err.println(s"Error: app id specified, but no channels passed")
         sys.exit(1)
-      } else if (params.rawAppDescriptor.copy(repositories = Nil).isEmpty) {
+      } else if (params.rawAppDescriptor.withRepositories(Nil).isEmpty) {
 
         val (actualId, overrideVersionOpt) = {
           val idx = id.indexOf(':')
@@ -123,7 +122,7 @@ object Install extends CaseApp[InstallOptions] {
                 Nil
             }
             val rawSource = RawSource(repositories, source.channel.repr, id)
-            (Some((rawSource, source.copy(id = id))), (repr, overrideVersionOpt.fold(desc)(desc.overrideVersion)))
+            (Some((rawSource, source.withId(id))), (repr, overrideVersionOpt.fold(desc)(desc.overrideVersion)))
         }
       } else {
         import caseapp.core.util.NameOps._
@@ -195,15 +194,14 @@ object Install extends CaseApp[InstallOptions] {
     }
 
     if (params.shared.verbosity >= 0) {
-      val path = sys.env.get("PATH")
-        .orElse(sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").map(_._2)) // Windows
+      val path = Option(System.getenv("PATH"))
         .toSeq
         .flatMap(_.split(File.pathSeparatorChar).toSeq)
         .toSet
 
       if (!path(params.shared.dir.toAbsolutePath.toString)) {
         System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
-        if (!coursier.bootstrap.LauncherBat.isWindows)
+        if (!Windows.isWindows)
           System.err.println(
             s"""To fix that, add the following line to ${ShellUtil.rcFileOpt.getOrElse("your shell configuration file")}
                |

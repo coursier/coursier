@@ -227,9 +227,9 @@ import dataclass.data
 object Fetch {
 
   @data class Result(
-    resolution: Resolution,
-    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-    extraArtifacts: Seq[(Artifact, File)]
+    resolution: Resolution = Resolution(),
+    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] = Nil,
+    extraArtifacts: Seq[(Artifact, File)] = Nil
   ) {
 
     def artifacts: Seq[(Artifact, File)] =

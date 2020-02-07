@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets
 
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
-import coursier.bootstrap.util.FileUtil
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
@@ -16,9 +15,14 @@ import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 import coursier.cli.spark.SparkSubmit
 import coursier.core.Version
+import coursier.launcher.internal.{FileUtil, Windows}
+import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
+
+  if (System.console() != null && Windows.isWindows)
+    WindowsAnsi.setup()
 
   override val appName = "Coursier"
   override val progName =

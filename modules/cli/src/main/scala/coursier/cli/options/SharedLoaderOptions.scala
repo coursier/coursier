@@ -1,7 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
+import coursier.install.RawAppDescriptor
 
 
 final case class SharedLoaderOptions(
