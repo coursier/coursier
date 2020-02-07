@@ -6,6 +6,7 @@ import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.install.{Install, InstallPath, Update}
+import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.publish.sonatype.Sonatype
@@ -21,6 +22,8 @@ object CoursierCommand {
       .add(Fetch)
       .add(Install)
       .add(InstallPath)
+      .add(Java)
+      .add(JavaHome)
       .add(Launch)
       .add(Publish)
       .add(Resolve)
@@ -36,6 +39,8 @@ object CoursierCommand {
       .add(Fetch)
       .add(Install)
       .add(InstallPath)
+      .add(Java)
+      .add(JavaHome)
       .add(Launch)
       .add(Publish)
       .add(Resolve)
