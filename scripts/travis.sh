@@ -24,7 +24,7 @@ jsCompile() {
 }
 
 jvmCompile() {
-  sbt scalaFromEnv jvm/compile jvm/test:compile
+  sbt scalaFromEnv jvmProjects/compile jvmProjects/test:compile
 }
 
 runJsTests() {
@@ -35,12 +35,12 @@ runJvmTests() {
   if [ "$(uname)" == "Darwin" ]; then
     IT="testsJVM/it:test" # don't run proxy-tests in particular
   else
-    IT="jvm/it:test"
+    IT="jvmProjects/it:test"
   fi
 
   ./scripts/with-redirect-server.sh \
     ./modules/tests/handmade-metadata/scripts/with-test-repo.sh \
-    sbt scalaFromEnv jvm/test $IT
+    sbt scalaFromEnv jvmProjects/test $IT
 }
 
 checkBinaryCompatibility() {

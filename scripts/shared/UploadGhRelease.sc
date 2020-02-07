@@ -1,4 +1,7 @@
 
+import $ivy.`com.softwaremill.sttp.client::core:2.0.0-RC6`
+import $ivy.`com.lihaoyi::ujson:0.9.5`
+
 import java.nio.ByteBuffer
 import java.nio.charset.{MalformedInputException, StandardCharsets}
 import java.nio.file.{Files, Path}

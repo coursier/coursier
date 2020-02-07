@@ -10,6 +10,7 @@ object Deps {
     def argonautShapeless = "1.2.0-M11"
     def fastParse = "2.2.4"
     def http4s = "0.18.25"
+    def jsoniterScala = "2.1.6"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
@@ -24,6 +25,8 @@ object Deps {
   def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
+  def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
+  def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala
   def jsoup = "org.jsoup" % "jsoup" % "1.12.1"
   def junit = "junit" % "junit" % "4.13"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -35,6 +38,8 @@ object Deps {
   def svm = "org.graalvm.nativeimage" % "svm" % "19.3.1"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
+  def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.1"
+  def plexusContainerDefault = "org.codehaus.plexus" % "plexus-container-default" % "2.1.0" // plexus-archiver needs its loggers
 
   def scalaAsync = "org.scala-lang.modules" %% "scala-async" % "0.10.0"
   def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
