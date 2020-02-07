@@ -11,7 +11,7 @@ object Deps {
     def fastParse = "2.2.4"
     def http4s = "0.18.25"
     def jsoniterScala = "2.1.6"
-    def okhttp = "3.13.1"
+    def okhttp = "3.14.6"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
   }
