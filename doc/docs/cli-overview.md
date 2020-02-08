@@ -58,12 +58,12 @@ On Windows, use
 
 ## JAR-based launcher
 
-### Linux / macOS
-
 In case you run into any issue with the [native launcher](#native-launcher),
 a JAR-based launcher is available.
 
-Download and run it with
+### Linux / macOS
+
+Download and run the launcher with
 ```bash
 $ curl -Lo coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
