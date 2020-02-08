@@ -7,6 +7,6 @@ import coursier.cli.util.Guard
 object InstallPath extends CaseApp[InstallPathOptions] {
   def run(options: InstallPathOptions, args: RemainingArgs): Unit = {
     Guard()
-    println(InstallParams.defaultDir.toString)
+    println(SharedInstallParams.defaultDir.toString)
   }
 }

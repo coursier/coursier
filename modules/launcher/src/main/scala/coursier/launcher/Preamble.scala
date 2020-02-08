@@ -14,6 +14,16 @@ import scala.io.{Codec, Source}
   command: Option[String] = None
 ) {
 
+  def withOsKind(isWindows: Boolean): Preamble =
+    withKind(if (isWindows) Preamble.Kind.Bat else Preamble.Kind.Sh)
+
+  def callsItself(isWindows: Boolean): Preamble = {
+    val updatedJarPath =
+      if (isWindows) "%~dpnx0"
+      else "$0"
+    withJarPath(updatedJarPath)
+  }
+
   def withJarPath(path: String): Preamble =
     withJarPath(Some(path))
   def withCommand(command: String): Preamble =

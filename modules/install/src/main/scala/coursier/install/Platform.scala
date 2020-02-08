@@ -20,7 +20,7 @@ object Platform {
 
   final case object Native extends Platform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
-      AppArtifacts.listVersions(cache, repositories, mod"org.scala-native:tools_2.12")
+      AppDescriptor.listVersions(cache, repositories, mod"org.scala-native:tools_2.12")
         .map(binaryVersion)
     def suffix(ver: String): String =
       s"_native$ver"
@@ -28,7 +28,7 @@ object Platform {
 
   final case object JS extends Platform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
-      AppArtifacts.listVersions(cache, repositories, mod"org.scala-js:scalajs-tools_2.12")
+      AppDescriptor.listVersions(cache, repositories, mod"org.scala-js:scalajs-tools_2.12")
         .map(binaryVersion)
     def suffix(ver: String): String =
       s"_sjs$ver"

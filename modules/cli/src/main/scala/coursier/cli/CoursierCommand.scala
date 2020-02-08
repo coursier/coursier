@@ -11,6 +11,7 @@ import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
+import coursier.cli.setup.Setup
 import coursier.cli.spark.SparkSubmit
 
 object CoursierCommand {
@@ -27,6 +28,7 @@ object CoursierCommand {
       .add(Launch)
       .add(Publish)
       .add(Resolve)
+      .add(Setup)
       .add(Sonatype, "sonatype")
       .add(SparkSubmit)
       .add(Update)
@@ -44,6 +46,7 @@ object CoursierCommand {
       .add(Launch)
       .add(Publish)
       .add(Resolve)
+      .add(Setup)
       .add(Sonatype, "sonatype")
       .add(SparkSubmit)
       .add(Update)

@@ -10,7 +10,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
-import coursier.install.{AppGenerator, GraalvmParams, RawAppDescriptor}
+import coursier.install.{GraalvmParams, InstallDir, RawAppDescriptor}
 import coursier.util.{Sync, Task}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 
@@ -150,11 +150,11 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
     val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
+    val installDir = InstallDir(tmpDir, cache)
+
+    val created = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
       launcher
     )
 
@@ -183,11 +183,11 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
     val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
+    val installDir = InstallDir(tmpDir, cache)
+
+    val created = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
       launcher
     )
 
@@ -211,11 +211,11 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
     val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
+    val installDir = InstallDir(tmpDir, cache)
+
+    val created = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
       launcher
     )
 
@@ -245,13 +245,13 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
     val launcher = tmpDir.resolve("echo")
 
-    val created = AppGenerator.createOrUpdate(
+    val installDir = InstallDir(tmpDir, cache)
+      .withVerbosity(1)
+
+    val created = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
-      launcher,
-      verbosity = 1
+      launcher
     )
 
     assert(created)
@@ -265,11 +265,9 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
     testRun()
 
-    val updated = AppGenerator.createOrUpdate(
+    val updated = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
       launcher
     )
 
@@ -292,13 +290,14 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       val t = Instant.now()
       t.minusNanos(t.getNano) // seems nano part isn't persisted
     }
-    val created = AppGenerator.createOrUpdate(
+
+    val installDir = InstallDir(tmpDir, cache)
+      .withVerbosity(1)
+
+    val created = installDir.createOrUpdate(
       Some((appDesc, descRepr)),
       None,
-      cache,
-      tmpDir,
       launcher,
-      verbosity = 1,
       currentTime = now.plusSeconds(-30)
     )
 
@@ -321,13 +320,10 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
         .withLauncherType("standalone") // easier to test
     )
 
-    val updated = AppGenerator.createOrUpdate(
+    val updated = installDir.createOrUpdate(
       Some((newAppDesc, newDescRepr)),
       None,
-      cache,
-      tmpDir,
       launcher,
-      verbosity = 1,
       currentTime = now
     )
 
@@ -351,24 +347,28 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
 
   //   val launcher = tmpDir.resolve("echo")
 
-  //   val created = AppGenerator.createOrUpdate(
+  //   val installDir = InstallDir(tmpDir, cache)
+  //     .withVerbosity(1)
+  //     .withGraalvmParamsOpt {
+  //       Option(System.getenv("GRAALVM_HOME"))
+  //         .orElse {
+  //           val isGraalVM = Option(System.getProperty("java.vm.name"))
+  //             .map(_.toLowerCase(Locale.ROOT))
+  //             .exists(_.contains("graal"))
+  //           if (isGraalVM)
+  //             Option(System.getenv("JAVA_HOME"))
+  //               .orElse(Option(System.getProperty("java.home")))
+  //           else
+  //             None
+  //         }
+  //         .map(GraalvmParams(_, Nil))
+  //     }
+  //   )
+
+  //   val created = installDir.createOrUpdate(
   //     Some((appDesc, descRepr)),
   //     None,
-  //     cache,
-  //     tmpDir,
-  //     launcher,
-  //     graalvmParamsOpt = Option(System.getenv("GRAALVM_HOME"))
-  //       .orElse {
-  //         val isGraalVM = Option(System.getProperty("java.vm.name"))
-  //           .map(_.toLowerCase(Locale.ROOT))
-  //           .exists(_.contains("graal"))
-  //         if (isGraalVM)
-  //           Option(System.getenv("JAVA_HOME"))
-  //             .orElse(Option(System.getProperty("java.home")))
-  //         else
-  //           None
-  //       }
-  //       .map(GraalvmParams(_, Nil))
+  //     launcher
   //   )
 
   //   assert(created)

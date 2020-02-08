@@ -5,12 +5,16 @@ import java.nio.charset.Charset
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.cache.internal.FileUtil
+import coursier.env.EnvironmentUpdate
 import coursier.util.Task
 import dataclass.data
 
 @data class JavaHome(
   cache: Option[JvmCache] = None,
-  installIfNeeded: Boolean = true
+  installIfNeeded: Boolean = true,
+  getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
+  os: String = JvmIndex.defaultOs(),
+  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default()
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -33,39 +37,39 @@ import dataclass.data
     get(JavaHome.defaultId)
 
   def system(): Task[Option[File]] =
-    Task.delay(Option(System.getenv("JAVA_HOME"))).flatMap {
+    Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
       case None =>
-        if (JvmCache.isMacOs)
+        if (os == "darwin")
           Task.delay {
-            import sys.process._
             // FIXME What happens if no JDK is installed?
-            Some(Seq("/usr/libexec/java_home").!!.trim)
+            val outputOrRetCode = commandOutput
+              .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
+            outputOrRetCode
+              .toOption
+              .map(_.trim)
               .filter(_.nonEmpty)
               .map(new File(_))
           }
         else
           Task.delay {
-            val b = new ProcessBuilder("java", "-XshowSettings:properties", "-version")
-            b.redirectInput(ProcessBuilder.Redirect.INHERIT)
-            b.redirectOutput(ProcessBuilder.Redirect.PIPE)
-            b.redirectError(ProcessBuilder.Redirect.PIPE)
-            b.redirectErrorStream(true)
-            val p = b.start()
-            val output = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
-            val retCode = p.waitFor()
-            if (retCode == 0) {
-              val it = output
-                .linesIterator
-                .map(_.trim)
-                .filter(_.startsWith("java.home = "))
-                .map(_.stripPrefix("java.home = "))
-              if (it.hasNext)
-                Some(it.next())
-                  .map(new File(_))
-              else
-                None
-            } else
-              None
+
+            val outputOrRetCode = commandOutput
+              .run(Seq("java", "-XshowSettings:properties", "-version"), keepErrStream = true)
+
+            outputOrRetCode
+              .toOption
+              .flatMap { output =>
+                val it = output
+                  .linesIterator
+                  .map(_.trim)
+                  .filter(_.startsWith("java.home = "))
+                  .map(_.stripPrefix("java.home = "))
+                if (it.hasNext)
+                  Some(it.next())
+                    .map(new File(_))
+                else
+                  None
+              }
           }
       case Some(home) =>
         Task.point(Some(new File(home)))
@@ -100,10 +104,21 @@ import dataclass.data
       }
     }
 
+  def environmentFor(id: String): Task[EnvironmentUpdate] =
+    get(id).map { home =>
+      JavaHome.environmentFor(id, home, isMacOs = os == "darwin")
+    }
+
+  def environmentFor(id: String, home: File): EnvironmentUpdate =
+    JavaHome.environmentFor(id, home, isMacOs = os == "darwin")
+
 }
 
 object JavaHome {
 
+  // TODO Load the content of JvmIndex lazily / later, and only if it is required
+  // (it's not when looking at the system JVM for example), so that we can get
+  // this one as is, rather than wrapped in Task[_].
   def default: Task[JavaHome] =
     JavaHome().withDefaultCache
 
@@ -113,5 +128,56 @@ object JavaHome {
     "adopt@1.8+"
   def defaultId: String =
     s"$systemId|$defaultJvm"
+
+  def environmentFor(
+    id: String,
+    javaHome: File,
+    isMacOs: Boolean
+  ): EnvironmentUpdate =
+    if (id == systemId)
+      EnvironmentUpdate.empty
+    else {
+      val addPath = !isMacOs // /usr/bin/java reads JAVA_HOME on macOS, no need to update the PATH
+      val pathEnv =
+        if (addPath) {
+          val binDir = new File(javaHome, "bin").getAbsolutePath
+          EnvironmentUpdate.empty.withPathLikeAppends(Seq("PATH" -> binDir))
+        } else
+          EnvironmentUpdate.empty
+      EnvironmentUpdate.empty.withSet(Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
+    }
+
+  trait CommandOutput {
+    def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String]
+  }
+
+  object CommandOutput {
+    private final class DefaultCommandOutput extends CommandOutput {
+      def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] = {
+        val b = new ProcessBuilder(command: _*)
+        b.redirectInput(ProcessBuilder.Redirect.INHERIT)
+        b.redirectOutput(ProcessBuilder.Redirect.PIPE)
+        b.redirectError(ProcessBuilder.Redirect.PIPE)
+        b.redirectErrorStream(true)
+        val p = b.start()
+        p.getOutputStream.close()
+        val output = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
+        val retCode = p.waitFor()
+        if (retCode == 0)
+          Right(output)
+        else
+          Left(retCode)
+      }
+    }
+
+    def default(): CommandOutput =
+      new DefaultCommandOutput
+
+    def apply(f: (Seq[String], Boolean) => Either[Int, String]): CommandOutput =
+      new CommandOutput {
+        def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] =
+          f(command, keepErrStream)
+      }
+  }
 
 }

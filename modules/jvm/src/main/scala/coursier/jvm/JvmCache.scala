@@ -11,8 +11,6 @@ import coursier.cache.internal.ThreadUtil
 import coursier.paths.CoursierPaths
 import coursier.util.{Artifact, Task}
 import dataclass.data
-import org.codehaus.plexus.archiver.UnArchiver
-import org.codehaus.plexus.logging.AbstractLogger
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.control.NonFatal
@@ -28,11 +26,51 @@ import scala.util.control.NonFatal
   index: Option[JvmIndex] = None,
   maxWaitDuration: Option[Duration] = Some(1.minute),
   durationBetweenChecks: FiniteDuration = 2.seconds,
-  scheduledExecutor: Option[ScheduledExecutorService] = None
+  scheduledExecutor: Option[ScheduledExecutorService] = Some(JvmCache.defaultScheduledExecutor),
+  currentTime: () => Instant = () => Instant.now(),
+  unArchiver: UnArchiver = UnArchiver.default()
 ) {
 
   def withDefaultLogger(logger: JvmCacheLogger): JvmCache =
     withDefaultLogger(Some(logger))
+
+
+  private def tryExtract(
+    entry: JvmIndexEntry,
+    dir: File,
+    logger0: JvmCacheLogger,
+    archive: File,
+    tmpDir: File
+  ) =
+    withLockFor(dir) {
+      logger0.extracting(entry.id, entry.url, dir)
+      val dir0 = try {
+
+        JvmCache.deleteRecursive(tmpDir)
+        unArchiver.extract(entry.archiveType, archive, tmpDir, overwrite = false)
+
+        val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
+          case Array() =>
+            throw new Exception(s"$archive is empty (from ${entry.url})")
+          case Array(rootDir0) =>
+            if (rootDir0.isDirectory)
+              rootDir0
+            else
+              throw new Exception(s"$archive does not contain a directory (from ${entry.url})")
+          case other =>
+            throw new Exception(s"Unexpected content at the root of $archive (from ${entry.url}): ${other.toSeq}")
+        }
+        Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
+        JvmCache.deleteRecursive(tmpDir)
+        dir
+      } catch {
+        case NonFatal(e) =>
+          logger0.extractionFailed(entry.id, entry.url, dir, e)
+          throw e
+      }
+      logger0.extracted(entry.id, entry.url, dir)
+      dir0
+    }
 
   def get(
     entry: JvmIndexEntry,
@@ -43,7 +81,7 @@ import scala.util.control.NonFatal
     val tmpDir = tempDirectory(dir)
     val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
 
-    Task.delay(Instant.now()).flatMap { initialAttempt =>
+    Task.delay(currentTime()).flatMap { initialAttempt =>
 
       lazy val task: Task[File] =
         Task.delay(dir.isDirectory).flatMap {
@@ -52,53 +90,24 @@ import scala.util.control.NonFatal
             cache.file(Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))).run.flatMap {
               case Left(err) => Task.fail(err)
               case Right(archive) =>
-                val tryExtract = Task.delay {
-                  withLockFor(dir) {
-                    logger0.extracting(entry.id, entry.url, dir)
-                    val dir0 = try {
-
-                      val unArchiver = entry.archiveType.unArchiver() : UnArchiver
-                      unArchiver.setOverwrite(false)
-                      unArchiver.setSourceFile(archive)
-                      unArchiver.setDestDirectory(tmpDir)
-
-                      JvmCache.deleteRecursive(tmpDir)
-                      tmpDir.mkdirs()
-                      unArchiver.extract()
-                      val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
-                        case Array() =>
-                          throw new Exception(s"$archive is empty (from ${entry.url})")
-                        case Array(rootDir0) =>
-                          if (rootDir0.isDirectory)
-                            rootDir0
-                          else
-                            throw new Exception(s"$archive does not contain a directory (from ${entry.url})")
-                        case other =>
-                          throw new Exception(s"Unexpected content at the root of $archive (from ${entry.url}): ${other.toSeq}")
-                      }
-                      Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
-                      JvmCache.deleteRecursive(tmpDir)
-                      dir
-                    } catch {
-                      case NonFatal(e) =>
-                        logger0.extractionFailed(entry.id, entry.url, dir, e)
-                        throw e
-                    }
-                    logger0.extracted(entry.id, entry.url, dir)
-                    dir0
-                  }
+                val tryExtract0 = Task.delay {
+                  tryExtract(
+                    entry,
+                    dir,
+                    logger0,
+                    archive,
+                    tmpDir
+                  )
                 }
 
-                tryExtract.flatMap {
+                tryExtract0.flatMap {
                   case Some(dir) => Task.point(dir)
                   case None =>
-                    maxWaitDuration match {
-                      case None =>
-                        Task.fail(new Exception(s"Directory $dir is locked"))
-                      case Some(max) =>
+                    (maxWaitDuration, scheduledExecutor) match {
+                      case (Some(max), Some(executor)) =>
 
                         val shouldTryAgainTask = Task.delay {
-                          val now = Instant.now()
+                          val now = currentTime()
                           val elapsedMs = now.toEpochMilli - initialAttempt.toEpochMilli
                           elapsedMs < max.toMillis
                         }
@@ -107,10 +116,12 @@ import scala.util.control.NonFatal
                           case false =>
                             Task.fail(new Exception(s"Directory $dir still locked after $max"))
                           case true =>
-                            val executor = scheduledExecutor.getOrElse(JvmCache.defaultScheduledExecutor)
                             Task.completeAfter(executor, durationBetweenChecks)
                               .flatMap { _ => task }
                         }
+
+                      case _ =>
+                        Task.fail(new Exception(s"Directory $dir is locked"))
                     }
                 }
             }
@@ -245,11 +256,6 @@ object JvmCache {
       .orElse(defaultVersion)
   }
 
-
-  private[coursier] lazy val isMacOs: Boolean =
-    Option(System.getProperty("os.name"))
-      .map(_.toLowerCase(Locale.ROOT))
-      .exists(_.contains("mac"))
 
   private def finalDirectory(dir: File, os: String): File =
     if (os == "darwin")

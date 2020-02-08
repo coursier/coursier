@@ -2,7 +2,9 @@ package coursier.cli
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.Scanner
 
+import caseapp.core.RemainingArgs
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
 import coursier.cli.bootstrap.Bootstrap
@@ -14,6 +16,7 @@ import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
+import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.cli.spark.SparkSubmit
 import coursier.core.Version
 import coursier.launcher.internal.{FileUtil, Windows}
@@ -45,6 +48,18 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     }
     new String(b, StandardCharsets.UTF_8)
   }
+
+  override def main(args: Array[String]): Unit =
+    if (args.isEmpty && Windows.isWindows) {
+      // TODO Print some kind of banner
+      Setup.run(SetupOptions(), RemainingArgs(Nil, Nil))
+
+      // https://stackoverflow.com/questions/26184409/java-console-prompt-for-enter-input-before-moving-on/26184535#26184535
+      println("Press \"ENTER\" to continue...")
+      val scanner = new Scanner(System.in)
+      scanner.nextLine()
+    } else
+      super.main(args)
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
@@ -90,13 +105,15 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Publish.run(publishOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions))))))))))) =>
+        Setup.run(setupOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions)))))))))))) =>
         Sonatype.run(sonatypeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions))))))))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
         cnil.impossible
     }
 

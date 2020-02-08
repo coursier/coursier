@@ -16,7 +16,7 @@ final case class SharedJavaParams(
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
 
-  def jvmCacheLogger: JvmCacheLogger =
+  def jvmCacheLogger(): JvmCacheLogger =
     if (output.verbosity >= 0)
       new JvmCacheLogger {
         def extracting(id: String, origin: String, dest: File): Unit =
