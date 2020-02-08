@@ -3,54 +3,53 @@ package coursier.cli.install
 import java.nio.file.{Path, Paths}
 
 import caseapp.Tag
-import cats.data.ValidatedNel
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
+import cats.implicits._
 import coursier.cache.CacheLogger
 import coursier.cli.params.OutputParams
+import coursier.core.Repository
 import coursier.install.GraalvmParams
-import coursier.params.CacheParams
-
-import scala.concurrent.duration.Duration
+import coursier.parse.RepositoryParser
 
 final case class SharedInstallParams(
-  cache: CacheParams,
-  verbosity: Int,
-  progressBars: Boolean,
+  repositories: Seq[Repository],
   dir: Path,
-  forceUpdate: Boolean,
   graalvmParamsOpt: Option[GraalvmParams] = None
-) {
-  def logger(): CacheLogger =
-    OutputParams(verbosity, progressBars, forcePrint = false).logger()
-}
+)
 
 object SharedInstallParams {
-  def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] =
-    apply(options, None)
-  def apply(options: SharedInstallOptions, defaultTtlOpt: Option[Duration]): ValidatedNel[String, SharedInstallParams] = {
 
-    val cacheParamsV = options.cacheOptions.params(defaultTtlOpt)
+  lazy val defaultDir = {
+    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+  }
 
-    val verbosity = Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet)
+  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
+    v.either match {
+      case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
+      case Right(r) => Validated.validNel(r)
+    }
 
-    val progressBars = options.progress
+  def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] = {
+
+    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.repository))
+
+    val defaultRepositories =
+      if (options.defaultRepositories)
+        coursier.Resolve.defaultRepositories
+      else
+        Nil
 
     val dir = options.dir match {
       case Some(d) => Paths.get(d)
-      case None => InstallParams.defaultDir
+      case None => defaultDir
     }
 
-    val graalvmParams = {
-      val homeOpt = options.graalvmHome.orElse(sys.env.get("GRAALVM_HOME"))
-      GraalvmParams(homeOpt, options.graalvmOption)
-    }
+    val graalvmParams = GraalvmParams(options.graalvmOption)
 
-    cacheParamsV.map { cacheParams =>
+    repositoriesV.map { repositories =>
       SharedInstallParams(
-        cacheParams,
-        verbosity,
-        progressBars,
+        defaultRepositories ++ repositories,
         dir,
-        options.forceUpdate,
         Some(graalvmParams)
       )
     }

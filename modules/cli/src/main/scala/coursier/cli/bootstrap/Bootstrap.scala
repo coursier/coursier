@@ -10,15 +10,16 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.resolve.{Resolve, ResolveException}
+import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{Classifier, Dependency, Module, ModuleName, Organization, Repository, Resolution, Type}
-import coursier.install.MainClass
-import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, ScalaNativeGenerator}
+import coursier.install.{Channels, MainClass}
+import coursier.jvm.JvmCache
+import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble, ScalaNativeGenerator}
 import coursier.launcher.native.NativeBuilder
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
-import coursier.launcher.Preamble
 
 object Bootstrap extends CaseApp[BootstrapOptions] {
 
@@ -183,18 +184,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
-      val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels, initialRepositories, cache)
+      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 
-    val params = BootstrapParams(options0).toEither match {
-      case Left(errors) =>
-        for (err <- errors.toList)
-          System.err.println(err)
-        sys.exit(1)
-      case Right(params0) =>
-        params0
-    }
+    val params = BootstrapParams(options0).exitOnError()
 
     if (pool == null)
       pool = Sync.fixedThreadPool(params.sharedLaunch.resolve.cache.parallel)
@@ -231,56 +226,80 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         t0
     }
 
-    // kind of lame, I know
     var wroteBat = false
 
-    if (params.sharedLaunch.resolve.dependency.native) {
+    val javaOptions =
+      if (params.specific.assembly)
+        params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
+      else
+        params.specific.javaOptions
 
-      val nativeVersion = params.nativeShortVersionOpt
-        .orElse(defaultNativeVersion(res.rootDependencies))
-        .getOrElse {
-          // FIXME Throw here?
-          "0.3"
+    val params0 =
+      if (params.sharedLaunch.resolve.dependency.native) {
+
+        val nativeVersion = params.nativeShortVersionOpt
+          .orElse(defaultNativeVersion(res.rootDependencies))
+          .getOrElse {
+            // FIXME Throw here?
+            "0.3"
+          }
+
+        if (params.sharedLaunch.resolve.output.verbosity >= 1)
+          System.err.println(s"Using scala-native version $nativeVersion")
+
+        val log: String => Unit =
+          if (params.sharedLaunch.resolve.output.verbosity >= 0)
+            s => Console.err.println(s)
+          else
+            _ => ()
+
+        val fetch0 = {
+          val logger = params.sharedLaunch.resolve.output.logger()
+          simpleFetchFunction(
+            params.sharedLaunch.resolve.repositories.repositories,
+            params.sharedLaunch.resolve.cache.cache(pool, logger)
+          )
         }
 
-      if (params.sharedLaunch.resolve.output.verbosity >= 1)
-        System.err.println(s"Using scala-native version $nativeVersion")
+        Parameters.ScalaNative(fetch0, mainClass, nativeVersion)
+          .withJars(files.map(_._2))
+          .withOptions(params.nativeOptions)
+          .withLog(log)
+          .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
+      } else if (params.specific.nativeImage) {
+        val fetch0 = {
+          val logger = params.sharedLaunch.resolve.output.logger()
+          simpleFetchFunction(
+            params.sharedLaunch.resolve.repositories.repositories,
+            params.sharedLaunch.resolve.cache.cache(pool, logger)
+          )
+        }
 
-      val log: String => Unit =
-        if (params.sharedLaunch.resolve.output.verbosity >= 0)
-          s => Console.err.println(s)
-        else
-          _ => ()
+        val graalvmVersion = params.specific.graalvmVersionOpt.getOrElse("latest.release")
 
-      val fetch0 = {
-        val logger = params.sharedLaunch.resolve.output.logger()
-        simpleFetchFunction(
-          params.sharedLaunch.resolve.repositories.repositories,
-          params.sharedLaunch.resolve.cache.cache(pool, logger)
-        )
-      }
+        val javaHomeTask = for {
+          baseHandle <- JvmCache.default
+          handle = baseHandle.withCache(
+            params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger())
+          )
+          home <- handle.get(s"graalvm:$graalvmVersion")
+        } yield home
+        val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
-      val params0 = Parameters.ScalaNative(fetch0, mainClass, nativeVersion)
-        .withJars(files.map(_._2))
-        .withOptions(params.nativeOptions)
-        .withLog(log)
-        .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
+        Parameters.NativeImage(mainClass, fetch0)
+          .withJars(files.map(_._2))
+          .withGraalvmVersion(params.specific.graalvmVersionOpt)
+          .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
+          .withGraalvmOptions(params.specific.graalvmOptions)
+          .withJavaHome(javaHome)
+          .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
+      } else {
 
-      ScalaNativeGenerator.generate(params0, params.specific.output)
-    } else {
+        if (params.specific.createBatFile && !params.specific.force && Files.exists(params.specific.batOutput)) {
+          System.err.println(s"Error: ${params.specific.batOutput} already exists, use -f option to force erasing it.")
+          sys.exit(1)
+        }
 
-      if (params.specific.createBatFile && !params.specific.force && Files.exists(params.specific.batOutput)) {
-        System.err.println(s"Error: ${params.specific.batOutput} already exists, use -f option to force erasing it.")
-        sys.exit(1)
-      }
-
-      val javaOptions =
-        if (params.specific.assembly)
-          params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
-        else
-          params.specific.javaOptions
-
-      val params0 =
         if (params.specific.assembly)
           Parameters.Assembly()
             .withFiles(files.map(_._2))
@@ -342,18 +361,18 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             .withHybridAssembly(params.specific.hybrid)
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
         }
-
-      Generator.generate(params0, output0)
-
-      if (params.specific.createBatFile) {
-        val content = Preamble()
-          .withKind(Preamble.Kind.Bat)
-          .withJarPath("%~dp0\\%~n0")
-          .withJavaOpts(javaOptions)
-          .value
-        Files.write(params.specific.batOutput, content)
-        wroteBat = true
       }
+
+    Generator.generate(params0, output0)
+
+    if (params.specific.createBatFile) {
+      val content = Preamble()
+        .withKind(Preamble.Kind.Bat)
+        .withJarPath("%~dp0\\%~n0")
+        .withJavaOpts(javaOptions)
+        .value
+      Files.write(params.specific.batOutput, content)
+      wroteBat = true
     }
 
     if (params.sharedLaunch.resolve.output.verbosity >= 0) {

@@ -7,7 +7,9 @@ import java.util.zip.ZipEntry
 
 import dataclass.data
 
-sealed abstract class Parameters extends Product with Serializable
+sealed abstract class Parameters extends Product with Serializable {
+  def isNative: Boolean = false
+}
 
 object Parameters {
 
@@ -69,19 +71,18 @@ object Parameters {
 
   @data class NativeImage(
     mainClass: String,
+    fetch: Seq[String] => Seq[File],
     jars: Seq[File] = Nil,
-    fetch: Option[Seq[String] => Seq[File]] = None,
-    graalvmHome: Option[File] = None,
     graalvmVersion: Option[String] = None,
     graalvmJvmOptions: Seq[String] = NativeImage.defaultGraalvmJvmOptions,
     graalvmOptions: Seq[String] = Nil,
+    javaHome: Option[File] = None, // needs a "JVMCI-enabled JDK" (like GraalVM)
     nameOpt: Option[String] = None,
     verbosity: Int = 0
   ) extends Parameters {
-    def withGraalvmHome(f: File): NativeImage =
-      withGraalvmHome(Some(f))
-    def withFetch(fetch: Seq[String] => Seq[File]): NativeImage =
-      withFetch(Some(fetch))
+    override def isNative: Boolean = true
+    def withJavaHome(home: File): NativeImage =
+      withJavaHome(Some(home))
   }
 
   object NativeImage {
@@ -97,7 +98,9 @@ object Parameters {
     options: ScalaNative.ScalaNativeOptions = ScalaNative.ScalaNativeOptions(),
     log: String => Unit = s => System.err.println(s),
     verbosity: Int = 0
-  ) extends Parameters
+  ) extends Parameters {
+    override def isNative: Boolean = true
+  }
 
   object ScalaNative {
 
@@ -120,6 +123,8 @@ object Parameters {
   }
 
   /** For test purposes */
-  @data class DummyNative() extends Parameters
+  @data class DummyNative() extends Parameters {
+    override def isNative: Boolean = true
+  }
 
 }

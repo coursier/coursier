@@ -12,7 +12,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.Resolution
-import coursier.install.{MainClass, RawAppDescriptor}
+import coursier.install.{Channels, MainClass, RawAppDescriptor}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -392,7 +392,8 @@ object Launch extends CaseApp[LaunchOptions] {
       val channels = initialParams.shared.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
       val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
-      val res = Resolve.handleApps(options, args.remaining, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels, initialRepositories, cache)
+      val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
 
       if (options.json) {
         val app = res._1.app

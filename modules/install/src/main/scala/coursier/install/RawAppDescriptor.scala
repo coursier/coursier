@@ -138,6 +138,9 @@ import scala.language.implicitConversions
         dep +: dependencies.tail
       }
     }
+
+  def overrideVersion(verOpt: Option[String]): RawAppDescriptor =
+    verOpt.fold(this)(overrideVersion(_))
 }
 
 object RawAppDescriptor {

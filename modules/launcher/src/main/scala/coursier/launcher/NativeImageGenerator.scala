@@ -8,25 +8,32 @@ import coursier.launcher.internal.{FileUtil, Windows}
 
 object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
+  // TODO Get isWindows via the params? Along with some kind of CommandRunner?
+  // That would allow to unit test the logic here.
+
+  private def executable(dir: File, name: String): Option[File] =
+    if (Windows.isWindows)
+      ("" +: Windows.pathExtensions)
+        .toStream
+        .map(ext => new File(dir, s"$name$ext"))
+        .filter(_.exists())
+        .headOption
+    else
+      Some(new File(dir, name))
+
+
   def generate(parameters: Parameters.NativeImage, output: Path): Unit = {
 
-    val startCmd = parameters.graalvmHome match {
-      case Some(home) =>
-        if (Windows.isWindows)
-          Seq(s"$home/bin/native-image.cmd")
-        else
-          Seq(s"$home/bin/native-image", "--no-server")
-      case None =>
-        parameters.fetch match {
-          case Some(fetch) =>
-            val version = parameters.graalvmVersion.getOrElse("latest.release")
-            val javaOpts = parameters.graalvmJvmOptions
-            val cp = fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version"))
-            // FIXME Really only works well if the JVM is GraalVM
-            Seq("java") ++ javaOpts ++ Seq("-cp", cp.map(_.getAbsolutePath).mkString(File.pathSeparator), "com.oracle.svm.driver.NativeImage")
-          case None =>
-            sys.error("No GraalVM home specified, and no function to fetch artifacts passed either.")
-        }
+    val startCmd = {
+      val version = parameters.graalvmVersion.getOrElse("latest.release")
+      val javaOpts = parameters.graalvmJvmOptions
+      val cp = parameters.fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version"))
+      // Really only works well if the JVM is GraalVM
+      val javaPath = parameters.javaHome
+        .map(new File(_, "bin"))
+        .flatMap(executable(_, "java"))
+        .fold("java")(_.getAbsolutePath)
+      Seq(javaPath) ++ javaOpts ++ Seq("-cp", cp.map(_.getAbsolutePath).mkString(File.pathSeparator), "com.oracle.svm.driver.NativeImage")
     }
 
     def generate(extraArgs: String*): Either[Int, Unit] = {

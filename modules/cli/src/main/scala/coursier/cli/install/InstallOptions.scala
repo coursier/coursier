@@ -1,6 +1,7 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.options.{CacheOptions, OutputOptions}
 
 final case class InstallOptions(
 
@@ -10,19 +11,22 @@ final case class InstallOptions(
     repository: List[String] = Nil,
 
   @Recurse
+    cacheOptions: CacheOptions = CacheOptions(),
+
+  @Recurse
+    outputOptions: OutputOptions = OutputOptions(),
+
+  @Recurse
     sharedInstallOptions: SharedInstallOptions = SharedInstallOptions(),
 
-  channel: List[String] = Nil,
+  @Recurse
+    sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  defaultChannels: Boolean = true,
-  fileChannels: Boolean = true,
+  addChannel: List[String] = Nil,
 
-  defaultRepositories: Boolean = true,
+  @Short("f")
+    force: Boolean = false
 
-  @Help("Name of the binary of the app to be installed")
-    name: Option[String] = None,
-
-  addChannel: List[String] = Nil
 )
 
 object InstallOptions {

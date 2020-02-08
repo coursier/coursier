@@ -15,7 +15,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
-import coursier.install.{AppArtifacts, Channel, RawAppDescriptor}
+import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
@@ -125,19 +125,21 @@ object Resolve extends CaseApp[ResolveOptions] {
       }
 
       val (scalaVersion, platformOpt, deps) = unlift {
-        AppArtifacts.dependencies(
-          cache,
-          params.repositories.repositories,
-          params.dependency.platformOpt,
-          params.output.verbosity,
-          javaOrScalaDeps,
-          constraintOpt = params.resolution.scalaVersionOpt.map { s =>
-            val reworked =
+        AppDescriptor()
+          .withDependencies(javaOrScalaDeps)
+          .withRepositories(params.repositories.repositories)
+          .withScalaVersionOpt(
+            params.resolution.scalaVersionOpt.map { s =>
               if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
               else s
-            coursier.core.Parse.versionConstraint(reworked)
-          }
-        ).left.map(err => new Exception(err))
+            }
+          )
+          .processDependencies(
+            cache,
+            params.dependency.platformOpt,
+            params.output.verbosity
+          )
+          .left.map(err => new Exception(err))
       }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
@@ -288,9 +290,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   def handleApps[T](
     options: T,
     args: Seq[String],
-    channels: Seq[Channel],
-    repositories: Seq[Repository],
-    cache: Cache[Task]
+    channels: Channels
   )(
     withApp: (T, RawAppDescriptor) => T
   ): (T, Seq[String]) = {
@@ -304,30 +304,29 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val descOpt = appIds.headOption.map { id =>
 
-      val (actualId, overrideVersionOpt) = {
-        val idx = id.indexOf(':')
-        if (idx < 0)
-          (id, None)
-        else
-          (id.take(idx), Some(id.drop(idx + 1)))
-      }
-
       val e = for {
-        b <- Install.appDescriptor(
-          channels,
-          repositories,
-          cache,
-          actualId
-        ).map(_._2)
-        desc <- RawAppDescriptor.parse(new String(b, StandardCharsets.UTF_8))
-      } yield overrideVersionOpt.fold(desc)(desc.overrideVersion)
+        info <- channels.appDescriptor(id)
+          .attempt
+          .flatMap {
+            case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
+            case Left(e) => Task.fail(e)
+            case Right(res) => Task.point(Right(res))
+          }
+          .unsafeRun()(channels.cache.ec)
+        rawDesc <- RawAppDescriptor.parse(new String(info.appDescriptorBytes, StandardCharsets.UTF_8))
+      } yield {
+        rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+          .overrideVersion(info.overrideVersionOpt)
+      }
 
       e match {
         case Left(err) =>
           System.err.println(err)
           sys.exit(1)
-        case Right(res) =>
-          res.withName(res.name.orElse(Some(actualId))) // kind of meh - so that the id can be picked as default output name by bootstrap
+        case Right(res) => res
       }
     }
 
@@ -347,7 +346,8 @@ object Resolve extends CaseApp[ResolveOptions] {
       val channels = initialParams.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val res = handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels, initialRepositories, cache)
+      val res = handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 

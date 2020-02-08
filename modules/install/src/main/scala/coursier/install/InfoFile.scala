@@ -11,6 +11,7 @@ import coursier.cache.internal.FileUtil
 import coursier.launcher.Preamble
 
 import scala.util.control.NonFatal
+import java.util.zip.ZipException
 
 object InfoFile {
 
@@ -20,8 +21,21 @@ object InfoFile {
   private[coursier] def sharedLockFilePath = "META-INF/coursier/shared-deps-lock-file"
 
 
-  def isInfoFile(p: Path): Boolean =
-    ???
+  def isInfoFile(p: Path): Boolean = {
+
+    var zf: ZipFile = null
+
+    try {
+      zf = new ZipFile(p.toFile)
+      zf.getEntry(jsonDescFilePath) != null
+    } catch {
+      case e: ZipException =>
+        false
+    } finally {
+      if (zf != null)
+        zf.close()
+    }
+  }
 
   def readSource(f: Path): Option[(Source, Array[Byte])] = {
 
@@ -54,39 +68,34 @@ object InfoFile {
     }
   }
 
-  def readAppDescriptor(f: Path): Option[(AppDescriptor, Array[Byte])] = {
+  private[coursier] def appDescriptor(path: String, content: Array[Byte]) =
+    RawAppDescriptor.parse(new String(content, StandardCharsets.UTF_8))
+      .left.map(err => new ErrorParsingAppDescription(path, err))
+      .flatMap { r =>
+        r.appDescriptor
+          .toEither
+          .left.map { errors =>
+            new ErrorProcessingAppDescription(path, errors.toList.mkString(", "))
+          }
+      }
 
-    val from = {
-      val info = f.getParent.resolve(s".${f.getFileName}.info")
-      if (Files.isRegularFile(info))
-        info
-      else
-        f
-    }
+  def readAppDescriptor(f: Path): Option[(AppDescriptor, Array[Byte])] = {
 
     var zf: ZipFile = null
 
     try {
-      zf = new ZipFile(from.toFile)
+      zf = new ZipFile(f.toFile)
       val entOpt = Option(zf.getEntry(jsonDescFilePath))
 
       entOpt.map { ent =>
         val content = FileUtil.readFully(zf.getInputStream(ent))
-        val e = RawAppDescriptor.parse(new String(content, StandardCharsets.UTF_8))
-          .left.map(err => new ErrorParsingAppDescription(s"$from!$jsonDescFilePath", err))
-          .flatMap { r =>
-            r.appDescriptor
-              .toEither
-              .left.map { errors =>
-                new ErrorProcessingAppDescription(s"$from!$jsonDescFilePath", errors.toList.mkString(", "))
-              }
-          }
-        val desc = e.fold(throw _, identity)
+        val e = appDescriptor(s"$f!$jsonDescFilePath", content)
+        val desc = e.fold(throw _, identity) // meh
         (desc, content)
       }
     } catch {
       case NonFatal(e) =>
-        throw new Exception(s"Reading $from", e)
+        throw new Exception(s"Reading $f", e)
     } finally {
       if (zf != null)
         zf.close()
@@ -117,7 +126,7 @@ object InfoFile {
       e -> content
     }
 
-    val destEntry = {
+    val descEntry = {
       val e = new ZipEntry(jsonDescFilePath)
       e.setLastModifiedTime(FileTime.from(currentTime))
       e.setCompressedSize(-1L)
@@ -131,7 +140,7 @@ object InfoFile {
       e -> sourceRepr
     }
 
-    Seq(destEntry, lockFileEntry) ++ sourceEntryOpt.toSeq ++ sharedLockFileEntryOpt.toSeq
+    Seq(descEntry, lockFileEntry) ++ sourceEntryOpt.toSeq ++ sharedLockFileEntryOpt.toSeq
   }
 
   def upToDate(

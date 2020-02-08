@@ -61,7 +61,7 @@ goto Win9xApp
 @REM Reaching here means variables are defined and arguments have been captured
 :endInit
 
-set JAR_PATH=%~dp0\%~n0
+set JAR_PATH=@JAR_PATH@
 SET PROG_DIR=%~dp0
 SET PSEP=;
 

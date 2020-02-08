@@ -292,9 +292,21 @@ lazy val publish = project("publish")
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
   )
 
+lazy val env = project("env")
+  .disablePlugins(MimaPlugin)
+  .settings(
+    shared,
+    coursierPrefix,
+    libs ++= Seq(
+      Deps.dataClass % Provided,
+      Deps.jimfs % Test,
+      Deps.scalatest % Test
+    )
+  )
+
 lazy val install = project("install")
   .disablePlugins(MimaPlugin)
-  .dependsOn(coursierJvm, launcher)
+  .dependsOn(coursierJvm, env, launcher)
   .settings(
     shared,
     coursierPrefix,
@@ -304,13 +316,12 @@ lazy val install = project("install")
       Deps.dataClass % Provided,
       Deps.scalatest % Test
     ),
-    onlyIn("2.12"),
     addBootstrapJarResourceInTests
   )
 
 lazy val jvm = project("jvm")
   .disablePlugins(MimaPlugin)
-  .dependsOn(coursierJvm)
+  .dependsOn(coursierJvm, env)
   .settings(
     shared,
     coursierPrefix,
@@ -512,6 +523,7 @@ lazy val jvmProjects = project("jvmProjects")
     `resources-bootstrap-launcher`,
     launcher,
     jvm,
+    env,
     benchmark,
     publish,
     install,
@@ -563,6 +575,7 @@ lazy val `coursier-repo` = project("coursier-repo")
     `resources-bootstrap-launcher`,
     launcher,
     jvm,
+    env,
     benchmark,
     publish,
     install,

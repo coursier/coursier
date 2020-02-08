@@ -4,21 +4,17 @@ import java.io.File
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.Util.ValidatedExitOnError
 import coursier.jvm.{Execve, JvmCacheLogger}
 import coursier.util.Sync
 import coursier.jvm.JvmCache
+import coursier.launcher.internal.Windows
 
 object Java extends CaseApp[JavaOptions] {
   override def stopAtFirstUnrecognized = true
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
 
-    val params = JavaParams(options).toEither match {
-      case Left(errors) =>
-        for (err <- errors.toList)
-          System.err.println(err)
-        sys.exit(1)
-      case Right(params0) => params0
-    }
+    val params = JavaParams(options).exitOnError()
 
     if (params.env && args.all.nonEmpty) {
       System.err.println(s"Error: unexpected arguments passed along --env: ${args.all.mkString(" ")}")
@@ -36,36 +32,47 @@ object Java extends CaseApp[JavaOptions] {
           .withJvmCacheLogger(params.shared.jvmCacheLogger)
           .withCoursierCache(coursierCache)
         homeId <- handle.getWithRetainedId(params.shared.id)
-      } yield homeId
+        (id, home) = homeId
+        envUpdate = handle.environmentFor(id, home)
+      } yield (id, home, envUpdate)
 
+    // TODO More thin grain handling of the logger lifetime here.
+    // As is, its output gets flushed too late sometimes, resulting in progress bars
+    // displayed after actions done after downloads.
     logger.init()
-    val (retainedId, home) =
+    val (retainedId, home, envUpdate) =
       try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
       finally logger.stop()
 
-    // TODO Extension on Windows
-    val javaBin = new File(home, "bin/java")
+    val javaBin = {
+
+      val javaBin0 = new File(home, "bin/java")
+
+      def notFound(): Nothing = {
+        System.err.println(s"Error: $javaBin0 not found")
+        sys.exit(1)
+      }
+
+      // should we use isFile instead of exists?
+      if (Windows.isWindows)
+        // should we really add the empty extension?
+        (Stream("") ++ Windows.pathExtensions)
+          .map(ext => new File(home, s"bin/java$ext"))
+          .filter(_.exists())
+          .headOption
+          .getOrElse(notFound())
+      else
+        Some(javaBin0)
+          .filter(_.exists())
+          .getOrElse(notFound())
+    }
 
     if (!javaBin.isFile) {
       System.err.println(s"Error: $javaBin not found")
       sys.exit(1)
     }
 
-    val extraEnv =
-      if (retainedId == coursier.jvm.JavaHome.systemId)
-        Nil
-      else {
-        val addPath = !JvmCache.isMacOs // /usr/bin/java reads JAVA_HOME on macOS, no need to update the PATH
-        val pathEnv =
-          if (addPath) {
-            val binDir = new File(home, "bin").getAbsolutePath
-            val updatedPath = binDir + Option(System.getenv("PATH")).map(File.pathSeparator + _).getOrElse("")
-            Seq("PATH" -> updatedPath)
-          } else
-            Nil
-        Seq("JAVA_HOME" -> home.getAbsolutePath) ++
-          pathEnv
-      }
+    val extraEnv = envUpdate.updatedEnv()
 
     if (params.env) {
       val q = "\""

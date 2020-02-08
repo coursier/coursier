@@ -9,6 +9,7 @@ import caseapp._
 import cats.data.Validated
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
+import coursier.install.Channels
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
@@ -85,7 +86,8 @@ object Fetch extends CaseApp[FetchOptions] {
       val channels = initialParams.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
       val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
-      val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels, initialRepositories, cache)
+      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 

@@ -20,6 +20,10 @@ final case class BootstrapSpecificParams(
   deterministicOutput: Boolean,
   proguarded: Boolean,
   hybrid: Boolean,
+  nativeImage: Boolean,
+  graalvmVersionOpt: Option[String],
+  graalvmJvmOptions: Seq[String],
+  graalvmOptions: Seq[String],
   disableJarCheckingOpt: Option[Boolean]
 ) {
   import BootstrapSpecificParams.BootstrapPackaging
@@ -36,15 +40,27 @@ final case class BootstrapSpecificParams(
 object BootstrapSpecificParams {
   def apply(options: BootstrapSpecificOptions, native: Boolean): ValidatedNel[String, BootstrapSpecificParams] = {
 
+    val graalvmVersion = options.graalvmVersion
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .filter(_ => !options.nativeImage.contains(false))
+
+    val (graalvmJvmOptions, graalvmOptions) =
+      if (options.nativeImage.contains(false))
+        (Nil, Nil)
+      else
+        (options.graalvmJvmOption.filter(_.nonEmpty), options.graalvmOption.filter(_.nonEmpty))
+
     val validateOutputType = {
       val count = Seq(
         options.assembly.exists(identity),
         options.standalone.exists(identity),
         options.hybrid.exists(identity),
+        options.nativeImage.exists(identity) || graalvmVersion.nonEmpty,
         native
       ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly, --standalone, --hybrid, or --native, can be specified")
+        Validated.invalidNel("Only one of --assembly, --standalone, --hybrid, --native-image, or --native, can be specified")
       else
         Validated.validNel(())
     }
@@ -81,6 +97,7 @@ object BootstrapSpecificParams {
     val assembly = options.assembly.getOrElse(false)
     val standalone = options.standalone.getOrElse(false)
     val hybrid = options.hybrid.getOrElse(false)
+    val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
 
     (validateOutputType, rulesV).mapN {
       (_, rules) =>
@@ -98,6 +115,10 @@ object BootstrapSpecificParams {
           options.deterministic,
           options.proguarded,
           hybrid,
+          nativeImage,
+          graalvmVersion,
+          graalvmJvmOptions,
+          graalvmOptions,
           options.disableJarChecking
         )
     }

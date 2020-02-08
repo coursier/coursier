@@ -24,22 +24,11 @@ object Updatable {
         .filter(InfoFile.isInfoFile)
         .map(_.getFileName.toString)
         .toVector
+        .sorted
     } finally {
       if (s != null)
         s.close()
     }
-  }
-
-  def auxName(name: String, auxExtension: String): String = {
-    val (name0, _) = {
-      val idx = name.lastIndexOf('.')
-      if (idx >= 0)
-        (name.take(idx), name.drop(idx))
-      else
-        (name, "")
-    }
-
-    s".$name0.aux$auxExtension"
   }
 
   def writing[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int)(f: (Path, Path) => T): Option[T] = {
@@ -51,7 +40,7 @@ object Updatable {
     //   Things these moves aren't actually atomic, because we move two files sometimes, and REPLACE_EXISTING doesn't
     //   seem to work along with ATOMIC_MOVE.
 
-    val auxName0 = auxName(dest.getFileName.toString, auxExtension)
+    val auxName0 = InstallDir.auxName(dest.getFileName.toString, auxExtension)
 
     val dir = dest.getParent
 
