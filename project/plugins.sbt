@@ -1,6 +1,6 @@
 
 plugins_(
-  "com.geirsson"       % "sbt-ci-release"           % "1.5.0",
+  "com.geirsson"       % "sbt-ci-release"           % "1.5.2",
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "org.scalameta"      % "sbt-mdoc"                 % "2.1.1",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.6.3",
