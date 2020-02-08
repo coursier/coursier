@@ -55,7 +55,7 @@ object Deps {
     // other settings.
 
     def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % versions.argonautShapeless)
-    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.1.0")
+    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.1.1")
     def fastParse = setting("com.lihaoyi" %%% "fastparse" % versions.fastParse)
     def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "0.9.8")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "0.9.6")
