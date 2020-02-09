@@ -1,7 +1,7 @@
 package coursier.cli.setup
 
 import caseapp.core.parser.Parser
-import caseapp.{Name, Recurse}
+import caseapp.{Name => Short, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, OutputOptions}
@@ -17,7 +17,9 @@ final case class SetupOptions(
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
-  home: Option[String] = None
+  home: Option[String] = None,
+  @Short("y")
+    yes: Boolean = false
 )
 
 object SetupOptions {
