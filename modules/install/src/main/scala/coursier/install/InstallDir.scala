@@ -264,7 +264,7 @@ import scala.util.control.NonFatal
 
             case Some((_, prebuilt)) =>
               Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
-              FileUtil.tryMakeExecutable(prebuilt.toPath)
+              FileUtil.tryMakeExecutable(genDest)
           }
 
           if (desc.launcherType.isNative) {
