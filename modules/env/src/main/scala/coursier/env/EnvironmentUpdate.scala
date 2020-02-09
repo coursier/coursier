@@ -41,7 +41,7 @@ import scala.collection.mutable
           l += k
         val formerOpt = m.get(k).orElse(getEnv(k))
         val newValue = formerOpt.fold(v)(p => p + pathSeparator + v)
-        m(k) = v
+        m(k) = newValue
       }
       l.toList.map(k => k -> m(k))
     }
