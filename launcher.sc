@@ -200,7 +200,10 @@ def uploadNativeImage(): Unit = {
       "-r", "typesafe:ivy-releases",
     ),
     output = dest,
-    mainClass = "coursier.cli.Coursier"
+    mainClass = "coursier.cli.Coursier",
+    // sometimes getting command-too-long errors when starting native-image
+    // with the full classpath, without this
+    useAssembly = Util.os == "win"
   )
 
   // TODO Check that we are on the right CPU too?

@@ -1,6 +1,8 @@
 
 import $file.Util
 
+import java.nio.file.Files
+
 /**
  * Generates a native-image for module `module`.
  *
@@ -15,17 +17,46 @@ def nativeImage(
   module: String,
   extraArgs: Seq[String],
   output: String,
-  mainClass: String // FIXME Get from cp / manifest
+  mainClass: String, // FIXME Get from cp / manifest
+  useAssembly: Boolean = false
 ): Unit = {
 
-  val cpCmd = Seq(
-    coursierLauncher,
-    "fetch",
-    "--classpath",
-    module
-  ) ++ extraArgs
+  val cp =
+    if (useAssembly) {
 
-  val cp = Util.output(cpCmd).trim
+      val tempFile = Files.createTempFile("assembly-", ".jar")
+
+      Runtime.getRuntime().addShutdownHook(
+        new Thread {
+          override def run(): Unit =
+            Files.deleteIfExists(tempFile)
+        }
+      )
+
+      val assemblyPath = tempFile.toAbsolutePath.toString
+
+      val assemblyCmd = Seq(
+        coursierLauncher,
+        "bootstrap",
+        "--assembly",
+        "--preamble=false",
+        "-o", assemblyPath,
+        "-f",
+        module
+      ) ++ extraArgs
+
+      Util.run(assemblyCmd)
+      assemblyPath
+    } else {
+      val cpCmd = Seq(
+        coursierLauncher,
+        "fetch",
+        "--classpath",
+        module
+      ) ++ extraArgs
+
+      Util.output(cpCmd).trim
+    }
 
   def run(extraNativeImageOpts: String*): Unit = {
 
