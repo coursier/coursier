@@ -55,8 +55,7 @@ object Java extends CaseApp[JavaOptions] {
 
       // should we use isFile instead of exists?
       if (Windows.isWindows)
-        // should we really add the empty extension?
-        (Stream("") ++ Windows.pathExtensions)
+        Windows.pathExtensions
           .map(ext => new File(home, s"bin/java$ext"))
           .filter(_.exists())
           .headOption
