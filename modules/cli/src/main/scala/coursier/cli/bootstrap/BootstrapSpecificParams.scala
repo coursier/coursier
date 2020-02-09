@@ -60,7 +60,7 @@ object BootstrapSpecificParams {
         native
       ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly, --standalone, --hybrid, --native-image, or --native, can be specified")
+        Validated.invalidNel("Only one of --assembly (or -a), --standalone (or -s), --hybrid, --native-image, or --native (or -S), can be specified")
       else
         Validated.validNel(())
     }
