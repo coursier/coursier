@@ -223,7 +223,7 @@ import scala.util.control.NonFatal
                         .callsItself(isWindows)
                         .withJavaOpts(desc.javaOptions)
                     )
-                    .withFiles(appArtifacts.fetchResult.files)
+                    .withFiles(appArtifacts.fetchResult.files.map(_.toFile)) // could fail on virtual FS (keeping files for ZipFile)
                     .withMainClass(mainClass)
                     .withExtraZipEntries(infoEntries)
 
@@ -238,7 +238,7 @@ import scala.util.control.NonFatal
 
                   Parameters.NativeImage(mainClass, fetch)
                     .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
-                    .withJars(appArtifacts.fetchResult.files)
+                    .withJars(appArtifacts.fetchResult.files.map(_.toFile))
                     .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
                     .withVerbosity(verbosity)
 
@@ -253,7 +253,7 @@ import scala.util.control.NonFatal
                   val options = ScalaNative.ScalaNativeOptions()
 
                   Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-                    .withJars(appArtifacts.fetchResult.files)
+                    .withJars(appArtifacts.fetchResult.files.map(_.toFile))
                     .withOptions(options)
                     .withVerbosity(verbosity)
               }
@@ -263,8 +263,8 @@ import scala.util.control.NonFatal
               }
 
             case Some((_, prebuilt)) =>
-              Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
-              FileUtil.tryMakeExecutable(prebuilt.toPath)
+              Files.copy(prebuilt, genDest, StandardCopyOption.REPLACE_EXISTING)
+              FileUtil.tryMakeExecutable(prebuilt)
           }
 
           if (desc.launcherType.isNative) {
@@ -357,19 +357,19 @@ object InstallDir {
   def defaultDir: Path =
     defaultDir0
 
-  private def classpathEntry(a: Artifact, f: File, forceResource: Boolean = false): ClassPathEntry =
+  private def classpathEntry(a: Artifact, f: Path, forceResource: Boolean = false): ClassPathEntry =
     if (forceResource || a.changing || a.url.startsWith("file:"))
       ClassPathEntry.Resource(
-        f.getName,
-        f.lastModified(),
-        Files.readAllBytes(f.toPath)
+        f.getFileName.toString,
+        Files.getLastModifiedTime(f).toInstant.toEpochMilli,
+        Files.readAllBytes(f)
       )
     else
       ClassPathEntry.Url(a.url)
 
   private def foundMainClassOpt(
-    shared: Seq[File],
-    jars: Seq[File],
+    shared: Seq[Path],
+    jars: Seq[Path],
     verbosity: Int,
     mainDependencyOpt: Option[Dependency]
   ): Option[String] = {
@@ -401,7 +401,7 @@ object InstallDir {
         }
       }
 
-      fetch.addDependencies(deps0: _*).run()
+      fetch.addDependencies(deps0: _*).run().map(_.toFile)
   }
 
   private def writing[T](
@@ -424,7 +424,7 @@ object InstallDir {
     desc: AppDescriptor,
     cache: Cache[Task],
     verbosity: Int
-  ): Option[(Artifact, File)] =
+  ): Option[(Artifact, Path)] =
     desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).flatMap { pattern =>
       val version = desc.retainedMainVersion(cache, verbosity)
         .orElse(desc.mainVersionOpt)
@@ -451,7 +451,7 @@ object InstallDir {
           case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
           case Right(f) =>
             if (verbosity >= 1) {
-              val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
+              val size = ProgressBarRefreshDisplay.byteCount(Files.size(f))
               System.err.println(s"Found prebuilt launcher at $url ($size)")
             }
             Iterator.single((artifact, f))

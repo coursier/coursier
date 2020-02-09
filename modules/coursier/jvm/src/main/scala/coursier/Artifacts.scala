@@ -2,16 +2,17 @@ package coursier
 
 import java.io.File
 import java.lang.{Boolean => JBoolean}
+import java.nio.file.Path
 
 import coursier.cache.{ArtifactError, Cache}
 import coursier.core.Publication
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
+import dataclass.data
 
 import scala.collection.mutable
-import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.data
+import scala.concurrent.duration.Duration
 
 @data class Artifacts[F[_]](
   cache: Cache[F],
@@ -45,7 +46,7 @@ import dataclass.data
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
     withExtraArtifactsSeq(l)
 
-  def io: F[Seq[(Artifact, File)]] =
+  def io: F[Seq[(Artifact, Path)]] =
     S.map(ioResult)(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
@@ -99,24 +100,24 @@ object Artifacts {
 
 
   @data class Result(
-    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-    extraArtifacts: Seq[(Artifact, File)]
+    detailedArtifacts: Seq[(Dependency, Publication, Artifact, Path)],
+    extraArtifacts: Seq[(Artifact, Path)]
   ) {
 
-    def artifacts: Seq[(Artifact, File)] =
+    def artifacts: Seq[(Artifact, Path)] =
       detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
 
-    def files: Seq[File] =
+    def files: Seq[Path] =
       artifacts.map(_._2)
   }
 
 
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
 
-    def future()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Seq[(Artifact, File)]] =
+    def future()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Seq[(Artifact, Path)]] =
       artifacts.io.future()
 
-    def either()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+    def either()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Seq[(Artifact, Path)]] = {
 
       val f = artifacts
         .io
@@ -127,7 +128,7 @@ object Artifacts {
       Await.result(f, Duration.Inf)
     }
 
-    def run()(implicit ec: ExecutionContext = artifacts.cache.ec): Seq[(Artifact, File)] = {
+    def run()(implicit ec: ExecutionContext = artifacts.cache.ec): Seq[(Artifact, Path)] = {
       val f = artifacts.io.future()
       Await.result(f, Duration.Inf)
     }
@@ -238,7 +239,7 @@ object Artifacts {
     otherCaches: Cache[F]*
   )(implicit
      S: Sync[F]
-  ): F[Seq[(Artifact, File)]] = {
+  ): F[Seq[(Artifact, Path)]] = {
 
     val groupedArtifacts = groupArtifacts(artifacts)
 
@@ -256,7 +257,7 @@ object Artifacts {
     }
 
     // sequential accumulation (we don't have higher level libraries to ease that here…)
-    val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
+    val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, Path])])) { (acc, f) =>
       // for (l <- acc; l0 <- f) yield l ++ l0
       S.bind(acc) { l =>
         S.map(f) { l0 =>
@@ -284,7 +285,7 @@ object Artifacts {
 
       val ignoredErrors = new mutable.ListBuffer[(Artifact, ArtifactError)]
       val errors = new mutable.ListBuffer[(Artifact, ArtifactError)]
-      val artifactToFile = new mutable.ListBuffer[(Artifact, File)]
+      val artifactToFile = new mutable.ListBuffer[(Artifact, Path)]
 
       results.foreach {
         case (artifact, Left(err)) if artifact.optional && err.notFound =>

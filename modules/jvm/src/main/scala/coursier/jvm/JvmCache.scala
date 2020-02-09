@@ -95,7 +95,7 @@ import scala.util.control.NonFatal
                     entry,
                     dir,
                     logger0,
-                    archive,
+                    archive.toFile,
                     tmpDir
                   )
                 }
@@ -159,7 +159,7 @@ import scala.util.control.NonFatal
     }
 
   private def withLockFor[T](dir: File)(f: => T): Option[T] =
-    CacheLocks.withLockOr(baseDirectory, dir)(Some(f), Some(None))
+    CacheLocks.withLockOr(baseDirectory.toPath, dir.toPath)(Some(f), Some(None))
 
   private def assertValidEntry(entry: JvmIndexEntry): Unit = {
     assert(entry.os == os)

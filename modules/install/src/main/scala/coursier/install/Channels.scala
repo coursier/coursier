@@ -2,6 +2,7 @@ package coursier.install
 
 import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
@@ -86,17 +87,31 @@ import dataclass._
           .toStream
           .map { f =>
             Task.delay {
-              var zf: ZipFile = null
-              try {
-                zf = new ZipFile(f)
-                val path = s"$id.json"
-                Option(zf.getEntry(path))
-                  .map { e =>
-                    (channel, s"$f!$path", FileUtil.readFully(zf.getInputStream(e)))
+              val fileOpt =
+                try Some(f.toFile)
+                catch {
+                  case _: UnsupportedOperationException =>
+                    None
+                }
+
+              fileOpt match {
+                case Some(file) =>
+                  var zf: ZipFile = null
+                  try {
+                    zf = new ZipFile(file)
+                    val path = s"$id.json"
+                    Option(zf.getEntry(path))
+                      .map { e =>
+                        (channel, s"$f!$path", FileUtil.readFully(zf.getInputStream(e)))
+                      }
+                  } finally {
+                    if (zf == null)
+                      zf.close()
                   }
-              } finally {
-                if (zf == null)
-                  zf.close()
+                case None =>
+                  // couldn't convert Path -> File
+                  // should only happen with virtual filesystems, used in tests…
+                  ???
               }
             }
           }
@@ -132,7 +147,7 @@ import dataclass._
         e <- task
         f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
         content <- Task.delay {
-          val b = FileUtil.readFully(new FileInputStream(f))
+          val b = Files.readAllBytes(f)
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {

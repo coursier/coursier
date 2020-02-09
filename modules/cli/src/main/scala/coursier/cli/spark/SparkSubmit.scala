@@ -200,7 +200,7 @@ object SparkSubmit extends CaseApp[SparkSubmitOptions] {
     )
 
     coursier.cli.launch.Launch.launch(
-      Seq((None, submitCp.toArray)),
+      Seq((None, submitCp.map(_.toPath).toArray)),
       Submit.mainClassName,
       sparkSubmitOptions,
       Nil

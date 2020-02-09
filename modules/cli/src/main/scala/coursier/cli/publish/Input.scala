@@ -1,7 +1,7 @@
 package coursier.cli.publish
 
 import java.io.{File, PrintStream}
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.time.Instant
 import java.util.concurrent.ExecutorService
 
@@ -52,7 +52,7 @@ object Input {
         } yield a ++ extra
       }
 
-  def sbtCsPublishJarTask(cache: Cache[Task]): Task[File] =
+  def sbtCsPublishJarTask(cache: Cache[Task]): Task[Path] =
     Task.delay {
       val files = coursier.Fetch(cache)
         .addRepositories(Repositories.sbtPlugin("releases"))
@@ -97,7 +97,7 @@ object Input {
             t <- Task.delay {
               val sbt = new Sbt(
                 sbtDir.toFile,
-                sbtStructureJar,
+                sbtStructureJar.toFile,
                 ExecutionContext.global,
                 params.sbtOutputFrame,
                 params.verbosity,

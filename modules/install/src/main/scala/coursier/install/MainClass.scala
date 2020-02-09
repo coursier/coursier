@@ -1,6 +1,7 @@
 package coursier.install
 
 import java.io.{File, InputStream}
+import java.nio.file.Path
 import java.util.jar.{Manifest => JManifest}
 import java.util.zip.ZipFile
 
@@ -8,10 +9,10 @@ object MainClass {
 
   private def manifestPath = "META-INF/MANIFEST.MF"
 
-  def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
+  def mainClasses(jars: Seq[Path]): Map[(String, String), String] = {
 
     val metaInfs = jars.flatMap { f =>
-      val zf = new ZipFile(f)
+      val zf = new ZipFile(f.toFile) // Path -> File conversion could fail on virtual filesystems
       val entryOpt = Option(zf.getEntry(manifestPath))
       entryOpt.map(e => () => zf.getInputStream(e)).toSeq
     }

@@ -94,7 +94,7 @@ object FetchCacheTests extends TestSuite {
       assert(pomCount1 == expectedPomCount1)
 
 
-      artifacts1(10).delete()
+      Files.deleteIfExists(artifacts1(10))
 
       val artifacts2 = await(artifacts())
 

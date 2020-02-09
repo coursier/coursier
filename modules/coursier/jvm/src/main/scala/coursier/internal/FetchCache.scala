@@ -20,7 +20,7 @@ final case class FetchCache(base: Path) {
   def lockFile(key: FetchCache.Key): Path =
     dir(key).resolve("lock")
 
-  def read(key: FetchCache.Key): Option[Seq[File]] = {
+  def read(key: FetchCache.Key): Option[Seq[Path]] = {
     val resultFile0 = resultFile(key)
     if (Files.isRegularFile(resultFile0)) {
       val artifacts = Predef.augmentString(new String(Files.readAllBytes(resultFile0), StandardCharsets.UTF_8))
@@ -31,25 +31,25 @@ final case class FetchCache(base: Path) {
         .toVector
 
       if (artifacts.forall(Files.isRegularFile(_)))
-        Some(artifacts.map(_.toFile))
+        Some(artifacts)
       else
         None
     } else
       None
   }
 
-  def write(key: FetchCache.Key, artifacts: Seq[File]): Boolean = {
+  def write(key: FetchCache.Key, artifacts: Seq[Path]): Boolean = {
     val resultFile0 = resultFile(key)
-    val tmpFile = CachePath.temporaryFile(resultFile0.toFile).toPath
+    val tmpFile = CachePath.temporaryFile(resultFile0)
 
     def doWrite(): Unit = {
-      Files.write(tmpFile, artifacts.map(_.getAbsolutePath).mkString("\n").getBytes(StandardCharsets.UTF_8))
+      Files.write(tmpFile, artifacts.map(_.toAbsolutePath.toString).mkString("\n").getBytes(StandardCharsets.UTF_8))
       Files.move(tmpFile, resultFile0, StandardCopyOption.ATOMIC_MOVE)
     }
 
     CacheLocks.withLockOr(
-      base.toFile,
-      resultFile0.toFile
+      base,
+      resultFile0
     )(
       { doWrite(); true },
       Some(false)

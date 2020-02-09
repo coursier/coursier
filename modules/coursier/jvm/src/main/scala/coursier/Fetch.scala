@@ -2,6 +2,7 @@ package coursier
 
 import java.io.File
 import java.lang.{Boolean => JBoolean}
+import java.nio.file.Path
 
 import coursier.cache.{Cache, FileCache}
 import coursier.core.Publication
@@ -9,10 +10,10 @@ import coursier.error.CoursierError
 import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}
 import coursier.util.{Artifact, Sync, Task}
+import dataclass.data
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.data
 
 @data class Fetch[F[_]](
   private val resolve: Resolve[F],
@@ -78,7 +79,7 @@ import dataclass.data
             resolve.resolutionParams.properties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolve.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolve.resolutionParams.profiles.toVector.sorted,
-            f.location.getAbsolutePath,
+            f.location.toAbsolutePath.toString,
             artifacts.classifiers.toVector.sorted,
             artifacts.mainArtifactsOpt,
             artifacts.artifactTypesOpt.map(_.toVector.sorted)
@@ -188,7 +189,7 @@ import dataclass.data
     }
   }
 
-  def io: F[Seq[File]] = {
+  def io: F[Seq[Path]] = {
 
     val cacheKeyOpt0 = for {
       fetchCache <- fetchCacheOpt
@@ -228,14 +229,14 @@ object Fetch {
 
   @data class Result(
     resolution: Resolution = Resolution(),
-    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] = Nil,
-    extraArtifacts: Seq[(Artifact, File)] = Nil
+    detailedArtifacts: Seq[(Dependency, Publication, Artifact, Path)] = Nil,
+    extraArtifacts: Seq[(Artifact, Path)] = Nil
   ) {
 
-    def artifacts: Seq[(Artifact, File)] =
+    def artifacts: Seq[(Artifact, Path)] =
       detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
 
-    def files: Seq[File] =
+    def files: Seq[Path] =
       artifacts.map(_._2)
   }
 
@@ -258,7 +259,7 @@ object Fetch {
     def futureResult()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Future[Result] =
       fetch.ioResult.future()
 
-    def future()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Future[Seq[File]] =
+    def future()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Future[Seq[Path]] =
       fetch.io.future()
 
     def eitherResult()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Either[CoursierError, Result] = {
@@ -272,7 +273,7 @@ object Fetch {
       Await.result(f, Duration.Inf)
     }
 
-    def either()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Either[CoursierError, Seq[File]] = {
+    def either()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Either[CoursierError, Seq[Path]] = {
 
       val f = fetch
         .io
@@ -288,7 +289,7 @@ object Fetch {
       Await.result(f, Duration.Inf)
     }
 
-    def run()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Seq[File] = {
+    def run()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Seq[Path] = {
       val f = fetch.io.future()
       Await.result(f, Duration.Inf)
     }
