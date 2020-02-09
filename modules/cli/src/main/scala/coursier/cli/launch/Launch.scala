@@ -61,7 +61,7 @@ object Launch extends CaseApp[LaunchOptions] {
         b.inheritIO()
 
         val env = b.environment()
-        for ((k, v) <- extraEnv.updatedEnv())
+        for ((k, v) <- extraEnv.transientUpdates())
           env.put(k, v)
 
         Right {
