@@ -1,6 +1,7 @@
 package coursier.cli.launch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
 
@@ -9,6 +10,9 @@ final case class LaunchOptions(
 
   @Recurse
     sharedOptions: SharedLaunchOptions = SharedLaunchOptions(),
+
+  @Recurse
+    sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
 
   @Help("Add Java command-line options, when forking")
   @Value("option")

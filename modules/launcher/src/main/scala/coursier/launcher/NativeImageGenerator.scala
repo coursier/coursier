@@ -13,7 +13,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
   private def executable(dir: File, name: String): Option[File] =
     if (Windows.isWindows)
-      ("" +: Windows.pathExtensions)
+      Windows.pathExtensions
         .toStream
         .map(ext => new File(dir, s"$name$ext"))
         .filter(_.exists())

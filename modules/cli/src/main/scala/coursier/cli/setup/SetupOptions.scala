@@ -4,6 +4,7 @@ import caseapp.core.parser.Parser
 import caseapp.{Name, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
+import coursier.cli.options.{CacheOptions, OutputOptions}
 
 final case class SetupOptions(
   @Recurse
@@ -12,6 +13,10 @@ final case class SetupOptions(
     sharedInstallOptions: SharedInstallOptions = SharedInstallOptions(),
   @Recurse
     sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
+  @Recurse
+    cacheOptions: CacheOptions = CacheOptions(),
+  @Recurse
+    outputOptions: OutputOptions = OutputOptions(),
   home: Option[String] = None
 )
 

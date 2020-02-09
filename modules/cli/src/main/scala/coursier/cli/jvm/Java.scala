@@ -21,15 +21,15 @@ object Java extends CaseApp[JavaOptions] {
       sys.exit(1)
     }
 
-    val pool = Sync.fixedThreadPool(params.shared.cache.parallel)
-    val logger = params.shared.output.logger()
-    val coursierCache = params.shared.cache.cache(pool, logger)
+    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val logger = params.output.logger()
+    val coursierCache = params.cache.cache(pool, logger)
 
     val task =
       for {
         baseHandle <- coursier.jvm.JavaHome.default
         handle = baseHandle
-          .withJvmCacheLogger(params.shared.jvmCacheLogger)
+          .withJvmCacheLogger(params.shared.jvmCacheLogger(params.output.verbosity))
           .withCoursierCache(coursierCache)
         homeId <- handle.getWithRetainedId(params.shared.id)
         (id, home) = homeId
@@ -55,8 +55,7 @@ object Java extends CaseApp[JavaOptions] {
 
       // should we use isFile instead of exists?
       if (Windows.isWindows)
-        // should we really add the empty extension?
-        (Stream("") ++ Windows.pathExtensions)
+        Windows.pathExtensions
           .map(ext => new File(home, s"bin/java$ext"))
           .filter(_.exists())
           .headOption

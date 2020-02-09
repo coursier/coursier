@@ -41,6 +41,7 @@ object Launch extends CaseApp[LaunchOptions] {
     hierarchy: Seq[(Option[String], Array[File])],
     mainClass: String,
     args: Seq[String],
+    javaPath: String,
     javaOptions: Seq[String],
     properties: Seq[(String, String)],
     verbosity: Int
@@ -48,8 +49,7 @@ object Launch extends CaseApp[LaunchOptions] {
     hierarchy match {
       case Seq((None, files)) =>
 
-        // Read JAVA_HOME if it's set? Allow users to change that command via CLI options?
-        val cmd = Seq("java") ++
+        val cmd = Seq(javaPath) ++
           javaOptions ++
           properties.map { case (k, v) => s"-D$k=$v" } ++
           Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
@@ -196,6 +196,7 @@ object Launch extends CaseApp[LaunchOptions] {
 
   def launchCall(
     params: LaunchParams,
+    javaPath: String,
     mainClass0: String,
     files: Seq[Path],
     hierarchy: Seq[(Option[String], Array[Path])],
@@ -257,7 +258,15 @@ object Launch extends CaseApp[LaunchOptions] {
     }
 
     if (params.fork)
-      launchFork(hierarchy0.map { case (nameOpt, files) => (nameOpt, files.map(_.toFile)) }, mainClass0, userArgs, params.javaOptions, properties0, params.shared.resolve.output.verbosity)
+      launchFork(
+        hierarchy0.map { case (nameOpt, files) => (nameOpt, files.map(_.toFile)) },
+        mainClass0,
+        userArgs,
+        javaPath,
+        params.javaOptions,
+        properties0,
+        params.shared.resolve.output.verbosity
+      )
         .map(f => () => Some(f()))
     else
       launch(hierarchy0, mainClass0, userArgs, properties0)
@@ -296,10 +305,12 @@ object Launch extends CaseApp[LaunchOptions] {
           .withFetchCache(params.fetchCacheIKnowWhatImDoing.map(new File(_)))
           .io
       }
+      javaPath <- params.javaPath(cache)
       mainClass0 <- mainClass(params.shared, files, deps0.headOption)
       f <- Task.fromEither {
         launchCall(
           params,
+          javaPath,
           mainClass0,
           files,
           Seq((None, files.toArray)),
@@ -361,9 +372,11 @@ object Launch extends CaseApp[LaunchOptions] {
       (res, scalaVersion, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
+      javaPath <- params.javaPath(params.shared.resolve.cache.cache[Task](pool, params.shared.resolve.output.logger()))
       f <- Task.fromEither {
         launchCall(
           params,
+          javaPath,
           mainClass0,
           files.map(_._2),
           loaderHierarchy(
