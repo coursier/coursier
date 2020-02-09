@@ -2,6 +2,8 @@ package coursier.jvm
 
 import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.{Files, Path}
+import java.util.Locale
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.cache.internal.FileUtil
@@ -14,7 +16,8 @@ import dataclass.data
   installIfNeeded: Boolean = true,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmIndex.defaultOs(),
-  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default()
+  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default(),
+  pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -104,6 +107,14 @@ import dataclass.data
       }
     }
 
+  def javaBin(id: String): Task[Path] =
+    get(id).flatMap { home =>
+      JavaHome.javaBin(home.toPath, pathExtensions) match {
+        case Some(exe) => Task.point(exe)
+        case None => Task.fail(new Exception(s"${new File(home, "java/bin")} not found"))
+      }
+    }
+
   def environmentFor(id: String): Task[EnvironmentUpdate] =
     get(id).map { home =>
       JavaHome.environmentFor(id, home, isMacOs = os == "darwin")
@@ -146,6 +157,39 @@ object JavaHome {
           EnvironmentUpdate.empty
       EnvironmentUpdate.empty.withSet(Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
     }
+
+  private def executable(
+    dir: Path,
+    name: String,
+    pathExtensionsOpt: Option[Seq[String]]
+  ): Option[Path] =
+    pathExtensionsOpt match {
+      case Some(pathExtensions) =>
+        pathExtensions
+          .toStream
+          .map(ext => dir.resolve(name + ext))
+          .filter(Files.exists(_))
+          .headOption
+      case None =>
+        Some(dir.resolve(name))
+    }
+
+  def javaBin(
+    javaHome: Path,
+    pathExtensionsOpt: Option[Seq[String]]
+  ): Option[Path] =
+    executable(javaHome.resolve("bin"), "java", pathExtensionsOpt)
+
+  def defaultPathExtensions: Option[Seq[String]] = {
+    val isWindows = System.getProperty("os.name", "")
+      .toLowerCase(Locale.ROOT)
+      .contains("windows")
+    if (isWindows)
+      Option(System.getenv("pathext"))
+        .map(_.split(File.pathSeparator).toSeq)
+    else
+      None
+  }
 
   trait CommandOutput {
     def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String]

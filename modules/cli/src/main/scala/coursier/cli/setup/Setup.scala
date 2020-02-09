@@ -172,10 +172,10 @@ object Setup extends CaseApp[SetupOptions] {
 
     val params = SetupParams(options).exitOnError()
 
-    val pool = Sync.fixedThreadPool(params.sharedJava.cache.parallel)
-    val logger = params.sharedJava.output.logger()
-    val jvmCacheLogger = params.sharedJava.jvmCacheLogger()
-    val cache = params.sharedJava.cache.cache(pool, logger)
+    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val logger = params.output.logger()
+    val jvmCacheLogger = params.sharedJava.jvmCacheLogger(params.output.verbosity)
+    val cache = params.cache.cache(pool, logger)
 
     val envVarUpdater =
       if (Windows.isWindows)
@@ -187,12 +187,12 @@ object Setup extends CaseApp[SetupOptions] {
         )
 
     val installDir = InstallDir(params.sharedInstall.dir, cache)
-      .withVerbosity(params.sharedJava.output.verbosity)
+      .withVerbosity(params.output.verbosity)
       .withGraalvmParamsOpt(params.sharedInstall.graalvmParamsOpt)
       .withCoursierRepositories(params.sharedInstall.repositories)
 
     val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, cache)
-      .withVerbosity(params.sharedJava.output.verbosity)
+      .withVerbosity(params.output.verbosity)
 
     val tasks = Seq(
       maybeInstallJvm(cache, envVarUpdater, jvmCacheLogger),
