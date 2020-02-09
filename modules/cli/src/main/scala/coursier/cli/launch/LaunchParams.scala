@@ -5,6 +5,7 @@ import cats.implicits._
 import coursier.cache.Cache
 import coursier.cli.jvm.SharedJavaParams
 import coursier.cli.params.SharedLaunchParams
+import coursier.env.EnvironmentUpdate
 import coursier.util.Task
 
 final case class LaunchParams(
@@ -17,9 +18,9 @@ final case class LaunchParams(
   lazy val fork: Boolean =
     shared.fork.getOrElse(jep || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
 
-  def javaPath(cache: Cache[Task]): Task[String] =
+  def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] =
     sharedJava.jvm match {
-      case None => Task.point("java")
+      case None => Task.point(("java", EnvironmentUpdate.empty))
       case Some(id) =>
         for {
           baseHandle <- coursier.jvm.JavaHome.default
@@ -27,7 +28,8 @@ final case class LaunchParams(
             .withJvmCacheLogger(sharedJava.jvmCacheLogger(shared.resolve.output.verbosity))
             .withCoursierCache(cache)
           javaExe <- handle.javaBin(id)
-        } yield javaExe.toAbsolutePath.toString
+          envUpdate <- handle.environmentFor(id)
+        } yield (javaExe.toAbsolutePath.toString, envUpdate)
     }
 }
 
