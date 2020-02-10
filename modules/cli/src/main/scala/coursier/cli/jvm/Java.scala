@@ -76,7 +76,7 @@ object Java extends CaseApp[JavaOptions] {
       sys.exit(1)
     }
 
-    val extraEnv = envUpdate.updatedEnv()
+    val extraEnv = envUpdate.transientUpdates()
 
     if (params.env) {
       val q = "\""

@@ -20,15 +20,18 @@ import scala.collection.mutable
   def isEmpty: Boolean =
     set.isEmpty && pathLikeAppends.isEmpty
 
-  def updatedEnv(): Seq[(String, String)] =
+  // puts the "path-like appends" upfront, better not to persist these updates
+  def transientUpdates(): Seq[(String, String)] =
     updatedEnv(
       EnvironmentUpdate.defaultGetEnv,
-      File.pathSeparator
+      File.pathSeparator,
+      upfront = true
     )
 
   def updatedEnv(
     getEnv: String => Option[String],
-    pathSeparator: String
+    pathSeparator: String,
+    upfront: Boolean
   ): Seq[(String, String)] =
     if (pathLikeAppends.isEmpty)
       set
@@ -40,8 +43,13 @@ import scala.collection.mutable
         if (!m.contains(k))
           l += k
         val formerOpt = m.get(k).orElse(getEnv(k))
-        val newValue = formerOpt.fold(v)(p => p + pathSeparator + v)
-        m(k) = v
+        val newValue = formerOpt.fold(v) { p =>
+          if (upfront)
+            v + pathSeparator + p
+          else
+            p + pathSeparator + v
+        }
+        m(k) = newValue
       }
       l.toList.map(k => k -> m(k))
     }
