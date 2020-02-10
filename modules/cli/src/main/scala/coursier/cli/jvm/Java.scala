@@ -5,14 +5,19 @@ import java.io.File
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.jvm.{Execve, JvmCacheLogger}
-import coursier.util.Sync
-import coursier.jvm.JvmCache
+import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
+import coursier.util.Sync
 
 object Java extends CaseApp[JavaOptions] {
   override def stopAtFirstUnrecognized = true
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
+
+    val csJavaFailVariable = coursier.jvm.JavaHome.csJavaFailVariable
+    if (Option(System.getenv(csJavaFailVariable)).nonEmpty) {
+      System.err.println(s"$csJavaFailVariable is set, refusing to do anything.")
+      sys.exit(1)
+    }
 
     val params = JavaParams(options).exitOnError()
 
@@ -71,7 +76,7 @@ object Java extends CaseApp[JavaOptions] {
       sys.exit(1)
     }
 
-    val extraEnv = envUpdate.updatedEnv()
+    val extraEnv = envUpdate.transientUpdates()
 
     if (params.env) {
       val q = "\""

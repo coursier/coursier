@@ -13,6 +13,7 @@ import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.{Dependency, Resolution}
+import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
@@ -44,6 +45,7 @@ object Launch extends CaseApp[LaunchOptions] {
     javaPath: String,
     javaOptions: Seq[String],
     properties: Seq[(String, String)],
+    extraEnv: EnvironmentUpdate,
     verbosity: Int
   ): Either[LaunchException, () => Int] =
     hierarchy match {
@@ -58,6 +60,10 @@ object Launch extends CaseApp[LaunchOptions] {
         val b = new ProcessBuilder()
         b.command(cmd: _*)
         b.inheritIO()
+
+        val env = b.environment()
+        for ((k, v) <- extraEnv.transientUpdates())
+          env.put(k, v)
 
         Right {
           () =>
@@ -201,6 +207,7 @@ object Launch extends CaseApp[LaunchOptions] {
     files: Seq[Path],
     hierarchy: Seq[(Option[String], Array[Path])],
     props: Seq[(String, String)],
+    extraEnv: EnvironmentUpdate,
     userArgs: Seq[String]
   ) = {
 
@@ -265,6 +272,7 @@ object Launch extends CaseApp[LaunchOptions] {
         javaPath,
         params.javaOptions,
         properties0,
+        extraEnv,
         params.shared.resolve.output.verbosity
       )
         .map(f => () => Some(f()))
@@ -305,7 +313,8 @@ object Launch extends CaseApp[LaunchOptions] {
           .withFetchCache(params.fetchCacheIKnowWhatImDoing.map(new File(_)))
           .io
       }
-      javaPath <- params.javaPath(cache)
+      javaPathEnvUpdate <- params.javaPath(cache)
+      (javaPath, envUpdate) = javaPathEnvUpdate
       mainClass0 <- mainClass(params.shared, files, deps0.headOption)
       f <- Task.fromEither {
         launchCall(
@@ -315,6 +324,7 @@ object Launch extends CaseApp[LaunchOptions] {
           files,
           Seq((None, files.toArray)),
           params.shared.properties,
+          envUpdate,
           userArgs
         )
       }
@@ -372,7 +382,8 @@ object Launch extends CaseApp[LaunchOptions] {
       (res, scalaVersion, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
-      javaPath <- params.javaPath(params.shared.resolve.cache.cache[Task](pool, params.shared.resolve.output.logger()))
+      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache[Task](pool, params.shared.resolve.output.logger()))
+      (javaPath, envUpdate) = javaPathEnvUpdate
       f <- Task.fromEither {
         launchCall(
           params,
@@ -390,6 +401,7 @@ object Launch extends CaseApp[LaunchOptions] {
             params.shared.resolve.classpathOrder
           ),
           props,
+          envUpdate,
           userArgs
         )
       }

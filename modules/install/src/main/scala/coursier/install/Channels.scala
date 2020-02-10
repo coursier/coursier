@@ -161,6 +161,34 @@ import dataclass._
       }
     }
 
+    def fromDirectory(channel: Channel.FromDirectory): Task[Option[(Channel, String, Array[Byte])]] = {
+
+      val f = channel.path.resolve(s"$id.json")
+
+      for {
+        contentOpt <- Task.delay {
+          if (Files.isRegularFile(f)) {
+            val b = Files.readAllBytes(f)
+            Some(new String(b, StandardCharsets.UTF_8))
+          } else
+            None
+        }
+        objOpt <- Task.fromEither {
+          contentOpt match {
+            case None => Right(None)
+            case Some(content) =>
+              Parse.decodeEither(content)(decodeObj)
+                .left.map(err => new Exception(s"Error decoding $f: $err"))
+                .map(Some(_))
+          }
+        }
+      } yield {
+        objOpt.map { obj =>
+          (channel, f.toString, encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8))
+        }
+      }
+    }
+
     channels
       .toStream
       .map {
@@ -168,6 +196,8 @@ import dataclass._
           fromModule(m)
         case u: Channel.FromUrl =>
           fromUrl(u)
+        case d: Channel.FromDirectory =>
+          fromDirectory(d)
       }
       .foldLeft(Task.point(Option.empty[(Channel, String, Array[Byte])])) { (acc, elem) =>
         acc.flatMap {

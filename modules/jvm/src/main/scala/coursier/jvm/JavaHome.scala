@@ -57,7 +57,14 @@ import dataclass.data
           Task.delay {
 
             val outputOrRetCode = commandOutput
-              .run(Seq("java", "-XshowSettings:properties", "-version"), keepErrStream = true)
+              .run(
+                Seq("java", "-XshowSettings:properties", "-version"),
+                keepErrStream = true,
+                // Setting this makes cs-java fail.
+                // This prevents us (possibly cs-java) to call ourselves,
+                // which could call ourselves again, etc. indefinitely.
+                extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+              )
 
             outputOrRetCode
               .toOption
@@ -192,17 +199,33 @@ object JavaHome {
   }
 
   trait CommandOutput {
-    def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String]
+    final def run(
+      command: Seq[String],
+      keepErrStream: Boolean
+    ): Either[Int, String] =
+      run(command, keepErrStream, Nil)
+    def run(
+      command: Seq[String],
+      keepErrStream: Boolean,
+      extraEnv: Seq[(String, String)]
+    ): Either[Int, String]
   }
 
   object CommandOutput {
     private final class DefaultCommandOutput extends CommandOutput {
-      def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] = {
+      def run(
+        command: Seq[String],
+        keepErrStream: Boolean,
+        extraEnv: Seq[(String, String)]
+      ): Either[Int, String] = {
         val b = new ProcessBuilder(command: _*)
         b.redirectInput(ProcessBuilder.Redirect.INHERIT)
         b.redirectOutput(ProcessBuilder.Redirect.PIPE)
         b.redirectError(ProcessBuilder.Redirect.PIPE)
         b.redirectErrorStream(true)
+        val env = b.environment()
+        for ((k, v) <- extraEnv)
+          env.put(k, v)
         val p = b.start()
         p.getOutputStream.close()
         val output = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
@@ -217,11 +240,18 @@ object JavaHome {
     def default(): CommandOutput =
       new DefaultCommandOutput
 
-    def apply(f: (Seq[String], Boolean) => Either[Int, String]): CommandOutput =
+    def apply(f: (Seq[String], Boolean, Seq[(String, String)]) => Either[Int, String]): CommandOutput =
       new CommandOutput {
-        def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] =
-          f(command, keepErrStream)
+        def run(
+          command: Seq[String],
+          keepErrStream: Boolean,
+          extraEnv: Seq[(String, String)]
+        ): Either[Int, String] =
+          f(command, keepErrStream, extraEnv)
       }
   }
+
+  private[coursier] def csJavaFailVariable: String =
+    "__CS_JAVA_FAIL"
 
 }
