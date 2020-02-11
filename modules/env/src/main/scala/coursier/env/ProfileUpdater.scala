@@ -88,7 +88,7 @@ import dataclass.data
       .map {
         case (k, v) =>
           // FIXME Needs more escaping?
-          s"""export $k="${v.replaceAllLiterally("\"", "\\\"")}$pathSeparator$$$k"""" + "\n"
+          s"""export $k="$$$k$pathSeparator${v.replaceAllLiterally("\"", "\\\"")}"""" + "\n"
       }
       .mkString
 
