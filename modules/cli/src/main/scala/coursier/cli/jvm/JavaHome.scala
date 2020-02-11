@@ -5,7 +5,7 @@ import caseapp.core.RemainingArgs
 
 import java.io.File
 
-import coursier.jvm.JvmCacheLogger
+import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.util.Sync
 
 object JavaHome extends CaseApp[JavaHomeOptions] {
@@ -25,8 +25,9 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
 
     val task =
       for {
-        baseHandle <- coursier.jvm.JavaHome.default
-        handle = baseHandle
+        jvmCache <- JvmCache.default.map(_.withBaseDirectory(params.shared.jvmDir.toFile))
+        handle = coursier.jvm.JavaHome()
+          .withCache(jvmCache)
           .withJvmCacheLogger(params.shared.jvmCacheLogger(params.output.verbosity))
           .withCoursierCache(coursierCache)
         home <- handle.get(params.shared.id)
