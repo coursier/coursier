@@ -32,14 +32,11 @@ object Java extends CaseApp[JavaOptions] {
 
     val task =
       for {
-        jvmCache <- JvmCache.default.map(_.withBaseDirectory(params.shared.jvmDir.toFile))
-        handle = coursier.jvm.JavaHome()
-          .withCache(jvmCache)
-          .withJvmCacheLogger(params.shared.jvmCacheLogger(params.output.verbosity))
-          .withCoursierCache(coursierCache)
-        homeId <- handle.getWithRetainedId(params.shared.id)
+        javaHome <- params.shared.javaHome(params.output.verbosity)
+          .map(_.withCoursierCache(coursierCache))
+        homeId <- javaHome.getWithRetainedId(params.shared.id)
         (id, home) = homeId
-        envUpdate = handle.environmentFor(id, home)
+        envUpdate = javaHome.environmentFor(id, home)
       } yield (id, home, envUpdate)
 
     // TODO More thin grain handling of the logger lifetime here.

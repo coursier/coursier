@@ -25,12 +25,9 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
 
     val task =
       for {
-        jvmCache <- JvmCache.default.map(_.withBaseDirectory(params.shared.jvmDir.toFile))
-        handle = coursier.jvm.JavaHome()
-          .withCache(jvmCache)
-          .withJvmCacheLogger(params.shared.jvmCacheLogger(params.output.verbosity))
-          .withCoursierCache(coursierCache)
-        home <- handle.get(params.shared.id)
+        javaHome <- params.shared.javaHome(params.output.verbosity)
+          .map(_.withCoursierCache(coursierCache))
+        home <- javaHome.get(params.shared.id)
       } yield home
 
     logger.init()

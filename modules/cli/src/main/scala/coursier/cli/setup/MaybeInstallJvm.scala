@@ -9,7 +9,7 @@ import dataclass.data
 @data class MaybeInstallJvm(
   coursierCache: Cache[Task],
   envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-  jvmCacheLogger: JvmCacheLogger,
+  javaHome: JavaHome,
   confirm: Confirm
 ) extends SetupStep {
 
@@ -18,30 +18,25 @@ import dataclass.data
 
   def task: Task[Unit] =
     for {
-      baseHandle <- JavaHome.default
-      handle = baseHandle
-        .withJvmCacheLogger(jvmCacheLogger)
-        .withCoursierCache(coursierCache)
-
-      javaHomeOpt <- handle.system()
+      javaHomeOpt <- javaHome.system()
 
       idJavaHomeOpt <- javaHomeOpt match {
-        case Some(javaHome) =>
-          System.out.println(s"Found a JVM installed under $javaHome.") // Task.delay(…)
-          Task.point(Some(JavaHome.systemId -> javaHome))
+        case Some(javaHome0) =>
+          System.out.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
+          Task.point(Some(JavaHome.systemId -> javaHome0))
         case None =>
           confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>
               System.out.println("No JVM found, trying to install one.") // Task.delay(…)
-              baseHandle.getWithRetainedId(JavaHome.defaultJvm).map(Some(_))
+              javaHome.getWithRetainedId(JavaHome.defaultJvm).map(Some(_))
           }
       }
 
       envUpdate = idJavaHomeOpt match {
-        case Some((id, javaHome)) =>
-          handle.environmentFor(id, javaHome)
+        case Some((id, javaHome0)) =>
+          javaHome.environmentFor(id, javaHome0)
         case None =>
           EnvironmentUpdate.empty
       }

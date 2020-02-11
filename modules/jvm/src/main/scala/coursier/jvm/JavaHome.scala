@@ -17,7 +17,8 @@ import dataclass.data
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmIndex.defaultOs(),
   commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default(),
-  pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions
+  pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
+  allowSystem: Boolean = true
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -40,56 +41,59 @@ import dataclass.data
     get(JavaHome.defaultId)
 
   def system(): Task[Option[File]] =
-    Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
-      case None =>
-        if (os == "darwin")
-          Task.delay {
-            // FIXME What happens if no JDK is installed?
-            val outputOrRetCode = commandOutput
-              .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
-            outputOrRetCode
-              .toOption
-              .map(_.trim)
-              .filter(_.nonEmpty)
-              .map(new File(_))
-          }
-        else
-          Task.delay {
+    if (allowSystem)
+      Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
+        case None =>
+          if (os == "darwin")
+            Task.delay {
+              // FIXME What happens if no JDK is installed?
+              val outputOrRetCode = commandOutput
+                .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
+              outputOrRetCode
+                .toOption
+                .map(_.trim)
+                .filter(_.nonEmpty)
+                .map(new File(_))
+            }
+          else
+            Task.delay {
 
-            val outputOrRetCode =
-              try {
-                commandOutput
-                  .run(
-                    Seq("java", "-XshowSettings:properties", "-version"),
-                    keepErrStream = true,
-                    // Setting this makes cs-java fail.
-                    // This prevents us (possibly cs-java) to call ourselves,
-                    // which could call ourselves again, etc. indefinitely.
-                    extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
-                  )
-                  .toOption
-              } catch {
-                case _: IOException =>
-                  None
-              }
+              val outputOrRetCode =
+                try {
+                  commandOutput
+                    .run(
+                      Seq("java", "-XshowSettings:properties", "-version"),
+                      keepErrStream = true,
+                      // Setting this makes cs-java fail.
+                      // This prevents us (possibly cs-java) to call ourselves,
+                      // which could call ourselves again, etc. indefinitely.
+                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                    )
+                    .toOption
+                } catch {
+                  case _: IOException =>
+                    None
+                }
 
-            outputOrRetCode
-              .flatMap { output =>
-                val it = output
-                  .linesIterator
-                  .map(_.trim)
-                  .filter(_.startsWith("java.home = "))
-                  .map(_.stripPrefix("java.home = "))
-                if (it.hasNext)
-                  Some(it.next())
-                    .map(new File(_))
-                else
-                  None
-              }
-          }
-      case Some(home) =>
-        Task.point(Some(new File(home)))
-    }
+              outputOrRetCode
+                .flatMap { output =>
+                  val it = output
+                    .linesIterator
+                    .map(_.trim)
+                    .filter(_.startsWith("java.home = "))
+                    .map(_.stripPrefix("java.home = "))
+                  if (it.hasNext)
+                    Some(it.next())
+                      .map(new File(_))
+                  else
+                    None
+                }
+            }
+        case Some(home) =>
+          Task.point(Some(new File(home)))
+      }
+    else
+      Task.point(None)
 
   def get(id: String): Task[File] =
     getWithRetainedId(id)
