@@ -23,10 +23,20 @@ import coursier.launcher.internal.{FileUtil, Windows}
 import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
+import scala.util.control.NonFatal
+
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
   if (System.console() != null && Windows.isWindows)
-    WindowsAnsi.setup()
+    try WindowsAnsi.setup()
+    catch {
+      case NonFatal(e) =>
+        val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
+        if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
+          System.err.println(s"Error setting up Windows terminal for ANSI escape codes: $e")
+        if (doThrow)
+           throw e
+    }
 
   override val appName = "Coursier"
   override val progName =
