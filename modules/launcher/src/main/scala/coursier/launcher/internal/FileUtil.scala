@@ -1,11 +1,10 @@
 package coursier.launcher.internal
 
-import java.io.{ByteArrayOutputStream, InputStream}
+import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
 import java.nio.file.attribute.PosixFilePermission
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, LinkOption, Path}
 
 import scala.collection.JavaConverters._
-import java.io.OutputStream
 
 private[coursier] object FileUtil {
 
@@ -74,5 +73,16 @@ private[coursier] object FileUtil {
         false
     }
   }
+
+  def tryHideWindows(path: Path): Boolean =
+    Windows.isWindows && {
+      try {
+        Files.setAttribute(path, "dos:hidden", java.lang.Boolean.TRUE, LinkOption.NOFOLLOW_LINKS)
+        true
+      } catch {
+        case _: UnsupportedOperationException =>
+          false
+      }
+    }
 
 }

@@ -27,7 +27,7 @@ class ProfileUpdaterTests extends FlatSpec {
 
     val expectedInDotProfile =
       """
-        |export PATH="/foo/bin:$PATH"
+        |export PATH="$PATH:/foo/bin"
         |""".stripMargin
     val dotProfile = new String(Files.readAllBytes(fs.getPath("/home/alex/.profile")), StandardCharsets.UTF_8)
     assert(dotProfile.contains(expectedInDotProfile))
@@ -77,7 +77,7 @@ class ProfileUpdaterTests extends FlatSpec {
 
     val expectedInDotProfileFiles =
       """
-        |export PATH="/foo/bin:$PATH"
+        |export PATH="$PATH:/foo/bin"
         |""".stripMargin
 
     val dotProfile = new String(Files.readAllBytes(fs.getPath("/home/alex/.profile")), StandardCharsets.UTF_8)
@@ -114,7 +114,7 @@ class ProfileUpdaterTests extends FlatSpec {
 
     val expectedInDotProfileFiles =
       """
-        |export PATH="/foo/bin:$PATH"
+        |export PATH="$PATH:/foo/bin"
         |""".stripMargin
 
     val dotProfile = new String(Files.readAllBytes(fs.getPath("/home/alex/.profile")), StandardCharsets.UTF_8)
@@ -148,7 +148,7 @@ class ProfileUpdaterTests extends FlatSpec {
 
     val expectedInDotProfileFiles =
       """
-        |export PATH="/foo/bin:$PATH"
+        |export PATH="$PATH:/foo/bin"
         |""".stripMargin
 
     val dotProfile = new String(Files.readAllBytes(fs.getPath("/home/alex/.profile")), StandardCharsets.UTF_8)
@@ -175,7 +175,7 @@ class ProfileUpdaterTests extends FlatSpec {
 
     val expectedInDotProfile =
       """
-        |export PATH="/foo/bin:$PATH"
+        |export PATH="$PATH:/foo/bin"
         |""".stripMargin
     val dotProfileBytes = Files.readAllBytes(fs.getPath("/home/alex/.profile"))
     val dotProfile = new String(dotProfileBytes, StandardCharsets.UTF_8)

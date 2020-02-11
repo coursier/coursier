@@ -78,6 +78,7 @@ object Updatable {
           System.err.println(s"Wrote $tmpAux")
           System.err.println(s"Moving $tmpAux to $aux")
         }
+        FileUtil.tryHideWindows(tmpAux)
         Files.deleteIfExists(aux) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
         Files.move(
           tmpAux,

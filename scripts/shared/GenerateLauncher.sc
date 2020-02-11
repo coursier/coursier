@@ -63,6 +63,7 @@ def nativeImage(
     val cmd = Seq(
       coursierLauncher,
       "launch",
+      "--jvm", "graalvm:19.3",
       "org.graalvm.nativeimage:svm-driver:19.3.1",
       "--",
       "-cp", cp

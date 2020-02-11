@@ -6,11 +6,10 @@ import java.util.Locale
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.env.{ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
-import coursier.env.EnvironmentUpdate
 
 object Setup extends CaseApp[SetupOptions] {
 
@@ -20,8 +19,11 @@ object Setup extends CaseApp[SetupOptions] {
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
-    val jvmCacheLogger = params.sharedJava.jvmCacheLogger(params.output.verbosity)
     val cache = params.cache.cache(pool, logger)
+
+    val javaHome = params.sharedJava.javaHome(params.output.verbosity)
+        .map(_.withCoursierCache(cache))
+        .unsafeRun()(cache.ec) // meh
 
     val envVarUpdater =
       if (Windows.isWindows)
@@ -47,7 +49,7 @@ object Setup extends CaseApp[SetupOptions] {
         Confirm.default
 
     val tasks = Seq(
-      MaybeInstallJvm(cache, envVarUpdater, jvmCacheLogger, confirm),
+      MaybeInstallJvm(cache, envVarUpdater, javaHome, confirm),
       MaybeSetupPath(
         installDir,
         envVarUpdater,

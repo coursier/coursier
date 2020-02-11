@@ -4,17 +4,29 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import cats.data.ValidatedNel
+import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.jvm.{JvmCache, JvmCacheLogger}
-import cats.data.Validated
+import coursier.util.Task
 
 final case class SharedJavaParams(
   jvm: Option[String],
-  jvmDir: Path
+  jvmDir: Path,
+  allowSystemJvm: Boolean,
+  requireSystemJvm: Boolean
 ) {
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
+
+  def javaHome(verbosity: Int): Task[coursier.jvm.JavaHome] =
+    JvmCache.default.map { cache =>
+      val cache0 = cache
+        .withBaseDirectory(jvmDir.toFile)
+      coursier.jvm.JavaHome()
+        .withCache(cache0)
+        .withJvmCacheLogger(jvmCacheLogger(verbosity))
+        .withAllowSystem(allowSystemJvm)
+    }
 
   def jvmCacheLogger(verbosity: Int): JvmCacheLogger =
     if (verbosity >= 0)
@@ -41,10 +53,24 @@ object SharedJavaParams {
     val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
       JvmCache.defaultBaseDirectory.toPath
     }
-    Validated.validNel {
+    val (allowSystem, requireSystem) = options.systemJvm match {
+      case None => (true, false)
+      case Some(false) => (false, false)
+      case Some(true) => (true, true)
+    }
+
+    val checkSystemV =
+      if (options.systemJvm.contains(true) && jvm.exists(_ != coursier.jvm.JavaHome.systemId))
+        Validated.invalidNel("Cannot specify both --system-jvm and --jvm")
+      else
+        Validated.validNel(())
+
+    checkSystemV.map { _ =>
       SharedJavaParams(
         jvm,
-        jvmDir
+        jvmDir,
+        allowSystem,
+        requireSystem
       )
     }
   }

@@ -23,7 +23,7 @@ private def initialLauncher(
   def packLauncher: String = {
     val path = "modules/cli/target/pack/bin/coursier"
     if (!Files.exists(Paths.get(path)))
-      Util.run(Seq("sbt", "cli/pack"))
+      Util.run(Seq("./sbt", "cli/pack"))
     path
   }
 
