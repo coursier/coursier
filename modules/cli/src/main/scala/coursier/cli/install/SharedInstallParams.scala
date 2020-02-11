@@ -39,7 +39,7 @@ object SharedInstallParams {
       else
         Nil
 
-    val dir = options.dir match {
+    val dir = options.installDir match {
       case Some(d) => Paths.get(d)
       case None => defaultDir
     }
