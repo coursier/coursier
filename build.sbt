@@ -241,6 +241,7 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     pureJava,
     dontPublish,
     addPathsSources,
+    addWindowsAnsiPsSources,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.Launcher"),
     proguardedBootstrap("coursier.bootstrap.launcher.Launcher", resourceBased = false)
   )
