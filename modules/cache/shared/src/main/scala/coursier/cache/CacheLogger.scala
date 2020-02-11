@@ -21,6 +21,12 @@ trait CacheLogger {
   // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
   def init(sizeHint: Option[Int] = None): Unit = {}
   def stop(): Unit = {}
+
+  final def use[T](f: => T): T = {
+    init()
+    try f
+    finally stop()
+  }
 }
 
 object CacheLogger {

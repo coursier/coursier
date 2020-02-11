@@ -1,26 +1,32 @@
 package coursier.cli.install
 
-import caseapp.{HelpMessage => Help, _}
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.options.{CacheOptions, OutputOptions}
 
 final case class InstallOptions(
 
+  @Help("Repository - for multiple repositories, separate with comma and/or add this option multiple times (e.g. -r central,ivy2local -r sonatype:snapshots, or equivalently -r central,ivy2local,sonatype:snapshots)")
+  @Value("maven|sonatype:$repo|ivy2local|bintray:$org/$repo|bintray-ivy:$org/$repo|typesafe:ivy-$repo|typesafe:$repo|sbt-plugin:$repo|ivy:$pattern")
+  @Short("r")
+    repository: List[String] = Nil,
+
   @Recurse
-    appOptions: InstallAppOptions = InstallAppOptions(),
+    cacheOptions: CacheOptions = CacheOptions(),
+
+  @Recurse
+    outputOptions: OutputOptions = OutputOptions(),
 
   @Recurse
     sharedInstallOptions: SharedInstallOptions = SharedInstallOptions(),
 
-  channel: List[String] = Nil,
+  @Recurse
+    sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  defaultChannels: Boolean = true,
-  fileChannels: Boolean = true,
+  addChannel: List[String] = Nil,
 
-  defaultRepositories: Boolean = true,
+  @Short("f")
+    force: Boolean = false
 
-  @Help("Name of the binary of the app to be installed")
-    name: Option[String] = None,
-
-  addChannel: List[String] = Nil
 )
 
 object InstallOptions {

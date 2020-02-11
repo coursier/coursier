@@ -10,12 +10,12 @@ import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.{AppArtifacts, Channel, RawAppDescriptor}
 import coursier.cli.install.Install
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
+import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
@@ -100,6 +100,99 @@ object Resolve extends CaseApp[ResolveOptions] {
     result(0)
   }
 
+
+  private[cli] def depsAndReposOrError(
+    params: ResolveParams,
+    args: Seq[String],
+    cache: Cache[Task]
+  ) = {
+    import coursier.cli.util.MonadlessEitherThrowable._
+
+    lift {
+
+      val (javaOrScalaDeps, urlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          args,
+          params.dependency.intransitiveDependencies
+        )
+      }
+
+      val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          Nil,
+          params.dependency.sbtPluginDependencies
+        )
+      }
+
+      val (scalaVersion, platformOpt, deps) = unlift {
+        AppDescriptor()
+          .withDependencies(javaOrScalaDeps)
+          .withRepositories(params.repositories.repositories)
+          .withScalaVersionOpt(
+            params.resolution.scalaVersionOpt.map { s =>
+              if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
+              else s
+            }
+          )
+          .processDependencies(
+            cache,
+            params.dependency.platformOpt,
+            params.output.verbosity
+          )
+          .left.map(err => new Exception(err))
+      }
+
+      val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
+        val m0 = m.map {
+          case ((mod, v), url) =>
+            ((mod.module(scalaVersion), v), (url, true))
+        }
+        InMemoryRepository(
+          m0,
+          params.cache.cacheLocalArtifacts
+        )
+      }
+
+      val deps0 = Dependencies.addExclusions(
+        deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
+        params.dependency.exclude.map { m =>
+          val m0 = m.module(scalaVersion)
+          (m0.organization, m0.name)
+        },
+        params.dependency.perModuleExclude.map {
+          case (k, s) =>
+            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+        }
+      )
+
+      // Prepend FallbackDependenciesRepository to the repository list
+      // so that dependencies with URIs are resolved against this repo
+      val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
+
+      unlift {
+        val invalidForced = extraRepoOpt
+          .map(_.fallbacks.toSeq)
+          .getOrElse(Nil)
+          .collect {
+            case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+              (mod, version)
+          }
+        if (invalidForced.isEmpty)
+          Right(())
+        else
+          Left(
+            new ResolveException(
+              s"Cannot force a version that is different from the one specified " +
+                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+            )
+          )
+      }
+
+      (deps0, repositories, scalaVersion, platformOpt)
+    }
+  }
+
+
   // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
   def task(
     params: ResolveParams,
@@ -118,94 +211,11 @@ object Resolve extends CaseApp[ResolveOptions] {
       inMemoryCache = params.benchmark != 0 && params.benchmarkCache
     )
 
-    val depsAndReposOrError = {
-      import coursier.cli.util.MonadlessEitherThrowable._
-
-      lift {
-
-        val (javaOrScalaDeps, urlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            args,
-            params.dependency.intransitiveDependencies
-          )
-        }
-
-        val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            Nil,
-            params.dependency.sbtPluginDependencies
-          )
-        }
-
-        val (scalaVersion, platformOpt, deps) = unlift {
-          AppArtifacts.dependencies(
-            cache,
-            params.repositories.repositories,
-            params.dependency.platformOpt,
-            params.output.verbosity,
-            javaOrScalaDeps,
-            constraintOpt = params.resolution.scalaVersionOpt.map { s =>
-              val reworked =
-                if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
-                else s
-              coursier.core.Parse.versionConstraint(reworked)
-            }
-          ).left.map(err => new Exception(err))
-        }
-
-        val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
-          val m0 = m.map {
-            case ((mod, v), url) =>
-              ((mod.module(scalaVersion), v), (url, true))
-          }
-          InMemoryRepository(
-            m0,
-            params.cache.cacheLocalArtifacts
-          )
-        }
-
-        val deps0 = Dependencies.addExclusions(
-          deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
-          params.dependency.exclude.map { m =>
-            val m0 = m.module(scalaVersion)
-            (m0.organization, m0.name)
-          },
-          params.dependency.perModuleExclude.map {
-            case (k, s) =>
-              k.module(scalaVersion) -> s.map(_.module(scalaVersion))
-          }
-        )
-
-        // Prepend FallbackDependenciesRepository to the repository list
-        // so that dependencies with URIs are resolved against this repo
-        val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
-
-        unlift {
-          val invalidForced = extraRepoOpt
-            .map(_.fallbacks.toSeq)
-            .getOrElse(Nil)
-            .collect {
-              case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
-                (mod, version)
-            }
-          if (invalidForced.isEmpty)
-            Right(())
-          else
-            Left(
-              new ResolveException(
-                s"Cannot force a version that is different from the one specified " +
-                  s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
-              )
-            )
-        }
-
-        (deps0, repositories, scalaVersion, platformOpt)
-      }
-    }
+    val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
 
     lift {
 
-      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError))
+      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
         resolution = params.resolution
           .withScalaVersionOpt(params.resolution.scalaVersionOpt.map(_ => scalaVersion))
@@ -222,9 +232,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .withDependencies(deps0)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
-          .withCache(
-            cache
-          )
+          .withCache(cache)
           .transformResolution { t =>
             if (params0.benchmark == 0) t
             else benchmark(math.abs(params0.benchmark))(t)
@@ -282,9 +290,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   def handleApps[T](
     options: T,
     args: Seq[String],
-    channels: Seq[Channel],
-    repositories: Seq[Repository],
-    cache: Cache[Task]
+    channels: Channels
   )(
     withApp: (T, RawAppDescriptor) => T
   ): (T, Seq[String]) = {
@@ -298,33 +304,29 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val descOpt = appIds.headOption.map { id =>
 
-      val (actualId, overrideVersionOpt) = {
-        val idx = id.indexOf(':')
-        if (idx < 0)
-          (id, None)
-        else
-          (id.take(idx), Some(id.drop(idx + 1)))
-      }
-
       val e = for {
-        b <- Install.appDescriptor(
-          channels,
-          repositories,
-          cache,
-          actualId
-        ).map(_._2)
-        desc <- RawAppDescriptor.parse(new String(b, StandardCharsets.UTF_8))
-      } yield overrideVersionOpt.fold(desc)(desc.overrideVersion)
+        info <- channels.appDescriptor(id)
+          .attempt
+          .flatMap {
+            case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
+            case Left(e) => Task.fail(e)
+            case Right(res) => Task.point(Right(res))
+          }
+          .unsafeRun()(channels.cache.ec)
+        rawDesc <- RawAppDescriptor.parse(new String(info.appDescriptorBytes, StandardCharsets.UTF_8))
+      } yield {
+        rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+          .overrideVersion(info.overrideVersionOpt)
+      }
 
       e match {
         case Left(err) =>
           System.err.println(err)
           sys.exit(1)
-        case Right(res) =>
-          res.copy(
-            name = res.name
-              .orElse(Some(actualId)) // kind of meh - so that the id can be picked as default output name by bootstrap
-          )
+        case Right(res) => res
       }
     }
 
@@ -344,7 +346,8 @@ object Resolve extends CaseApp[ResolveOptions] {
       val channels = initialParams.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val res = handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels, initialRepositories, cache)
+      val res = handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 

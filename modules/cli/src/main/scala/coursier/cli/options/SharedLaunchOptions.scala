@@ -1,8 +1,8 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.resolve.ResolveOptions
+import coursier.install.RawAppDescriptor
 
 final case class SharedLaunchOptions(
 
@@ -45,21 +45,20 @@ final case class SharedLaunchOptions(
     )
 
   def app: RawAppDescriptor =
-    RawAppDescriptor(
-      Nil,
-      shared = sharedLoaderOptions.shared,
-      repositories = {
+    RawAppDescriptor(Nil)
+      .withShared(sharedLoaderOptions.shared)
+      .withRepositories {
         val default =
           if (resolveOptions.repositoryOptions.noDefault) List()
           else List("central") // ?
         default ::: resolveOptions.repositoryOptions.repository
-      },
-      exclusions = resolveOptions.dependencyOptions.exclude,
-      launcherType = {
+      }
+      .withExclusions(resolveOptions.dependencyOptions.exclude)
+      .withLauncherType {
         if (resolveOptions.dependencyOptions.native) "scala-native"
         else "bootstrap"
-      },
-      classifiers = {
+      }
+      .withClassifiers {
         val l = artifactOptions.classifier
         val default = if (artifactOptions.default0) List("_") else Nil
         val c = default ::: l
@@ -67,20 +66,21 @@ final case class SharedLaunchOptions(
           Nil
         else
           c
-      },
-      artifactTypes = artifactOptions.artifactType,
-      mainClass = Some(mainClass).filter(_.nonEmpty),
-      properties = RawAppDescriptor.Properties {
-        property.map { s =>
-          s.split("=", 2) match {
-            case Array(k, v) =>
-              (k, v)
-            case Array(k) =>
-              (k, "")
+      }
+      .withArtifactTypes(artifactOptions.artifactType)
+      .withMainClass(Some(mainClass).filter(_.nonEmpty))
+      .withProperties(
+        RawAppDescriptor.Properties {
+          property.map { s =>
+            s.split("=", 2) match {
+              case Array(k, v) =>
+                (k, v)
+              case Array(k) =>
+                (k, "")
+            }
           }
         }
-      }
-    )
+      )
 }
 
 object SharedLaunchOptions {

@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Random
 import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
 
-import coursier.bootstrap.util.Zip
+import coursier.launcher.internal.Zip
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatestplus.junit.JUnitRunner
