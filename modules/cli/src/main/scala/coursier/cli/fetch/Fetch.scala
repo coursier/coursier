@@ -46,7 +46,7 @@ object Fetch extends CaseApp[FetchOptions] {
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?
         Some(params.artifact.artifactTypes),  // allow to be null?
-        params.resolve.classpathOrder
+        params.resolve.classpathOrder.getOrElse(true),
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(

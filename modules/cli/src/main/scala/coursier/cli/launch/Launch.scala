@@ -397,7 +397,7 @@ object Launch extends CaseApp[LaunchOptions] {
             params.shared.sharedLoader,
             params.shared.artifact,
             Nil,
-            params.shared.resolve.classpathOrder
+            params.shared.resolve.classpathOrder.getOrElse(true),
           ),
           props,
           envUpdate,

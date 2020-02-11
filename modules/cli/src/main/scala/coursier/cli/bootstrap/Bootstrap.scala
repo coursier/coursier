@@ -329,7 +329,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             params.sharedLaunch.artifact.artifactTypes,
             scalaVersion,
             platformOpt,
-            params.sharedLaunch.resolve.classpathOrder
+            params.sharedLaunch.resolve.classpathOrder.getOrElse(true),
           )
 
           val main = {

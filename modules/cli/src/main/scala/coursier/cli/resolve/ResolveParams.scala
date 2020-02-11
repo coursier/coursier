@@ -19,7 +19,7 @@ final case class ResolveParams(
   whatDependsOn: Seq[JavaOrScalaModule],
   candidateUrls: Boolean,
   conflicts: Boolean,
-  classpathOrder: Boolean
+  classpathOrder: Option[Boolean],
 ) {
   def anyTree: Boolean =
     tree ||
