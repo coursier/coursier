@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -evx
 
-setupCoursierBinDir() {
-  mkdir -p bin
-  cp coursier bin/
-  export PATH="$(pwd)/bin:$PATH"
-}
-
 isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
@@ -59,8 +53,6 @@ testNativeBootstrap() {
     exit 1
   fi
 }
-
-setupCoursierBinDir
 
 if isScalaJs; then
   jsCompile
