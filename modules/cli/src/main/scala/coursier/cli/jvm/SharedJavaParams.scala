@@ -1,14 +1,17 @@
 package coursier.cli.jvm
 
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.jvm.JvmCacheLogger
+import coursier.jvm.{JvmCache, JvmCacheLogger}
 import cats.data.Validated
 
 final case class SharedJavaParams(
-  jvm: Option[String]
+  jvm: Option[String],
+  jvmDir: Path
 ) {
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
@@ -35,9 +38,13 @@ final case class SharedJavaParams(
 object SharedJavaParams {
   def apply(options: SharedJavaOptions): ValidatedNel[String, SharedJavaParams] = {
     val jvm = options.jvm.map(_.trim).filter(_.nonEmpty)
+    val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
+      JvmCache.defaultBaseDirectory.toPath
+    }
     Validated.validNel {
       SharedJavaParams(
-        jvm
+        jvm,
+        jvmDir
       )
     }
   }

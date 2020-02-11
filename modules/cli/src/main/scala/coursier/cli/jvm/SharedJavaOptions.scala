@@ -3,5 +3,6 @@ package coursier.cli.jvm
 import caseapp.Recurse
 
 final case class SharedJavaOptions(
-  jvm: Option[String] = None
+  jvm: Option[String] = None,
+  jvmDir: Option[String] = None
 )

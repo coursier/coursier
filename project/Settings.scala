@@ -365,6 +365,9 @@ object Settings {
 
   lazy val Integration = config("it").extend(Test)
 
+  // For whatever reason, it seems this messes with the terminal on Windows,
+  // disabling ANSI handling by the terminal (which results in ANSI escape codes
+  // printing junk).
   def runCommand(cmd: Seq[String], dir: File): Unit = {
     val b = new ProcessBuilder(cmd: _*)
     b.directory(dir)
@@ -514,6 +517,23 @@ object Settings {
       directoriesDir
     }
   }
+
+  lazy val addWindowsAnsiPsSources = {
+    unmanagedSourceDirectories.in(Compile) += {
+      val baseDir = baseDirectory.in(LocalRootProject).value
+      val windowsAnsiPsDir = baseDir / "modules" / "windows-ansi" / "ps" / "src" / "main" / "java"
+      if (!windowsAnsiPsDir.exists())
+        gitLock.synchronized {
+          if (!windowsAnsiPsDir.exists()) {
+            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/windows-ansi")
+            runCommand(cmd, baseDir)
+          }
+        }
+
+      windowsAnsiPsDir
+    }
+  }
+
 
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 

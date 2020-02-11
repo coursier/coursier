@@ -1,6 +1,6 @@
 package coursier.jvm
 
-import java.io.File
+import java.io.{File, IOException}
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path}
 import java.util.Locale
@@ -56,18 +56,24 @@ import dataclass.data
         else
           Task.delay {
 
-            val outputOrRetCode = commandOutput
-              .run(
-                Seq("java", "-XshowSettings:properties", "-version"),
-                keepErrStream = true,
-                // Setting this makes cs-java fail.
-                // This prevents us (possibly cs-java) to call ourselves,
-                // which could call ourselves again, etc. indefinitely.
-                extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
-              )
+            val outputOrRetCode =
+              try {
+                commandOutput
+                  .run(
+                    Seq("java", "-XshowSettings:properties", "-version"),
+                    keepErrStream = true,
+                    // Setting this makes cs-java fail.
+                    // This prevents us (possibly cs-java) to call ourselves,
+                    // which could call ourselves again, etc. indefinitely.
+                    extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                  )
+                  .toOption
+              } catch {
+                case _: IOException =>
+                  None
+              }
 
             outputOrRetCode
-              .toOption
               .flatMap { output =>
                 val it = output
                   .linesIterator

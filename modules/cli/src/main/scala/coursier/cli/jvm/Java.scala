@@ -32,8 +32,9 @@ object Java extends CaseApp[JavaOptions] {
 
     val task =
       for {
-        baseHandle <- coursier.jvm.JavaHome.default
-        handle = baseHandle
+        jvmCache <- JvmCache.default.map(_.withBaseDirectory(params.shared.jvmDir.toFile))
+        handle = coursier.jvm.JavaHome()
+          .withCache(jvmCache)
           .withJvmCacheLogger(params.shared.jvmCacheLogger(params.output.verbosity))
           .withCoursierCache(coursierCache)
         homeId <- handle.getWithRetainedId(params.shared.id)
