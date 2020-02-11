@@ -49,7 +49,7 @@ object Deps {
   def scalatest = "org.scalatest" %% "scalatest" % "3.0.8"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % versions.scalaz
-  def windowsAnsi = "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.2"
+  def windowsAnsi = "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
 
   object cross {
     // The setting / .value hoop-and-loop is necessary because of the expansion of the %%% macro, which references
