@@ -287,8 +287,8 @@ object JvmCache {
     val fromProps = Option(System.getProperty("coursier.jvm-dir")).map(new File(_))
     def fromEnv = Option(System.getenv("COURSIER_JVM_DIR")).map(new File(_))
     def default = {
-      val dataDir = CoursierPaths.dataLocalDirectory()
-      new File(dataDir, "jvm")
+      val cacheDir = CoursierPaths.projectCacheDirectory()
+      new File(cacheDir, "jvm")
     }
 
     fromProps

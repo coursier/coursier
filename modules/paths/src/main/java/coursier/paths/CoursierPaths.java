@@ -133,4 +133,8 @@ public final class CoursierPaths {
 
         return dataLocalDirectory0;
     }
+
+    public static File projectCacheDirectory() throws IOException {
+        return new File(coursierDirectories().cacheDir);
+    }
 }
