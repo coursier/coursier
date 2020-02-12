@@ -5,6 +5,7 @@ import java.nio.file.{Path, Paths}
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
+import coursier.launcher.internal.Windows
 import dataclass.data
 
 sealed abstract class Parameters extends Product with Serializable {
@@ -79,7 +80,10 @@ object Parameters {
     javaHome: Option[File] = None, // needs a "JVMCI-enabled JDK" (like GraalVM)
     nameOpt: Option[String] = None,
     verbosity: Int = 0,
-    intermediateAssembly: Boolean = false
+    intermediateAssembly: Boolean = false,
+    windowsPathExtensions: Option[Seq[String]] =
+      if (Windows.isWindows) Some(Windows.pathExtensions) else None,
+    isWindows: Boolean = Windows.isWindows
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =
