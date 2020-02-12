@@ -37,10 +37,8 @@ object Setup extends CaseApp[SetupOptions] {
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
-    val installDir = InstallDir(params.sharedInstall.dir, installCache)
+    val installDir = params.sharedInstall.installDir(installCache)
       .withVerbosity(params.output.verbosity)
-      .withGraalvmParamsOpt(params.sharedInstall.graalvmParamsOpt)
-      .withCoursierRepositories(params.sharedInstall.repositories)
       .withNativeImageJavaHome(Some(graalvmHome))
     val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
       .withVerbosity(params.output.verbosity)

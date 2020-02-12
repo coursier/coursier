@@ -30,7 +30,8 @@ import scala.util.control.NonFatal
   platform: Option[String] = InstallDir.platform(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
   os: String = System.getProperty("os.name", ""),
-  nativeImageJavaHome: Option[String => Task[File]] = None
+  nativeImageJavaHome: Option[String => Task[File]] = None,
+  onlyPrebuilt: Boolean = false
 ) {
 
   private lazy val isWindows =
@@ -115,22 +116,22 @@ import scala.util.control.NonFatal
           None
       }
 
-      val prebuiltOpt0 = prebuiltOpt(desc, cache, verbosity)
+      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(desc, cache, verbosity)
 
-      val appArtifacts = prebuiltOpt0 match {
-        case None => desc.artifacts(cache, verbosity)
-        case Some(_) => AppArtifacts.empty
+      val appArtifacts = prebuiltOrNotFoundUrls0 match {
+        case Left(_) => desc.artifacts(cache, verbosity)
+        case Right(_) => AppArtifacts.empty
       }
 
       val lock0 = {
-        val artifacts = prebuiltOpt0.map(Seq(_)).getOrElse {
+        val artifacts = prebuiltOrNotFoundUrls0.map(Seq(_)).getOrElse {
           appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet)
         }
         ArtifactsLock.ofArtifacts(artifacts)
       }
 
       val sharedLockOpt =
-        if (appArtifacts.shared.isEmpty || prebuiltOpt0.nonEmpty)
+        if (appArtifacts.shared.isEmpty || prebuiltOrNotFoundUrls0.isRight)
           None
         else
           Some(ArtifactsLock.ofArtifacts(appArtifacts.shared))
@@ -173,8 +174,18 @@ import scala.util.control.NonFatal
             if (desc.launcherType.isNative) tmpAux
             else tmpDest
 
-          prebuiltOpt0 match {
-            case None =>
+          prebuiltOrNotFoundUrls0 match {
+            case Left(notFoundUrls) =>
+
+              if (onlyPrebuilt && desc.launcherType.isNative) {
+                val message =
+                  if (notFoundUrls.isEmpty)
+                    "No prebuilt binary available"
+                  else
+                    s"No prebuilt binary available at ${notFoundUrls.mkString(", ")}"
+                throw new Exception(message) // meh
+              }
+
               val params = desc.launcherType match {
                 case LauncherType.DummyJar =>
                   Parameters.Bootstrap(Nil, mainClass)
@@ -278,7 +289,7 @@ import scala.util.control.NonFatal
                 Generator.generate(params, genDest)
               }
 
-            case Some((_, prebuilt)) =>
+            case Right((_, prebuilt)) =>
               Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
               FileUtil.tryMakeExecutable(genDest)
           }
@@ -434,48 +445,58 @@ object InstallDir {
     t
   }
 
-  private def prebuiltOpt(
+
+  private def prebuiltUrlsOpt(
     desc: AppDescriptor,
     cache: Cache[Task],
     verbosity: Int
-  ): Option[(Artifact, File)] =
-    desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).flatMap { pattern =>
+  ): Option[(String, Seq[String])] =
+    desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).map { pattern =>
       val version = desc.retainedMainVersion(cache, verbosity)
         .orElse(desc.mainVersionOpt)
         .getOrElse("")
       val baseUrl = pattern
         .replaceAllLiterally("${version}", version)
         .replaceAllLiterally("${platform}", platform.getOrElse(""))
-      val urls = platformExtensions.map(ext => baseUrl + ext) ++ Seq(baseUrl)
+      (version, platformExtensions.map(ext => baseUrl + ext) ++ Seq(baseUrl))
+    }
 
-      val iterator = urls.iterator.flatMap { url =>
-        if (verbosity >= 2)
-          System.err.println(s"Checking prebuilt launcher at $url")
-        // FIXME Make this changing all the time? Allow to change that?
-        val artifact = Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
-        cache.loggerOpt.foreach(_.init())
-        val maybeFile =
-          try cache.file(artifact).run.unsafeRun()(cache.ec)
-          finally cache.loggerOpt.foreach(_.stop())
-        maybeFile match {
-          case Left(e: ArtifactError.NotFound) =>
-            if (verbosity >= 2)
-              System.err.println(s"No prebuilt launcher found at $url")
-            Iterator.empty
-          case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
-          case Right(f) =>
-            if (verbosity >= 1) {
-              val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-              System.err.println(s"Found prebuilt launcher at $url ($size)")
-            }
-            Iterator.single((artifact, f))
+  private def prebuiltOrNotFoundUrls(
+    desc: AppDescriptor,
+    cache: Cache[Task],
+    verbosity: Int
+  ): Either[Seq[String], (Artifact, File)] =
+    prebuiltUrlsOpt(desc, cache, verbosity).toRight(Nil).flatMap {
+      case (version, urls) =>
+
+        val iterator = urls.iterator.flatMap { url =>
+          if (verbosity >= 2)
+            System.err.println(s"Checking prebuilt launcher at $url")
+          // FIXME Make this changing all the time? Allow to change that?
+          val artifact = Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
+          cache.loggerOpt.foreach(_.init())
+          val maybeFile =
+            try cache.file(artifact).run.unsafeRun()(cache.ec)
+            finally cache.loggerOpt.foreach(_.stop())
+          maybeFile match {
+            case Left(e: ArtifactError.NotFound) =>
+              if (verbosity >= 2)
+                System.err.println(s"No prebuilt launcher found at $url")
+              Iterator.empty
+            case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
+            case Right(f) =>
+              if (verbosity >= 1) {
+                val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
+                System.err.println(s"Found prebuilt launcher at $url ($size)")
+              }
+              Iterator.single((artifact, f))
+          }
         }
-      }
 
-      if (iterator.hasNext)
-        Some(iterator.next())
-      else
-        None
+        if (iterator.hasNext)
+          Right(iterator.next())
+        else
+          Left(urls)
     }
 
   def auxName(name: String, auxExtension: String): String = {

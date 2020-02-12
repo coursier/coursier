@@ -34,10 +34,7 @@ object Update extends CaseApp[UpdateOptions] {
         .get(s"graalvm:$version")
     }
 
-    val installDir =
-      InstallDir(params.shared.dir, cache)
-        .withGraalvmParamsOpt(params.shared.graalvmParamsOpt)
-        .withCoursierRepositories(params.shared.repositories)
+    val installDir = params.shared.installDir(cache)
         .withVerbosity(params.output.verbosity)
         .withNativeImageJavaHome(Some(graalvmHome))
 

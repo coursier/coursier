@@ -5,17 +5,26 @@ import java.nio.file.{Path, Paths}
 import caseapp.Tag
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cache.CacheLogger
+import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.params.OutputParams
 import coursier.core.Repository
-import coursier.install.GraalvmParams
+import coursier.install.{GraalvmParams, InstallDir}
 import coursier.parse.RepositoryParser
+import coursier.util.Task
 
 final case class SharedInstallParams(
   repositories: Seq[Repository],
   dir: Path,
-  graalvmParamsOpt: Option[GraalvmParams] = None
-)
+  graalvmParamsOpt: Option[GraalvmParams] = None,
+  onlyPrebuilt: Boolean
+) {
+
+  def installDir(cache: Cache[Task]): InstallDir =
+    InstallDir(dir, cache)
+      .withGraalvmParamsOpt(graalvmParamsOpt)
+      .withCoursierRepositories(repositories)
+      .withOnlyPrebuilt(onlyPrebuilt)
+}
 
 object SharedInstallParams {
 
@@ -49,11 +58,14 @@ object SharedInstallParams {
       options.graalvmOption
     )
 
+    val onlyPrebuilt = options.onlyPrebuilt
+
     repositoriesV.map { repositories =>
       SharedInstallParams(
         defaultRepositories ++ repositories,
         dir,
-        Some(graalvmParams)
+        Some(graalvmParams),
+        onlyPrebuilt
       )
     }
   }
