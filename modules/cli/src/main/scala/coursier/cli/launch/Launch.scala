@@ -3,6 +3,7 @@ package coursier.cli.launch
 import java.io.{File, PrintStream}
 import java.lang.reflect.Modifier
 import java.net.{URL, URLClassLoader}
+import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import caseapp.CaseApp
@@ -16,6 +17,7 @@ import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
+import coursier.launcher.{BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Parameters}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -47,34 +49,59 @@ object Launch extends CaseApp[LaunchOptions] {
     properties: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     verbosity: Int
-  ): Either[LaunchException, () => Int] =
-    hierarchy match {
+  ): Either[LaunchException, () => Int] = {
+
+    val cp = hierarchy match {
       case Seq((None, files)) =>
-
-        val cmd = Seq(javaPath) ++
-          javaOptions ++
-          properties.map { case (k, v) => s"-D$k=$v" } ++
-          Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
-          args
-
-        val b = new ProcessBuilder()
-        b.command(cmd: _*)
-        b.inheritIO()
-
-        val env = b.environment()
-        for ((k, v) <- extraEnv.transientUpdates())
-          env.put(k, v)
-
-        Right {
-          () =>
-            if (verbosity >= 1)
-              System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
-            val p = b.start()
-            p.waitFor()
-        }
+        Right(files.map(_.getAbsolutePath).mkString(File.pathSeparator))
       case _ =>
-        Left(new LaunchException.ClasspathHierarchyUnsupportedWhenForking)
+        val content = hierarchy.map {
+          case (nameOpt, files) =>
+            val entries = files.toSeq.map(f => ClassPathEntry.Url(f.toURI.toASCIIString))
+            ClassLoaderContent(entries, nameOpt.getOrElse(""))
+        }
+        val tmpFile = Files.createTempFile("coursier-launch-", ".jar")
+        // not sure that will be fine if we use execve instead of ProcessBuilder
+        // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
+        Runtime.getRuntime().addShutdownHook(
+          new Thread {
+            override def run(): Unit =
+              Files.deleteIfExists(tmpFile)
+          }
+        )
+        val bootstrapParams = Parameters.Bootstrap(content, mainClass)
+          .withPreambleOpt(None)
+        BootstrapGenerator.generate(bootstrapParams, tmpFile)
+        Left(tmpFile.toAbsolutePath.toFile)
     }
+
+    val cpOpts = cp match {
+      case Right(cp0) => Seq("-cp", cp0, mainClass)
+      case Left(jar) => Seq("-jar", jar.getAbsolutePath)
+    }
+
+    val cmd = Seq(javaPath) ++
+      javaOptions ++
+      properties.map { case (k, v) => s"-D$k=$v" } ++
+      cpOpts ++
+      args
+
+    val b = new ProcessBuilder()
+    b.command(cmd: _*)
+    b.inheritIO()
+
+    val env = b.environment()
+    for ((k, v) <- extraEnv.transientUpdates())
+      env.put(k, v)
+
+    Right {
+      () =>
+        if (verbosity >= 1)
+          System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
+        val p = b.start()
+        p.waitFor()
+    }
+  }
 
   def launch(
     hierarchy: Seq[(Option[String], Array[File])],
