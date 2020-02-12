@@ -20,6 +20,7 @@ final case class ResolveParams(
   candidateUrls: Boolean,
   conflicts: Boolean,
   classpathOrder: Option[Boolean],
+  forcePrint: Boolean
 ) {
   def anyTree: Boolean =
     tree ||
@@ -61,6 +62,7 @@ object ResolveParams {
         Validated.validNel(options.benchmarkCache)
 
     val classpathOrder = options.classpathOrder
+    val forcePrint = options.forcePrint
 
     (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
       (cache, output, repositories, dependency, resolution, whatDependsOn, _, benchmarkCache) =>
@@ -77,7 +79,8 @@ object ResolveParams {
           whatDependsOn,
           candidateUrls,
           conflicts,
-          classpathOrder
+          classpathOrder,
+          forcePrint
         )
     }
   }

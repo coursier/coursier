@@ -14,11 +14,7 @@ final case class OutputOptions(
 
   @Help("Force display of progress bars")
   @Short("P")
-    progress: Boolean = false,
-
-  @Help("Force printing / generating results, even if errored")
-  @Short("F")
-    forcePrint: Boolean = false
+    progress: Boolean = false
 
 ) {
 

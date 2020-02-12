@@ -45,7 +45,11 @@ final case class ResolveOptions(
     dependencyOptions: DependencyOptions = DependencyOptions(),
 
   @Recurse
-    outputOptions: OutputOptions = OutputOptions()
+    outputOptions: OutputOptions = OutputOptions(),
+
+  @Help("Force printing / generating results, even if errored")
+  @Short("F")
+    forcePrint: Boolean = false
 
 ) {
   def addApp(app: RawAppDescriptor): ResolveOptions =

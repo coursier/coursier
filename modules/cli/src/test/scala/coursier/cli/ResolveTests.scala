@@ -101,9 +101,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
   it should "print results anyway" in {
     val options = ResolveOptions(
-      outputOptions = OutputOptions(
-        forcePrint = true
-      )
+      forcePrint = true
     )
     val args = RemainingArgs(
       Seq("ioi.get-coursier:coursier-core_2.12:1.1.0-M9", "io.get-coursier:coursier-cache_2.12:1.1.0-M9"),

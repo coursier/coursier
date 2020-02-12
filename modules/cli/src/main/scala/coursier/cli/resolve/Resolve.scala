@@ -252,7 +252,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(ex: ResolutionError) =>
-              if (force || params0.output.forcePrint)
+              if (force || params0.forcePrint)
                 Task.point((ex.resolution, Nil, ex.errors))
               else
                 Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
@@ -265,7 +265,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val valid = errors.isEmpty
 
-      val outputToStdout = printOutput && (valid || params0.output.forcePrint)
+      val outputToStdout = printOutput && (valid || params0.forcePrint)
       if (outputToStdout || params0.output.verbosity >= 2) {
         Output.printResolutionResult(
           printResultStdout = outputToStdout,
