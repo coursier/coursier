@@ -158,7 +158,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       launcher
     )
 
-    assert(created)
+    assert(created.exists(identity))
     assert(Files.isRegularFile(launcher))
 
     val urls = stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-urls")
@@ -191,7 +191,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       launcher
     )
 
-    assert(created)
+    assert(created.exists(identity))
     assert(Files.isRegularFile(launcher))
 
     assertHasEntry(launcher.toFile, "coursier/echo/Echo.class")
@@ -219,7 +219,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       launcher
     )
 
-    assert(created)
+    assert(created.exists(identity))
     assert(Files.isRegularFile(launcher))
 
     assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/ResourcesLauncher.class")
@@ -254,7 +254,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       launcher
     )
 
-    assert(created)
+    assert(created.exists(identity))
     assert(Files.isRegularFile(launcher))
 
     def testRun(): Unit = {
@@ -271,7 +271,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
       launcher
     )
 
-    assert(!updated)
+    assert(updated.exists(!_))
 
     testRun()
   }
@@ -302,7 +302,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     )
 
     Predef.assert(Files.getLastModifiedTime(launcher).toInstant == now.plusSeconds(-30), s"now=$now, 30s before=${now.plusSeconds(-30)}")
-    assert(created)
+    assert(created.exists(identity))
     assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
     assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
 
@@ -330,7 +330,7 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
     // randomly seeing the old file on OS X if we don't check that :|
     assert(Files.getLastModifiedTime(launcher).toInstant == now)
 
-    assert(updated)
+    assert(updated.exists(identity))
     assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
     assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
 

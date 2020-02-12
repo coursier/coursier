@@ -39,15 +39,15 @@ import scala.util.control.NonFatal
 
   // TODO Make that return a Task[Boolean] instead
   def createOrUpdate(
-    appInfo: AppInfo,
-  ): Boolean =
+    appInfo: AppInfo
+  ): Option[Boolean] =
     createOrUpdate(appInfo, Instant.now(), force = false)
 
   // TODO Make that return a Task[Boolean] instead
   def createOrUpdate(
     appInfo: AppInfo,
     currentTime: Instant
-  ): Boolean =
+  ): Option[Boolean] =
     createOrUpdate(appInfo, currentTime, force = false)
 
   // TODO Make that return a Task[Boolean] instead
@@ -55,7 +55,7 @@ import scala.util.control.NonFatal
     appInfo: AppInfo,
     currentTime: Instant,
     force: Boolean
-  ): Boolean = {
+  ): Option[Boolean] = {
 
     val name = appInfo.appDescriptor.nameOpt
       .getOrElse(appInfo.source.id)
@@ -77,7 +77,7 @@ import scala.util.control.NonFatal
     dest: Path,
     currentTime: Instant = Instant.now(),
     force: Boolean = false
-  ): Boolean = {
+  ): Option[Boolean] = {
 
     val dest0 =
       if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
@@ -289,8 +289,6 @@ import scala.util.control.NonFatal
 
     Updatable.writing(baseDir, dest0, auxExtension, verbosity) { (tmpDest, tmpAux) =>
       update(tmpDest, tmpAux)
-    }.getOrElse {
-      sys.error(s"Could not acquire lock for $dest0")
     }
   }
 
@@ -299,7 +297,7 @@ import scala.util.control.NonFatal
     update: Source => Task[Option[(String, Array[Byte])]],
     currentTime: Instant = Instant.now(),
     force: Boolean = false
-  ): Task[Boolean] =
+  ): Task[Option[Boolean]] =
     for {
       _ <- Task.delay {
         if (verbosity >= 2)
@@ -330,8 +328,8 @@ import scala.util.control.NonFatal
           info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
       }
 
-      written <- Task.delay {
-        val written0 = InstallDir(baseDir, cache)
+      writtenOpt <- Task.delay {
+        val writtenOpt0 = InstallDir(baseDir, cache)
           .withVerbosity(verbosity)
           .withGraalvmParamsOpt(graalvmParamsOpt)
           .withCoursierRepositories(coursierRepositories)
@@ -340,11 +338,11 @@ import scala.util.control.NonFatal
             currentTime,
             force
           )
-        if (!written0 && verbosity >= 1)
+        if (!writtenOpt0.exists(!_) && verbosity >= 1)
           System.err.println(s"No new update for $name\n")
-        written0
+        writtenOpt0
       }
-    } yield written
+    } yield writtenOpt
 
 }
 

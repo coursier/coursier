@@ -44,10 +44,13 @@ object Update extends CaseApp[UpdateOptions] {
         now,
         params.force
       ).map {
-        case true =>
+        case None =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Could not update $name (concurrent operation ongoing)")
+        case Some(true) =>
           if (params.output.verbosity >= 0)
             System.err.println(s"Updated $name")
-        case false =>
+        case Some(false) =>
       }
     }
 

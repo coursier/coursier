@@ -19,12 +19,14 @@ import dataclass.data
       .map { id =>
         for {
           appInfo <- channels.appDescriptor(id)
-          installed <- Task.delay(installDir.createOrUpdate(appInfo))
+          installedOpt <- Task.delay(installDir.createOrUpdate(appInfo))
           _ <- {
             Task.delay {
-              val message =
-                if (installed) s"Installed $id"
-                else s"Found $id"
+              val message = installedOpt match {
+                case None => s"Could not install $id (concurrent operation ongoing)"
+                case Some(true) => s"Installed $id"
+                case Some(false) => s"Found $id"
+              }
               System.out.println("  " + message)
             }
           }

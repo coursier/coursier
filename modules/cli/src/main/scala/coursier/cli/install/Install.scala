@@ -80,16 +80,23 @@ object Install extends CaseApp[InstallOptions] {
         case Right(appInfo) => appInfo
       }
 
-      val wroteSomething = installDir.createOrUpdate(
+      val wroteSomethingOpt = installDir.createOrUpdate(
         appInfo,
         Instant.now(),
         force = params.force
       )
 
-      if (wroteSomething)
-        System.err.println(s"Wrote ${appInfo.source.id}")
-      else if (params.output.verbosity >= 1)
-        System.err.println(s"${appInfo.source.id} doesn't need updating")
+      wroteSomethingOpt match {
+        case Some(true) =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Wrote ${appInfo.source.id}")
+        case Some(false) =>
+          if (params.output.verbosity >= 1)
+            System.err.println(s"${appInfo.source.id} doesn't need updating")
+        case None =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
+      }
     }
 
     if (params.output.verbosity >= 0) {
