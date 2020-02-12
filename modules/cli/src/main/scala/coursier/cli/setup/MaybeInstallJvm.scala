@@ -25,11 +25,10 @@ import dataclass.data
           System.out.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
           Task.point(Some(JavaHome.systemId -> javaHome0))
         case None =>
-          confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
+          confirm.confirm("No system JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>
-              System.out.println("No JVM found, trying to install one.") // Task.delay(…)
               javaHome.getWithRetainedId(JavaHome.defaultJvm).map(Some(_))
           }
       }

@@ -18,6 +18,7 @@ final case class SetupOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
   home: Option[String] = None,
+  banner: Option[Boolean] = None,
   @Short("y")
     yes: Boolean = false
 )

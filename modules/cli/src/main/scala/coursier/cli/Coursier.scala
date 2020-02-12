@@ -61,7 +61,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   override def main(args: Array[String]): Unit =
     if (args.isEmpty && Windows.isWindows) {
-      Setup.run(SetupOptions(), RemainingArgs(Nil, Nil))
+      Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
 
       // https://stackoverflow.com/questions/26184409/java-console-prompt-for-enter-input-before-moving-on/26184535#26184535
       println("Press \"ENTER\" to continue...")

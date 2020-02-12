@@ -5,13 +5,16 @@ import cats.data.{Validated, ValidatedNel}
 import coursier.cache.CacheLogger
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.options.OutputOptions
+import coursier.cache.loggers.FileTypeRefreshDisplay
 
 final case class OutputParams(
   verbosity: Int,
   progressBars: Boolean,
   forcePrint: Boolean
 ) {
-  def logger(): CacheLogger = {
+  def logger(): CacheLogger =
+    logger(byFileType = false)
+  def logger(byFileType: Boolean): CacheLogger = {
 
     val loggerFallbackMode =
       !progressBars && RefreshLogger.defaultFallbackMode
@@ -19,10 +22,13 @@ final case class OutputParams(
     if (verbosity >= -1)
       RefreshLogger.create(
         System.err,
-        RefreshLogger.defaultDisplay(
-          loggerFallbackMode,
-          quiet = verbosity == -1 || sys.env.contains("CI")
-        )
+        if (byFileType)
+          FileTypeRefreshDisplay.create(keepOnScreen = false)
+        else
+          RefreshLogger.defaultDisplay(
+            loggerFallbackMode,
+            quiet = verbosity == -1 || sys.env.contains("CI")
+          )
       )
     else
       CacheLogger.nop
