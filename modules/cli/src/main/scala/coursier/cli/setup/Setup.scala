@@ -76,6 +76,14 @@ object Setup extends CaseApp[SetupOptions] {
       )
 
     // TODO Better error messages for relevant exceptions
-    task.unsafeRun()(cache.ec)
+    try task.unsafeRun()(cache.ec)
+    catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
+          sys.exit(1)
+    }
   }
 }

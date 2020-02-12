@@ -5,7 +5,7 @@ import caseapp.core.help.CommandsHelp
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
-import coursier.cli.install.{Install, Update}
+import coursier.cli.install.{Install, Uninstall, Update}
 import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
@@ -30,6 +30,7 @@ object CoursierCommand {
       .add(Setup)
       .add(Sonatype, "sonatype")
       .add(SparkSubmit)
+      .add(Uninstall)
       .add(Update)
       .reverse
 
@@ -47,6 +48,7 @@ object CoursierCommand {
       .add(Setup)
       .add(Sonatype, "sonatype")
       .add(SparkSubmit)
+      .add(Uninstall)
       .add(Update)
       .reverse
 

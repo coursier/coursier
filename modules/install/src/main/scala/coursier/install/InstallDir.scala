@@ -177,14 +177,8 @@ import scala.util.control.NonFatal
           prebuiltOrNotFoundUrls0 match {
             case Left(notFoundUrls) =>
 
-              if (onlyPrebuilt && desc.launcherType.isNative) {
-                val message =
-                  if (notFoundUrls.isEmpty)
-                    "No prebuilt binary available"
-                  else
-                    s"No prebuilt binary available at ${notFoundUrls.mkString(", ")}"
-                throw new Exception(message) // meh
-              }
+              if (onlyPrebuilt && desc.launcherType.isNative)
+                throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
               val params = desc.launcherType match {
                 case LauncherType.DummyJar =>
@@ -544,17 +538,25 @@ object InstallDir {
     Option(System.getProperty("os.name"))
       .flatMap(platform(_))
 
-  sealed abstract class AppGeneratorException(message: String, cause: Throwable = null)
+  sealed abstract class InstallDirException(message: String, cause: Throwable = null)
     extends Exception(message, cause)
 
-  final class NoMainClassFound extends AppGeneratorException("No main class found")
+  final class NoMainClassFound extends InstallDirException("No main class found")
 
   // FIXME Keep more details
-  final class NoScalaVersionFound extends AppGeneratorException("No scala version found")
+  final class NoScalaVersionFound extends InstallDirException("No scala version found")
 
-  final class LauncherNotFound(path: Path) extends AppGeneratorException(s"$path not found")
+  final class LauncherNotFound(path: Path) extends InstallDirException(s"$path not found")
+
+  final class NoPrebuiltBinaryAvailable(candidateUrls: Seq[String])
+    extends InstallDirException(
+      if (candidateUrls.isEmpty)
+        "No prebuilt binary available"
+      else
+        s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
+    )
 
   final class CannotReadAppDescriptionInLauncher(path: Path)
-    extends AppGeneratorException(s"Cannot read app description in $path")
+    extends InstallDirException(s"Cannot read app description in $path")
 
 }

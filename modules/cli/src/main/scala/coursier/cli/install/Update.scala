@@ -61,6 +61,14 @@ object Update extends CaseApp[UpdateOptions] {
       for (_ <- acc; _ <- t) yield ()
     }
 
-    task.unsafeRun()(cache.ec)
+    try task.unsafeRun()(cache.ec)
+    catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
+          sys.exit(1)
+    }
   }
 }

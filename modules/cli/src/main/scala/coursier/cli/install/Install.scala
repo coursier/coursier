@@ -74,33 +74,42 @@ object Install extends CaseApp[InstallOptions] {
     val channels = Channels(params.channels, params.shared.repositories, cache)
       .withVerbosity(params.output.verbosity)
 
-    for (id <- args.all) {
+    try {
+      for (id <- args.all) {
 
-      val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-        case Left(err: Channels.ChannelsException) =>
-          System.err.println(err.getMessage)
+        val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
+          case Left(err: Channels.ChannelsException) =>
+            System.err.println(err.getMessage)
+            sys.exit(1)
+          case Left(err) => throw err
+          case Right(appInfo) => appInfo
+        }
+
+        val wroteSomethingOpt = installDir.createOrUpdate(
+          appInfo,
+          Instant.now(),
+          force = params.force
+        )
+
+        wroteSomethingOpt match {
+          case Some(true) =>
+            if (params.output.verbosity >= 0)
+              System.err.println(s"Wrote ${appInfo.source.id}")
+          case Some(false) =>
+            if (params.output.verbosity >= 1)
+              System.err.println(s"${appInfo.source.id} doesn't need updating")
+          case None =>
+            if (params.output.verbosity >= 0)
+              System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
+        }
+      }
+    } catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
           sys.exit(1)
-        case Left(err) => throw err
-        case Right(appInfo) => appInfo
-      }
-
-      val wroteSomethingOpt = installDir.createOrUpdate(
-        appInfo,
-        Instant.now(),
-        force = params.force
-      )
-
-      wroteSomethingOpt match {
-        case Some(true) =>
-          if (params.output.verbosity >= 0)
-            System.err.println(s"Wrote ${appInfo.source.id}")
-        case Some(false) =>
-          if (params.output.verbosity >= 1)
-            System.err.println(s"${appInfo.source.id} doesn't need updating")
-        case None =>
-          if (params.output.verbosity >= 0)
-            System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
-      }
     }
 
     if (params.output.verbosity >= 0) {
