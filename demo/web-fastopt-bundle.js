@@ -25983,7 +25983,6 @@ function $c_Lorg_scalajs_dom_package$() {
   this.ApplicationCache$1 = null;
   this.Blob$1 = null;
   this.BlobPropertyBag$1 = null;
-  this.ClipboardEventInit$1 = null;
   this.DOMException$1 = null;
   this.Event$1 = null;
   this.EventException$1 = null;
@@ -25992,7 +25991,6 @@ function $c_Lorg_scalajs_dom_package$() {
   this.FormData$1 = null;
   this.KeyboardEvent$1 = null;
   this.MediaError$1 = null;
-  this.MutationEvent$1 = null;
   this.MutationObserverInit$1 = null;
   this.Node$1 = null;
   this.NodeFilter$1 = null;
@@ -26023,22 +26021,22 @@ $c_Lorg_scalajs_dom_package$.prototype.init___ = (function() {
   return this
 });
 $c_Lorg_scalajs_dom_package$.prototype.document__Lorg_scalajs_dom_raw_HTMLDocument = (function() {
-  return (((268435456 & this.bitmap$0$1) === 0) ? this.document$lzycompute__p1__Lorg_scalajs_dom_raw_HTMLDocument() : this.document$1)
+  return (((67108864 & this.bitmap$0$1) === 0) ? this.document$lzycompute__p1__Lorg_scalajs_dom_raw_HTMLDocument() : this.document$1)
 });
 $c_Lorg_scalajs_dom_package$.prototype.window__Lorg_scalajs_dom_raw_Window = (function() {
-  return (((134217728 & this.bitmap$0$1) === 0) ? this.window$lzycompute__p1__Lorg_scalajs_dom_raw_Window() : this.window$1)
+  return (((33554432 & this.bitmap$0$1) === 0) ? this.window$lzycompute__p1__Lorg_scalajs_dom_raw_Window() : this.window$1)
 });
 $c_Lorg_scalajs_dom_package$.prototype.window$lzycompute__p1__Lorg_scalajs_dom_raw_Window = (function() {
-  if (((134217728 & this.bitmap$0$1) === 0)) {
+  if (((33554432 & this.bitmap$0$1) === 0)) {
     this.window$1 = $g.window;
-    this.bitmap$0$1 = (134217728 | this.bitmap$0$1)
+    this.bitmap$0$1 = (33554432 | this.bitmap$0$1)
   };
   return this.window$1
 });
 $c_Lorg_scalajs_dom_package$.prototype.document$lzycompute__p1__Lorg_scalajs_dom_raw_HTMLDocument = (function() {
-  if (((268435456 & this.bitmap$0$1) === 0)) {
+  if (((67108864 & this.bitmap$0$1) === 0)) {
     this.document$1 = this.window__Lorg_scalajs_dom_raw_Window().document;
-    this.bitmap$0$1 = (268435456 | this.bitmap$0$1)
+    this.bitmap$0$1 = (67108864 | this.bitmap$0$1)
   };
   return this.document$1
 });
