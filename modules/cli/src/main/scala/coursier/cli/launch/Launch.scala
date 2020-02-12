@@ -11,6 +11,7 @@ import cats.data.Validated
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
+import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
@@ -429,50 +430,46 @@ object Launch extends CaseApp[LaunchOptions] {
       res
     }
 
-    LaunchParams(options0) match {
-      case Validated.Invalid(errors) =>
-        for (err <- errors.toList)
-          System.err.println(err)
-        sys.exit(1)
-      case Validated.Valid(params) =>
+    val params = LaunchParams(options0).exitOnError()
 
-        if (pool == null)
-          pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
-        val ec = ExecutionContext.fromExecutorService(pool)
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
 
-        val t =
-          if (params.fetchCacheIKnowWhatImDoing.isEmpty)
-            task(params, pool, deps, args.unparsed)
-          else
-            fetchCacheTask(params, pool, deps, args.unparsed)
+    val ec = ExecutionContext.fromExecutorService(pool)
 
-        t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.message)
-            sys.exit(1)
-          case Left(e: coursier.error.FetchError) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.getMessage)
-            sys.exit(1)
-          case Left(e: LaunchException.NoMainClassFound) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
-            sys.exit(1)
-          case Left(e: LaunchException) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.getMessage)
-            sys.exit(1)
-          case Left(e) => throw e
-          case Right((mainClass, run)) =>
-            if (params.shared.resolve.output.verbosity >= 2)
-              System.err.println(s"Launching $mainClass ${args.unparsed.mkString(" ")}")
-            else if (params.shared.resolve.output.verbosity == 1)
-              System.err.println("Launching")
+    val t =
+      if (params.fetchCacheIKnowWhatImDoing.isEmpty)
+        task(params, pool, deps, args.unparsed)
+      else
+        fetchCacheTask(params, pool, deps, args.unparsed)
 
-            run() match {
-              case None =>
-              case Some(retCode) =>
-                if (retCode != 0)
-                  sys.exit(retCode)
-            }
-        }
+    val (mainClass, run) =
+      try t.unsafeRun()(ec)
+      catch {
+        case e: ResolveException if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.message)
+          sys.exit(1)
+        case e: coursier.error.FetchError if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+        case e: LaunchException.NoMainClassFound if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
+          sys.exit(1)
+        case e: LaunchException if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+      }
+
+    if (params.shared.resolve.output.verbosity >= 2)
+      System.err.println(s"Launching $mainClass ${args.unparsed.mkString(" ")}")
+    else if (params.shared.resolve.output.verbosity == 1)
+      System.err.println("Launching")
+
+    run() match {
+      case None =>
+      case Some(retCode) =>
+        if (retCode != 0)
+          sys.exit(retCode)
     }
   }
 
