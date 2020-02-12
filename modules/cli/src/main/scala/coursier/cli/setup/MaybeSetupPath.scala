@@ -15,13 +15,9 @@ import dataclass.data
   confirm: Confirm
 ) extends SetupStep {
 
-  private def binDir = installDir.baseDir
+  import MaybeSetupPath.dirStr
 
-  private def dirStr(path: Path): String =
-    path
-      .toAbsolutePath
-      .toString
-      .replaceAllLiterally(sys.props("user.home"), "~")
+  private def binDir = installDir.baseDir
 
   def banner: String =
     s"Checking if ${dirStr(installDir.baseDir)} is in PATH"
@@ -53,10 +49,56 @@ import dataclass.data
             case false => Task.point(())
             case true =>
               Task.delay {
-                profileUpdater.applyUpdate(envUpdate, "coursier install directory")
+                profileUpdater.applyUpdate(envUpdate, headerComment)
               }
           }
       }
   }
+
+  def tryRevert: Task[Unit] = {
+
+    val envUpdate = EnvironmentUpdate()
+      .withPathLikeAppends(Seq("PATH" -> binDir.toAbsolutePath.toString))
+
+    val revertedTask = envVarUpdater match {
+      case Left(windowsEnvVarUpdater) =>
+        Task.delay {
+          windowsEnvVarUpdater.tryRevertUpdate(envUpdate)
+        }
+      case Right(profileUpdater) =>
+        val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
+        Task.delay {
+          profileUpdater.tryRevertUpdate(envUpdate, headerComment)
+        }
+    }
+
+    val profileFilesOpt = envVarUpdater match {
+      case Left(windowsEnvVarUpdater) =>
+        None
+      case Right(profileUpdater) =>
+        val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
+        Some(profileFilesStr)
+    }
+
+    revertedTask.flatMap { reverted =>
+      val message =
+        if (reverted) s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
+        else s"$binDir not setup in PATH"
+
+      Task.delay(System.out.println(message))
+    }
+  }
+
+  private def headerComment = "coursier install directory"
+
+}
+
+object MaybeSetupPath {
+
+  def dirStr(path: Path): String =
+    path
+      .toAbsolutePath
+      .toString
+      .replaceAllLiterally(sys.props("user.home"), "~")
 
 }

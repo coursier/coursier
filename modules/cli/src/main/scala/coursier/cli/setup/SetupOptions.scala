@@ -20,7 +20,8 @@ final case class SetupOptions(
   home: Option[String] = None,
   banner: Option[Boolean] = None,
   @Short("y")
-    yes: Boolean = false
+    yes: Boolean = false,
+  tryRevert: Boolean = false
 )
 
 object SetupOptions {

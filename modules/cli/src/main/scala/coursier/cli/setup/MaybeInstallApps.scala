@@ -36,4 +36,28 @@ import dataclass.data
     tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t))
   }
 
+  def tryRevert: Task[Unit] = {
+
+    val tasks = appIds
+      .map { id =>
+        for {
+          appInfo <- channels.appDescriptor(id)
+          installedName = appInfo.appDescriptor.nameOpt.getOrElse(id)
+          deletedOpt <- Task.delay(installDir.delete(installedName))
+          _ <- {
+            Task.delay {
+              val message = deletedOpt match {
+                case None => s"Could not delete $installedName (concurrent operation ongoing)"
+                case Some(true) => s"Uninstalled $installedName"
+                case Some(false) => s"$installedName was not installed"
+              }
+              System.out.println(message)
+            }
+          }
+        } yield ()
+      }
+
+    tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t))
+  }
+
 }

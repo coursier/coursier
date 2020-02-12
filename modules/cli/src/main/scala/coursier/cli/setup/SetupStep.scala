@@ -7,6 +7,7 @@ import coursier.util.Task
 trait SetupStep {
   def banner: String
   def task: Task[Unit]
+  def tryRevert: Task[Unit]
 
   final def fullTask(out: PrintStream): Task[Unit] =
     for {
