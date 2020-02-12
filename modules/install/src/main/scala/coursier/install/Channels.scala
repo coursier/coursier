@@ -43,7 +43,7 @@ import dataclass._
       (channel, _, descRepr) = t0
 
       _ = if (verbosity >= 1)
-        System.err.println(s"Found app $actualId in channel $channel")
+        System.err.println(s"Found app $actualId in channel ${channel.repr}")
 
       strRepr = new String(descRepr, StandardCharsets.UTF_8)
 
