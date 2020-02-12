@@ -3,7 +3,7 @@ package coursier.cli.spark
 import java.io.{File, FileOutputStream}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{FileSystems, Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.jar.JarFile
 
@@ -105,12 +105,18 @@ object SparkAssembly {
       case (_, a) =>
         val f = a.checksumUrls.get("SHA-1") match {
           case Some(url) =>
-            FileCache.localFile0(url, helper.cache, a.authentication.map(_.user), localArtifactsShouldBeCached)
+            FileCache.localFile0(
+              url,
+              helper.cache.toPath,
+              a.authentication.map(_.user),
+              localArtifactsShouldBeCached,
+              FileSystems.getDefault()
+            )
           case None =>
             throw new Exception(s"SHA-1 file not found for ${a.url}")
         }
 
-        val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(f.toPath))
+        val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(f))
 
         sumOpt match {
           case Some(sum) =>
@@ -153,7 +159,7 @@ object SparkAssembly {
     if (dest.exists())
       success
     else
-      CacheLocks.withLockFor(helper.cache, dest) {
+      CacheLocks.withLockFor(helper.cache.toPath, dest.toPath) {
         Files.createDirectories(dest.toPath.getParent)
         val tmpDest = new File(dest.getParentFile, s".${dest.getName}.part")
         // FIXME Acquire lock on tmpDest

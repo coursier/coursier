@@ -1,6 +1,6 @@
 package coursier.internal
 
-import java.io.File
+import java.nio.file.Path
 
 import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.util.{Artifact, EitherT, Sync}
@@ -14,7 +14,7 @@ final case class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends C
   def fetch: Cache.Fetch[F] =
     new InMemoryCachingFetcher(underlying.fetch).fetcher
 
-  def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
+  def file(artifact: Artifact): EitherT[F, ArtifactError, Path] =
     underlying.file(artifact)
 
   def ec: ExecutionContext =

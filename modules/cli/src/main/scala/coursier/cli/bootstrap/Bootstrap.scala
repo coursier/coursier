@@ -1,7 +1,7 @@
 package coursier.cli.bootstrap
 
 import java.io.{File, PrintStream}
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import caseapp.core.RemainingArgs
@@ -30,7 +30,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)], String)] =
+  ): Task[(Resolution, String, Option[String], Seq[(Artifact, Path)], String)] =
     for {
       t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
       (res, scalaVersion, platformOpt, files) = t
@@ -39,7 +39,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
+            Task.delay(MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars)).flatMap { m =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:\n" +
@@ -108,7 +108,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
   private def classloaderContent(
     packaging: BootstrapSpecificParams.BootstrapPackaging,
-    artifactFiles: Seq[(Artifact, File)]
+    artifactFiles: Seq[(Artifact, Path)]
   ): ClassLoaderContent = {
     val (asFiles, asUrls) =
       if (packaging.standalone || packaging.hybrid)
@@ -124,9 +124,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val urls0 = asUrls.map(_._1.url).map(ClassPathEntry.Url(_))
     val files0 = asFiles.map(_._2).map { f =>
       ClassPathEntry.Resource(
-        f.getName,
-        f.lastModified(),
-        Files.readAllBytes(f.toPath)
+        f.getFileName.toString,
+        Files.getLastModifiedTime(f).toInstant.toEpochMilli,
+        Files.readAllBytes(f)
       )
     }
     ClassLoaderContent(urls0 ++ files0)
@@ -172,6 +172,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       fetch
         .addDependencies(deps0: _*)
         .run()
+        .map(_.toFile)
   }
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
@@ -262,7 +263,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         }
 
         Parameters.ScalaNative(fetch0, mainClass, nativeVersion)
-          .withJars(files.map(_._2))
+          .withJars(files.map(_._2.toFile))
           .withOptions(params.nativeOptions)
           .withLog(log)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
@@ -287,7 +288,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)
-          .withJars(files.map(_._2))
+          .withJars(files.map(_._2.toFile))
           .withGraalvmVersion(params.specific.graalvmVersionOpt)
           .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
           .withGraalvmOptions(params.specific.graalvmOptions)
@@ -302,7 +303,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         if (params.specific.assembly)
           Parameters.Assembly()
-            .withFiles(files.map(_._2))
+            .withFiles(files.map(_._2.toFile))
             .withMainClass(mainClass)
             .withRules(params.specific.assemblyRules)
             .withPreambleOpt(

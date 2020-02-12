@@ -25,14 +25,14 @@ object CacheLocks {
     CachePath.withStructureLock(cache, new Callable[T] { def call() = f })
 
   def withLockOr[T](
-    cache: File,
-    file: File
+    cache: Path,
+    file: Path
   )(
     f: => T,
     ifLocked: => Option[T]
   ): T = {
 
-    val lockFile = CachePath.lockFile(file).toPath
+    val lockFile = CachePath.lockFile(file)
 
     var channel: FileChannel = null
 
@@ -88,7 +88,7 @@ object CacheLocks {
     }
   }
 
-  def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
+  def withLockFor[T](cache: Path, file: Path)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
     withLockOr(cache, file)(f, Some(Left(new ArtifactError.Locked(file))))
 
   private val urlLocks = new ConcurrentHashMap[String, Object]

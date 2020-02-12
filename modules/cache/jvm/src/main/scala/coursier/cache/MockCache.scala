@@ -3,7 +3,7 @@ package coursier.cache
 import java.io._
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
@@ -38,11 +38,11 @@ final case class MockCache[F[_]](
       file(artifact0)
         .leftMap(_.describe)
         .flatMap { f =>
-          EitherT(MockCache.readFully(new FileInputStream(f), if (links) Some(artifact0.url) else None))
+          EitherT(MockCache.readFully(Files.newInputStream(f), if (links) Some(artifact0.url) else None))
         }
   }
 
-  def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
+  def file(artifact: Artifact): EitherT[F, ArtifactError, Path] = {
 
     if (artifact.url.startsWith("file:")) {
       val url =
@@ -50,7 +50,7 @@ final case class MockCache[F[_]](
           artifact.url + ".directory"
         else
           artifact.url
-      val f = new File(new URI(url))
+      val f = Paths.get(new URI(url))
       EitherT.point(f)
     } else {
 
@@ -100,7 +100,6 @@ final case class MockCache[F[_]](
         case Some(f) => S.point(Right(f))
       }
       EitherT[F, ArtifactError, Path](e)
-        .map(_.toFile)
     }
   }
 

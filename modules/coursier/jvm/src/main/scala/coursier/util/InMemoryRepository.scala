@@ -1,7 +1,8 @@
 package coursier.util
 
-import java.io.{File, FileNotFoundException, IOException}
+import java.io.{FileNotFoundException, IOException}
 import java.net.{URL, URLConnection}
+import java.nio.file.{Files, Paths}
 
 import coursier.cache.{CacheUrl, FileCache}
 import coursier.core._
@@ -29,13 +30,12 @@ object InMemoryRepository {
     val protocolSpecificAttemptOpt = {
 
       def ifFile: Option[Boolean] = {
-        if (localArtifactsShouldBeCached && !new File(url.toURI).exists()) {
-          val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location)(_.location)
+        if (localArtifactsShouldBeCached && !Files.exists(Paths.get(url.toURI))) {
+          val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location.toPath)(_.location)
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
-          Some(new File(cachePath, s"file/${url.getPath}").exists())
-        } else {
-          Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
-        }
+          Some(Files.exists(cachePath.resolve(s"file/${url.getPath}")))
+        } else
+          Some(Files.exists(Paths.get(url.toURI))) // FIXME Escaping / de-escaping needed here?
       }
 
       def ifHttp: Option[Boolean] = {

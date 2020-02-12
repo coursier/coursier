@@ -1,10 +1,12 @@
 package coursier.cache
 
+import java.nio.file.attribute.FileTime
+import java.nio.file.{Path, Paths, StandardOpenOption}
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.net.{HttpURLConnection, URLConnection}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{FileSystem, Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -14,16 +16,17 @@ import coursier.core.Authentication
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
+import dataclass.data
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
-import dataclass.data
 
 @data class FileCache[F[_]](
-  location: File,
+  location: Path,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
   credentials: Seq[Credentials] = CacheDefaults.credentials,
@@ -38,7 +41,9 @@ import dataclass.data
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.defaultRetryCount,
-  bufferSize: Int = CacheDefaults.bufferSize
+  bufferSize: Int = CacheDefaults.bufferSize,
+  currentTime: FileCache.CurrentTime = FileCache.CurrentTime.default,
+  fileSystem: Option[FileSystem] = None // mainly used for file:/// URLs
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] {
@@ -52,7 +57,9 @@ import dataclass.data
     S.delay(allCredentials0)
 
   def withLocation(location: String): FileCache[F] =
-    withLocation(new File(location))
+    withLocation(Paths.get(location))
+  def withLocation(location: File): FileCache[F] =
+    withLocation(location.toPath)
   def noCredentials: FileCache[F] =
     withCredentials(Nil)
   def addCredentials(credentials: Credentials*): FileCache[F] =
@@ -68,9 +75,11 @@ import dataclass.data
   def withMaxRedirections(max: Int): FileCache[F] =
     withMaxRedirections(Some(max))
 
+  private def fileSystem0: FileSystem =
+    fileSystem.getOrElse(location.getFileSystem)
 
-  def localFile(url: String, user: Option[String] = None): File =
-    FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
+  def localFile(url: String, user: Option[String] = None): Path =
+    FileCache.localFile0(url, location, user, localArtifactsShouldBeCached, fileSystem0)
 
   import FileCache.{auxiliaryFile, checksumHeader, clearAuxiliaryFiles, readFullyTo, contentLength}
 
@@ -81,7 +90,7 @@ import dataclass.data
     artifact: Artifact,
     checksums: Set[String],
     cachePolicy: CachePolicy
-  ): F[Seq[((File, String), Either[ArtifactError, Unit])]] = {
+  ): F[Seq[((Path, String), Either[ArtifactError, Unit])]] = {
 
     // Reference file - if it exists, and we get not found errors on some URLs, we assume
     // we can keep track of these missing, and not try to get them again later.
@@ -94,13 +103,15 @@ import dataclass.data
       .extra
       .contains("cache-errors")
 
-    def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(_.exists())
+    def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(Files.exists(_))
 
-    def fileLastModified(file: File): EitherT[F, ArtifactError, Option[Long]] =
+    def fileLastModified(file: Path): EitherT[F, ArtifactError, Option[Long]] =
       EitherT {
         S.schedule(pool) {
           Right {
-            val lastModified = file.lastModified()
+            val lastModified = Files.getLastModifiedTime(file)
+              .toInstant
+              .toEpochMilli
             if (lastModified > 0L)
               Some(lastModified)
             else
@@ -175,49 +186,50 @@ import dataclass.data
         }
       })
 
-    def fileExists(file: File): F[Boolean] =
+    def fileExists(file: Path): F[Boolean] =
       S.schedule(pool) {
-        file.exists()
+        Files.exists(file)
       }
 
-    def ttlFile(file: File): File =
-      new File(file.getParent, s".${file.getName}.checked")
+    def ttlFile(file: Path): Path =
+      file.getParent.resolve("." + file.getFileName + ".checked")
 
-    def lastCheck(file: File): F[Option[Long]] = {
+    def lastCheck(file: Path): F[Option[Long]] = {
 
       val ttlFile0 = ttlFile(file)
 
       S.schedule(pool) {
-        if (ttlFile0.exists())
-          Some(ttlFile0.lastModified()).filter(_ > 0L)
+        if (Files.exists(ttlFile0))
+          Some(Files.getLastModifiedTime(ttlFile0).toInstant.toEpochMilli)
+            .filter(_ > 0L)
         else
           None
       }
     }
 
     /** Not wrapped in a `Task` !!! */
-    def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
-      val ts = System.currentTimeMillis()
+    def doTouchCheckFile(file: Path, url: String, updateLinks: Boolean): Unit = {
+      val ts = currentTime.currentTimeMillis()
       val f = ttlFile(file)
-      if (f.exists())
-        f.setLastModified(ts)
+      if (Files.exists(f))
+        Files.setLastModifiedTime(f, FileTime.fromMillis(ts))
       else {
-        val fos = new FileOutputStream(f)
+        val fos = Files.newOutputStream(f)
         fos.write(Array.empty[Byte])
         fos.close()
       }
 
-      if (updateLinks && file.getName == ".directory") {
+      if (updateLinks && file.getFileName.toString == ".directory") {
         val linkFile = auxiliaryFile(file, "links")
 
         val succeeded =
           try {
-            val content = WebPage.listElements(url, new String(Files.readAllBytes(file.toPath), UTF_8))
+            val content = WebPage.listElements(url, new String(Files.readAllBytes(file), UTF_8))
               .mkString("\n")
 
-            var fos: FileOutputStream = null
+            var fos: OutputStream = null
             try {
-              fos = new FileOutputStream(linkFile)
+              fos = Files.newOutputStream(linkFile)
               fos.write(content.getBytes(UTF_8))
             } finally {
               if (fos != null)
@@ -230,21 +242,21 @@ import dataclass.data
           }
 
         if (!succeeded)
-          Files.deleteIfExists(linkFile.toPath)
+          Files.deleteIfExists(linkFile)
       }
     }
 
-    def shouldDownload(file: File, url: String, checkRemote: Boolean): EitherT[F, ArtifactError, Boolean] = {
+    def shouldDownload(file: Path, url: String, checkRemote: Boolean): EitherT[F, ArtifactError, Boolean] = {
       val errFile0 = errFile(file)
 
       def checkErrFile: EitherT[F, ArtifactError, Unit] =
         EitherT {
           S.schedule[Either[ArtifactError, Unit]](pool) {
-            if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
+            if (referenceFileOpt.exists(Files.exists(_)) && Files.exists(errFile0))
               Left(new ArtifactError.NotFound(url, Some(true)))
-            else if (cacheErrors && errFile0.exists()) {
-              val ts = errFile0.lastModified()
-              val now = System.currentTimeMillis()
+            else if (cacheErrors && Files.exists(errFile0)) {
+              val ts = Files.getLastModifiedTime(errFile0).toInstant.toEpochMilli
+              val now = currentTime.currentTimeMillis()
               if (ts > 0L && now < ts + ttl.fold(0L)(_.toMillis))
                 Left(new ArtifactError.NotFound(url))
               else
@@ -259,7 +271,7 @@ import dataclass.data
           S.bind(lastCheck(file)) {
             case None => S.point(true)
             case Some(ts) =>
-              S.map(S.schedule(pool)(System.currentTimeMillis()))(_ > ts + ttl.toMillis)
+              S.map(S.schedule(pool)(currentTime.currentTimeMillis()))(_ > ts + ttl.toMillis)
           }
         else
           S.point(false)
@@ -305,7 +317,7 @@ import dataclass.data
     }
 
     def remote(
-      file: File,
+      file: Path,
       url: String,
       keepHeaderChecksums: Boolean
     ): EitherT[F, ArtifactError, Unit] =
@@ -319,7 +331,11 @@ import dataclass.data
           def doDownload(): Either[ArtifactError, Unit] =
             FileCache.downloading(url, file, sslRetry) {
 
-              val alreadyDownloaded = tmp.length()
+              val alreadyDownloaded =
+                if (Files.exists(tmp))
+                  Files.size(tmp)
+                else
+                  0L
 
               var conn: URLConnection = null
 
@@ -387,8 +403,11 @@ import dataclass.data
                   val result =
                     try {
                       val out = CacheLocks.withStructureLock(location) {
-                        Files.createDirectories(tmp.toPath.getParent);
-                        new FileOutputStream(tmp, partialDownload)
+                        Files.createDirectories(tmp.getParent);
+                        if (partialDownload)
+                          Files.newOutputStream(tmp, StandardOpenOption.APPEND)
+                        else
+                          Files.newOutputStream(tmp)
                       }
                       try readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L, bufferSize)
                       finally out.close()
@@ -399,21 +418,21 @@ import dataclass.data
                   for ((key, data) <- auxiliaryData) {
                     val dest = auxiliaryFile(file, key)
                     val tmpDest = CachePath.temporaryFile(dest)
-                    Files.createDirectories(tmpDest.toPath.getParent)
-                    Files.write(tmpDest.toPath, data)
+                    Files.createDirectories(tmpDest.getParent)
+                    Files.write(tmpDest, data)
                     for (lastModified <- lastModifiedOpt)
-                      tmpDest.setLastModified(lastModified)
-                    Files.createDirectories(dest.toPath.getParent)
-                    Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
+                      Files.setLastModifiedTime(tmpDest, FileTime.fromMillis(lastModified))
+                    Files.createDirectories(dest.getParent)
+                    Files.move(tmpDest, dest, StandardCopyOption.ATOMIC_MOVE)
                   }
 
                   CacheLocks.withStructureLock(location) {
-                    Files.createDirectories(file.toPath.getParent)
-                    Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
+                    Files.createDirectories(file.getParent)
+                    Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE)
                   }
 
                   for (lastModified <- lastModifiedOpt)
-                    file.setLastModified(lastModified)
+                    Files.setLastModifiedTime(file, FileTime.fromMillis(lastModified))
 
                   doTouchCheckFile(file, url, updateLinks = true)
 
@@ -468,17 +487,17 @@ import dataclass.data
                 for (o <- lenOpt; len <- o)
                   logger.downloadProgress(url, len)
 
-            if (file.exists()) {
+            if (Files.exists(file)) {
               done()
               val res = lenOpt.flatten match {
                 case None =>
                   Right(())
                 case Some(len) =>
-                  val fileLen = file.length()
+                  val fileLen = Files.size(file)
                   if (len == fileLen)
                     Right(())
                   else
-                    Left(new ArtifactError.WrongLength(fileLen, len, file.getAbsolutePath))
+                    Left(new ArtifactError.WrongLength(fileLen, len, file.toAbsolutePath.toString))
               }
               Some(res)
             } else {
@@ -486,9 +505,13 @@ import dataclass.data
               // (And the various resources make it not straightforward to switch to a more Task-based internal API here.)
               Thread.sleep(20L)
 
-              val currentLen = tmp.length()
+              val currentLen =
+                if (Files.exists(tmp))
+                  Files.size(tmp)
+                else
+                  0L
 
-              if (currentLen == 0L && file.exists()) { // check again if file exists in case it was created in the mean time
+              if (currentLen == 0L && Files.exists(file)) { // check again if file exists in case it was created in the mean time
                 done()
                 Some(Right(()))
               } else {
@@ -515,9 +538,10 @@ import dataclass.data
         }
       })
 
-    def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
+    def errFile(file: Path): Path =
+      file.getParent.resolve("." + file.getFileName + ".error")
 
-    def remoteKeepErrors(file: File, url: String, keepHeaderChecksums: Boolean): EitherT[F, ArtifactError, Unit] = {
+    def remoteKeepErrors(file: Path, url: String, keepHeaderChecksums: Boolean): EitherT[F, ArtifactError, Unit] = {
 
       val errFile0 = errFile(file)
 
@@ -525,7 +549,7 @@ import dataclass.data
         EitherT {
           S.schedule[Either[ArtifactError, Unit]](pool) {
             if (cacheErrors0) {
-              val p = errFile0.toPath
+              val p = errFile0
               Files.createDirectories(p.getParent)
               Files.write(p, Array.emptyByteArray)
             }
@@ -537,9 +561,7 @@ import dataclass.data
       def deleteErrFile =
         EitherT {
           S.schedule[Either[ArtifactError, Unit]](pool) {
-            if (errFile0.exists())
-              errFile0.delete()
-
+            Files.deleteIfExists(errFile0)
             Right(())
           }
         }
@@ -554,11 +576,11 @@ import dataclass.data
       }
     }
 
-    def checkFileExists(file: File, url: String,
+    def checkFileExists(file: Path, url: String,
                         log: Boolean = true): EitherT[F, ArtifactError, Unit] =
       EitherT {
         S.schedule(pool) {
-          if (file.exists()) {
+          if (Files.exists(file)) {
             logger.foundLocally(url)
             Right(())
           } else
@@ -626,7 +648,7 @@ import dataclass.data
 
     val mainTask = res(artifact.url, keepHeaderChecksums = true)
 
-    def checksumRes(c: String): Option[F[((File, String), Either[ArtifactError, Unit])]] =
+    def checksumRes(c: String): Option[F[((Path, String), Either[ArtifactError, Unit])]] =
       artifact.checksumUrls.get(c).map { url =>
         res(url, keepHeaderChecksums = false)
       }
@@ -638,12 +660,12 @@ import dataclass.data
             .toSeq
             .map { c =>
               val candidate = auxiliaryFile(f, c)
-              S.map(S.delay(candidate.exists())) {
+              S.map(S.delay(Files.exists(candidate))) {
                 case false =>
                   checksumRes(c).toSeq
                 case true =>
                   val url = artifact.checksumUrls.getOrElse(c, s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}")
-                  Seq(S.point[((File, String), Either[ArtifactError, Unit])](((candidate, url), Right(()))))
+                  Seq(S.point[((Path, String), Either[ArtifactError, Unit])](((candidate, url), Right(()))))
               }
             }
           S.bind(S.gather(l))(l => S.gather(l.flatten))
@@ -672,21 +694,21 @@ import dataclass.data
 
     EitherT {
       S.schedule(pool) {
-        (headerSumFile ++ downloadedSumFile.toSeq).find(_.exists()) match {
+        (headerSumFile ++ downloadedSumFile.toSeq).find(Files.exists(_)) match {
           case Some(sumFile) =>
 
-            val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
+            val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile))
 
             sumOpt match {
               case None =>
-                Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
+                Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.toString))
 
               case Some(sum) =>
                 val md = MessageDigest.getInstance(sumType)
 
-                var is: FileInputStream = null
+                var is: InputStream = null
                 try {
-                  is = new FileInputStream(localFile0)
+                  is = Files.newInputStream(localFile0)
                   FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
                 } finally is.close()
 
@@ -700,13 +722,13 @@ import dataclass.data
                     sumType,
                     calculatedSum.toString(16),
                     sum.toString(16),
-                    localFile0.getPath,
-                    sumFile.getPath
+                    localFile0.toString,
+                    sumFile.toString
                   ))
             }
 
           case None =>
-            Left(new ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)): Either[ArtifactError, Unit]
+            Left(new ArtifactError.ChecksumNotFound(sumType, localFile0.toString)): Either[ArtifactError, Unit]
         }
       }
     }
@@ -718,7 +740,7 @@ import dataclass.data
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] = {
+  ): EitherT[F, ArtifactError, Path] = {
 
     val artifact0 = S.map(allCredentials) { allCredentials =>
       if (artifact.authentication.isEmpty) {
@@ -740,7 +762,7 @@ import dataclass.data
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] = {
+  ): EitherT[F, ArtifactError, Path] = {
 
     EitherT {
       S.map(download(
@@ -785,7 +807,7 @@ import dataclass.data
         }
       }
     }.flatMap {
-      case (f, None) => EitherT(S.point[Either[ArtifactError, File]](Right(f)))
+      case (f, None) => EitherT(S.point[Either[ArtifactError, Path]](Right(f)))
       case (f, Some(c)) =>
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
@@ -793,8 +815,8 @@ import dataclass.data
         val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
         val badChecksumFile = new File(err.sumFile)
         val foundBadFileInCache = {
-          val location0 = location.getCanonicalPath.stripSuffix("/") + "/"
-          badFile.getCanonicalPath.startsWith(location0) &&
+          val location0 = location.normalize.toString.stripSuffix("/") + "/"
+          badFile.normalize.toString.startsWith(location0) &&
             badChecksumFile.getCanonicalPath.startsWith(location0)
         }
         if (retry <= 0 || !foundBadFileInCache)
@@ -803,7 +825,7 @@ import dataclass.data
           EitherT {
             S.schedule[Either[ArtifactError, Unit]](pool) {
               assert(foundBadFileInCache)
-              badFile.delete()
+              Files.deleteIfExists(badFile)
               badChecksumFile.delete()
               clearAuxiliaryFiles(badFile)
               logger.removedCorruptFile(artifact.url, Some(err.describe))
@@ -817,10 +839,10 @@ import dataclass.data
     }
   }
 
-  def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
+  def file(artifact: Artifact): EitherT[F, ArtifactError, Path] =
     file(artifact, retry)
 
-  def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
+  def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, Path] =
     cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
       .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
 
@@ -832,58 +854,77 @@ import dataclass.data
 
     filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>
 
-      def notFound(f: File) = Left(s"${f.getCanonicalPath} not found")
+      def notFound(f: Path) = Left(s"${f.normalize} not found")
 
-      def read(f: File) =
+      def read(f: Path) =
         try {
           val content =
             if (links) {
               val linkFile = auxiliaryFile(f, "links")
-              if (f.getName == ".directory" && linkFile.isFile)
-                new String(Files.readAllBytes(linkFile.toPath), UTF_8)
+              if (f.getFileName.toString == ".directory" && Files.isRegularFile(linkFile))
+                new String(Files.readAllBytes(linkFile), UTF_8)
               else
-                WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f.toPath), UTF_8))
+                WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f), UTF_8))
                   .mkString("\n")
             } else
-              new String(Files.readAllBytes(f.toPath), UTF_8)
+              new String(Files.readAllBytes(f), UTF_8)
           Right(content)
         }
         catch {
           case NonFatal(e) =>
-            Left(s"Could not read (file:${f.getCanonicalPath}): ${e.getMessage}")
+            Left(s"Could not read (file:${f.normalize}): ${e.getMessage}")
         }
 
-      val res = if (f.exists()) {
-        if (f.isDirectory) {
+      val res = if (Files.exists(f)) {
+        if (Files.isDirectory(f)) {
           if (artifact0.url.startsWith("file:")) {
 
             val content =
-              if (links)
-                f.listFiles()
-                  .map { c =>
-                    val name = c.getName
-                    if (c.isDirectory)
-                      name + "/"
-                    else
-                      name
-                  }
-                  .sorted
-                  .mkString("\n")
-              else {
+              if (links) {
+                var s: java.util.stream.Stream[Path] = null
+                try {
+                  s = Files.list(f)
+                  s.iterator()
+                    .asScala
+                    .map { c =>
+                      val name = c.getFileName.toString
+                      if (Files.isDirectory(c))
+                        name + "/"
+                      else
+                        name
+                    }
+                    .toVector
+                    .sorted
+                    .mkString("\n")
+                } finally {
+                  if (s != null)
+                    s.close()
+                }
+              } else {
 
-                val elements = f.listFiles()
-                  .map { c =>
-                    val name = c.getName
-                    if (c.isDirectory)
-                      name + "/"
-                    else
-                      name
+                var s: java.util.stream.Stream[Path] = null
+                val elements =
+                  try {
+                    s = Files.list(f)
+                    s.iterator()
+                      .asScala
+                      .map { c =>
+                        val name = c.getFileName.toString
+                        if (Files.isDirectory(c))
+                          name + "/"
+                        else
+                          name
+                      }
+                      .toVector
+                      .sorted
+                      .map { name0 =>
+                        s"""<li><a href="$name0">$name0</a></li>"""
+                      }
+                      .mkString
+                  } finally {
+                    if (s != null)
+                      s.close()
                   }
-                  .sorted
-                  .map { name0 =>
-                    s"""<li><a href="$name0">$name0</a></li>"""
-                  }
-                  .mkString
 
                 s"""<!DOCTYPE html>
                    |<html>
@@ -899,11 +940,11 @@ import dataclass.data
 
             Right(content)
           } else {
-            val f0 = new File(f, ".directory")
+            val f0 = f.resolve(".directory")
 
-            if (f0.exists()) {
-              if (f0.isDirectory)
-                Left(s"Woops: ${f.getCanonicalPath} is a directory")
+            if (Files.exists(f0)) {
+              if (Files.isDirectory(f0))
+                Left(s"Woops: ${f.normalize} is a directory")
               else
                 read(f0)
             } else
@@ -934,25 +975,36 @@ import dataclass.data
 
 object FileCache {
 
-  private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
-    CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
+  private[coursier] def localFile0(
+    url: String,
+    cache: Path,
+    user: Option[String],
+    localArtifactsShouldBeCached: Boolean,
+    fileSystem: FileSystem
+  ): Path =
+    CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached, fileSystem)
 
-  private def auxiliaryFilePrefix(file: File): String =
-    s".${file.getName}__"
+  private def auxiliaryFilePrefix(file: Path): String =
+    "." + file.getFileName + "__"
 
-  private def clearAuxiliaryFiles(file: File): Unit = {
+  private def clearAuxiliaryFiles(file: Path): Unit = {
     val prefix = auxiliaryFilePrefix(file)
-    val filter: FilenameFilter = new FilenameFilter {
-      def accept(dir: File, name: String): Boolean =
-        name.startsWith(prefix)
+    var s: java.util.stream.Stream[Path] = null
+    try {
+      s = Files.list(file.getParent)
+      s.iterator()
+        .asScala
+        .filter(_.getFileName.toString.startsWith(prefix))
+        .foreach(Files.deleteIfExists)
+    } finally {
+      if (s != null)
+        s.close()
     }
-    for (f <- file.getParentFile.listFiles(filter))
-      f.delete() // check return type?
   }
 
-  private[coursier] def auxiliaryFile(file: File, key: String): File = {
+  private[coursier] def auxiliaryFile(file: Path, key: String): Path = {
     val key0 = key.toLowerCase(Locale.ROOT).filter(_ != '-')
-    new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key0")
+    file.getParent.resolve(auxiliaryFilePrefix(file) + key0)
   }
 
   private def readFullyTo(
@@ -983,7 +1035,7 @@ object FileCache {
 
   private def downloading[T](
     url: String,
-    file: File,
+    file: Path,
     sslRetry: Int
   )(
     f: => Either[ArtifactError, T]
@@ -1088,9 +1140,28 @@ object FileCache {
 
 
   def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
-    FileCache(CacheDefaults.location)(S)
+    FileCache(CacheDefaults.location.toPath)(S)
 
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
+
+  trait CurrentTime {
+    def currentTimeMillis(): Long
+  }
+
+  object CurrentTime {
+    private object DefaultCurrentTime extends CurrentTime {
+      def currentTimeMillis(): Long =
+        System.currentTimeMillis()
+    }
+
+    def default: CurrentTime =
+      DefaultCurrentTime
+
+    def apply(f: => Long): CurrentTime =
+      new CurrentTime {
+        def currentTimeMillis(): Long = f
+      }
+  }
 
 }

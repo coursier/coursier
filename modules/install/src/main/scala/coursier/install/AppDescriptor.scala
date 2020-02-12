@@ -1,6 +1,7 @@
 package coursier.install
 
 import java.io.File
+import java.nio.file.Path
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{Classifier, Module, Repository, Resolution, Type, Version, VersionConstraint}
@@ -92,7 +93,7 @@ import dataclass._
 
     val shared =
       if (sharedDependencies.isEmpty)
-        List.empty[(Artifact, File)]
+        List.empty[(Artifact, Path)]
       else {
         val artifactMap = res.artifacts.toMap
         val subRes = res.resolution.subset(

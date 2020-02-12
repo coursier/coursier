@@ -1,6 +1,6 @@
 package coursier.cache
 
-import java.io.File
+import java.nio.file.Path
 
 sealed abstract class ArtifactError(
   val `type`: String,
@@ -101,7 +101,7 @@ object ArtifactError {
     def this(`type`: String, message: String) =
       this(`type`, message, None)
   }
-  final class Locked(val file: File) extends Recoverable(
+  final class Locked(val file: Path) extends Recoverable(
     "locked",
     file.toString
   )

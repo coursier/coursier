@@ -93,7 +93,7 @@ object Updatable {
       res
     }
 
-    CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
+    CacheLocks.withLockOr(baseDir, dest)(Some(get), Some(None))
   }
 
 

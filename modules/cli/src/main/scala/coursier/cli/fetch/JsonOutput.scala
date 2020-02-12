@@ -5,6 +5,7 @@ import java.io.File
 import coursier.{Classifier, Dependency, Resolution}
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.Publication
+import coursier.publish.fileset.Path
 import coursier.util.Artifact
 
 object JsonOutput {
@@ -12,7 +13,7 @@ object JsonOutput {
   def report(
     resolution: Resolution,
     artifacts: Seq[(Dependency, Publication, Artifact)],
-    files: Seq[(Artifact, File)],
+    files: Seq[(Artifact, java.nio.file.Path)],
     classifiers: Set[Classifier],
     printExclusions: Boolean // common.verbosityLevel >= 1
   ): String = {

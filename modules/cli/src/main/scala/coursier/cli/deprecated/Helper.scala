@@ -813,6 +813,7 @@ class Helper(
     }
 
     artifactToFile
+      .map { case (k, v) => k -> v.toFile }
   }
 
   def fetch(
@@ -947,7 +948,7 @@ class Helper(
 
   lazy val retainedMainClass = {
 
-    val mainClasses = MainClass.mainClasses(filteredFiles ++ extraJars)
+    val mainClasses = MainClass.mainClasses((filteredFiles ++ extraJars).map(_.toPath))
 
     if (common.verbosityLevel >= 2) {
       Console.err.println("Found main classes:")

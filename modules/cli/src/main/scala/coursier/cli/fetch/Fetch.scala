@@ -2,7 +2,7 @@ package coursier.cli.fetch
 
 import java.io.{File, PrintStream}
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import caseapp._
@@ -22,7 +22,7 @@ object Fetch extends CaseApp[FetchOptions] {
     args: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)])] = {
+  ): Task[(Resolution, String, Option[String], Seq[(Artifact, Path)])] = {
 
     val resolveTask = coursier.cli.resolve.Resolve.task(
       params.resolve,

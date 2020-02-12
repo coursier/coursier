@@ -3,6 +3,7 @@ package coursier.cli.launch
 import java.io.{File, PrintStream}
 import java.lang.reflect.Modifier
 import java.net.{URL, URLClassLoader}
+import java.nio.file.Path
 import java.util.concurrent.ExecutorService
 
 import caseapp.CaseApp
@@ -76,7 +77,7 @@ object Launch extends CaseApp[LaunchOptions] {
     }
 
   def launch(
-    hierarchy: Seq[(Option[String], Array[File])],
+    hierarchy: Seq[(Option[String], Array[Path])],
     mainClass: String,
     args: Seq[String],
     properties: Seq[(String, String)]
@@ -85,7 +86,7 @@ object Launch extends CaseApp[LaunchOptions] {
     val loader0 = loader(
       hierarchy.map {
         case (nameOpt, files) =>
-          (nameOpt, files.map(_.toURI.toURL))
+          (nameOpt, files.map(_.toUri.toURL))
       }
     )
 
@@ -141,16 +142,16 @@ object Launch extends CaseApp[LaunchOptions] {
 
   def loaderHierarchy(
     res: Resolution,
-    files: Seq[(Artifact, File)],
+    files: Seq[(Artifact, Path)],
     scalaVersion: String,
     platformOpt: Option[String],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
-    extraJars: Seq[File],
+    extraJars: Seq[Path],
     classpathOrder: Boolean
-  ): Seq[(Option[String], Array[File])] = {
+  ): Seq[(Option[String], Array[Path])] = {
     val fileMap = files.toMap
-    val alreadyAdded = Set.empty[File] // unused???
+    val alreadyAdded = Set.empty[Path] // unused???
     val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
         val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))))
@@ -178,7 +179,7 @@ object Launch extends CaseApp[LaunchOptions] {
         new SharedClassLoader(urls, parent, Array(name))
     }
 
-  def mainClass(params: SharedLaunchParams, files: Seq[File], mainDependencyOpt: Option[Dependency]) =
+  def mainClass(params: SharedLaunchParams, files: Seq[Path], mainDependencyOpt: Option[Dependency]) =
     params.mainClassOpt match {
       case Some(c) =>
         Task.point(c)
@@ -203,8 +204,8 @@ object Launch extends CaseApp[LaunchOptions] {
     params: LaunchParams,
     javaPath: String,
     mainClass0: String,
-    files: Seq[File],
-    hierarchy: Seq[(Option[String], Array[File])],
+    files: Seq[Path],
+    hierarchy: Seq[(Option[String], Array[Path])],
     props: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     userArgs: Seq[String]
@@ -222,11 +223,11 @@ object Launch extends CaseApp[LaunchOptions] {
           "java.library.path" -> jepLocation.getAbsolutePath
         )
 
-        (props, Some(jepJar))
+        (props, Some(jepJar.toPath))
       } else
         (Nil, None)
 
-    val extraJars = params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq
+    val extraJars = params.shared.extraJars ++ jepExtraJar.toSeq
     val hierarchy0 =
       if (extraJars.isEmpty) hierarchy
       else {
@@ -238,7 +239,7 @@ object Launch extends CaseApp[LaunchOptions] {
       hierarchy0 match {
         case Seq((None, files)) =>
           Seq(
-            "java.class.path" -> files.map(_.getAbsolutePath).mkString(File.pathSeparator)
+            "java.class.path" -> files.mkString(File.pathSeparator)
           )
         case _ =>
           Nil
@@ -265,7 +266,7 @@ object Launch extends CaseApp[LaunchOptions] {
 
     if (params.fork)
       launchFork(
-        hierarchy0,
+        hierarchy0.map { case (nameOpt, files) => (nameOpt, files.map(_.toFile)) },
         mainClass0,
         userArgs,
         javaPath,

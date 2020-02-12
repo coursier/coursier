@@ -1,7 +1,8 @@
 package coursier.install
 
-import java.io.{File, FileInputStream}
+import java.io.InputStream
 import java.math.BigInteger
+import java.nio.file.{Files, Path}
 import java.security.MessageDigest
 
 import cats.implicits._
@@ -59,12 +60,12 @@ object ArtifactsLock {
         ArtifactsLock(entries.toSet)
       }
 
-  private def sha1(f: File): String = {
+  private def sha1(f: Path): String = {
     val md = MessageDigest.getInstance("SHA-1")
 
-    var is: FileInputStream = null
+    var is: InputStream = null
     try {
-      is = new FileInputStream(f)
+      is = Files.newInputStream(f)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     } finally is.close()
 
@@ -72,7 +73,7 @@ object ArtifactsLock {
     new BigInteger(1, b).toString(16)
   }
 
-  def ofArtifacts(artifacts: Seq[(Artifact, File)]): ArtifactsLock = {
+  def ofArtifacts(artifacts: Seq[(Artifact, Path)]): ArtifactsLock = {
 
     val entries = artifacts.map {
       case (a, f) =>

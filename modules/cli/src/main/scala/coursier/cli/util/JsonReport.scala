@@ -1,6 +1,7 @@
 package coursier.cli.util
 
 import java.io.File
+import java.nio.file.Path
 import java.util.Objects
 
 import coursier.core._
@@ -14,7 +15,7 @@ import Argonaut._
 /**
  * Lookup table for files and artifacts to print in the JsonReport.
  */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]])
+final case class JsonPrintRequirement(fileByArtifact: Map[String, Path], depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]])
 
 /**
  * Represents a resolved dependency's artifact in the JsonReport.
@@ -109,10 +110,8 @@ final case class JsonElem(dep: Dependency,
     jsonPrintRequirement.flatMap(req =>
         req.depToArtifacts.getOrElse(dep, Seq())
           .filter(_._1.classifier == dep.attributes.classifier)
-          .map(x => req.fileByArtifact.get(x._2.url))
-          .filter(_.isDefined)
-          .filter(_.nonEmpty)
-          .map(_.get.getPath)
+          .flatMap(x => req.fileByArtifact.get(x._2.url).toSeq)
+          .map(_.toAbsolutePath.toString)
           .headOption
     )
   }
