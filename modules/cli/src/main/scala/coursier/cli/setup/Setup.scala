@@ -61,9 +61,18 @@ object Setup extends CaseApp[SetupOptions] {
       MaybeInstallApps(installDir, channels, DefaultAppList.defaultAppList)
     )
 
-    val task = tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t.fullTask(System.out)))
+    val init =
+      if (params.tryRevert) {
+        val message = "Warning: the --try-revert option is experimental. Keep going only if you know what you are doing."
+        confirm.confirm(message, default = false)
+      } else
+        Task.point(())
+    val task = tasks.foldLeft(init) { (acc, step) =>
+      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.out)
+      acc.flatMap(_ => t)
+    }
 
-    if (params.banner)
+    if (params.banner && !params.tryRevert)
       // from https://github.com/scala/scala/blob/eb1ea8b367f9b240afc0b16184396fa3bbf7e37c/project/VersionUtil.scala#L34-L39
       System.out.println(
         """

@@ -17,7 +17,8 @@ final case class SetupParams(
   output: OutputParams,
   homeOpt: Option[Path],
   banner: Boolean,
-  yes: Boolean
+  yes: Boolean,
+  tryRevert: Boolean
 )
 
 object SetupParams {
@@ -30,6 +31,7 @@ object SetupParams {
     val homeOpt = options.home.filter(_.nonEmpty).map(Paths.get(_))
     val banner = options.banner.getOrElse(false)
     val yes = options.yes
+    val tryRevert = options.tryRevert
     (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output) =>
       SetupParams(
         sharedJava,
@@ -39,7 +41,8 @@ object SetupParams {
         output,
         homeOpt,
         banner,
-        yes
+        yes,
+        tryRevert
       )
     }
   }

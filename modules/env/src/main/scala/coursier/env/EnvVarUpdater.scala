@@ -4,6 +4,7 @@ import java.util.Locale
 
 abstract class EnvVarUpdater {
   def applyUpdate(update: EnvironmentUpdate): Boolean
+  def tryRevertUpdate(update: EnvironmentUpdate): Boolean
 }
 
 object EnvVarUpdater {

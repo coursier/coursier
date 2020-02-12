@@ -73,6 +73,25 @@ import scala.util.control.NonFatal
       dir0
     }
 
+  private def tryRemove(
+    id: String,
+    dir: File,
+    logger0: JvmCacheLogger
+  ): Option[Boolean] =
+    withLockFor(dir) {
+      // TODO logger0.removing(id, dir)
+      dir.exists() && {
+        try JvmCache.deleteRecursive(dir)
+        catch {
+          case NonFatal(e) =>
+            // TODO logger0.removingFailed(id, dir, e)
+            throw e
+        }
+        // TODO logger0.removed(id, dir)
+        true
+      }
+    }
+
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger],
@@ -138,6 +157,38 @@ import scala.util.control.NonFatal
     }
   }
 
+  def entry(id: String): Task[Either[String, JvmIndexEntry]] =
+    index match {
+      case None => Task.fail(new Exception("No index specified"))
+      case Some(indexTask) =>
+        indexTask.flatMap { index0 =>
+          JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+            case None =>
+              Task.fail(new Exception(s"Malformed JVM id '$id'"))
+            case Some((name, ver)) =>
+              Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
+          }
+        }
+    }
+
+  def delete(id: String): Task[Option[Boolean]] =
+    delete(id, None)
+
+  def delete(
+    id: String,
+    logger: Option[JvmCacheLogger]
+  ): Task[Option[Boolean]] = {
+    val dir = baseDirectoryOf(id)
+    val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
+
+    Task.delay(dir.isDirectory).flatMap {
+      case true =>
+        Task.delay(tryRemove(id, dir, logger0))
+      case false =>
+        Task.point(Some(false))
+    }
+  }
+
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger]
@@ -152,22 +203,30 @@ import scala.util.control.NonFatal
   def get(id: String): Task[File] =
     get(id, installIfNeeded = true)
   def get(id: String, installIfNeeded: Boolean): Task[File] =
-    index match {
-      case None => Task.fail(new Exception("No index specified"))
-      case Some(indexTask) =>
-        indexTask.flatMap { index0 =>
-          JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
-            case None =>
-              Task.fail(new Exception(s"Malformed JVM id '$id'"))
-            case Some((name, ver)) =>
-              index0.lookup(name, ver, Some(os), Some(architecture)) match {
-                case Left(err) => Task.fail(new Exception(err))
-                case Right(entry) =>
-                  get(entry, None, installIfNeeded)
-              }
-          }
-        }
+    entry(id).flatMap {
+      case Left(err) => Task.fail(new Exception(err))
+      case Right(entry0) => get(entry0, None, installIfNeeded)
     }
+
+  def idOf(javaHome: File): Option[String] = {
+
+    val javaHomeRoot =
+      if (os == "darwin")
+        Option(javaHome.getParentFile)
+          .flatMap(f => Option(f.getParentFile))
+          .getOrElse(javaHome)
+      else
+        javaHome
+
+    val isManaged = Option(javaHomeRoot.getParentFile)
+      .exists(_.toPath.normalize.toAbsolutePath == baseDirectory.toPath.normalize.toAbsolutePath)
+
+    if (isManaged)
+      Some(javaHomeRoot.getName)
+    else
+      None
+  }
+
 
   private def withLockFor[T](dir: File)(f: => T): Option[T] =
     CacheLocks.withLockOr(baseDirectory, dir)(Some(f), Some(None))
@@ -185,10 +244,13 @@ import scala.util.control.NonFatal
     directory(entry.id)
   }
 
-  def directory(id: String): File = {
+  private def baseDirectoryOf(id: String): File = {
     assert(!id.contains("/"))
     new File(baseDirectory, id)
   }
+
+  def directory(id: String): File =
+    JvmCache.finalDirectory(baseDirectoryOf(id), os)
 
   def installed(): Task[Seq[String]] =
     Task.delay {

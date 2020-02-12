@@ -56,6 +56,21 @@ import dataclass.data
     updatedSomething
   }
 
+  private def removeFromProfileFiles(addition: String): Boolean = {
+    var updatedSomething = false
+    for (file <- profileFiles()) {
+      val contentOpt = Some(file)
+        .filter(Files.exists(_))
+        .map(f => new String(Files.readAllBytes(f), charset))
+      if (addition.nonEmpty && contentOpt.exists(_.contains(addition))) {
+        val updatedContent = contentOpt.getOrElse("").replaceAllLiterally(addition, "")
+        Files.write(file, updatedContent.getBytes(charset))
+        updatedSomething = true
+      }
+    }
+    updatedSomething
+  }
+
   def addPath(dir: String*): Unit =
     if (dir.nonEmpty) {
       val update = EnvironmentUpdate()
@@ -68,11 +83,7 @@ import dataclass.data
     applyUpdate(update, "added by coursier setup")
   }
 
-  def applyUpdate(update: EnvironmentUpdate): Boolean =
-    applyUpdate(update, None)
-  def applyUpdate(update: EnvironmentUpdate, headerComment: String): Boolean =
-    applyUpdate(update, Some(headerComment))
-  def applyUpdate(update: EnvironmentUpdate, headerComment: Option[String]): Boolean = {
+  private def contentFor(update: EnvironmentUpdate, headerComment: Option[String]): String = {
 
     val set = update
       .set
@@ -92,7 +103,7 @@ import dataclass.data
       }
       .mkString
 
-    val addition = "\n" +
+    "\n" +
       headerComment
         .iterator
         .flatMap(_.linesIterator)
@@ -100,8 +111,24 @@ import dataclass.data
         .mkString +
       set +
       updates
+  }
 
+  def applyUpdate(update: EnvironmentUpdate): Boolean =
+    applyUpdate(update, None)
+  def applyUpdate(update: EnvironmentUpdate, headerComment: String): Boolean =
+    applyUpdate(update, Some(headerComment))
+  def applyUpdate(update: EnvironmentUpdate, headerComment: Option[String]): Boolean = {
+    val addition = contentFor(update, headerComment)
     addToProfileFiles(addition)
+  }
+
+  def tryRevertUpdate(update: EnvironmentUpdate): Boolean =
+    tryRevertUpdate(update, None)
+  def tryRevertUpdate(update: EnvironmentUpdate, headerComment: String): Boolean =
+    tryRevertUpdate(update, Some(headerComment))
+  def tryRevertUpdate(update: EnvironmentUpdate, headerComment: Option[String]): Boolean = {
+    val addition = contentFor(update, headerComment)
+    removeFromProfileFiles(addition)
   }
 
 }
