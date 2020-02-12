@@ -16,11 +16,7 @@ final case class OutputOptions(
   @Short("P")
     progress: Boolean = false
 
-) {
-
-  val verbosityLevel = Tag.unwrap(verbose) - Tag.unwrap(quiet)
-
-}
+)
 
 object OutputOptions {
   implicit val parser = Parser[OutputOptions]
