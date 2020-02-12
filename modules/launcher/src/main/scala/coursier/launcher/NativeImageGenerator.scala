@@ -36,14 +36,26 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       Seq(javaPath) ++ javaOpts ++ Seq("-cp", cp.map(_.getAbsolutePath).mkString(File.pathSeparator), "com.oracle.svm.driver.NativeImage")
     }
 
-    def generate(extraArgs: String*): Either[Int, Unit] = {
-      val cp = parameters.jars
-        .map(_.getAbsolutePath.toString)
-        .mkString(File.pathSeparator)
+    var tmpFile: Path = null
+
+    val res = try {
+      val cp =
+        if (parameters.intermediateAssembly) {
+          val p = Parameters.Assembly()
+            .withFiles(parameters.jars)
+            .withMainClass(parameters.mainClass)
+            .withPreambleOpt(None)
+          tmpFile = Files.createTempFile("native-image-assembly-", ".jar")
+          AssemblyGenerator.generate(p, tmpFile)
+          tmpFile.toString
+        } else
+          parameters.jars
+            .map(_.getAbsolutePath.toString)
+            .mkString(File.pathSeparator)
+
       val cmd = startCmd ++
         parameters.graalvmOptions ++
         parameters.nameOpt.map(name => s"-H:Name=$name") ++
-        extraArgs ++
         Seq("-cp", cp, parameters.mainClass, output.toString)
       if (parameters.verbosity >= 1)
         System.err.println(s"Running $cmd")
@@ -69,15 +81,16 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         Right(())
       } else
         Left(retCode)
+    } finally {
+      if (tmpFile != null)
+        Files.deleteIfExists(tmpFile)
     }
-
-    val res = generate()
 
     res match {
       case Left(retCode) =>
         sys.error(s"Error running native-image (exit code: $retCode)")
       case Right(()) =>
-        FileUtil.tryMakeExecutable(output)
+        FileUtil.tryMakeExecutable(output) // do we really need that?
     }
   }
 

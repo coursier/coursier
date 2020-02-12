@@ -291,6 +291,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withGraalvmVersion(params.specific.graalvmVersionOpt)
           .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
           .withGraalvmOptions(params.specific.graalvmOptions)
+          .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
           .withJavaHome(javaHome)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
       } else {

@@ -78,7 +78,8 @@ object Parameters {
     graalvmOptions: Seq[String] = Nil,
     javaHome: Option[File] = None, // needs a "JVMCI-enabled JDK" (like GraalVM)
     nameOpt: Option[String] = None,
-    verbosity: Int = 0
+    verbosity: Int = 0,
+    intermediateAssembly: Boolean = false
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =
