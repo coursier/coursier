@@ -33,9 +33,6 @@ import dataclass.data
       this.cache.map(_.withCache(cache))
     )
 
-  def withDefaultCache: Task[JavaHome] =
-    JvmCache.default.map(withCache(_))
-
 
   def default(): Task[File] =
     get(JavaHome.defaultId)
@@ -120,7 +117,7 @@ import dataclass.data
       cache match {
         case None => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
-          cache0.get(id0).map(id -> _)
+          cache0.get(id0, installIfNeeded).map(id -> _)
       }
     }
 
@@ -143,12 +140,6 @@ import dataclass.data
 }
 
 object JavaHome {
-
-  // TODO Load the content of JvmIndex lazily / later, and only if it is required
-  // (it's not when looking at the system JVM for example), so that we can get
-  // this one as is, rather than wrapped in Task[_].
-  def default: Task[JavaHome] =
-    JavaHome().withDefaultCache
 
   def systemId: String =
     "system"

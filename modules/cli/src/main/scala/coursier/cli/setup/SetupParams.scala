@@ -16,6 +16,7 @@ final case class SetupParams(
   cache: CacheParams,
   output: OutputParams,
   homeOpt: Option[Path],
+  banner: Boolean,
   yes: Boolean
 )
 
@@ -27,6 +28,7 @@ object SetupParams {
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val homeOpt = options.home.filter(_.nonEmpty).map(Paths.get(_))
+    val banner = options.banner.getOrElse(false)
     val yes = options.yes
     (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output) =>
       SetupParams(
@@ -36,6 +38,7 @@ object SetupParams {
         cache,
         output,
         homeOpt,
+        banner,
         yes
       )
     }

@@ -4,22 +4,24 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 
-import coursier.launcher.internal.{FileUtil, Windows}
+import coursier.launcher.internal.FileUtil
 
 object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
   // TODO Get isWindows via the params? Along with some kind of CommandRunner?
   // That would allow to unit test the logic here.
 
-  private def executable(dir: File, name: String): Option[File] =
-    if (Windows.isWindows)
-      Windows.pathExtensions
-        .toStream
-        .map(ext => new File(dir, s"$name$ext"))
-        .filter(_.exists())
-        .headOption
-    else
-      Some(new File(dir, name))
+  private def executable(dir: File, name: String, pathExtensionsOpt: Option[Seq[String]]): Option[File] =
+    pathExtensionsOpt match {
+      case None =>
+        Some(new File(dir, name))
+      case Some(pathExts) =>
+        pathExts
+          .toStream
+          .map(ext => new File(dir, s"$name$ext"))
+          .filter(_.exists())
+          .headOption
+    }
 
 
   def generate(parameters: Parameters.NativeImage, output: Path): Unit = {
@@ -31,19 +33,31 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       // Really only works well if the JVM is GraalVM
       val javaPath = parameters.javaHome
         .map(new File(_, "bin"))
-        .flatMap(executable(_, "java"))
+        .flatMap(executable(_, "java", parameters.windowsPathExtensions))
         .fold("java")(_.getAbsolutePath)
       Seq(javaPath) ++ javaOpts ++ Seq("-cp", cp.map(_.getAbsolutePath).mkString(File.pathSeparator), "com.oracle.svm.driver.NativeImage")
     }
 
-    def generate(extraArgs: String*): Either[Int, Unit] = {
-      val cp = parameters.jars
-        .map(_.getAbsolutePath.toString)
-        .mkString(File.pathSeparator)
+    var tmpFile: Path = null
+
+    val res = try {
+      val cp =
+        if (parameters.intermediateAssembly) {
+          val p = Parameters.Assembly()
+            .withFiles(parameters.jars)
+            .withMainClass(parameters.mainClass)
+            .withPreambleOpt(None)
+          tmpFile = Files.createTempFile("native-image-assembly-", ".jar")
+          AssemblyGenerator.generate(p, tmpFile)
+          tmpFile.toString
+        } else
+          parameters.jars
+            .map(_.getAbsolutePath.toString)
+            .mkString(File.pathSeparator)
+
       val cmd = startCmd ++
         parameters.graalvmOptions ++
         parameters.nameOpt.map(name => s"-H:Name=$name") ++
-        extraArgs ++
         Seq("-cp", cp, parameters.mainClass, output.toString)
       if (parameters.verbosity >= 1)
         System.err.println(s"Running $cmd")
@@ -52,7 +66,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       val p = b.start()
       val retCode = p.waitFor()
       if (retCode == 0) {
-        if (Windows.isWindows) {
+        if (parameters.isWindows) {
           val exe = output.getFileName.toString + ".exe"
 
           import scala.collection.JavaConverters._
@@ -69,15 +83,16 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         Right(())
       } else
         Left(retCode)
+    } finally {
+      if (tmpFile != null)
+        Files.deleteIfExists(tmpFile)
     }
-
-    val res = generate()
 
     res match {
       case Left(retCode) =>
         sys.error(s"Error running native-image (exit code: $retCode)")
       case Right(()) =>
-        FileUtil.tryMakeExecutable(output)
+        FileUtil.tryMakeExecutable(output) // do we really need that?
     }
   }
 

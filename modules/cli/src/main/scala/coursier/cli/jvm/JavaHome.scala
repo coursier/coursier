@@ -23,12 +23,8 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     val logger = params.output.logger()
     val coursierCache = params.cache.cache(pool, logger)
 
-    val task =
-      for {
-        javaHome <- params.shared.javaHome(params.output.verbosity)
-          .map(_.withCoursierCache(coursierCache))
-        home <- javaHome.get(params.shared.id)
-      } yield home
+    val javaHome = params.shared.javaHome(coursierCache, params.output.verbosity)
+    val task = javaHome.get(params.shared.id)
 
     logger.init()
     val home =

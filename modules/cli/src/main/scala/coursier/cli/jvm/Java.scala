@@ -30,10 +30,9 @@ object Java extends CaseApp[JavaOptions] {
     val logger = params.output.logger()
     val coursierCache = params.cache.cache(pool, logger)
 
+    val javaHome = params.shared.javaHome(coursierCache, params.output.verbosity)
     val task =
       for {
-        javaHome <- params.shared.javaHome(params.output.verbosity)
-          .map(_.withCoursierCache(coursierCache))
         homeId <- javaHome.getWithRetainedId(params.shared.id)
         (id, home) = homeId
         envUpdate = javaHome.environmentFor(id, home)

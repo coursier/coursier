@@ -21,9 +21,7 @@ object Setup extends CaseApp[SetupOptions] {
     val logger = params.output.logger()
     val cache = params.cache.cache(pool, logger)
 
-    val javaHome = params.sharedJava.javaHome(params.output.verbosity)
-        .map(_.withCoursierCache(cache))
-        .unsafeRun()(cache.ec) // meh
+    val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
 
     val envVarUpdater =
       if (Windows.isWindows)
@@ -34,19 +32,19 @@ object Setup extends CaseApp[SetupOptions] {
             .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
         )
 
-    val installDir = InstallDir(params.sharedInstall.dir, cache)
+    val installCache = cache.withLogger(params.output.logger(byFileType = true))
+    val installDir = InstallDir(params.sharedInstall.dir, installCache)
       .withVerbosity(params.output.verbosity)
       .withGraalvmParamsOpt(params.sharedInstall.graalvmParamsOpt)
       .withCoursierRepositories(params.sharedInstall.repositories)
-
-    val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, cache)
+    val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
       .withVerbosity(params.output.verbosity)
 
     val confirm =
       if (params.yes)
-        Confirm.yesToAll()
+        Confirm.YesToAll()
       else
-        Confirm.default
+        Confirm.ConsoleInput().withIndent(2)
 
     val tasks = Seq(
       MaybeInstallJvm(cache, envVarUpdater, javaHome, confirm),
@@ -62,21 +60,19 @@ object Setup extends CaseApp[SetupOptions] {
 
     val task = tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t.fullTask(System.out)))
 
-    if (Option(System.getenv("CS_SETUP_BANNER")).map(_.toLowerCase(Locale.ROOT)).contains("true"))
+    if (params.banner)
+      // from https://github.com/scala/scala/blob/eb1ea8b367f9b240afc0b16184396fa3bbf7e37c/project/VersionUtil.scala#L34-L39
       System.out.println(
-        """   ____      _      _   _     _   _   U _____ u   ____
-          |U | __")uU  /"\  u | \ |"|   | \ |"|  \| ___"|/U |  _"\ u
-          | \|  _ \/ \/ _ \/ <|  \| |> <|  \| |>  |  _|"   \| |_) |/
-          |  | |_) | / ___ \ U| |\  |u U| |\  |u  | |___    |  _ <
-          |  |____/ /_/   \_\ |_| \_|   |_| \_|   |_____|   |_| \_\
-          | _|| \\_  \\    >> ||   \\,-.||   \\,-.<<   >>   //   \\_
-          |(__) (__)(__)  (__)(_")  (_/ (_")  (_/(__) (__) (__)  (__)
+        """
+          |     ________ ___   / /  ___
+          |    / __/ __// _ | / /  / _ |
+          |  __\ \/ /__/ __ |/ /__/ __ |
+          | /____/\___/_/ |_/____/_/ | |
+          |                          |/
           |""".stripMargin
       )
 
-    logger.use {
-      // TODO Better error messages for relevant exceptions
-      task.unsafeRun()(cache.ec)
-    }
+    // TODO Better error messages for relevant exceptions
+    task.unsafeRun()(cache.ec)
   }
 }

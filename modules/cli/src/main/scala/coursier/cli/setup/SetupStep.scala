@@ -10,7 +10,7 @@ trait SetupStep {
 
   final def fullTask(out: PrintStream): Task[Unit] =
     for {
-      _ <- Task.delay(out.println("  " + banner))
+      _ <- Task.delay(out.println(banner))
       _ <- task
       _ <- Task.delay(out.println())
     } yield ()

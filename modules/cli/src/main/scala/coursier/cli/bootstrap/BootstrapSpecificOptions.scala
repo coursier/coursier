@@ -15,6 +15,8 @@ final case class BootstrapSpecificOptions(
     hybrid: Option[Boolean] = None,
   @Help("Generate a GraalVM native image")
     nativeImage: Option[Boolean] = None,
+  @Help("When generating a GraalVM native image, merge the classpath into an assembly prior to passing it to native-image")
+    intermediateAssembly: Boolean = false,
   @Help("GraalVM version to use to generate native images")
   @Short("graalvm")
     graalvmVersion: Option[String] = None,

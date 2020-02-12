@@ -19,7 +19,15 @@ import dataclass.data
       .map { id =>
         for {
           appInfo <- channels.appDescriptor(id)
-          _ <- Task.delay(installDir.createOrUpdate(appInfo))
+          installed <- Task.delay(installDir.createOrUpdate(appInfo))
+          _ <- {
+            Task.delay {
+              val message =
+                if (installed) s"Installed $id"
+                else s"Found $id"
+              System.out.println("  " + message)
+            }
+          }
         } yield ()
       }
 

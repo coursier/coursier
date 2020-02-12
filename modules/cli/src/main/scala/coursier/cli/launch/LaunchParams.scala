@@ -25,10 +25,12 @@ final case class LaunchParams(
         val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
         for {
           _ <- Task.delay(logger.init())
-          baseHandle <- coursier.jvm.JavaHome.default
-          handle = baseHandle
-            .withJvmCacheLogger(sharedJava.jvmCacheLogger(shared.resolve.output.verbosity))
-            .withCoursierCache(cache)
+          cache0 = coursier.jvm.JvmCache()
+            .withCache(cache)
+            .withDefaultLogger(sharedJava.jvmCacheLogger(shared.resolve.output.verbosity))
+            .loadDefaultIndex
+          handle = coursier.jvm.JavaHome()
+            .withCache(cache0)
           javaExe <- handle.javaBin(id)
           envUpdate <- handle.environmentFor(id)
           _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails

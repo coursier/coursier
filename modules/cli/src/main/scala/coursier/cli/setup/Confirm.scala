@@ -1,12 +1,12 @@
 package coursier.cli.setup
 
+import java.io.{InputStream, PrintStream}
 import java.util.{Locale, Scanner}
 
 import coursier.util.Task
+import dataclass.data
 
 import scala.annotation.tailrec
-import java.io.InputStream
-import java.io.PrintStream
 
 trait Confirm {
   def confirm(message: String, default: Boolean): Task[Boolean]
@@ -14,11 +14,14 @@ trait Confirm {
 
 object Confirm {
 
-  final class ConsoleInput(
-    in: InputStream,
-    out: PrintStream,
-    locale: Locale
+  @data class ConsoleInput(
+    in: InputStream = System.in,
+    out: PrintStream = System.out,
+    locale: Locale = Locale.getDefault,
+    @since
+    indent: Int = 0
   ) extends Confirm {
+    private val marginOpt = if (indent > 0) Some(" " * indent) else None
     def confirm(message: String, default: Boolean): Task[Boolean] =
       Task.delay {
 
@@ -26,7 +29,11 @@ object Confirm {
           if (default) "[Y/n]"
           else "[y/N]"
 
-        out.print(s"$message $choice ")
+        val message0 = marginOpt match {
+          case None => message
+          case Some(margin) => message.linesIterator.map(margin + _).mkString(System.lineSeparator())
+        }
+        out.print(s"$message0 $choice ")
 
         @tailrec
         def loop(): Boolean = {
@@ -51,7 +58,9 @@ object Confirm {
       }
   }
 
-  final class YesToAll(out: PrintStream) extends Confirm {
+  @data class YesToAll(
+    out: PrintStream = System.out
+  ) extends Confirm {
     def confirm(message: String, default: Boolean): Task[Boolean] =
       Task.delay {
         out.println(message + " [Y/n] Y")
@@ -59,19 +68,7 @@ object Confirm {
       }
   }
 
-  def consoleInput(): Confirm =
-    new ConsoleInput(System.in, System.out, Locale.getDefault)
-  def consoleInput(in: InputStream, out: PrintStream): Confirm =
-    new ConsoleInput(in, out, Locale.getDefault)
-  def consoleInput(in: InputStream, out: PrintStream, locale: Locale): Confirm =
-    new ConsoleInput(in, out, locale)
-
-  def yesToAll(): Confirm =
-    new YesToAll(System.out)
-  def yesToAll(out: PrintStream): Confirm =
-    new YesToAll(out)
-
   def default: Confirm =
-    consoleInput()
+    ConsoleInput()
 
 }

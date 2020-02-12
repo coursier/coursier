@@ -1,11 +1,11 @@
 package coursier.cli.jvm
 
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cache.Cache
 import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.util.Task
 
@@ -18,15 +18,16 @@ final case class SharedJavaParams(
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
 
-  def javaHome(verbosity: Int): Task[coursier.jvm.JavaHome] =
-    JvmCache.default.map { cache =>
-      val cache0 = cache
-        .withBaseDirectory(jvmDir.toFile)
-      coursier.jvm.JavaHome()
-        .withCache(cache0)
-        .withJvmCacheLogger(jvmCacheLogger(verbosity))
-        .withAllowSystem(allowSystemJvm)
-    }
+  def javaHome(cache: Cache[Task], verbosity: Int): coursier.jvm.JavaHome = {
+    val jvmCache = JvmCache()
+      .withBaseDirectory(jvmDir.toFile)
+      .withCache(cache)
+      .loadDefaultIndex
+    coursier.jvm.JavaHome()
+      .withCache(jvmCache)
+      .withJvmCacheLogger(jvmCacheLogger(verbosity))
+      .withAllowSystem(allowSystemJvm)
+  }
 
   def jvmCacheLogger(verbosity: Int): JvmCacheLogger =
     if (verbosity >= 0)

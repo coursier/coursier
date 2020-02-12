@@ -46,13 +46,12 @@ final case class CacheParams(
   def withUseEnvCredentials(useEnvCredentials: Boolean): CacheParams =
     copy(useEnvCredentials = useEnvCredentials)
 
-  def cache[F[_]](
+  def cache(
     pool: ExecutorService,
-    logger: CacheLogger,
-    inMemoryCache: Boolean = false
-  )(implicit S: Sync[F] = Task.sync): Cache[F] = {
+    logger: CacheLogger
+  ): FileCache[Task] = {
 
-    var c = FileCache[F]()
+    var c = FileCache[Task]()
       .withLocation(cacheLocation)
       .withCachePolicies(cachePolicies)
       .withChecksums(checksum)
@@ -68,8 +67,19 @@ final case class CacheParams(
 
     c = c.addCredentials(credentials: _*)
 
+    c
+  }
+
+  def cache(
+    pool: ExecutorService,
+    logger: CacheLogger,
+    inMemoryCache: Boolean
+  ): Cache[Task] = {
+
+    val c = cache(pool, logger)
+
     if (inMemoryCache)
-      InMemoryCache(c, S)
+      InMemoryCache(c, Task.sync)
     else
       c
   }

@@ -277,13 +277,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         val graalvmVersion = params.specific.graalvmVersionOpt.getOrElse("latest.release")
 
-        val javaHomeTask = for {
-          baseHandle <- JvmCache.default
-          handle = baseHandle.withCache(
+        val handle = JvmCache()
+          .withCache(
             params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger())
           )
-          home <- handle.get(s"graalvm:$graalvmVersion")
-        } yield home
+          .loadDefaultIndex
+        val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
         val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)
@@ -291,6 +290,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withGraalvmVersion(params.specific.graalvmVersionOpt)
           .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
           .withGraalvmOptions(params.specific.graalvmOptions)
+          .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
           .withJavaHome(javaHome)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
       } else {

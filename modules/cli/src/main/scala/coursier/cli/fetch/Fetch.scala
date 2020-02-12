@@ -36,7 +36,7 @@ object Fetch extends CaseApp[FetchOptions] {
 
     val logger = params.resolve.output.logger()
 
-    val cache = params.resolve.cache.cache[Task](pool, logger)
+    val cache = params.resolve.cache.cache(pool, logger)
 
     for {
       t <- resolveTask
