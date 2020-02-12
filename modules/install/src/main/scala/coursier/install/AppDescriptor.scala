@@ -255,6 +255,7 @@ import dataclass._
 object AppDescriptor {
 
   @data class GraalvmOptions(
+    version: Option[String] = None,
     options: Seq[String] = Nil
   )
 

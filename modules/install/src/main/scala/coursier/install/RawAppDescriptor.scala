@@ -173,10 +173,12 @@ object RawAppDescriptor {
   import argonaut.ArgonautShapeless._
 
   @data class RawGraalvmOptions(
-    options: List[String] = Nil
+    options: List[String] = Nil,
+    version: Option[String] = None
   ) {
     def graalvmOptions: AppDescriptor.GraalvmOptions =
       AppDescriptor.GraalvmOptions(
+        version.filter(_.nonEmpty),
         options
       )
   }

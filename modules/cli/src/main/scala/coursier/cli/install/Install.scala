@@ -62,34 +62,54 @@ object Install extends CaseApp[InstallOptions] {
       sys.exit(0)
     }
 
-    val installDir = InstallDir(params.shared.dir, cache)
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
+    }
+
+    val installDir = params.shared.installDir(cache)
       .withVerbosity(params.output.verbosity)
-      .withGraalvmParamsOpt(params.shared.graalvmParamsOpt)
-      .withCoursierRepositories(params.shared.repositories)
+      .withNativeImageJavaHome(Some(graalvmHome))
 
     val channels = Channels(params.channels, params.shared.repositories, cache)
       .withVerbosity(params.output.verbosity)
 
-    for (id <- args.all) {
+    try {
+      for (id <- args.all) {
 
-      val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-        case Left(err: Channels.ChannelsException) =>
-          System.err.println(err.getMessage)
-          sys.exit(1)
-        case Left(err) => throw err
-        case Right(appInfo) => appInfo
+        val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
+          case Left(err: Channels.ChannelsException) =>
+            System.err.println(err.getMessage)
+            sys.exit(1)
+          case Left(err) => throw err
+          case Right(appInfo) => appInfo
+        }
+
+        val wroteSomethingOpt = installDir.createOrUpdate(
+          appInfo,
+          Instant.now(),
+          force = params.force
+        )
+
+        wroteSomethingOpt match {
+          case Some(true) =>
+            if (params.output.verbosity >= 0)
+              System.err.println(s"Wrote ${appInfo.source.id}")
+          case Some(false) =>
+            if (params.output.verbosity >= 1)
+              System.err.println(s"${appInfo.source.id} doesn't need updating")
+          case None =>
+            if (params.output.verbosity >= 0)
+              System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
+        }
       }
-
-      val wroteSomething = installDir.createOrUpdate(
-        appInfo,
-        Instant.now(),
-        force = params.force
-      )
-
-      if (wroteSomething)
-        System.err.println(s"Wrote ${appInfo.source.id}")
-      else if (params.output.verbosity >= 1)
-        System.err.println(s"${appInfo.source.id} doesn't need updating")
+    } catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
+          sys.exit(1)
     }
 
     if (params.output.verbosity >= 0) {

@@ -28,7 +28,7 @@ final case class LaunchParams(
           cache0 = coursier.jvm.JvmCache()
             .withCache(cache)
             .withDefaultLogger(sharedJava.jvmCacheLogger(shared.resolve.output.verbosity))
-            .loadDefaultIndex
+            .withDefaultIndex
           handle = coursier.jvm.JavaHome()
             .withCache(cache0)
           javaExe <- handle.javaBin(id)

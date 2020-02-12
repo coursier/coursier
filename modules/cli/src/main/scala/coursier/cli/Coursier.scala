@@ -10,7 +10,7 @@ import caseapp.core.parser.Parser
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
-import coursier.cli.install.{Install, Update}
+import coursier.cli.install.{Install, Uninstall, Update}
 import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
@@ -118,9 +118,11 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Sonatype.run(sonatypeOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))))) =>
         SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))))) =>
+        Uninstall.run(uninstallOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
         cnil.impossible
     }
 

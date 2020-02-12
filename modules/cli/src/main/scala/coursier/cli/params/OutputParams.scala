@@ -9,8 +9,7 @@ import coursier.cache.loggers.FileTypeRefreshDisplay
 
 final case class OutputParams(
   verbosity: Int,
-  progressBars: Boolean,
-  forcePrint: Boolean
+  progressBars: Boolean
 ) {
   def logger(): CacheLogger =
     logger(byFileType = false)
@@ -45,13 +44,11 @@ object OutputParams {
         Validated.validNel(Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet))
 
     val progressBars = options.progress
-    val forcePrint = options.forcePrint
 
     verbosityV.map { verbosity =>
       OutputParams(
         verbosity,
-        progressBars,
-        forcePrint
+        progressBars
       )
     }
   }
