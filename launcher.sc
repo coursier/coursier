@@ -48,18 +48,6 @@ private val pgpSecret = Option(System.getenv("PGP_SECRET"))
 
 private val dryRun = false
 
-private def doWaitForSync(
-  initialLauncher: String,
-  version: String
-): Unit =
-  WaitForSync(
-    initialLauncher,
-    s"io.get-coursier::coursier-cli:$version",
-    Seq("--no-default", "-r", "central", "-r", "typesafe:ivy-releases"),
-    "sonatype:public",
-    attempts = 25
-  )
-
 @main
 def uploadJavaLauncher(): Unit = {
 
@@ -71,13 +59,21 @@ def uploadJavaLauncher(): Unit = {
 
   println(version)
 
-  doWaitForSync(initialLauncher0, version)
+  val module = s"io.get-coursier::coursier-cli:$version"
+
+  WaitForSync(
+    initialLauncher0,
+    module,
+    Seq("--no-default", "-r", "central", "-r", "typesafe:ivy-releases"),
+    "sonatype:public",
+    attempts = 25
+  )
 
   val javaLauncher = "./coursier"
 
   GenerateLauncher(
     initialLauncher0,
-    module = s"io.get-coursier::coursier-cli:$version",
+    module = module,
     extraArgs = Seq(
       "--no-default",
       "-r", "central",
