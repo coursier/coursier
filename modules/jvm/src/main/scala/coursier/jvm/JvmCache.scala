@@ -23,12 +23,13 @@ import scala.util.control.NonFatal
   defaultJdkNameOpt: Option[String] = Some(JvmCache.defaultJdkName),
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
   defaultLogger: Option[JvmCacheLogger] = None,
-  index: Option[JvmIndex] = None,
+  index: Option[Task[JvmIndex]] = None,
   maxWaitDuration: Option[Duration] = Some(1.minute),
   durationBetweenChecks: FiniteDuration = 2.seconds,
   scheduledExecutor: Option[ScheduledExecutorService] = Some(JvmCache.defaultScheduledExecutor),
   currentTime: () => Instant = () => Instant.now(),
-  unArchiver: UnArchiver = UnArchiver.default()
+  unArchiver: UnArchiver = UnArchiver.default(),
+  handleLoggerLifecycle: Boolean = true
 ) {
 
   def withDefaultLogger(logger: JvmCacheLogger): JvmCache =
@@ -87,44 +88,50 @@ import scala.util.control.NonFatal
         Task.delay(dir.isDirectory).flatMap {
           case true => Task.point(dir)
           case false =>
-            cache.file(Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))).run.flatMap {
-              case Left(err) => Task.fail(err)
-              case Right(archive) =>
-                val tryExtract0 = Task.delay {
-                  tryExtract(
-                    entry,
-                    dir,
-                    logger0,
-                    archive,
-                    tmpDir
-                  )
-                }
+            if (installIfNeeded) {
+              val maybeArchiveTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+                cache.file(Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))).run
+              }
+              maybeArchiveTask.flatMap {
+                case Left(err) => Task.fail(err)
+                case Right(archive) =>
+                  val tryExtract0 = Task.delay {
+                    tryExtract(
+                      entry,
+                      dir,
+                      logger0,
+                      archive,
+                      tmpDir
+                    )
+                  }
 
-                tryExtract0.flatMap {
-                  case Some(dir) => Task.point(dir)
-                  case None =>
-                    (maxWaitDuration, scheduledExecutor) match {
-                      case (Some(max), Some(executor)) =>
+                  tryExtract0.flatMap {
+                    case Some(dir) => Task.point(dir)
+                    case None =>
+                      (maxWaitDuration, scheduledExecutor) match {
+                        case (Some(max), Some(executor)) =>
 
-                        val shouldTryAgainTask = Task.delay {
-                          val now = currentTime()
-                          val elapsedMs = now.toEpochMilli - initialAttempt.toEpochMilli
-                          elapsedMs < max.toMillis
-                        }
+                          val shouldTryAgainTask = Task.delay {
+                            val now = currentTime()
+                            val elapsedMs = now.toEpochMilli - initialAttempt.toEpochMilli
+                            elapsedMs < max.toMillis
+                          }
 
-                        shouldTryAgainTask.flatMap {
-                          case false =>
-                            Task.fail(new Exception(s"Directory $dir still locked after $max"))
-                          case true =>
-                            Task.completeAfter(executor, durationBetweenChecks)
-                              .flatMap { _ => task }
-                        }
+                          shouldTryAgainTask.flatMap {
+                            case false =>
+                              Task.fail(new Exception(s"Directory $dir still locked after $max"))
+                            case true =>
+                              Task.completeAfter(executor, durationBetweenChecks)
+                                .flatMap { _ => task }
+                          }
 
-                      case _ =>
-                        Task.fail(new Exception(s"Directory $dir is locked"))
-                    }
-                }
-            }
+                        case _ =>
+                          Task.fail(new Exception(s"Directory $dir is locked"))
+                      }
+                  }
+              }
+            } else
+              Task.fail(new Exception(s"$dir not found"))
         }
 
         task.map(JvmCache.finalDirectory(_, os))
@@ -143,18 +150,22 @@ import scala.util.control.NonFatal
     get(entry, None, installIfNeeded = true)
 
   def get(id: String): Task[File] =
+    get(id, installIfNeeded = true)
+  def get(id: String, installIfNeeded: Boolean): Task[File] =
     index match {
       case None => Task.fail(new Exception("No index specified"))
-      case Some(index0) =>
-        JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
-          case None =>
-            Task.fail(new Exception(s"Malformed JVM id '$id'"))
-          case Some((name, ver)) =>
-            index0.lookup(name, ver, Some(os), Some(architecture)) match {
-              case Left(err) => Task.fail(new Exception(err))
-              case Right(entry) =>
-                get(entry)
-            }
+      case Some(indexTask) =>
+        indexTask.flatMap { index0 =>
+          JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+            case None =>
+              Task.fail(new Exception(s"Malformed JVM id '$id'"))
+            case Some((name, ver)) =>
+              index0.lookup(name, ver, Some(os), Some(architecture)) match {
+                case Left(err) => Task.fail(new Exception(err))
+                case Right(entry) =>
+                  get(entry, None, installIfNeeded)
+              }
+          }
         }
     }
 
@@ -193,19 +204,19 @@ import scala.util.control.NonFatal
         .sorted
     }
 
-  def withIndex(index: JvmIndex): JvmCache =
+  def withIndex(index: Task[JvmIndex]): JvmCache =
     withIndex(Some(index))
 
-  def loadDefaultIndex: Task[JvmCache] =
-    JvmIndex.load(cache)
-      .map(withIndex(_))
+  def loadDefaultIndex: JvmCache = {
+    val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+      JvmIndex.load(cache)
+    }
+    withIndex(indexTask)
+  }
 
 }
 
 object JvmCache {
-
-  def default: Task[JvmCache] =
-    JvmCache().loadDefaultIndex
 
   def defaultBaseDirectory: File =
     defaultBaseDirectory0

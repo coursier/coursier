@@ -21,9 +21,7 @@ object Setup extends CaseApp[SetupOptions] {
     val logger = params.output.logger()
     val cache = params.cache.cache(pool, logger)
 
-    val javaHome = params.sharedJava.javaHome(params.output.verbosity)
-        .map(_.withCoursierCache(cache))
-        .unsafeRun()(cache.ec) // meh
+    val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
 
     val envVarUpdater =
       if (Windows.isWindows)
@@ -74,9 +72,7 @@ object Setup extends CaseApp[SetupOptions] {
           |""".stripMargin
       )
 
-    logger.use {
-      // TODO Better error messages for relevant exceptions
-      task.unsafeRun()(cache.ec)
-    }
+    // TODO Better error messages for relevant exceptions
+    task.unsafeRun()(cache.ec)
   }
 }

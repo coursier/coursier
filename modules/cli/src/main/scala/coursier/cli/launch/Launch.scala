@@ -294,7 +294,7 @@ object Launch extends CaseApp[LaunchOptions] {
   ): Task[(String, () => Option[Int])] = {
 
     val logger = params.shared.resolve.output.logger()
-    val cache = params.shared.resolve.cache.cache[Task](pool, logger)
+    val cache = params.shared.resolve.cache.cache(pool, logger)
 
     for {
       depsAndReposOrError0 <- Task.fromEither(Resolve.depsAndReposOrError(params.shared.resolve, dependencyArgs, cache))
@@ -381,7 +381,7 @@ object Launch extends CaseApp[LaunchOptions] {
       (res, scalaVersion, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
-      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache[Task](pool, params.shared.resolve.output.logger()))
+      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache(pool, params.shared.resolve.output.logger()))
       (javaPath, envUpdate) = javaPathEnvUpdate
       f <- Task.fromEither {
         launchCall(
