@@ -22,7 +22,7 @@ final case class SharedJavaParams(
     val jvmCache = JvmCache()
       .withBaseDirectory(jvmDir.toFile)
       .withCache(cache)
-      .loadDefaultIndex
+      .withDefaultIndex
     coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withJvmCacheLogger(jvmCacheLogger(verbosity))

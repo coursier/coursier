@@ -29,11 +29,17 @@ object Update extends CaseApp[UpdateOptions] {
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
+    }
+
     val installDir =
       InstallDir(params.shared.dir, cache)
         .withGraalvmParamsOpt(params.shared.graalvmParamsOpt)
         .withCoursierRepositories(params.shared.repositories)
         .withVerbosity(params.output.verbosity)
+        .withNativeImageJavaHome(Some(graalvmHome))
 
     val tasks = names.map { name =>
       installDir.maybeUpdate(

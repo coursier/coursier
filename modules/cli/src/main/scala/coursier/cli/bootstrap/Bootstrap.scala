@@ -281,7 +281,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withCache(
             params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger())
           )
-          .loadDefaultIndex
+          .withDefaultIndex
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
         val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 

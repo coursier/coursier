@@ -6,6 +6,7 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.jvm.SharedJavaParams
 import coursier.cli.params.OutputParams
 import coursier.install.Channel
 import coursier.params.CacheParams
@@ -15,6 +16,7 @@ final case class InstallParams(
   output: OutputParams,
   shared: SharedInstallParams,
   sharedChannel: SharedChannelParams,
+  sharedJava: SharedJavaParams,
   addChannels: Seq[Channel],
   installChannels: Seq[String],
   force: Boolean
@@ -33,6 +35,7 @@ object InstallParams {
     val sharedV = SharedInstallParams(options.sharedInstallOptions)
 
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
+    val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
     val addChannelsV = options.addChannel.traverse { s =>
       val e = Channel.parse(s)
@@ -43,13 +46,14 @@ object InstallParams {
 
     val force = options.force
 
-    (cacheParamsV, outputV, sharedV, sharedChannelV, addChannelsV).mapN {
-      (cacheParams, output, shared, sharedChannel, addChannels) =>
+    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, addChannelsV).mapN {
+      (cacheParams, output, shared, sharedChannel, sharedJava, addChannels) =>
         InstallParams(
           cacheParams,
           output,
           shared,
           sharedChannel,
+          sharedJava,
           addChannels.map(_._2),
           addChannels.map(_._1),
           force

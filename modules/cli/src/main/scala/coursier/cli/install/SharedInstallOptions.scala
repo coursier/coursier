@@ -6,6 +6,7 @@ final case class SharedInstallOptions(
 
   graalvmHome: Option[String] = None,
   graalvmOption: List[String] = Nil,
+  graalvmDefaultVersion: Option[String] = SharedInstallOptions.defaultGraalvmVersion,
 
   @Short("dir")
     installDir: Option[String] = None,
@@ -15,7 +16,11 @@ final case class SharedInstallOptions(
   @Short("r")
     repository: List[String] = Nil,
 
-  defaultRepositories: Boolean = true,
-
+  defaultRepositories: Boolean = true
 
 )
+
+object SharedInstallOptions {
+  def defaultGraalvmVersion: Option[String] =
+    Some("19.3")
+}

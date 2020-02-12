@@ -62,10 +62,16 @@ object Install extends CaseApp[InstallOptions] {
       sys.exit(0)
     }
 
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
+    }
+
     val installDir = InstallDir(params.shared.dir, cache)
       .withVerbosity(params.output.verbosity)
       .withGraalvmParamsOpt(params.shared.graalvmParamsOpt)
       .withCoursierRepositories(params.shared.repositories)
+      .withNativeImageJavaHome(Some(graalvmHome))
 
     val channels = Channels(params.channels, params.shared.repositories, cache)
       .withVerbosity(params.output.verbosity)

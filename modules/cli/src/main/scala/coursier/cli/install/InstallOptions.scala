@@ -1,6 +1,7 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, OutputOptions}
 
 final case class InstallOptions(
@@ -16,6 +17,9 @@ final case class InstallOptions(
 
   @Recurse
     sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
+
+  @Recurse
+    sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
 
   addChannel: List[String] = Nil,
 

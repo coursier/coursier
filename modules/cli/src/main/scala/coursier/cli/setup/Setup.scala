@@ -32,11 +32,16 @@ object Setup extends CaseApp[SetupOptions] {
             .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
         )
 
+    val graalvmHome = { version: String =>
+      javaHome.get(s"graalvm:$version")
+    }
+
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
     val installDir = InstallDir(params.sharedInstall.dir, installCache)
       .withVerbosity(params.output.verbosity)
       .withGraalvmParamsOpt(params.sharedInstall.graalvmParamsOpt)
       .withCoursierRepositories(params.sharedInstall.repositories)
+      .withNativeImageJavaHome(Some(graalvmHome))
     val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
       .withVerbosity(params.output.verbosity)
 

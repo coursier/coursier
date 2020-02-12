@@ -29,11 +29,16 @@ import scala.util.control.NonFatal
   coursierRepositories: Seq[Repository] = Nil,
   platform: Option[String] = InstallDir.platform(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
-  os: String = System.getProperty("os.name", "")
+  os: String = System.getProperty("os.name", ""),
+  nativeImageJavaHome: Option[String => Task[File]] = None
 ) {
 
   private lazy val isWindows =
     os.toLowerCase(Locale.ROOT).contains("windows")
+
+  private lazy val auxExtension =
+    if (isWindows) ".exe"
+    else ""
 
   import InstallDir._
 
@@ -70,6 +75,15 @@ import scala.util.control.NonFatal
     )
   }
 
+  def delete(appName: String): Option[Boolean] = {
+    val launcher = actualDest(baseDir.resolve(appName))
+    Updatable.delete(baseDir, launcher, auxExtension, verbosity)
+  }
+
+  private def actualDest(dest: Path): Path =
+    if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
+    else dest
+
   // TODO Remove that override
   private[coursier] def createOrUpdate(
     descOpt: Option[(AppDescriptor, Array[Byte])],
@@ -79,12 +93,7 @@ import scala.util.control.NonFatal
     force: Boolean = false
   ): Option[Boolean] = {
 
-    val dest0 =
-      if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
-      else dest
-    val auxExtension =
-      if (isWindows) ".exe"
-      else ""
+    val dest0 = actualDest(dest)
 
     // values before the `(tmpDest, tmpAux) =>` need to be evaluated when we hold the lock of Updatable.writing
     def update: (Path, Path) => Boolean = {
@@ -236,10 +245,17 @@ import scala.util.control.NonFatal
 
                   val fetch = simpleFetch(cache, coursierRepositories)
 
+                  val graalvmHomeOpt = for {
+                    ver <- desc.graalvmOptions.flatMap(_.version)
+                      .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
+                    home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
+                  } yield home
+
                   Parameters.NativeImage(mainClass, fetch)
                     .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
                     .withJars(appArtifacts.fetchResult.files)
                     .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
+                    .withJavaHome(graalvmHomeOpt)
                     .withVerbosity(verbosity)
 
                 case LauncherType.ScalaNative =>
