@@ -17,7 +17,6 @@ import coursier.cli.publish.Publish
 import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.{Setup, SetupOptions}
-import coursier.cli.spark.SparkSubmit
 import coursier.core.Version
 import coursier.launcher.internal.{FileUtil, Windows}
 import io.github.alexarchambault.windowsansi.WindowsAnsi
@@ -116,13 +115,11 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Setup.run(setupOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))))) =>
         Sonatype.run(sonatypeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))))) =>
-        SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions)))))))))))) =>
         Uninstall.run(uninstallOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
         cnil.impossible
     }
 
