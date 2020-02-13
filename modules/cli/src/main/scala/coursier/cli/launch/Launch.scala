@@ -3,6 +3,7 @@ package coursier.cli.launch
 import java.io.{File, PrintStream}
 import java.lang.reflect.Modifier
 import java.net.{URL, URLClassLoader}
+import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import caseapp.CaseApp
@@ -11,10 +12,12 @@ import cats.data.Validated
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
+import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
+import coursier.launcher.{BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Parameters}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -46,34 +49,59 @@ object Launch extends CaseApp[LaunchOptions] {
     properties: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     verbosity: Int
-  ): Either[LaunchException, () => Int] =
-    hierarchy match {
+  ): Either[LaunchException, () => Int] = {
+
+    val cp = hierarchy match {
       case Seq((None, files)) =>
-
-        val cmd = Seq(javaPath) ++
-          javaOptions ++
-          properties.map { case (k, v) => s"-D$k=$v" } ++
-          Seq("-cp", files.map(_.getAbsolutePath).mkString(File.pathSeparator), mainClass) ++
-          args
-
-        val b = new ProcessBuilder()
-        b.command(cmd: _*)
-        b.inheritIO()
-
-        val env = b.environment()
-        for ((k, v) <- extraEnv.transientUpdates())
-          env.put(k, v)
-
-        Right {
-          () =>
-            if (verbosity >= 1)
-              System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
-            val p = b.start()
-            p.waitFor()
-        }
+        Right(files.map(_.getAbsolutePath).mkString(File.pathSeparator))
       case _ =>
-        Left(new LaunchException.ClasspathHierarchyUnsupportedWhenForking)
+        val content = hierarchy.map {
+          case (nameOpt, files) =>
+            val entries = files.toSeq.map(f => ClassPathEntry.Url(f.toURI.toASCIIString))
+            ClassLoaderContent(entries, nameOpt.getOrElse(""))
+        }
+        val tmpFile = Files.createTempFile("coursier-launch-", ".jar")
+        // not sure that will be fine if we use execve instead of ProcessBuilder
+        // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
+        Runtime.getRuntime().addShutdownHook(
+          new Thread {
+            override def run(): Unit =
+              Files.deleteIfExists(tmpFile)
+          }
+        )
+        val bootstrapParams = Parameters.Bootstrap(content, mainClass)
+          .withPreambleOpt(None)
+        BootstrapGenerator.generate(bootstrapParams, tmpFile)
+        Left(tmpFile.toAbsolutePath.toFile)
     }
+
+    val cpOpts = cp match {
+      case Right(cp0) => Seq("-cp", cp0, mainClass)
+      case Left(jar) => Seq("-jar", jar.getAbsolutePath)
+    }
+
+    val cmd = Seq(javaPath) ++
+      javaOptions ++
+      properties.map { case (k, v) => s"-D$k=$v" } ++
+      cpOpts ++
+      args
+
+    val b = new ProcessBuilder()
+    b.command(cmd: _*)
+    b.inheritIO()
+
+    val env = b.environment()
+    for ((k, v) <- extraEnv.transientUpdates())
+      env.put(k, v)
+
+    Right {
+      () =>
+        if (verbosity >= 1)
+          System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
+        val p = b.start()
+        p.waitFor()
+    }
+  }
 
   def launch(
     hierarchy: Seq[(Option[String], Array[File])],
@@ -429,50 +457,46 @@ object Launch extends CaseApp[LaunchOptions] {
       res
     }
 
-    LaunchParams(options0) match {
-      case Validated.Invalid(errors) =>
-        for (err <- errors.toList)
-          System.err.println(err)
-        sys.exit(1)
-      case Validated.Valid(params) =>
+    val params = LaunchParams(options0).exitOnError()
 
-        if (pool == null)
-          pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
-        val ec = ExecutionContext.fromExecutorService(pool)
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.shared.resolve.cache.parallel)
 
-        val t =
-          if (params.fetchCacheIKnowWhatImDoing.isEmpty)
-            task(params, pool, deps, args.unparsed)
-          else
-            fetchCacheTask(params, pool, deps, args.unparsed)
+    val ec = ExecutionContext.fromExecutorService(pool)
 
-        t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.message)
-            sys.exit(1)
-          case Left(e: coursier.error.FetchError) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.getMessage)
-            sys.exit(1)
-          case Left(e: LaunchException.NoMainClassFound) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
-            sys.exit(1)
-          case Left(e: LaunchException) if params.shared.resolve.output.verbosity <= 1 =>
-            System.err.println(e.getMessage)
-            sys.exit(1)
-          case Left(e) => throw e
-          case Right((mainClass, run)) =>
-            if (params.shared.resolve.output.verbosity >= 2)
-              System.err.println(s"Launching $mainClass ${args.unparsed.mkString(" ")}")
-            else if (params.shared.resolve.output.verbosity == 1)
-              System.err.println("Launching")
+    val t =
+      if (params.fetchCacheIKnowWhatImDoing.isEmpty)
+        task(params, pool, deps, args.unparsed)
+      else
+        fetchCacheTask(params, pool, deps, args.unparsed)
 
-            run() match {
-              case None =>
-              case Some(retCode) =>
-                if (retCode != 0)
-                  sys.exit(retCode)
-            }
-        }
+    val (mainClass, run) =
+      try t.unsafeRun()(ec)
+      catch {
+        case e: ResolveException if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.message)
+          sys.exit(1)
+        case e: coursier.error.FetchError if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+        case e: LaunchException.NoMainClassFound if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
+          sys.exit(1)
+        case e: LaunchException if params.shared.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+      }
+
+    if (params.shared.resolve.output.verbosity >= 2)
+      System.err.println(s"Launching $mainClass ${args.unparsed.mkString(" ")}")
+    else if (params.shared.resolve.output.verbosity == 1)
+      System.err.println("Launching")
+
+    run() match {
+      case None =>
+      case Some(retCode) =>
+        if (retCode != 0)
+          sys.exit(retCode)
     }
   }
 
