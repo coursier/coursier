@@ -344,19 +344,8 @@ object JvmCache {
   }
 
 
-  private lazy val defaultBaseDirectory0: File = {
-
-    val fromProps = Option(System.getProperty("coursier.jvm-dir")).map(new File(_))
-    def fromEnv = Option(System.getenv("COURSIER_JVM_DIR")).map(new File(_))
-    def default = {
-      val cacheDir = CoursierPaths.projectCacheDirectory()
-      new File(cacheDir, "jvm")
-    }
-
-    fromProps
-      .orElse(fromEnv)
-      .getOrElse(default)
-  }
+  private lazy val defaultBaseDirectory0: File =
+    CoursierPaths.jvmCacheDirectory()
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
