@@ -9,10 +9,8 @@ import coursier.cli.install.{Install, Uninstall, Update}
 import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
-import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.Setup
-import coursier.cli.spark.SparkSubmit
 
 object CoursierCommand {
 
@@ -28,8 +26,6 @@ object CoursierCommand {
       .add(Publish)
       .add(Resolve)
       .add(Setup)
-      .add(Sonatype, "sonatype")
-      .add(SparkSubmit)
       .add(Uninstall)
       .add(Update)
       .reverse
@@ -46,8 +42,6 @@ object CoursierCommand {
       .add(Publish)
       .add(Resolve)
       .add(Setup)
-      .add(Sonatype, "sonatype")
-      .add(SparkSubmit)
       .add(Uninstall)
       .add(Update)
       .reverse
