@@ -44,7 +44,7 @@ import scala.util.control.NonFatal
     tmpDir: File
   ) =
     withLockFor(dir) {
-      logger0.extracting(entry.id, entry.url, dir)
+      logger0.extracting(entry.id, archive.getAbsolutePath, dir)
       val dir0 = try {
 
         JvmCache.deleteRecursive(tmpDir)
@@ -254,15 +254,15 @@ import scala.util.control.NonFatal
 
   def installed(): Task[Seq[String]] =
     Task.delay {
-      baseDirectory
-        .listFiles()
+      Option(baseDirectory.listFiles())
+        .map(_.toVector)
+        .getOrElse(Vector.empty)
         .filter { f =>
           !f.getName.startsWith(".") &&
             f.isDirectory
             // TODO Check that a java executable is there too?
         }
         .map(_.getName)
-        .toVector
         .sorted
     }
 
