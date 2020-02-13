@@ -10,7 +10,9 @@ final case class JavaHomeOptions(
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse
-    outputOptions: OutputOptions = OutputOptions()
+    outputOptions: OutputOptions = OutputOptions(),
+  setup: Boolean = false,
+  userHome: Option[String] = None
 )
 
 object JavaHomeOptions {
