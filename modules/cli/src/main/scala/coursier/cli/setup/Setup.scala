@@ -8,6 +8,7 @@ import caseapp.core.RemainingArgs
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
+import coursier.jvm.JvmCache
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
@@ -87,12 +88,12 @@ object Setup extends CaseApp[SetupOptions] {
     // TODO Better error messages for relevant exceptions
     try task.unsafeRun()(cache.ec)
     catch {
-      case e: InstallDir.InstallDirException =>
+      case e: InstallDir.InstallDirException if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
-        if (params.output.verbosity >= 2)
-          throw e
-        else
-          sys.exit(1)
+        sys.exit(1)
+      case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
+        System.err.println(e.getMessage)
+        sys.exit(1)
     }
   }
 }

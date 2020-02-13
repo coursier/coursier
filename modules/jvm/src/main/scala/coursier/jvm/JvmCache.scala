@@ -44,7 +44,7 @@ import scala.util.control.NonFatal
     tmpDir: File
   ) =
     withLockFor(dir) {
-      logger0.extracting(entry.id, entry.url, dir)
+      logger0.extracting(entry.id, archive.getAbsolutePath, dir)
       val dir0 = try {
 
         JvmCache.deleteRecursive(tmpDir)
@@ -52,14 +52,14 @@ import scala.util.control.NonFatal
 
         val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
           case Array() =>
-            throw new Exception(s"$archive is empty (from ${entry.url})")
+            throw new JvmCache.EmptyArchive(archive, entry.url)
           case Array(rootDir0) =>
             if (rootDir0.isDirectory)
               rootDir0
             else
-              throw new Exception(s"$archive does not contain a directory (from ${entry.url})")
+              throw new JvmCache.NoDirectoryFoundInArchive(archive, entry.url)
           case other =>
-            throw new Exception(s"Unexpected content at the root of $archive (from ${entry.url}): ${other.toSeq}")
+            throw new JvmCache.UnexpectedContentInArchive(archive, entry.url, other.map(_.getName).toSeq)
         }
         Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
         JvmCache.deleteRecursive(tmpDir)
@@ -97,7 +97,7 @@ import scala.util.control.NonFatal
     logger: Option[JvmCacheLogger],
     installIfNeeded: Boolean
   ): Task[File] = {
-    val dir = directory(entry)
+    val dir = baseDirectoryOf(entry.id)
     val tmpDir = tempDirectory(dir)
     val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
 
@@ -138,19 +138,19 @@ import scala.util.control.NonFatal
 
                           shouldTryAgainTask.flatMap {
                             case false =>
-                              Task.fail(new Exception(s"Directory $dir still locked after $max"))
+                              Task.fail(new JvmCache.TimeoutOnLockedDirectory(dir, max))
                             case true =>
                               Task.completeAfter(executor, durationBetweenChecks)
                                 .flatMap { _ => task }
                           }
 
                         case _ =>
-                          Task.fail(new Exception(s"Directory $dir is locked"))
+                          Task.fail(new JvmCache.LockedDirectory(dir))
                       }
                   }
               }
             } else
-              Task.fail(new Exception(s"$dir not found"))
+              Task.fail(new JvmCache.JvmNotFound(entry.id, dir))
         }
 
         task.map(JvmCache.finalDirectory(_, os))
@@ -159,12 +159,12 @@ import scala.util.control.NonFatal
 
   def entry(id: String): Task[Either[String, JvmIndexEntry]] =
     index match {
-      case None => Task.fail(new Exception("No index specified"))
+      case None => Task.fail(new JvmCache.NoIndexSpecified)
       case Some(indexTask) =>
         indexTask.flatMap { index0 =>
           JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
             case None =>
-              Task.fail(new Exception(s"Malformed JVM id '$id'"))
+              Task.fail(new JvmCache.MalformedJvmId(id))
             case Some((name, ver)) =>
               Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
           }
@@ -204,7 +204,7 @@ import scala.util.control.NonFatal
     get(id, installIfNeeded = true)
   def get(id: String, installIfNeeded: Boolean): Task[File] =
     entry(id).flatMap {
-      case Left(err) => Task.fail(new Exception(err))
+      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
       case Right(entry0) => get(entry0, None, installIfNeeded)
     }
 
@@ -254,15 +254,15 @@ import scala.util.control.NonFatal
 
   def installed(): Task[Seq[String]] =
     Task.delay {
-      baseDirectory
-        .listFiles()
+      Option(baseDirectory.listFiles())
+        .map(_.toVector)
+        .getOrElse(Vector.empty)
         .filter { f =>
           !f.getName.startsWith(".") &&
             f.isDirectory
             // TODO Check that a java executable is there too?
         }
         .map(_.getName)
-        .toVector
         .sorted
     }
 
@@ -344,24 +344,42 @@ object JvmCache {
   }
 
 
-  private lazy val defaultBaseDirectory0: File = {
-
-    val fromProps = Option(System.getProperty("coursier.jvm-dir")).map(new File(_))
-    def fromEnv = Option(System.getenv("COURSIER_JVM_DIR")).map(new File(_))
-    def default = {
-      val cacheDir = CoursierPaths.projectCacheDirectory()
-      new File(cacheDir, "jvm")
-    }
-
-    fromProps
-      .orElse(fromEnv)
-      .getOrElse(default)
-  }
+  private lazy val defaultBaseDirectory0: File =
+    CoursierPaths.jvmCacheDirectory()
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
       f.listFiles().foreach(deleteRecursive)
     f.delete()
   }
+
+  sealed abstract class JvmCacheException(message: String, parent: Throwable = null)
+    extends Exception(message, parent)
+
+  final class EmptyArchive(val archive: File, val archiveUrl: String)
+    extends JvmCacheException(s"$archive is empty (from $archiveUrl)")
+  final class NoDirectoryFoundInArchive(val archive: File, val archiveUrl: String)
+    extends JvmCacheException(s"$archive does not contain a directory (from $archiveUrl)")
+
+  final class UnexpectedContentInArchive(val archive: File, val archiveUrl: String, val rootFileNames: Seq[String])
+    extends JvmCacheException(s"Unexpected content at the root of $archive (from $archiveUrl): ${rootFileNames.mkString(", ")}")
+
+  final class TimeoutOnLockedDirectory(val directory: File, val timeout: Duration)
+    extends JvmCacheException(s"Directory $directory is locked")
+
+  final class LockedDirectory(val directory: File)
+    extends JvmCacheException(s"Directory $directory is locked")
+
+  final class JvmNotFound(val id: String, val expectedLocation: File)
+    extends JvmCacheException(s"JVM $id not found at $expectedLocation")
+
+  final class NoIndexSpecified
+    extends JvmCacheException("No index specified")
+
+  final class MalformedJvmId(val id: String)
+    extends JvmCacheException(s"Malformed JVM id '$id'")
+
+  final class JvmNotFoundInIndex(val id: String, val reason: String)
+    extends JvmCacheException(s"JVM $id not found in index: $reason")
 
 }

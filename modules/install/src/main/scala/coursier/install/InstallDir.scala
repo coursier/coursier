@@ -31,7 +31,8 @@ import scala.util.control.NonFatal
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
   os: String = System.getProperty("os.name", ""),
   nativeImageJavaHome: Option[String => Task[File]] = None,
-  onlyPrebuilt: Boolean = false
+  onlyPrebuilt: Boolean = false,
+  preferPrebuilt: Boolean = true
 ) {
 
   private lazy val isWindows =
@@ -116,7 +117,7 @@ import scala.util.control.NonFatal
           None
       }
 
-      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(desc, cache, verbosity)
+      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt)
 
       val appArtifacts = prebuiltOrNotFoundUrls0 match {
         case Left(_) => desc.artifacts(cache, verbosity)
@@ -440,34 +441,51 @@ object InstallDir {
   }
 
 
-  private def prebuiltUrlsOpt(
+  private def candidatePrebuiltArtifacts(
     desc: AppDescriptor,
     cache: Cache[Task],
-    verbosity: Int
-  ): Option[(String, Seq[String])] =
+    verbosity: Int,
+    platform: Option[String],
+    platformExtensions: Seq[String],
+    preferPrebuilt: Boolean
+  ): Option[Seq[Artifact]] =
     desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).map { pattern =>
-      val version = desc.retainedMainVersion(cache, verbosity)
-        .orElse(desc.mainVersionOpt)
-        .getOrElse("")
-      val baseUrl = pattern
-        .replaceAllLiterally("${version}", version)
-        .replaceAllLiterally("${platform}", platform.getOrElse(""))
-      (version, platformExtensions.map(ext => baseUrl + ext) ++ Seq(baseUrl))
+      val it = {
+        val it0 = desc.candidateMainVersions(cache, verbosity)
+        if (it0.hasNext) it0
+        else desc.mainVersionOpt.iterator
+      }
+      it
+        // check the latest 5 versions if preferPrebuilt is true
+        // FIXME Don't hardcode that number?
+        .take(if (preferPrebuilt) 5 else 1)
+        .flatMap { version =>
+          val baseUrl = pattern
+            .replaceAllLiterally("${version}", version)
+            .replaceAllLiterally("${platform}", platform.getOrElse(""))
+          platformExtensions.iterator.map(ext => (version, baseUrl + ext)) ++ Iterator.single((version, baseUrl))
+        }
+        .map {
+          case (version, url) =>
+            // FIXME Make this changing all the time? Allow to change that?
+            Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
+        }
+        .toVector
     }
 
   private def prebuiltOrNotFoundUrls(
     desc: AppDescriptor,
     cache: Cache[Task],
-    verbosity: Int
+    verbosity: Int,
+    platform: Option[String],
+    platformExtensions: Seq[String],
+    preferPrebuilt: Boolean
   ): Either[Seq[String], (Artifact, File)] =
-    prebuiltUrlsOpt(desc, cache, verbosity).toRight(Nil).flatMap {
-      case (version, urls) =>
+    candidatePrebuiltArtifacts(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt).toRight(Nil).flatMap { artifacts =>
 
-        val iterator = urls.iterator.flatMap { url =>
+        val iterator = artifacts.iterator.flatMap { artifact =>
           if (verbosity >= 2)
-            System.err.println(s"Checking prebuilt launcher at $url")
-          // FIXME Make this changing all the time? Allow to change that?
-          val artifact = Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
+            System.err.println(s"Checking prebuilt launcher at ${artifact.url}")
           cache.loggerOpt.foreach(_.init())
           val maybeFile =
             try cache.file(artifact).run.unsafeRun()(cache.ec)
@@ -475,13 +493,13 @@ object InstallDir {
           maybeFile match {
             case Left(e: ArtifactError.NotFound) =>
               if (verbosity >= 2)
-                System.err.println(s"No prebuilt launcher found at $url")
+                System.err.println(s"No prebuilt launcher found at ${artifact.url}")
               Iterator.empty
             case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
             case Right(f) =>
               if (verbosity >= 1) {
                 val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-                System.err.println(s"Found prebuilt launcher at $url ($size)")
+                System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
               }
               Iterator.single((artifact, f))
           }
@@ -490,7 +508,7 @@ object InstallDir {
         if (iterator.hasNext)
           Right(iterator.next())
         else
-          Left(urls)
+          Left(artifacts.map(_.url))
     }
 
   def auxName(name: String, auxExtension: String): String = {

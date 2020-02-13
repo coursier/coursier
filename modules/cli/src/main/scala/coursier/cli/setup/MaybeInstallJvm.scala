@@ -16,6 +16,8 @@ import dataclass.data
   defaultId: String = JavaHome.defaultJvm
 ) extends SetupStep {
 
+  import MaybeInstallJvm.headerComment
+
   import MaybeSetupPath.dirStr
 
   def banner: String =
@@ -138,9 +140,6 @@ import dataclass.data
     }
   }
 
-  private def headerComment = "JVM installed by coursier"
-
-
   def tryRevert: Task[Unit] = {
 
     val maybeRemoveJvm = javaHome.cache
@@ -175,5 +174,11 @@ import dataclass.data
 
     maybeRemoveJvm
   }
+
+}
+
+object MaybeInstallJvm {
+
+  def headerComment = "JVM installed by coursier"
 
 }

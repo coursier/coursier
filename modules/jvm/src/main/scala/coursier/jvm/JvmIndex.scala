@@ -43,17 +43,19 @@ object JvmIndex {
         case (os, m1) =>
           os -> m1.map {
             case (arch, m2) =>
-              arch -> m2.map {
+              arch -> m2.flatMap {
                 case (jdkName @ "jdk@graalvm", m3) =>
-                  jdkName -> m3.map {
+                  val jdk8 = jdkName -> m3.map {
                     case (version, url) =>
                       version -> url.replaceAllLiterally("-java11-", "-java8-")
                   }
-                case (jdkName, m3) =>
-                  jdkName -> m3.map {
-                    case (version, url) =>
-                      version -> url
+                  val jdk11 = s"$jdkName-java11" -> m3.collect {
+                    case (version, url) if url.contains("-java8-") || url.contains("-java11-") =>
+                      version -> url.replaceAllLiterally("-java8-", "-java11-")
                   }
+                  Seq(jdk8, jdk11).filter(_._2.nonEmpty)
+                case (jdkName, m3) =>
+                  Seq(jdkName -> m3)
               }
           }
       }
@@ -157,4 +159,22 @@ object JvmIndex {
       (archiveType, url) = archiveTypeUrl
     } yield JvmIndexEntry(os, arch, name, retainedVersion, archiveType, url)
   }
+
+  def available(
+    os: Option[String] = None,
+    arch: Option[String] = None,
+    jdkNamePrefix: Option[String] = Some("jdk@")
+  ): Either[String, Map[String, Map[String, String]]] =
+    for {
+      os <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
+      arch <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      osIndex <- content.get(os).toRight(s"No JVM found for OS $os")
+      archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
+    } yield {
+      archIndex.map {
+        case (name, versionMap) =>
+          val name0 = jdkNamePrefix.fold(name)(name.stripPrefix)
+          name0 -> versionMap
+      }
+    }
 }
