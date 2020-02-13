@@ -13,7 +13,8 @@ final case class LaunchParams(
   sharedJava: SharedJavaParams,
   javaOptions: Seq[String],
   jep: Boolean,
-  fetchCacheIKnowWhatImDoing: Option[String]
+  fetchCacheIKnowWhatImDoing: Option[String],
+  execve: Option[Boolean]
 ) {
   lazy val fork: Boolean =
     shared.fork.getOrElse(jep || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
@@ -50,7 +51,8 @@ object LaunchParams {
         sharedJava,
         options.javaOpt,
         options.jep,
-        options.fetchCacheIKnowWhatImDoing
+        options.fetchCacheIKnowWhatImDoing,
+        options.execve
       )
     }
   }

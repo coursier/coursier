@@ -21,6 +21,9 @@ final case class LaunchOptions(
 
   fetchCacheIKnowWhatImDoing: Option[String] = None,
 
+  @Help("Launch child application via execve (replaces the coursier process)")
+    execve: Option[Boolean] = None,
+
   json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
 
   jep: Boolean = false

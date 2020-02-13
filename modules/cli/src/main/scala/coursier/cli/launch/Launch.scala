@@ -17,6 +17,7 @@ import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
+import coursier.jvm.Execve
 import coursier.launcher.{BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Parameters}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
@@ -48,7 +49,8 @@ object Launch extends CaseApp[LaunchOptions] {
     javaOptions: Seq[String],
     properties: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
-    verbosity: Int
+    verbosity: Int,
+    execve: Option[Boolean]
   ): Either[LaunchException, () => Int] = {
 
     val cp = hierarchy match {
@@ -75,6 +77,12 @@ object Launch extends CaseApp[LaunchOptions] {
         Left(tmpFile.toAbsolutePath.toFile)
     }
 
+    val execve0 = Execve.available() && new File(javaPath).exists() && execve.getOrElse {
+      // See comment above - we keep the current process alive to clean up the
+      // temporary bootstrap if cp is left
+      cp.isRight
+    }
+
     val cpOpts = cp match {
       case Right(cp0) => Seq("-cp", cp0, mainClass)
       case Left(jar) => Seq("-jar", jar.getAbsolutePath)
@@ -86,20 +94,32 @@ object Launch extends CaseApp[LaunchOptions] {
       cpOpts ++
       args
 
-    val b = new ProcessBuilder()
-    b.command(cmd: _*)
-    b.inheritIO()
+    lazy val b = {
+      val b0 = new ProcessBuilder(cmd: _*)
+      b0.inheritIO()
 
-    val env = b.environment()
-    for ((k, v) <- extraEnv.transientUpdates())
-      env.put(k, v)
+      val env = b0.environment()
+      for ((k, v) <- extraEnv.transientUpdates())
+        env.put(k, v)
+      b0
+    }
 
     Right {
       () =>
         if (verbosity >= 1)
           System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
-        val p = b.start()
-        p.waitFor()
+        if (execve0) {
+          Execve.execve(
+            new File(javaPath).getAbsolutePath,
+            cmd.toArray,
+            extraEnv.transientUpdates().map { case (k, v) => s"$k=$v" }.toArray
+          )
+          // execve should not return
+          sys.error("something went wrong")
+        } else {
+          val p = b.start()
+          p.waitFor()
+        }
     }
   }
 
@@ -300,7 +320,8 @@ object Launch extends CaseApp[LaunchOptions] {
         params.javaOptions,
         properties0,
         extraEnv,
-        params.shared.resolve.output.verbosity
+        params.shared.resolve.output.verbosity,
+        params.execve
       )
         .map(f => () => Some(f()))
     else
