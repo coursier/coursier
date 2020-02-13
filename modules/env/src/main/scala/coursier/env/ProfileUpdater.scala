@@ -20,7 +20,7 @@ import dataclass.data
     val main = home.toSeq.map(_.resolve(".profile"))
 
     val zprofile = {
-      val isZsh = getEnv.exists(_("SHELL").contains("zsh"))
+      val isZsh = getEnv.flatMap(_("SHELL")).exists(_.contains("zsh"))
       if (isZsh) {
         val zDotDirOpt = getEnv.flatMap { getEnv0 =>
           getEnv0("ZDOTDIR")

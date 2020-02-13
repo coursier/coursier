@@ -59,7 +59,7 @@ class ProfileUpdaterTests extends FlatSpec {
   it should "create ~/.profile and ~/.zprofile" in {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
-    val env = Map("SHELL" -> "zsh")
+    val env = Map("SHELL" -> "/bin/zsh")
     val update = ProfileUpdater()
       .withHome(Some(home))
       .withGetEnv(Some(env.get))
@@ -95,7 +95,7 @@ class ProfileUpdaterTests extends FlatSpec {
     Files.write(bashProfilePath, Array.emptyByteArray)
 
     val home = fs.getPath("/home/alex")
-    val env = Map("SHELL" -> "zsh")
+    val env = Map("SHELL" -> "/bin/zsh")
     val update = ProfileUpdater()
       .withHome(Some(home))
       .withGetEnv(Some(env.get))
@@ -130,7 +130,7 @@ class ProfileUpdaterTests extends FlatSpec {
   it should "take ZDOTDIR into account" in {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
-    val env = Map("SHELL" -> "zsh", "ZDOTDIR" -> "/the/zdotdir")
+    val env = Map("SHELL" -> "/bin/zsh", "ZDOTDIR" -> "/the/zdotdir")
     val update = ProfileUpdater()
       .withHome(Some(home))
       .withGetEnv(Some(env.get))
