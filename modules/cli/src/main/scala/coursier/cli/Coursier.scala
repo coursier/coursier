@@ -14,7 +14,6 @@ import coursier.cli.install.{Install, Uninstall, Update}
 import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
-import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.core.Version
@@ -113,13 +112,11 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Resolve.run(resolveOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions)))))))))) =>
         Setup.run(setupOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))))) =>
-        Sonatype.run(sonatypeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions)))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))) =>
         Uninstall.run(uninstallOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))) =>
         cnil.impossible
     }
 
