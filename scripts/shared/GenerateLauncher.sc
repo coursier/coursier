@@ -58,12 +58,18 @@ def nativeImage(
       Util.output(cpCmd).trim
     }
 
+  val mem =
+    if (Util.os == "linux") "3584m"
+    else "3g"
+
   def run(extraNativeImageOpts: String*): Unit = {
 
     val cmd = Seq(
       coursierLauncher,
       "launch",
-      "--jvm", "graalvm:19.3",
+      // "--jvm", "graalvm:19.3",
+      // "--java-opt", s"-Xmx$memm",
+      // "--fork",
       "org.graalvm.nativeimage:svm-driver:19.3.1",
       "--",
       "-cp", cp
@@ -73,10 +79,6 @@ def nativeImage(
     )
 
     System.err.println("Running " + cmd.mkString(" "))
-
-    val mem =
-      if (Util.os == "linux") "3584m"
-      else "3g"
 
     Util.run(cmd, Seq("JAVA_OPTS" -> s"-Xmx$mem"))
   }
