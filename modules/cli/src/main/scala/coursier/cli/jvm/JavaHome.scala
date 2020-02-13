@@ -29,6 +29,11 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     logger.init()
     val home =
       try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
+      catch {
+        case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+      }
       finally logger.stop()
 
     println(home.getAbsolutePath)
