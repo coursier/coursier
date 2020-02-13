@@ -97,7 +97,7 @@ import scala.util.control.NonFatal
     logger: Option[JvmCacheLogger],
     installIfNeeded: Boolean
   ): Task[File] = {
-    val dir = directory(entry)
+    val dir = baseDirectoryOf(entry.id)
     val tmpDir = tempDirectory(dir)
     val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
 
