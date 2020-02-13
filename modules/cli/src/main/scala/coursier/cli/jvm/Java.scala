@@ -14,6 +14,13 @@ object Java extends CaseApp[JavaOptions] {
   override def stopAtFirstUnrecognized = true
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
 
+    // that should probably be fixed by case-app
+    val args0 =
+      if (args.remaining.headOption.contains("--"))
+        args.all.drop(1)
+      else
+        args.all
+
     val csJavaFailVariable = coursier.jvm.JavaHome.csJavaFailVariable
     if (Option(System.getenv(csJavaFailVariable)).nonEmpty) {
       System.err.println(s"$csJavaFailVariable is set, refusing to do anything.")
@@ -22,8 +29,8 @@ object Java extends CaseApp[JavaOptions] {
 
     val params = JavaParams(options).exitOnError()
 
-    if ((params.env || params.installed || params.available) && args.all.nonEmpty) {
-      System.err.println(s"Error: unexpected arguments passed along --env, --installed, or --available: ${args.all.mkString(" ")}")
+    if ((params.env || params.installed || params.available) && args0.nonEmpty) {
+      System.err.println(s"Error: unexpected arguments passed along --env, --installed, or --available: ${args0.mkString(" ")}")
       sys.exit(1)
     }
 
@@ -131,11 +138,11 @@ object Java extends CaseApp[JavaOptions] {
               s"$k=$v"
           }
           .sorted
-        Execve.execve(javaBin.getAbsolutePath, (javaBin.getAbsolutePath +: args.all).toArray, fullEnv)
+        Execve.execve(javaBin.getAbsolutePath, (javaBin.getAbsolutePath +: args0).toArray, fullEnv)
         System.err.println("should not happen")
         sys.exit(1)
       } else {
-        val b = new ProcessBuilder((javaBin.getAbsolutePath +: args.all): _*)
+        val b = new ProcessBuilder((javaBin.getAbsolutePath +: args0): _*)
         b.inheritIO()
         val env = b.environment()
         for ((k, v) <- extraEnv)
