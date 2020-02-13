@@ -9,6 +9,8 @@ import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import dataclass._
+import coursier.core.Parse
+import coursier.core.Latest
 
 @data class AppDescriptor(
   repositories: Seq[Repository] = Nil,
@@ -175,10 +177,10 @@ import dataclass._
   }
 
   // TODO Change return type to Task[Option[String]] (and don't call unsafeRun via Resolve.run())
-  def retainedMainVersion(
+  def candidateMainVersions(
     cache: Cache[Task],
     verbosity: Int
-  ): Option[String] = {
+  ): Iterator[String] = {
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
@@ -195,24 +197,48 @@ import dataclass._
       case Right(t) => t
     }
 
-    val hasFullCrossVersionDeps = dependencies.exists {
-      case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
-      case _ => false
+    if (deps.isEmpty)
+      Iterator.empty
+    else {
+
+      def versions() = coursier.Versions()
+        .withModule(deps.head.module)
+        .withRepositories(repositories)
+        .withCache(cache)
+        .result()
+        .unsafeRun()(cache.ec)
+        .versions
+
+      Latest(deps.head.version) match {
+        case Some(kind) =>
+          versions().candidates(kind)
+        case None =>
+          val c = Parse.versionConstraint(deps.head.version)
+          if (c.preferred.isEmpty)
+            versions().candidatesInInterval(c.interval)
+          else {
+            val hasFullCrossVersionDeps = dependencies.exists {
+              case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
+              case _ => false
+            }
+
+            val resolutionParams = ResolutionParams()
+              .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+
+            val res = coursier.Resolve()
+              .withDependencies(deps.take(1).map(_.withTransitive(false)))
+              .withRepositories(repositories)
+              .withResolutionParams(resolutionParams)
+              .withCache(cache)
+              .run()
+
+            res.retainedVersions.get(deps.head.module)
+              .flatMap(v => res.projectCache.get((deps.head.module, v)))
+              .map(_._2.version)
+              .iterator
+          }
+      }
     }
-
-    val resolutionParams = ResolutionParams()
-      .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
-
-    val res = coursier.Resolve()
-      .withDependencies(deps.take(1).map(_.withTransitive(false)))
-      .withRepositories(repositories)
-      .withResolutionParams(resolutionParams)
-      .withCache(cache)
-      .run()
-
-    res.retainedVersions.get(deps.head.module)
-      .flatMap(v => res.projectCache.get((deps.head.module, v)))
-      .map(_._2.version)
   }
 
   // Adds the final version of the first dependency in the java properties

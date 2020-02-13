@@ -11,6 +11,11 @@ final case class SharedInstallOptions(
   @Short("dir")
     installDir: Option[String] = None,
 
+  @Help("Platform for prebuilt binaries (e.g. \"x86_64-pc-linux\", \"x86_64-apple-darwin\", \"x86_64-pc-win32\")")
+    installPlatform: Option[String] = None,
+
+  installPreferPrebuilt: Boolean = true,
+
   @Help("Require prebuilt artifacts for native applications, don't try to build native executable ourselves")
     onlyPrebuilt: Boolean = false,
 

@@ -16,7 +16,9 @@ final case class SharedInstallParams(
   repositories: Seq[Repository],
   dir: Path,
   graalvmParamsOpt: Option[GraalvmParams] = None,
-  onlyPrebuilt: Boolean
+  onlyPrebuilt: Boolean,
+  platformOpt: Option[String],
+  preferPrebuilt: Boolean
 ) {
 
   def installDir(cache: Cache[Task]): InstallDir =
@@ -24,6 +26,8 @@ final case class SharedInstallParams(
       .withGraalvmParamsOpt(graalvmParamsOpt)
       .withCoursierRepositories(repositories)
       .withOnlyPrebuilt(onlyPrebuilt)
+      .withPlatform(platformOpt)
+      .withPreferPrebuilt(preferPrebuilt)
 }
 
 object SharedInstallParams {
@@ -60,12 +64,18 @@ object SharedInstallParams {
 
     val onlyPrebuilt = options.onlyPrebuilt
 
+    val platformOpt = options.installPlatform.orElse(InstallDir.platform())
+
+    val preferPrebuilt = options.installPreferPrebuilt
+
     repositoriesV.map { repositories =>
       SharedInstallParams(
         defaultRepositories ++ repositories,
         dir,
         Some(graalvmParams),
-        onlyPrebuilt
+        onlyPrebuilt,
+        platformOpt,
+        preferPrebuilt
       )
     }
   }
