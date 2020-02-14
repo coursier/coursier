@@ -3,7 +3,7 @@ package coursier.install
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.Instant
 import java.util.Locale
 
@@ -370,9 +370,18 @@ import scala.util.control.NonFatal
 
 object InstallDir {
 
-  private lazy val defaultDir0: Path =
-    // TODO Take some env var / Java props into account too
-    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+  private lazy val defaultDir0: Path = {
+
+    val fromEnv = Option(System.getenv("COURSIER_BIN_DIR")).filter(_.nonEmpty)
+      .orElse(Option(System.getenv("COURSIER_INSTALL_DIR")).filter(_.nonEmpty))
+
+    def fromProps = Option(System.getProperty("coursier.install.dir"))
+
+    def default = coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+
+    fromEnv.orElse(fromProps).map(Paths.get(_))
+      .getOrElse(default)
+  }
 
   def defaultDir: Path =
     defaultDir0
