@@ -8,6 +8,7 @@ import java.util.Locale
 
 import coursier.cache.{Cache, CacheLocks, CacheLogger, FileCache}
 import coursier.cache.internal.ThreadUtil
+import coursier.core.Version
 import coursier.paths.CoursierPaths
 import coursier.util.{Artifact, Task}
 import dataclass.data
@@ -263,7 +264,18 @@ import scala.util.control.NonFatal
             // TODO Check that a java executable is there too?
         }
         .map(_.getName)
+        .map { id =>
+          val idx = id.indexOf('@')
+          if (idx < 0)
+            (id, "", Version(""))
+          else
+            (id.take(idx), "@", Version(id.drop(idx + 1)))
+        }
         .sorted
+        .map {
+          case (name, sep, ver) =>
+            name + sep + ver.repr
+        }
     }
 
   def withIndex(index: Task[JvmIndex]): JvmCache =
