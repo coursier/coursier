@@ -573,9 +573,9 @@ object InstallDir {
   // FIXME Keep more details
   final class NoScalaVersionFound extends InstallDirException("No scala version found")
 
-  final class LauncherNotFound(path: Path) extends InstallDirException(s"$path not found")
+  final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
 
-  final class NoPrebuiltBinaryAvailable(candidateUrls: Seq[String])
+  final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
     extends InstallDirException(
       if (candidateUrls.isEmpty)
         "No prebuilt binary available"
@@ -583,7 +583,10 @@ object InstallDir {
         s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
     )
 
-  final class CannotReadAppDescriptionInLauncher(path: Path)
+  final class CannotReadAppDescriptionInLauncher(val path: Path)
     extends InstallDirException(s"Cannot read app description in $path")
+
+  final class NotAnApplication(val path: Path)
+    extends InstallDirException(s"File $path wasn't installed by cs install")
 
 }

@@ -55,7 +55,13 @@ object Uninstall extends CaseApp[UninstallOptions] {
         System.err.println("Nothing to remove")
     } else
       for (app <- list) {
-        val resOpt = installDir.delete(app)
+        val resOpt =
+          try installDir.delete(app)
+          catch {
+            case e: InstallDir.InstallDirException if params.verbosity <= 1 =>
+              System.err.println(e.getMessage)
+              sys.exit(1)
+          }
         resOpt match {
           case None =>
             if (params.verbosity >= 0)
