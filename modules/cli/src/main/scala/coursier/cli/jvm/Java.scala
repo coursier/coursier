@@ -123,7 +123,7 @@ object Java extends CaseApp[JavaOptions] {
         sys.exit(1)
       }
 
-      val extraEnv = envUpdate.transientUpdates()
+      val extraEnv = envUpdate.scriptUpdates()
 
       if (params.env) {
         val q = "\""

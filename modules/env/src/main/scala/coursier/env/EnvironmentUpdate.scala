@@ -20,6 +20,15 @@ import scala.collection.mutable
   def isEmpty: Boolean =
     set.isEmpty && pathLikeAppends.isEmpty
 
+
+  // references previous values with as variables
+  def scriptUpdates(): Seq[(String, String)] =
+    updatedEnv(
+      k => Some(s"$$$k"),
+      File.pathSeparator,
+      upfront = true
+    )
+
   // puts the "path-like appends" upfront, better not to persist these updates
   def transientUpdates(): Seq[(String, String)] =
     updatedEnv(
@@ -51,7 +60,7 @@ import scala.collection.mutable
         }
         m(k) = newValue
       }
-      l.toList.map(k => k -> m(k))
+      set ++ l.toList.map(k => k -> m(k))
     }
 
 
