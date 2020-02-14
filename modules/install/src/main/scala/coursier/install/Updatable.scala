@@ -117,19 +117,23 @@ object Updatable {
 
   def delete[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int): Option[Boolean] = {
 
-    val files = relatedFiles(dest, auxExtension)
+    if (InfoFile.isInfoFile(dest)) {
 
-    def get: Boolean = {
+      val files = relatedFiles(dest, auxExtension)
 
-      val foundSomething = files.list.exists(Files.exists(_))
+      def get: Boolean = {
 
-      foundSomething && {
-        files.list.foreach(Files.deleteIfExists(_))
-        true
+        val foundSomething = files.list.exists(Files.exists(_))
+
+        foundSomething && {
+          files.list.foreach(Files.deleteIfExists(_))
+          true
+        }
       }
-    }
 
-    CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
+      CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
+    } else
+      throw new InstallDir.NotAnApplication(dest)
   }
 
 }

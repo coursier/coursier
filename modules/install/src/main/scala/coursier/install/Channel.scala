@@ -101,6 +101,6 @@ object Channel {
         case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
       }
     else
-      Right(FromDirectory(fs.getPath(s)))
+      Right(FromDirectory(fs.getPath(s).toAbsolutePath))
 
 }

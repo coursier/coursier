@@ -139,7 +139,6 @@ object Resolve extends CaseApp[ResolveOptions] {
             params.dependency.platformOpt,
             params.output.verbosity
           )
-          .left.map(err => new Exception(err))
       }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
@@ -309,7 +308,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
-            case Left(e) => Task.fail(e)
+            case Left(e) => Task.fail(new Exception(e))
             case Right(res) => Task.point(Right(res))
           }
           .unsafeRun()(channels.cache.ec)
@@ -368,9 +367,12 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     t.attempt.unsafeRun()(ec) match {
       case Left(e: ResolveException) if params.output.verbosity <= 1 =>
-        Output.errPrintln(e.message)
+        Output.errPrintln(e.getMessage)
         sys.exit(1)
-      case Left(e) => throw e
+      case Left(e: AppArtifacts.AppArtifactsException) if params.output.verbosity <= 1 =>
+        Output.errPrintln(e.getMessage)
+        sys.exit(1)
+      case Left(e) => throw new Exception(e)
       case Right(_) =>
     }
   }

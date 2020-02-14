@@ -54,6 +54,8 @@ object JavaOrScalaDependency {
     def module: JavaOrScalaModule.ScalaModule =
       // FIXME withPlatformSuffix not supported in JavaOrScalaModule.ScalaModule
       JavaOrScalaModule.ScalaModule(baseDependency.module, fullCrossVersion)
+    def repr: String =
+      s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.version}"
     def version: String =
       baseDependency.version
     def dependency(scalaBinaryVersion: String, scalaVersion: String, platformName: String): Dependency = {
