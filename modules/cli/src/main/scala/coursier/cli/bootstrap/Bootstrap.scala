@@ -27,7 +27,6 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     params: BootstrapParams,
     pool: ExecutorService,
     dependencyArgs: Seq[String],
-    userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
   ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)], String)] =
@@ -179,13 +178,13 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
       val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
       val channels0 = Channels(channels, initialRepositories, cache)
-      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
+      val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
       res
     }
 
@@ -204,8 +203,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val t = task(
       params,
       pool,
-      deps,
-      Nil
+      deps
     )
 
     val (res, scalaVersion, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
@@ -289,7 +287,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withJars(files.map(_._2))
           .withGraalvmVersion(params.specific.graalvmVersionOpt)
           .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
-          .withGraalvmOptions(params.specific.graalvmOptions)
+          .withGraalvmOptions(params.specific.graalvmOptions ++ args.unparsed)
           .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
           .withJavaHome(javaHome)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
