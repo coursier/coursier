@@ -40,14 +40,58 @@ import dataclass.data
     main ++ zprofile ++ bashProfile
   }
 
-  private def addToProfileFiles(addition: String): Boolean = {
+  private def startEndIndices(start: String, end: String, content: String): Option[(Int, Int)] = {
+    val startIdx = content.indexOf(start)
+    if (startIdx >= 0) {
+      val endIdx = content.indexOf(end, startIdx + 1)
+      if (endIdx >= 0)
+        Some(startIdx, endIdx + end.length)
+      else
+        None
+    } else
+      None
+  }
+
+  private def addToProfileFiles(addition: String, titleOpt: Option[String]): Boolean = {
+
+    def updated(content: String): Option[String] =
+      titleOpt match {
+        case None =>
+          if (content.contains(addition))
+            None
+          else
+            Some {
+              content + "\n" +
+                addition.stripSuffix("\n") + "\n"
+            }
+        case Some(title) =>
+          val start = s"# >>> $title >>>\n"
+          val end = s"# <<< $title <<<\n"
+          val withTags = "\n" +
+            start +
+            addition.stripSuffix("\n") + "\n" +
+            end
+          if (content.contains(withTags))
+            None
+          else
+            Some {
+              startEndIndices(start, end, content) match {
+                case None =>
+                  content + withTags
+                case Some((startIdx, endIdx)) =>
+                  content.take(startIdx) +
+                    withTags +
+                    content.drop(endIdx)
+              }
+            }
+      }
+
     var updatedSomething = false
     for (file <- profileFiles()) {
       val contentOpt = Some(file)
         .filter(Files.exists(_))
         .map(f => new String(Files.readAllBytes(f), charset))
-      if (!contentOpt.exists(_.contains(addition))) {
-        val updatedContent = contentOpt.getOrElse("") + addition
+      for (updatedContent <- updated(contentOpt.getOrElse(""))) {
         Option(file.getParent).map(Files.createDirectories(_))
         Files.write(file, updatedContent.getBytes(charset))
         updatedSomething = true
@@ -56,14 +100,34 @@ import dataclass.data
     updatedSomething
   }
 
-  private def removeFromProfileFiles(addition: String): Boolean = {
+  private def removeFromProfileFiles(additionOpt: Option[String], titleOpt: Option[String]): Boolean = {
+
+    def updated(content: String): Option[String] =
+      titleOpt match {
+        case None =>
+          additionOpt.flatMap { addition =>
+            if (content.contains(addition))
+              Some(content.replaceAllLiterally(addition, ""))
+            else
+              None
+          }
+        case Some(title) =>
+          val start = s"# >>> $title >>>\n"
+          val end = s"# <<< $title <<<\n"
+          startEndIndices(start, end, content).map {
+            case (startIdx, endIdx) =>
+              content.take(startIdx).stripSuffix("\n") +
+                content.drop(endIdx)
+          }
+      }
+
     var updatedSomething = false
     for (file <- profileFiles()) {
       val contentOpt = Some(file)
         .filter(Files.exists(_))
         .map(f => new String(Files.readAllBytes(f), charset))
-      if (addition.nonEmpty && contentOpt.exists(_.contains(addition))) {
-        val updatedContent = contentOpt.getOrElse("").replaceAllLiterally(addition, "")
+      for (updatedContent <- updated(contentOpt.getOrElse(""))) {
+        Option(file.getParent).map(Files.createDirectories(_))
         Files.write(file, updatedContent.getBytes(charset))
         updatedSomething = true
       }
@@ -71,19 +135,7 @@ import dataclass.data
     updatedSomething
   }
 
-  def addPath(dir: String*): Unit =
-    if (dir.nonEmpty) {
-      val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> dir.mkString(pathSeparator)))
-      applyUpdate(update, "added by coursier setup")
-    }
-
-  def setJavaHome(dir: String): Unit = {
-    val update = EnvironmentUpdate().withSet(Seq("JAVA_HOME" -> dir))
-    applyUpdate(update, "added by coursier setup")
-  }
-
-  private def contentFor(update: EnvironmentUpdate, headerComment: Option[String]): String = {
+  private def contentFor(update: EnvironmentUpdate): String = {
 
     val set = update
       .set
@@ -103,32 +155,24 @@ import dataclass.data
       }
       .mkString
 
-    "\n" +
-      headerComment
-        .iterator
-        .flatMap(_.linesIterator)
-        .map("# " + _ + "\n")
-        .mkString +
-      set +
-      updates
+    set + updates
   }
 
   def applyUpdate(update: EnvironmentUpdate): Boolean =
     applyUpdate(update, None)
-  def applyUpdate(update: EnvironmentUpdate, headerComment: String): Boolean =
-    applyUpdate(update, Some(headerComment))
-  def applyUpdate(update: EnvironmentUpdate, headerComment: Option[String]): Boolean = {
-    val addition = contentFor(update, headerComment)
-    addToProfileFiles(addition)
+  def applyUpdate(update: EnvironmentUpdate, title: String): Boolean =
+    applyUpdate(update, Some(title))
+  def applyUpdate(update: EnvironmentUpdate, title: Option[String]): Boolean = {
+    val addition = contentFor(update)
+    addToProfileFiles(addition, title)
   }
 
-  def tryRevertUpdate(update: EnvironmentUpdate): Boolean =
-    tryRevertUpdate(update, None)
-  def tryRevertUpdate(update: EnvironmentUpdate, headerComment: String): Boolean =
-    tryRevertUpdate(update, Some(headerComment))
-  def tryRevertUpdate(update: EnvironmentUpdate, headerComment: Option[String]): Boolean = {
-    val addition = contentFor(update, headerComment)
-    removeFromProfileFiles(addition)
+  def tryRevertUpdate(update: EnvironmentUpdate): Boolean = {
+    val addition = contentFor(update)
+    removeFromProfileFiles(Some(addition), None)
+  }
+  def tryRevertUpdate(title: String): Boolean = {
+    removeFromProfileFiles(None, Some(title))
   }
 
 }

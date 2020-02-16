@@ -119,7 +119,7 @@ import dataclass.data
       case Right(profileUpdater) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
-          profileUpdater.tryRevertUpdate(envUpdate, headerComment)
+          profileUpdater.tryRevertUpdate(headerComment)
         }
     }
 
