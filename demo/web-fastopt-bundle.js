@@ -13457,46 +13457,41 @@ function $asArrayOf_Lcoursier_core_ArtifactSource(obj, depth) {
   return (($isArrayOf_Lcoursier_core_ArtifactSource(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lcoursier.core.ArtifactSource;", depth))
 }
 function $f_Lcoursier_core_Repository$Complete__name__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Name__Lcoursier_util_Monad__O($thiz, nameInput, F) {
-  if ((nameInput === null)) {
-    throw new $c_s_MatchError().init___O(nameInput)
-  };
-  var org = nameInput.organization$2;
-  var input1 = nameInput.input$2;
-  var from = nameInput.from$2;
-  var requiredSuffix = nameInput.requiredSuffix$2;
-  var _1 = new $c_Lcoursier_core_Organization().init___T(org);
-  var org$2 = _1.value$1;
-  var this$2 = new $c_sci_StringOps().init___T(input1);
+  var jsx$1 = nameInput.organization$2;
+  var x = nameInput.input$2;
+  var this$2 = new $c_sci_StringOps().init___T(x);
+  var n = nameInput.from$2;
   var $$this = this$2.repr$1;
   var until = $uI($$this.length);
-  return F.map__O__F1__O($thiz.moduleName__T__T__O(org$2, $m_sci_StringOps$().slice$extension__T__I__I__T(this$2.repr$1, from, until)), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, org$2$1, input1$2, from$2, requiredSuffix$2, nameInput$1) {
+  return F.map__O__F1__O($thiz.moduleName__T__T__O(jsx$1, $m_sci_StringOps$().slice$extension__T__I__I__T(this$2.repr$1, n, until)), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, nameInput$1) {
     return (function(x0$1$2) {
       var x0$1 = $as_s_util_Either(x0$1$2);
       if ((x0$1 instanceof $c_s_util_Left)) {
         var x2 = $as_s_util_Left(x0$1);
         var e = $as_jl_Throwable(x2.value$2);
         $m_s_package$();
-        var value = new $c_Lcoursier_core_Repository$Complete$CompletingNameException().init___T__T__I__jl_Throwable(org$2$1, input1$2, from$2, e);
+        var value = new $c_Lcoursier_core_Repository$Complete$CompletingNameException().init___T__T__I__jl_Throwable(nameInput$1.organization$2, nameInput$1.input$2, nameInput$1.from$2, e);
         return new $c_s_util_Left().init___O(value)
       } else if ((x0$1 instanceof $c_s_util_Right)) {
         var x3 = $as_s_util_Right(x0$1);
         var l = $as_sc_Seq(x3.value$2);
-        var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, requiredSuffix$1) {
+        var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, nameInput$1$1) {
+          return (function(x$3$2) {
+            var x$3 = $as_T(x$3$2);
+            return $m_sjsr_RuntimeString$().endsWith__T__T__Z(x$3, nameInput$1$1.requiredSuffix$2)
+          })
+        })($this, nameInput$1));
+        var jsx$3 = $as_sc_TraversableLike(l.filterImpl__F1__Z__O(p, false));
+        var jsx$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, nameInput$1$2) {
           return (function(x$4$2) {
             var x$4 = $as_T(x$4$2);
-            return $m_sjsr_RuntimeString$().endsWith__T__T__Z(x$4, requiredSuffix$1)
+            var this$7 = new $c_sci_StringOps().init___T(x$4);
+            var suffix = nameInput$1$2.requiredSuffix$2;
+            return $f_sci_StringLike__stripSuffix__T__T(this$7, suffix)
           })
-        })($this, requiredSuffix$2));
-        var jsx$2 = $as_sc_TraversableLike(l.filterImpl__F1__Z__O(p, false));
-        var jsx$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, requiredSuffix$1$1) {
-          return (function(x$5$2) {
-            var x$5 = $as_T(x$5$2);
-            var this$7 = new $c_sci_StringOps().init___T(x$5);
-            return $f_sci_StringLike__stripSuffix__T__T(this$7, requiredSuffix$1$1)
-          })
-        })($this, requiredSuffix$2));
+        })($this, nameInput$1));
         var this$8 = $m_sc_Seq$();
-        var l0 = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$8.ReusableCBFInstance$2));
+        var l0 = $as_sc_Seq(jsx$3.map__F1__scg_CanBuildFrom__O(jsx$2, this$8.ReusableCBFInstance$2));
         $m_s_package$();
         var value$1 = new $c_Lcoursier_core_Repository$Complete$Result().init___Lcoursier_core_Repository$Complete$Input__sc_Seq(nameInput$1, l0);
         return new $c_s_util_Right().init___O(value$1)
@@ -13504,7 +13499,7 @@ function $f_Lcoursier_core_Repository$Complete__name__pLcoursier_core_Repository
         throw new $c_s_MatchError().init___O(x0$1)
       }
     })
-  })($thiz, org$2, input1, from, requiredSuffix, nameInput)))
+  })($thiz, nameInput)))
 }
 function $f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Org__Z__Lcoursier_util_Monad__O($thiz, orgInput, partial, F) {
   var check = F.map__O__F1__O($f_Lcoursier_core_Repository$Complete__org__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Org__Lcoursier_util_Monad__O($thiz, orgInput, F), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, orgInput$1, partial$1) {
@@ -13515,10 +13510,10 @@ function $f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Reposito
         var arg1 = this$1.get__O();
         var res$2$1 = $as_Lcoursier_core_Repository$Complete$Result(arg1);
         return (res$2$1.completions$1.contains__O__Z(orgInput$1.input$2) || (partial$1 && res$2$1.completions$1.exists__F1__Z(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this$1, orgInput$2) {
-          return (function(x$6$2) {
-            var x$6 = $as_T(x$6$2);
+          return (function(x$5$2) {
+            var x$5 = $as_T(x$5$2);
             var prefix = (orgInput$2.input$2 + ".");
-            return (($uI(x$6.length) >= 0) && ($as_T(x$6.substring(0, $uI(prefix.length))) === prefix))
+            return (($uI(x$5.length) >= 0) && ($as_T(x$5.substring(0, $uI(prefix.length))) === prefix))
           })
         })($this, orgInput$1)))))
       } else {
@@ -13530,7 +13525,8 @@ function $f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Reposito
   if ((idx > 0)) {
     var x = orgInput.input$2;
     var this$8 = new $c_sci_StringOps().init___T(x);
-    var truncatedInput = new $c_Lcoursier_core_Repository$Complete$Input$Org().init___T($m_sci_StringOps$().slice$extension__T__I__I__T(this$8.repr$1, 0, idx));
+    var input = $m_sci_StringOps$().slice$extension__T__I__I__T(this$8.repr$1, 0, idx);
+    var truncatedInput = new $c_Lcoursier_core_Repository$Complete$Input$Org().init___T(input);
     return F.bind__O__F1__O($f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Org__Z__Lcoursier_util_Monad__O($thiz, truncatedInput, true, F), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, F$1, check$1) {
       return (function(x0$1$2) {
         var x0$1 = $uZ(x0$1$2);
@@ -13548,7 +13544,8 @@ function $f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Reposito
   }
 }
 function $f_Lcoursier_core_Repository$Complete__hasModule__Lcoursier_core_Module__Z__Lcoursier_util_Monad__O($thiz, module, sbtAttrStub, F) {
-  var orgInput = new $c_Lcoursier_core_Repository$Complete$Input$Org().init___T(module.organization$1);
+  var input = module.organization$1;
+  var orgInput = new $c_Lcoursier_core_Repository$Complete$Input$Org().init___T(input);
   return F.bind__O__F1__O($f_Lcoursier_core_Repository$Complete__hasOrg__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Org__Z__Lcoursier_util_Monad__O($thiz, orgInput, false, F), new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, F$1, module$1, sbtAttrStub$1) {
     return (function(x0$1$2) {
       var x0$1 = $uZ(x0$1$2);
@@ -13557,7 +13554,10 @@ function $f_Lcoursier_core_Repository$Complete__hasModule__Lcoursier_core_Module
       } else if ((x0$1 === true)) {
         var prefix = (module$1.organization$1 + ":");
         var actualModuleName = (sbtAttrStub$1 ? $m_Lcoursier_maven_MavenRepository$().dirModuleName__Lcoursier_core_Module__Z__T(module$1, true) : module$1.name$1);
-        var nameInput = new $c_Lcoursier_core_Repository$Complete$Input$Name().init___T__T__I__T(module$1.organization$1, (prefix + actualModuleName), $uI(prefix.length), "");
+        var organization = module$1.organization$1;
+        var input$1 = (prefix + actualModuleName);
+        var from = $uI(prefix.length);
+        var nameInput = new $c_Lcoursier_core_Repository$Complete$Input$Name().init___T__T__I__T(organization, input$1, from, "");
         return $f_Lcoursier_core_Repository$Complete__hasName__pLcoursier_core_Repository$Complete__Lcoursier_core_Repository$Complete$Input$Name__Lcoursier_util_Monad__O($this, nameInput, F$1)
       } else {
         throw new $c_s_MatchError().init___O(x0$1)
@@ -13594,8 +13594,8 @@ function $f_Lcoursier_core_Repository$Complete__hasName__pLcoursier_core_Reposit
       var this$1 = res.toOption__s_Option();
       if ((!this$1.isEmpty__Z())) {
         var arg1 = this$1.get__O();
-        var x$7 = $as_Lcoursier_core_Repository$Complete$Result(arg1);
-        var jsx$1 = x$7.completions$1;
+        var x$6 = $as_Lcoursier_core_Repository$Complete$Result(arg1);
+        var jsx$1 = x$6.completions$1;
         var x = nameInput$1.input$2;
         var this$3 = new $c_sci_StringOps().init___T(x);
         var n = nameInput$1.from$2;
@@ -15550,7 +15550,7 @@ $c_Lcoursier_core_Parse$.prototype.versionConstraint__T__Lcoursier_core_VersionC
   } else {
     var this$10 = this$5
   };
-  return $as_Lcoursier_core_VersionConstraint((this$10.isEmpty__Z() ? $m_Lcoursier_core_VersionConstraint$().preferred__Lcoursier_core_Version__Lcoursier_core_VersionConstraint(new $c_Lcoursier_core_Version().init___T(s)) : this$10.get__O()))
+  return $as_Lcoursier_core_VersionConstraint((this$10.isEmpty__Z() ? $m_Lcoursier_core_VersionConstraint$().preferred__Lcoursier_core_Version__Lcoursier_core_VersionConstraint(($m_Lcoursier_core_Version$(), new $c_Lcoursier_core_Version().init___T(s))) : this$10.get__O()))
 });
 $c_Lcoursier_core_Parse$.prototype.version__T__s_Option = (function(s) {
   var trimmed = $as_T(s.trim());
@@ -15590,7 +15590,7 @@ $c_Lcoursier_core_Parse$.prototype.version__T__s_Option = (function(s) {
   if (jsx$1) {
     return $m_s_None$()
   } else {
-    return new $c_s_Some().init___O(new $c_Lcoursier_core_Version().init___T(trimmed))
+    return new $c_s_Some().init___O(($m_Lcoursier_core_Version$(), new $c_Lcoursier_core_Version().init___T(trimmed)))
   }
 });
 $c_Lcoursier_core_Parse$.prototype.ivyLatestSubRevisionInterval__T__s_Option = (function(s) {
@@ -16082,12 +16082,14 @@ $c_Lcoursier_core_Version$Tokenizer$.prototype.parseItem$1__p1__sci_Stream__s_Op
       var digits0 = $as_T(x1.$$und1__O());
       var rem = $as_sci_Stream(x1.$$und2__O());
       if (($uI(digits0.length) >= 10)) {
-        var item = new $c_Lcoursier_core_Version$BigNumber().init___s_math_BigInt($m_s_package$().BigInt__s_math_BigInt$().apply__T__s_math_BigInt(digits0))
+        var value = $m_s_package$().BigInt__s_math_BigInt$().apply__T__s_math_BigInt(digits0);
+        var item = new $c_Lcoursier_core_Version$BigNumber().init___s_math_BigInt(value)
       } else {
-        var this$8 = new $c_sci_StringOps().init___T(digits0);
-        var this$10 = $m_jl_Integer$();
-        var $$this = this$8.repr$1;
-        var item = new $c_Lcoursier_core_Version$Number().init___I(this$10.parseInt__T__I__I($$this, 10))
+        var this$9 = new $c_sci_StringOps().init___T(digits0);
+        var this$11 = $m_jl_Integer$();
+        var $$this = this$9.repr$1;
+        var value$1 = this$11.parseInt__T__I__I($$this, 10);
+        var item = new $c_Lcoursier_core_Version$Number().init___I(value$1)
       };
       return new $c_T2().init___O__O(item, rem)
     } else {
@@ -16096,8 +16098,8 @@ $c_Lcoursier_core_Version$Tokenizer$.prototype.parseItem$1__p1__sci_Stream__s_Op
       if ((c$2 === null)) {
         var c$3 = 0
       } else {
-        var this$12 = $as_jl_Character(c$2);
-        var c$3 = this$12.value$1
+        var this$14 = $as_jl_Character(c$2);
+        var c$3 = this$14.value$1
       };
       if (jsx$1.letter$extension__C__Z(c$3)) {
         var x1$2 = this.letters$1__p1__scm_StringBuilder__sci_Stream__T2(new $c_scm_StringBuilder().init___(), s);
@@ -16185,10 +16187,11 @@ $c_Lcoursier_core_Version$Tokenizer$.prototype.helper$1__p1__sci_Stream__sci_Str
     var x = $m_Lcoursier_core_Version$Tokenizer$Plus$();
     if ((x === sep)) {
       $m_s_package$();
-      var array = [new $c_T2().init___O__O(sep, new $c_Lcoursier_core_Version$BuildMetadata().init___T(rem0.mkString__T__T__T__T("", "", "")))];
+      var value = rem0.mkString__T__T__T__T("", "", "");
+      var array = [new $c_T2().init___O__O(sep, new $c_Lcoursier_core_Version$BuildMetadata().init___T(value))];
       var xs$1 = new $c_sjs_js_WrappedArray().init___sjs_js_Array(array);
-      var this$5 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs$1, 0, $uI(xs$1.array$6.length));
-      return $f_sc_Iterator__toStream__sci_Stream(this$5)
+      var this$6 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs$1, 0, $uI(xs$1.array$6.length));
+      return $f_sc_Iterator__toStream__sci_Stream(this$6)
     } else {
       var x1$3 = this.parseItem$1__p1__sci_Stream__s_Option__T2(rem0, new $c_s_Some().init___O(sep));
       if ((x1$3 === null)) {
@@ -37257,6 +37260,7 @@ $c_Lcoursier_core_ResolutionProcess$.prototype.versionOrError0$1__p1__s_util_Eit
       if ((selectedOpt instanceof $c_s_Some)) {
         var x2$3 = $as_s_Some(selectedOpt);
         var ver0 = $as_T(x2$3.value$2);
+        $m_Lcoursier_core_Version$();
         var selectedVer = new $c_Lcoursier_core_Version().init___T(ver0);
         if ((ver instanceof $c_s_util_Right)) {
           var x2$4 = $as_s_util_Right(ver);
@@ -37635,15 +37639,16 @@ $c_Lcoursier_core_ResolutionProcess$.prototype.uniqueModules$1__p1__sc_Seq__sci_
           var x0$2 = $as_T2(x0$2$2);
           if ((x0$2 !== null)) {
             var v0 = $as_T(x0$2.$$und2__O());
+            $m_Lcoursier_core_Version$();
             return new $c_Lcoursier_core_Version().init___T(v0)
           } else {
             throw new $c_s_MatchError().init___O(x0$2)
           }
         })
       })(this$3$1));
-      var this$6 = $m_s_math_Ordering$();
+      var this$7 = $m_s_math_Ordering$();
       var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-      var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
+      var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$7, evidence$1);
       var res = $as_T2($f_sc_TraversableOnce__maxBy__F1__s_math_Ordering__O(x0$1, f$1, cmp));
       var p = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, res$1) {
         return (function(x$27$2) {
@@ -37654,22 +37659,22 @@ $c_Lcoursier_core_ResolutionProcess$.prototype.uniqueModules$1__p1__sc_Seq__sci_
       return new $c_T2().init___O__O(res, x0$1.filterImpl__F1__Z__O(p, false))
     })
   })(this));
-  var this$7 = $m_sc_Seq$();
-  var res$2 = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$7.ReusableCBFInstance$2));
+  var this$8 = $m_sc_Seq$();
+  var res$2 = $as_sc_Seq(jsx$2.map__F1__scg_CanBuildFrom__O(jsx$1, this$8.ReusableCBFInstance$2));
   var jsx$5 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$4$1) {
     return (function(x$28$2) {
       var x$28 = $as_T2(x$28$2);
       return $as_sc_Seq(x$28.$$und2__O())
     })
   })(this));
-  var this$8 = $m_sc_Seq$();
-  var other = $as_sc_Seq(res$2.flatMap__F1__scg_CanBuildFrom__O(jsx$5, this$8.ReusableCBFInstance$2));
+  var this$9 = $m_sc_Seq$();
+  var other = $as_sc_Seq(res$2.flatMap__F1__scg_CanBuildFrom__O(jsx$5, this$9.ReusableCBFInstance$2));
   if (other.isEmpty__Z()) {
     $m_s_package$();
     var array = [modVers];
     var xs = new $c_sjs_js_WrappedArray().init___sjs_js_Array(array);
-    var this$12 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs, 0, $uI(xs.array$6.length));
-    return $f_sc_Iterator__toStream__sci_Stream(this$12)
+    var this$13 = new $c_sc_IndexedSeqLike$Elements().init___sc_IndexedSeqLike__I__I(xs, 0, $uI(xs.array$6.length));
+    return $f_sc_Iterator__toStream__sci_Stream(this$13)
   } else {
     var jsx$6 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$5$1) {
       return (function(x$29$2) {
@@ -37677,8 +37682,8 @@ $c_Lcoursier_core_ResolutionProcess$.prototype.uniqueModules$1__p1__sc_Seq__sci_
         return $as_T2(x$29.$$und1__O())
       })
     })(this));
-    var this$13 = $m_sc_Seq$();
-    var missing0 = $as_sc_Seq(res$2.map__F1__scg_CanBuildFrom__O(jsx$6, this$13.ReusableCBFInstance$2));
+    var this$14 = $m_sc_Seq$();
+    var missing0 = $as_sc_Seq(res$2.map__F1__scg_CanBuildFrom__O(jsx$6, this$14.ReusableCBFInstance$2));
     $m_sci_Stream$();
     var stream = new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$6$1, other$1) {
       return (function() {
@@ -37960,7 +37965,7 @@ function $h_Lcoursier_core_Version$() {
 $h_Lcoursier_core_Version$.prototype = $c_Lcoursier_core_Version$.prototype;
 $c_Lcoursier_core_Version$.prototype.init___ = (function() {
   $n_Lcoursier_core_Version$ = this;
-  this.zero$1 = new $c_Lcoursier_core_Version().init___T("0");
+  this.zero$1 = ($m_Lcoursier_core_Version$(), new $c_Lcoursier_core_Version().init___T("0"));
   this.empty$1 = new $c_Lcoursier_core_Version$Number().init___I(0);
   return this
 });
@@ -38383,66 +38388,66 @@ $c_Lcoursier_core_Version$Item.prototype.compareToEmpty__I = (function() {
 });
 $c_Lcoursier_core_Version$Item.prototype.compare__Lcoursier_core_Version$Item__I = (function(other) {
   if ((this instanceof $c_Lcoursier_core_Version$Number)) {
-    var x4 = $as_Lcoursier_core_Version$Number(this);
-    var a = x4.value$3;
+    var x2 = $as_Lcoursier_core_Version$Number(this);
     if ((other instanceof $c_Lcoursier_core_Version$Number)) {
-      var x5 = $as_Lcoursier_core_Version$Number(other);
-      var b = x5.value$3;
-      var this$2 = new $c_sr_RichInt().init___I(a);
-      var x = this$2.self$1;
-      return ((x === b) ? 0 : ((x < b) ? (-1) : 1))
+      var x3 = $as_Lcoursier_core_Version$Number(other);
+      var x = x2.value$3;
+      var this$2 = new $c_sr_RichInt().init___I(x);
+      var y = x3.value$3;
+      var x$1 = this$2.self$1;
+      return ((x$1 === y) ? 0 : ((x$1 < y) ? (-1) : 1))
+    }
+  };
+  if ((this instanceof $c_Lcoursier_core_Version$BigNumber)) {
+    var x4 = $as_Lcoursier_core_Version$BigNumber(this);
+    if ((other instanceof $c_Lcoursier_core_Version$BigNumber)) {
+      var x5 = $as_Lcoursier_core_Version$BigNumber(other);
+      var this$6 = x4.value$3;
+      var that = x5.value$3;
+      return this$6.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that.bigInteger$3)
+    }
+  };
+  if ((this instanceof $c_Lcoursier_core_Version$Number)) {
+    var x6 = $as_Lcoursier_core_Version$Number(this);
+    if ((other instanceof $c_Lcoursier_core_Version$BigNumber)) {
+      var x7 = $as_Lcoursier_core_Version$BigNumber(other);
+      var this$8 = x7.value$3;
+      var this$7 = $m_s_math_BigInt$();
+      var i = x6.value$3;
+      var that$1 = this$7.apply__I__s_math_BigInt(i);
+      return ((-this$8.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that$1.bigInteger$3)) | 0)
     }
   };
   if ((this instanceof $c_Lcoursier_core_Version$BigNumber)) {
     var x8 = $as_Lcoursier_core_Version$BigNumber(this);
-    var a$2 = x8.value$3;
-    if ((other instanceof $c_Lcoursier_core_Version$BigNumber)) {
-      var x9 = $as_Lcoursier_core_Version$BigNumber(other);
-      var b$2 = x9.value$3;
-      return a$2.bigInteger$3.compareTo__Ljava_math_BigInteger__I(b$2.bigInteger$3)
-    }
-  };
-  if ((this instanceof $c_Lcoursier_core_Version$Number)) {
-    var x12 = $as_Lcoursier_core_Version$Number(this);
-    var a$3 = x12.value$3;
-    if ((other instanceof $c_Lcoursier_core_Version$BigNumber)) {
-      var x13 = $as_Lcoursier_core_Version$BigNumber(other);
-      var b$3 = x13.value$3;
-      var this$6 = $m_s_math_BigInt$();
-      var that = this$6.apply__I__s_math_BigInt(a$3);
-      return ((-b$3.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that.bigInteger$3)) | 0)
-    }
-  };
-  if ((this instanceof $c_Lcoursier_core_Version$BigNumber)) {
-    var x16 = $as_Lcoursier_core_Version$BigNumber(this);
-    var a$4 = x16.value$3;
     if ((other instanceof $c_Lcoursier_core_Version$Number)) {
-      var x17 = $as_Lcoursier_core_Version$Number(other);
-      var b$4 = x17.value$3;
-      var this$7 = $m_s_math_BigInt$();
-      var that$1 = this$7.apply__I__s_math_BigInt(b$4);
-      return a$4.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that$1.bigInteger$3)
+      var x9 = $as_Lcoursier_core_Version$Number(other);
+      var this$10 = x8.value$3;
+      var this$9 = $m_s_math_BigInt$();
+      var i$1 = x9.value$3;
+      var that$2 = this$9.apply__I__s_math_BigInt(i$1);
+      return this$10.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that$2.bigInteger$3)
     }
   };
   if ((this instanceof $c_Lcoursier_core_Version$Tag)) {
-    var x18 = $as_Lcoursier_core_Version$Tag(this);
+    var x10 = $as_Lcoursier_core_Version$Tag(this);
     if ((other instanceof $c_Lcoursier_core_Version$Tag)) {
-      var x20 = $as_Lcoursier_core_Version$Tag(other);
-      return x18.compareTag__Lcoursier_core_Version$Tag__I(x20)
+      var x11 = $as_Lcoursier_core_Version$Tag(other);
+      return x10.compareTag__Lcoursier_core_Version$Tag__I(x11)
     }
   };
   var rel0 = this.compareToEmpty__I();
   var rel1 = other.compareToEmpty__I();
   if ((rel0 === rel1)) {
-    var x$1 = this.order__I();
-    var this$9 = new $c_sr_RichInt().init___I(x$1);
-    var y = other.order__I();
-    var x$2 = this$9.self$1;
-    return ((x$2 === y) ? 0 : ((x$2 < y) ? (-1) : 1))
+    var x$2 = this.order__I();
+    var this$12 = new $c_sr_RichInt().init___I(x$2);
+    var y$1 = other.order__I();
+    var x$3 = this$12.self$1;
+    return ((x$3 === y$1) ? 0 : ((x$3 < y$1) ? (-1) : 1))
   } else {
-    var this$14 = new $c_sr_RichInt().init___I(rel0);
-    var x$3 = this$14.self$1;
-    return ((x$3 === rel1) ? 0 : ((x$3 < rel1) ? (-1) : 1))
+    var this$17 = new $c_sr_RichInt().init___I(rel0);
+    var x$4 = this$17.self$1;
+    return ((x$4 === rel1) ? 0 : ((x$4 < rel1) ? (-1) : 1))
   }
 });
 function $as_Lcoursier_core_Version$Item(obj) {
@@ -47975,6 +47980,9 @@ function $h_Lcoursier_core_Repository$Complete$Input() {
   /*<skip>*/
 }
 $h_Lcoursier_core_Repository$Complete$Input.prototype = $c_Lcoursier_core_Repository$Complete$Input.prototype;
+$c_Lcoursier_core_Repository$Complete$Input.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_s_Product$$anon$1().init___s_Product(this)
+});
 /** @constructor */
 function $c_Lcoursier_core_Repository$Complete$Result() {
   $c_O.call(this);
@@ -47994,16 +48002,14 @@ $c_Lcoursier_core_Repository$Complete$Result.prototype.productPrefix__T = (funct
 $c_Lcoursier_core_Repository$Complete$Result.prototype.productArity__I = (function() {
   return 2
 });
-$c_Lcoursier_core_Repository$Complete$Result.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Repository$Complete$Result)) {
-    var Result$1 = $as_Lcoursier_core_Repository$Complete$Result(x$1);
+$c_Lcoursier_core_Repository$Complete$Result.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Repository$Complete$Result(obj);
     var x = this.input$1;
-    var x$2 = Result$1.input$1;
+    var x$2 = other.input$1;
     if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
       var x$3 = this.completions$1;
-      var x$4 = Result$1.completions$1;
+      var x$4 = other.completions$1;
       return ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
     } else {
       return false
@@ -48012,8 +48018,8 @@ $c_Lcoursier_core_Repository$Complete$Result.prototype.equals__O__Z = (function(
     return false
   }
 });
-$c_Lcoursier_core_Repository$Complete$Result.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Repository$Complete$Result.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.input$1;
       break
@@ -48023,24 +48029,38 @@ $c_Lcoursier_core_Repository$Complete$Result.prototype.productElement__I__O = (f
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Repository$Complete$Result.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Result(");
+  var obj = this.input$1;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.completions$1;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Repository$Complete$Result.prototype.init___Lcoursier_core_Repository$Complete$Input__sc_Seq = (function(input, completions) {
   this.input$1 = input;
   this.completions$1 = completions;
   return this
 });
+$c_Lcoursier_core_Repository$Complete$Result.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Repository$Complete$Result))
+});
 $c_Lcoursier_core_Repository$Complete$Result.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Result")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.input$1)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.completions$1)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Repository$Complete$Result.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 function $as_Lcoursier_core_Repository$Complete$Result(obj) {
   return (((obj instanceof $c_Lcoursier_core_Repository$Complete$Result) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Repository$Complete$Result"))
@@ -50527,23 +50547,24 @@ $c_Lcoursier_core_Versions.prototype.equals__O__Z = (function(obj) {
   }
 });
 $c_Lcoursier_core_Versions.prototype.latestFromAvailable$1__p1__sc_Iterator = (function() {
-  var this$2 = this.available$1;
+  var this$3 = this.available$1;
   var f = (function($this) {
     return (function(x$3$2) {
       var x$3 = $as_T(x$3$2);
+      $m_Lcoursier_core_Version$();
       return new $c_Lcoursier_core_Version().init___T(x$3)
     })
   })(this);
-  var this$1 = $m_sci_List$();
-  var bf = this$1.ReusableCBFInstance$2;
+  var this$2 = $m_sci_List$();
+  var bf = this$2.ReusableCBFInstance$2;
   if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$2 === $m_sci_Nil$())) {
+    if ((this$3 === $m_sci_Nil$())) {
       var jsx$1 = $m_sci_Nil$()
     } else {
-      var arg1 = this$2.head__O();
+      var arg1 = this$3.head__O();
       var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1), $m_sci_Nil$());
       var t = h;
-      var rest = $as_sci_List(this$2.tail__O());
+      var rest = $as_sci_List(this$3.tail__O());
       while ((rest !== $m_sci_Nil$())) {
         var arg1$1 = rest.head__O();
         var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$1), $m_sci_Nil$());
@@ -50554,8 +50575,8 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$1__p1__sc_Iterator = (f
       var jsx$1 = h
     }
   } else {
-    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$2, bf);
-    var these = this$2;
+    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$3, bf);
+    var these = this$3;
     while ((!these.isEmpty__Z())) {
       var arg1$2 = these.head__O();
       b.$$plus$eq__O__scm_Builder(f(arg1$2));
@@ -50563,18 +50584,18 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$1__p1__sc_Iterator = (f
     };
     var jsx$1 = b.result__O()
   };
-  var this$4 = $as_sc_SeqLike(jsx$1);
-  var this$3 = $m_s_math_Ordering$();
+  var this$5 = $as_sc_SeqLike(jsx$1);
+  var this$4 = $m_s_math_Ordering$();
   var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$3, evidence$1);
-  var this$5 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$4, ord)).reverseIterator__sc_Iterator();
+  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$4, evidence$1);
+  var this$6 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$5, ord)).reverseIterator__sc_Iterator();
   var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1) {
     return (function(x$4$2) {
       var x$4 = $as_Lcoursier_core_Version(x$4$2);
       return x$4.repr$1
     })
   })(this));
-  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$5, f$1)
+  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$6, f$1)
 });
 $c_Lcoursier_core_Versions.prototype.productElement__I__O = (function(n) {
   switch (n) {
@@ -50702,7 +50723,7 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$2__p1__sc_Iterator = (f
         }
       }
     };
-    var this$4 = result
+    var this$5 = result
   } else {
     $m_sci_List$();
     var b = new $c_scm_ListBuffer().init___();
@@ -50714,24 +50735,25 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$2__p1__sc_Iterator = (f
       };
       these = $as_sci_List(these.tail__O())
     };
-    var this$4 = b.toList__sci_List()
+    var this$5 = b.toList__sci_List()
   };
   var f$1 = (function(this$2$1) {
     return (function(x$9$2) {
       var x$9 = $as_T(x$9$2);
+      $m_Lcoursier_core_Version$();
       return new $c_Lcoursier_core_Version().init___T(x$9)
     })
   })(this);
-  var this$3 = $m_sci_List$();
-  var bf = this$3.ReusableCBFInstance$2;
+  var this$4 = $m_sci_List$();
+  var bf = this$4.ReusableCBFInstance$2;
   if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$4 === $m_sci_Nil$())) {
+    if ((this$5 === $m_sci_Nil$())) {
       var jsx$1 = $m_sci_Nil$()
     } else {
-      var arg1$1 = this$4.head__O();
+      var arg1$1 = this$5.head__O();
       var h$1 = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$1), $m_sci_Nil$());
       var t$1 = h$1;
-      var rest = $as_sci_List(this$4.tail__O());
+      var rest = $as_sci_List(this$5.tail__O());
       while ((rest !== $m_sci_Nil$())) {
         var arg1$2 = rest.head__O();
         var nx = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$2), $m_sci_Nil$());
@@ -50742,8 +50764,8 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$2__p1__sc_Iterator = (f
       var jsx$1 = h$1
     }
   } else {
-    var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$4, bf);
-    var these$1 = this$4;
+    var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$5, bf);
+    var these$1 = this$5;
     while ((!these$1.isEmpty__Z())) {
       var arg1$3 = these$1.head__O();
       b$1.$$plus$eq__O__scm_Builder(f$1(arg1$3));
@@ -50751,18 +50773,18 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$2__p1__sc_Iterator = (f
     };
     var jsx$1 = b$1.result__O()
   };
-  var this$6 = $as_sc_SeqLike(jsx$1);
-  var this$5 = $m_s_math_Ordering$();
+  var this$7 = $as_sc_SeqLike(jsx$1);
+  var this$6 = $m_s_math_Ordering$();
   var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$5, evidence$1);
-  var this$7 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$6, ord)).reverseIterator__sc_Iterator();
+  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
+  var this$8 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$7, ord)).reverseIterator__sc_Iterator();
   var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
     return (function(x$10$2) {
       var x$10 = $as_Lcoursier_core_Version(x$10$2);
       return x$10.repr$1
     })
   })(this));
-  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$7, f$2)
+  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$8, f$2)
 });
 $c_Lcoursier_core_Versions.prototype.toString__T = (function() {
   var b = new $c_jl_StringBuilder().init___T("Versions(");
@@ -50888,7 +50910,7 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$3__p1__sc_Iterator = (f
         }
       }
     };
-    var this$4 = result
+    var this$5 = result
   } else {
     $m_sci_List$();
     var b = new $c_scm_ListBuffer().init___();
@@ -50900,24 +50922,25 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$3__p1__sc_Iterator = (f
       };
       these = $as_sci_List(these.tail__O())
     };
-    var this$4 = b.toList__sci_List()
+    var this$5 = b.toList__sci_List()
   };
   var f$1 = (function(this$2$1) {
     return (function(x$14$2) {
       var x$14 = $as_T(x$14$2);
+      $m_Lcoursier_core_Version$();
       return new $c_Lcoursier_core_Version().init___T(x$14)
     })
   })(this);
-  var this$3 = $m_sci_List$();
-  var bf = this$3.ReusableCBFInstance$2;
+  var this$4 = $m_sci_List$();
+  var bf = this$4.ReusableCBFInstance$2;
   if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$4 === $m_sci_Nil$())) {
+    if ((this$5 === $m_sci_Nil$())) {
       var jsx$1 = $m_sci_Nil$()
     } else {
-      var arg1$1 = this$4.head__O();
+      var arg1$1 = this$5.head__O();
       var h$1 = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$1), $m_sci_Nil$());
       var t$1 = h$1;
-      var rest = $as_sci_List(this$4.tail__O());
+      var rest = $as_sci_List(this$5.tail__O());
       while ((rest !== $m_sci_Nil$())) {
         var arg1$2 = rest.head__O();
         var nx = new $c_sci_$colon$colon().init___O__sci_List(f$1(arg1$2), $m_sci_Nil$());
@@ -50928,8 +50951,8 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$3__p1__sc_Iterator = (f
       var jsx$1 = h$1
     }
   } else {
-    var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$4, bf);
-    var these$1 = this$4;
+    var b$1 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$5, bf);
+    var these$1 = this$5;
     while ((!these$1.isEmpty__Z())) {
       var arg1$3 = these$1.head__O();
       b$1.$$plus$eq__O__scm_Builder(f$1(arg1$3));
@@ -50937,18 +50960,18 @@ $c_Lcoursier_core_Versions.prototype.latestFromAvailable$3__p1__sc_Iterator = (f
     };
     var jsx$1 = b$1.result__O()
   };
-  var this$6 = $as_sc_SeqLike(jsx$1);
-  var this$5 = $m_s_math_Ordering$();
+  var this$7 = $as_sc_SeqLike(jsx$1);
+  var this$6 = $m_s_math_Ordering$();
   var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$5, evidence$1);
-  var this$7 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$6, ord)).reverseIterator__sc_Iterator();
+  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$6, evidence$1);
+  var this$8 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$7, ord)).reverseIterator__sc_Iterator();
   var f$2 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
     return (function(x$15$2) {
       var x$15 = $as_Lcoursier_core_Version(x$15$2);
       return x$15.repr$1
     })
   })(this));
-  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$7, f$2)
+  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$8, f$2)
 });
 $c_Lcoursier_core_Versions.prototype.latestReleaseCandidates__p1__sc_Iterator = (function() {
   var this$1 = new $c_s_Some().init___O(this.latest$1);
@@ -51056,24 +51079,26 @@ $c_Lcoursier_core_Versions.prototype.inInterval__Lcoursier_core_VersionInterval_
   return (it.hasNext__Z() ? new $c_s_Some().init___O(it.next__O()) : $m_s_None$())
 });
 $c_Lcoursier_core_Versions.prototype.candidatesInInterval__Lcoursier_core_VersionInterval__sc_Iterator = (function(itv) {
-  var this$1 = new $c_s_Some().init___O(new $c_Lcoursier_core_Version().init___T(this.release$1));
-  var arg1 = this$1.value$2;
+  $m_Lcoursier_core_Version$();
+  var repr = this.release$1;
+  var this$2 = new $c_s_Some().init___O(new $c_Lcoursier_core_Version().init___T(repr));
+  var arg1 = this$2.value$2;
   var version = $as_Lcoursier_core_Version(arg1);
   if (itv.contains__Lcoursier_core_Version__Z(version)) {
-    var this$2 = this$1
+    var this$3 = this$2
   } else {
-    var this$2 = $m_s_None$()
+    var this$3 = $m_s_None$()
   };
-  if (this$2.isEmpty__Z()) {
+  if (this$3.isEmpty__Z()) {
     var fromRelease = $m_s_None$()
   } else {
-    var arg1$1 = this$2.get__O();
+    var arg1$1 = this$3.get__O();
     var x$16 = $as_Lcoursier_core_Version(arg1$1);
     var fromRelease = new $c_s_Some().init___O(x$16.repr$1)
   };
-  return fromRelease.iterator__sc_Iterator().$$plus$plus__F0__sc_Iterator(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3, itv$1) {
+  return fromRelease.iterator__sc_Iterator().$$plus$plus__F0__sc_Iterator(new $c_sjsr_AnonFunction0().init___sjs_js_Function0((function(this$3$1, itv$1) {
     return (function() {
-      return this$3.fromAvailable$1__p1__Lcoursier_core_VersionInterval__sc_Iterator(itv$1)
+      return this$3$1.fromAvailable$1__p1__Lcoursier_core_VersionInterval__sc_Iterator(itv$1)
     })
   })(this, itv)))
 });
@@ -51086,23 +51111,24 @@ $c_Lcoursier_core_Versions.prototype.hashCode__I = (function() {
   return $imul(37, code)
 });
 $c_Lcoursier_core_Versions.prototype.fromAvailable$1__p1__Lcoursier_core_VersionInterval__sc_Iterator = (function(itv$1) {
-  var this$2 = this.available$1;
+  var this$3 = this.available$1;
   var f = (function($this) {
     return (function(x$17$2) {
       var x$17 = $as_T(x$17$2);
+      $m_Lcoursier_core_Version$();
       return new $c_Lcoursier_core_Version().init___T(x$17)
     })
   })(this);
-  var this$1 = $m_sci_List$();
-  var bf = this$1.ReusableCBFInstance$2;
+  var this$2 = $m_sci_List$();
+  var bf = this$2.ReusableCBFInstance$2;
   if ((bf === $m_sci_List$().ReusableCBFInstance$2)) {
-    if ((this$2 === $m_sci_Nil$())) {
+    if ((this$3 === $m_sci_Nil$())) {
       var jsx$1 = $m_sci_Nil$()
     } else {
-      var arg1 = this$2.head__O();
+      var arg1 = this$3.head__O();
       var h = new $c_sci_$colon$colon().init___O__sci_List(f(arg1), $m_sci_Nil$());
       var t = h;
-      var rest = $as_sci_List(this$2.tail__O());
+      var rest = $as_sci_List(this$3.tail__O());
       while ((rest !== $m_sci_Nil$())) {
         var arg1$1 = rest.head__O();
         var nx = new $c_sci_$colon$colon().init___O__sci_List(f(arg1$1), $m_sci_Nil$());
@@ -51113,8 +51139,8 @@ $c_Lcoursier_core_Versions.prototype.fromAvailable$1__p1__Lcoursier_core_Version
       var jsx$1 = h
     }
   } else {
-    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$2, bf);
-    var these = this$2;
+    var b = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(this$3, bf);
+    var these = this$3;
     while ((!these.isEmpty__Z())) {
       var arg1$2 = these.head__O();
       b.$$plus$eq__O__scm_Builder(f(arg1$2));
@@ -51122,23 +51148,23 @@ $c_Lcoursier_core_Versions.prototype.fromAvailable$1__p1__Lcoursier_core_Version
     };
     var jsx$1 = b.result__O()
   };
-  var this$4 = $as_sc_SeqLike($as_sc_TraversableLike(jsx$1).filter__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, itv$1$1) {
+  var this$5 = $as_sc_SeqLike($as_sc_TraversableLike(jsx$1).filter__F1__O(new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$2$1, itv$1$1) {
     return (function(version$2) {
       var version = $as_Lcoursier_core_Version(version$2);
       return itv$1$1.contains__Lcoursier_core_Version__Z(version)
     })
   })(this, itv$1))));
-  var this$3 = $m_s_math_Ordering$();
+  var this$4 = $m_s_math_Ordering$();
   var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$3, evidence$1);
-  var this$5 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$4, ord)).reverseIterator__sc_Iterator();
+  var ord = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$4, evidence$1);
+  var this$6 = $as_sc_SeqLike($f_sc_SeqLike__sorted__s_math_Ordering__O(this$5, ord)).reverseIterator__sc_Iterator();
   var f$1 = new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function(this$3$1) {
     return (function(x$18$2) {
       var x$18 = $as_Lcoursier_core_Version(x$18$2);
       return x$18.repr$1
     })
   })(this));
-  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$5, f$1)
+  return new $c_sc_Iterator$$anon$10().init___sc_Iterator__F1(this$6, f$1)
 });
 $c_Lcoursier_core_Versions.prototype.candidates__Lcoursier_core_Latest__sc_Iterator = (function(kind) {
   var x = $m_Lcoursier_core_Latest$Integration$();
@@ -56126,18 +56152,16 @@ $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productPrefix__T = (f
 $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productArity__I = (function() {
   return 4
 });
-$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Repository$Complete$Input$Name)) {
-    var Name$1 = $as_Lcoursier_core_Repository$Complete$Input$Name(x$1);
-    return ((((this.organization$2 === Name$1.organization$2) && (this.input$2 === Name$1.input$2)) && (this.from$2 === Name$1.from$2)) && (this.requiredSuffix$2 === Name$1.requiredSuffix$2))
+$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Repository$Complete$Input$Name(obj);
+    return ((((this.organization$2 === other.organization$2) && (this.input$2 === other.input$2)) && (this.from$2 === other.from$2)) && (this.requiredSuffix$2 === other.requiredSuffix$2))
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return new $c_Lcoursier_core_Organization().init___T(this.organization$2);
       break
@@ -56155,23 +56179,40 @@ $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productElement__I__O 
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Name(");
+  var obj = new $c_Lcoursier_core_Organization().init___T(this.organization$2);
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.input$2;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var i = this.from$2;
+  var str$2 = ("" + i);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$2 = this.requiredSuffix$2;
+  var str$3 = ("" + obj$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$3);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Repository$Complete$Input$Name))
 });
 $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.hashCode__I = (function() {
-  var acc = (-889275714);
-  acc = $m_sr_Statics$().mix__I__I__I(acc, $m_sr_Statics$().anyHash__O__I(new $c_Lcoursier_core_Organization().init___T(this.organization$2)));
-  acc = $m_sr_Statics$().mix__I__I__I(acc, $m_sr_Statics$().anyHash__O__I(this.input$2));
-  acc = $m_sr_Statics$().mix__I__I__I(acc, this.from$2);
-  acc = $m_sr_Statics$().mix__I__I__I(acc, $m_sr_Statics$().anyHash__O__I(this.requiredSuffix$2));
-  return $m_sr_Statics$().finalizeHash__I__I__I(acc, 4)
-});
-$c_Lcoursier_core_Repository$Complete$Input$Name.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Name")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(new $c_Lcoursier_core_Organization().init___T(this.organization$2))) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.input$2)) | 0);
+  code = (($imul(37, code) + this.from$2) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.requiredSuffix$2)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Repository$Complete$Input$Name.prototype.init___T__T__I__T = (function(organization, input, from, requiredSuffix) {
   this.organization$2 = organization;
@@ -56219,40 +56260,44 @@ $c_Lcoursier_core_Repository$Complete$Input$Org.prototype.productPrefix__T = (fu
 $c_Lcoursier_core_Repository$Complete$Input$Org.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Repository$Complete$Input$Org)) {
-    var Org$1 = $as_Lcoursier_core_Repository$Complete$Input$Org(x$1);
-    return (this.input$2 === Org$1.input$2)
+$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Repository$Complete$Input$Org(obj);
+    return (this.input$2 === other.input$2)
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.input$2;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Repository$Complete$Input$Org.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Org(");
+  var obj = this.input$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
+});
+$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Repository$Complete$Input$Org))
 });
 $c_Lcoursier_core_Repository$Complete$Input$Org.prototype.init___T = (function(input) {
   this.input$2 = input;
   return this
 });
 $c_Lcoursier_core_Repository$Complete$Input$Org.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
-});
-$c_Lcoursier_core_Repository$Complete$Input$Org.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Org")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.input$2)) | 0);
+  return $imul(37, code)
 });
 function $as_Lcoursier_core_Repository$Complete$Input$Org(obj) {
   return (((obj instanceof $c_Lcoursier_core_Repository$Complete$Input$Org) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Repository$Complete$Input$Org"))
@@ -56709,7 +56754,7 @@ $c_Lcoursier_core_ResolutionProcess$$anonfun$4.prototype.applyOrElse__T3__F1__O 
     if ((p2 instanceof $c_s_Some)) {
       var x3 = $as_s_Some(p2);
       var v = $as_T(x3.value$2);
-      return new $c_T3().init___O__O__O(new $c_Lcoursier_core_Version().init___T(v), repo, listingUrl)
+      return new $c_T3().init___O__O__O(($m_Lcoursier_core_Version$(), new $c_Lcoursier_core_Version().init___T(v)), repo, listingUrl)
     }
   };
   return $default.apply__O__O(x2)
@@ -57095,23 +57140,21 @@ $c_Lcoursier_maven_MavenComplete.prototype.productPrefix__T = (function() {
 $c_Lcoursier_maven_MavenComplete.prototype.productArity__I = (function() {
   return 3
 });
-$c_Lcoursier_maven_MavenComplete.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_maven_MavenComplete)) {
-    var MavenComplete$1 = $as_Lcoursier_maven_MavenComplete(x$1);
+$c_Lcoursier_maven_MavenComplete.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_maven_MavenComplete(obj);
     var x = this.repo$1;
-    var x$2 = MavenComplete$1.repo$1;
+    var x$2 = other.repo$1;
     if (((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))) {
       var x$3 = this.fetch$1;
-      var x$4 = MavenComplete$1.fetch$1;
+      var x$4 = other.fetch$1;
       var jsx$1 = ((x$3 === null) ? (x$4 === null) : x$3.equals__O__Z(x$4))
     } else {
       var jsx$1 = false
     };
     if (jsx$1) {
       var x$5 = this.F$1;
-      var x$6 = MavenComplete$1.F$1;
+      var x$6 = other.F$1;
       return (x$5 === x$6)
     } else {
       return false
@@ -57120,8 +57163,8 @@ $c_Lcoursier_maven_MavenComplete.prototype.equals__O__Z = (function(x$1) {
     return false
   }
 });
-$c_Lcoursier_maven_MavenComplete.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_maven_MavenComplete.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.repo$1;
       break
@@ -57135,12 +57178,25 @@ $c_Lcoursier_maven_MavenComplete.prototype.productElement__I__O = (function(x$1)
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_maven_MavenComplete.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("MavenComplete(");
+  var obj = this.repo$1;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$1 = this.fetch$1;
+  var str$1 = ("" + obj$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$1);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ", ");
+  var obj$2 = this.F$1;
+  var str$2 = ("" + obj$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str$2);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_maven_MavenComplete.prototype.moduleName__T__T__O = (function(organization, prefix) {
   var this$2 = new $c_sci_StringOps().init___T(organization);
@@ -57199,6 +57255,9 @@ $c_Lcoursier_maven_MavenComplete.prototype.organization__T__O = (function(prefix
     })
   })(this, base)))
 });
+$c_Lcoursier_maven_MavenComplete.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_maven_MavenComplete))
+});
 $c_Lcoursier_maven_MavenComplete.prototype.fromDirListing__p1__T__T__O = (function(dirUrl, prefix) {
   return this.F$1.map__O__F1__O($as_Lcoursier_util_EitherT(this.fetch$1.apply__O__O(this.repo$1.artifactFor__T__Z__Lcoursier_util_Artifact((dirUrl + ".links"), true))).run$1, new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this, prefix$1) {
     return (function(x0$1$2) {
@@ -57222,11 +57281,14 @@ $c_Lcoursier_maven_MavenComplete.prototype.fromDirListing__p1__T__T__O = (functi
   })(this, prefix)))
 });
 $c_Lcoursier_maven_MavenComplete.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("MavenComplete")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.repo$1)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.fetch$1)) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.F$1)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_maven_MavenComplete.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 $c_Lcoursier_maven_MavenComplete.prototype.init___Lcoursier_maven_MavenRepository__F1__Lcoursier_util_Monad = (function(repo, fetch, F) {
   this.repo$1 = repo;
@@ -60603,42 +60665,49 @@ $c_Lcoursier_cache_AlwaysDownload.prototype.productPrefix__T = (function() {
 $c_Lcoursier_cache_AlwaysDownload.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_cache_AlwaysDownload.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_cache_AlwaysDownload)) {
-    var AlwaysDownload$1 = $as_Lcoursier_cache_AlwaysDownload(x$1);
+$c_Lcoursier_cache_AlwaysDownload.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_cache_AlwaysDownload(obj);
     var x = this.logger$3;
-    var x$2 = AlwaysDownload$1.logger$3;
+    var x$2 = other.logger$3;
     return (x === x$2)
   } else {
     return false
   }
 });
-$c_Lcoursier_cache_AlwaysDownload.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_cache_AlwaysDownload.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.logger$3;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_cache_AlwaysDownload.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("AlwaysDownload(");
+  var obj = this.logger$3;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_cache_AlwaysDownload.prototype.init___Lcoursier_cache_CacheLogger = (function(logger) {
   this.logger$3 = logger;
   return this
 });
+$c_Lcoursier_cache_AlwaysDownload.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_cache_AlwaysDownload))
+});
 $c_Lcoursier_cache_AlwaysDownload.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("AlwaysDownload")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.logger$3)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_cache_AlwaysDownload.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 $c_Lcoursier_cache_AlwaysDownload.prototype.fetch__F1 = (function() {
   return new $c_sjsr_AnonFunction1().init___sjs_js_Function1((function($this) {
@@ -60725,29 +60794,32 @@ $c_Lcoursier_core_Version.prototype.isEmpty__Z = (function() {
   };
   return res
 });
-$c_Lcoursier_core_Version.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Version)) {
-    var Version$1 = $as_Lcoursier_core_Version(x$1);
-    return (this.repr$1 === Version$1.repr$1)
+$c_Lcoursier_core_Version.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Version(obj);
+    return (this.repr$1 === other.repr$1)
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Version.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Version.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.repr$1;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Version.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Version(");
+  var obj = this.repr$1;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Version.prototype.compareTo__O__I = (function(that) {
   var other = $as_Lcoursier_core_Version(that);
@@ -60756,6 +60828,9 @@ $c_Lcoursier_core_Version.prototype.compareTo__O__I = (function(that) {
 $c_Lcoursier_core_Version.prototype.compare__O__I = (function(that) {
   var other = $as_Lcoursier_core_Version(that);
   return $m_Lcoursier_core_Version$().listCompare__sci_Vector__sci_Vector__I(this.items__sci_Vector(), other.items__sci_Vector())
+});
+$c_Lcoursier_core_Version.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Version))
 });
 $c_Lcoursier_core_Version.prototype.init___T = (function(repr) {
   this.repr$1 = repr;
@@ -60769,11 +60844,12 @@ $c_Lcoursier_core_Version.prototype.items$lzycompute__p1__sci_Vector = (function
   return this.items$1
 });
 $c_Lcoursier_core_Version.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Version")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.repr$1)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Version.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 function $as_Lcoursier_core_Version(obj) {
   return (((obj instanceof $c_Lcoursier_core_Version) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Version"))
@@ -61424,17 +61500,18 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
         while (this$8.$$undhasNext$2) {
           var arg1 = this$8.next__O();
           var x$3 = $as_T(arg1);
+          $m_Lcoursier_core_Version$();
           b.$$plus$eq__O__scm_Builder(new $c_Lcoursier_core_Version().init___T(x$3))
         };
         var parsedVersions = $as_sci_Vector(b.result__O());
         var f = (function(this$2$1) {
           return (function(x$4$2) {
             var x$4 = $as_Lcoursier_core_Version(x$4$2);
-            var this$9 = x$4.items__sci_Vector();
-            var this$10 = this$9.iterator__sci_VectorIterator();
+            var this$10 = x$4.items__sci_Vector();
+            var this$11 = this$10.iterator__sci_VectorIterator();
             var res = true;
-            while ((res && this$10.$$undhasNext$2)) {
-              var arg1$1 = this$10.next__O();
+            while ((res && this$11.$$undhasNext$2)) {
+              var arg1$1 = this$11.next__O();
               var x0$1 = $as_Lcoursier_core_Version$Item(arg1$1);
               if ((!(x0$1 instanceof $c_Lcoursier_core_Version$Tag))) {
                 res = true
@@ -61517,9 +61594,9 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
         } else {
           $m_sci_Vector$();
           var b$1 = new $c_sci_VectorBuilder().init___();
-          var this$12 = parsedVersions.iterator__sci_VectorIterator();
-          while (this$12.$$undhasNext$2) {
-            var arg1$2 = this$12.next__O();
+          var this$13 = parsedVersions.iterator__sci_VectorIterator();
+          while (this$13.$$undhasNext$2) {
+            var arg1$2 = this$13.next__O();
             if (($uZ(f(arg1$2)) !== false)) {
               b$1.$$plus$eq__O__sci_VectorBuilder(arg1$2)
             }
@@ -61532,9 +61609,9 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
           var value$1 = ("Found only pre-versions at " + listingUrl$1);
           var res$1 = new $c_s_util_Left().init___O(value$1)
         } else {
-          var this$14 = $m_s_math_Ordering$();
+          var this$15 = $m_s_math_Ordering$();
           var evidence$1 = $m_s_Predef$().singleton$und$less$colon$less$2;
-          var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$14, evidence$1);
+          var cmp = new $c_s_math_LowPriorityOrderingImplicits$$anon$3().init___s_math_LowPriorityOrderingImplicits__F1(this$15, evidence$1);
           var latest = $as_Lcoursier_core_Version($f_sc_TraversableOnce__max__s_math_Ordering__O(nonPreVersions, cmp));
           $m_s_package$();
           $m_Lcoursier_core_Versions$();
@@ -61543,9 +61620,9 @@ $c_Lcoursier_maven_MavenRepository.prototype.versionsFromListing__p1__Lcoursier_
           $m_sci_Vector$();
           var bf$1 = $m_sc_IndexedSeq$().ReusableCBF$6;
           var b$2 = $f_sc_TraversableLike__builder$1__psc_TraversableLike__scg_CanBuildFrom__scm_Builder(nonPreVersions, bf$1);
-          var this$16 = nonPreVersions.iterator__sci_VectorIterator();
-          while (this$16.$$undhasNext$2) {
-            var arg1$3 = this$16.next__O();
+          var this$17 = nonPreVersions.iterator__sci_VectorIterator();
+          while (this$17.$$undhasNext$2) {
+            var arg1$3 = this$17.next__O();
             var x$5 = $as_Lcoursier_core_Version(arg1$3);
             b$2.$$plus$eq__O__scm_Builder(x$5.repr$1)
           };
@@ -62738,32 +62815,38 @@ $c_Lcoursier_core_Version$BuildMetadata.prototype.productPrefix__T = (function()
 $c_Lcoursier_core_Version$BuildMetadata.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_core_Version$BuildMetadata.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Version$BuildMetadata)) {
-    var BuildMetadata$1 = $as_Lcoursier_core_Version$BuildMetadata(x$1);
-    return (this.value$2 === BuildMetadata$1.value$2)
+$c_Lcoursier_core_Version$BuildMetadata.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Version$BuildMetadata(obj);
+    return (this.value$2 === other.value$2)
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Version$BuildMetadata.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Version$BuildMetadata.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.value$2;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Version$BuildMetadata.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("BuildMetadata(");
+  var obj = this.value$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Version$BuildMetadata.prototype.order__I = (function() {
   return this.order$2
+});
+$c_Lcoursier_core_Version$BuildMetadata.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Version$BuildMetadata))
 });
 $c_Lcoursier_core_Version$BuildMetadata.prototype.compareToEmpty__I = (function() {
   return 0
@@ -62774,11 +62857,12 @@ $c_Lcoursier_core_Version$BuildMetadata.prototype.init___T = (function(value) {
   return this
 });
 $c_Lcoursier_core_Version$BuildMetadata.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("BuildMetadata")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.value$2)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Version$BuildMetadata.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 function $as_Lcoursier_core_Version$BuildMetadata(obj) {
   return (((obj instanceof $c_Lcoursier_core_Version$BuildMetadata) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Version$BuildMetadata"))
@@ -62944,29 +63028,32 @@ $c_Lcoursier_core_Version$Tag.prototype.productPrefix__T = (function() {
 $c_Lcoursier_core_Version$Tag.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_core_Version$Tag.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Version$Tag)) {
-    var Tag$1 = $as_Lcoursier_core_Version$Tag(x$1);
-    return (this.value$2 === Tag$1.value$2)
+$c_Lcoursier_core_Version$Tag.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Version$Tag(obj);
+    return (this.value$2 === other.value$2)
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Version$Tag.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Version$Tag.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.value$2;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Version$Tag.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Tag(");
+  var obj = this.value$2;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Version$Tag.prototype.order__I = (function() {
   return this.order$2
@@ -62991,6 +63078,9 @@ $c_Lcoursier_core_Version$Tag.prototype.compareToEmpty__I = (function() {
 $c_Lcoursier_core_Version$Tag.prototype.isPreRelease__Z = (function() {
   return (this.level__I() < 0)
 });
+$c_Lcoursier_core_Version$Tag.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Version$Tag))
+});
 $c_Lcoursier_core_Version$Tag.prototype.init___T = (function(value) {
   this.value$2 = value;
   this.order$2 = (-1);
@@ -62998,8 +63088,12 @@ $c_Lcoursier_core_Version$Tag.prototype.init___T = (function(value) {
   return this
 });
 $c_Lcoursier_core_Version$Tag.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Tag")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.value$2)) | 0);
+  return $imul(37, code)
+});
+$c_Lcoursier_core_Version$Tag.prototype.productIterator__sc_Iterator = (function() {
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 $c_Lcoursier_core_Version$Tag.prototype.level$lzycompute__p2__I = (function() {
   if ((!this.bitmap$0$2)) {
@@ -63008,9 +63102,6 @@ $c_Lcoursier_core_Version$Tag.prototype.level$lzycompute__p2__I = (function() {
     this.bitmap$0$2 = true
   };
   return this.level$2
-});
-$c_Lcoursier_core_Version$Tag.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
 });
 function $as_Lcoursier_core_Version$Tag(obj) {
   return (((obj instanceof $c_Lcoursier_core_Version$Tag) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Version$Tag"))
@@ -64098,34 +64189,40 @@ $c_Lcoursier_core_Version$BigNumber.prototype.productPrefix__T = (function() {
 $c_Lcoursier_core_Version$BigNumber.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_core_Version$BigNumber.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Version$BigNumber)) {
-    var BigNumber$1 = $as_Lcoursier_core_Version$BigNumber(x$1);
+$c_Lcoursier_core_Version$BigNumber.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Version$BigNumber(obj);
     var x = this.value$3;
-    var x$2 = BigNumber$1.value$3;
+    var x$2 = other.value$3;
     return ((x === null) ? (x$2 === null) : x.equals__O__Z(x$2))
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Version$BigNumber.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Version$BigNumber.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.value$3;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("BigNumber(");
+  var obj = this.value$3;
+  var str = ("" + obj);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.order__I = (function() {
   return this.order$3
+});
+$c_Lcoursier_core_Version$BigNumber.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Version$BigNumber))
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.compareToEmpty__I = (function() {
   var this$2 = this.value$3;
@@ -64134,11 +64231,12 @@ $c_Lcoursier_core_Version$BigNumber.prototype.compareToEmpty__I = (function() {
   return this$2.bigInteger$3.compareTo__Ljava_math_BigInteger__I(that.bigInteger$3)
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.hashCode__I = (function() {
-  var this$2 = $m_s_util_hashing_MurmurHash3$();
-  return this$2.productHash__s_Product__I__I(this, (-889275714))
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("BigNumber")) | 0);
+  code = (($imul(37, code) + $m_sr_Statics$().anyHash__O__I(this.value$3)) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 $c_Lcoursier_core_Version$BigNumber.prototype.init___s_math_BigInt = (function(value) {
   this.value$3 = value;
@@ -64188,32 +64286,38 @@ $c_Lcoursier_core_Version$Number.prototype.productPrefix__T = (function() {
 $c_Lcoursier_core_Version$Number.prototype.productArity__I = (function() {
   return 1
 });
-$c_Lcoursier_core_Version$Number.prototype.equals__O__Z = (function(x$1) {
-  if ((this === x$1)) {
-    return true
-  } else if ((x$1 instanceof $c_Lcoursier_core_Version$Number)) {
-    var Number$1 = $as_Lcoursier_core_Version$Number(x$1);
-    return (this.value$3 === Number$1.value$3)
+$c_Lcoursier_core_Version$Number.prototype.equals__O__Z = (function(obj) {
+  if (this.canEqual__O__Z(obj)) {
+    var other = $as_Lcoursier_core_Version$Number(obj);
+    return (this.value$3 === other.value$3)
   } else {
     return false
   }
 });
-$c_Lcoursier_core_Version$Number.prototype.productElement__I__O = (function(x$1) {
-  switch (x$1) {
+$c_Lcoursier_core_Version$Number.prototype.productElement__I__O = (function(n) {
+  switch (n) {
     case 0: {
       return this.value$3;
       break
     }
     default: {
-      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + x$1))
+      throw new $c_jl_IndexOutOfBoundsException().init___T(("" + n))
     }
   }
 });
 $c_Lcoursier_core_Version$Number.prototype.toString__T = (function() {
-  return $m_sr_ScalaRunTime$().$$undtoString__s_Product__T(this)
+  var b = new $c_jl_StringBuilder().init___T("Number(");
+  var i = this.value$3;
+  var str = ("" + i);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + str);
+  b.java$lang$StringBuilder$$content$f = (b.java$lang$StringBuilder$$content$f + ")");
+  return b.java$lang$StringBuilder$$content$f
 });
 $c_Lcoursier_core_Version$Number.prototype.order__I = (function() {
   return this.order$3
+});
+$c_Lcoursier_core_Version$Number.prototype.canEqual__O__Z = (function(obj) {
+  return ((obj !== null) && (obj instanceof $c_Lcoursier_core_Version$Number))
 });
 $c_Lcoursier_core_Version$Number.prototype.compareToEmpty__I = (function() {
   var x = this.value$3;
@@ -64227,12 +64331,12 @@ $c_Lcoursier_core_Version$Number.prototype.init___I = (function(value) {
   return this
 });
 $c_Lcoursier_core_Version$Number.prototype.hashCode__I = (function() {
-  var acc = (-889275714);
-  acc = $m_sr_Statics$().mix__I__I__I(acc, this.value$3);
-  return $m_sr_Statics$().finalizeHash__I__I__I(acc, 1)
+  var code = ((17 + $m_sr_Statics$().anyHash__O__I("Number")) | 0);
+  code = (($imul(37, code) + this.value$3) | 0);
+  return $imul(37, code)
 });
 $c_Lcoursier_core_Version$Number.prototype.productIterator__sc_Iterator = (function() {
-  return new $c_sr_ScalaRunTime$$anon$1().init___s_Product(this)
+  return new $c_s_Product$$anon$1().init___s_Product(this)
 });
 function $as_Lcoursier_core_Version$Number(obj) {
   return (((obj instanceof $c_Lcoursier_core_Version$Number) || (obj === null)) ? obj : $throwClassCastException(obj, "coursier.core.Version$Number"))
