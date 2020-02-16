@@ -7,6 +7,7 @@ import java.time.Instant
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.launcher.internal.Windows
@@ -16,7 +17,7 @@ object Install extends CaseApp[InstallOptions] {
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
 
-    val params = InstallParams(options).exitOnError()
+    val params = InstallParams(options, args.all.nonEmpty).exitOnError()
 
     if (params.output.verbosity >= 1)
       System.err.println(s"Using install directory ${params.shared.dir}")
@@ -30,10 +31,14 @@ object Install extends CaseApp[InstallOptions] {
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
-    if (args.all.nonEmpty && params.channels.isEmpty) {
-      System.err.println(s"Error: no channels specified")
-      sys.exit(1)
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
     }
+
+    val installDir = params.shared.installDir(cache)
+      .withVerbosity(params.output.verbosity)
+      .withNativeImageJavaHome(Some(graalvmHome))
 
     if (params.installChannels.nonEmpty) {
 
@@ -54,78 +59,80 @@ object Install extends CaseApp[InstallOptions] {
         System.err.println(s"Writing $f")
       Files.createDirectories(f.toPath.getParent)
       Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
-    }
+    } else if (params.env.env)
+      println(installDir.envUpdate.script)
+    else if (params.env.setup) {
+      val task = params.env.setupTask(
+        installDir.envUpdate,
+        params.env.envVarUpdater,
+        params.output.verbosity,
+        MaybeSetupPath.headerComment
+      )
+      task.unsafeRun()(cache.ec)
+    } else {
 
-    if (args.all.isEmpty) {
-      if (params.output.verbosity >= 0 && params.installChannels.isEmpty)
-        System.err.println("Nothing to install")
-      sys.exit(0)
-    }
-
-    val graalvmHome = { version: String =>
-      params.sharedJava.javaHome(cache, params.output.verbosity)
-        .get(s"graalvm:$version")
-    }
-
-    val installDir = params.shared.installDir(cache)
-      .withVerbosity(params.output.verbosity)
-      .withNativeImageJavaHome(Some(graalvmHome))
-
-    val channels = Channels(params.channels, params.shared.repositories, cache)
-      .withVerbosity(params.output.verbosity)
-
-    try {
-      for (id <- args.all) {
-
-        val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-          case Left(err: Channels.ChannelsException) =>
-            System.err.println(err.getMessage)
-            sys.exit(1)
-          case Left(err) => throw err
-          case Right(appInfo) => appInfo
-        }
-
-        val wroteSomethingOpt = installDir.createOrUpdate(
-          appInfo,
-          Instant.now(),
-          force = params.force
-        )
-
-        wroteSomethingOpt match {
-          case Some(true) =>
-            if (params.output.verbosity >= 0)
-              System.err.println(s"Wrote ${appInfo.source.id}")
-          case Some(false) =>
-            if (params.output.verbosity >= 1)
-              System.err.println(s"${appInfo.source.id} doesn't need updating")
-          case None =>
-            if (params.output.verbosity >= 0)
-              System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
-        }
+      if (args.all.isEmpty) {
+        if (params.output.verbosity >= 0 && params.installChannels.isEmpty)
+          System.err.println("Nothing to install")
+        sys.exit(0)
       }
-    } catch {
-      case e: InstallDir.InstallDirException =>
-        System.err.println(e.getMessage)
-        if (params.output.verbosity >= 2)
-          throw e
-        else
-          sys.exit(1)
-    }
 
-    if (params.output.verbosity >= 0) {
-      val path = Option(System.getenv("PATH"))
-        .toSeq
-        .flatMap(_.split(File.pathSeparatorChar).toSeq)
-        .toSet
+      val channels = Channels(params.channels, params.shared.repositories, cache)
+        .withVerbosity(params.output.verbosity)
 
-      if (!path(params.shared.dir.toAbsolutePath.toString)) {
-        System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
-        if (!Windows.isWindows)
-          System.err.println(
-            s"""To fix that, add the following line to ${ShellUtil.rcFileOpt.getOrElse("your shell configuration file")}
-               |
-               |export PATH="$$PATH:${params.shared.dir.toAbsolutePath}"""".stripMargin
+      try {
+        for (id <- args.all) {
+
+          val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
+            case Left(err: Channels.ChannelsException) =>
+              System.err.println(err.getMessage)
+              sys.exit(1)
+            case Left(err) => throw err
+            case Right(appInfo) => appInfo
+          }
+
+          val wroteSomethingOpt = installDir.createOrUpdate(
+            appInfo,
+            Instant.now(),
+            force = params.force
           )
+
+          wroteSomethingOpt match {
+            case Some(true) =>
+              if (params.output.verbosity >= 0)
+                System.err.println(s"Wrote ${appInfo.source.id}")
+            case Some(false) =>
+              if (params.output.verbosity >= 1)
+                System.err.println(s"${appInfo.source.id} doesn't need updating")
+            case None =>
+              if (params.output.verbosity >= 0)
+                System.err.println(s"Could not install ${appInfo.source.id} (concurrent operation ongoing)")
+          }
+        }
+      } catch {
+        case e: InstallDir.InstallDirException =>
+          System.err.println(e.getMessage)
+          if (params.output.verbosity >= 2)
+            throw e
+          else
+            sys.exit(1)
+      }
+
+      if (params.output.verbosity >= 0) {
+        val path = Option(System.getenv("PATH"))
+          .toSeq
+          .flatMap(_.split(File.pathSeparatorChar).toSeq)
+          .toSet
+
+        if (!path(params.shared.dir.toAbsolutePath.toString)) {
+          System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
+          if (!Windows.isWindows)
+            System.err.println(
+              s"""To fix that, add the following line to ${ShellUtil.rcFileOpt.getOrElse("your shell configuration file")}
+                 |
+                 |export PATH="$$PATH:${params.shared.dir.toAbsolutePath}"""".stripMargin
+            )
+        }
       }
     }
   }

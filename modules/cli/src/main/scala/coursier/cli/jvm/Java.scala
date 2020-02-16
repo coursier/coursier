@@ -4,6 +4,8 @@ import java.io.File
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.params.EnvParams
+import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.Version
 import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
@@ -121,10 +123,11 @@ object Java extends CaseApp[JavaOptions] {
       if (params.env.env)
         println(envUpdate.script)
       else if (params.env.setup) {
-        val task = JavaHome.setup(
+        val task = params.env.setupTask(
           envUpdate,
           params.env.envVarUpdater,
-          params.output.verbosity
+          params.output.verbosity,
+          MaybeInstallJvm.headerComment
         )
         task.unsafeRun()(coursierCache.ec)
       } else if (Execve.available()) {

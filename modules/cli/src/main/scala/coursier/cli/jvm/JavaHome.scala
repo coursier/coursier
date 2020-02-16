@@ -13,61 +13,6 @@ import coursier.util.{Sync, Task}
 
 object JavaHome extends CaseApp[JavaHomeOptions] {
 
-  def setup(
-    envUpdate: EnvironmentUpdate,
-    envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-    verbosity: Int
-  ): Task[Unit] =
-    for {
-
-      updatedSomething <- {
-
-        if (envUpdate.isEmpty) Task.point(false)
-        else
-          envVarUpdater match {
-            case Left(windowsEnvVarUpdater) =>
-              val msg = s"Updating the " +
-                (envUpdate.set.map(_._1) ++ envUpdate.pathLikeAppends.map(_._1)).mkString(", ") +
-                " user environment variable(s)."
-              Task.delay {
-                if (verbosity >= 0)
-                  println(msg)
-                windowsEnvVarUpdater.applyUpdate(envUpdate)
-              }
-            case Right(profileUpdater) =>
-              lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replaceAllLiterally(sys.props("user.home"), "~"))
-              val msg = s"Updating ${profileFilesStr.mkString(", ")}"
-              Task.delay {
-                if (verbosity >= 0)
-                  println(msg)
-                profileUpdater.applyUpdate(envUpdate, MaybeInstallJvm.headerComment)
-              }
-          }
-      }
-
-      _ <- {
-        if (updatedSomething && verbosity >= 0)
-          Task.delay {
-            val messageStart =
-              if (envVarUpdater.isLeft)
-                "Some global environment variables were updated."
-              else
-                "Some shell configuration files were updated."
-
-            val message =
-              messageStart + " It is recommended to close this terminal once " +
-                "the setup command is done, and open a new one " +
-                "for the changes to be taken into account."
-
-            println(message)
-          }
-        else
-          Task.point(())
-      }
-
-    } yield ()
-
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 
     val params = JavaHomeParams(options).exitOnError()
@@ -93,10 +38,11 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     if (params.env.env)
       println(envUpdate.script)
     else if (params.env.setup) {
-      val setupTask = setup(
+      val setupTask = params.env.setupTask(
         envUpdate,
         params.env.envVarUpdater,
-        params.output.verbosity
+        params.output.verbosity,
+        MaybeInstallJvm.headerComment
       )
       setupTask.unsafeRun()(coursierCache.ec)
     } else

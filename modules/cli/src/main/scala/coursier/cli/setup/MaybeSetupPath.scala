@@ -26,8 +26,8 @@ import dataclass.data
 
     val binDirStr = dirStr(binDir)
 
-    val envUpdate = EnvironmentUpdate()
-      .withPathLikeAppends(Seq("PATH" -> binDir.toAbsolutePath.toString))
+    // FIXME Messages may get out of sync with the actual update if it does more than adding to PATH
+    val envUpdate = installDir.envUpdate
 
     val alreadyApplied = envUpdate.alreadyApplied(getEnv, pathSeparator)
 
@@ -49,7 +49,7 @@ import dataclass.data
             case false => Task.point(())
             case true =>
               Task.delay {
-                profileUpdater.applyUpdate(envUpdate, headerComment)
+                profileUpdater.applyUpdate(envUpdate, MaybeSetupPath.headerComment)
               }
           }
       }
@@ -68,7 +68,7 @@ import dataclass.data
       case Right(profileUpdater) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
-          profileUpdater.tryRevertUpdate(envUpdate, headerComment)
+          profileUpdater.tryRevertUpdate(envUpdate, MaybeSetupPath.headerComment)
         }
     }
 
@@ -89,8 +89,6 @@ import dataclass.data
     }
   }
 
-  private def headerComment = "coursier install directory"
-
 }
 
 object MaybeSetupPath {
@@ -100,5 +98,7 @@ object MaybeSetupPath {
       .toAbsolutePath
       .toString
       .replaceAllLiterally(sys.props("user.home"), "~")
+
+  def headerComment = "coursier install directory"
 
 }

@@ -11,6 +11,7 @@ import coursier.Fetch
 import coursier.cache.{ArtifactError, Cache, FileCache}
 import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
+import coursier.env.EnvironmentUpdate
 import coursier.launcher.{AssemblyGenerator, BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Generator, NativeImageGenerator, Parameters, Preamble, ScalaNativeGenerator}
 import coursier.launcher.internal.FileUtil
 import coursier.launcher.native.NativeBuilder
@@ -365,6 +366,10 @@ import scala.util.control.NonFatal
         writtenOpt0
       }
     } yield writtenOpt
+
+  def envUpdate: EnvironmentUpdate =
+    EnvironmentUpdate()
+      .withPathLikeAppends(Seq("PATH" -> baseDir.toAbsolutePath.toString))
 
 }
 
