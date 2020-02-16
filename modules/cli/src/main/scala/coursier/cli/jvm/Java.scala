@@ -29,7 +29,12 @@ object Java extends CaseApp[JavaOptions] {
 
     val params = JavaParams(options).exitOnError()
 
-    if ((params.env || params.installed || params.available) && args0.nonEmpty) {
+    if (Seq(params.env.env, params.installed, params.available).count(identity) > 1) {
+      System.err.println("Error: can only specify one of --env, --installed, --available.")
+      sys.exit(1)
+    }
+
+    if ((params.env.env || params.installed || params.available) && args0.nonEmpty) {
       System.err.println(s"Error: unexpected arguments passed along --env, --installed, or --available: ${args0.mkString(" ")}")
       sys.exit(1)
     }
@@ -125,7 +130,7 @@ object Java extends CaseApp[JavaOptions] {
 
       val extraEnv = envUpdate.scriptUpdates()
 
-      if (params.env) {
+      if (params.env.env) {
         val q = "\""
         for ((k, v) <- extraEnv)
           // FIXME Is this escaping fine?
