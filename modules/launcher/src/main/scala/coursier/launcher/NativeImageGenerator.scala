@@ -39,8 +39,10 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
     val startCmd = {
       val version = parameters.graalvmVersion.getOrElse("latest.release")
+      val isInterval = version.startsWith("latest") || version.endsWith("+") || version.contains("[") || version.contains("(")
+      val version0 = if (isInterval) version else version + "+"
       val javaOpts = parameters.graalvmJvmOptions
-      val cp = parameters.fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version"))
+      val cp = parameters.fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version0"))
       // Really only works well if the JVM is GraalVM
       val javaPath = parameters.javaHome
         .map(new File(_, "bin"))
