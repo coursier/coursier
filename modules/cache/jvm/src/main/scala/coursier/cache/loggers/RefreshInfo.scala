@@ -1,5 +1,7 @@
 package coursier.cache.loggers
 
+import dataclass.data
+
 sealed abstract class RefreshInfo extends Product with Serializable {
   def fraction: Option[Double]
   def watching: Boolean
@@ -7,7 +9,7 @@ sealed abstract class RefreshInfo extends Product with Serializable {
 
 object RefreshInfo {
 
-  final case class DownloadInfo(
+  @data class DownloadInfo(
     downloaded: Long,
     previouslyDownloaded: Long,
     length: Option[Long],
@@ -27,7 +29,7 @@ object RefreshInfo {
     }
   }
 
-  final case class CheckUpdateInfo(
+  @data class CheckUpdateInfo(
     currentTimeOpt: Option[Long],
     remoteTimeOpt: Option[Long],
     isDone: Boolean

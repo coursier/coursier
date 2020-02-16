@@ -339,7 +339,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             case (name, artifacts) =>
               val artifactFiles0 = artifacts.map(a => (a, artifactFiles.getOrElse(a, sys.error("should not happen"))))
               classloaderContent(params.specific.bootstrapPackaging, artifactFiles0)
-                .copy(loaderName = name)
+                .withLoaderName(name)
           }
 
           Parameters.Bootstrap(content, mainClass)

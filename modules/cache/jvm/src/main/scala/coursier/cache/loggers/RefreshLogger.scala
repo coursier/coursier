@@ -218,11 +218,10 @@ class RefreshLogger(
     assert(info != null, s"Incoherent state ($url)")
     val newInfo = info match {
       case info0: DownloadInfo =>
-        info0.copy(
-          length = Some(totalLength),
-          previouslyDownloaded = alreadyDownloaded,
-          watching = watching
-        )
+        info0
+          .withLength(Some(totalLength))
+          .withPreviouslyDownloaded(alreadyDownloaded)
+          .withWatching(watching)
       case _ =>
         throw new Exception(s"Incoherent display state for $url")
     }
@@ -235,7 +234,7 @@ class RefreshLogger(
     assert(info != null, s"Incoherent state ($url)")
     val newInfo = info match {
       case info0: DownloadInfo =>
-        info0.copy(downloaded = downloaded)
+        info0.withDownloaded(downloaded)
       case _ =>
         throw new Exception(s"Incoherent display state for $url")
     }
@@ -275,7 +274,9 @@ class RefreshLogger(
 
     updateRunnable.removeEntry(url, !newUpdate, s"Checked $url\n") {
       case info: CheckUpdateInfo =>
-        info.copy(remoteTimeOpt = remoteTimeOpt, isDone = true)
+        info
+          .withRemoteTimeOpt(remoteTimeOpt)
+          .withIsDone(true)
       case _ =>
         throw new Exception(s"Incoherent display state for $url")
     }

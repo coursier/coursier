@@ -95,7 +95,7 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
-  @data case class ScalaNative(
+  @data class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
     nativeVersion: String,
@@ -109,7 +109,7 @@ object Parameters {
 
   object ScalaNative {
 
-    @data case class ScalaNativeOptions(
+    @data class ScalaNativeOptions(
       gcOpt: Option[String] = None,
       modeOpt: Option[String] = None,
       linkStubs: Boolean = true,
