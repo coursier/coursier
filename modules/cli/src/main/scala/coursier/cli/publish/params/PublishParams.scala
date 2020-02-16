@@ -10,10 +10,10 @@ import caseapp.Tag
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.params.CacheParams
 import coursier.cli.publish.{Hooks, PublishRepository}
 import coursier.cli.publish.conf.Conf
 import coursier.cli.publish.options.PublishOptions
-import coursier.params.CacheParams
 import coursier.publish.Content
 import coursier.publish.bintray.BintrayApi
 import coursier.publish.checksum.logger.{BatchChecksumLogger, ChecksumLogger, InteractiveChecksumLogger}

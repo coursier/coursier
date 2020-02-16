@@ -203,8 +203,17 @@ object Channels {
       Channel.module(mod"io.get-coursier:apps")
     )
 
+  private lazy val contribChannels0 =
+    // TODO Allow to customize that via env vars / Java properties
+    Seq(
+      Channel.module(mod"io.get-coursier:apps-contrib")
+    )
+
   def defaultChannels: Seq[Channel] =
     defaultChannels0
+  def contribChannels: Seq[Channel] =
+    contribChannels0
+
 
   private def repositoriesRepr(repositories: Seq[Repository]): Seq[String] =
     repositories.toList.flatMap {

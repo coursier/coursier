@@ -6,8 +6,8 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheDefaults
+import coursier.cli.params.CacheParams
 import coursier.credentials.FileCredentials
-import coursier.params.CacheParams
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 
 import scala.concurrent.duration.Duration

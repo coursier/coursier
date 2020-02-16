@@ -2,6 +2,7 @@ package coursier.util
 
 import coursier.core._
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
+import dataclass.data
 
 object Print {
 
@@ -12,7 +13,7 @@ object Print {
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  case class Colors private(red: String, yellow: String, reset: String)
+  @data class Colors private(red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)

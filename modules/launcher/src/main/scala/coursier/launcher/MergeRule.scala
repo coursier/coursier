@@ -2,6 +2,7 @@ package coursier.launcher
 
 import java.util.jar.JarFile
 import java.util.regex.Pattern
+import dataclass.data
 
 sealed abstract class MergeRule extends Product with Serializable
 
@@ -10,8 +11,8 @@ object MergeRule {
     def path: String
   }
 
-  final case class Exclude(path: String) extends PathRule
-  final case class ExcludePattern(path: Pattern) extends MergeRule
+  @data class Exclude(path: String) extends PathRule
+  @data class ExcludePattern(path: Pattern) extends MergeRule
 
   object ExcludePattern {
     def apply(s: String): ExcludePattern =
@@ -20,8 +21,8 @@ object MergeRule {
 
   // TODO Accept a separator: Array[Byte] argument in these
   // (to separate content with a line return in particular)
-  final case class Append(path: String) extends PathRule
-  final case class AppendPattern(path: Pattern) extends MergeRule
+  @data class Append(path: String) extends PathRule
+  @data class AppendPattern(path: Pattern) extends MergeRule
 
   object AppendPattern {
     def apply(s: String): AppendPattern =

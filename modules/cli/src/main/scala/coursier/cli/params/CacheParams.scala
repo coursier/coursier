@@ -1,4 +1,4 @@
-package coursier.params
+package coursier.cli.params
 
 import java.io.File
 import java.util.concurrent.ExecutorService

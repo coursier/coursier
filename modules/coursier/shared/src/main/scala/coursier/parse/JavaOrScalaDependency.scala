@@ -1,6 +1,7 @@
 package coursier.parse
 
 import coursier.core.{Dependency, ModuleName}
+import dataclass.data
 
 sealed abstract class JavaOrScalaDependency extends Product with Serializable {
   def module: JavaOrScalaModule
@@ -29,7 +30,7 @@ object JavaOrScalaDependency {
         ScalaDependency(dep.withModule(s.baseModule), s.fullCrossVersion, withPlatformSuffix = false, Set.empty)
     }
 
-  final case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule]) extends JavaOrScalaDependency {
+  @data class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule]) extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
     def version: String =
@@ -41,11 +42,11 @@ object JavaOrScalaDependency {
       this
 
     def addExclude(excl: JavaOrScalaModule*): JavaDependency =
-      copy(exclude = exclude ++ excl)
+      withExclude(exclude ++ excl)
     def withUnderlyingDependency(f: Dependency => Dependency): JavaDependency =
-      copy(dependency = f(dependency))
+      withDependency(f(dependency))
   }
-  final case class ScalaDependency(
+  @data class ScalaDependency(
     baseDependency: Dependency,
     fullCrossVersion: Boolean,
     withPlatformSuffix: Boolean,
@@ -85,8 +86,8 @@ object JavaOrScalaDependency {
         this
 
     def addExclude(excl: JavaOrScalaModule*): ScalaDependency =
-      copy(exclude = exclude ++ excl)
+      withExclude(exclude ++ excl)
     def withUnderlyingDependency(f: Dependency => Dependency): ScalaDependency =
-      copy(baseDependency = f(baseDependency))
+      withBaseDependency(f(baseDependency))
   }
 }

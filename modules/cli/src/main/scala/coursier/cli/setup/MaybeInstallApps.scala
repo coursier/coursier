@@ -27,7 +27,7 @@ import dataclass.data
                 case Some(true) => s"Installed $id"
                 case Some(false) => s"Found $id"
               }
-              System.out.println("  " + message)
+              System.err.println("  " + message)
             }
           }
         } yield ()
@@ -51,7 +51,7 @@ import dataclass.data
                 case Some(true) => s"Uninstalled $installedName"
                 case Some(false) => s"$installedName was not installed"
               }
-              System.out.println(message)
+              System.err.println(message)
             }
           }
         } yield ()

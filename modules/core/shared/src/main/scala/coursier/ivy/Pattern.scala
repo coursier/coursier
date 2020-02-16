@@ -2,9 +2,10 @@ package coursier.ivy
 
 import coursier.util.Traverse.TraverseOps
 import coursier.util.ValidationNel
+import dataclass.data
 import fastparse._, NoWhitespace._
 
-final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
+@data class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString
 
@@ -13,12 +14,12 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
   def substituteProperties(properties: Map[String, String]): Either[String, Pattern] = {
 
     val validation = chunks.validationNelTraverse[String, Seq[Pattern.Chunk]] {
-      case ChunkOrProperty.Prop(name, alternativesOpt) =>
-        properties.get(name) match {
+      case prop: ChunkOrProperty.Prop => //(name, alternativesOpt) =>
+        properties.get(prop.name) match {
           case Some(value) =>
             ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
           case None =>
-            alternativesOpt match {
+            prop.alternative match {
               case Some(alt) =>
                 ValidationNel.fromEither(
                   PropertiesPattern(alt)
@@ -26,22 +27,22 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
                     .map(_.chunks.toVector)
                 )
               case None =>
-                ValidationNel.failure(name)
+                ValidationNel.failure(prop.name)
             }
         }
 
-      case ChunkOrProperty.Opt(l @ _*) =>
+      case opt: ChunkOrProperty.Opt =>
         ValidationNel.fromEither(
-          PropertiesPattern(l)
+          PropertiesPattern(opt.content)
             .substituteProperties(properties)
-            .map(l => Seq(Pattern.Chunk.Opt(l.chunks: _*)))
+            .map(l => Seq(Pattern.Chunk.Opt(l.chunks)))
         )
 
-      case ChunkOrProperty.Var(name) =>
-        ValidationNel.success(Seq(Pattern.Chunk.Var(name)))
+      case v: ChunkOrProperty.Var =>
+        ValidationNel.success(Seq(Pattern.Chunk.Var(v.name)))
 
-      case ChunkOrProperty.Const(value) =>
-        ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
+      case c: ChunkOrProperty.Const =>
+        ValidationNel.success(Seq(Pattern.Chunk.Const(c.value)))
 
     }.map(c => Pattern(c.flatten))
 
@@ -51,7 +52,7 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
   }
 }
 
-final case class Pattern(chunks: Seq[Pattern.Chunk]) {
+@data class Pattern(chunks: Seq[Pattern.Chunk]) {
 
   def +:(chunk: Pattern.Chunk): Pattern =
     Pattern(chunk +: chunks)
@@ -64,15 +65,15 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
 
     def helper(chunks: Seq[Chunk]): ValidationNel[String, Seq[Chunk.Const]] =
       chunks.validationNelTraverse[String, Seq[Chunk.Const]] {
-        case Chunk.Var(name) =>
-          variables.get(name) match {
+        case v: Chunk.Var =>
+          variables.get(v.name) match {
             case Some(value) =>
               ValidationNel.success(Seq(Chunk.Const(value)))
             case None =>
-              ValidationNel.failure(name)
+              ValidationNel.failure(v.name)
           }
-        case Chunk.Opt(l @ _*) =>
-          val res = helper(l)
+        case opt: Chunk.Opt =>
+          val res = helper(opt.content)
           if (res.isSuccess)
             res
           else
@@ -97,8 +98,8 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
   def substitute(varName: String, replacement: Seq[Chunk]): Pattern =
     Pattern(
       chunks.flatMap {
-        case Chunk.Var(`varName`) => replacement
-        case Chunk.Opt(chunks0 @ _*) => Seq(Chunk.Opt(Pattern(chunks0).substitute(varName, replacement).chunks: _*))
+        case v: Chunk.Var if v.name == varName => replacement
+        case opt: Chunk.Opt => Seq(Chunk.Opt(Pattern(opt.content).substitute(varName, replacement).chunks))
         case c => Seq(c)
       }
     )
@@ -109,7 +110,7 @@ final case class Pattern(chunks: Seq[Pattern.Chunk]) {
   private lazy val constStart = chunks
     .iterator
     .map {
-      case Pattern.Chunk.Const(c) => Some(c)
+      case c: Pattern.Chunk.Const => Some(c.value)
       case _ => None
     }
     .takeWhile(_.nonEmpty)
@@ -134,17 +135,25 @@ object PropertiesPattern {
   }
 
   object ChunkOrProperty {
-    final case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]]) extends ChunkOrProperty {
+    @data class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]]) extends ChunkOrProperty {
       def string: String =
       s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
-    final case class Var(name: String) extends ChunkOrProperty {
+    @data class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
     }
-    final case class Opt(content: ChunkOrProperty*) extends ChunkOrProperty {
+    @data class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
-    final case class Const(value: String) extends ChunkOrProperty {
+    object Opt {
+      def apply(elem: ChunkOrProperty): Opt =
+        Opt(Seq(elem))
+      def apply(elem: ChunkOrProperty, elem1: ChunkOrProperty): Opt =
+        Opt(Seq(elem, elem1))
+      def apply(elem: ChunkOrProperty, elem1: ChunkOrProperty, elem2: ChunkOrProperty): Opt =
+        Opt(Seq(elem, elem1, elem2))
+    }
+    @data class Const(value: String) extends ChunkOrProperty {
       def string: String = value
     }
 
@@ -159,7 +168,7 @@ object PropertiesPattern {
 
     def constant: P[ChunkOrProperty.Const] =
       P(chars.!)
-        .map(ChunkOrProperty.Const)
+        .map(ChunkOrProperty.Const(_))
 
     def property: P[ChunkOrProperty.Prop] =
       P(s"$${" ~ noHyphenChars.! ~ ("-" ~ chunks).? ~ "}")
@@ -167,11 +176,11 @@ object PropertiesPattern {
 
     def variable: P[ChunkOrProperty.Var] =
       P("[" ~ chars.! ~ "]")
-        .map(ChunkOrProperty.Var)
+        .map(ChunkOrProperty.Var(_))
 
     def optional: P[ChunkOrProperty.Opt] =
       P("(" ~ chunks ~ ")")
-        .map(l => ChunkOrProperty.Opt(l: _*))
+        .map(l => ChunkOrProperty.Opt(l))
 
     def chunks: P[Seq[ChunkOrProperty]] =
       P((constant | property | variable | optional).rep)
@@ -198,13 +207,21 @@ object Pattern {
   }
 
   object Chunk {
-    final case class Var(name: String) extends Chunk {
+    @data class Var(name: String) extends Chunk {
       def string: String = "[" + name + "]"
     }
-    final case class Opt(content: Chunk*) extends Chunk {
+    @data class Opt(content: Seq[Chunk]) extends Chunk {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
-    final case class Const(value: String) extends Chunk {
+    object Opt {
+      def apply(chunk: Chunk): Opt =
+        Opt(Seq(chunk))
+      def apply(chunk: Chunk, chunk1: Chunk): Opt =
+        Opt(Seq(chunk, chunk1))
+      def apply(chunk: Chunk, chunk1: Chunk, chunk2: Chunk): Opt =
+        Opt(Seq(chunk, chunk1, chunk2))
+    }
+    @data class Const(value: String) extends Chunk {
       def string: String = value
     }
 

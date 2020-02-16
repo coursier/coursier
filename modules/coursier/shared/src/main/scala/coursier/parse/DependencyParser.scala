@@ -299,7 +299,7 @@ object DependencyParser {
                         dep0 match {
                           case j: JavaOrScalaDependency.JavaDependency => j
                           case s: JavaOrScalaDependency.ScalaDependency =>
-                            s.copy(withPlatformSuffix = true)
+                            s.withWithPlatformSuffix(true)
                         }
                       else
                         dep0

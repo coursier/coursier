@@ -20,6 +20,26 @@ import scala.collection.mutable
   def isEmpty: Boolean =
     set.isEmpty && pathLikeAppends.isEmpty
 
+
+  // references previous values with as variables
+  def scriptUpdates: Seq[(String, String)] =
+    updatedEnv(
+      k => Some(s"$$$k"),
+      File.pathSeparator,
+      upfront = true
+    )
+
+  def script: String = {
+    val q = "\""
+    scriptUpdates
+      .map {
+        case (k, v) =>
+          // FIXME Escape more?
+          s"export $k=$q${v.replaceAllLiterally(q, "\\" + q)}$q"
+      }
+      .mkString("\n") // Use System.lineSeparator() instead? (this is mostly meant for bash…)
+  }
+
   // puts the "path-like appends" upfront, better not to persist these updates
   def transientUpdates(): Seq[(String, String)] =
     updatedEnv(
@@ -51,7 +71,7 @@ import scala.collection.mutable
         }
         m(k) = newValue
       }
-      l.toList.map(k => k -> m(k))
+      set ++ l.toList.map(k => k -> m(k))
     }
 
 

@@ -1,6 +1,7 @@
 package coursier.parse
 
 import coursier.core.{Module, ModuleName}
+import dataclass.data
 
 sealed abstract class JavaOrScalaModule extends Product with Serializable {
   def attributes: Map[String, String]
@@ -20,14 +21,14 @@ object JavaOrScalaModule {
     else
       scalaVersion.split('.').take(2).mkString(".")
 
-  final case class JavaModule(module: Module) extends JavaOrScalaModule {
+  @data class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes
     override def toString =
       module.toString
     def module(scalaBinaryVersion: String, scalaVersion: String): Module =
       module
   }
-  final case class ScalaModule(
+  @data class ScalaModule(
     baseModule: Module,
     fullCrossVersion: Boolean
   ) extends JavaOrScalaModule {

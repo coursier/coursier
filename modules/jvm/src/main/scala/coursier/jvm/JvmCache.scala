@@ -8,6 +8,7 @@ import java.util.Locale
 
 import coursier.cache.{Cache, CacheLocks, CacheLogger, FileCache}
 import coursier.cache.internal.ThreadUtil
+import coursier.core.Version
 import coursier.paths.CoursierPaths
 import coursier.util.{Artifact, Task}
 import dataclass.data
@@ -92,6 +93,18 @@ import scala.util.control.NonFatal
       }
     }
 
+  def getIfInstalled(id: String): Task[Option[(String, File)]] = {
+    entry(id).flatMap {
+      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+      case Right(entry0) =>
+        val dir = baseDirectoryOf(entry0.id)
+        Task.delay(dir.isDirectory).map {
+          case true => Some((entry0.id, JvmCache.finalDirectory(dir, os)))
+          case false => None
+        }
+    }
+  }
+
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger],
@@ -158,16 +171,16 @@ import scala.util.control.NonFatal
   }
 
   def entry(id: String): Task[Either[String, JvmIndexEntry]] =
-    index match {
-      case None => Task.fail(new JvmCache.NoIndexSpecified)
-      case Some(indexTask) =>
-        indexTask.flatMap { index0 =>
-          JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
-            case None =>
-              Task.fail(new JvmCache.MalformedJvmId(id))
-            case Some((name, ver)) =>
+    JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+      case None =>
+        Task.fail(new JvmCache.MalformedJvmId(id))
+      case Some((name, ver)) =>
+        index match {
+          case None => Task.fail(new JvmCache.NoIndexSpecified)
+          case Some(indexTask) =>
+            indexTask.flatMap { index0 =>
               Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
-          }
+            }
         }
     }
 
@@ -263,7 +276,18 @@ import scala.util.control.NonFatal
             // TODO Check that a java executable is there too?
         }
         .map(_.getName)
+        .map { id =>
+          val idx = id.indexOf('@')
+          if (idx < 0)
+            (id, "", Version(""))
+          else
+            (id.take(idx), "@", Version(id.drop(idx + 1)))
+        }
         .sorted
+        .map {
+          case (name, sep, ver) =>
+            name + sep + ver.repr
+        }
     }
 
   def withIndex(index: Task[JvmIndex]): JvmCache =

@@ -6,73 +6,12 @@ import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.env.{EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.env.{EnvironmentUpdate, EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 object JavaHome extends CaseApp[JavaHomeOptions] {
-
-  private def setup(
-    javaHome: coursier.jvm.JavaHome,
-    envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-    id: String,
-    home: File,
-    verbosity: Int
-  ): Task[Unit] = {
-
-    val envUpdate = javaHome.environmentFor(id, home)
-
-    for {
-
-      updatedSomething <- {
-
-        if (envUpdate.isEmpty) Task.point(false)
-        else
-          envVarUpdater match {
-            case Left(windowsEnvVarUpdater) =>
-              val msg = s"Updating the " +
-                (envUpdate.set.map(_._1) ++ envUpdate.pathLikeAppends.map(_._1)).mkString(", ") +
-                " user environment variable(s)."
-              Task.delay {
-                if (verbosity >= 0)
-                  println(msg)
-                windowsEnvVarUpdater.applyUpdate(envUpdate)
-              }
-            case Right(profileUpdater) =>
-              lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replaceAllLiterally(sys.props("user.home"), "~"))
-              val msg = s"Updating ${profileFilesStr.mkString(", ")}"
-              Task.delay {
-                if (verbosity >= 0)
-                  println(msg)
-                profileUpdater.applyUpdate(envUpdate, MaybeInstallJvm.headerComment)
-              }
-          }
-      }
-
-      _ <- {
-        if (updatedSomething && verbosity >= 0)
-          Task.delay {
-            val messageStart =
-              if (envVarUpdater.isLeft)
-                "Some global environment variables were updated."
-              else
-                "Some shell configuration files were updated."
-
-            val message =
-              messageStart + " It is recommended to close this terminal once " +
-                "the setup command is done, and open a new one " +
-                "for the changes to be taken into account."
-
-            println(message)
-          }
-        else
-          Task.point(())
-      }
-
-    } yield ()
-  }
 
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 
@@ -82,7 +21,7 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     val logger = params.output.logger()
     val coursierCache = params.cache.cache(pool, logger)
 
-    val javaHome = params.shared.javaHome(coursierCache, params.output.verbosity)
+    val (jvmCache, javaHome) = params.shared.cacheAndHome(coursierCache, params.output.verbosity)
     val task = javaHome.getWithRetainedId(params.shared.id)
 
     logger.init()
@@ -95,17 +34,20 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       }
       finally logger.stop()
 
-    if (params.setup) {
-      val envVarUpdater =
-        if (Windows.isWindows)
-          Left(WindowsEnvVarUpdater())
-        else
-          Right(
-            ProfileUpdater()
-              .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
-          )
-
-      val setupTask = setup(javaHome, envVarUpdater, retainedId, home, params.output.verbosity)
+    lazy val envUpdate = javaHome.environmentFor(retainedId, home)
+    if (params.env.env) {
+      val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+      print(script)
+    } else if (params.env.disableEnv) {
+      val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+      print(script)
+    } else if (params.env.setup) {
+      val setupTask = params.env.setupTask(
+        envUpdate,
+        params.env.envVarUpdater,
+        params.output.verbosity,
+        MaybeInstallJvm.headerComment
+      )
       setupTask.unsafeRun()(coursierCache.ec)
     } else
       println(home.getAbsolutePath)

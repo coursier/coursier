@@ -40,14 +40,14 @@ abstract class PlatformTestHelpers {
 
   val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = writeMockData)
-      .copy(dummyArtifact = _.url.endsWith(".jar"))
+      .withDummyArtifact(_.url.endsWith(".jar"))
 
   val handmadeMetadataCache: Cache[Task] =
     MockCache.create[Task](handmadeMetadataLocation, pool = pool)
 
   val cacheWithHandmadeMetadata: Cache[Task] =
     MockCache.create[Task](mockDataLocation, pool = pool, Seq(handmadeMetadataLocation), writeMissing = writeMockData)
-      .copy(dummyArtifact = _.url.endsWith(".jar"))
+      .withDummyArtifact(_.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Future {

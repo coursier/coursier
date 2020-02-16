@@ -4,13 +4,14 @@ import coursier.core.{Module, Resolution, Version}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatcher
+import dataclass.data
 
 /**
   * Forces some modules to all have the same version.
   *
   * If ever different versions are found, the highest one is currently selected.
   */
-final case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
+@data class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
 
   import SameVersion._
 

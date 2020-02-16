@@ -6,8 +6,7 @@ import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.install.{SharedChannelParams, SharedInstallParams}
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.OutputParams
-import coursier.params.CacheParams
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
 
 final case class SetupParams(
   sharedJava: SharedJavaParams,
@@ -15,10 +14,11 @@ final case class SetupParams(
   sharedChannel: SharedChannelParams,
   cache: CacheParams,
   output: OutputParams,
-  homeOpt: Option[Path],
+  env: EnvParams,
   banner: Boolean,
   yes: Boolean,
-  tryRevert: Boolean
+  tryRevert: Boolean,
+  apps: Seq[String]
 )
 
 object SetupParams {
@@ -28,21 +28,25 @@ object SetupParams {
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
-    val homeOpt = options.home.filter(_.nonEmpty).map(Paths.get(_))
+    val envV = EnvParams(options.envOptions)
     val banner = options.banner.getOrElse(false)
-    val yes = options.yes
+    val yes = options.yes.getOrElse(envV.toOption.exists(_.env))
     val tryRevert = options.tryRevert
-    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output) =>
+    val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
+      .filter(_.nonEmpty)
+      .getOrElse(DefaultAppList.defaultAppList)
+    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output, env) =>
       SetupParams(
         sharedJava,
         sharedInstall,
         sharedChannel,
         cache,
         output,
-        homeOpt,
+        env,
         banner,
         yes,
-        tryRevert
+        tryRevert,
+        apps
       )
     }
   }

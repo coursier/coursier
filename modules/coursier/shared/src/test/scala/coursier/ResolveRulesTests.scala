@@ -220,11 +220,10 @@ object ResolveRulesTests extends TestSuite {
 
       "with intervals" - async {
 
-        val rule = Strict(
-          exclude = Set(
+        val rule = Strict()
+          .withExclude(Set(
             ModuleMatcher(mod"org.scala-lang:*")
-          )
-        )
+          ))
         val ruleRes = RuleResolution.Fail
 
         val params = ResolutionParams()
@@ -264,11 +263,10 @@ object ResolveRulesTests extends TestSuite {
       "ignore if forced version" - {
         "do ignore" - async {
 
-          val rule = Strict(
-            exclude = Set(
+          val rule = Strict()
+            .withExclude(Set(
               ModuleMatcher(mod"org.scala-lang:*")
-            )
-          )
+            ))
           val ruleRes = RuleResolution.Fail
 
           val params = ResolutionParams()
@@ -292,12 +290,11 @@ object ResolveRulesTests extends TestSuite {
 
         "do not ignore" - async {
 
-          val rule = Strict(
-            exclude = Set(
+          val rule = Strict()
+            .withExclude(Set(
               ModuleMatcher(mod"org.scala-lang:*")
-            ),
-            ignoreIfForcedVersion = false
-          )
+            ))
+            .withIgnoreIfForcedVersion(false)
           val ruleRes = RuleResolution.Fail
 
           val params = ResolutionParams()

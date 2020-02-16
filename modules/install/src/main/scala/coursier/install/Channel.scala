@@ -5,6 +5,7 @@ import java.util.regex.Pattern.quote
 
 import coursier.core.Module
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
+import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
   def repr: String
@@ -12,17 +13,17 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  final case class FromModule(module: Module) extends Channel {
+  @data class FromModule(module: Module) extends Channel {
     def repr: String =
       module.repr
   }
 
-  final case class FromUrl(url: String) extends Channel {
+  @data class FromUrl(url: String) extends Channel {
     def repr: String =
       url
   }
 
-  final case class FromDirectory(path: Path) extends Channel {
+  @data class FromDirectory(path: Path) extends Channel {
     def repr: String =
       path.toString
   }
