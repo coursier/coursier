@@ -183,7 +183,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
       val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
       res
     }

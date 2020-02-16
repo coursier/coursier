@@ -345,7 +345,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       val channels = initialParams.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
       val res = handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }

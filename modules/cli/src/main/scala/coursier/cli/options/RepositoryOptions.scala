@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 
 final case class RepositoryOptions(
 
@@ -18,15 +19,8 @@ final case class RepositoryOptions(
   @Help("Drop module attributes starting with 'info.' - these are sometimes used by projects built with sbt")
     dropInfoAttr: Boolean = false,
 
-  @Help("Channel for apps")
-  @Value("org:name")
-    channel: List[String] = Nil,
-
-  @Help("Add default channels")
-    defaultChannels: Boolean = true,
-
-  @Help("Add channels read from the configuration directory")
-    fileChannels: Boolean = true
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions()
 
 )
 
