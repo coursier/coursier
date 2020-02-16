@@ -9,7 +9,7 @@ import dataclass.data
 
 @data class MaybeSetupPath(
   installDir: InstallDir,
-  envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
+  envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   getEnv: String => Option[String],
   pathSeparator: String,
   confirm: Confirm
@@ -34,8 +34,12 @@ import dataclass.data
     if (alreadyApplied)
       Task.point(())
     else
-      envVarUpdater match {
-        case Left(windowsEnvVarUpdater) =>
+      envVarUpdaterOpt match {
+        case None =>
+          Task.delay {
+            println(envUpdate.script)
+          }
+        case Some(Left(windowsEnvVarUpdater)) =>
           confirm.confirm(s"Should we add $binDirStr to your PATH?", default = true).flatMap {
             case false => Task.point(())
             case true =>
@@ -43,7 +47,7 @@ import dataclass.data
                 windowsEnvVarUpdater.applyUpdate(envUpdate)
               }
           }
-        case Right(profileUpdater) =>
+        case Some(Right(profileUpdater)) =>
           val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
           confirm.confirm(s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
             case false => Task.point(())
@@ -60,19 +64,21 @@ import dataclass.data
     val envUpdate = EnvironmentUpdate()
       .withPathLikeAppends(Seq("PATH" -> binDir.toAbsolutePath.toString))
 
-    val revertedTask = envVarUpdater match {
-      case Left(windowsEnvVarUpdater) =>
+    val revertedTask = envVarUpdaterOpt match {
+      case None =>
+        Task.point(false)
+      case Some(Left(windowsEnvVarUpdater)) =>
         Task.delay {
           windowsEnvVarUpdater.tryRevertUpdate(envUpdate)
         }
-      case Right(profileUpdater) =>
+      case Some(Right(profileUpdater)) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
           profileUpdater.tryRevertUpdate(MaybeSetupPath.headerComment)
         }
     }
 
-    val profileFilesOpt = envVarUpdater match {
+    val profileFilesOpt = envVarUpdaterOpt.flatMap {
       case Left(windowsEnvVarUpdater) =>
         None
       case Right(profileUpdater) =>

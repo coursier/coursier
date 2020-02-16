@@ -10,7 +10,7 @@ import dataclass.data
 
 @data class MaybeInstallJvm(
   coursierCache: Cache[Task],
-  envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
+  envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   javaHome: JavaHome,
   confirm: Confirm,
   defaultId: String
@@ -49,8 +49,13 @@ import dataclass.data
 
       updatedSomething <- {
 
-        envVarUpdater match {
-          case Left(windowsEnvVarUpdater) =>
+        envVarUpdaterOpt match {
+          case None =>
+            Task.delay {
+              println(envUpdate.script)
+              false
+            }
+          case Some(Left(windowsEnvVarUpdater)) =>
             if (envUpdate.isEmpty) Task.point(false)
             else {
               val msg = s"Should we update the " +
@@ -65,7 +70,7 @@ import dataclass.data
                     }
                 }
             }
-          case Right(profileUpdater) =>
+          case Some(Right(profileUpdater)) =>
             lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
             if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
               Task.point(false)
@@ -86,7 +91,7 @@ import dataclass.data
         if (updatedSomething)
           Task.delay {
             val messageStart =
-              if (envVarUpdater.isLeft)
+              if (envVarUpdaterOpt.exists(_.isLeft))
                 "Some global environment variables were updated."
               else
                 "Some shell configuration files were updated."
@@ -111,19 +116,21 @@ import dataclass.data
 
     // FIXME Some duplication with MaybeSetupPath.revert
 
-    val revertedTask = envVarUpdater match {
-      case Left(windowsEnvVarUpdater) =>
+    val revertedTask = envVarUpdaterOpt match {
+      case None =>
+        Task.point(false)
+      case Some(Left(windowsEnvVarUpdater)) =>
         Task.delay {
           windowsEnvVarUpdater.tryRevertUpdate(envUpdate)
         }
-      case Right(profileUpdater) =>
+      case Some(Right(profileUpdater)) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
           profileUpdater.tryRevertUpdate(headerComment)
         }
     }
 
-    val profileFilesOpt = envVarUpdater match {
+    val profileFilesOpt = envVarUpdaterOpt.flatMap {
       case Left(windowsEnvVarUpdater) =>
         None
       case Right(profileUpdater) =>

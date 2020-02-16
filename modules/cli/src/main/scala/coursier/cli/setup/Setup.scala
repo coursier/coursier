@@ -24,14 +24,9 @@ object Setup extends CaseApp[SetupOptions] {
 
     val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
 
-    val envVarUpdater =
-      if (Windows.isWindows)
-        Left(WindowsEnvVarUpdater())
-      else
-        Right(
-          ProfileUpdater()
-            .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
-        )
+    val envVarUpdaterOpt =
+      if (params.env.env) None
+      else Some(params.env.envVarUpdater)
 
     val graalvmHome = { version: String =>
       javaHome.get(s"graalvm:$version")
@@ -53,14 +48,14 @@ object Setup extends CaseApp[SetupOptions] {
     val tasks = Seq(
       MaybeInstallJvm(
         cache,
-        envVarUpdater,
+        envVarUpdaterOpt,
         javaHome,
         confirm,
         params.sharedJava.id
       ),
       MaybeSetupPath(
         installDir,
-        envVarUpdater,
+        envVarUpdaterOpt,
         EnvironmentUpdate.defaultGetEnv,
         File.pathSeparator,
         confirm
