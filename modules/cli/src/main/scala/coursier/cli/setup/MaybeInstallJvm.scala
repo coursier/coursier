@@ -13,7 +13,7 @@ import dataclass.data
   envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
   javaHome: JavaHome,
   confirm: Confirm,
-  defaultId: String = JavaHome.defaultJvm
+  defaultId: String
 ) extends SetupStep {
 
   import MaybeInstallJvm.headerComment
@@ -25,14 +25,14 @@ import dataclass.data
 
   def task: Task[Unit] =
     for {
-      javaHomeOpt <- javaHome.system()
+      initialIdJavaHomeOpt <- javaHome.getWithRetainedIdIfInstalled(defaultId)
 
-      idJavaHomeOpt <- javaHomeOpt match {
-        case Some(javaHome0) =>
+      idJavaHomeOpt <- initialIdJavaHomeOpt match {
+        case Some((id, javaHome0)) =>
           System.out.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
-          Task.point(Some(JavaHome.systemId -> javaHome0))
+          Task.point(Some(id -> javaHome0))
         case None =>
-          confirm.confirm("No system JVM found, should we try to install one?", default = true).flatMap {
+          confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>

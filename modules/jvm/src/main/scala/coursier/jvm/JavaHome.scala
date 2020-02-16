@@ -92,6 +92,31 @@ import dataclass.data
     else
       Task.point(None)
 
+  def getIfInstalled(id: String): Task[Option[File]] =
+    getWithRetainedIdIfInstalled(id)
+      .map(_.map(_._2))
+
+  def getWithRetainedIdIfInstalled(id: String): Task[Option[(String, File)]] =
+    if (id == JavaHome.systemId)
+      system().map(_.map(JavaHome.systemId -> _))
+    else if (id.startsWith(JavaHome.systemId + "|"))
+      system().flatMap {
+        case None => getWithRetainedIdIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
+        case Some(dir) => Task.point(Some(JavaHome.systemId -> dir))
+      }
+    else
+      cache match {
+        case None => Task.point(None)
+        case Some(cache0) =>
+          val id0 =
+            if (id == JavaHome.defaultId)
+              JavaHome.defaultJvm
+            else
+              id
+
+          cache0.getIfInstalled(id0)
+      }
+
   def get(id: String): Task[File] =
     getWithRetainedId(id)
       .map(_._2)

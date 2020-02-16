@@ -51,7 +51,13 @@ object Setup extends CaseApp[SetupOptions] {
         Confirm.ConsoleInput().withIndent(2)
 
     val tasks = Seq(
-      MaybeInstallJvm(cache, envVarUpdater, javaHome, confirm),
+      MaybeInstallJvm(
+        cache,
+        envVarUpdater,
+        javaHome,
+        confirm,
+        params.sharedJava.id
+      ),
       MaybeSetupPath(
         installDir,
         envVarUpdater,

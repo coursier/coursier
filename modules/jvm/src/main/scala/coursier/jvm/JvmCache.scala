@@ -93,6 +93,18 @@ import scala.util.control.NonFatal
       }
     }
 
+  def getIfInstalled(id: String): Task[Option[(String, File)]] = {
+    entry(id).flatMap {
+      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+      case Right(entry0) =>
+        val dir = baseDirectoryOf(entry0.id)
+        Task.delay(dir.isDirectory).map {
+          case true => Some((entry0.id, JvmCache.finalDirectory(dir, os)))
+          case false => None
+        }
+    }
+  }
+
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger],
@@ -159,16 +171,16 @@ import scala.util.control.NonFatal
   }
 
   def entry(id: String): Task[Either[String, JvmIndexEntry]] =
-    index match {
-      case None => Task.fail(new JvmCache.NoIndexSpecified)
-      case Some(indexTask) =>
-        indexTask.flatMap { index0 =>
-          JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
-            case None =>
-              Task.fail(new JvmCache.MalformedJvmId(id))
-            case Some((name, ver)) =>
+    JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+      case None =>
+        Task.fail(new JvmCache.MalformedJvmId(id))
+      case Some((name, ver)) =>
+        index match {
+          case None => Task.fail(new JvmCache.NoIndexSpecified)
+          case Some(indexTask) =>
+            indexTask.flatMap { index0 =>
               Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
-          }
+            }
         }
     }
 
