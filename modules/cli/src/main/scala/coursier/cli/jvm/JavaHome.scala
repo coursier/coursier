@@ -6,23 +6,18 @@ import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.env.{EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.env.{EnvironmentUpdate, EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 object JavaHome extends CaseApp[JavaHomeOptions] {
 
-  private def setup(
-    javaHome: coursier.jvm.JavaHome,
+  def setup(
+    envUpdate: EnvironmentUpdate,
     envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-    id: String,
-    home: File,
     verbosity: Int
-  ): Task[Unit] = {
-
-    val envUpdate = javaHome.environmentFor(id, home)
-
+  ): Task[Unit] =
     for {
 
       updatedSomething <- {
@@ -72,7 +67,6 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       }
 
     } yield ()
-  }
 
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 
@@ -95,17 +89,15 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       }
       finally logger.stop()
 
-    if (params.setup) {
-      val envVarUpdater =
-        if (Windows.isWindows)
-          Left(WindowsEnvVarUpdater())
-        else
-          Right(
-            ProfileUpdater()
-              .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
-          )
-
-      val setupTask = setup(javaHome, envVarUpdater, retainedId, home, params.output.verbosity)
+    lazy val envUpdate = javaHome.environmentFor(retainedId, home)
+    if (params.env.env)
+      println(envUpdate.script)
+    else if (params.env.setup) {
+      val setupTask = setup(
+        envUpdate,
+        params.env.envVarUpdater,
+        params.output.verbosity
+      )
       setupTask.unsafeRun()(coursierCache.ec)
     } else
       println(home.getAbsolutePath)

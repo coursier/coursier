@@ -14,19 +14,30 @@ final case class JavaParams(
 )
 
 object JavaParams {
-  def apply(options: JavaOptions): ValidatedNel[String, JavaParams] = {
+  def apply(options: JavaOptions, anyArg: Boolean): ValidatedNel[String, JavaParams] = {
     val sharedV = SharedJavaParams(options.sharedJavaOptions)
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val envV = EnvParams(options.envOptions)
 
+    val flags = Seq(
+      options.installed,
+      options.available,
+      envV.toOption.fold(false)(_.anyFlag)
+    )
     val flagsV =
-      if (Seq(options.installed, options.available).count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --installed, --available.")
+      if (flags.count(identity) > 1)
+        Validated.invalidNel("Error: can only specify one of --env, --setup, --installed, --available.")
       else
         Validated.validNel(())
 
-    (sharedV, cacheV, outputV, envV, flagsV).mapN { (shared, cache, output, env, _) =>
+    val checkArgsV =
+      if (anyArg && flags.exists(identity))
+        Validated.invalidNel(s"Error: unexpected arguments passed along --env, --setup, --installed, or --available")
+      else
+        Validated.validNel(())
+
+    (sharedV, cacheV, outputV, envV, flagsV, checkArgsV).mapN { (shared, cache, output, env, _, _) =>
       JavaParams(
         options.installed,
         options.available,

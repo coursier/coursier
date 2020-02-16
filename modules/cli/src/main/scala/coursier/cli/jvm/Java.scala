@@ -27,17 +27,7 @@ object Java extends CaseApp[JavaOptions] {
       sys.exit(1)
     }
 
-    val params = JavaParams(options).exitOnError()
-
-    if (Seq(params.env.env, params.installed, params.available).count(identity) > 1) {
-      System.err.println("Error: can only specify one of --env, --installed, --available.")
-      sys.exit(1)
-    }
-
-    if ((params.env.env || params.installed || params.available) && args0.nonEmpty) {
-      System.err.println(s"Error: unexpected arguments passed along --env, --installed, or --available: ${args0.mkString(" ")}")
-      sys.exit(1)
-    }
+    val params = JavaParams(options, args0.nonEmpty).exitOnError()
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
@@ -128,14 +118,17 @@ object Java extends CaseApp[JavaOptions] {
         sys.exit(1)
       }
 
-      val extraEnv = envUpdate.scriptUpdates()
-
-      if (params.env.env) {
-        val q = "\""
-        for ((k, v) <- extraEnv)
-          // FIXME Is this escaping fine?
-          println(s"export $k=$q${v.replaceAllLiterally(q, "\\" + q)}$q")
+      if (params.env.env)
+        println(envUpdate.script)
+      else if (params.env.setup) {
+        val task = JavaHome.setup(
+          envUpdate,
+          params.env.envVarUpdater,
+          params.output.verbosity
+        )
+        task.unsafeRun()(coursierCache.ec)
       } else if (Execve.available()) {
+        val extraEnv = envUpdate.transientUpdates()
         val fullEnv = (sys.env ++ extraEnv)
           .toArray
           .map {
@@ -147,6 +140,7 @@ object Java extends CaseApp[JavaOptions] {
         System.err.println("should not happen")
         sys.exit(1)
       } else {
+        val extraEnv = envUpdate.transientUpdates()
         val b = new ProcessBuilder((javaBin.getAbsolutePath +: args0): _*)
         b.inheritIO()
         val env = b.environment()
