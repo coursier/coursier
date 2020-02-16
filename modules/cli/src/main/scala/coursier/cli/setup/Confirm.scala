@@ -16,7 +16,7 @@ object Confirm {
 
   @data class ConsoleInput(
     in: InputStream = System.in,
-    out: PrintStream = System.out,
+    out: PrintStream = System.err,
     locale: Locale = Locale.getDefault,
     @since
     indent: Int = 0
@@ -59,7 +59,7 @@ object Confirm {
   }
 
   @data class YesToAll(
-    out: PrintStream = System.out
+    out: PrintStream = System.err
   ) extends Confirm {
     def confirm(message: String, default: Boolean): Task[Boolean] =
       Task.delay {

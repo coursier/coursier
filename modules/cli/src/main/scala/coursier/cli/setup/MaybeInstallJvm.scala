@@ -29,7 +29,7 @@ import dataclass.data
 
       idJavaHomeOpt <- initialIdJavaHomeOpt match {
         case Some((id, javaHome0)) =>
-          System.out.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
+          System.err.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
           Task.point(Some(id -> javaHome0))
         case None =>
           confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
@@ -96,7 +96,7 @@ import dataclass.data
                 "the setup command is done, and open a new one " +
                 "for the changes to be taken into account."
 
-            println(message)
+            System.err.println(message)
           }
         else
           Task.point(())
@@ -136,7 +136,7 @@ import dataclass.data
         if (reverted) s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
         else s"JVM $id not setup"
 
-      Task.delay(System.out.println(message))
+      Task.delay(System.err.println(message))
     }
   }
 
@@ -166,7 +166,7 @@ import dataclass.data
             case Some(false) => s"JVM $id was not installed"
             case Some(true) => s"Deleted JVM $id in $dir"
           }
-          _ <- Task.delay(System.out.println(message))
+          _ <- Task.delay(System.err.println(message))
           _ <- tryRevertEnvVarUpdate(envUpdate, id)
         } yield ()
       }

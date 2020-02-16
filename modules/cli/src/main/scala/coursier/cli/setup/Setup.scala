@@ -75,13 +75,13 @@ object Setup extends CaseApp[SetupOptions] {
       } else
         Task.point(())
     val task = tasks.foldLeft(init) { (acc, step) =>
-      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.out)
+      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.err)
       acc.flatMap(_ => t)
     }
 
     if (params.banner && !params.tryRevert)
       // from https://github.com/scala/scala/blob/eb1ea8b367f9b240afc0b16184396fa3bbf7e37c/project/VersionUtil.scala#L34-L39
-      System.out.println(
+      System.err.println(
         """
           |     ________ ___   / /  ___
           |    / __/ __// _ | / /  / _ |

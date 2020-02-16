@@ -85,7 +85,7 @@ import dataclass.data
         if (reverted) s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
         else s"$binDir not setup in PATH"
 
-      Task.delay(System.out.println(message))
+      Task.delay(System.err.println(message))
     }
   }
 

@@ -44,7 +44,7 @@ final case class EnvParams(
                 " user environment variable(s) need(s) updating."
               Task.delay {
                 if (verbosity >= 0)
-                  println(msg)
+                  System.err.println(msg)
                 windowsEnvVarUpdater.applyUpdate(envUpdate)
               }
             case Right(profileUpdater) =>
@@ -53,7 +53,7 @@ final case class EnvParams(
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {
                 if (verbosity >= 0)
-                  println(msg)
+                  System.err.println(msg)
                 profileUpdater.applyUpdate(envUpdate, headerComment)
               }
           }
@@ -73,7 +73,7 @@ final case class EnvParams(
                 "the setup command is done, and open a new one " +
                 "for the changes to be taken into account."
 
-            println(message)
+            System.err.println(message)
           }
         else
           Task.point(())
