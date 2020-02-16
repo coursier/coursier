@@ -21,7 +21,7 @@ final case class SetupOptions(
   userHome: Option[String] = None,
   banner: Option[Boolean] = None,
   @Short("y")
-    yes: Boolean = false,
+    yes: Option[Boolean] = None,
   tryRevert: Boolean = false,
   apps: List[String] = Nil
 ) {

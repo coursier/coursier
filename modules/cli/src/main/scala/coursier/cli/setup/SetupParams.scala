@@ -30,7 +30,7 @@ object SetupParams {
     val outputV = OutputParams(options.outputOptions)
     val envV = EnvParams(options.envOptions)
     val banner = options.banner.getOrElse(false)
-    val yes = options.yes
+    val yes = options.yes.getOrElse(envV.toOption.exists(_.env))
     val tryRevert = options.tryRevert
     val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
       .filter(_.nonEmpty)
