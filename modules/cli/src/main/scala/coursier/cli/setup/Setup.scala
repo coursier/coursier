@@ -65,7 +65,7 @@ object Setup extends CaseApp[SetupOptions] {
         File.pathSeparator,
         confirm
       ),
-      MaybeInstallApps(installDir, channels, DefaultAppList.defaultAppList)
+      MaybeInstallApps(installDir, channels, params.apps)
     )
 
     val init =

@@ -17,7 +17,8 @@ final case class SetupParams(
   homeOpt: Option[Path],
   banner: Boolean,
   yes: Boolean,
-  tryRevert: Boolean
+  tryRevert: Boolean,
+  apps: Seq[String]
 )
 
 object SetupParams {
@@ -31,6 +32,9 @@ object SetupParams {
     val banner = options.banner.getOrElse(false)
     val yes = options.yes
     val tryRevert = options.tryRevert
+    val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
+      .filter(_.nonEmpty)
+      .getOrElse(DefaultAppList.defaultAppList)
     (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output) =>
       SetupParams(
         sharedJava,
@@ -41,7 +45,8 @@ object SetupParams {
         homeOpt,
         banner,
         yes,
-        tryRevert
+        tryRevert,
+        apps
       )
     }
   }
