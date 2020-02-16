@@ -2,8 +2,8 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{DependencyParams, OutputParams, RepositoryParams}
-import coursier.params.{CacheParams, ResolutionParams}
+import coursier.cli.params.{CacheParams, DependencyParams, OutputParams, RepositoryParams}
+import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
 final case class ResolveParams(

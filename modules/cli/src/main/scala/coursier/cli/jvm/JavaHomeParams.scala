@@ -2,8 +2,7 @@ package coursier.cli.jvm
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.params.OutputParams
-import coursier.params.CacheParams
+import coursier.cli.params.{CacheParams, OutputParams}
 import java.nio.file.Paths
 import java.nio.file.Path
 

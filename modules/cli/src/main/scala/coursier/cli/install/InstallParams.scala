@@ -7,9 +7,8 @@ import java.nio.file.Files
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.OutputParams
+import coursier.cli.params.{CacheParams, OutputParams}
 import coursier.install.Channel
-import coursier.params.CacheParams
 
 final case class InstallParams(
   cache: CacheParams,

@@ -6,8 +6,7 @@ import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.install.{SharedChannelParams, SharedInstallParams}
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.OutputParams
-import coursier.params.CacheParams
+import coursier.cli.params.{CacheParams, OutputParams}
 
 final case class SetupParams(
   sharedJava: SharedJavaParams,
