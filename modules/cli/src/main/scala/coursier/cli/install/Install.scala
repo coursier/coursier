@@ -61,7 +61,22 @@ object Install extends CaseApp[InstallOptions] {
       Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
     } else if (params.env.env)
       println(installDir.envUpdate.script)
-    else if (params.env.setup) {
+    else if (params.env.disableEnv) {
+      // TODO Move that to InstallDir?
+      val dir = installDir.baseDir.toAbsolutePath.toString
+      val updatedPath = Option(System.getenv("PATH")).flatMap { strPath =>
+        val path = strPath.split(File.pathSeparator)
+        if (path.contains(dir))
+          Some(path.filter(_ != dir).mkString(File.pathSeparator)) // FIXME Only remove first one?
+        else
+          None
+      }
+      val script = updatedPath.fold("") { s =>
+        // FIXME Escaping in s
+        s"""export PATH="$s"""" + "\n"
+      }
+      print(script)
+    } else if (params.env.setup) {
       val task = params.env.setupTask(
         installDir.envUpdate,
         params.env.envVarUpdater,

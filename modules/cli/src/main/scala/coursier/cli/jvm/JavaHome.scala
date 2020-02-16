@@ -21,7 +21,7 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     val logger = params.output.logger()
     val coursierCache = params.cache.cache(pool, logger)
 
-    val javaHome = params.shared.javaHome(coursierCache, params.output.verbosity)
+    val (jvmCache, javaHome) = params.shared.cacheAndHome(coursierCache, params.output.verbosity)
     val task = javaHome.getWithRetainedId(params.shared.id)
 
     logger.init()
@@ -35,9 +35,13 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       finally logger.stop()
 
     lazy val envUpdate = javaHome.environmentFor(retainedId, home)
-    if (params.env.env)
-      println(envUpdate.script)
-    else if (params.env.setup) {
+    if (params.env.env) {
+      val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+      print(script)
+    } else if (params.env.disableEnv) {
+      val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+      print(script)
+    } else if (params.env.setup) {
       val setupTask = params.env.setupTask(
         envUpdate,
         params.env.envVarUpdater,

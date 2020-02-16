@@ -280,4 +280,74 @@ object JavaHome {
   private[coursier] def csJavaFailVariable: String =
     "__CS_JAVA_FAIL"
 
+  private def maybeRemovePath(
+    cacheDirectory: Path,
+    getEnv: String => Option[String],
+    pathSeparator: String
+  ): Option[String] = {
+    val fs = cacheDirectory.getFileSystem
+    // remove former Java bin dir from PATH
+    for {
+      previousPath <- getEnv("PATH")
+      previousHome <- getEnv("JAVA_HOME").map(fs.getPath(_))
+      if previousHome.startsWith(cacheDirectory)
+      previousPath0 = previousPath.split(pathSeparator)
+      removeIdx = previousPath0.indexWhere { entry =>
+        val p0 = fs.getPath(entry)
+        // FIXME Make that more strict?
+        p0.startsWith(previousHome) && p0.endsWith("bin")
+      }
+      if removeIdx >= 0
+    } yield {
+      val newPath = previousPath0.take(removeIdx) ++ previousPath0.drop(removeIdx + 1)
+      // FIXME Not sure escaping is fine in all cases…
+      s"""export PATH="${newPath.mkString(pathSeparator)}"""" + "\n"
+    }
+  }
+
+  def finalScript(
+    envUpdate: EnvironmentUpdate,
+    cacheDirectory: Path,
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = File.pathSeparator
+  ): String = {
+
+    val preamble =
+      if (getEnv("CS_FORMER_JAVA_HOME").isEmpty) {
+        val saveJavaHome = """export CS_FORMER_JAVA_HOME="$JAVA_HOME""""
+        saveJavaHome + "\n"
+      } else if (envUpdate.pathLikeAppends.exists(_._1 == "PATH")) {
+        val updatedPathOpt = maybeRemovePath(cacheDirectory, getEnv, pathSeparator)
+        updatedPathOpt.getOrElse("")
+      } else
+        ""
+
+    preamble + envUpdate.script + "\n"
+  }
+
+  def disableScript(
+    cacheDirectory: Path,
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = File.pathSeparator,
+    isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
+  ): String = {
+
+    val maybeReinstateFormerJavaHome =
+      getEnv("CS_FORMER_JAVA_HOME") match {
+        case None => ""
+        case Some("") =>
+          """unset JAVA_HOME""" + "\n" +
+            """unset CS_FORMER_JAVA_HOME""" + "\n"
+        case Some(_) =>
+          """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
+            """unset CS_FORMER_JAVA_HOME""" + "\n"
+      }
+
+    val maybeRemovePath0 =
+      if (isMacOs) ""
+      else maybeRemovePath(cacheDirectory, getEnv, pathSeparator).getOrElse("")
+
+    maybeReinstateFormerJavaHome + maybeRemovePath0
+  }
+
 }

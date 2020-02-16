@@ -10,6 +10,7 @@ import coursier.util.Task
 
 final case class EnvParams(
   env: Boolean,
+  disableEnv: Boolean,
   setup: Boolean,
   homeOpt: Option[Path]
 ) {
@@ -87,17 +88,19 @@ object EnvParams {
 
     val flags = Seq(
       options.env,
+      options.disableEnv,
       options.setup
     )
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --env, --setup.")
+        Validated.invalidNel("Error: can only specify one of --env, --disable / --disable-env, --setup.")
       else
         Validated.validNel(())
 
     flagsV.map { _ =>
       EnvParams(
         options.env,
+        options.disableEnv,
         options.setup,
         homeOpt
       )

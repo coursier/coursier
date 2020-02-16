@@ -73,18 +73,13 @@ object Java extends CaseApp[JavaOptions] {
       }
     } else {
 
-      val task =
-        for {
-          homeId <- javaHome.getWithRetainedId(params.shared.id)
-          (id, home) = homeId
-          envUpdate = javaHome.environmentFor(id, home)
-        } yield (id, home, envUpdate)
+      val task = javaHome.getWithRetainedId(params.shared.id)
 
       // TODO More thin grain handling of the logger lifetime here.
       // As is, its output gets flushed too late sometimes, resulting in progress bars
       // displayed after actions done after downloads.
       logger.init()
-      val (retainedId, home, envUpdate) =
+      val (retainedId, home) =
         try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
@@ -92,6 +87,8 @@ object Java extends CaseApp[JavaOptions] {
             sys.exit(1)
         }
         finally logger.stop()
+
+      val envUpdate = javaHome.environmentFor(retainedId, home)
 
       val javaBin = {
 
@@ -120,9 +117,13 @@ object Java extends CaseApp[JavaOptions] {
         sys.exit(1)
       }
 
-      if (params.env.env)
-        println(envUpdate.script)
-      else if (params.env.setup) {
+      if (params.env.env) {
+        val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+        print(script)
+      } else if (params.env.disableEnv) {
+        val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+        print(script)
+      } else if (params.env.setup) {
         val task = params.env.setupTask(
           envUpdate,
           params.env.envVarUpdater,
