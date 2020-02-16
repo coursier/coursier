@@ -11,6 +11,9 @@ final case class SharedChannelOptions(
   @Help("Add default channels")
     defaultChannels: Boolean = true,
 
+  @Help("Add contrib channel")
+    contrib: Boolean = false,
+
   @Help("Add channels read from the configuration directory")
     fileChannels: Boolean = true
 
