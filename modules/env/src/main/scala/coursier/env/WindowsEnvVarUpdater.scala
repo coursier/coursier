@@ -12,7 +12,7 @@ import dataclass.data
   // https://docs.microsoft.com/fr-fr/dotnet/api/system.environment.setenvironmentvariable?view=netframework-4.8#System_Environment_SetEnvironmentVariable_System_String_System_String_System_EnvironmentVariableTarget_
 
   private def getEnvironmentVariable(name: String): Option[String] = {
-    val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name))
+    val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name)).stripSuffix(System.lineSeparator())
     if (output == "null") // if ever the actual value is "null", we'll miss it
       None
     else
