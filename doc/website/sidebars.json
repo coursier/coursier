@@ -11,13 +11,13 @@
     ],
     "Command-line": [
       "cli-overview",
-      "cli-setup",
-      "cli-install",
-      "cli-java",
       "cli-resolve",
       "cli-fetch",
       "cli-launch",
-      "cli-bootstrap"
+      "cli-bootstrap",
+      "cli-install",
+      "cli-java",
+      "cli-setup"
     ],
     "API": [
       "api",
