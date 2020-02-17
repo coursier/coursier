@@ -1,8 +1,8 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
+import coursier.install.RawAppDescriptor
 
 @ArgsName("org:name:version|app-name[:version]*")
 final case class ResolveOptions(
@@ -30,7 +30,7 @@ final case class ResolveOptions(
     conflicts: Boolean = false,
 
   @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
-    classpathOrder: Boolean = false,
+    classpathOrder: Option[Boolean] = None,
 
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
@@ -45,7 +45,11 @@ final case class ResolveOptions(
     dependencyOptions: DependencyOptions = DependencyOptions(),
 
   @Recurse
-    outputOptions: OutputOptions = OutputOptions()
+    outputOptions: OutputOptions = OutputOptions(),
+
+  @Help("Force printing / generating results, even if errored")
+  @Short("F")
+    forcePrint: Boolean = false
 
 ) {
   def addApp(app: RawAppDescriptor): ResolveOptions =

@@ -15,6 +15,8 @@ import Aliases._
 import ScalaVersion._
 import sbt.util.FileInfo
 import scalajsbundler.Npm
+import java.io.ByteArrayOutputStream
+import java.{util => ju}
 
 object Settings {
 
@@ -36,7 +38,6 @@ object Settings {
   }
 
   lazy val javaScalaPluginShared = Seq(
-    test.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := {},
     scalazBintrayRepository,
     sonatypeRepository("releases"),
     crossScalaVersions := ScalaVersion.versions, // defined for all projects to trump sbt-doge
@@ -112,26 +113,47 @@ object Settings {
     autoScalaLibrary := false
   )
 
-  lazy val generatePropertyFile =
+  def generatePropertyFile(dir: String) =
     resourceGenerators.in(Compile) += Def.task {
       import sys.process._
 
-      val dir = classDirectory.in(Compile).value / "coursier"
+      val log = state.value.log
+
+      val dir0 = {
+        val d = classDirectory.in(Compile).value
+        // `d / dir` might be just fine here…
+        dir.split('/').filter(_.nonEmpty).foldLeft(d)(_ / _)
+      }
       val ver = version.value
 
-      val f = dir / "coursier.properties"
-      dir.mkdirs()
+      val f = dir0 / "coursier.properties"
+      dir0.mkdirs()
 
-      val p = new java.util.Properties
+      val props = Seq(
+        "version" -> ver,
+        "commit-hash" -> Seq("git", "rev-parse", "HEAD").!!.trim
+      )
 
-      p.setProperty("version", ver)
-      p.setProperty("commit-hash", Seq("git", "rev-parse", "HEAD").!!.trim)
+      val b = props
+        .map {
+          case (k, v) =>
+            assert(!v.contains("\n"), s"Invalid ${"\\n"} character in property $k")
+            s"$k=$v"
+        }
+        .mkString("\n")
+        .getBytes(StandardCharsets.UTF_8)
 
-      val w = new java.io.FileOutputStream(f)
-      p.store(w, "Coursier properties")
-      w.close()
+      val currentContentOpt = Some(f.toPath)
+        .filter(Files.exists(_))
+        .map(p => Files.readAllBytes(p))
 
-      state.value.log.info(s"Wrote $f")
+      if (currentContentOpt.forall(b0 => !ju.Arrays.equals(b, b0))) {
+        val w = new java.io.FileOutputStream(f)
+        w.write(b)
+        w.close()
+
+        log.info(s"Wrote $f")
+      }
 
       Nil
     }
@@ -343,6 +365,9 @@ object Settings {
 
   lazy val Integration = config("it").extend(Test)
 
+  // For whatever reason, it seems this messes with the terminal on Windows,
+  // disabling ANSI handling by the terminal (which results in ANSI escape codes
+  // printing junk).
   def runCommand(cmd: Seq[String], dir: File): Unit = {
     val b = new ProcessBuilder(cmd: _*)
     b.directory(dir)
@@ -492,6 +517,23 @@ object Settings {
       directoriesDir
     }
   }
+
+  lazy val addWindowsAnsiPsSources = {
+    unmanagedSourceDirectories.in(Compile) += {
+      val baseDir = baseDirectory.in(LocalRootProject).value
+      val windowsAnsiPsDir = baseDir / "modules" / "windows-ansi" / "ps" / "src" / "main" / "java"
+      if (!windowsAnsiPsDir.exists())
+        gitLock.synchronized {
+          if (!windowsAnsiPsDir.exists()) {
+            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/windows-ansi")
+            runCommand(cmd, baseDir)
+          }
+        }
+
+      windowsAnsiPsDir
+    }
+  }
+
 
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 

@@ -1253,7 +1253,7 @@ object Resolution {
     artifacts(defaultTypes, classifiers)
 
   def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
-    artifacts(types, classifiers, classpathOrder = false)
+    artifacts(types, classifiers, classpathOrder = true)
 
   def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[Artifact] =
     dependencyArtifacts(classifiers)
@@ -1267,7 +1267,7 @@ object Resolution {
     dependencyArtifacts(None)
 
   def dependencyArtifacts(classifiers: Option[Seq[Classifier]]): Seq[(Dependency, Publication, Artifact)] =
-    dependencyArtifacts(classifiers, classpathOrder = false)
+    dependencyArtifacts(classifiers, classpathOrder = true)
 
   def dependencyArtifacts(classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[(Dependency, Publication, Artifact)] =
     for {

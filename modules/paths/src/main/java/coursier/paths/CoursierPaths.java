@@ -23,6 +23,7 @@ public final class CoursierPaths {
 
     private static final Object cacheDirectoryLock = new Object();
     private static volatile File cacheDirectory0 = null;
+    private static volatile File jvmCacheDirectory0 = null;
 
     private static final Object configDirectoryLock = new Object();
     private static volatile File configDirectory0 = null;
@@ -33,16 +34,24 @@ public final class CoursierPaths {
     // TODO After switching to nio, that logic can be unit tested with mock filesystems.
 
     private static String computeCacheDirectory() throws IOException {
-        String path = System.getenv("COURSIER_CACHE");
+        return computeCacheDirectory("COURSIER_CACHE", "coursier.cache", "v1");
+    }
+
+    private static String computeJvmCacheDirectory() throws IOException {
+        return computeCacheDirectory("COURSIER_JVM_CACHE", "coursier.jvm.cache", "jvm");
+    }
+
+    private static String computeCacheDirectory(String envVar, String propName, String dirName) throws IOException {
+        String path = System.getenv(envVar);
 
         if (path == null)
-            path = System.getProperty("coursier.cache");
+            path = System.getProperty(propName);
 
         if (path != null)
           return path;
 
         File baseXdgDir = new File(coursierDirectories().cacheDir);
-        File xdgDir = new File(baseXdgDir, "v1");
+        File xdgDir = new File(baseXdgDir, dirName);
         String xdgPath = xdgDir.getAbsolutePath();
 
         if (baseXdgDir.isDirectory())
@@ -51,7 +60,7 @@ public final class CoursierPaths {
         if (path == null) {
             File coursierDotFile = new File(System.getProperty("user.home") + "/.coursier");
             if (coursierDotFile.isDirectory())
-                path = System.getProperty("user.home") + "/.coursier/cache/v1/";
+                path = System.getProperty("user.home") + "/.coursier/cache/" + dirName + "/";
         }
 
         if (path == null) {
@@ -72,6 +81,18 @@ public final class CoursierPaths {
             }
 
         return cacheDirectory0;
+    }
+
+    public static File jvmCacheDirectory() throws IOException {
+
+        if (jvmCacheDirectory0 == null)
+            synchronized (cacheDirectoryLock) {
+                if (jvmCacheDirectory0 == null) {
+                    jvmCacheDirectory0 = new File(computeJvmCacheDirectory()).getAbsoluteFile();
+                }
+            }
+
+        return jvmCacheDirectory0;
     }
 
     private static ProjectDirectories coursierDirectories() throws IOException {
@@ -132,5 +153,9 @@ public final class CoursierPaths {
             }
 
         return dataLocalDirectory0;
+    }
+
+    public static File projectCacheDirectory() throws IOException {
+        return new File(coursierDirectories().cacheDir);
     }
 }

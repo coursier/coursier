@@ -1,7 +1,7 @@
 package coursier.cli.bootstrap
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.app.RawAppDescriptor
+import coursier.install.RawAppDescriptor
 
 final case class BootstrapSpecificOptions(
   @Short("o")
@@ -13,9 +13,20 @@ final case class BootstrapSpecificOptions(
     standalone: Option[Boolean] = None,
   @Help("Generate an hybrid assembly / standalone launcher")
     hybrid: Option[Boolean] = None,
+  @Help("Generate a GraalVM native image")
+    nativeImage: Option[Boolean] = None,
+  @Help("When generating a GraalVM native image, merge the classpath into an assembly prior to passing it to native-image")
+    intermediateAssembly: Boolean = false,
+  @Help("GraalVM version to use to generate native images")
+  @Short("graalvm")
+    graalvmVersion: Option[String] = None,
+  @Short("graalvm-jvm-opt")
+    graalvmJvmOption: List[String] = Nil,
+  @Short("graalvm-opt")
+    graalvmOption: List[String] = Nil,
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
-  @Help("Set Java command-line options in the generated launcher.")
+  @Help("Add Java command-line options in the generated launcher.")
   @Value("option")
   @Short("J")
     javaOpt: List[String] = Nil,
@@ -40,12 +51,20 @@ final case class BootstrapSpecificOptions(
     disableJarChecking: Option[Boolean] = None
 ) {
   def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
-    val count = Seq(assembly.exists(identity), standalone.exists(identity), native).count(identity)
+    val count = Seq(
+      assembly.exists(identity),
+      standalone.exists(identity),
+      native,
+      nativeImage.exists(identity) ||
+        graalvmVersion.map(_.trim).filter(_.nonEmpty).filter(_ => !nativeImage.contains(false)).nonEmpty ||
+        (!nativeImage.contains(false) && (graalvmJvmOption.filter(_.nonEmpty).nonEmpty || graalvmOption.filter(_.nonEmpty).nonEmpty))
+    ).count(identity)
     copy(
       output = output.orElse(app.name),
       javaOpt = app.javaOptions ++ javaOpt,
       standalone = standalone.orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
-      assembly = assembly.orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None)
+      assembly = assembly.orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None),
+      nativeImage = nativeImage.orElse(if (count == 0 && app.launcherType == "graalvm-native-image") Some(true) else None)
     )
   }
 }

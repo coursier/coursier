@@ -33,20 +33,8 @@ PATH.
 
 To generate the website once, run
 ```bash
-$ amm scripts/site.sc --publishLocal true --npmInstall true
-$ amm scripts/site.sc --yarnRunBuild true --relativize true
+$ amm website.sc generate
 ```
-
-- `--publishLocal true` publishes locally the core and cache modules, so that they can be later picked by mdoc,
-- `--npmInstall true` runs `npm install` from the `doc/website` directory, to install docusaurus in particular,
-- `--yarnRunBuild true` runs docusaurus via `yarn run build` from `doc/website`, to have docusaurus generate the website,
-- `--relativize true` relativizes links in the output of docusaurus, so that the
-site doesn't require being accessed from a particular path.
-
-Note that the first command,
-`amm scripts/site.sc --publishLocal true --npmInstall true`, only needs to be
-run once, unless you made or pulled changes in the sources of coursier, that
-are used from the documentation.
 
 You can then run
 ```bash
@@ -57,21 +45,10 @@ documentation (its address should be printed in the console).
 
 ## Watch mode
 
-To run the website while watching its sources (under `doc/docs`), run
+To run the website while watching its sources (which live under `doc/docs`), run
 ```bash
-$ amm scripts/site.sc --publishLocal true --npmInstall true
-$ amm scripts/site.sc --yarnRunBuild true --watch true
+$ amm website.sc watch
 ```
-
-- `--publishLocal true` publishes locally the core and cache modules, so that they can be later picked by mdoc,
-- `--npmInstall true` runs `npm install` from the `doc/website` directory, to install docusaurus in particular,
-- `--yarnRunBuild true` runs docusaurus via `yarn run start` from `doc/website`, to have docusaurus generate the website and watch for changes,
-- `--watch true` runs mdoc in watch mode.
 
 This runs both docusaurus and mdoc in watch mode. The former should open
 a browser window, that automatically refreshes upon changes.
-
-Like above, note that the first command  only needs to be run once, unless you
-made or pulled changes in the sources of coursier, that are used from the
-documentation.
-

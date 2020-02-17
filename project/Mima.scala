@@ -32,14 +32,14 @@ object Mima {
         .filter(stable)
         .toSet
 
-      val previous = Seq("git", "tag", "--list", "v" + prefix + "*", "--contains", "fe644397a4d")
+      val previous = Seq("git", "tag", "--list", "v" + prefix + "*", "--contains", "9c27d22ae")
         .!!
         .linesIterator
         .map(_.trim.stripPrefix("v"))
         .filter(stable)
         .toSet
 
-      assert(previous.contains(latest) || latest == "2.0.0-RC3-3", "Something went wrong")
+      assert(previous.contains(latest) || latest == "2.0.0-RC6-7", "Something went wrong")
 
       previous -- head
     } else

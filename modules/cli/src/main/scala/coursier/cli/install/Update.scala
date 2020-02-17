@@ -1,21 +1,14 @@
 package coursier.cli.install
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
 import java.time.Instant
 
-import caseapp.core.RemainingArgs
 import caseapp.core.app.CaseApp
-import coursier.cli.app.{AppGenerator, Channels, RawAppDescriptor}
-import coursier.cli.util.Guard
-import coursier.util.Sync
-
-import scala.collection.JavaConverters._
+import caseapp.core.RemainingArgs
+import coursier.install.{Channels, InstallDir, Updatable}
+import coursier.util.{Sync, Task}
 
 object Update extends CaseApp[UpdateOptions] {
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
-
-    Guard()
 
     val params = UpdateParams(options).toEither match {
       case Left(errors) =>
@@ -25,78 +18,57 @@ object Update extends CaseApp[UpdateOptions] {
       case Right(p) => p
     }
 
-    val launchers =
-      if (args.all.isEmpty) {
-        var s: java.util.stream.Stream[Path] = null
-        s = Files.list(params.dir)
-        try {
-          s.iterator()
-            .asScala
-            .filter { p =>
-              val name = p.getFileName.toString
-              !name.startsWith(".") &&
-                !name.endsWith(".bat") &&
-                Files.isRegularFile(p)
-            }
-            .toVector
-            .sortBy(_.getFileName.toString)
-        } finally {
-          if (s != null)
-            s.close()
-        }
-      } else
-        args.all.map(params.dir.resolve)
+    val names =
+      if (args.all.isEmpty)
+        Updatable.list(params.shared.dir)
+      else
+        args.all
 
     val now = Instant.now()
 
-    val pool = Sync.fixedThreadPool(params.shared.cache.parallel)
-    val cache = params.shared.cache.cache(pool, params.shared.logger())
+    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val cache = params.cache.cache(pool, params.output.logger())
 
-    for (launcher <- launchers) {
-      if (params.shared.verbosity >= 2)
-        System.err.println(s"Looking at ${params.dir.relativize(launcher)}")
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
+    }
 
-      val infoFile = {
-        val f = launcher.getParent.resolve(s".${launcher.getFileName}.info")
-        if (Files.isRegularFile(f))
-          f
-        else
-          launcher
-      }
+    val installDir = params.shared.installDir(cache)
+        .withVerbosity(params.output.verbosity)
+        .withNativeImageJavaHome(Some(graalvmHome))
 
-      val updatedDescOpt =
-        for {
-          (s, _) <- AppGenerator.readSource(infoFile)
-          repositories = if (params.overrideRepositories) params.repositories else s.repositories
-          (_, path, a) <- Channels.find(Seq(s.channel), s.id, cache, repositories)
-        } yield {
-          val e = RawAppDescriptor.parse(new String(a, StandardCharsets.UTF_8))
-            .left.map(err => new AppGenerator.ErrorParsingAppDescription(path, err))
-            .flatMap { r =>
-              r.appDescriptor
-                .toEither
-                .left.map { errors =>
-                  new AppGenerator.ErrorProcessingAppDescription(path, errors.toList.mkString(", "))
-                }
-            }
-          val desc = e.fold(throw _, identity)
-          (desc, a)
-        }
-
-      val written = AppGenerator.createOrUpdate(
-        updatedDescOpt,
-        None,
-        cache,
-        params.dir,
-        launcher,
+    val tasks = names.map { name =>
+      installDir.maybeUpdate(
+        name,
+        source => Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
+          .find(source.id)
+          .map(_.map { case (_, path, descBytes) => (path, descBytes) }),
         now,
-        params.shared.verbosity,
-        params.shared.forceUpdate,
-        params.shared.graalvmParamsOpt,
-        coursierRepositories = params.repositories
-      )
-      if (!written && params.shared.verbosity >= 1)
-        System.err.println(s"No new update for ${params.dir.relativize(launcher)}\n")
+        params.force
+      ).map {
+        case None =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Could not update $name (concurrent operation ongoing)")
+        case Some(true) =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Updated $name")
+        case Some(false) =>
+      }
+    }
+
+    val task = tasks.foldLeft(Task.point(())) { (acc, t) =>
+      for (_ <- acc; _ <- t) yield ()
+    }
+
+    try task.unsafeRun()(cache.ec)
+    catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
+          sys.exit(1)
     }
   }
 }

@@ -1,9 +1,9 @@
 package coursier.cli.bootstrap
 
 import caseapp.{ArgsName, Parser, Recurse}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.native.NativeLauncherOptions
 import coursier.cli.options.SharedLaunchOptions
+import coursier.install.RawAppDescriptor
 
 @ArgsName("org:name:version|app-name[:version]*")
 final case class BootstrapOptions(

@@ -101,9 +101,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
   it should "print results anyway" in {
     val options = ResolveOptions(
-      outputOptions = OutputOptions(
-        forcePrint = true
-      )
+      forcePrint = true
     )
     val args = RemainingArgs(
       Seq("ioi.get-coursier:coursier-core_2.12:1.1.0-M9", "io.get-coursier:coursier-cache_2.12:1.1.0-M9"),
@@ -305,7 +303,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
   it should "resolve the main artifact first in classpath order" in {
     val options = ResolveOptions(
-      classpathOrder = true
+      classpathOrder = Option(true)
     )
     val args = RemainingArgs(
       Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M9"),
@@ -342,9 +340,9 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     val expectedOutput =
       """https://repo1.maven.org/maven2/com/github/alexarchambault/case-app_2.13/2.0.0-M9/case-app_2.13-2.0.0-M9.jar
         |https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
-        |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
         |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-annotations_2.13/2.0.0-M9/case-app-annotations_2.13-2.0.0-M9.jar
         |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-util_2.13/2.0.0-M9/case-app-util_2.13-2.0.0-M9.jar
+        |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
         |""".stripMargin
 
     assert(output == expectedOutput)

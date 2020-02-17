@@ -4,11 +4,15 @@ import coursier.core.Resolution
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
+import dataclass._
 
-final case class Strict(
+@data class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
+  @since
   exclude: Set[ModuleMatcher] = Set.empty,
+  @since
   includeByDefault: Boolean = false,
+  @since
   ignoreIfForcedVersion: Boolean = true,
   semVer: Boolean = false
 ) extends Rule {

@@ -1,9 +1,11 @@
 package coursier.util
 
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{ExecutorService, ScheduledExecutorService}
 
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.Promise
+import scala.util.Success
 
 abstract class PlatformTaskCompanion { self =>
 
@@ -16,6 +18,18 @@ abstract class PlatformTaskCompanion { self =>
 
     Task(_ => Future(f)(ec0))
   }
+
+  def completeAfter(pool: ScheduledExecutorService, duration: FiniteDuration): Task[Unit] =
+    Task.delay {
+      val p = Promise[Unit]()
+      val runnable =
+        new Runnable {
+          def run(): Unit =
+            p.complete(Success(()))
+        }
+      pool.schedule(runnable, duration.length, duration.unit)
+      Task(_ => p.future)
+    }.flatMap(identity)
 
   implicit val sync: Sync[Task] =
     new TaskSync {

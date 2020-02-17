@@ -6,82 +6,38 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.app.{Channel, RawAppDescriptor}
-import coursier.moduleString
-import coursier.core.Repository
-import coursier.parse.RepositoryParser
+import coursier.cli.jvm.SharedJavaParams
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
+import coursier.install.Channel
 
 final case class InstallParams(
+  cache: CacheParams,
+  output: OutputParams,
   shared: SharedInstallParams,
-  rawAppDescriptor: RawAppDescriptor,
-  channels: Seq[Channel],
-  repositories: Seq[Repository],
-  nameOpt: Option[String],
-  installChannels: Seq[String]
-)
+  sharedChannel: SharedChannelParams,
+  sharedJava: SharedJavaParams,
+  env: EnvParams,
+  addChannels: Seq[Channel],
+  installChannels: Seq[String],
+  force: Boolean
+) {
+  lazy val channels: Seq[Channel] =
+    (sharedChannel.channels ++ addChannels).distinct
+}
 
 object InstallParams {
 
-  lazy val defaultDir = {
-    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
-  }
+  def apply(options: InstallOptions, anyArg: Boolean): ValidatedNel[String, InstallParams] = {
 
-  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
-    v.either match {
-      case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
-      case Right(r) => Validated.validNel(r)
-    }
-
-  def apply(options: InstallOptions): ValidatedNel[String, InstallParams] = {
+    val cacheParamsV = options.cacheOptions.params(None)
+    val outputV = OutputParams(options.outputOptions)
 
     val sharedV = SharedInstallParams(options.sharedInstallOptions)
 
-    val rawAppDescriptor = options.appOptions.rawAppDescriptor
+    val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
+    val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
-    val channelsV = options
-      .channel
-      .traverse { s =>
-        val e = Channel.parse(s)
-          .left.map(NonEmptyList.one)
-        Validated.fromEither(e)
-      }
-
-    val defaultChannels =
-      if (options.defaultChannels)
-        Seq(
-          Channel.module(mod"io.get-coursier:apps")
-        )
-      else Nil
-
-    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.appOptions.repository))
-
-    val defaultRepositories =
-      if (options.defaultRepositories)
-        coursier.Resolve.defaultRepositories
-      else
-        Nil
-
-    val nameOpt = options.name.map(_.trim).filter(_.nonEmpty)
-
-    val fileChannelsV =
-      if (options.fileChannels) {
-        val configDir = coursier.paths.CoursierPaths.configDirectory()
-        val channelDir = new File(configDir, "channels")
-        val files = Option(channelDir.listFiles())
-          .getOrElse(Array.empty[File])
-          .filter(f => !f.getName.startsWith("."))
-        val rawChannels = files.toList.flatMap { f =>
-          val b = Files.readAllBytes(f.toPath)
-          val s = new String(b, StandardCharsets.UTF_8)
-          s.linesIterator.map(_.trim).filter(_.nonEmpty).toSeq
-        }
-        rawChannels.traverse { s =>
-          val e = Channel.parse(s)
-            .left.map(NonEmptyList.one)
-          Validated.fromEither(e)
-        }
-      } else
-        Validated.validNel(Nil)
+    val envV = EnvParams(options.envOptions)
 
     val addChannelsV = options.addChannel.traverse { s =>
       val e = Channel.parse(s)
@@ -90,15 +46,42 @@ object InstallParams {
       Validated.fromEither(e)
     }
 
-    (sharedV, channelsV, fileChannelsV, addChannelsV, repositoriesV).mapN {
-      (shared, channels, fileChannels, addChannels, repositories) =>
+    val force = options.force
+
+    val checkNeedsChannelsV =
+      if (anyArg && sharedChannelV.toOption.exists(_.channels.isEmpty) && addChannelsV.toOption.exists(_.isEmpty))
+        Validated.invalidNel(s"Error: no channels specified")
+      else
+        Validated.validNel(())
+
+    val flags = Seq(
+      options.addChannel.nonEmpty,
+      envV.toOption.fold(false)(_.anyFlag)
+    )
+    val flagsV =
+      if (flags.count(identity) > 1)
+        Validated.invalidNel("Error: can only specify one of --add-channel, --env, --setup.")
+      else
+        Validated.validNel(())
+
+    val checkArgsV =
+      if (anyArg && flags.exists(identity))
+        Validated.invalidNel(s"Error: unexpected arguments passed along --add-channel, --env, or --setup.")
+      else
+        Validated.validNel(())
+
+    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, addChannelsV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
+      (cacheParams, output, shared, sharedChannel, sharedJava, env, addChannels, _, _, _) =>
         InstallParams(
+          cacheParams,
+          output,
           shared,
-          rawAppDescriptor,
-          (channels ++ fileChannels ++ defaultChannels ++ addChannels.map(_._2)).distinct,
-          defaultRepositories ++ repositories,
-          nameOpt,
-          addChannels.map(_._1)
+          sharedChannel,
+          sharedJava,
+          env,
+          addChannels.map(_._2),
+          addChannels.map(_._1),
+          force
         )
     }
   }

@@ -2,13 +2,13 @@ package coursier.cli.bootstrap
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.app.Platform
-import coursier.cli.native.NativeLauncherParams
 import coursier.cli.params.SharedLaunchParams
+import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 final case class BootstrapParams(
   sharedLaunch: SharedLaunchParams,
-  nativeBootstrap: NativeLauncherParams,
+  nativeOptions: ScalaNativeOptions,
+  nativeShortVersionOpt: Option[String] = None,
   specific: BootstrapSpecificParams
 ) {
   lazy val fork: Boolean =
@@ -18,7 +18,8 @@ final case class BootstrapParams(
 object BootstrapParams {
   def apply(options: BootstrapOptions): ValidatedNel[String, BootstrapParams] = {
     val sharedLaunchV = SharedLaunchParams(options.sharedLaunchOptions)
-    val nativeBootstrapV = options.nativeOptions.params
+    val nativeOptionsV = options.nativeOptions.params
+    val nativeVersionOpt = options.nativeOptions.nativeVersion.map(_.trim).filter(_.nonEmpty)
     val specificV = BootstrapSpecificParams(
       options.options,
       sharedLaunchV
@@ -26,11 +27,12 @@ object BootstrapParams {
         .exists(_.resolve.dependency.native)
     )
 
-    (sharedLaunchV, nativeBootstrapV, specificV).mapN {
-      case (sharedLaunch, nativeBootstrap, specific) =>
+    (sharedLaunchV, nativeOptionsV, specificV).mapN {
+      case (sharedLaunch, nativeOptions, specific) =>
         BootstrapParams(
           sharedLaunch,
-          nativeBootstrap,
+          nativeOptions,
+          nativeVersionOpt,
           specific
         )
     }

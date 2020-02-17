@@ -33,7 +33,8 @@ final case class CommonOptions(
     outputOptions: OutputOptions = OutputOptions()
 
 ) {
-  def verbosityLevel = outputOptions.verbosityLevel
+  def verbosityLevel: Int =
+    Tag.unwrap(outputOptions.verbose) - Tag.unwrap(outputOptions.quiet)
 }
 
 object CommonOptions {

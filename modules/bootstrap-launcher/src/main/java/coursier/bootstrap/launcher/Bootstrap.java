@@ -1,6 +1,7 @@
 package coursier.bootstrap.launcher;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -14,9 +15,26 @@ public class Bootstrap {
         System.exit(255);
     }
 
+    private static void maybeInitWindowsAnsi() throws InterruptedException, IOException {
+        if (!System.getProperty("coursier.bootstrap.windows-ansi.disable", "").equalsIgnoreCase("false")) {
+            try {
+                // noop on Linux / macOS
+                io.github.alexarchambault.windowsansi.WindowsAnsiPs.setup();
+            } catch (InterruptedException | IOException e) {
+                boolean doThrow = Boolean.getBoolean("coursier.bootstrap.windows-ansi.throw-exception");
+                if (doThrow || Boolean.getBoolean("coursier.bootstrap.windows-ansi.verbose"))
+                    System.err.println("Error setting up Windows terminal for ANSI escape codes: " + e);
+                if (doThrow)
+                    throw e;
+            }
+        }
+    }
+
     static void main(
             String[] args,
             ClassLoaders classLoaders) throws Throwable {
+
+        maybeInitWindowsAnsi();
 
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
