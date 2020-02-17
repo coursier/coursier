@@ -15,10 +15,11 @@ private def ghToken() = Option(System.getenv("GH_TOKEN")).getOrElse {
 private val dryRun = false
 
 @main
-def watch() = {
+def watch(skipGenerate: Boolean = false) = {
 
   // generate website once so that `yarn run start` starts with a valid website
-  generate()
+  if (!skipGenerate)
+    generate()
 
   Docusaurus.generate(
     docusaurusDir,

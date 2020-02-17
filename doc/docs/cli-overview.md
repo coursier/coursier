@@ -5,18 +5,20 @@ hide_title: true
 
 # CLI
 
-The CLI of coursier allows to
-- [list the transitive dependencies](cli-resolve.md) and
-- [fetch the artifacts](cli-fetch.md) of one or more dependencies,
-- [run applications from dependencies](cli-launch.md), and
-- [generate convenient launchers to run them](cli-bootstrap.md)
-among others.
+The CLI of coursier has a number of commands to deal with dependencies and artifacts:
+- `setup`: [check if your system has a JVM and the standard Scala applications](cli-setup.md), and install them if needed,
+- `install`: [install applications based on Maven / Ivy dependencies](cli-install.md),
+- `java` and `java-home`: [install, run, and get the home directory of JVMs](cli-java.md),
+- `resolve`: [list the transitive dependencies](cli-resolve.md) of one or more dependencies,
+- `fetch`: [fetch the artifacts](cli-fetch.md) of one or more dependencies,
+- `launch`: [run applications based on Maven / Ivy dependencies](cli-launch.md),
+- `bootstrap`: [generate convenient launchers to run them](cli-bootstrap.md).
 
-See below for its [installation](#native-launcher), [its basic usage](#usage),
+See below for its [installation](#install-native-launcher), [its basic usage](#usage),
 and click on the links above or on the left for more details about each of
 its commands.
 
-## Native launcher
+## Install native launcher
 
 > The commands below install the native launcher as `cs`, which can be
 substituted to `coursier` in the various examples on this website.
@@ -56,7 +58,7 @@ On Windows, use
 > .\cs --help
 ```
 
-## JAR-based launcher
+## Install JAR-based launcher
 
 In case you run into any issue with the [native launcher](#native-launcher),
 a JAR-based launcher is available.
