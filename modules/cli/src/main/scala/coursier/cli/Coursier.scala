@@ -73,8 +73,6 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   override def main(args: Array[String]): Unit = {
 
-    coursier.cache.CacheDefaults.warnLegacyCacheLocation()
-
     if (args.nonEmpty)
       super.main(args)
     else if (Windows.isWindows && !isInstalledLauncher)
