@@ -34,7 +34,10 @@ final case class ResolveOptions(
 
   @Help("Force printing / generating results, even if errored")
   @Short("F")
-    forcePrint: Boolean = false
+    forcePrint: Boolean = false,
+
+  retry: Option[String] = None,
+  attempts: Option[Int] = None
 
 ) {
   def addApp(app: RawAppDescriptor): ResolveOptions =

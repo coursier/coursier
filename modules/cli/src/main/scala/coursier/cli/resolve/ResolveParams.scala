@@ -4,6 +4,8 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+
 final case class ResolveParams(
   shared: SharedResolveParams,
   benchmark: Int,
@@ -13,7 +15,8 @@ final case class ResolveParams(
   whatDependsOn: Seq[JavaOrScalaModule],
   candidateUrls: Boolean,
   conflicts: Boolean,
-  forcePrint: Boolean
+  forcePrint: Boolean,
+  retry: Option[(FiniteDuration, Int)]
 ) {
 
   def cache = shared.cache
@@ -60,8 +63,19 @@ object ResolveParams {
 
     val forcePrint = options.forcePrint
 
-    (sharedV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
-      (shared, whatDependsOn, _, benchmarkCache) =>
+    // TODO Validate that attempts > 0
+    val retryV =
+      (options.retry, options.attempts) match {
+        case (Some(retry), attemptsOpt) =>
+          duration(retry).map((_, attemptsOpt.getOrElse(30))).map(Some(_))
+        case (None, Some(attempts)) =>
+          Validated.validNel(Some((1.minute, attempts)))
+        case (None, None) =>
+          Validated.validNel(None)
+      }
+
+    (sharedV, whatDependsOnV, printCheck, benchmarkCacheV, retryV).mapN {
+      (shared, whatDependsOn, _, benchmarkCache, retry) =>
         ResolveParams(
           shared,
           benchmark,
@@ -71,8 +85,20 @@ object ResolveParams {
           whatDependsOn,
           candidateUrls,
           conflicts,
-          forcePrint
+          forcePrint,
+          retry
         )
     }
   }
+
+  private def duration(input: String): ValidatedNel[String, FiniteDuration] =
+    try {
+      Duration(input) match {
+        case f: FiniteDuration => Validated.validNel(f)
+        case _ => Validated.invalidNel(s"Invalid non-finite duration '$input'")
+      }
+    } catch {
+      case _: IllegalArgumentException =>
+        Validated.invalidNel(s"Invalid duration '$input'") // anything interesting in the exception message?
+    }
 }

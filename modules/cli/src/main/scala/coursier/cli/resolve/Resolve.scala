@@ -2,7 +2,7 @@ package coursier.cli.resolve
 
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{Executors, ExecutorService, ThreadFactory}
 
 import caseapp._
 import cats.data.Validated
@@ -211,7 +211,50 @@ object Resolve extends CaseApp[ResolveOptions] {
       benchmark,
       benchmarkCache
     )
-    task0.flatMap {
+
+    val finalTask =
+      params.retry match {
+        case None => task0
+        case Some((period, maxAttempts)) =>
+          // meh
+          val scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactory {
+              val defaultThreadFactory = Executors.defaultThreadFactory()
+              def newThread(r: Runnable) = {
+                val t = defaultThreadFactory.newThread(r)
+                t.setDaemon(true)
+                t.setName("retry-handler")
+                t
+              }
+            }
+          )
+          val delay = Task.completeAfter(scheduler, period)
+          def helper(count: Int): Task[(Resolution, String, Option[String], Option[ResolutionError])] =
+            task0.attempt.flatMap {
+              case Left(e) =>
+                if (count >= maxAttempts) {
+                  val ex = e match {
+                    case _: ResolveException => new ResolveException(s"Resolution still failing after $maxAttempts attempts: ${e.getMessage}", e)
+                    case _ => new Exception(s"Resolution still failing after $maxAttempts attempts", e)
+                  }
+                  Task.fail(ex)
+                } else {
+                  val print = Task.delay {
+                    // TODO Better printing of error (getMessage for relevent types, …)
+                    stderr.println(s"Attempt $count failed: $e")
+                  }
+                  for {
+                    _ <- print
+                    _ <- delay
+                    res <- helper(count + 1)
+                  } yield res
+                }
+              case Right(res) => Task.point(res)
+            }
+          helper(1)
+      }
+
+    finalTask.flatMap {
       case (res, scalaVersion, platformOpt, errorOpt) =>
         val outputToStdout = errorOpt.isEmpty || params.forcePrint
         if (outputToStdout || params.output.verbosity >= 2)
