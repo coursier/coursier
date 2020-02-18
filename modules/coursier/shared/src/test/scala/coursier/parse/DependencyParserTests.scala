@@ -149,6 +149,21 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    "multiple attrs with interval, url, and exclusions" - {
+      DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, extraParams)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version == "[1.7,1.8)")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
+          assert(extraParams.isDefinedAt("url"))
+          assert(extraParams.getOrElse("url", "") == url)
+          assert(dep.exclusions == Set((org"org", name"nme")))
+      }
+    }
+
     "single attr with org::name:version" - {
       DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
@@ -171,6 +186,18 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    "multiple attr with org::name:interval and exclusion" - {
+      DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"io.get-coursier.scala-native")
+          assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          assert(dep.version == "[0.3.0,0.4.0)")
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
+          assert(dep.exclusions == Set((org"foo", name"bar")))
+      }
+    }
+
     "full cross versioned org:::name:version" - {
       DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7", "2.12.8") match {
         case Left(err) => assert(false)
@@ -178,6 +205,17 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
           assert(dep.version == "1.6.7")
+      }
+    }
+
+    "full cross versioned org:::name:version with exclusion" - {
+      DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7,exclude=aa%*", "2.12.8") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"com.lihaoyi")
+          assert(dep.module.name.value == "ammonite_2.12.8")
+          assert(dep.version == "1.6.7")
+          assert(dep.exclusions == Set((org"aa", name"*")))
       }
     }
 
@@ -191,6 +229,13 @@ object DependencyParserTests extends TestSuite {
     "illegal 2" - {
       DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
         case Left(err) => assert(err.contains("The only attributes allowed are:"))
+        case Right(dep) => assert(false)
+      }
+    }
+
+    "illegal 3, malformed exclude" - {
+      DependencyParser.dependencyParams("a:b:c,exclude=aaa", "2.11.11") match {
+        case Left(err) => assert(err.contains("Malformed exclusion:"))
         case Right(dep) => assert(false)
       }
     }
