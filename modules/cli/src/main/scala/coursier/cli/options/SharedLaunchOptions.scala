@@ -1,7 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.resolve.ResolveOptions
+import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
 final case class SharedLaunchOptions(
@@ -24,7 +24,7 @@ final case class SharedLaunchOptions(
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
 
   @Recurse
-    resolveOptions: ResolveOptions = ResolveOptions(),
+    resolveOptions: SharedResolveOptions = SharedResolveOptions(),
 
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()

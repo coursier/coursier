@@ -8,7 +8,7 @@ import java.util.zip.ZipInputStream
 import caseapp.core.RemainingArgs
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
 import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
-import coursier.cli.resolve.ResolveOptions
+import coursier.cli.resolve.SharedResolveOptions
 import coursier.launcher.BootstrapGenerator.resourceDir
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -60,7 +60,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
       val artifactOptions = ArtifactOptions()
-      val resolveOptions = ResolveOptions(
+      val resolveOptions = SharedResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val sharedLoaderOptions = SharedLoaderOptions(
@@ -121,7 +121,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
       val artifactOptions = ArtifactOptions()
-      val resolveOptions = ResolveOptions(
+      val resolveOptions = SharedResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val sharedLoaderOptions = SharedLoaderOptions(
@@ -184,7 +184,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
         sources = true,
         default = Some(true)
       )
-      val resolveOptions = ResolveOptions(
+      val resolveOptions = SharedResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(
@@ -224,7 +224,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           sources = true,
           default = Some(true)
         )
-        val resolveOptions = ResolveOptions(
+        val resolveOptions = SharedResolveOptions(
           repositoryOptions = repositoryOpt
         )
         val sharedLoaderOptions = SharedLoaderOptions(
@@ -290,7 +290,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
           sources = true,
           default = Some(true)
         )
-        val resolveOptions = ResolveOptions(
+        val resolveOptions = SharedResolveOptions(
           repositoryOptions = repositoryOpt
         )
         val sharedLoaderOptions = SharedLoaderOptions(
@@ -350,7 +350,7 @@ class CliBootstrapIntegrationTest extends FlatSpec with CliTestLib {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalacenter/releases"))
-      val resolveOptions = ResolveOptions(
+      val resolveOptions = SharedResolveOptions(
         repositoryOptions = repositoryOpt
       )
       val bootstrapSpecificOptions = BootstrapSpecificOptions(

@@ -30,7 +30,6 @@ object Fetch extends CaseApp[FetchOptions] {
       System.out,
       System.err,
       args,
-      printOutput = false,
       force = params.artifact.force
     )
 
@@ -40,7 +39,7 @@ object Fetch extends CaseApp[FetchOptions] {
 
     for {
       t <- resolveTask
-      (res, scalaVersion, platformOpt) = t
+      (res, scalaVersion, platformOpt, _) = t
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,

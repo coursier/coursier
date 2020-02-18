@@ -2,16 +2,10 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{CacheParams, DependencyParams, OutputParams, RepositoryParams}
-import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
 final case class ResolveParams(
-  cache: CacheParams,
-  output: OutputParams,
-  repositories: RepositoryParams,
-  dependency: DependencyParams,
-  resolution: ResolutionParams,
+  shared: SharedResolveParams,
   benchmark: Int,
   benchmarkCache: Boolean,
   tree: Boolean,
@@ -19,9 +13,16 @@ final case class ResolveParams(
   whatDependsOn: Seq[JavaOrScalaModule],
   candidateUrls: Boolean,
   conflicts: Boolean,
-  classpathOrder: Option[Boolean],
   forcePrint: Boolean
 ) {
+
+  def cache = shared.cache
+  def output = shared.output
+  def repositories = shared.repositories
+  def dependency = shared.dependency
+  def resolution = shared.resolution
+  def classpathOrder = shared.classpathOrder
+
   def anyTree: Boolean =
     tree ||
       reverseTree ||
@@ -31,11 +32,7 @@ final case class ResolveParams(
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
 
-    val cacheV = options.cacheOptions.params
-    val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
-    val resolutionV = options.resolutionOptions.params
-    val dependencyV = DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
+    val sharedV = SharedResolveParams(options.sharedResolveOptions)
 
     val benchmark = options.benchmark
     val tree = options.tree
@@ -61,17 +58,12 @@ object ResolveParams {
       else
         Validated.validNel(options.benchmarkCache)
 
-    val classpathOrder = options.classpathOrder
     val forcePrint = options.forcePrint
 
-    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
-      (cache, output, repositories, dependency, resolution, whatDependsOn, _, benchmarkCache) =>
+    (sharedV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
+      (shared, whatDependsOn, _, benchmarkCache) =>
         ResolveParams(
-          cache,
-          output,
-          repositories,
-          dependency,
-          resolution,
+          shared,
           benchmark,
           benchmarkCache,
           tree,
@@ -79,7 +71,6 @@ object ResolveParams {
           whatDependsOn,
           candidateUrls,
           conflicts,
-          classpathOrder,
           forcePrint
         )
     }
