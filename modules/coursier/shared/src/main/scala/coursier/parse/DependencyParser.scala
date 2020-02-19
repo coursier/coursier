@@ -92,7 +92,7 @@ object DependencyParser {
    * @return A string if there is an error, otherwise None
    */
   private def validateAttributes(
-    attrs: Map[String, String],
+    attrs: Map[String, Seq[String]],
     dep: String,
     validAttrsKeys: Set[String]
   ): Option[String] = {
@@ -213,12 +213,16 @@ object DependencyParser {
           .collect {
             case Right(attr) => attr
           }
-          .toMap
+          .groupBy(_._1)
+          .map {
+            case (k, l) =>
+              k -> l.map(_._2)
+          }
 
         val parts = coords.split(":", -1)
 
         // Only attributes allowed
-        val validAttrsKeys = Set("classifier", "ext", "type", "url")
+        val validAttrsKeys = Set("classifier", "ext", "type", "url", "exclude")
 
         validateAttributes(attrs, input, validAttrsKeys) match {
           case Some(err) => Left(err)
@@ -226,19 +230,34 @@ object DependencyParser {
 
             val type0 = attrs
               .get("type")
+              .map(_.last)
               .map(Type(_))
               .getOrElse(Type.empty)
             val ext = attrs
               .get("ext")
+              .map(_.last)
               .map(Extension(_))
               .getOrElse(Extension.empty)
             val classifier = attrs
               .get("classifier")
+              .map(_.last)
               .map(Classifier(_))
               .getOrElse(Classifier.empty)
             val publication = Publication("", type0, ext, classifier)
+            val excludeOpt = attrs
+              .get("exclude")
+              .map(_.eitherTraverse { s =>
+                // not using : to split, which would mess up with the parser
+                // Using a proper parsing library would help support ':'.
+                s.split("%", 2) match {
+                  case Array(o, n) => Right((Organization(o), ModuleName(n)))
+                  case _ => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
+                }
+              })
+              .getOrElse(Right(Nil))
+              .map(_.toSet)
 
-            val extraDependencyParams: Map[String, String] = attrs.get("url") match {
+            val extraDependencyParams: Map[String, String] = attrs.get("url").map(_.last) match {
                 case Some(url) => Map("url" -> url)
                 case None => Map()
               }
@@ -282,13 +301,13 @@ object DependencyParser {
 
             parts0.flatMap {
               case (org, rawName, version, config, orgNameSep, withPlatformSuffix) =>
-                ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName")
-                  .map { mod =>
+                excludeOpt.flatMap { exclude =>
+                  ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName").map { mod =>
                     val dep = Dependency(
                       dummyModule,
                       version,
                       config,
-                      Set.empty[(Organization, ModuleName)],
+                      exclude,
                       publication,
                       optional = false,
                       transitive = true
@@ -305,6 +324,7 @@ object DependencyParser {
                         dep0
                     (dep1, extraDependencyParams)
                   }
+                }
             }
         }
     }
