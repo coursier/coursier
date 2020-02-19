@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>install · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p>The <code>install</code> command installs launchers for JVM-based applications.</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC6-9">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="install · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p>The <code>install</code> command installs launchers for JVM-based applications.</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../versions"><h3>2.0.0-RC6-9</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../docs/2.0.0-RC6-9/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-install">install</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-java">java</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cli-setup">setup</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/other-version-handling">Version handling</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/2.0.0-RC6-9/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-install.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">install</h1>
+       </header>
+       <article>
+        <div>
+         <span><p>The <code>install</code> command installs launchers for JVM-based applications.</p> <p>For example, the following command:</p> <pre><code class="hljs css language-bash">$ cs install scala
+</code></pre> <p>creates an executable file named <code>scala</code> in <a href="cli-install.html#installation-directory">the default installation directory</a>.</p> <p>Put that directory in your PATH, then run <code>scala</code> with just</p> <pre><code class="hljs css language-bash">$ scala
+</code></pre> <p><a href="cli-install.html#updates">The <code>update</code> command</a> allows to update it, if newer versions are available</p> <pre><code class="hljs css language-bash">$ cs update scala
+</code></pre> <p>Running <code>cs update</code> with no argument updates all installed applications</p> <pre><code class="hljs css language-bash">$ cs update
+</code></pre> <p><a href="cli-install.html#uninstall">The <code>uninstall</code> command</a> allows to uninstall it:</p> <pre><code class="hljs css language-bash">$ cs uninstall scala
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="application-descriptors"></a><a href="cli-install.html#application-descriptors" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Application descriptors</h2> <p>The <code>install</code> command goes from an application name (<code>scala</code>, <code>ammonite</code>, <code>scalafmt</code>, etc.) to actual dependencies via "channels", which contain one application descriptor per application.</p> <p>For example, the application descriptor of <code>mdoc</code> in the default channel contains:</p> <pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"repositories"</span>: [
+    <span class="hljs-string">"central"</span>
+  ],
+  <span class="hljs-attr">"dependencies"</span>: [
+    <span class="hljs-string">"org.scalameta::mdoc:latest.stable"</span>
+  ]
+}
+</code></pre> <p><code>"repositories": ["central"]</code> says that mdoc should be pulled from <a href="https://repo1.maven.org/maven2">Maven Central</a>, that <code>"central"</code> is an alias for.</p> <p><code>"dependencies": ["org.scalameta::mdoc:latest.stable"]</code> gives the Maven coordinates of mdoc. Note the use of <code>::</code>, as mdoc is a Scala dependency, and of <code>latest.stable</code> to automatically select the latest version, excluding versions corresponding to nightlies.</p> <h2><a class="anchor" aria-hidden="true" id="channels"></a><a href="cli-install.html#channels" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Channels</h2> <p>Application descriptors are pulled via "channels".</p> <p>Channels consist either of</p> 
+          <ul> 
+           <li><a href="cli-install.html#url-based-channels">a single JSON file, available at some URL</a>, or</li> 
+           <li><a href="cli-install.html#jar-based-channels">a collection of JSON files in a JAR</a>, published on a Maven repository, or</li> 
+           <li><a href="cli-install.html#directory-based-channels">a local directory, containing JSON files</a>.</li> 
+          </ul> <p>For example, the default channel, <code>io.get-coursier:apps</code> is JAR-based. It lives in <a href="https://github.com/coursier/apps">this GitHub repository</a>. It is published as <code>io.get-coursier:apps</code> <a href="https://repo1.maven.org/maven2/io/get-coursier/apps">on Maven Central</a>.</p> <p>Its JAR contains a number of JSON files at its root:</p> <pre><code class="hljs">$ unzip -l <span class="hljs-string">"$(cs fetch io.get-coursier:apps:0.0.8)"</span> | grep json
+      <span class="hljs-number">188</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   ammonite.json
+      <span class="hljs-number">175</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   coursier.json
+      <span class="hljs-number">332</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   cs.json
+      <span class="hljs-number">241</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   dotty-repl.json
+      <span class="hljs-number">150</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-graalvm.json
+      <span class="hljs-number">108</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-java.json
+      <span class="hljs-number">172</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-native.json
+      <span class="hljs-number">335</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   giter8.json
+      <span class="hljs-number">135</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mdoc.json
+      <span class="hljs-number">323</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mill-<span class="hljs-built_in">int</span>eractive.json
+      <span class="hljs-number">321</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mill.json
+      <span class="hljs-number">524</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   sbt-launcher.json
+      <span class="hljs-number">222</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scala.json
+      <span class="hljs-number">209</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalac.json
+      <span class="hljs-number">213</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scaladoc.json
+      <span class="hljs-number">180</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalafix.json
+      <span class="hljs-number">184</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalafmt.json
+      <span class="hljs-number">204</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalap.json
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="updates"></a><a href="cli-install.html#updates" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Updates</h2> <p>Update specific applications with <code>cs update</code>, like</p> <pre><code class="hljs css language-bash">$ cs update coursier
+</code></pre> <p>Update all installed applications at once with</p> <pre><code class="hljs css language-bash">$ cs update
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="how-updates-work"></a><a href="cli-install.html#how-updates-work" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>How updates work</h3> <p>When installing an application with <code>cs install</code>, the <code>install</code> command puts a self-executable JAR for that application in the application directory. It puts some metadata of its own in this JAR too, under <code>META-INF/coursier/</code>.</p> <p>These metadata keep track of:</p> 
+          <ul> 
+           <li>the channel used to go from the application name to an application descriptor, and the repositories used to fetch this channel JAR if it is JAR-based,</li> 
+           <li>the application descriptor itself, that gives the application dependencies, and other parameters to start the application (see <a href="cli-install.html#application-descriptor-reference">below</a> too),</li> 
+           <li>the list of JARs used by this application, along with their checksums.</li> 
+          </ul> <p>Updates:</p> 
+          <ul> 
+           <li>check the channel for updates of the application descriptor, and</li> 
+           <li>check that the resolved artifacts of the application descriptor didn't change.</li> 
+          </ul> <p>If any of these two changed, the launcher of the application is generated again, from the newest data.</p> <h2><a class="anchor" aria-hidden="true" id="uninstall"></a><a href="cli-install.html#uninstall" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Uninstall</h2> <p>The <code>uninstall</code> command uninstalls applications previously installed by the <code>install</code> command.</p> <p>Pass it the application names of applications to uninstall, like</p> <pre><code class="hljs css language-bash">$ cs uninstall scala scalac
+</code></pre> <p>It also accepts a <code>--all</code> option to uninstall all applications from the installation directory.</p> <pre><code class="hljs css language-bash">$ cs uninstall --all
+</code></pre> <p>Note that the <code>uninstall</code> command only uninstalls applications previously installed by the <code>install</code> command, not files put in the installation directory by other means. It checks if a file was installed by the <code>install</code> command by looking for <a href="cli-install.html#how-updates-work">its metadata</a> in it.</p> <p>Note also that some applications have a different name when installed and when used and uninstalled:</p> <pre><code class="hljs css language-bash">$ cs install ammonite
+$ amm
+…
+$ cs uninstall amm <span class="hljs-comment"># ammonite is installed as "amm"</span>
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="default-channels"></a><a href="cli-install.html#default-channels" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Default channels</h2> <h3><a class="anchor" aria-hidden="true" id="main-channel"></a><a href="cli-install.html#main-channel" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Main channel</h3> <p>The JAR-based channel <code>io.get-coursier:apps</code> is added by default, unless <code>--default-channels=false</code> is passed.</p> <p>This channel lives on GitHub at <a href="https://github.com/coursier/apps">this address</a>.</p> <h3><a class="anchor" aria-hidden="true" id="contrib-channel"></a><a href="cli-install.html#contrib-channel" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Contrib channel</h3> <p>Passing <code>--contrib</code> to the <code>install</code> command adds the JAR-based channel <code>io.get-coursier:apps-contrib</code>.</p> <p>This channel lives on GitHub at <a href="https://github.com/coursier/apps">the same address</a> as the <a href="cli-install.html#main-channel">main channel</a>.</p> <p>Feel free to send pull requests to add applications to it.</p> <h2><a class="anchor" aria-hidden="true" id="creating-your-own-applications"></a><a href="cli-install.html#creating-your-own-applications" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Creating your own applications</h2> <h3><a class="anchor" aria-hidden="true" id="publish-your-application"></a><a href="cli-install.html#publish-your-application" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Publish your application</h3> <p>In order for your application to be install-able via <code>install</code>, it should be published to Maven / Ivy repositories.</p> <p>Once published, you should be able to pull its class path via the <a href="../../../docs/2.0.0-RC6-9/cli-fetch"><code>fetch</code> command</a>:</p> <pre><code class="hljs css language-bash">$ cs fetch my-app-org::my-app-name:latest.release
+…
+</code></pre> <p>Replace <code>my-app-org</code> and <code>my-app-name</code> by the Maven group id and artifact id of your application. Note the use of <code>::</code> to separate them if your application corresponds to a Scala module. Use a simple <code>:</code> for Java modules. <code>:::</code> is also accepted for fully cross-versioned Scala modules.</p> <p>Pass any missing Maven / Ivy repository via the <code>-r</code> / <code>--repository</code> option.</p> <h3><a class="anchor" aria-hidden="true" id="run-your-application-via-bootstrap"></a><a href="cli-install.html#run-your-application-via-bootstrap" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Run your application via <code>bootstrap</code></h3> <p>You should then check that your application runs fine via the <a href="../../../docs/2.0.0-RC6-9/cli-bootstrap"><code>bootstrap</code> command</a>:</p> <pre><code class="hljs css language-bash">$ cs bootstrap my-app-org::my-app-name:latest.release -o my-app
+$ ./my-app <span class="hljs-comment"># should run your application</span>
+…
+</code></pre> <p>Adjust the dependency string as above, and pass any required repository.</p> <p>Pass <code>-M my.main.class</code> to <code>bootstrap</code> if the main class of your application isn't detected automatically, or if the wrong main class is detected.</p> <h3><a class="anchor" aria-hidden="true" id="create-an-application-descriptor"></a><a href="cli-install.html#create-an-application-descriptor" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Create an application descriptor</h3> <p>You should then put the details passed to the <code>bootstrap</code> command in an <a href="cli-install.html#application-descriptor-reference">application descriptor</a>. Examples of such application descriptors live in <a href="https://github.com/coursier/apps/tree/master/apps/resources">the default channel GitHub repository</a>.</p> <p>At the minimum, your application descriptor should have <code>repositories</code> and <code>dependencies</code> sections, like</p> <pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"repositories"</span>: [
+    <span class="hljs-string">"central"</span>
+  ],
+  <span class="hljs-attr">"dependencies"</span>: [
+    <span class="hljs-string">"my-app-org::my-app-name:latest.release"</span>
+  ]
+}
+</code></pre> <p>Add a <code>"mainClass": "my.main.class"</code> field if you passed an explicit main class to the <code>bootstrap</code> command.</p> <p>If your application should be run via <code>my-app</code> once installed, its application descriptor should be written in a file named <code>my-app.json</code>.</p> <p>Check that your application runs fine via its application descriptor by installing it to a temporary directory with</p> <pre><code class="hljs css language-bash">$ cs install \
+    --install-dir tmp-install \
+    --default-channels=<span class="hljs-literal">false</span> \
+    --channel directory/of/app/descriptor \
+    my-app
+$ tmp-install/my-app <span class="hljs-comment"># should run your application</span>
+…
+</code></pre> <p>Replace <code>directory/of/app/descriptor</code> by the directory where you wrote your application descriptor (<code>my-app.json</code> in the example here). Replace <code>my-app</code> by your application name.</p> <h3><a class="anchor" aria-hidden="true" id="publish-your-application-descriptor"></a><a href="cli-install.html#publish-your-application-descriptor" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Publish your application descriptor</h3> <p>You should then make your application descriptor available to your users. You can either:</p> 
+          <ul> 
+           <li>add it to an existing channel, such as the contrib channel, or</li> 
+           <li>create your own channel.</li> 
+          </ul> <h4><a class="anchor" aria-hidden="true" id="use-the-contrib-channel"></a><a href="cli-install.html#use-the-contrib-channel" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Use the contrib channel</h4> <p>Send a pull requests adding your application channel under the <a href="https://github.com/coursier/apps/tree/master/apps-contrib/resources">resources directory</a> of the contrib channel. Once the maintainers of this repository merge your pull request and cut a release, your users should be able to install and run your appplication like</p> <pre><code class="hljs css language-bash">$ cs install --contrib my-app
+$ my-app
+…
+</code></pre> <h4><a class="anchor" aria-hidden="true" id="create-your-own-channel"></a><a href="cli-install.html#create-your-own-channel" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Create your own channel</h4> <p>If you wish to create your own channel, You can either create a <a href="cli-install.html#jar-based-channels">JAR-based channel</a> or a <a href="cli-install.html#url-based-channels">URL-based channel</a>.</p> <p>For the sake of simplicity, we'll only describe URL-based channels here.</p> <p>Create a JSON file, containing a JSON object with your application name as key, and your application descriptor as value, like</p> <pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"my-app"</span>: {
+    <span class="hljs-attr">"repositories"</span>: [
+      <span class="hljs-string">"central"</span>
+    ],
+    <span class="hljs-attr">"dependencies"</span>: [
+      <span class="hljs-string">"my-app-org::my-app-name:latest.release"</span>
+    ]
+  }
+}
+</code></pre> <p>Put that file on at a URL where your users can consume it. It can be a file in a GitHub repository, or a GitHub gist, but any service allowing to download that file via HTTP should work. In the case of GitHub and GitHub gists, note that you can shorten the resulting URL with <a href="https://git.io">git.io</a>. Don't forget to give your users the link to the "raw" content of your channel.</p> <p>Once that file is available at some URL, like <code>https://git.io/Jv8um</code>, your users should be able to install your application with</p> <pre><code class="hljs css language-bash">$ cs install --channel https://git.io/Jv8um my-app
+$ my-app
+…
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="channel-types"></a><a href="cli-install.html#channel-types" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Channel types</h2> <h3><a class="anchor" aria-hidden="true" id="jar-based-channels"></a><a href="cli-install.html#jar-based-channels" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>JAR-based channels</h3> <p>These channels can be created by publishing a JAR to a Maven or Ivy repository. The default channel, <code>io.get-coursier:apps</code>, living in <a href="https://github.com/coursier/apps">this GitHub repository</a>, is <a href="https://repo1.maven.org/maven2/io/get-coursier/apps">published</a> this way.</p> <p><a href="https://repo1.maven.org/maven2/io/get-coursier/apps/0.0.8/apps-0.0.8.jar">The JAR it publishes</a> contains JSON files at its root (<code>scala.json</code>, <code>ammonite.json</code>, etc.) Each of these JSON files gives the Maven coordinates of the corresponding application, plus other parameters, like Java properties that need to be set for the application to start fine, an explicit main class if the manifest of the application JAR doesn't contain one or if this JAR has several main classes to choose from, etc. See <a href="cli-install.html#application-descriptor-reference">this section</a> for more details.</p> <p>JAR-based channels can be passed to the <code>--channel</code> option of <code>install</code> command, via their Maven coordinates, with no version, like <code>io.get-coursier:apps</code>. The latest version of the channel module is automatically pulled.</p> <p>The following command explicitly adds the default channel via its coordinates:</p> <pre><code class="hljs css language-bash">$ cs install --default-channels=<span class="hljs-literal">false</span> \
+    --channel io.get-coursier:apps \
+    mdoc
+</code></pre> <p>JAR-based channels should be the most reliable kind of channels for end-users (if published on Central, the channel JARs can't a priori be deleted, and previous versions can be manually inspected if needed), but are the less straightforward to setup.</p> <h3><a class="anchor" aria-hidden="true" id="url-based-channels"></a><a href="cli-install.html#url-based-channels" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>URL-based channels</h3> <p>These channels consist in a single JSON file, containing a JSON object. This object's keys correspond to application names, and its values are application descriptors.</p> <p>Such a file must be made available at a public URL. This URL can then be passed to the <code>--channel</code> option of the <code>install</code> command.</p> <p>For example, the <a href="https://git.io/Jvl0m">following URL</a> contains two application descriptors, for <code>"my-scala"</code> and <code>"my-scalac"</code>, that can be installed via</p> <pre><code class="hljs css language-bash">$ cs install --channel https://git.io/Jvl0m my-scala
+$ my-scala --<span class="hljs-built_in">help</span>
+…
+</code></pre> <p>These channels are the easiest to setup, yet don't provide the ability to inspect former versions out-of-the-box.</p> <h3><a class="anchor" aria-hidden="true" id="directory-based-channels"></a><a href="cli-install.html#directory-based-channels" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Directory-based channels</h3> <p>These channels consist in a single local directory, containing JSON files at its root. Each of these JSON files correspond to an application descriptor. For example, JSON file <code>foo.json</code> contains the application descriptor for application <code>foo</code>.</p> <p>You get <a href="https://github.com/coursier/apps/tree/c2645a5e4768b5b58d29902e18630e9d9bf6eacd/apps/resources">an example</a> of such a directory if you clone the default channel GitHub repository:</p> <pre><code class="hljs css language-bash">$ git <span class="hljs-built_in">clone</span> https://github.com/coursier/apps.git
+$ cs install --default-channels=<span class="hljs-literal">false</span> \
+    --channel ./apps/apps/resources \
+    mdoc
+</code></pre> <p>These channels are intended for local usage and debugging mostly.</p> <h2><a class="anchor" aria-hidden="true" id="installation-directory"></a><a href="cli-install.html#installation-directory" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Installation directory</h2> <p>Applications are installed in OS-specific directories. These respect the <a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">"XDG Base directory specification"</a> on Linux.</p> <p>The default application directory is:</p> 
+          <ul> 
+           <li>Linux: <code>~/.local/share/coursier/bin</code></li> 
+           <li>macOS: <code>~/Library/Application Support/Coursier/bin</code></li> 
+           <li>Windows:</li> 
+          </ul> <p>The actual installation directory is computed via:</p> 
+          <ul> 
+           <li>the <code>COURSIER_BIN_DIR</code> environment variable if it's defined, else</li> 
+           <li>the <code>COURSIER_INSTALL_DIR</code> environment variable if it's defined, else</li> 
+           <li>the <code>coursier.install.dir</code> Java property if it's defined,</li> 
+           <li>else, the default OS-specific directory above is used.</li> 
+          </ul> <p>Note that the <code>install</code>, <code>update</code>, <code>uninstall</code>, and <code>setup</code> commands also accept a directory via <code>--dir</code> or <code>--install-dir</code>, like</p> <pre><code class="hljs css language-bash">$ cs install ammonite --install-dir <span class="hljs-built_in">test</span>-install-dir
+$ <span class="hljs-built_in">test</span>-install-dir/ammonite
+…
+</code></pre> <p>The directory passed this way takes precedence over the ones above.</p> <h2><a class="anchor" aria-hidden="true" id="application-descriptor-reference"></a><a href="cli-install.html#application-descriptor-reference" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Application descriptor reference</h2> <p>Application descriptors are parsed from <a href="https://github.com/coursier/coursier/blob/master/modules/install/src/main/scala/coursier/install/RawAppDescriptor.scala"><code>RawAppDescriptor.scala</code></a>, that contains the full up-to-date list of supported fields.</p> <p>Unrecognized fields in an application descriptor are simply ignored.</p> <h4><a class="anchor" aria-hidden="true" id="repositories"></a><a href="cli-install.html#repositories" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>repositories</code></h4> <p>Specifies repositories this application should be pulled from. Accepts the same inputs as the <code>-r</code> / <code>--repository</code> option of the coursier CLI.</p> <p>Example:</p> <pre><code class="hljs css language-json">"repositories": [
+  "central",
+  "typesafe:ivy-releases",
+  "https://some.custom.maven/repository"
+]
+</code></pre> <h4><a class="anchor" aria-hidden="true" id="dependencies"></a><a href="cli-install.html#dependencies" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>dependencies</code></h4> <p>The dependency list of this application. Can contain Java dependencies (<code>org:name:version</code>), binary or fully cross-versioned Scala dependencies (<code>org::name:version</code>, <code>org:::name:version</code>), and Scala platform specific dependencies (for Scala Native typically, like <code>org::name::version</code>).</p> <p>Example</p> <pre><code class="hljs css language-json">"dependencies": [
+  "org.scalameta::mdoc:latest.stable"
+]
+</code></pre> <h4><a class="anchor" aria-hidden="true" id="launchertype"></a><a href="cli-install.html#launchertype" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>launcherType</code></h4> <p>Specifies the type of launcher that should be built for this application. Can be one of</p> 
+          <ul> 
+           <li><code>bootstrap</code>: builds a bootstrap as built by the <code>bootstrap</code> command by default</li> 
+           <li><code>assembly</code>: builds an assembly (corresponds to the <code>--assembly</code> option of the <code>bootstrap</code> command)</li> 
+           <li><code>standalone</code>: builds a bootstrap embedding its JAR dependencies as resources (corresponds to the <code>--standalone</code> option of the <code>bootstrap</code> command - these JARs are similar to the ones <a href="http://one-jar.sourceforge.net">one-jar</a> builds)</li> 
+           <li><code>scala-native</code>: builds a Scala Native application (requires the right <a href="https://scala-native.readthedocs.io/en/v0.3.9-docs/user/setup.html">environment setup</a>, and requires coursier to be started via its <a href="../../../docs/2.0.0-RC6-9/cli-overview#install-jar-based-launcher">JAR-based launcher</a> for now)</li> 
+           <li><code>graalvm-native-image</code>: builds a GraalVM native image</li> 
+          </ul> <h4><a class="anchor" aria-hidden="true" id="mainclass"></a><a href="cli-install.html#mainclass" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>mainClass</code></h4> <p>Specifies an explicit main class to start. Add a <code>?</code> suffix to use the specified main class only if none is found in the application JAR manifest.</p> <p>Examples</p> <pre><code class="hljs css language-json">"mainClass": "scala.tools.nsc.MainGenericRunner"
+</code></pre> <pre><code class="hljs css language-json">"mainClass": "ammonite.Main?"
+</code></pre> <h4><a class="anchor" aria-hidden="true" id="name"></a><a href="cli-install.html#name" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>name</code></h4> <p>Specifies the name under which this application should be installed. The default name is the same as the JSON file (<code>foo.json</code> gets installed as <code>foo</code>). The <code>name</code> field allows to override that.</p> <p>Example</p> <pre><code class="hljs css language-json">"name": "amm"
+</code></pre> <h4><a class="anchor" aria-hidden="true" id="prebuilt"></a><a href="cli-install.html#prebuilt" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>prebuilt</code></h4> <p>Specifies a URL at which prebuilt versions of the application are available.</p> <p>This field is only used if <a href="cli-install.html#launchertype"><code>launcherType</code></a> is <code>scala-native</code> or <code>graalvm-native-image</code>.</p> <p>That URL can contain expressions like <code>${version}</code> and <code>${platform}</code>, that are replaced by the selected version of the application, and the platform it is installed in. Currently <code>${platform}</code> can be replaced by one of</p> 
+          <ul> 
+           <li><code>x86_64-pc-linux</code></li> 
+           <li><code>x86_64-apple-darwin</code></li> 
+           <li><code>x86_64-pc-win32</code></li> 
+          </ul> <p>Example</p> <pre><code class="hljs css language-json">"prebuilt": "https://github.com/coursier/coursier/releases/download/v${version}/cs-${platform}"
+</code></pre> <p>For version <code>2.0.0-RC6-6</code> on macOS, this gets transformed as <a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-6/cs-x86_64-apple-darwin">this URL</a>.</p> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../docs/2.0.0-RC6-9/cli-bootstrap"><span class="arrow-prev">← </span><span>bootstrap</span></a>
+       <a class="docs-next button" href="../../../docs/2.0.0-RC6-9/cli-java"><span>java</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="cli-install.html#application-descriptors">Application descriptors</a></li>
+      <li><a href="cli-install.html#channels">Channels</a></li>
+      <li><a href="cli-install.html#updates">Updates</a>
+       <ul class="toc-headings">
+        <li><a href="cli-install.html#how-updates-work">How updates work</a></li>
+       </ul></li>
+      <li><a href="cli-install.html#uninstall">Uninstall</a></li>
+      <li><a href="cli-install.html#default-channels">Default channels</a>
+       <ul class="toc-headings">
+        <li><a href="cli-install.html#main-channel">Main channel</a></li>
+        <li><a href="cli-install.html#contrib-channel">Contrib channel</a></li>
+       </ul></li>
+      <li><a href="cli-install.html#creating-your-own-applications">Creating your own applications</a>
+       <ul class="toc-headings">
+        <li><a href="cli-install.html#publish-your-application">Publish your application</a></li>
+        <li><a href="cli-install.html#run-your-application-via-bootstrap">Run your application via <code>bootstrap</code></a></li>
+        <li><a href="cli-install.html#create-an-application-descriptor">Create an application descriptor</a></li>
+        <li><a href="cli-install.html#publish-your-application-descriptor">Publish your application descriptor</a></li>
+       </ul></li>
+      <li><a href="cli-install.html#channel-types">Channel types</a>
+       <ul class="toc-headings">
+        <li><a href="cli-install.html#jar-based-channels">JAR-based channels</a></li>
+        <li><a href="cli-install.html#url-based-channels">URL-based channels</a></li>
+        <li><a href="cli-install.html#directory-based-channels">Directory-based channels</a></li>
+       </ul></li>
+      <li><a href="cli-install.html#installation-directory">Installation directory</a></li>
+      <li><a href="cli-install.html#application-descriptor-reference">Application descriptor reference</a></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5><a href="../../../docs/overview">Docs</a></h5>
+      <a href="../../../docs/overview">Overview</a>
+      <a href="../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2020 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>
