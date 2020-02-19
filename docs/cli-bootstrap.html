@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>Like the <a href=&quot;/docs/cli-fetch&quot;><code>fetch</code> command</a>, <code>bootstrap</code> resolves and fetches the</p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-8">
+  <meta name="docsearch:version" content="2.0.0-RC6-9">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="bootstrap · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../versions"><h3>2.0.0-RC6-8</h3></a>
+     <a href="../../versions"><h3>2.0.0-RC6-9</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -87,7 +87,9 @@
            <li class="navListItem"><a class="navItem" href="../../docs/cli-fetch">fetch</a></li>
            <li class="navListItem"><a class="navItem" href="../../docs/cli-launch">launch</a></li>
            <li class="navListItem navListItemActive"><a class="navItem" href="../../docs/cli-bootstrap">bootstrap</a></li>
-           <li class="navListItem"><a class="navItem" href="../../docs/cli-native-bootstrap">scala-native bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../docs/cli-install">install</a></li>
+           <li class="navListItem"><a class="navItem" href="../../docs/cli-java">java</a></li>
+           <li class="navListItem"><a class="navItem" href="../../docs/cli-setup">setup</a></li>
           </ul>
          </div>
          <div class="navGroup">
@@ -186,9 +188,11 @@
        </header>
        <article>
         <div>
-         <span><p>Like the <a href="../../docs/cli-fetch"><code>fetch</code> command</a>, <code>bootstrap</code> resolves and fetches the JARs of one or more dependencies. Like the <a href="../../docs/cli-launch"><code>launch</code> command</a>, it tries to find a <a href="../../docs/cli-launch#main-class">main class</a> in those JARs (unless <code>-M</code> specifies one already). But unlike <a href="../../docs/cli-launch"><code>launch</code></a>, the <code>bootstrap</code> command doesn't launch this main class straightaway. Instead, it generates a (usually tiny) JAR, that can be renamed, copied, moved to another machine or OS, and is able to download and launch the corresponding application.</p> <p>For example,</p> <pre><code class="hljs css language-bash">$ coursier bootstrap com.geirsson:scalafmt-cli_2.12:1.5.1 -o scalafmt
+         <span><p>Like the <a href="../../docs/cli-fetch"><code>fetch</code> command</a>, <code>bootstrap</code> resolves and fetches the JARs of one or more dependencies. Like the <a href="../../docs/cli-launch"><code>launch</code> command</a>, it tries to find a <a href="../../docs/cli-launch#main-class">main class</a> in those JARs (unless <code>-M</code> specifies one already). But unlike <a href="../../docs/cli-launch"><code>launch</code></a>, the <code>bootstrap</code> command doesn't launch this main class straightaway. Instead, it generates a (usually tiny) JAR, that can be renamed, copied, moved to another machine or OS, and is able to download and launch the corresponding application.</p> <p>For example,</p> <pre><code class="hljs css language-bash">$ coursier bootstrap org.scalameta:scalafmt-cli_2.13:2.3.2 -o scalafmt
 $ ./scalafmt --version
-scalafmt 1.5.1
+scalafmt 2.3.2
+</code></pre> <p>Note that <code>boostrap</code> also accepts the same application names as the <a href="../../docs/cli-install"><code>install</code></a> command, that are looked for in <a href="../../docs/cli-install#channels">channels</a>, so that the following works</p> <pre><code class="hljs css language-bash">$ coursier bootstrap scalafmt -o scalafmt
+$ coursier bootstrap scalafmt:2.3.2 -o scalafmt <span class="hljs-comment"># explicit version</span>
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="bootstrap-content"></a><a href="cli-bootstrap.html#bootstrap-content" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
@@ -238,7 +242,37 @@ scalafmt 1.5.1
           <ul> 
            <li>dependencies are still kept separate (each dependency stays in its own JAR, themselves added as JARs to the launcher - these are JARs in JARs), so that no conflict has to be resolved,</li> 
            <li>the launchers can't be added as is to a classpath, like standard JARs, or assemblies / uber JARs. This prevents using them as is to package spark jobs in particular.</li> 
-          </ul> <h2><a class="anchor" aria-hidden="true" id="local-artifacts"></a><a href="cli-bootstrap.html#local-artifacts" aria-hidden="true" class="hash-link">
+          </ul> <h2><a class="anchor" aria-hidden="true" id="scala-native"></a><a href="cli-bootstrap.html#scala-native" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>scala-native</h2> <p>The <code>bootstrap</code> command of coursier can generate <a href="https://www.scala-native.org">Scala Native</a>-based native launchers.</p> <p>This requires the application you want a launcher for to be cross-compiled to Scala Native, and its Scala Native artifacts to be published to Maven or Ivy repositories. The <a href="https://github.com/coursier/echo">echo</a> project of coursier has <a href="https://github.com/coursier/echo/tree/master/native">such a module</a>, currently published as <a href="https://repo1.maven.org/maven2/io/get-coursier/echo_native0.3_2.11/1.0.2"><code>io.get-coursier:echo_native0.3_2.11:1.0.2</code></a>.</p> <p>In order to generate a launcher for such a published application, you'll need to have your environment <a href="https://www.scala-native.org/en/v0.3.8/user/setup.html#installing-clang-and-runtime-dependencies">set up for Scala Native</a>. You can then generate native launchers by passing the <code>--native</code> or <code>-S</code> option to the <code>bootstrap</code> command, like</p> <pre><code class="hljs css language-bash">$ coursier bootstrap \
+    --native \
+    io.get-coursier:echo_native0.3_2.11:1.0.2 \
+    -o <span class="hljs-built_in">echo</span>
+[info] Linking (2354 ms)
+[info] Discovered 1291 classes and 9538 methods
+…
+</code></pre> <p>and run them, like</p> <pre><code class="hljs css language-bash">$ ./<span class="hljs-built_in">echo</span> hey
+hey
+</code></pre> <p>Linking flags during the linking phase can be adjusted via <code>LDFLAGS</code> in the environment.</p> <h2><a class="anchor" aria-hidden="true" id="graalvm-native-image"></a><a href="cli-bootstrap.html#graalvm-native-image" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>GraalVM native image</h2> <p>The <code>bootstrap</code> command can generate native executables via <a href="https://www.graalvm.org/docs/reference-manual/native-image">GraalVM native image</a>.</p> <p>For example,</p> <pre><code class="hljs css language-bash">$ coursier bootstrap --native-image \
+    io.get-coursier:<span class="hljs-built_in">echo</span>:1.0.3 \
+    -o <span class="hljs-built_in">echo</span>
+</code></pre> <p>This command automatically fetches and extracts a GraalVM Community edition archive, like the <a href="../../docs/cli-java"><code>java</code> command of coursier</a> does, then uses it to call <code>native-image</code>.</p> <p>You can pass an explicit GraalVM version via <code>--graalvm-version</code> or <code>--graalvm</code>, like</p> <pre><code class="hljs css language-bash">$ coursier bootstrap --native-image \
+    --graalvm 19.3 \
+    io.get-coursier:<span class="hljs-built_in">echo</span>:1.0.3 \
+    -o <span class="hljs-built_in">echo</span>
+</code></pre> <p>Note that this option accepts short versions. So as of writing this, <code>19.3</code> gets automatically expanded to <code>19.3.1</code>.</p> <p>You can pass custom options to native-image via <code>--graalvm-option</code> or <code>--graalvm-opt</code>, or after a <code>--</code>, like</p> <pre><code class="hljs css language-bash">$ coursier bootstrap --native-image \
+    --graalvm 19.3 \
+    io.get-coursier:<span class="hljs-built_in">echo</span>:1.0.3 \
+    -o <span class="hljs-built_in">echo</span> \
+    --graalvm-opt --no-fallback \
+    -- \
+      --<span class="hljs-built_in">enable</span>-all-security-services \
+      --initialize-at-build-time
+</code></pre> <p>Note that it can be more convenient to pass arguments to native-image via <a href="https://medium.com/graalvm/simplifying-native-image-generation-with-maven-plugin-and-embeddable-configuration-d5b283b92f57#e114">a native-image.properties resource</a> rather than on the command-line.</p> <h2><a class="anchor" aria-hidden="true" id="local-artifacts"></a><a href="cli-bootstrap.html#local-artifacts" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
             </svg></a>Local artifacts</h2> <p>Some of the JARs of the dependencies passed to the <code>bootstrap</code> command may correspond to local files (e.g. from the local <code>~/.ivy2/local</code> repository) rather than files from remote repositories. In that case, these local files are going to be included as <em>resources</em>, rather than via a URL, in the generated launchers. That allows these launchers to be copied to other machines, and work fine even without the original local repositories. To disable that behavior, pass <code>--embed-files=false</code> to the <code>bootstrap</code> command. Note that this only applies when the <code>--standalone</code> option is not passed - if it is, JARs are added as resources to the launcher nevertheless.</p> </span>
@@ -247,7 +281,7 @@ scalafmt 1.5.1
       </div>
       <div class="docs-prevnext">
        <a class="docs-prev button" href="../../docs/cli-launch"><span class="arrow-prev">← </span><span>launch</span></a>
-       <a class="docs-next button" href="../../docs/cli-native-bootstrap"><span>Next</span><span class="arrow-next"> →</span></a>
+       <a class="docs-next button" href="../../docs/cli-install"><span>install</span><span class="arrow-next"> →</span></a>
       </div>
      </div>
     </div>
@@ -257,6 +291,8 @@ scalafmt 1.5.1
       <li><a href="cli-bootstrap.html#java-options">Java options</a></li>
       <li><a href="cli-bootstrap.html#windows">Windows</a></li>
       <li><a href="cli-bootstrap.html#standalone-bootstraps">Standalone bootstraps</a></li>
+      <li><a href="cli-bootstrap.html#scala-native">scala-native</a></li>
+      <li><a href="cli-bootstrap.html#graalvm-native-image">GraalVM native image</a></li>
       <li><a href="cli-bootstrap.html#local-artifacts">Local artifacts</a></li>
      </ul>
     </nav>
