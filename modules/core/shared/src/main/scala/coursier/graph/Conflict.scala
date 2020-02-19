@@ -3,8 +3,9 @@ package coursier.graph
 import coursier.core.{Module, Parse, Resolution, Version, VersionConstraint, VersionInterval}
 import coursier.util.Print.Colors
 import coursier.util.{Print, Tree}
+import dataclass.data
 
-final case class Conflict(
+@data class Conflict(
   module: Module,
   version: String,
   wantedVersion: String,
@@ -19,7 +20,7 @@ final case class Conflict(
 
 object Conflict {
 
-  final case class Conflicted(tree: ReverseModuleTree) {
+  @data class Conflicted(tree: ReverseModuleTree) {
     def conflict: Conflict =
       Conflict(
         tree.dependsOnModule,

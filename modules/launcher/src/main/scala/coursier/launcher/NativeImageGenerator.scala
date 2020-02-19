@@ -2,7 +2,7 @@ package coursier.launcher
 
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 
 import coursier.launcher.internal.FileUtil
 
@@ -26,10 +26,23 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
   def generate(parameters: Parameters.NativeImage, output: Path): Unit = {
 
+    // more concise graalvm logging
+    val relativizedOutput =
+      if (output.isAbsolute) {
+        val currentDir = Paths.get(System.getProperty("user.dir"))
+        if (output.startsWith(currentDir))
+          currentDir.relativize(output)
+        else
+          output
+      } else
+        output
+
     val startCmd = {
       val version = parameters.graalvmVersion.getOrElse("latest.release")
+      val isInterval = version.startsWith("latest") || version.endsWith("+") || version.contains("[") || version.contains("(")
+      val version0 = if (isInterval) version else version + "+"
       val javaOpts = parameters.graalvmJvmOptions
-      val cp = parameters.fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version"))
+      val cp = parameters.fetch(Seq(s"org.graalvm.nativeimage:svm-driver:$version0"))
       // Really only works well if the JVM is GraalVM
       val javaPath = parameters.javaHome
         .map(new File(_, "bin"))
@@ -58,7 +71,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       val cmd = startCmd ++
         parameters.graalvmOptions ++
         parameters.nameOpt.map(name => s"-H:Name=$name") ++
-        Seq("-cp", cp, parameters.mainClass, output.toString)
+        Seq("-cp", cp, parameters.mainClass, relativizedOutput.toString)
       if (parameters.verbosity >= 1)
         System.err.println(s"Running $cmd")
       val b = new ProcessBuilder(cmd: _*)

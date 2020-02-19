@@ -4,7 +4,7 @@ import caseapp.core.parser.Parser
 import caseapp.{Name => Short, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, OutputOptions}
+import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions}
 
 final case class SetupOptions(
   @Recurse
@@ -17,12 +17,17 @@ final case class SetupOptions(
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
-  home: Option[String] = None,
+  env: Boolean = false,
+  userHome: Option[String] = None,
   banner: Option[Boolean] = None,
   @Short("y")
-    yes: Boolean = false,
-  tryRevert: Boolean = false
-)
+    yes: Option[Boolean] = None,
+  tryRevert: Boolean = false,
+  apps: List[String] = Nil
+) {
+  def envOptions: EnvOptions =
+    EnvOptions(env = env, userHome = userHome)
+}
 
 object SetupOptions {
   implicit val parser = Parser[SetupOptions]

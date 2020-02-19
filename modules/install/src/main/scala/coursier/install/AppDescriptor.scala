@@ -128,7 +128,7 @@ import coursier.core.Latest
     cache: Cache[Task],
     platformOpt: Option[Platform],
     verbosity: Int
-  ): Either[String, (String, Option[String], Seq[Dependency])] = {
+  ): Either[AppArtifacts.AppArtifactsException, (String, Option[String], Seq[Dependency])] = {
 
     val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
 
@@ -144,7 +144,11 @@ import coursier.core.Latest
       val platformOpt0 = platformOpt.filter(_ => hasPlatformDeps)
       if (onlyJavaDeps)
         Right((scala.util.Properties.versionNumberString, None)) // shouldn't matter… pass an invalid - unused at the end - version instead?
-      else
+      else {
+       def scalaDeps = dependencies.collect {
+         case s: JavaOrScalaDependency.ScalaDependency =>
+           s
+       }
         platformOpt0 match {
           case Some(platform) =>
             AppDescriptor.dependenciesMaxScalaVersionAndPlatform(
@@ -154,7 +158,8 @@ import coursier.core.Latest
               constraintOpt,
               verbosity,
               platform
-            ).map { case (v, p) => (v, Some(platform.suffix(p))) }.toRight("No scala version found")
+            ).map { case (v, p) => (v, Some(platform.suffix(p))) }
+              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
             AppDescriptor.dependenciesMaxScalaVersion(
               cache,
@@ -162,8 +167,10 @@ import coursier.core.Latest
               dependencies,
               constraintOpt,
               verbosity
-            ).map(v => (v, None)).toRight("No scala version found")
+            ).map(v => (v, None))
+              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
         }
+      }
     }
 
     t.map {

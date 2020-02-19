@@ -465,7 +465,7 @@ object Launch extends CaseApp[LaunchOptions] {
       val channels = initialParams.shared.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
       val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
       val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
 
       if (options.json) {

@@ -1,10 +1,45 @@
 {
   "docs": {
-    "Intro": ["overview", "overview-motivations", "overview-in-the-wild"],
-    "sbt plugins": ["sbt-coursier", "sbt-pgp-coursier"],
-    "Command-line": ["cli-overview", "cli-resolve", "cli-fetch", "cli-launch", "cli-bootstrap", "cli-native-bootstrap"],
-    "API": ["api", "api-low-level", "api-scala-js"],
-    "Other": ["cache", "ttl", "other-repositories", "other-credentials", "other-proxy", "json-report", "extra", "limitations", "other-version-handling", "faq"],
-    "Development": ["dev-contributing", "dev-cli", "dev-website"]
+    "Intro": [
+      "overview",
+      "overview-motivations",
+      "overview-in-the-wild"
+    ],
+    "sbt plugins": [
+      "sbt-coursier",
+      "sbt-pgp-coursier"
+    ],
+    "Command-line": [
+      "cli-overview",
+      "cli-resolve",
+      "cli-fetch",
+      "cli-launch",
+      "cli-bootstrap",
+      "cli-install",
+      "cli-java",
+      "cli-setup"
+    ],
+    "API": [
+      "api",
+      "api-low-level",
+      "api-scala-js"
+    ],
+    "Other": [
+      "cache",
+      "ttl",
+      "other-repositories",
+      "other-credentials",
+      "other-proxy",
+      "json-report",
+      "extra",
+      "limitations",
+      "other-version-handling",
+      "faq"
+    ],
+    "Development": [
+      "dev-contributing",
+      "dev-cli",
+      "dev-website"
+    ]
   }
 }

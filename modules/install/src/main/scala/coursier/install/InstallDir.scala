@@ -3,7 +3,7 @@ package coursier.install
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.Instant
 import java.util.Locale
 
@@ -11,6 +11,7 @@ import coursier.Fetch
 import coursier.cache.{ArtifactError, Cache, FileCache}
 import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
+import coursier.env.EnvironmentUpdate
 import coursier.launcher.{AssemblyGenerator, BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Generator, NativeImageGenerator, Parameters, Preamble, ScalaNativeGenerator}
 import coursier.launcher.internal.FileUtil
 import coursier.launcher.native.NativeBuilder
@@ -366,13 +367,26 @@ import scala.util.control.NonFatal
       }
     } yield writtenOpt
 
+  def envUpdate: EnvironmentUpdate =
+    EnvironmentUpdate()
+      .withPathLikeAppends(Seq("PATH" -> baseDir.toAbsolutePath.toString))
+
 }
 
 object InstallDir {
 
-  private lazy val defaultDir0: Path =
-    // TODO Take some env var / Java props into account too
-    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+  private lazy val defaultDir0: Path = {
+
+    val fromEnv = Option(System.getenv("COURSIER_BIN_DIR")).filter(_.nonEmpty)
+      .orElse(Option(System.getenv("COURSIER_INSTALL_DIR")).filter(_.nonEmpty))
+
+    def fromProps = Option(System.getProperty("coursier.install.dir"))
+
+    def default = coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+
+    fromEnv.orElse(fromProps).map(Paths.get(_))
+      .getOrElse(default)
+  }
 
   def defaultDir: Path =
     defaultDir0
@@ -564,9 +578,9 @@ object InstallDir {
   // FIXME Keep more details
   final class NoScalaVersionFound extends InstallDirException("No scala version found")
 
-  final class LauncherNotFound(path: Path) extends InstallDirException(s"$path not found")
+  final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
 
-  final class NoPrebuiltBinaryAvailable(candidateUrls: Seq[String])
+  final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
     extends InstallDirException(
       if (candidateUrls.isEmpty)
         "No prebuilt binary available"
@@ -574,7 +588,10 @@ object InstallDir {
         s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
     )
 
-  final class CannotReadAppDescriptionInLauncher(path: Path)
+  final class CannotReadAppDescriptionInLauncher(val path: Path)
     extends InstallDirException(s"Cannot read app description in $path")
+
+  final class NotAnApplication(val path: Path)
+    extends InstallDirException(s"File $path wasn't installed by cs install")
 
 }

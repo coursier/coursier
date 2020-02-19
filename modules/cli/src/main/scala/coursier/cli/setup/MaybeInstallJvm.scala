@@ -10,10 +10,10 @@ import dataclass.data
 
 @data class MaybeInstallJvm(
   coursierCache: Cache[Task],
-  envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
+  envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   javaHome: JavaHome,
   confirm: Confirm,
-  defaultId: String = JavaHome.defaultJvm
+  defaultId: String
 ) extends SetupStep {
 
   import MaybeInstallJvm.headerComment
@@ -25,14 +25,14 @@ import dataclass.data
 
   def task: Task[Unit] =
     for {
-      javaHomeOpt <- javaHome.system()
+      initialIdJavaHomeOpt <- javaHome.getWithRetainedIdIfInstalled(defaultId)
 
-      idJavaHomeOpt <- javaHomeOpt match {
-        case Some(javaHome0) =>
-          System.out.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
-          Task.point(Some(JavaHome.systemId -> javaHome0))
+      idJavaHomeOpt <- initialIdJavaHomeOpt match {
+        case Some((id, javaHome0)) =>
+          System.err.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
+          Task.point(Some(id -> javaHome0))
         case None =>
-          confirm.confirm("No system JVM found, should we try to install one?", default = true).flatMap {
+          confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>
@@ -49,8 +49,13 @@ import dataclass.data
 
       updatedSomething <- {
 
-        envVarUpdater match {
-          case Left(windowsEnvVarUpdater) =>
+        envVarUpdaterOpt match {
+          case None =>
+            Task.delay {
+              println(envUpdate.script)
+              false
+            }
+          case Some(Left(windowsEnvVarUpdater)) =>
             if (envUpdate.isEmpty) Task.point(false)
             else {
               val msg = s"Should we update the " +
@@ -65,7 +70,7 @@ import dataclass.data
                     }
                 }
             }
-          case Right(profileUpdater) =>
+          case Some(Right(profileUpdater)) =>
             lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
             if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
               Task.point(false)
@@ -86,7 +91,7 @@ import dataclass.data
         if (updatedSomething)
           Task.delay {
             val messageStart =
-              if (envVarUpdater.isLeft)
+              if (envVarUpdaterOpt.exists(_.isLeft))
                 "Some global environment variables were updated."
               else
                 "Some shell configuration files were updated."
@@ -96,7 +101,7 @@ import dataclass.data
                 "the setup command is done, and open a new one " +
                 "for the changes to be taken into account."
 
-            println(message)
+            System.err.println(message)
           }
         else
           Task.point(())
@@ -111,19 +116,21 @@ import dataclass.data
 
     // FIXME Some duplication with MaybeSetupPath.revert
 
-    val revertedTask = envVarUpdater match {
-      case Left(windowsEnvVarUpdater) =>
+    val revertedTask = envVarUpdaterOpt match {
+      case None =>
+        Task.point(false)
+      case Some(Left(windowsEnvVarUpdater)) =>
         Task.delay {
           windowsEnvVarUpdater.tryRevertUpdate(envUpdate)
         }
-      case Right(profileUpdater) =>
+      case Some(Right(profileUpdater)) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
-          profileUpdater.tryRevertUpdate(envUpdate, headerComment)
+          profileUpdater.tryRevertUpdate(headerComment)
         }
     }
 
-    val profileFilesOpt = envVarUpdater match {
+    val profileFilesOpt = envVarUpdaterOpt.flatMap {
       case Left(windowsEnvVarUpdater) =>
         None
       case Right(profileUpdater) =>
@@ -136,7 +143,7 @@ import dataclass.data
         if (reverted) s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
         else s"JVM $id not setup"
 
-      Task.delay(System.out.println(message))
+      Task.delay(System.err.println(message))
     }
   }
 
@@ -166,7 +173,7 @@ import dataclass.data
             case Some(false) => s"JVM $id was not installed"
             case Some(true) => s"Deleted JVM $id in $dir"
           }
-          _ <- Task.delay(System.out.println(message))
+          _ <- Task.delay(System.err.println(message))
           _ <- tryRevertEnvVarUpdate(envUpdate, id)
         } yield ()
       }

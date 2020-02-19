@@ -381,6 +381,25 @@ class InstallTests extends FlatSpec with BeforeAndAfterAll {
   //   assert(output == expectedOutput)
   // }
 
+  it should "refuse to delete a file not created by us" in withTempDir { tmpDir =>
+
+    val app = tmpDir.resolve("foo")
+    Files.write(app, Array.emptyByteArray)
+
+    val installDir = InstallDir(tmpDir, cache)
+      .withVerbosity(1)
+
+    val gotException = try {
+      installDir.delete("foo")
+      false
+    } catch {
+      case _: InstallDir.NotAnApplication =>
+        true
+    }
+
+    assert(gotException)
+  }
+
   // TODO
   //   should update launcher if the app description changes (change default main class?)
   //   should use found main class if it is found, and ignore default main class in that case

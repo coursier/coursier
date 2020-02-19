@@ -4,6 +4,8 @@ import java.io.File
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.params.EnvParams
+import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.Version
 import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
@@ -27,12 +29,7 @@ object Java extends CaseApp[JavaOptions] {
       sys.exit(1)
     }
 
-    val params = JavaParams(options).exitOnError()
-
-    if ((params.env || params.installed || params.available) && args0.nonEmpty) {
-      System.err.println(s"Error: unexpected arguments passed along --env, --installed, or --available: ${args0.mkString(" ")}")
-      sys.exit(1)
-    }
+    val params = JavaParams(options, args0.nonEmpty).exitOnError()
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
@@ -76,18 +73,13 @@ object Java extends CaseApp[JavaOptions] {
       }
     } else {
 
-      val task =
-        for {
-          homeId <- javaHome.getWithRetainedId(params.shared.id)
-          (id, home) = homeId
-          envUpdate = javaHome.environmentFor(id, home)
-        } yield (id, home, envUpdate)
+      val task = javaHome.getWithRetainedId(params.shared.id)
 
       // TODO More thin grain handling of the logger lifetime here.
       // As is, its output gets flushed too late sometimes, resulting in progress bars
       // displayed after actions done after downloads.
       logger.init()
-      val (retainedId, home, envUpdate) =
+      val (retainedId, home) =
         try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
@@ -95,6 +87,8 @@ object Java extends CaseApp[JavaOptions] {
             sys.exit(1)
         }
         finally logger.stop()
+
+      val envUpdate = javaHome.environmentFor(retainedId, home)
 
       val javaBin = {
 
@@ -123,14 +117,22 @@ object Java extends CaseApp[JavaOptions] {
         sys.exit(1)
       }
 
-      val extraEnv = envUpdate.transientUpdates()
-
-      if (params.env) {
-        val q = "\""
-        for ((k, v) <- extraEnv)
-          // FIXME Is this escaping fine?
-          println(s"export $k=$q${v.replaceAllLiterally(q, "\\" + q)}$q")
+      if (params.env.env) {
+        val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+        print(script)
+      } else if (params.env.disableEnv) {
+        val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+        print(script)
+      } else if (params.env.setup) {
+        val task = params.env.setupTask(
+          envUpdate,
+          params.env.envVarUpdater,
+          params.output.verbosity,
+          MaybeInstallJvm.headerComment
+        )
+        task.unsafeRun()(coursierCache.ec)
       } else if (Execve.available()) {
+        val extraEnv = envUpdate.transientUpdates()
         val fullEnv = (sys.env ++ extraEnv)
           .toArray
           .map {
@@ -142,6 +144,7 @@ object Java extends CaseApp[JavaOptions] {
         System.err.println("should not happen")
         sys.exit(1)
       } else {
+        val extraEnv = envUpdate.transientUpdates()
         val b = new ProcessBuilder((javaBin.getAbsolutePath +: args0): _*)
         b.inheritIO()
         val env = b.environment()

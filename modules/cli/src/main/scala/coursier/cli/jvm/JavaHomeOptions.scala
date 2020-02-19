@@ -1,6 +1,6 @@
 package coursier.cli.jvm
 
-import coursier.cli.options.{CacheOptions, OutputOptions}
+import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions}
 import caseapp.core.parser.Parser
 import caseapp.Recurse
 
@@ -11,8 +11,8 @@ final case class JavaHomeOptions(
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
-  setup: Boolean = false,
-  userHome: Option[String] = None
+  @Recurse
+    envOptions: EnvOptions = EnvOptions()
 )
 
 object JavaHomeOptions {

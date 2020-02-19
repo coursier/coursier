@@ -2,8 +2,9 @@ package coursier.maven
 
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
+import dataclass.data
 
-final case class MavenComplete[F[_]](
+@data class MavenComplete[F[_]](
   repo: MavenRepository,
   fetch: Repository.Fetch[F],
   F: Monad[F]

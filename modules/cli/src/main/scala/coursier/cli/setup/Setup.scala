@@ -24,14 +24,9 @@ object Setup extends CaseApp[SetupOptions] {
 
     val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
 
-    val envVarUpdater =
-      if (Windows.isWindows)
-        Left(WindowsEnvVarUpdater())
-      else
-        Right(
-          ProfileUpdater()
-            .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
-        )
+    val envVarUpdaterOpt =
+      if (params.env.env) None
+      else Some(params.env.envVarUpdater)
 
     val graalvmHome = { version: String =>
       javaHome.get(s"graalvm:$version")
@@ -51,15 +46,21 @@ object Setup extends CaseApp[SetupOptions] {
         Confirm.ConsoleInput().withIndent(2)
 
     val tasks = Seq(
-      MaybeInstallJvm(cache, envVarUpdater, javaHome, confirm),
+      MaybeInstallJvm(
+        cache,
+        envVarUpdaterOpt,
+        javaHome,
+        confirm,
+        params.sharedJava.id
+      ),
       MaybeSetupPath(
         installDir,
-        envVarUpdater,
+        envVarUpdaterOpt,
         EnvironmentUpdate.defaultGetEnv,
         File.pathSeparator,
         confirm
       ),
-      MaybeInstallApps(installDir, channels, DefaultAppList.defaultAppList)
+      MaybeInstallApps(installDir, channels, params.apps)
     )
 
     val init =
@@ -69,13 +70,13 @@ object Setup extends CaseApp[SetupOptions] {
       } else
         Task.point(())
     val task = tasks.foldLeft(init) { (acc, step) =>
-      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.out)
+      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.err)
       acc.flatMap(_ => t)
     }
 
     if (params.banner && !params.tryRevert)
       // from https://github.com/scala/scala/blob/eb1ea8b367f9b240afc0b16184396fa3bbf7e37c/project/VersionUtil.scala#L34-L39
-      System.out.println(
+      System.err.println(
         """
           |     ________ ___   / /  ___
           |    / __/ __// _ | / /  / _ |

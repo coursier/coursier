@@ -6,9 +6,8 @@ import java.util.concurrent.TimeUnit
 import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.OutputParams
+import coursier.cli.params.{CacheParams, OutputParams}
 import coursier.core.Repository
-import coursier.params.CacheParams
 
 import scala.concurrent.duration.Duration
 

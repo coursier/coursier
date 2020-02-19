@@ -30,7 +30,6 @@ object Fetch extends CaseApp[FetchOptions] {
       System.out,
       System.err,
       args,
-      printOutput = false,
       force = params.artifact.force
     )
 
@@ -40,7 +39,7 @@ object Fetch extends CaseApp[FetchOptions] {
 
     for {
       t <- resolveTask
-      (res, scalaVersion, platformOpt) = t
+      (res, scalaVersion, platformOpt, _) = t
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
@@ -86,7 +85,7 @@ object Fetch extends CaseApp[FetchOptions] {
       val channels = initialParams.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
       val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
       val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }

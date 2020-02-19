@@ -27,7 +27,7 @@ def apply(
   ) ++
   extraArgs
 
-  val testCommand = probeCommand ++ Seq("-r", testRepo)
+  val testCommand = probeCommand ++ Seq("-r", testRepo, "--ttl", "0s")
 
   Util.run(testCommand)
 

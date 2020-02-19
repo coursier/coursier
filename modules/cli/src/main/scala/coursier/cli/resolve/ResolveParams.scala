@@ -2,16 +2,12 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{DependencyParams, OutputParams, RepositoryParams}
-import coursier.params.{CacheParams, ResolutionParams}
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+
 final case class ResolveParams(
-  cache: CacheParams,
-  output: OutputParams,
-  repositories: RepositoryParams,
-  dependency: DependencyParams,
-  resolution: ResolutionParams,
+  shared: SharedResolveParams,
   benchmark: Int,
   benchmarkCache: Boolean,
   tree: Boolean,
@@ -19,9 +15,17 @@ final case class ResolveParams(
   whatDependsOn: Seq[JavaOrScalaModule],
   candidateUrls: Boolean,
   conflicts: Boolean,
-  classpathOrder: Option[Boolean],
-  forcePrint: Boolean
+  forcePrint: Boolean,
+  retry: Option[(FiniteDuration, Int)]
 ) {
+
+  def cache = shared.cache
+  def output = shared.output
+  def repositories = shared.repositories
+  def dependency = shared.dependency
+  def resolution = shared.resolution
+  def classpathOrder = shared.classpathOrder
+
   def anyTree: Boolean =
     tree ||
       reverseTree ||
@@ -31,11 +35,7 @@ final case class ResolveParams(
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
 
-    val cacheV = options.cacheOptions.params
-    val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
-    val resolutionV = options.resolutionOptions.params
-    val dependencyV = DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
+    val sharedV = SharedResolveParams(options.sharedResolveOptions)
 
     val benchmark = options.benchmark
     val tree = options.tree
@@ -61,17 +61,23 @@ object ResolveParams {
       else
         Validated.validNel(options.benchmarkCache)
 
-    val classpathOrder = options.classpathOrder
     val forcePrint = options.forcePrint
 
-    (cacheV, outputV, repositoriesV, dependencyV, resolutionV, whatDependsOnV, printCheck, benchmarkCacheV).mapN {
-      (cache, output, repositories, dependency, resolution, whatDependsOn, _, benchmarkCache) =>
+    // TODO Validate that attempts > 0
+    val retryV =
+      (options.retry, options.attempts) match {
+        case (Some(retry), attemptsOpt) =>
+          duration(retry).map((_, attemptsOpt.getOrElse(30))).map(Some(_))
+        case (None, Some(attempts)) =>
+          Validated.validNel(Some((1.minute, attempts)))
+        case (None, None) =>
+          Validated.validNel(None)
+      }
+
+    (sharedV, whatDependsOnV, printCheck, benchmarkCacheV, retryV).mapN {
+      (shared, whatDependsOn, _, benchmarkCache, retry) =>
         ResolveParams(
-          cache,
-          output,
-          repositories,
-          dependency,
-          resolution,
+          shared,
           benchmark,
           benchmarkCache,
           tree,
@@ -79,9 +85,20 @@ object ResolveParams {
           whatDependsOn,
           candidateUrls,
           conflicts,
-          classpathOrder,
-          forcePrint
+          forcePrint,
+          retry
         )
     }
   }
+
+  private def duration(input: String): ValidatedNel[String, FiniteDuration] =
+    try {
+      Duration(input) match {
+        case f: FiniteDuration => Validated.validNel(f)
+        case _ => Validated.invalidNel(s"Invalid non-finite duration '$input'")
+      }
+    } catch {
+      case _: IllegalArgumentException =>
+        Validated.invalidNel(s"Invalid duration '$input'") // anything interesting in the exception message?
+    }
 }

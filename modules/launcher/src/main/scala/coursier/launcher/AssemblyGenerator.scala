@@ -64,8 +64,8 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
   ): Unit = {
 
     val rulesMap = rules.collect { case r: MergeRule.PathRule => r.path -> r }.toMap
-    val excludePatterns = rules.collect { case MergeRule.ExcludePattern(p) => p }
-    val appendPatterns = rules.collect { case MergeRule.AppendPattern(p) => p }
+    val excludePatterns = rules.collect { case e: MergeRule.ExcludePattern => e.path }
+    val appendPatterns = rules.collect { case a: MergeRule.AppendPattern => a.path }
 
     for ((ent, content) <- extraZipEntries) {
       zos.putNextEntry(ent)
@@ -98,10 +98,10 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
             concatenatedEntries += ent.getName -> ::((ent, content), concatenatedEntries.getOrElse(ent.getName, Nil))
 
           rulesMap.get(ent.getName) match {
-            case Some(MergeRule.Exclude(_)) =>
+            case Some(e: MergeRule.Exclude) =>
               // ignored
 
-            case Some(MergeRule.Append(_)) =>
+            case Some(a: MergeRule.Append) =>
               append()
 
             case None =>
