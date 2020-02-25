@@ -9,13 +9,14 @@ import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions
 import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 
 @RunWith(classOf[JUnitRunner])
-class ResolveTests extends FlatSpec with BeforeAndAfterAll {
+class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)

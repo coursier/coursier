@@ -6,9 +6,9 @@ import java.util.Arrays
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class ProfileUpdaterTests extends FlatSpec {
+class ProfileUpdaterTests extends AnyFlatSpec {
 
   private def indicesOf(string: String, subString: String): Seq[Int] = {
 
