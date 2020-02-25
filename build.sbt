@@ -356,7 +356,8 @@ lazy val cli = project("cli")
           Deps.monadlessCats,
           Deps.monadlessStdlib,
           Deps.junit % Test, // to be able to run tests with pants
-          Deps.scalatest % Test
+          Deps.scalatest % Test,
+          Deps.scalatestJunit % Test
         )
       else
         Seq()
