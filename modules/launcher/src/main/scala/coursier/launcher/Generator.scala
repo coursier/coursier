@@ -14,5 +14,6 @@ object Generator extends Generator[Parameters] {
       case n: Parameters.NativeImage => NativeImageGenerator.generate(n, output)
       case s: Parameters.ScalaNative => ScalaNativeGenerator.generate(s, output)
       case d: Parameters.DummyNative => DummyNativeGenerator.generate(d, output)
+      case m: Parameters.ManifestJar => ManifestJarGenerator.generate(m, output)
     }
 }

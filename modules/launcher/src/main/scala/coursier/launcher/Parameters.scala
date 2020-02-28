@@ -69,6 +69,16 @@ object Parameters {
         preambleOpt
   }
 
+  @data class ManifestJar(
+    classpath: Seq[File],
+    mainClass: String,
+    preambleOpt: Option[Preamble] = Some(Preamble())
+  ) extends Parameters {
+
+    def withPreamble(preamble: Preamble): ManifestJar =
+      withPreambleOpt(Some(preamble))
+  }
+
   @data class NativeImage(
     mainClass: String,
     fetch: Seq[String] => Seq[File],

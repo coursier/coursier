@@ -33,6 +33,8 @@ final case class BootstrapSpecificOptions(
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
+  @Help("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
+    manifestJar: Option[Boolean] = None,
   @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false else)")
     bat: Option[Boolean] = None,
   @Help("Add assembly rule")
