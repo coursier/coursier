@@ -36,7 +36,6 @@ object Parameters {
   @data class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
-    javaOpts: Seq[String] = Nil,
     javaProperties: Seq[(String, String)] = Nil,
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = true,
@@ -68,6 +67,16 @@ object Parameters {
         }
       else
         preambleOpt
+  }
+
+  @data class ManifestJar(
+    classpath: Seq[File],
+    mainClass: String,
+    preambleOpt: Option[Preamble] = Some(Preamble())
+  ) extends Parameters {
+
+    def withPreamble(preamble: Preamble): ManifestJar =
+      withPreambleOpt(Some(preamble))
   }
 
   @data class NativeImage(
