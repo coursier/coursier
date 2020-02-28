@@ -36,7 +36,6 @@ object Parameters {
   @data class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
-    javaOpts: Seq[String] = Nil,
     javaProperties: Seq[(String, String)] = Nil,
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = true,

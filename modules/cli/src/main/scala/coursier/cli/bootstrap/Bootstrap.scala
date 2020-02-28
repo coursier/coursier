@@ -343,7 +343,6 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           }
 
           Parameters.Bootstrap(content, mainClass)
-            .withJavaOpts(javaOptions)
             .withJavaProperties(params.sharedLaunch.properties)
             .withDeterministic(params.specific.deterministicOutput)
             .withPreambleOpt(
