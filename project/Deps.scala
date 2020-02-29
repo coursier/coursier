@@ -39,7 +39,7 @@ object Deps {
   def svm = "org.graalvm.nativeimage" % "svm" % "19.3.1"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
-  def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.1"
+  def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.2"
   def plexusContainerDefault = "org.codehaus.plexus" % "plexus-container-default" % "2.1.0" // plexus-archiver needs its loggers
 
   def scalaAsync = "org.scala-lang.modules" %% "scala-async" % "0.10.0"
