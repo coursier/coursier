@@ -28,7 +28,7 @@ object Deps {
   def jimfs = "com.google.jimfs" % "jimfs" % "1.1"
   def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
   def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala
-  def jsoup = "org.jsoup" % "jsoup" % "1.12.2"
+  def jsoup = "org.jsoup" % "jsoup" % "1.13.1"
   def junit = "junit" % "junit" % "4.13"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   def mavenModel = "org.apache.maven" % "maven-model" % "3.6.3"
