@@ -338,7 +338,7 @@ object ResolveTests extends TestSuite {
     'exclusions - {
 
       val resolve0 = resolve
-        .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
+        .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M12")
 
       'check - async {
         val res = await {
@@ -543,7 +543,7 @@ object ResolveTests extends TestSuite {
           val res = await {
             resolve
               .addDependencies(
-                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11",
+                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M12",
                 dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
               )
               .io
