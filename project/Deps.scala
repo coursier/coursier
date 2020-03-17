@@ -48,7 +48,7 @@ object Deps {
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   def scalatest = "org.scalatest" %% "scalatest" % "3.1.1"
   def scalatestJunit = "org.scalatestplus" %% "junit-4-12" % "3.1.1.0"
-  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
+  def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % versions.scalaz
   def windowsAnsi = "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
 
