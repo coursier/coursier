@@ -264,6 +264,7 @@ lazy val launcher = project("launcher")
     coursierPrefix,
     addBootstrapJarAsResource,
     generatePropertyFile("coursier/launcher"),
+    crossScalaVersions += "2.11.12",
     libs += Deps.dataClass % Provided
   )
 
