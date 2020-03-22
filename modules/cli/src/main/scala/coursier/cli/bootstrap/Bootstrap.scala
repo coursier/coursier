@@ -227,7 +227,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var wroteBat = false
 
     val javaOptions =
-      if (params.specific.assembly)
+      if (params.specific.assembly || params.specific.manifestJar)
         params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
       else
         params.specific.javaOptions
@@ -312,6 +312,17 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
               else
                 None
             )
+        else if (params.specific.manifestJar)
+          Parameters.ManifestJar(files.map(_._2), mainClass)
+            .withPreambleOpt(
+              if (params.specific.withPreamble)
+                Some(
+                  coursier.launcher.Preamble()
+                    .withJavaOpts(javaOptions)
+                )
+              else
+                None
+            )
         else {
 
           val artifactFiles = files.toMap
@@ -343,7 +354,6 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           }
 
           Parameters.Bootstrap(content, mainClass)
-            .withJavaOpts(javaOptions)
             .withJavaProperties(params.sharedLaunch.properties)
             .withDeterministic(params.specific.deterministicOutput)
             .withPreambleOpt(

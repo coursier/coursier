@@ -81,9 +81,14 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     val bootstrapJar =
       FileUtil.readFully {
         val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
-        if (is == null)
-          throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
-        is
+        if (is == null) {
+          val is0 = BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
+          if (is0 == null)
+            throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
+          else
+            is0
+        } else
+          is
       }
 
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))

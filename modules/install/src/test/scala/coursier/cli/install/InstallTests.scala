@@ -12,11 +12,12 @@ import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
 import coursier.install.{GraalvmParams, InstallDir, RawAppDescriptor}
 import coursier.util.{Sync, Task}
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.collection.JavaConverters._
 
-class InstallTests extends FlatSpec with BeforeAndAfterAll {
+class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   private val pool = Sync.fixedThreadPool(6)
 

@@ -42,6 +42,9 @@ checkBinaryCompatibility() {
 }
 
 testBootstrap() {
+  # check that the launcher module compiles fine
+  sbt "++2.11.12 compile"
+
   scripts/test-bootstrap.sh
 }
 
