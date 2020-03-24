@@ -135,7 +135,7 @@ export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
 ### Linux / macOS
 
 The `setup` command updates the following files:
-- `~/.profile` (created it if needed),
+- `~/.profile` (created if needed),
 - `~/.zprofile` if zsh is the current shell (created if needed, respects `ZDOTDIR`),
 - `~/.bash_profile` (only if it exists).
 
