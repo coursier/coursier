@@ -37,6 +37,11 @@ sealed abstract class Group extends Product with Serializable {
     now: Instant
   ): Task[Group]
 
+  def transformVersion(
+    map: Map[(Organization, ModuleName), (String, String)],
+    now: Instant
+  ): Task[Group]
+
   /** Ensure the files of this [[Group]] are ordered (POMs last for [[Group.Module]], etc.) */
   def ordered: Group
 }
@@ -192,6 +197,17 @@ object Group {
         }
       }
     }
+
+    def transformVersion(
+      map: Map[(Organization, ModuleName), (String, String)],
+      now: Instant
+    ): Task[Module] =
+      transformPom(now) { elem =>
+        map.foldLeft(elem) {
+          case (acc, ((org, name), (fromVer, toVer))) =>
+            Pom.transformDependencyVersion(acc, org, name, fromVer, toVer)
+        }
+      }
 
     private def pomFileName: String =
       s"${name.value}-${snapshotVersioning.getOrElse(version)}.pom"
@@ -551,6 +567,12 @@ object Group {
         case _ =>
           Task.point(this)
       }
+
+    def transformVersion(
+      map: Map[(Organization, ModuleName), (String, String)],
+      now: Instant
+    ): Task[MavenMetadata] =
+      Task.point(this)
 
     def ordered: MavenMetadata = {
       // reverse alphabetical order should be enough here (will put checksums and signatures before underlying files)

@@ -348,6 +348,52 @@ object Pom {
     )
   }
 
+  def transformDependencyVersion(
+    content: Elem,
+    org: Organization,
+    name: ModuleName,
+    fromVersion: String,
+    toVersion: String
+  ): Elem = {
+
+    def adjustVersion(n: Elem): Elem = {
+
+      val orgOpt = n.child.collectFirst {
+        case n if n.label == "groupId" => Organization(n.text)
+      }
+      val nameOpt = n.child.collectFirst {
+        case n if n.label == "artifactId" => ModuleName(n.text)
+      }
+
+      if (orgOpt.contains(org) && nameOpt.contains(name))
+        n.copy(
+          child = n.child.map {
+            case n if n.label == "version" && n.text.trim == fromVersion =>
+              <version>{toVersion}</version>
+            case n => n
+          }
+        )
+      else
+        n
+    }
+
+    // TODO Adjust dependencyManagement section too?
+
+    content.copy(
+      child = content.child.map {
+        case n: Elem if n.label == "dependencies" =>
+          n.copy(
+            child = n.child.map {
+              case n: Elem if n.label == "dependency" =>
+                adjustVersion(n)
+              case n => n
+            }
+          )
+        case n => n
+      }
+    )
+  }
+
   def print(elem: Elem): String = {
     val printer = new scala.xml.PrettyPrinter(Int.MaxValue, 2)
     """<?xml version="1.0" encoding="UTF-8"?>""" + '\n' + printer.format(elem)
