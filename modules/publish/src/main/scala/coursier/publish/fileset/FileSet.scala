@@ -70,7 +70,26 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
         }
       }
 
-    adjustOrgName.flatMap { l =>
+    val adjustVersion: Task[Seq[Group]] =
+      version match {
+        case Some(ver) =>
+          adjustOrgName.flatMap { groups =>
+            val map = groups
+              .collect {
+                case m: Group.Module => (m.organization, m.name) -> (m.version -> ver)
+              }
+              .toMap
+            Task.sync.gather {
+              groups.map { group =>
+                group.transformVersion(map, now)
+              }
+            }
+          }
+        case None =>
+          adjustOrgName
+      }
+
+    adjustVersion.flatMap { l =>
       Task.gather.gather {
         l.map {
           case m: Group.Module =>
