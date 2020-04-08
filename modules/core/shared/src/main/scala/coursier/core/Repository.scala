@@ -3,6 +3,7 @@ package coursier.core
 import coursier.core.compatibility.encodeURIComponent
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Monad}
+import dataclass.data
 
 trait Repository extends Serializable with ArtifactSource {
 
@@ -128,24 +129,20 @@ object Repository {
           Right(Complete.Result(orgInput, l))
       }
 
-    private def name(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] = {
-      val Complete.Input.Name(org, input1, from, requiredSuffix) = nameInput
-
-      F.map(moduleName(org, input1.drop(from))) {
+    private def name(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Either[Throwable, Complete.Result]] =
+      F.map(moduleName(nameInput.organization, nameInput.input.drop(nameInput.from))) {
         case Left(e) =>
-          Left(new Complete.CompletingNameException(org, input1, from, e))
+          Left(new Complete.CompletingNameException(nameInput.organization, nameInput.input, nameInput.from, e))
         case Right(l) =>
-          val l0 = l.filter(_.endsWith(requiredSuffix)).map(_.stripSuffix(requiredSuffix))
+          val l0 = l.filter(_.endsWith(nameInput.requiredSuffix)).map(_.stripSuffix(nameInput.requiredSuffix))
           Right(Complete.Result(nameInput, l0))
       }
-    }
 
     private def hasOrg(orgInput: Complete.Input.Org, partial: Boolean)(implicit F: Monad[F]): F[Boolean] = {
 
       val check =
         F.map(org(orgInput)) { res =>
           res
-            .right
             .toOption
             .exists { res =>
               res.completions.contains(orgInput.input) ||
@@ -169,7 +166,6 @@ object Repository {
     private def hasName(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Boolean] =
       F.map(name(nameInput)) { res =>
         res
-          .right
           .toOption
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
@@ -201,16 +197,13 @@ object Repository {
       // - now that we know that 'org.scala-lang:scala-library' is a thing, we try to list its versions.
       // Each time we request something, we know that the parent ~element exists.
 
-      def ver(versionInput: Complete.Input.Ver): F[Either[Throwable, Complete.Result]] = {
-        val Complete.Input.Ver(mod, input1, from) = versionInput
-
-        F.map(versions(mod, input1.drop(from))) {
+      def ver(versionInput: Complete.Input.Ver): F[Either[Throwable, Complete.Result]] =
+        F.map(versions(versionInput.module, versionInput.input.drop(versionInput.from))) {
           case Left(e) =>
-            Left(new Complete.CompletingVersionException(mod, input1, from, e))
+            Left(new Complete.CompletingVersionException(versionInput.module, versionInput.input, versionInput.from, e))
           case Right(l) =>
             Right(Complete.Result(input, l))
         }
-      }
 
       def empty: F[Either[Throwable, Complete.Result]] = F.point(Right(Complete.Result(input, Nil)))
 
@@ -256,14 +249,14 @@ object Repository {
       def from: Int
     }
     object Input {
-      final case class Org(input: String) extends Input {
+      @data class Org(input: String) extends Input {
         def from: Int = 0
       }
-      final case class Name(organization: Organization, input: String, from: Int, requiredSuffix: String) extends Input {
+      @data class Name(organization: Organization, input: String, from: Int, requiredSuffix: String) extends Input {
         def orgInput: Org =
           Org(organization.value)
       }
-      final case class Ver(module: Module, input: String, from: Int) extends Input {
+      @data class Ver(module: Module, input: String, from: Int) extends Input {
         def orgInput: Org =
           nameInput.orgInput
         def nameInput: Name = {
@@ -309,7 +302,7 @@ object Repository {
         }
     }
 
-    final case class Result(input: Input, completions: Seq[String])
+    @data class Result(input: Input, completions: Seq[String])
 
     final class CompletingOrgException(input: String, cause: Throwable = null)
       extends Exception(s"Completing organization '$input'", cause)

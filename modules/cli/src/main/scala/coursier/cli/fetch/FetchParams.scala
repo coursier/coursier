@@ -5,12 +5,12 @@ import java.nio.file.{Path, Paths}
 import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.params.ArtifactParams
-import coursier.cli.resolve.ResolveParams
+import coursier.cli.resolve.SharedResolveParams
 
 final case class FetchParams(
   classpath: Boolean,
   jsonOutputOpt: Option[Path],
-  resolve: ResolveParams,
+  resolve: SharedResolveParams,
   artifact: ArtifactParams
 )
 
@@ -25,7 +25,7 @@ object FetchParams {
       else
         Some(Paths.get(options.jsonOutputFile))
 
-    val resolveV = ResolveParams(options.resolveOptions)
+    val resolveV = SharedResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
 
     (resolveV, artifactV).mapN {

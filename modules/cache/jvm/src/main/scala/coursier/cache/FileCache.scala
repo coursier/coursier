@@ -161,12 +161,13 @@ import dataclass.data
             }
           } catch {
             case NonFatal(e) =>
-              Left(
-                new ArtifactError.DownloadError(
-                  s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
-                  Some(e)
-                )
+              val ex = new ArtifactError.DownloadError(
+                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
+                Some(e)
               )
+              if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+                throw ex
+              Left(ex)
           } finally {
             if (conn != null)
               CacheUrl.closeConn(conn)
@@ -233,8 +234,7 @@ import dataclass.data
       }
     }
 
-    def shouldDownload(file: File, url: String): EitherT[F, ArtifactError, Boolean] = {
-
+    def shouldDownload(file: File, url: String, checkRemote: Boolean): EitherT[F, ArtifactError, Boolean] = {
       val errFile0 = errFile(file)
 
       def checkErrFile: EitherT[F, ArtifactError, Unit] =
@@ -286,7 +286,9 @@ import dataclass.data
               S.bind(checkNeeded) {
                 case false =>
                   S.point(Right(false))
-                case true =>
+                case true if !checkRemote =>
+                  S.point(Right(true))
+                case true if checkRemote =>
                   S.bind(check.run) {
                     case Right(false) =>
                       S.schedule(pool) {
@@ -438,7 +440,7 @@ import dataclass.data
                     hostnameVerifierOpt,
                     logger,
                     maxRedirections
-                  ).right.toOption.flatten
+                  ).toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, currentLen, watching = true)
@@ -458,7 +460,7 @@ import dataclass.data
                     hostnameVerifierOpt,
                     logger,
                     maxRedirections
-                  ).right.toOption.flatten
+                  ).toOption.flatten
                 )
                 for (o <- lenOpt; len <- o)
                   logger.downloadLength(url, len, len, watching = true)
@@ -587,7 +589,7 @@ import dataclass.data
             // )
             checkFileExists(file, url)
           } else {
-            def update = shouldDownload(file, url).flatMap {
+            def update = shouldDownload(file, url, checkRemote = true).flatMap {
               case true =>
                 remoteKeepErrors(file, url, keepHeaderChecksums)
               case false =>
@@ -603,7 +605,7 @@ import dataclass.data
                 }
               case CachePolicy.LocalOnlyIfValid =>
                 checkFileExists(file, url, log = false).flatMap { _ =>
-                  shouldDownload(file, url).flatMap {
+                  shouldDownload(file, url, checkRemote = false).flatMap {
                     case true =>
                       EitherT[F, ArtifactError, Unit](S.point(Left(new ArtifactError.FileTooOldOrNotFound(file.toString))))
                     case false =>
@@ -772,7 +774,7 @@ import dataclass.data
         }
 
         val ((f, _), res) = results.head
-        res.right.flatMap { _ =>
+        res.flatMap { _ =>
           checksum match {
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
@@ -1011,12 +1013,13 @@ object FileCache {
             // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
             None
           case NonFatal(e) =>
-            Some(Left(
-              new ArtifactError.DownloadError(
-                s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
-                Some(e)
-              )
-            ))
+            val ex = new ArtifactError.DownloadError(
+              s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+              Some(e)
+            )
+            if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+              throw ex
+            Some(Left(ex))
         }
 
       resOpt match {

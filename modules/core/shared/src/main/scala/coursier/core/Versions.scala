@@ -8,33 +8,33 @@ import dataclass.data
   available: List[String],
   lastUpdated: Option[Versions.DateTime]
 ) {
-  private def latestIntegrationOpt: Option[String] = {
+  private def latestIntegrationCandidates(): Iterator[String] = {
 
     val latestOpt = Some(latest).filter(_.nonEmpty)
     val releaseOpt = Some(release).filter(_.nonEmpty)
-    val latestFromAvailable = Some(available)
-      .filter(_.nonEmpty)
-      .map(_.map(Version(_)).max.repr)
+    def latestFromAvailable = available
+      .map(Version(_))
+      .sorted
+      .reverseIterator
+      .map(_.repr)
 
-    latestOpt
-      .orElse(releaseOpt)
-      .orElse(latestFromAvailable)
+    latestOpt.iterator ++ releaseOpt.iterator ++ latestFromAvailable
   }
-  private def latestReleaseOpt: Option[String] = {
+  private def latestReleaseCandidates(): Iterator[String] = {
 
     val latestOpt = Some(latest).filter(_.nonEmpty).filter(!_.endsWith("SNAPSHOT"))
     val releaseOpt = Some(release).filter(_.nonEmpty)
-    val latestFromAvailable = Some(available)
-      .map(_.filter(!_.endsWith("SNAPSHOT")))
-      .filter(_.nonEmpty)
-      .map(_.map(Version(_)).max.repr)
+    def latestFromAvailable = available
+      .filter(!_.endsWith("SNAPSHOT"))
+      .map(Version(_))
+      .sorted
+      .reverseIterator
+      .map(_.repr)
 
-    releaseOpt
-      .orElse(latestOpt)
-      .orElse(latestFromAvailable)
+    releaseOpt.iterator ++ latestOpt.iterator ++ latestFromAvailable
   }
 
-  private def latestStableOpt: Option[String] = {
+  private def latestStableCandidates(): Iterator[String] = {
 
     def isStable(ver: String): Boolean =
       !ver.endsWith("SNAPSHOT") &&
@@ -44,36 +44,48 @@ import dataclass.data
 
     val latestOpt = Some(latest).filter(_.nonEmpty).filter(isStable)
     val releaseOpt = Some(release).filter(_.nonEmpty).filter(isStable)
-    val latestFromAvailable = Some(available)
-      .map(_.filter(isStable))
-      .filter(_.nonEmpty)
-      .map(_.map(Version(_)).max.repr)
+    def latestFromAvailable = available
+      .filter(isStable)
+      .map(Version(_))
+      .sorted
+      .reverseIterator
+      .map(_.repr)
 
-    releaseOpt
-      .orElse(latestOpt)
-      .orElse(latestFromAvailable)
+    releaseOpt.iterator ++ latestOpt.iterator ++ latestFromAvailable
   }
 
-  def latest(kind: Latest): Option[String] =
+  def candidates(kind: Latest): Iterator[String] =
     kind match {
-      case Latest.Integration => latestIntegrationOpt
-      case Latest.Release => latestReleaseOpt
-      case Latest.Stable => latestStableOpt
+      case Latest.Integration => latestIntegrationCandidates()
+      case Latest.Release => latestReleaseCandidates()
+      case Latest.Stable => latestStableCandidates()
     }
 
+  def latest(kind: Latest): Option[String] = {
+    val it = candidates(kind)
+    if (it.hasNext)
+      Some(it.next())
+    else
+      None
+  }
+
+  def candidatesInInterval(itv: VersionInterval): Iterator[String] = {
+    val fromRelease = Some(Version(release)).filter(itv.contains).map(_.repr)
+    def fromAvailable = available
+      .map(Version(_))
+      .filter(itv.contains)
+      .sorted
+      .reverseIterator
+      .map(_.repr)
+
+    fromRelease.iterator ++ fromAvailable
+  }
   def inInterval(itv: VersionInterval): Option[String] = {
-    val release0 = Version(release)
-
-    if (itv.contains(release0))
-      Some(release)
-    else {
-      val inInterval = available
-        .map(Version(_))
-        .filter(itv.contains)
-
-      if (inInterval.isEmpty) None
-      else Some(inInterval.max.repr)
-    }
+    val it = candidatesInInterval(itv)
+    if (it.hasNext)
+      Some(it.next())
+    else
+      None
   }
 }
 

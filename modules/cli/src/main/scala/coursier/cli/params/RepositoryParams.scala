@@ -6,17 +6,18 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.app.Channel
 import coursier.{Repositories, moduleString}
+import coursier.cli.install.SharedChannelParams
 import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
+import coursier.install.Channel
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.parse.RepositoryParser
 
 final case class RepositoryParams(
   repositories: Seq[Repository],
-  channels: Seq[Channel]
+  channels: SharedChannelParams
 )
 
 object RepositoryParams {
@@ -32,42 +33,10 @@ object RepositoryParams {
         }
     )
 
-    val channelsV = options
-      .channel
-      .traverse { s =>
-        val e = Channel.parse(s)
-          .left.map(NonEmptyList.one)
-        Validated.fromEither(e)
-      }
+    val channelsV = SharedChannelParams(options.channelOptions)
 
-    val defaultChannels =
-      if (options.defaultChannels)
-        Seq(
-          Channel.module(mod"io.get-coursier:apps")
-        )
-      else Nil
-
-    val fileChannelsV =
-      if (options.fileChannels) {
-        val configDir = coursier.paths.CoursierPaths.configDirectory()
-        val channelDir = new File(configDir, "channels")
-        val files = Option(channelDir.listFiles()).getOrElse(Array.empty[File])
-          .filter(f => !f.getName.startsWith("."))
-        val rawChannels = files.toList.flatMap { f =>
-          val b = Files.readAllBytes(f.toPath)
-          val s = new String(b, StandardCharsets.UTF_8)
-          s.linesIterator.map(_.trim).filter(_.nonEmpty).toSeq
-        }
-        rawChannels.traverse { s =>
-          val e = Channel.parse(s)
-            .left.map(NonEmptyList.one)
-          Validated.fromEither(e)
-        }
-      } else
-        Validated.validNel(Nil)
-
-    (repositoriesV, channelsV, fileChannelsV).mapN {
-      (repos0, channels, fileChannels) =>
+    (repositoriesV, channelsV).mapN {
+      (repos0, channels) =>
 
         // preprend defaults
         val defaults =
@@ -95,7 +64,7 @@ object RepositoryParams {
 
         RepositoryParams(
           repos,
-          (channels ++ fileChannels ++ defaultChannels).distinct
+          channels
         )
     }
   }

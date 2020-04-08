@@ -216,6 +216,22 @@ object Artifacts {
       }
   }
 
+  // Some artifacts may have the same URL. The progress bar logger rejects downloading the same URL twice in parallel
+  // (so that we don't display 2 or more progress bars for a single download).
+  // To circumvent that, we group the artifacts so that the URLs are unique in each group, then only
+  // download the artifacts of each group in parallel.
+  private[coursier] def groupArtifacts(artifacts: Seq[Artifact]): Seq[Seq[Artifact]] =
+    artifacts
+      .groupBy(_.url)
+      .iterator
+      .flatMap(_._2.zipWithIndex.iterator)
+      .toVector
+      .groupBy(_._2)
+      .mapValues(_.map(_._1))
+      .toVector
+      .sortBy(_._1)
+      .map(_._2)
+
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
     cache: Cache[F],
@@ -224,12 +240,30 @@ object Artifacts {
      S: Sync[F]
   ): F[Seq[(Artifact, File)]] = {
 
-    val tasks = artifacts.map { artifact =>
-      val file0 = cache.file(artifact)
-      S.map(file0.run)(artifact.->)
+    val groupedArtifacts = groupArtifacts(artifacts)
+
+    def reorder[T](l: Seq[(Artifact, T)]): Seq[(Artifact, T)] = {
+      val indices = artifacts.zipWithIndex.toMap
+      l.sortBy { case (a, _) => indices.getOrElse(a, -1) } // -1 case should never happen
     }
 
-    val gathered = S.gather(tasks)
+    val tasks = groupedArtifacts.map { l =>
+      val tasks0 = l.map { artifact =>
+        val file0 = cache.file(artifact)
+        S.map(file0.run)(artifact.->)
+      }
+      S.gather(tasks0)
+    }
+
+    // sequential accumulation (we don't have higher level libraries to ease that here…)
+    val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
+      // for (l <- acc; l0 <- f) yield l ++ l0
+      S.bind(acc) { l =>
+        S.map(f) { l0 =>
+          l ++ l0
+        }
+      }
+    }
 
     val loggerOpt = cache.loggerOpt
 
@@ -263,15 +297,15 @@ object Artifacts {
 
       if (otherCaches.isEmpty) {
         if (errors.isEmpty)
-          S.point(artifactToFile.toList)
+          S.point(reorder(artifactToFile.toList))
         else
           S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
       } else {
         if (errors.isEmpty && ignoredErrors.isEmpty)
-          S.point(artifactToFile.toList)
+          S.point(reorder(artifactToFile.toList))
         else
           S.map(fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*)) { l =>
-            artifactToFile.toList ++ l
+            reorder(artifactToFile.toList ++ l)
           }
       }
     }

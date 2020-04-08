@@ -220,6 +220,30 @@ object ArtifactsTests extends TestSuite {
         assert(urls == expectedUrls)
       }
     }
+
+    "Don't group artifacts with same URL" - async {
+
+      val res = await {
+        Resolve()
+          .noMirrors
+          .addDependencies(dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0")
+          .withCache(cache)
+          .future()
+      }
+
+      val artifacts = Artifacts.artifacts0(res, Set.empty, None, None, true).map(_._3).distinct
+      val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
+
+      assert(groupedArtifacts.length == 2)
+
+      val expectedDuplicatedUrls = Set("https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar")
+
+      val firstGroupUrls = groupedArtifacts.head.map(_.url).toSet
+      val duplicatedUrls = groupedArtifacts(1).map(_.url).toSet
+
+      assert(duplicatedUrls == expectedDuplicatedUrls)
+      assert((duplicatedUrls -- firstGroupUrls).isEmpty)
+    }
   }
 
 }

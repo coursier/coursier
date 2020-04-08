@@ -11,15 +11,11 @@ object IvyXml {
     for {
       org <- node
         .attribute("organisation")
-        .right
         .map(Organization(_))
-        .right
       name <- node
         .attribute("module")
-        .right
         .map(ModuleName(_))
-        .right
-      version <- node.attribute("revision").right
+      version <- node.attribute("revision")
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
       (Module(org, name, attr.toMap), version)
@@ -31,11 +27,11 @@ object IvyXml {
       .children
       .filter(_.label == "conf")
       .flatMap { node =>
-        node.attribute("name").right.toOption.toSeq.map(_ -> node)
+        node.attribute("name").toOption.toSeq.map(_ -> node)
       }
       .map {
         case (name, node) =>
-          Configuration(name) -> node.attribute("extends").right.toSeq.flatMap(_.split(',').map(Configuration(_)))
+          Configuration(name) -> node.attribute("extends").toSeq.flatMap(_.split(',').map(Configuration(_)))
       }
 
   // FIXME "default(compile)" likely not to be always the default
@@ -74,15 +70,15 @@ object IvyXml {
           .children
           .filter(_.label == "exclude")
           .flatMap { node0 =>
-            val org = Organization(node0.attribute("org").right.getOrElse("*"))
+            val org = Organization(node0.attribute("org").getOrElse("*"))
             val name = ModuleName(
-              node0.attribute("module").right.toOption
-                .orElse(node0.attribute("name").right.toOption)
+              node0.attribute("module").toOption
+                .orElse(node0.attribute("name").toOption)
                 .getOrElse("*")
             )
             val confs = node0
               .attribute("conf")
-              .right.toOption
+              .toOption
               .filter(_.nonEmpty)
               .fold(Seq(Configuration.all))(_.split(',').map(Configuration(_)))
             confs.map(_ -> (org, name))
@@ -101,18 +97,16 @@ object IvyXml {
         for {
           org <- node
             .attribute("org")
-            .right
             .toOption
             .toSeq
             .map(Organization(_))
           name <- node
             .attribute("name")
-            .right
             .toOption
             .toSeq
             .map(ModuleName(_))
-          version <- node.attribute("rev").right.toOption.toSeq
-          rawConf <- node.attribute("conf").right.toOption.toSeq
+          version <- node.attribute("rev").toOption.toSeq
+          rawConf <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
           pub <- publications
         } yield {
@@ -129,16 +123,10 @@ object IvyXml {
       }
 
   private def publication(node: Node): Publication = {
-    val name = node.attribute("name").right.getOrElse("")
-    val type0 = node.attribute("type")
-      .right.map(Type(_))
-      .right.getOrElse(Type.jar)
-    val ext = node.attribute("ext")
-      .right.map(Extension(_))
-      .right.getOrElse(type0.asExtension)
-    val classifier = node.attribute("classifier")
-      .right.map(Classifier(_))
-      .right.getOrElse(Classifier.empty)
+    val name = node.attribute("name").getOrElse("")
+    val type0 = node.attribute("type").toOption.fold(Type.jar)(Type(_))
+    val ext = node.attribute("ext").toOption.fold(type0.asExtension)(Extension(_))
+    val classifier = node.attribute("classifier").toOption.fold(Classifier.empty)(Classifier(_))
     Publication(name, type0, ext, classifier)
   }
 
@@ -160,9 +148,8 @@ object IvyXml {
       infoNode <- node.children
         .find(_.label == "info")
         .toRight("Info not found")
-        .right
 
-      modVer <- info(infoNode).right
+      modVer <- info(infoNode)
     } yield {
 
       val (module, version) = modVer
@@ -190,20 +177,17 @@ object IvyXml {
         .map(_.textContent.trim)
         .getOrElse("")
 
-      val homePage = descriptionNodeOpt.flatMap(_.attribute("homepage").right.toOption).getOrElse("")
+      val homePage = descriptionNodeOpt.flatMap(_.attribute("homepage").toOption).getOrElse("")
 
       val licenses = infoNode.children
         .filter(_.label == "license")
         .flatMap { n =>
-          n.attribute("name").right.toSeq.map { name =>
-            (name, n.attribute("url").right.toOption)
+          n.attribute("name").toSeq.map { name =>
+            (name, n.attribute("url").toOption)
           }
         }
 
-      val publicationDate = infoNode.attribute("publication")
-        .right
-        .toOption
-        .flatMap(parseDateTime)
+      val publicationDate = infoNode.attribute("publication").toOption.flatMap(parseDateTime)
 
       Project(
         module,

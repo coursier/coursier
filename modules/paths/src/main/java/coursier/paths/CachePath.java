@@ -82,7 +82,11 @@ public class CachePath {
     public static File temporaryFile(File file) {
         File dir = file.getParentFile();
         String name = file.getName();
-        return new File(dir, name + ".part");
+        return new File(dir, "." + name + ".part");
+    }
+
+    public static Path lockFile(Path path) {
+        return path.getParent().resolve(path.getFileName().toString() + ".lock");
     }
 
     public static File lockFile(File file) {

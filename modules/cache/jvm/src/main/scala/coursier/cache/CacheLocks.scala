@@ -1,13 +1,14 @@
 package coursier.cache
 
-import java.io.{File, FileOutputStream}
+import java.io.File
 import java.nio.channels.{FileLock, OverlappingFileLockException}
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.paths.CachePath
 
 import scala.annotation.tailrec
+import java.nio.channels.FileChannel
 
 object CacheLocks {
 
@@ -31,13 +32,18 @@ object CacheLocks {
     ifLocked: => Option[T]
   ): T = {
 
-    val lockFile = CachePath.lockFile(file)
+    val lockFile = CachePath.lockFile(file).toPath
 
-    var out: FileOutputStream = null
+    var channel: FileChannel = null
 
     withStructureLock(cache) {
-      Files.createDirectories(lockFile.toPath.getParent)
-      out = new FileOutputStream(lockFile)
+      Files.createDirectories(lockFile.getParent)
+      channel = FileChannel.open(
+        lockFile,
+        StandardOpenOption.CREATE,
+        StandardOpenOption.WRITE,
+        StandardOpenOption.DELETE_ON_CLOSE
+      )
     }
 
     @tailrec
@@ -46,7 +52,7 @@ object CacheLocks {
       val resOpt = {
         var lock: FileLock = null
         try {
-          lock = out.getChannel.tryLock()
+          lock = channel.tryLock()
           if (lock == null)
             ifLocked
           else
@@ -54,16 +60,18 @@ object CacheLocks {
             finally {
               lock.release()
               lock = null
-              out.close()
-              out = null
-              lockFile.delete()
+              channel.close()
+              channel = null
             }
         }
         catch {
           case _: OverlappingFileLockException =>
             ifLocked
         }
-        finally if (lock != null) lock.release()
+        finally {
+          if (lock != null)
+            lock.release()
+        }
       }
 
       resOpt match {
@@ -74,7 +82,10 @@ object CacheLocks {
     }
 
     try loop()
-    finally if (out != null) out.close()
+    finally {
+      if (channel != null)
+        channel.close()
+    }
   }
 
   def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =

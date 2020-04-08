@@ -1,6 +1,6 @@
 
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
-import org.scalajs.sbtplugin.ScalaJSPlugin
+import sbtcrossproject.CrossPlugin
 import sbt._
 import sbt.Keys._
 
@@ -40,7 +40,8 @@ object Publish {
 
   def dontPublishScalaJsIn(sbv: String*) = Seq(
     publishArtifact := {
-      (!ScalaJSPlugin.autoImport.isScalaJSProject.value || !sbv.contains(scalaBinaryVersion.value)) &&
+      val isScalaJs = CrossPlugin.autoImport.crossProjectPlatform.value != scalajscrossproject.JSPlatform
+      (!isScalaJs || !sbv.contains(scalaBinaryVersion.value)) &&
         publishArtifact.value
     },
     mimaPreviousArtifacts := {

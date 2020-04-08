@@ -1,9 +1,9 @@
 package coursier.cli.fetch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
-import coursier.cli.app.RawAppDescriptor
 import coursier.cli.options.ArtifactOptions
-import coursier.cli.resolve.ResolveOptions
+import coursier.cli.resolve.SharedResolveOptions
+import coursier.install.RawAppDescriptor
 
 @ArgsName("org:name:version|app-name[:version]*")
 final case class FetchOptions(
@@ -18,7 +18,7 @@ final case class FetchOptions(
 
 
   @Recurse
-    resolveOptions: ResolveOptions = ResolveOptions(),
+    resolveOptions: SharedResolveOptions = SharedResolveOptions(),
 
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()

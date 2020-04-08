@@ -1,26 +1,34 @@
 package coursier.cli.install
 
-import caseapp.{HelpMessage => Help, _}
+import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.jvm.SharedJavaOptions
+import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions}
 
 final case class InstallOptions(
 
   @Recurse
-    appOptions: InstallAppOptions = InstallAppOptions(),
+    cacheOptions: CacheOptions = CacheOptions(),
+
+  @Recurse
+    outputOptions: OutputOptions = OutputOptions(),
 
   @Recurse
     sharedInstallOptions: SharedInstallOptions = SharedInstallOptions(),
 
-  channel: List[String] = Nil,
+  @Recurse
+    sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  defaultChannels: Boolean = true,
-  fileChannels: Boolean = true,
+  @Recurse
+    sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
 
-  defaultRepositories: Boolean = true,
+  @Recurse
+    envOptions: EnvOptions = EnvOptions(),
 
-  @Help("Name of the binary of the app to be installed")
-    name: Option[String] = None,
+  addChannel: List[String] = Nil,
 
-  addChannel: List[String] = Nil
+  @Short("f")
+    force: Boolean = false
+
 )
 
 object InstallOptions {

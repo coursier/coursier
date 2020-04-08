@@ -2,23 +2,39 @@ package coursier.cli
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.Scanner
 
+import caseapp.core.RemainingArgs
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
-import coursier.bootstrap.util.FileUtil
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
-import coursier.cli.install.{Install, InstallPath, Update}
+import coursier.cli.install.{Install, Uninstall, Update}
+import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
-import coursier.cli.publish.sonatype.Sonatype
 import coursier.cli.resolve.Resolve
-import coursier.cli.spark.SparkSubmit
+import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.core.Version
+import coursier.launcher.internal.{FileUtil, Windows}
+import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
+import scala.util.control.NonFatal
+
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
+
+  if (System.console() != null && Windows.isWindows)
+    try WindowsAnsi.setup()
+    catch {
+      case NonFatal(e) =>
+        val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
+        if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
+          System.err.println(s"Error setting up Windows terminal for ANSI escape codes: $e")
+        if (doThrow)
+           throw e
+    }
 
   override val appName = "Coursier"
   override val progName =
@@ -40,6 +56,17 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     }
     new String(b, StandardCharsets.UTF_8)
   }
+
+  override def main(args: Array[String]): Unit =
+    if (args.isEmpty && Windows.isWindows) {
+      Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
+
+      // https://stackoverflow.com/questions/26184409/java-console-prompt-for-enter-input-before-moving-on/26184535#26184535
+      println("Press \"ENTER\" to continue...")
+      val scanner = new Scanner(System.in)
+      scanner.nextLine()
+    } else
+      super.main(args)
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
@@ -73,21 +100,23 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Fetch.run(fetchOptions, args)
       case Inr(Inr(Inr(Inl(installOptions)))) =>
         Install.run(installOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(installPathOptions))))) =>
-        InstallPath.run(installPathOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))) =>
+      case Inr(Inr(Inr(Inr(Inl(javaOptions))))) =>
+        Java.run(javaOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions)))))) =>
+        JavaHome.run(javaHomeOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions))))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions)))))))) =>
         Publish.run(publishOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions))))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sonatypeOptions))))))))) =>
-        Sonatype.run(sonatypeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(sparkSubmitOptions)))))))))) =>
-        SparkSubmit.run(sparkSubmitOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions)))))))))) =>
+        Setup.run(setupOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))) =>
+        Uninstall.run(uninstallOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))) =>
         cnil.impossible
     }
 

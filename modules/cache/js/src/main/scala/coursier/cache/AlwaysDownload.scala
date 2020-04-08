@@ -2,10 +2,11 @@ package coursier.cache
 
 import coursier.cache.internal.Platform
 import coursier.util.{EitherT, Task}
+import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class AlwaysDownload(
+@data class AlwaysDownload(
   logger: CacheLogger = CacheLogger.nop
 ) extends Cache[Task] {
 

@@ -9,6 +9,7 @@ import caseapp._
 import cats.data.Validated
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
+import coursier.install.Channels
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
@@ -29,23 +30,22 @@ object Fetch extends CaseApp[FetchOptions] {
       System.out,
       System.err,
       args,
-      printOutput = false,
       force = params.artifact.force
     )
 
     val logger = params.resolve.output.logger()
 
-    val cache = params.resolve.cache.cache[Task](pool, logger)
+    val cache = params.resolve.cache.cache(pool, logger)
 
     for {
       t <- resolveTask
-      (res, scalaVersion, platformOpt) = t
+      (res, scalaVersion, platformOpt, _) = t
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?
         Some(params.artifact.artifactTypes),  // allow to be null?
-        params.resolve.classpathOrder
+        params.resolve.classpathOrder.getOrElse(true),
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
@@ -85,7 +85,8 @@ object Fetch extends CaseApp[FetchOptions] {
       val channels = initialParams.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
       val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
-      val res = Resolve.handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
+      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 

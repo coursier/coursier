@@ -78,7 +78,7 @@ import dataclass.data
       case (m, Reconciliation.Strict) =>
         (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault), RuleResolution.Fail)
       case (m, Reconciliation.SemVer) =>
-        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault, semVer = true), RuleResolution.Fail)
+        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault).withSemVer(true), RuleResolution.Fail)
     }
 
     rules ++ fromReconciliation

@@ -24,7 +24,7 @@ abstract class PlatformRepositoryParser {
     else {
       val repo = SharedRepositoryParser.repository(input)
 
-      val url = repo.right.map {
+      val url = repo.map {
         case m: MavenRepository =>
           m.root
         case i: IvyRepository =>
@@ -37,7 +37,7 @@ abstract class PlatformRepositoryParser {
           sys.error(s"Unrecognized repository: $r")
       }
 
-      val validatedUrl = url.right.flatMap { url0 =>
+      val validatedUrl = url.flatMap { url0 =>
         try Right(CacheUrl.url(url0))
         catch {
           case e: MalformedURLException =>
@@ -55,7 +55,7 @@ abstract class PlatformRepositoryParser {
         }
       }
 
-      validatedUrl.right.flatMap { url =>
+      validatedUrl.flatMap { url =>
         Option(url.getUserInfo) match {
           case None =>
             repo
@@ -72,7 +72,7 @@ abstract class PlatformRepositoryParser {
                 val auth = Authentication(user, password)
                   .withHttpsOnly(url.getProtocol != "http")
 
-                repo.right.map {
+                repo.map {
                   case m: MavenRepository =>
                     m.withRoot(baseUrl).withAuthentication(Some(auth))
                   case i: IvyRepository =>

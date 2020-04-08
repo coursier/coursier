@@ -6,10 +6,10 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.fetch.FetchParams
 import coursier.cli.options.SharedLaunchOptions
-import coursier.cli.resolve.ResolveParams
+import coursier.cli.resolve.SharedResolveParams
 
 final case class SharedLaunchParams(
-  resolve: ResolveParams,
+  resolve: SharedResolveParams,
   artifact: ArtifactParams,
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
@@ -35,7 +35,7 @@ object SharedLaunchParams {
 
   def apply(options: SharedLaunchOptions): ValidatedNel[String, SharedLaunchParams] = {
 
-    val resolveV = ResolveParams(options.resolveOptions)
+    val resolveV = SharedResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
     val sharedLoaderV = resolveV.map(_.resolution).toOption match {
       case None =>

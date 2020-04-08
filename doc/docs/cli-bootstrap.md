@@ -12,9 +12,17 @@ machine or OS, and is able to download and launch the corresponding application.
 
 For example,
 ```bash
-$ coursier bootstrap com.geirsson:scalafmt-cli_2.12:1.5.1 -o scalafmt
+$ coursier bootstrap org.scalameta:scalafmt-cli_2.13:2.3.2 -o scalafmt
 $ ./scalafmt --version
-scalafmt 1.5.1
+scalafmt 2.3.2
+```
+
+Note that `boostrap` also accepts the same application names as the
+[`install`](cli-install.md) command, that are looked for in
+[channels](cli-install.md#channels), so that the following works
+```bash
+$ coursier bootstrap scalafmt -o scalafmt
+$ coursier bootstrap scalafmt:2.3.2 -o scalafmt # explicit version
 ```
 
 ## bootstrap content
@@ -110,6 +118,85 @@ conflict has to be resolved,
 - the launchers can't be added as is to a classpath, like standard JARs, or
 assemblies / uber JARs. This prevents using them as is to package spark jobs
 in particular.
+
+## scala-native
+
+The `bootstrap` command of coursier can generate
+[Scala Native](https://www.scala-native.org)-based native launchers.
+
+This requires the application you want a launcher for to be cross-compiled to
+Scala Native, and its Scala Native artifacts to be published to Maven or Ivy
+repositories. The [echo](https://github.com/coursier/echo) project of
+coursier has
+[such a module](https://github.com/coursier/echo/tree/master/native), currently
+published as
+[`io.get-coursier:echo_native0.3_2.11:1.0.2`](https://repo1.maven.org/maven2/io/get-coursier/echo_native0.3_2.11/1.0.2).
+
+In order to generate a launcher for such a published application, you'll need to
+have your environment
+[set up for Scala Native](https://www.scala-native.org/en/v0.3.8/user/setup.html#installing-clang-and-runtime-dependencies). You can then generate native
+launchers by passing the `--native` or `-S` option to the `bootstrap` command,
+like
+```bash
+$ coursier bootstrap \
+    --native \
+    io.get-coursier:echo_native0.3_2.11:1.0.2 \
+    -o echo
+[info] Linking (2354 ms)
+[info] Discovered 1291 classes and 9538 methods
+…
+```
+and run them, like
+```bash
+$ ./echo hey
+hey
+```
+
+Linking flags during the linking phase can be adjusted via `LDFLAGS` in the
+environment.
+
+## GraalVM native image
+
+The `bootstrap` command can generate native executables via
+[GraalVM native image](https://www.graalvm.org/docs/reference-manual/native-image).
+
+For example,
+```bash
+$ coursier bootstrap --native-image \
+    io.get-coursier:echo:1.0.3 \
+    -o echo
+```
+
+This command automatically fetches and extracts a GraalVM Community edition archive,
+like the [`java` command of coursier](cli-java.md) does, then uses it to call
+`native-image`.
+
+You can pass an explicit GraalVM version via `--graalvm-version` or `--graalvm`, like
+```bash
+$ coursier bootstrap --native-image \
+    --graalvm 19.3 \
+    io.get-coursier:echo:1.0.3 \
+    -o echo
+```
+Note that this option accepts short versions. So as of writing this, `19.3` gets automatically
+expanded to `19.3.1`.
+
+You can pass custom options to native-image via `--graalvm-option` or
+`--graalvm-opt`, or after a `--`, like
+```bash
+$ coursier bootstrap --native-image \
+    --graalvm 19.3 \
+    io.get-coursier:echo:1.0.3 \
+    -o echo \
+    --graalvm-opt --no-fallback \
+    -- \
+      --enable-all-security-services \
+      --initialize-at-build-time
+```
+Note that it can be more convenient to pass arguments
+to native-image via
+[a native-image.properties resource](https://medium.com/graalvm/simplifying-native-image-generation-with-maven-plugin-and-embeddable-configuration-d5b283b92f57#e114)
+rather than on the command-line.
 
 ## Local artifacts
 

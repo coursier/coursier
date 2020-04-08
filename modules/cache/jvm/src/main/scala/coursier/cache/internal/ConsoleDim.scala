@@ -1,7 +1,5 @@
 package coursier.cache.internal
 
-import sun.misc.{Signal, SignalHandler}
-
 final class ConsoleDim {
 
   @volatile private var dimsOpt: Option[(Int, Int)] = None
@@ -12,18 +10,16 @@ final class ConsoleDim {
 
   private def setup(): Unit = {
 
-    // From https://stackoverflow.com/q/31594364/3714539
-
-    val terminalSizeChangedHandler: SignalHandler =
-      new SignalHandler {
-        def handle(sig: Signal): Unit =
-          lock.synchronized {
-            dimsOpt = None
-          }
-      }
-
-    try Signal.handle(new Signal("WINCH"), terminalSizeChangedHandler)
-    catch {
+    try {
+      SigWinch.addHandler(
+        new Runnable {
+          def run(): Unit =
+            lock.synchronized {
+              dimsOpt = None
+            }
+        }
+      )
+    } catch {
       case _: IllegalArgumentException =>
         // ignored
     }

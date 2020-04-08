@@ -1165,7 +1165,11 @@ object Resolution {
       project0.dependencyManagement +: (
         profiles0.map(_.dependencyManagement) ++
         retainedParentProjects.map { p =>
-          withProperties(p.dependencyManagement, withFinalProperties(p).properties.toMap)
+          val parentProperties0 = parents(p, k => projectCache.get(k).map(_._2))
+            .toVector
+            .flatMap(_.properties)
+          val props = withFinalProperties(p.withProperties(parentProperties0 ++ p.properties)).properties.toMap
+          withProperties(p.dependencyManagement, props)
         }
       )
     )
@@ -1249,7 +1253,7 @@ object Resolution {
     artifacts(defaultTypes, classifiers)
 
   def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]]): Seq[Artifact] =
-    artifacts(types, classifiers, classpathOrder = false)
+    artifacts(types, classifiers, classpathOrder = true)
 
   def artifacts(types: Set[Type], classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[Artifact] =
     dependencyArtifacts(classifiers)
@@ -1263,7 +1267,7 @@ object Resolution {
     dependencyArtifacts(None)
 
   def dependencyArtifacts(classifiers: Option[Seq[Classifier]]): Seq[(Dependency, Publication, Artifact)] =
-    dependencyArtifacts(classifiers, classpathOrder = false)
+    dependencyArtifacts(classifiers, classpathOrder = true)
 
   def dependencyArtifacts(classifiers: Option[Seq[Classifier]], classpathOrder: Boolean): Seq[(Dependency, Publication, Artifact)] =
     for {

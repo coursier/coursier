@@ -37,7 +37,7 @@ final case class FileDownload(base: Path) extends Download {
         }
         logger.downloadedIfExists(
           url,
-          res.right.toOption.flatMap(_.map(_._2.length)),
+          res.toOption.flatMap(_.map(_._2.length)),
           res.left.toOption.map(e => new Download.Error.FileException(e))
         )
 

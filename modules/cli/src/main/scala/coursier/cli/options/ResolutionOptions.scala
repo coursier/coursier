@@ -35,6 +35,7 @@ final case class ResolutionOptions(
 
   @Help("Default scala version")
   @Short("e")
+  @Short("scala")
     scalaVersion: Option[String] = None,
 
   @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent, and adjust the scala version for fully cross-versioned dependencies")

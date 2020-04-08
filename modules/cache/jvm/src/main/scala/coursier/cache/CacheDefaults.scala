@@ -37,8 +37,8 @@ object CacheDefaults {
       }
 
   lazy val ttl: Option[Duration] = {
-    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(parseDuration(_).right.toOption)
-    def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).right.toOption)
+    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(parseDuration(_).toOption)
+    def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).toOption)
     def default = 24.hours
 
     fromEnv
@@ -113,7 +113,7 @@ object CacheDefaults {
                 path
             Seq(FileCredentials(path0, optional = true))
           case s =>
-            CredentialsParser.parseSeq(s).either.right.toSeq.flatten
+            CredentialsParser.parseSeq(s).either.toSeq.flatten
         }
 
   val noEnvCachePolicies = Seq(

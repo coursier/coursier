@@ -2,8 +2,9 @@ package coursier.maven
 
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
+import dataclass.data
 
-final case class MavenComplete[F[_]](
+@data class MavenComplete[F[_]](
   repo: MavenRepository,
   fetch: Repository.Fetch[F],
   F: Monad[F]
@@ -33,7 +34,7 @@ final case class MavenComplete[F[_]](
 
     val dirUrl = repo.urlFor(dir, isDir = true)
 
-    F.map(fromDirListing(dirUrl, prefix0))(_.right.map(_.map(base + _)))
+    F.map(fromDirListing(dirUrl, prefix0))(_.map(_.map(base + _)))
   }
   def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]] = {
 

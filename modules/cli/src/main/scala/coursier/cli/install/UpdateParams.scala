@@ -5,45 +5,45 @@ import java.util.concurrent.TimeUnit
 
 import cats.data.ValidatedNel
 import cats.implicits._
+import coursier.cli.jvm.SharedJavaParams
+import coursier.cli.params.{CacheParams, OutputParams}
 import coursier.core.Repository
-import coursier.parse.RepositoryParser
 
 import scala.concurrent.duration.Duration
 
 final case class UpdateParams(
+  cache: CacheParams,
+  output: OutputParams,
   shared: SharedInstallParams,
-  repositories: Seq[Repository],
+  sharedJava: SharedJavaParams,
   overrideRepositories: Boolean,
-  dir: Path
-)
+  force: Boolean
+) {
+  def selectedRepositories(initialList: Seq[Repository]): Seq[Repository] =
+    if (overrideRepositories) shared.repositories
+    else initialList
+}
 
 object UpdateParams {
   def apply(options: UpdateOptions): ValidatedNel[String, UpdateParams] = {
 
-    import InstallParams.validationNelToCats
+    val cacheParamsV = options.cacheOptions.params(Some(Duration(0L, TimeUnit.MILLISECONDS)))
+    val outputV = OutputParams(options.outputOptions)
 
-    val sharedV = SharedInstallParams(options.sharedInstallOptions, Some(Duration(0L, TimeUnit.MILLISECONDS)))
+    val sharedV = SharedInstallParams(options.sharedInstallOptions)
+    val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
-    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.repository))
+    val force = options.force
 
-    val defaultRepositories =
-      if (options.defaultRepositories)
-        coursier.Resolve.defaultRepositories
-      else
-        Nil
-
-    val dir = options.dir
-      .map(Paths.get(_))
-      .getOrElse(InstallParams.defaultDir)
-
-    (sharedV, repositoriesV).mapN {
-      (shared, repositories) =>
-        UpdateParams(
-          shared,
-          defaultRepositories ++ repositories,
-          options.overrideRepositories,
-          dir
-        )
+    (cacheParamsV, outputV, sharedV, sharedJavaV).mapN { (cacheParams, output, shared, sharedJava) =>
+      UpdateParams(
+        cacheParams,
+        output,
+        shared,
+        sharedJava,
+        options.overrideRepositories,
+        force
+      )
     }
   }
 }

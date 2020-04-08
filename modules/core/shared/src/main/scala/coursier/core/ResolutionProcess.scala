@@ -313,7 +313,7 @@ object ResolutionProcess {
     }
 
     def getLatest0(ver: Either[VersionInterval, (Latest, Option[VersionInterval])]) = {
-      val shouldParallelize = ver.right.exists(_._1 == Latest.Integration)
+      val shouldParallelize = ver.exists(_._1 == Latest.Integration)
       if (shouldParallelize)
         EitherT {
 

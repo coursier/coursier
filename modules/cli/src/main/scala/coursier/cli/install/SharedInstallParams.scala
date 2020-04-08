@@ -3,57 +3,79 @@ package coursier.cli.install
 import java.nio.file.{Path, Paths}
 
 import caseapp.Tag
-import cats.data.ValidatedNel
-import coursier.cache.CacheLogger
-import coursier.cli.app.GraalvmParams
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
+import cats.implicits._
+import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.params.OutputParams
-import coursier.params.CacheParams
-
-import scala.concurrent.duration.Duration
+import coursier.core.Repository
+import coursier.install.{GraalvmParams, InstallDir}
+import coursier.parse.RepositoryParser
+import coursier.util.Task
 
 final case class SharedInstallParams(
-  cache: CacheParams,
-  verbosity: Int,
-  progressBars: Boolean,
+  repositories: Seq[Repository],
   dir: Path,
-  forceUpdate: Boolean,
-  graalvmParamsOpt: Option[GraalvmParams] = None
+  graalvmParamsOpt: Option[GraalvmParams] = None,
+  onlyPrebuilt: Boolean,
+  platformOpt: Option[String],
+  preferPrebuilt: Boolean
 ) {
-  def logger(): CacheLogger =
-    OutputParams(verbosity, progressBars, forcePrint = false).logger()
+
+  def installDir(cache: Cache[Task]): InstallDir =
+    InstallDir(dir, cache)
+      .withGraalvmParamsOpt(graalvmParamsOpt)
+      .withCoursierRepositories(repositories)
+      .withOnlyPrebuilt(onlyPrebuilt)
+      .withPlatform(platformOpt)
+      .withPreferPrebuilt(preferPrebuilt)
 }
 
 object SharedInstallParams {
-  def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] =
-    apply(options, None)
-  def apply(options: SharedInstallOptions, defaultTtlOpt: Option[Duration]): ValidatedNel[String, SharedInstallParams] = {
 
-    val cacheParamsV = options.cacheOptions.params(defaultTtlOpt)
+  lazy val defaultDir = {
+    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+  }
 
-    val verbosity = Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet)
-
-    val progressBars = options.progress
-
-    val dir = options.dir match {
-      case Some(d) => Paths.get(d)
-      case None => InstallParams.defaultDir
+  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
+    v.either match {
+      case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
+      case Right(r) => Validated.validNel(r)
     }
 
-    val graalvmParamsOpt =
-      options.graalvmHome
-        .orElse(sys.env.get("GRAALVM_HOME"))
-        .map { home =>
-          GraalvmParams(home, options.graalvmOption)
-        }
+  def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] = {
 
-    cacheParamsV.map { cacheParams =>
+    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.repository))
+
+    val defaultRepositories =
+      if (options.defaultRepositories)
+        coursier.Resolve.defaultRepositories
+      else
+        Nil
+
+    val dir = options.installDir.filter(_.nonEmpty) match {
+      case Some(d) => Paths.get(d)
+      case None => defaultDir
+    }
+
+    val graalvmParams = GraalvmParams(
+      options.graalvmDefaultVersion.filter(_.nonEmpty),
+      options.graalvmOption
+    )
+
+    val onlyPrebuilt = options.onlyPrebuilt
+
+    val platformOpt = options.installPlatform.orElse(InstallDir.platform())
+
+    val preferPrebuilt = options.installPreferPrebuilt
+
+    repositoriesV.map { repositories =>
       SharedInstallParams(
-        cacheParams,
-        verbosity,
-        progressBars,
+        defaultRepositories ++ repositories,
         dir,
-        options.forceUpdate,
-        graalvmParamsOpt
+        Some(graalvmParams),
+        onlyPrebuilt,
+        platformOpt,
+        preferPrebuilt
       )
     }
   }

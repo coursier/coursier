@@ -2,7 +2,7 @@ package coursier.cli.resolve
 
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{Executors, ExecutorService, ThreadFactory}
 
 import caseapp._
 import cats.data.Validated
@@ -10,12 +10,12 @@ import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.app.{AppArtifacts, Channel, RawAppDescriptor}
 import coursier.cli.install.Install
 import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
+import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
@@ -27,7 +27,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     * Tries to parse get dependencies via Scala Index lookups.
     */
   def handleScaladexDependencies(
-    params: ResolveParams,
+    params: SharedResolveParams,
     pool: ExecutorService,
     scalaVersion: String
   ): Task[List[Dependency]] =
@@ -100,112 +100,205 @@ object Resolve extends CaseApp[ResolveOptions] {
     result(0)
   }
 
-  // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
-  def task(
+
+  private[cli] def depsAndReposOrError(
+    params: SharedResolveParams,
+    args: Seq[String],
+    cache: Cache[Task]
+  ) = {
+    import coursier.cli.util.MonadlessEitherThrowable._
+
+    lift {
+
+      val (javaOrScalaDeps, urlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          args,
+          params.dependency.intransitiveDependencies
+        )
+      }
+
+      val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
+        Dependencies.withExtraRepo(
+          Nil,
+          params.dependency.sbtPluginDependencies
+        )
+      }
+
+      val (scalaVersion, platformOpt, deps) = unlift {
+        AppDescriptor()
+          .withDependencies(javaOrScalaDeps)
+          .withRepositories(params.repositories.repositories)
+          .withScalaVersionOpt(
+            params.resolution.scalaVersionOpt.map { s =>
+              if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
+              else s
+            }
+          )
+          .processDependencies(
+            cache,
+            params.dependency.platformOpt,
+            params.output.verbosity
+          )
+      }
+
+      val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
+        val m0 = m.map {
+          case ((mod, v), url) =>
+            ((mod.module(scalaVersion), v), (url, true))
+        }
+        InMemoryRepository(
+          m0,
+          params.cache.cacheLocalArtifacts
+        )
+      }
+
+      val deps0 = Dependencies.addExclusions(
+        deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
+        params.dependency.exclude.map { m =>
+          val m0 = m.module(scalaVersion)
+          (m0.organization, m0.name)
+        },
+        params.dependency.perModuleExclude.map {
+          case (k, s) =>
+            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+        }
+      )
+
+      // Prepend FallbackDependenciesRepository to the repository list
+      // so that dependencies with URIs are resolved against this repo
+      val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
+
+      unlift {
+        val invalidForced = extraRepoOpt
+          .map(_.fallbacks.toSeq)
+          .getOrElse(Nil)
+          .collect {
+            case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+              (mod, version)
+          }
+        if (invalidForced.isEmpty)
+          Right(())
+        else
+          Left(
+            new ResolveException(
+              s"Cannot force a version that is different from the one specified " +
+                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+            )
+          )
+      }
+
+      (deps0, repositories, scalaVersion, platformOpt)
+    }
+  }
+
+  def printTask(
     params: ResolveParams,
     pool: ExecutorService,
     // stdout / stderr not used everywhere (added mostly for testing)
     stdout: PrintStream,
     stderr: PrintStream,
     args: Seq[String],
-    printOutput: Boolean = true,
-    force: Boolean = false
-  ): Task[(Resolution, String, Option[String])] = {
+    benchmark: Int = 0,
+    benchmarkCache: Boolean = false
+  ): Task[Unit] = {
+    val task0 = task(
+      params.shared,
+      pool,
+      stdout,
+      stderr,
+      args,
+      params.forcePrint,
+      benchmark,
+      benchmarkCache
+    )
+
+    val finalTask =
+      params.retry match {
+        case None => task0
+        case Some((period, maxAttempts)) =>
+          // meh
+          val scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactory {
+              val defaultThreadFactory = Executors.defaultThreadFactory()
+              def newThread(r: Runnable) = {
+                val t = defaultThreadFactory.newThread(r)
+                t.setDaemon(true)
+                t.setName("retry-handler")
+                t
+              }
+            }
+          )
+          val delay = Task.completeAfter(scheduler, period)
+          def helper(count: Int): Task[(Resolution, String, Option[String], Option[ResolutionError])] =
+            task0.attempt.flatMap {
+              case Left(e) =>
+                if (count >= maxAttempts) {
+                  val ex = e match {
+                    case _: ResolveException => new ResolveException(s"Resolution still failing after $maxAttempts attempts: ${e.getMessage}", e)
+                    case _ => new Exception(s"Resolution still failing after $maxAttempts attempts", e)
+                  }
+                  Task.fail(ex)
+                } else {
+                  val print = Task.delay {
+                    // TODO Better printing of error (getMessage for relevent types, …)
+                    stderr.println(s"Attempt $count failed: $e")
+                  }
+                  for {
+                    _ <- print
+                    _ <- delay
+                    res <- helper(count + 1)
+                  } yield res
+                }
+              case Right(res) => Task.point(res)
+            }
+          helper(1)
+      }
+
+    finalTask.flatMap {
+      case (res, scalaVersion, platformOpt, errorOpt) =>
+        val outputToStdout = errorOpt.isEmpty || params.forcePrint
+        if (outputToStdout || params.output.verbosity >= 2)
+          Task.delay {
+            Output.printResolutionResult(
+              printResultStdout = outputToStdout,
+              params,
+              scalaVersion,
+              platformOpt,
+              res,
+              stdout,
+              stderr,
+              colors = !RefreshLogger.defaultFallbackMode
+            )
+          }
+        else
+          Task.point(())
+    }
+  }
+
+  // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
+  def task(
+    params: SharedResolveParams,
+    pool: ExecutorService,
+    // stdout / stderr not used everywhere (added mostly for testing)
+    stdout: PrintStream,
+    stderr: PrintStream,
+    args: Seq[String],
+    force: Boolean = false,
+    benchmark: Int = 0,
+    benchmarkCache: Boolean = false
+  ): Task[(Resolution, String, Option[String], Option[ResolutionError])] = {
 
     val cache = params.cache.cache(
       pool,
       params.output.logger(),
-      inMemoryCache = params.benchmark != 0 && params.benchmarkCache
+      inMemoryCache = benchmark != 0 && benchmarkCache
     )
 
-    val depsAndReposOrError = {
-      import coursier.cli.util.MonadlessEitherThrowable._
-
-      lift {
-
-        val (javaOrScalaDeps, urlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            args,
-            params.dependency.intransitiveDependencies
-          )
-        }
-
-        val (sbtPluginJavaOrScalaDeps, sbtPluginUrlDeps) = unlift {
-          Dependencies.withExtraRepo(
-            Nil,
-            params.dependency.sbtPluginDependencies
-          )
-        }
-
-        val (scalaVersion, platformOpt, deps) = unlift {
-          AppArtifacts.dependencies(
-            cache,
-            params.repositories.repositories,
-            params.dependency.platformOpt,
-            params.output.verbosity,
-            javaOrScalaDeps,
-            constraintOpt = params.resolution.scalaVersionOpt.map { s =>
-              val reworked =
-                if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
-                else s
-              coursier.core.Parse.versionConstraint(reworked)
-            }
-          ).left.map(err => new Exception(err))
-        }
-
-        val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
-          val m0 = m.map {
-            case ((mod, v), url) =>
-              ((mod.module(scalaVersion), v), (url, true))
-          }
-          InMemoryRepository(
-            m0,
-            params.cache.cacheLocalArtifacts
-          )
-        }
-
-        val deps0 = Dependencies.addExclusions(
-          deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
-          params.dependency.exclude.map { m =>
-            val m0 = m.module(scalaVersion)
-            (m0.organization, m0.name)
-          },
-          params.dependency.perModuleExclude.map {
-            case (k, s) =>
-              k.module(scalaVersion) -> s.map(_.module(scalaVersion))
-          }
-        )
-
-        // Prepend FallbackDependenciesRepository to the repository list
-        // so that dependencies with URIs are resolved against this repo
-        val repositories = extraRepoOpt.toSeq ++ params.repositories.repositories
-
-        unlift {
-          val invalidForced = extraRepoOpt
-            .map(_.fallbacks.toSeq)
-            .getOrElse(Nil)
-            .collect {
-              case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
-                (mod, version)
-            }
-          if (invalidForced.isEmpty)
-            Right(())
-          else
-            Left(
-              new ResolveException(
-                s"Cannot force a version that is different from the one specified " +
-                  s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
-              )
-            )
-        }
-
-        (deps0, repositories, scalaVersion, platformOpt)
-      }
-    }
+    val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
 
     lift {
 
-      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError))
+      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
         resolution = params.resolution
           .withScalaVersionOpt(params.resolution.scalaVersionOpt.map(_ => scalaVersion))
@@ -217,17 +310,15 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       Output.printDependencies(params0.output, params0.resolution, deps0, stdout, stderr)
 
-      val (res, _, errors) = unlift {
+      val (res, _, errorOpt) = unlift {
         coursier.Resolve()
           .withDependencies(deps0)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
-          .withCache(
-            cache
-          )
+          .withCache(cache)
           .transformResolution { t =>
-            if (params0.benchmark == 0) t
-            else benchmark(math.abs(params0.benchmark))(t)
+            if (benchmark == 0) t
+            else Resolve.benchmark(math.abs(benchmark))(t)
           }
           .transformFetcher { f =>
             if (params0.output.verbosity >= 2) {
@@ -244,37 +335,21 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(ex: ResolutionError) =>
-              if (force || params0.output.forcePrint)
-                Task.point((ex.resolution, Nil, ex.errors))
+              if (force)
+                Task.point((ex.resolution, Nil, Some(ex)))
               else
                 Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
             case e =>
-              Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
+              Task.fromEither(e.map { case (r, w) => (r, w, None) })
           }
       }
 
       // TODO Print warnings
 
-      val valid = errors.isEmpty
-
-      val outputToStdout = printOutput && (valid || params0.output.forcePrint)
-      if (outputToStdout || params0.output.verbosity >= 2) {
-        Output.printResolutionResult(
-          printResultStdout = outputToStdout,
-          params0,
-          scalaVersion,
-          platformOpt,
-          res,
-          stdout,
-          stderr,
-          colors = !RefreshLogger.defaultFallbackMode
-        )
-      }
-
-      for (err <- errors)
+      for (ex <- errorOpt; err <- ex.errors)
         stderr.println(err.getMessage)
 
-      (res, scalaVersion, platformOpt)
+      (res, scalaVersion, platformOpt, errorOpt)
     }
   }
 
@@ -282,9 +357,7 @@ object Resolve extends CaseApp[ResolveOptions] {
   def handleApps[T](
     options: T,
     args: Seq[String],
-    channels: Seq[Channel],
-    repositories: Seq[Repository],
-    cache: Cache[Task]
+    channels: Channels
   )(
     withApp: (T, RawAppDescriptor) => T
   ): (T, Seq[String]) = {
@@ -298,33 +371,29 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val descOpt = appIds.headOption.map { id =>
 
-      val (actualId, overrideVersionOpt) = {
-        val idx = id.indexOf(':')
-        if (idx < 0)
-          (id, None)
-        else
-          (id.take(idx), Some(id.drop(idx + 1)))
-      }
-
       val e = for {
-        b <- Install.appDescriptor(
-          channels,
-          repositories,
-          cache,
-          actualId
-        ).right.map(_._2)
-        desc <- RawAppDescriptor.parse(new String(b, StandardCharsets.UTF_8))
-      } yield overrideVersionOpt.fold(desc)(desc.overrideVersion)
+        info <- channels.appDescriptor(id)
+          .attempt
+          .flatMap {
+            case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
+            case Left(e) => Task.fail(new Exception(e))
+            case Right(res) => Task.point(Right(res))
+          }
+          .unsafeRun()(channels.cache.ec)
+        rawDesc <- RawAppDescriptor.parse(new String(info.appDescriptorBytes, StandardCharsets.UTF_8))
+      } yield {
+        rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+          .overrideVersion(info.overrideVersionOpt)
+      }
 
       e match {
         case Left(err) =>
           System.err.println(err)
           sys.exit(1)
-        case Right(res) =>
-          res.copy(
-            name = res.name
-              .orElse(Some(actualId)) // kind of meh - so that the id can be picked as default output name by bootstrap
-          )
+        case Right(res) => res
       }
     }
 
@@ -344,7 +413,8 @@ object Resolve extends CaseApp[ResolveOptions] {
       val channels = initialParams.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val res = handleApps(options, args.all, channels, initialRepositories, cache)(_.addApp(_))
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
+      val res = handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
 
@@ -361,14 +431,25 @@ object Resolve extends CaseApp[ResolveOptions] {
       pool = Sync.fixedThreadPool(params.cache.parallel)
     val ec = ExecutionContext.fromExecutorService(pool)
 
-    val t = task(params, pool, System.out, System.err, deps)
+    val t = printTask(
+      params,
+      pool,
+      System.out,
+      System.err,
+      deps,
+      benchmark = params.benchmark,
+      benchmarkCache = params.benchmarkCache
+    )
 
     t.attempt.unsafeRun()(ec) match {
       case Left(e: ResolveException) if params.output.verbosity <= 1 =>
-        Output.errPrintln(e.message)
+        Output.errPrintln(e.getMessage)
         sys.exit(1)
-      case Left(e) => throw e
-      case Right(_) =>
+      case Left(e: AppArtifacts.AppArtifactsException) if params.output.verbosity <= 1 =>
+        Output.errPrintln(e.getMessage)
+        sys.exit(1)
+      case Left(e) => throw new Exception(e)
+      case Right(()) =>
     }
   }
 

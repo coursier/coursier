@@ -82,14 +82,14 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shading("coursier.core.shaded"),
     utest,
     libs ++= Seq(
-      Deps.fastParse.value % "shaded",
+      Deps.fastParse % "shaded",
       Deps.scalaXml
     ),
     shadeNamespaces ++= Set(
       "fastparse",
       "sourcecode"
     ),
-    generatePropertyFile
+    generatePropertyFile("coursier")
   )
   .jsSettings(
     libs ++= Seq(
@@ -122,7 +122,7 @@ lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
     dontPublish,
     hasITs,
     coursierPrefix,
-    libs += Deps.scalaAsync.value,
+    libs += Deps.scalaAsync,
     utest,
     sharedTestResources
   )
@@ -141,7 +141,7 @@ lazy val `proxy-tests` = project("proxy-tests")
     coursierPrefix,
     libs ++= Seq(
       Deps.dockerClient,
-      Deps.scalaAsync.value,
+      Deps.scalaAsync,
       Deps.slf4JNop
     ),
     utest,
@@ -161,25 +161,12 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.cache.shaded"),
-    shadeNamespaces ++= Set("org.fusesource", "org.jline"),
     shadeNamespaces ++= Set("io.github.soc"),
     addPathsSources,
     libraryDependencies ++= Seq(
-      Deps.jansi % "shaded",
-      Deps.jlineTerminalJansi % "shaded"
-    ),
-    packageBin.in(Compile) := {
-      // manually editing files under META-INF/services until sbt-shading does it automatically
-      val previous = packageBin.in(Compile).value
-      val new0 = new File(previous.getParentFile, s"${previous.getName.stripSuffix(".jar")}-edited.jar")
-      ZipUtil.addToZip(
-        previous,
-	new0,
-	Seq(
-	  "META-INF/services/org.jline.terminal.spi.JansiSupport" -> "coursier.cache.shaded.org.jline.terminal.spi.JansiSupport\n".getBytes("UTF-8"))
-      )
-      new0
-    }
+      Deps.svm % Provided,
+      Deps.windowsAnsi
+    )
   )
   .jsSettings(
     name := "fetch-js",
@@ -197,7 +184,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
             Deps.http4sBlazeServer % Test,
             Deps.http4sDsl % Test,
             Deps.logbackClassic % Test,
-            Deps.scalaAsync.value % Test
+            Deps.scalaAsync % Test
           )
         case _ =>
           Nil
@@ -254,6 +241,7 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     pureJava,
     dontPublish,
     addPathsSources,
+    addWindowsAnsiPsSources,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.Launcher"),
     proguardedBootstrap("coursier.bootstrap.launcher.Launcher", resourceBased = false)
   )
@@ -269,12 +257,15 @@ lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher"
     proguardedBootstrap("coursier.bootstrap.launcher.ResourcesLauncher", resourceBased = true)
   )
 
-lazy val bootstrap = project("bootstrap")
+lazy val launcher = project("launcher")
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
     coursierPrefix,
-    addBootstrapJarAsResource
+    addBootstrapJarAsResource,
+    generatePropertyFile("coursier/launcher"),
+    crossScalaVersions += "2.11.12",
+    libs += Deps.dataClass % Provided
   )
 
 lazy val benchmark = project("benchmark")
@@ -303,24 +294,54 @@ lazy val publish = project("publish")
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
   )
 
+lazy val env = project("env")
+  .disablePlugins(MimaPlugin)
+  .settings(
+    shared,
+    coursierPrefix,
+    libs ++= Seq(
+      Deps.dataClass % Provided,
+      Deps.jimfs % Test,
+      Deps.scalatest % Test
+    )
+  )
+
 lazy val install = project("install")
   .disablePlugins(MimaPlugin)
-  .dependsOn(bootstrap, coursierJvm)
+  .dependsOn(coursierJvm, env, launcher)
   .settings(
     shared,
     coursierPrefix,
     libs ++= Seq(
       Deps.argonautShapeless,
       Deps.catsCore,
+      Deps.dataClass % Provided,
       Deps.scalatest % Test
     ),
-    onlyIn("2.12"),
     addBootstrapJarResourceInTests
   )
 
+lazy val jvm = project("jvm")
+  .disablePlugins(MimaPlugin)
+  .dependsOn(coursierJvm, env)
+  .settings(
+    shared,
+    coursierPrefix,
+    utest,
+    libs ++= Seq(
+      Deps.argonautShapeless,
+      Deps.dataClass % Provided,
+      Deps.jsoniterCore,
+      Deps.jsoniterMacros % Provided,
+      Deps.plexusArchiver,
+      Deps.plexusContainerDefault,
+      Deps.svm % Provided
+    )
+  )
+
 lazy val cli = project("cli")
-  .dependsOn(bootstrap, coursierJvm, install, publish)
-  .enablePlugins(JlinkPlugin, PackPlugin)
+  .dependsOn(coursierJvm, install, jvm, launcher, publish)
+  .enablePlugins(PackPlugin)
   .disablePlugins(MimaPlugin)
   .settings(
     shared,
@@ -332,58 +353,26 @@ lazy val cli = project("cli")
           Deps.argonautShapeless,
           Deps.caseApp,
           Deps.catsCore,
+          Deps.dataClass % Provided,
           Deps.monadlessCats,
           Deps.monadlessStdlib,
           Deps.junit % Test, // to be able to run tests with pants
-          Deps.scalatest % Test
+          Deps.scalatest % Test,
+          Deps.scalatestJunit % Test
         )
       else
         Seq()
     },
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    // not to get launchers for each sub-command in the jlink package
-    discoveredMainClasses.in(Compile) := Seq("coursier.cli.Coursier"),
-    onlyIn("2.12"),
-    jlinkIgnoreMissingDependency := JlinkIgnore.everything,
-    jlinkOptions := Seq(
-      "--no-header-files",
-      "--no-man-pages",
-      "--strip-debug",
-      "--add-modules", jlinkModules.value.mkString(","),
-      "--output", target.in(jlinkBuildImage).value.getAbsolutePath
-    ),
-    maintainer := developers.value.head.email,
-    packageName.in(Universal) := "standalone",
-    topLevelDirectory.in(Universal) := Some(s"coursier-${version.value}"),
-    executableScriptName := "coursier"
+    onlyIn("2.12")
   )
 
-lazy val `cli-graalvm` = project("cli-graalvm")
+lazy val `launcher-native_03` = project("launcher-native_03")
   .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
+  .dependsOn(launcher % Provided)
   .settings(
     shared,
-    onlyIn("2.12"),
-    coursierPrefix,
-    assemblyMergeStrategy.in(assembly) := {
-      case x if x == "module-info.class" || x.endsWith("/module-info.class") || x.endsWith("\\module-info.class") => MergeStrategy.discard
-      case x =>
-        val oldStrategy = assemblyMergeStrategy.in(assembly).value
-        oldStrategy(x)
-    },
-    mainClass.in(Compile) := Some("coursier.cli.CoursierGraalvm"),
-    libs ++= Seq(
-      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
-      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
-    )
-  )
-
-lazy val `cli-native_03` = project("cli-native_03")
-  .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
-  .settings(
-    shared,
-    name := "cli-native_0.3",
+    name := "launcher-native_0.3",
     moduleName := name.value,
     onlyPublishIn("2.12"),
     coursierPrefix,
@@ -395,12 +384,12 @@ lazy val `cli-native_03` = project("cli-native_03")
     }
   )
 
-lazy val `cli-native_040M2` = project("cli-native_040M2")
+lazy val `launcher-native_040M2` = project("launcher-native_040M2")
   .disablePlugins(MimaPlugin)
-  .dependsOn(cli)
+  .dependsOn(launcher % Provided)
   .settings(
     shared,
-    name := "cli-native_0.4.0-M2",
+    name := "launcher-native_0.4.0-M2",
     moduleName := name.value,
     onlyPublishIn("2.12"),
     coursierPrefix,
@@ -466,7 +455,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     shading("coursier.core.shaded"), // shading only fastparse, that core shades too, so shading things under the same namespace
-    libs += Deps.fastParse.value % "shaded",
+    libs += Deps.fastParse % "shaded",
     shadeNamespaces ++= Set(
       "fastparse",
       "sourcecode"
@@ -488,7 +477,7 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
     publishGeneratedSources,
     utest,
     libs ++= Seq(
-      Deps.scalaAsync.value % Test,
+      Deps.scalaAsync % Test,
       Deps.cross.argonautShapeless.value,
       Deps.dataClass % Provided
     )
@@ -497,7 +486,33 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
 lazy val coursierJvm = coursier.jvm
 lazy val coursierJs = coursier.js
 
-lazy val jvm = project("jvm")
+lazy val docs = project("docs")
+  .in(file("doc"))
+  .enablePlugins(MdocPlugin)
+  .dependsOn(coursierJvm, catsJvm)
+  .settings(
+    shared,
+    mdocIn := file("doc/docs"),
+    mdocOut := file("doc/processed-docs"),
+    mdocVariables := {
+      def extraSbt(v: String) =
+        if (v.endsWith("SNAPSHOT"))
+          """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
+        else
+          ""
+      val version0 = version.value
+      val sv = scalaVersion.value
+      Map(
+        "VERSION" -> version0,
+        "EXTRA_SBT" -> extraSbt(version0),
+        "PLUGIN_VERSION" -> sbtCoursierVersion,
+        "PLUGIN_EXTRA_SBT" -> extraSbt(sbtCoursierVersion),
+        "SCALA_VERSION" -> sv
+      )
+    }
+  )
+
+lazy val jvmProjects = project("jvmProjects")
   .dummy
   .aggregate(
     utilJvm,
@@ -510,16 +525,17 @@ lazy val jvm = project("jvm")
     catsJvm,
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
-    bootstrap,
+    launcher,
+    jvm,
+    env,
     benchmark,
     publish,
     install,
     cli,
-    `cli-graalvm`,
     okhttp,
     coursierJvm,
-    `cli-native_03`,
-    `cli-native_040M2`
+    `launcher-native_03`,
+    `launcher-native_040M2`
   )
   .settings(
     shared,
@@ -561,20 +577,21 @@ lazy val `coursier-repo` = project("coursier-repo")
     cacheJs,
     `bootstrap-launcher`,
     `resources-bootstrap-launcher`,
-    bootstrap,
+    launcher,
+    jvm,
+    env,
     benchmark,
     publish,
     install,
     cli,
-    `cli-graalvm`,
     scalazJvm,
     scalazJs,
     web,
     okhttp,
     coursierJvm,
     coursierJs,
-    `cli-native_03`,
-    `cli-native_040M2`
+    `launcher-native_03`,
+    `launcher-native_040M2`
   )
   .settings(
     shared,

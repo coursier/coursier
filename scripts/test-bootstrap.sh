@@ -160,6 +160,16 @@ spaceInMainJar() {
   fi
 }
 
+manifestJar() {
+  # FIXME We should also inspect the generated launcher to check that it's indeed based on a manifest
+  "$COURSIER" bootstrap -o cs-echo-mf io.get-coursier:echo:1.0.1 --manifest-jar
+  local OUT="$(./cs-echo-mf foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from echo command manifest-jar-based launcher." 1>&2
+    exit 1
+  fi
+}
+
 hybrid() {
   # FIXME We should also inspect the generated launcher to check that it's indeed an hybrid one
   "$COURSIER" bootstrap -o cs-echo-hybrid io.get-coursier:echo:1.0.1 --hybrid
@@ -311,6 +321,7 @@ javaClassPathProp
 javaClassPathInExpansion
 javaClassPathInExpansionFromLaunch
 spaceInMainJar
+manifestJar
 hybrid
 hybridJavaClassPath
 hybridNoUrlInJavaClassPath

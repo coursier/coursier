@@ -61,7 +61,7 @@ object LocalRepositories {
       withChecksums = false,
       withSignatures = false,
       dropInfoAttributes = true
-    ).right.getOrElse(
+    ).getOrElse(
       throw new Exception("Cannot happen")
     )
   }
