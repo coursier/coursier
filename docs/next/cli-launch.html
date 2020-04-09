@@ -6,14 +6,14 @@
   <title>launch · Coursier</title>
   <meta name="viewport" content="width=device-width">
   <meta name="generator" content="Docusaurus">
-  <meta name="description" content="<p>Like the <a href=&quot;/docs/next/cli-fetch&quot;><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the</p>
+  <meta name="description" content="<p><code>launch</code> launches applications from one or more dependencies.</p>
 ">
   <meta name="docsearch:version" content="next">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="launch · Coursier">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://get-coursier.io/">
-  <meta property="og:description" content="<p>Like the <a href=&quot;/docs/next/cli-fetch&quot;><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the</p>
+  <meta property="og:description" content="<p><code>launch</code> launches applications from one or more dependencies.</p>
 ">
   <meta name="twitter:card" content="summary">
   <link rel="shortcut icon" href="../../../undefined">
@@ -83,6 +83,7 @@
           <h3 class="navGroupCategoryTitle">Command-line</h3>
           <ul class="">
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-installation">Installation</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-resolve">resolve</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-fetch">fetch</a></li>
            <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/next/cli-launch">launch</a></li>
@@ -188,89 +189,38 @@
        </header>
        <article>
         <div>
-         <span><p>Like the <a href="../../../docs/next/cli-fetch"><code>fetch</code> command</a>, <code>launch</code> resolves and fetches the artifacts of one or more dependencies. Unlike <a href="../../../docs/next/cli-fetch"><code>fetch</code></a>, it doesn't stop there, and proceeds to actually launch the dependencies it fetched, like</p> <pre><code class="hljs css language-bash">$ coursier launch io.get-coursier:http-server_2.12:1.0.0
-</code></pre> <p>The <code>launch</code> command runs the dependencies it fetched in its own JVM. It simply loads them in a fresh class loader, loads the main class by reflection, and calls its main method.</p> <h2><a class="anchor" aria-hidden="true" id="arguments"></a><a href="cli-launch.html#arguments" aria-hidden="true" class="hash-link">
+         <span><p><code>launch</code> launches applications from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --<span class="hljs-built_in">help</span>
+scalafmt 2.4.2
+Usage: scalafmt [options] [&lt;file&gt;...]
+
+  -h, --<span class="hljs-built_in">help</span>               prints this usage text
+  -v, --version            <span class="hljs-built_in">print</span> version
+…
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="arguments"></a><a href="cli-launch.html#arguments" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Arguments</h2> <p>Pass arguments to the launched program, by adding <code>--</code> after the coursier arguments, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -- --version
+            </svg></a>Arguments</h2> <p>Pass arguments to the launched program, by adding <code>--</code> after the coursier arguments, like</p> <pre><code class="hljs css language-bash">$ coursier launch org.scalameta::scalafmt-cli:2.4.2 -- --version
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="main-class"></a><a href="cli-launch.html#main-class" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Main class</h2> <p>The main class to launch from the passed dependencies must be either specified on the command-line, via the <code>-M</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-</code></pre> <p>or must be specified in the manifest of one of the loaded JARs.</p> <p>If the project of the main class relies on sbt, and contains only one main class, its manifest should already contain this main class name (it's added out-of-the-box). In case of several main classes, one should set the <a href="https://github.com/sbt/sbt/blob/v1.2.8/main/src/main/scala/sbt/Keys.scala#L265"><code>mainClass</code></a> setting to the right value, for the main class to be specified in the manifest.</p> <p>In case several of the loaded JARs have manifests with main classes, the <code>launch</code> command applies an heuristic to try to find the "main" one.</p> <p>If ever that heuristic fails, run the <code>launch</code> command with the <code>-v</code> option specified twice, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
+            </svg></a>Main class</h2> <p>If the dependencies don't specify a default main class via their manifest, or if the heuristics of the <code>launch</code> command fails to pick the right manifest, you can specify a main class via <code>-M</code> or <code>--main-class</code>, like</p> <pre><code class="hljs css language-bash">$ cs launch com.lihaoyi:ammonite_2.13.1:2.0.4 -M ammonite.Main
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@
+</code></pre> <p>If a dependency is published by sbt, and contains only one main class, the main class should have been automatically added to the manifest. If it contains several main classes, setting <a href="https://github.com/sbt/sbt/blob/v1.2.8/main/src/main/scala/sbt/Keys.scala#L265"><code>mainClass</code></a> in sbt is required for it to be set in the manifest.</p> <p>In case several of the loaded JARs have manifests with main classes, the <code>launch</code> command applies an heuristic to try to find the "main" one.</p> <p>If the heuristic to find the main class fails, pass <code>-v -v</code> to <code>launch</code> to get more details:</p> <pre><code class="hljs css language-bash">$ cs launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
 …
 Found main classes:
   com.martiansoftware.nailgun.NGServer (vendor: , title: )
   org.scalafmt.cli.Cli (vendor: com.geirsson, title: cli)
 …
-</code></pre> <p>It should print the main classes it found. Then, replace <code>-v -v</code> with <code>-M main.class.of.your.choice</code>, like</p> <pre><code class="hljs css language-bash">$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -M org.scalafmt.cli.Cli -- --version
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="java-options"></a><a href="cli-launch.html#java-options" aria-hidden="true" class="hash-link">
+</code></pre> <p>This prints the main classes of all manifests found, among other things. If you think one of them is the right one, just pass it via <code>-M</code> to <code>launch</code>.</p> <h2><a class="anchor" aria-hidden="true" id="java-options"></a><a href="cli-launch.html#java-options" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Java options</h2> <p>On Linux / OS X, recent versions of the coursier launcher accept Java options, prefixed with <code>-J</code>, like</p> <pre><code class="hljs css language-bash">$ coursier -J-Dfoo=bar -J-Xmx2g launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+            </svg></a>Java options</h2> <p>With the native coursier launcher, you can pass options to the JVM that <code>launch</code> starts with <code>-J</code> or <code>--java-opt</code>, like</p> <pre><code class="hljs css language-bash">$ cs launch -J -Dfoo=bar -J -Xmx2g ammonite
 Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 @ sys.props(<span class="hljs-string">"foo"</span>)
 res0: String = <span class="hljs-string">"bar"</span>
-</code></pre> <p>Alternatively, run <code>java</code> explicitly, and pass it the options you'd like, e.g.</p> <pre><code class="hljs css language-bash">$ java -Dfoo=bar -Xmx2g -jar <span class="hljs-string">"<span class="hljs-variable">$(which coursier)</span>"</span> launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
-@ sys.props(<span class="hljs-string">"foo"</span>)
-res0: String = <span class="hljs-string">"bar"</span>
-</code></pre> <p>From the Windows command, only the second way should work, like</p> <pre><code class="hljs">&gt; java -Dfoo=bar -jar /path/to/coursier launch com.lihaoyi:ammonite_2<span class="hljs-number">.12</span><span class="hljs-number">.8</span>:<span class="hljs-number">1.6</span><span class="hljs-number">.0</span> -M ammonite.Main
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="examples"></a><a href="cli-launch.html#examples" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Examples</h2> <h3><a class="anchor" aria-hidden="true" id="ammonite"></a><a href="cli-launch.html#ammonite" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Ammonite</h3> <pre><code class="hljs css language-bash">$ ./coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="frege"></a><a href="cli-launch.html#frege" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Frege</h3> <pre><code class="hljs css language-bash">$ ./coursier launch -r central -r https://oss.sonatype.org/content/groups/public \
-    org.frege-lang:frege-repl-core:1.3 -M frege.repl.FregeRepl
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="clojure"></a><a href="cli-launch.html#clojure" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>clojure</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.clojure:clojure:1.7.0 -M clojure.main
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="jruby"></a><a href="cli-launch.html#jruby" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>jruby</h3> <pre><code class="hljs css language-bash">$ wget https://raw.githubusercontent.com/jruby/jruby/master/bin/jirb &amp;&amp; \
-  ./coursier launch org.jruby:jruby:9.0.4.0 -M org.jruby.Main -- -- jirb
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="jython"></a><a href="cli-launch.html#jython" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>jython</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.python:jython-standalone:2.7.0 -M org.python.util.jython
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="groovy"></a><a href="cli-launch.html#groovy" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Groovy</h3> <pre><code class="hljs css language-bash">$ ./coursier launch org.codehaus.groovy:groovy-groovysh:2.4.5 -M org.codehaus.groovy.tools.shell.Main \
-    commons-cli:commons-cli:1.3.1
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="proguard"></a><a href="cli-launch.html#proguard" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>ProGuard</h3> <pre><code class="hljs css language-bash">$ ./coursier launch net.sf.proguard:proguard-base:5.2.1 -M proguard.ProGuard
-$ ./coursier launch net.sf.proguard:proguard-retrace:5.2.1 -M proguard.retrace.ReTrace
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="wiremock"></a><a href="cli-launch.html#wiremock" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Wiremock</h3> <pre><code class="hljs css language-bash">./coursier launch com.github.tomakehurst:wiremock:1.57 -- \
---proxy-all=<span class="hljs-string">"http://search.twitter.com"</span> --record-mappings --verbose
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="sqlline"></a><a href="cli-launch.html#sqlline" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>SQLLine</h3> <pre><code class="hljs css language-bash">$ ./coursier launch \
-  sqlline:sqlline:1.3.0 \
-  org.postgresql:postgresql:42.1.4 \
-  -M sqlline.SqlLine -- \
-  -d org.postgresql.Driver \
-  -n USERNAME \
-  -p PASSWORD \
-  -u jdbc:postgresql://HOST:PORT/DATABASE
 </code></pre> </span>
         </div>
        </article>
@@ -286,18 +236,6 @@ $ ./coursier launch net.sf.proguard:proguard-retrace:5.2.1 -M proguard.retrace.R
       <li><a href="cli-launch.html#arguments">Arguments</a></li>
       <li><a href="cli-launch.html#main-class">Main class</a></li>
       <li><a href="cli-launch.html#java-options">Java options</a></li>
-      <li><a href="cli-launch.html#examples">Examples</a>
-       <ul class="toc-headings">
-        <li><a href="cli-launch.html#ammonite">Ammonite</a></li>
-        <li><a href="cli-launch.html#frege">Frege</a></li>
-        <li><a href="cli-launch.html#clojure">clojure</a></li>
-        <li><a href="cli-launch.html#jruby">jruby</a></li>
-        <li><a href="cli-launch.html#jython">jython</a></li>
-        <li><a href="cli-launch.html#groovy">Groovy</a></li>
-        <li><a href="cli-launch.html#proguard">ProGuard</a></li>
-        <li><a href="cli-launch.html#wiremock">Wiremock</a></li>
-        <li><a href="cli-launch.html#sqlline">SQLLine</a></li>
-       </ul></li>
      </ul>
     </nav>
    </div>

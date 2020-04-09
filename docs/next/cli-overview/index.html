@@ -6,14 +6,14 @@
   <title>Overview · Coursier</title>
   <meta name="viewport" content="width=device-width">
   <meta name="generator" content="Docusaurus">
-  <meta name="description" content="<h1><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;cli&quot;></a><a href=&quot;#cli&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>CLI</h1>
+  <meta name="description" content="<p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p>
 ">
   <meta name="docsearch:version" content="next">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Overview · Coursier">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://get-coursier.io/">
-  <meta property="og:description" content="<h1><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;cli&quot;></a><a href=&quot;#cli&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>CLI</h1>
+  <meta property="og:description" content="<p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p>
 ">
   <meta name="twitter:card" content="summary">
   <link rel="shortcut icon" href="../../../../undefined">
@@ -83,6 +83,7 @@
           <h3 class="navGroupCategoryTitle">Command-line</h3>
           <ul class="">
            <li class="navListItem navListItemActive"><a class="navItem" href="../../../../docs/next/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/next/cli-installation">Installation</a></li>
            <li class="navListItem"><a class="navItem" href="../../../../docs/next/cli-resolve">resolve</a></li>
            <li class="navListItem"><a class="navItem" href="../../../../docs/next/cli-fetch">fetch</a></li>
            <li class="navListItem"><a class="navItem" href="../../../../docs/next/cli-launch">launch</a></li>
@@ -184,201 +185,115 @@
       <div class="post">
        <header class="postHeader">
         <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-overview.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">Overview</h1>
        </header>
        <article>
         <div>
-         <span><h1><a class="anchor" aria-hidden="true" id="cli"></a><a href="index.html#cli" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>CLI</h1> <p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p> 
+         <span><p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p> 
           <ul> 
-           <li><code>setup</code>: <a href="../../../../docs/next/cli-setup">check if your system has a JVM and the standard Scala applications</a>, and install them if needed,</li> 
-           <li><code>install</code>: <a href="../../../../docs/next/cli-install">install applications based on Maven / Ivy dependencies</a>,</li> 
-           <li><code>java</code> and <code>java-home</code>: <a href="../../../../docs/next/cli-java">install, run, and get the home directory of JVMs</a>,</li> 
-           <li><code>resolve</code>: <a href="../../../../docs/next/cli-resolve">list the transitive dependencies</a> of one or more dependencies,</li> 
-           <li><code>fetch</code>: <a href="../../../../docs/next/cli-fetch">fetch the artifacts</a> of one or more dependencies,</li> 
-           <li><code>launch</code>: <a href="../../../../docs/next/cli-launch">run applications based on Maven / Ivy dependencies</a>,</li> 
-           <li><code>bootstrap</code>: <a href="../../../../docs/next/cli-bootstrap">generate convenient launchers to run them</a>.</li> 
-          </ul> <p>See below for its <a href="index.html#install-native-launcher">installation</a>, <a href="index.html#usage">its basic usage</a>, and click on the links above or on the left for more details about each of its commands.</p> <h2><a class="anchor" aria-hidden="true" id="install-native-launcher"></a><a href="index.html#install-native-launcher" aria-hidden="true" class="hash-link">
+           <li><code>resolve</code> <a href="index.html#resolve">lists the transitive dependencies</a> of one or more dependencies,</li> 
+           <li><code>fetch</code> <a href="index.html#fetch">fetches the artifacts</a> of one or more dependencies,</li> 
+           <li><code>launch</code> <a href="index.html#launch">runs applications based on Maven / Ivy dependencies</a>,</li> 
+           <li><code>bootstrap</code> <a href="index.html#bootstrap">generates convenient launchers to run them</a>,</li> 
+           <li><code>install</code> <a href="index.html#install">installs applications based on Maven / Ivy dependencies</a>,</li> 
+           <li><code>java</code> and <code>java-home</code> <a href="index.html#java">install, run, and get the home directory of JVMs</a>,</li> 
+           <li><code>setup</code> <a href="index.html#setup">checks if your system has a JVM and the standard Scala applications</a>, and installs them if needed.</li> 
+          </ul> <p>See <a href="index.html#cli-installation.md">Installation</a> for how to install the CLI of coursier.</p> <p>This page succinctly describes each of these commands. More details about each them are then given in the dedicated documentation page of each command (see links on the left).</p> <h2><a class="anchor" aria-hidden="true" id="available-commands"></a><a href="index.html#available-commands" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Install native launcher</h2> 
-          <blockquote> 
-           <p>The commands below install the native launcher as <code>cs</code>, which can be substituted to <code>coursier</code> in the various examples on this website.</p> 
-          </blockquote> <h3><a class="anchor" aria-hidden="true" id="linux"></a><a href="index.html#linux" aria-hidden="true" class="hash-link">
+            </svg></a>Available commands</h2> <h3><a class="anchor" aria-hidden="true" id="resolve"></a><a href="index.html#resolve" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Linux</h3> <p>On Linux, download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-linux &amp;&amp;
-    chmod +x cs &amp;&amp;
-    ./cs --<span class="hljs-built_in">help</span>
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="macos"></a><a href="index.html#macos" aria-hidden="true" class="hash-link">
+            </svg></a><code>resolve</code></h3> <p><code>resolve</code> lists the transitive dependencies of one or more other dependencies. Use like</p> <pre><code class="hljs css language-bash">$ cs resolve io.circe::circe-generic:0.12.3
+com.chuusai:shapeless_2.13:2.3.3:default
+io.circe:circe-core_2.13:0.12.3:default
+io.circe:circe-generic_2.13:0.12.3:default
+io.circe:circe-numbers_2.13:0.12.3:default
+org.scala-lang:scala-library:2.13.0:default
+org.typelevel:cats-core_2.13:2.0.0:default
+org.typelevel:cats-kernel_2.13:2.0.0:default
+org.typelevel:cats-macros_2.13:2.0.0:default
+</code></pre> <p>Note that this only relies on metadata files (POMs in particular), and doesn't download any JAR.</p> <p><code>resolve</code> has more options, to <a href="../../../../docs/next/cli-resolve#tree">print trees</a>, <a href="../../../../docs/next/cli-resolve#what-depends-on">find which dependency brings another one</a>, etc. See <a href="../../../../docs/next/cli-resolve">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="fetch"></a><a href="index.html#fetch" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>macOS</h3> <p>Download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-macos &amp;&amp;
-    chmod +x cs &amp;&amp;
-    (xattr -d com.apple.quarantine cs || <span class="hljs-literal">true</span>) &amp;&amp;
-    ./cs --<span class="hljs-built_in">help</span>
-</code></pre> <p>Note the <code>xattr</code> command to circumvent notarization on macOS Catalina.</p> <p>Alternatively, the native launcher can be installed via <a href="https://brew.sh">homebrew</a> with</p> <pre><code class="hljs css language-bash">$ brew install coursier/formulas/coursier
-$ cs --<span class="hljs-built_in">help</span>
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="windows"></a><a href="index.html#windows" aria-hidden="true" class="hash-link">
+            </svg></a><code>fetch</code></h3> <p><code>fetch</code> fetches the JARs of one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs fetch io.circe::circe-generic:0.12.3
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-generic_2.13/0.12.3/circe-generic_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.12.3/circe-core_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-numbers_2.13/0.12.3/circe-numbers_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-core_2.13/2.0.0/cats-core_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-macros_2.13/2.0.0/cats-macros_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-kernel_2.13/2.0.0/cats-kernel_2.13-2.0.0.jar
+</code></pre> <p><code>fetch</code> has more options, to <a href="../../../../docs/next/cli-fetch#classpath-format">join its output with the path separator</a>, fetch <a href="../../../../docs/next/cli-fetch#source-jars">source JARs</a>, fetch <a href="../../../../docs/next/cli-fetch#javadoc">javadoc</a>, etc. See <a href="../../../../docs/next/cli-fetch">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="launch"></a><a href="index.html#launch" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Windows</h3> <p>On Windows, use</p> <pre><code class="hljs css language-bash">&gt; bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe <span class="hljs-string">"%cd%\cs.exe"</span>
-&gt; .\cs --<span class="hljs-built_in">help</span>
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="install-jar-based-launcher"></a><a href="index.html#install-jar-based-launcher" aria-hidden="true" class="hash-link">
+            </svg></a><code>launch</code></h3> <p><code>launch</code> launches applications from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --<span class="hljs-built_in">help</span>
+scalafmt 2.4.2
+Usage: scalafmt [options] [&lt;file&gt;...]
+
+  -h, --<span class="hljs-built_in">help</span>               prints this usage text
+  -v, --version            <span class="hljs-built_in">print</span> version
+…
+</code></pre> <p>Arguments can be passed to the application after <code>--</code>.</p> <p><code>launch</code> has more options, to <a href="../../../../docs/next/cli-launch#main-class">specify a main class</a>, <a href="../../../../docs/next/cli-launch#java-options">pass Java options</a>, etc. See <a href="../../../../docs/next/cli-launch">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="bootstrap"></a><a href="index.html#bootstrap" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Install JAR-based launcher</h2> <p>In case you run into any issue with the <a href="index.html#native-launcher">native launcher</a>, a JAR-based launcher is available.</p> <h3><a class="anchor" aria-hidden="true" id="linux-macos"></a><a href="index.html#linux-macos" aria-hidden="true" class="hash-link">
+            </svg></a><code>bootstrap</code></h3> <p><code>bootstrap</code> creates binary launchers from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs bootstrap org.scalameta::scalafmt-cli:2.4.2 -o scalafmt
+$ ./scalafmt --version
+scalafmt 2.4.2
+</code></pre> <p><code>bootstrap</code> can generate a <a href="../../../../docs/next/cli-bootstrap#launcher-types">variety of launchers</a>, including native ones like <a href="../../../../docs/next/cli-bootstrap#graalvm-native-image">GraalVM native images</a> or <a href="../../../../docs/next/cli-bootstrap#scala-native">Scala Native executables</a>. See <a href="../../../../docs/next/cli-bootstrap">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="install"></a><a href="index.html#install" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Linux / macOS</h3> <p>Download and run the launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo coursier https://git.io/coursier-cli &amp;&amp;
-    chmod +x coursier &amp;&amp;
-    ./coursier --<span class="hljs-built_in">help</span>
-</code></pre> <p>Note that the JAR-based launcher requires Java 8 or later to run. That is, a command like <code>java -version</code> should print a version &gt;= 8.</p> <p>The JAR-based launcher weights only about 25 kB and can be easily embedded as is in other projects. It downloads the artifacts required to launch coursier on the first run.</p> <p>Alternatively, on macOS, the JAR-based launcher can be installed via <a href="https://brew.sh">homebrew</a> with</p> <pre><code class="hljs css language-bash">$ brew install coursier/formulas/coursier
-$ coursier --<span class="hljs-built_in">help</span>
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="windows-1"></a><a href="index.html#windows-1" aria-hidden="true" class="hash-link">
+            </svg></a><code>install</code></h3> <p>The <code>install</code> command creates launchers for applications in the <a href="https://get-coursier.io/docs/cli-install.html#installation-directory">installation directory</a> (<code>~/.local/share/coursier/bin</code> on Linux):</p> <pre><code class="hljs css language-bash">$ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class="hljs-variable">$(cs install --env)</span>"</span> <span class="hljs-comment"># add installation directory in PATH in the current session</span>
+$ cs install scalafmt
+$ scalafmt --version
+scalafmt 2.4.2
+</code></pre> <p>One can run <code>cs install --setup</code> to <a href="https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally">update</a> profile files (Linux / macOS) or user environment variables (Windows), to add the installation directory to <code>PATH</code>.</p> <p>See <a href="../../../../docs/next/cli-install">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="java"></a><a href="index.html#java" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Windows</h3> <p>Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with</p> <pre><code class="hljs css language-bat">&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
-&gt; bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "<span class="hljs-variable">%cd%</span>\coursier.bat"
-</code></pre> <p>You can then run coursier from the same directory, like</p> <pre><code class="hljs css language-bat">&gt; coursier resolve io.circe:circe-core_2.<span class="hljs-number">12</span>:<span class="hljs-number">0</span>.<span class="hljs-number">10</span>.<span class="hljs-number">0</span>
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="arch-linux"></a><a href="index.html#arch-linux" aria-hidden="true" class="hash-link">
+            </svg></a><code>java</code></h3> <p>The <code>java</code> command manages JVMs. For example, the following command</p> <pre><code class="hljs css language-bash">$ cs java --jvm 11 -version
+openjdk version <span class="hljs-string">"11.0.6"</span> 2020-01-14
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
+</code></pre> <p>will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the <a href="https://get-coursier.io/docs/cli-java.html#managed-jvm-directory">managed JVM directory</a>), and run it with <code>-version</code>.</p> <p>It uses the <a href="https://github.com/shyiko/jabba/blob/8c8e6be29610a3d5ea505087a791e9a57f6e48a6/index.json">index</a> of jabba to know where to download JVM archives, and assumes AdoptOpenJDK if only a version is passed.</p> <p>The <code>java-home</code> command prints the Java home of a JVM, like</p> <pre><code class="hljs css language-bash">$ cs java-home --jvm 9
+~/Library/Caches/Coursier/jvm/adopt@1.9.0-0/Contents/Home
+</code></pre> <p>One can <a href="https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally">update</a> profile files (Linux / macOS) or user environment variables (Windows) for a specific JVM with <code>--setup</code>, like</p> <pre><code class="hljs css language-bash">$ cs java --jvm openjdk:1.14 --setup
+</code></pre> <p>(This updates <code>JAVA_HOME</code> and <code>PATH</code>.)</p> <p>You don't have to update these environment variables if you prefer not to. For example, one can just get a Java home with</p> <pre><code class="hljs css language-bash">$ cs java-home --jvm graalvm:20
+~/Library/Caches/Coursier/jvm/graalvm@20.0.0/Contents/Home
+</code></pre> <p>or set environment variables only for the current session with</p> <pre><code class="hljs css language-bash">$ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class="hljs-variable">$(cs java --env --jvm 11)</span>"</span>
+$ java -version
+openjdk version <span class="hljs-string">"11.0.6"</span> 2020-01-14
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
+</code></pre> <p>These two commands only write things in the coursier cache, and the <a href="https://get-coursier.io/docs/cli-java.html#managed-jvm-directory">managed JVM directory</a>, which is a cache too (both of these directories live under <code>~/.cache/coursier</code> on Linux, <code>~/Library/Caches/Coursier</code> on macOS).</p> <p>The <a href="../../../../docs/next/cli-java">dedicated page</a> gives more details about the <code>java</code> and <code>java-home</code> commands.</p> <h3><a class="anchor" aria-hidden="true" id="setup"></a><a href="index.html#setup" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Arch Linux</h3> <p>Install it from <a href="https://aur.archlinux.org/packages/coursier/">AUR</a>,</p> <pre><code class="hljs css language-bash">$ pacaur -S coursier
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="freebsd"></a><a href="index.html#freebsd" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>FreeBSD</h3> <p>Install it via <code>pkg</code> from the <a href="https://www.freshports.org/devel/coursier/">Ports Collection</a>,</p> <pre><code class="hljs css language-bash">$ pkg install coursier
-</code></pre> <h3><a class="anchor" aria-hidden="true" id="zsh-completions"></a><a href="index.html#zsh-completions" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>zsh completions</h3> <p>If you use ZSH, simple tab-completions are available by copying the <a href="https://raw.githubusercontent.com/coursier/coursier/master/scripts/_coursier"><code>scripts/_coursier</code></a> file into your completions directory, if you have one. If you do not, then you can install the completions with,</p> <pre><code class="hljs css language-bash">mkdir -p ~/.zsh/completion
-cp scripts/_coursier ~/.zsh/completion/
-<span class="hljs-built_in">echo</span> <span class="hljs-string">'fpath=(~/.zsh/completion $fpath)'</span> &gt;&gt; ~/.zshrc
-<span class="hljs-built_in">echo</span> <span class="hljs-string">'autoload -Uz compinit ; compinit'</span> &gt;&gt; ~/.zshrc
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="usage"></a><a href="index.html#usage" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Usage</h2> <pre><code class="hljs css language-bash">$ ./coursier --<span class="hljs-built_in">help</span>
-</code></pre> <p>lists the available coursier commands. The most notable ones are <code>launch</code>, and <code>fetch</code>. Type</p> <pre><code class="hljs css language-bash">$ ./coursier <span class="hljs-built_in">command</span> --<span class="hljs-built_in">help</span>
-</code></pre> <p>to get a description of the various options the command <code>command</code> (replace with one of the above command) accepts.</p> <p>Both commands below can be given repositories with the <code>-r</code> or <code>--repository</code> option, like</p> <pre><code class="hljs css language-bash">-r central
--r sonatype:snapshots
--r https://oss.sonatype.org/content/repositories/snapshots
--r <span class="hljs-string">"ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]"</span>
-</code></pre> <p><code>central</code> and <code>ivy2local</code> correspond to Maven Central and <code>~/.ivy2/local</code>. These are used by default unless the <code>--no-default</code> option is specified.</p> <p>Repositories starting with <code>ivy:</code> are assumed to be Ivy repositories, specified with an Ivy pattern, like <code>ivy:https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]</code>. Else, a Maven repository is assumed.</p> <p>To set credentials for a repository, pass a user and password in its URL, like</p> <pre><code class="hljs css language-bash">-r https://user:pass@nexus.corp.com/content/repositories/releases
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="launcher-urls"></a><a href="index.html#launcher-urls" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Launcher URLs</h2> <h3><a class="anchor" aria-hidden="true" id="latest-launchers"></a><a href="index.html#latest-launchers" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Latest launchers</h3> <p>The various <a href="https://git.io">git.io</a> shortened URLs above redirect to the latest launchers from the <a href="https://github.com/coursier/launchers">launchers repository</a>:</p> 
-          <table> 
-           <thead> 
-            <tr>
-             <th>OS</th>
-             <th>Short URL</th>
-             <th>redirects to</th>
-            </tr> 
-           </thead> 
-           <tbody> 
-            <tr>
-             <td>Linux</td>
-             <td><a href="https://git.io/coursier-cli-linux">https://git.io/coursier-cli-linux</a></td>
-             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux">https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux</a></td>
-            </tr> 
-            <tr>
-             <td>macOS</td>
-             <td><a href="https://git.io/coursier-cli-macos">https://git.io/coursier-cli-macos</a></td>
-             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin">https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin</a></td>
-            </tr> 
-            <tr>
-             <td>Windows</td>
-             <td><a href="https://git.io/coursier-cli-windows-exe">https://git.io/coursier-cli-windows-exe</a></td>
-             <td><a href="https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe">https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe</a></td>
-            </tr> 
-            <tr>
-             <td>Any (needs JVM)</td>
-             <td><a href="https://git.io/coursier-cli">https://git.io/coursier-cli</a></td>
-             <td><a href="https://github.com/coursier/coursier/raw/gh-pages/coursier">https://github.com/coursier/coursier/raw/gh-pages/coursier</a> (gh-pages branch of coursier repository rather than launchers repository)</td>
-            </tr> 
-            <tr>
-             <td>Any (needs JVM)</td>
-             <td></td>
-             <td><a href="https://github.com/coursier/launchers/raw/master/coursier">https://github.com/coursier/launchers/raw/master/coursier</a> (same launcher as above)</td>
-            </tr> 
-           </tbody> 
-          </table> <h3><a class="anchor" aria-hidden="true" id="specific-versions"></a><a href="index.html#specific-versions" aria-hidden="true" class="hash-link">
-            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
-             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Specific versions</h3> <p>To download specific versions of the launcher, download them from GitHub release assets:</p> 
-          <table> 
-           <thead> 
-            <tr>
-             <th>OS</th>
-             <th>URL</th>
-             <th>Since version</th>
-            </tr> 
-           </thead> 
-           <tbody> 
-            <tr>
-             <td>Linux</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-pc-linux</a></td>
-             <td><code>2.0.0-RC3-1</code></td>
-            </tr> 
-            <tr>
-             <td>macOS</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-apple-darwin</a></td>
-             <td><code>2.0.0-RC3-1</code></td>
-            </tr> 
-            <tr>
-             <td>Windows</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/cs-x86_64-pc-win32.exe</a></td>
-             <td><code>2.0.0-RC6</code></td>
-            </tr> 
-            <tr>
-             <td>Any (needs JVM)</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/coursier">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-11+8-ea7cc438-SNAPSHOT/coursier</a></td>
-             <td><code>1.1.0-M9</code></td>
-            </tr> 
-            <tr>
-             <td>Any (needs JVM)</td>
-             <td><a href="https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier">https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier</a> (up to version <code>1.1.0-M9</code>)</td>
-             <td><em>Invalid for newest versions</em></td>
-            </tr> 
-           </tbody> 
-          </table> </span>
+            </svg></a><code>setup</code></h3> <p><code>setup</code> ensures that:</p> 
+          <ul> 
+           <li>a JVM is installed on your machine,</li> 
+           <li>the installation directory of the <a href="index.html#install"><code>install</code></a> command is in your <code>PATH</code>,</li> 
+           <li>the standard Scala applications are installed on your system.</li> 
+          </ul> <p><code>setup</code> is a "repackaging" of features of the <a href="index.html#java"><code>java</code></a> and <a href="index.html#install"><code>install</code></a> commands. One doesn't have to run <code>setup</code> for the other commands to work fine, it's just a convenience.</p> <p>The features that <code>setup</code> wraps up are not tied to each other. You can rely on the <code>java</code> or <code>java-home</code> commands while managing applications with your preferred package manager. Or you can manage JVMs any other way while using the <code>install</code> command. <code>setup</code> only conveniently sets them up in one go, and it only sets up a JVM if it doesn't find one already installed.</p> <p>See the <a href="../../../../docs/next/cli-setup">dedicated page</a> for more details about what the <code>setup</code> command does.</p> </span>
         </div>
        </article>
       </div>
       <div class="docs-prevnext">
        <a class="docs-prev button" href="../../../../docs/next/sbt-pgp-coursier"><span class="arrow-prev">← </span><span>sbt-pgp-coursier</span></a>
-       <a class="docs-next button" href="../../../../docs/next/cli-resolve"><span>resolve</span><span class="arrow-next"> →</span></a>
+       <a class="docs-next button" href="../../../../docs/next/cli-installation"><span>Installation</span><span class="arrow-next"> →</span></a>
       </div>
      </div>
     </div>
     <nav class="onPageNav">
      <ul class="toc-headings">
-      <li><a href="index.html#install-native-launcher">Install native launcher</a>
+      <li><a href="index.html#available-commands">Available commands</a>
        <ul class="toc-headings">
-        <li><a href="index.html#linux">Linux</a></li>
-        <li><a href="index.html#macos">macOS</a></li>
-        <li><a href="index.html#windows">Windows</a></li>
-       </ul></li>
-      <li><a href="index.html#install-jar-based-launcher">Install JAR-based launcher</a>
-       <ul class="toc-headings">
-        <li><a href="index.html#linux-macos">Linux / macOS</a></li>
-        <li><a href="index.html#windows-1">Windows</a></li>
-        <li><a href="index.html#arch-linux">Arch Linux</a></li>
-        <li><a href="index.html#freebsd">FreeBSD</a></li>
-        <li><a href="index.html#zsh-completions">zsh completions</a></li>
-       </ul></li>
-      <li><a href="index.html#usage">Usage</a></li>
-      <li><a href="index.html#launcher-urls">Launcher URLs</a>
-       <ul class="toc-headings">
-        <li><a href="index.html#latest-launchers">Latest launchers</a></li>
-        <li><a href="index.html#specific-versions">Specific versions</a></li>
+        <li><a href="index.html#resolve"><code>resolve</code></a></li>
+        <li><a href="index.html#fetch"><code>fetch</code></a></li>
+        <li><a href="index.html#launch"><code>launch</code></a></li>
+        <li><a href="index.html#bootstrap"><code>bootstrap</code></a></li>
+        <li><a href="index.html#install"><code>install</code></a></li>
+        <li><a href="index.html#java"><code>java</code></a></li>
+        <li><a href="index.html#setup"><code>setup</code></a></li>
        </ul></li>
      </ul>
     </nav>

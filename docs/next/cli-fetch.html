@@ -6,14 +6,14 @@
   <title>fetch · Coursier</title>
   <meta name="viewport" content="width=device-width">
   <meta name="generator" content="Docusaurus">
-  <meta name="description" content="<p>The <code>fetch</code> command, like the <a href=&quot;/docs/next/cli-resolve&quot;><code>resolve</code> command</a>, resolves</p>
+  <meta name="description" content="<p><code>fetch</code> fetches the JARs of one or more dependencies. Use it like</p>
 ">
   <meta name="docsearch:version" content="next">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="fetch · Coursier">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://get-coursier.io/">
-  <meta property="og:description" content="<p>The <code>fetch</code> command, like the <a href=&quot;/docs/next/cli-resolve&quot;><code>resolve</code> command</a>, resolves</p>
+  <meta property="og:description" content="<p><code>fetch</code> fetches the JARs of one or more dependencies. Use it like</p>
 ">
   <meta name="twitter:card" content="summary">
   <link rel="shortcut icon" href="../../../undefined">
@@ -83,6 +83,7 @@
           <h3 class="navGroupCategoryTitle">Command-line</h3>
           <ul class="">
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-installation">Installation</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-resolve">resolve</a></li>
            <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/next/cli-fetch">fetch</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-launch">launch</a></li>
@@ -188,50 +189,38 @@
        </header>
        <article>
         <div>
-         <span><p>The <code>fetch</code> command, like the <a href="../../../docs/next/cli-resolve"><code>resolve</code> command</a>, resolves the transitive dependencies of one or more dependencies. It also goes one step further, by downloading their artifacts, and printing their paths.</p> <p>Use like</p> <pre><code class="hljs css language-bash">$ coursier fetch org.http4s:http4s-dsl_2.12:0.18.21
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.6/scala-reflect-2.12.6.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scala-library-2.12.7.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/http4s/http4s-websocket_2.12/0.2.1/http4s-websocket_2.12-0.2.1.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/scodec/scodec-bits_2.12/1.1.6/scodec-bits_2.12-1.1.6.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/typelevel/machinist_2.12/0.6.5/machinist_2.12-0.6.5.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/typelevel/cats-effect_2.12/0.10.1/cats-effect_2.12-0.10.1.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/typelevel/cats-core_2.12/1.4.0/cats-core_2.12-1.4.0.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/typelevel/cats-macros_2.12/1.4.0/cats-macros_2.12-1.4.0.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/log4s/log4s_2.12/1.6.1/log4s_2.12-1.6.1.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/http4s/parboiled_2.12/1.0.0/parboiled_2.12-1.0.0.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/typelevel/cats-kernel_2.12/1.4.0/cats-kernel_2.12-1.4.0.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/http4s/http4s-core_2.12/0.18.21/http4s-core_2.12-0.18.21.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/co/fs2/fs2-scodec_2.12/0.10.6/fs2-scodec_2.12-0.10.6.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/http4s/http4s-dsl_2.12/0.18.21/http4s-dsl_2.12-0.18.21.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/co/fs2/fs2-io_2.12/0.10.6/fs2-io_2.12-0.10.6.jar
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/co/fs2/fs2-core_2.12/0.10.6/fs2-core_2.12-0.10.6.jar
-</code></pre> <h2><a class="anchor" aria-hidden="true" id="classpath-format"></a><a href="cli-fetch.html#classpath-format" aria-hidden="true" class="hash-link">
+         <span><p><code>fetch</code> fetches the JARs of one or more dependencies. Use it like</p> <pre><code class="hljs css language-bash">$ cs fetch io.circe::circe-generic:0.12.3
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-generic_2.13/0.12.3/circe-generic_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.12.3/circe-core_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-numbers_2.13/0.12.3/circe-numbers_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-core_2.13/2.0.0/cats-core_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-macros_2.13/2.0.0/cats-macros_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-kernel_2.13/2.0.0/cats-kernel_2.13-2.0.0.jar
+</code></pre> <p>Note that JARs are printed in a deterministic order, with the JAR of a dependency before those of its dependencies. Pipe the output of <code>fetch</code> to <code>sort</code> to make it more readable, or use <code>resolve</code> if you are only looking for a dependency list.</p> <h2><a class="anchor" aria-hidden="true" id="classpath-format"></a><a href="cli-fetch.html#classpath-format" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Classpath format</h2> <p>Optionally, when passed the <code>-p</code> or <code>--classpath</code> option, the <code>fetch</code> command can print its output in a format that can be passed as-is to <code>java -cp</code>, like</p> <pre><code class="hljs css language-bash">$ coursier fetch -p com.lihaoyi:ammonite_2.12.8:1.6.0
-/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/io/get-coursier/coursier_2.12/1.1.0-M7/coursier_2.12-1.1.0-M7.jar:/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/jline/jline-terminal/3.6.2/jline-terminal-3.6.2.jar:…
-$ java -cp <span class="hljs-string">"<span class="hljs-variable">$(coursier fetch -p com.lihaoyi:ammonite_2.12.8:1.6.0)</span>"</span> ammonite.Main
-Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
-@
-</code></pre> <p>(Note that <a href="https://ammonite.io">Ammonite</a> in the example above can be launched directly and more conveniently with the <a href="../../../docs/next/cli-launch"><code>launch</code> command</a>.)</p> <h2><a class="anchor" aria-hidden="true" id="source-jars"></a><a href="cli-fetch.html#source-jars" aria-hidden="true" class="hash-link">
+            </svg></a>Classpath format</h2> <p>Pass <code>--classpath</code> to <code>fetch</code> to separate the elements it prints with the OS-dependent path separator, <code>:</code> on Linux and macOS, and <code>;</code> on Windows:</p> <pre><code class="hljs css language-bash">$ cs fetch --classpath io.circe::circe-generic:0.12.3
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-generic_2.13/0.12.3/circe-generic_2.13-0.12.3.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.12.3/circe-core_2.13-0.12.3.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-numbers_2.13/0.12.3/circe-numbers_2.13-0.12.3.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-core_2.13/2.0.0/cats-core_2.13-2.0.0.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-macros_2.13/2.0.0/cats-macros_2.13-2.0.0.jar:/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-kernel_2.13/2.0.0/cats-kernel_2.13-2.0.0.jar
+</code></pre> <p>When passed <code>--classpath</code>, the output of <code>fetch</code> can be passed as is to <code>java -cp</code> for example,</p> <pre><code class="hljs css language-bash">$ CP=<span class="hljs-string">"<span class="hljs-variable">$(cs fetch --classpath org.scalameta::scalafmt-cli:latest.release)</span>"</span>
+$ java -cp <span class="hljs-string">"<span class="hljs-variable">$CP</span>"</span> org.scalafmt.cli.Cli --<span class="hljs-built_in">help</span>
+</code></pre> <p>Note that there are easier ways to start applications, see <a href="../../../docs/next/cli-launch">the <code>launch</code> command</a>.</p> <h2><a class="anchor" aria-hidden="true" id="source-jars"></a><a href="cli-fetch.html#source-jars" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Source JARs</h2> <p>To fetch source JARs rather than standard JARs, pass the <code>--sources</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier fetch --sources com.lihaoyi:ammonite_2.12.8:1.6.0
+            </svg></a>Source JARs</h2> <p>To fetch source JARs rather than standard JARs, pass the <code>--sources</code> option, like</p> <pre><code class="hljs css language-bash">$ cs fetch --sources com.lihaoyi:ammonite_2.12.8:1.6.0
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA-sources.jar
 …
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="javadoc"></a><a href="cli-fetch.html#javadoc" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Javadoc</h2> <p>To fetch javadoc JARs rather than standard JARs, pass the <code>--javadoc</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier fetch --javadoc com.lihaoyi:ammonite_2.12.8:1.6.0
+            </svg></a>Javadoc</h2> <p>To fetch javadoc JARs rather than standard JARs, pass the <code>--javadoc</code> option, like</p> <pre><code class="hljs css language-bash">$ cs fetch --javadoc com.lihaoyi:ammonite_2.12.8:1.6.0
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/com/lihaoyi/sourcecode_2.12/0.1.5/sourcecode_2.12-0.1.5-javadoc.jar
 …
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="multiple-classifiers"></a><a href="cli-fetch.html#multiple-classifiers" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Multiple classifiers</h2> <p>With both <code>--sources</code> and <code>--javadoc</code>, if you want to retain standard JARs along sources or javadoc JARs, pass <code>--default=true</code> to force fetching the default JARs too, like</p> <pre><code class="hljs css language-bash">$ coursier fetch --default=<span class="hljs-literal">true</span> --sources com.lihaoyi:ammonite_2.12.8:1.6.0
+            </svg></a>Multiple classifiers</h2> <p>With both <code>--sources</code> and <code>--javadoc</code>, if you want to retain standard JARs along sources or javadoc JARs, pass <code>--default=true</code> to force fetching the default JARs too, like</p> <pre><code class="hljs css language-bash">$ cs fetch --default=<span class="hljs-literal">true</span> --sources com.lihaoyi:ammonite_2.12.8:1.6.0
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA-sources.jar
 …
 /path/to/coursier/cache/v1/https/repo1.maven.org/maven2/org/jline/jline-terminal/3.6.2/jline-terminal-3.6.2.jar
