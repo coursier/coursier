@@ -1,7 +1,7 @@
 package coursier.cli
 
 import caseapp.core.help.Help
-import caseapp.{Hidden, Parser, HelpMessage}
+import caseapp.{Hidden, Parser}
 
 final case class LauncherOptions(
   @Hidden
