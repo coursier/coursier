@@ -30,6 +30,13 @@ $ cs update
 $ cs uninstall scala
 ```
 
+[The `list` command](#list) allows you to view all of your currently installed
+applications
+
+```bash
+$ cs list
+```
+
 ## Application descriptors
 
 The `install` command goes from an application name (`scala`, `ammonite`, `scalafmt`, etc.)
@@ -152,6 +159,18 @@ $ cs install ammonite
 $ amm
 …
 $ cs uninstall amm # ammonite is installed as "amm"
+```
+
+## List
+
+The `list` command lists all the installed applications. By default this will
+list the applications in your [default installation
+directory](#installation-directory). However, you can explicitly provide a
+different directory with the `--dir` flag if you have your install directory in
+a custom location.
+
+```bash
+$ cs list --dir /myCustomDirectory
 ```
 
 ## Default channels
