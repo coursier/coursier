@@ -70,6 +70,11 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
+    if(options.version) {
+      System.out.println(appVersion)
+      sys.exit(0)
+    }
+
     for (requiredVersion <- options.require.map(_.trim).filter(_.nonEmpty)) {
       val requiredVersion0 = Version(requiredVersion)
       val currentVersion = coursier.util.Properties.version
