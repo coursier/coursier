@@ -22,7 +22,6 @@ import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
 import scala.util.control.NonFatal
-import caseapp.core.app.CaseApp
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
