@@ -2,153 +2,69 @@
 title: launch
 ---
 
-Like the [`fetch` command](cli-fetch.md), `launch` resolves and fetches the
-artifacts of one or more dependencies. Unlike [`fetch`](cli-fetch.md), it
-doesn't stop there, and proceeds to actually launch the dependencies it
-fetched, like
-```bash
-$ coursier launch io.get-coursier:http-server_2.12:1.0.0
-```
+`launch` launches applications from one or more dependencies.
 
-The `launch` command runs the dependencies it fetched in its own JVM. It simply
-loads them in a fresh class loader, loads the main class by reflection, and
-calls its main method.
+```bash
+$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --help
+scalafmt 2.4.2
+Usage: scalafmt [options] [<file>...]
+
+  -h, --help               prints this usage text
+  -v, --version            print version
+…
+```
 
 ## Arguments
 
 Pass arguments to the launched program, by adding `--` after the coursier
 arguments, like
 ```bash
-$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -- --version
+$ coursier launch org.scalameta::scalafmt-cli:2.4.2 -- --version
 ```
 
 ## Main class
 
-The main class to launch from the passed dependencies must be either specified
-on the command-line, via the `-M` option, like
+If the dependencies don't specify a default main class via
+their manifest, or if the heuristics of the `launch` command fails to pick the
+right manifest, you can specify a main class via
+`-M` or `--main-class`, like
 ```bash
-$ coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+$ cs launch com.lihaoyi:ammonite_2.13.1:2.0.4 -M ammonite.Main
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@
 ```
-or must be specified in the manifest of one of the loaded JARs.
 
-If the project of the main class relies on sbt, and contains only one main
-class, its manifest should already contain this main class name (it's added
-out-of-the-box). In case of several main classes, one should set the
+If a dependency is published by sbt, and contains only one main
+class, the main class should have been automatically added to the manifest.
+If it contains several main classes, setting
 [`mainClass`](https://github.com/sbt/sbt/blob/v1.2.8/main/src/main/scala/sbt/Keys.scala#L265)
-setting to the right value, for the main class to be specified in the manifest.
+in sbt is required for it to be set in the manifest.
 
 In case several of the loaded JARs have manifests with main classes, the
 `launch` command applies an heuristic to try to find the "main" one.
 
-If ever that heuristic fails, run the `launch` command with the `-v` option
-specified twice, like
+If the heuristic to find the main class fails, pass `-v -v` to `launch` to
+get more details:
 ```bash
-$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
+$ cs launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
 …
 Found main classes:
   com.martiansoftware.nailgun.NGServer (vendor: , title: )
   org.scalafmt.cli.Cli (vendor: com.geirsson, title: cli)
 …
 ```
-It should print the main classes it found. Then, replace `-v -v` with
-`-M main.class.of.your.choice`, like
-```bash
-$ coursier launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -M org.scalafmt.cli.Cli -- --version
-```
+This prints the main classes of all manifests found, among other things. If you think
+one of them is the right one, just pass it via `-M` to `launch`.
 
 ## Java options
 
-On Linux / OS X, recent versions of the coursier launcher accept Java options,
-prefixed with `-J`, like
+With the native coursier launcher, you can pass options to the JVM that
+`launch` starts with `-J` or `--java-opt`, like
 ```bash
-$ coursier -J-Dfoo=bar -J-Xmx2g launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
+$ cs launch -J -Dfoo=bar -J -Xmx2g ammonite
 Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 @ sys.props("foo")
 res0: String = "bar"
 ```
-
-Alternatively, run `java` explicitly, and pass it the options you'd like, e.g.
-```bash
-$ java -Dfoo=bar -Xmx2g -jar "$(which coursier)" launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
-@ sys.props("foo")
-res0: String = "bar"
-```
-
-From the Windows command, only the second way should work, like
-```
-> java -Dfoo=bar -jar /path/to/coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-```
-
-## Examples
-
-### Ammonite
-
-```bash
-$ ./coursier launch com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main
-```
-
-### Frege
-
-```bash
-$ ./coursier launch -r central -r https://oss.sonatype.org/content/groups/public \
-    org.frege-lang:frege-repl-core:1.3 -M frege.repl.FregeRepl
-```
-
-### clojure
-
-```bash
-$ ./coursier launch org.clojure:clojure:1.7.0 -M clojure.main
-```
-
-### jruby
-
-```bash
-$ wget https://raw.githubusercontent.com/jruby/jruby/master/bin/jirb && \
-  ./coursier launch org.jruby:jruby:9.0.4.0 -M org.jruby.Main -- -- jirb
-```
-
-### jython
-
-```bash
-$ ./coursier launch org.python:jython-standalone:2.7.0 -M org.python.util.jython
-```
-
-### Groovy
-
-```bash
-$ ./coursier launch org.codehaus.groovy:groovy-groovysh:2.4.5 -M org.codehaus.groovy.tools.shell.Main \
-    commons-cli:commons-cli:1.3.1
-```
-
-### ProGuard
-
-```bash
-$ ./coursier launch net.sf.proguard:proguard-base:5.2.1 -M proguard.ProGuard
-$ ./coursier launch net.sf.proguard:proguard-retrace:5.2.1 -M proguard.retrace.ReTrace
-```
-
-### Wiremock
-
-```bash
-./coursier launch com.github.tomakehurst:wiremock:1.57 -- \
---proxy-all="http://search.twitter.com" --record-mappings --verbose
-```
-
-### SQLLine
-
-```bash
-$ ./coursier launch \
-  sqlline:sqlline:1.3.0 \
-  org.postgresql:postgresql:42.1.4 \
-  -M sqlline.SqlLine -- \
-  -d org.postgresql.Driver \
-  -n USERNAME \
-  -p PASSWORD \
-  -u jdbc:postgresql://HOST:PORT/DATABASE
-```
-
