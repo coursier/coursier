@@ -57,7 +57,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     new String(b, StandardCharsets.UTF_8)
   }
 
-  override def main(args: Array[String]): Unit =
+  override def main(args: Array[String]): Unit = {
     if (args.isEmpty && Windows.isWindows) {
       Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
 
@@ -65,8 +65,11 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
       println("Press \"ENTER\" to continue...")
       val scanner = new Scanner(System.in)
       scanner.nextLine()
-    } else
+    } else if (args.isEmpty)
+      helpAsked()
+    else
       super.main(args)
+  }
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
