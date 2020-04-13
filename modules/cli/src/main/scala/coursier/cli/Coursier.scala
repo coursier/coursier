@@ -65,14 +65,10 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
       println("Press \"ENTER\" to continue...")
       val scanner = new Scanner(System.in)
       scanner.nextLine()
-    } 
-
-    if (args.isEmpty) {
+    } else if (args.isEmpty)
       helpAsked()
-    }
-    else {
+    else
       super.main(args)
-    }
   }
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
