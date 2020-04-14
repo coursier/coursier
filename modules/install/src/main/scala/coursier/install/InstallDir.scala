@@ -173,6 +173,7 @@ import scala.util.control.NonFatal
 
         Parameters.NativeImage(mainClass, fetch)
           .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
+          .withGraalvmVersion(graalvmParamsOpt.flatMap(_.defaultVersion))
           .withJars(appArtifacts.fetchResult.files)
           .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
           .withJavaHome(graalvmHomeOpt)
