@@ -1,4 +1,4 @@
-package coursier.cli.install
+package coursier.install
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream}
 import java.lang.ProcessBuilder.Redirect
@@ -10,7 +10,6 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
-import coursier.install.{GraalvmParams, InstallDir, RawAppDescriptor}
 import coursier.util.{Sync, Task}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
