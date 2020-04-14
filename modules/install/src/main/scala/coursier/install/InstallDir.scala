@@ -6,6 +6,7 @@ import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.Instant
 import java.util.Locale
+import java.util.zip.ZipEntry
 
 import coursier.Fetch
 import coursier.cache.{ArtifactError, Cache, FileCache}
@@ -86,6 +87,112 @@ import scala.util.control.NonFatal
   private def actualDest(dest: Path): Path =
     if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
+
+  private[install] def params(
+    desc: AppDescriptor,
+    appArtifacts: AppArtifacts,
+    infoEntries: Seq[(ZipEntry, Array[Byte])],
+    mainClass: String,
+    dest: Path
+  ): Parameters =
+    desc.launcherType match {
+      case LauncherType.DummyJar =>
+        Parameters.Bootstrap(Nil, mainClass)
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+          .withDeterministic(true)
+          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+          .withExtraZipEntries(infoEntries)
+
+      case _: LauncherType.BootstrapLike =>
+        val isStandalone = desc.launcherType != LauncherType.Bootstrap
+        val sharedContentOpt =
+          if (appArtifacts.shared.isEmpty) None
+          else {
+            val entries = appArtifacts.shared.map {
+              case (a, f) =>
+                classpathEntry(a, f, forceResource = isStandalone)
+            }
+
+            Some(ClassLoaderContent(entries))
+          }
+        val mainContent = ClassLoaderContent(
+          appArtifacts.fetchResult.artifacts.map {
+            case (a, f) =>
+              classpathEntry(a, f, forceResource = isStandalone)
+          }
+        )
+
+        Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+          .withDeterministic(true)
+          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+          .withExtraZipEntries(infoEntries)
+
+      case LauncherType.Assembly =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        // FIXME Allow to adjust merge rules?
+        Parameters.Assembly()
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withFiles(appArtifacts.fetchResult.files)
+          .withMainClass(mainClass)
+          .withExtraZipEntries(infoEntries)
+
+      case LauncherType.DummyNative =>
+        Parameters.DummyNative()
+
+      case LauncherType.GraalvmNativeImage =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        val fetch = simpleFetch(cache, coursierRepositories)
+
+        val graalvmHomeOpt = for {
+          ver <- desc.graalvmOptions.flatMap(_.version)
+            .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
+          home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
+        } yield home
+
+        Parameters.NativeImage(mainClass, fetch)
+          .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
+          .withJars(appArtifacts.fetchResult.files)
+          .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
+          .withJavaHome(graalvmHomeOpt)
+          .withVerbosity(verbosity)
+
+      case LauncherType.ScalaNative =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        val fetch = simpleFetch(cache, coursierRepositories)
+        val nativeVersion = appArtifacts.platformSuffixOpt
+          .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
+        // FIXME Allow options to be tweaked
+        val options = ScalaNative.ScalaNativeOptions()
+
+        Parameters.ScalaNative(fetch, mainClass, nativeVersion)
+          .withJars(appArtifacts.fetchResult.files)
+          .withOptions(options)
+          .withVerbosity(verbosity)
+    }
 
   // TODO Remove that override
   private[coursier] def createOrUpdate(
@@ -182,107 +289,10 @@ import scala.util.control.NonFatal
               if (onlyPrebuilt && desc.launcherType.isNative)
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
-              val params = desc.launcherType match {
-                case LauncherType.DummyJar =>
-                  Parameters.Bootstrap(Nil, mainClass)
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                    .withDeterministic(true)
-                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                    .withExtraZipEntries(infoEntries)
-
-                case _: LauncherType.BootstrapLike =>
-                  val isStandalone = desc.launcherType != LauncherType.Bootstrap
-                  val sharedContentOpt =
-                    if (appArtifacts.shared.isEmpty) None
-                    else {
-                      val entries = appArtifacts.shared.map {
-                        case (a, f) =>
-                          classpathEntry(a, f, forceResource = isStandalone)
-                      }
-
-                      Some(ClassLoaderContent(entries))
-                    }
-                  val mainContent = ClassLoaderContent(
-                    appArtifacts.fetchResult.artifacts.map {
-                      case (a, f) =>
-                        classpathEntry(a, f, forceResource = isStandalone)
-                    }
-                  )
-
-                  Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                    .withDeterministic(true)
-                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                    .withExtraZipEntries(infoEntries)
-
-                case LauncherType.Assembly =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  // FIXME Allow to adjust merge rules?
-                  Parameters.Assembly()
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withFiles(appArtifacts.fetchResult.files)
-                    .withMainClass(mainClass)
-                    .withExtraZipEntries(infoEntries)
-
-                case LauncherType.DummyNative =>
-                  Parameters.DummyNative()
-
-                case LauncherType.GraalvmNativeImage =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  val fetch = simpleFetch(cache, coursierRepositories)
-
-                  val graalvmHomeOpt = for {
-                    ver <- desc.graalvmOptions.flatMap(_.version)
-                      .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
-                    home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
-                  } yield home
-
-                  Parameters.NativeImage(mainClass, fetch)
-                    .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
-                    .withJars(appArtifacts.fetchResult.files)
-                    .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
-                    .withJavaHome(graalvmHomeOpt)
-                    .withVerbosity(verbosity)
-
-                case LauncherType.ScalaNative =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  val fetch = simpleFetch(cache, coursierRepositories)
-                  val nativeVersion = appArtifacts.platformSuffixOpt
-                    .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
-                  // FIXME Allow options to be tweaked
-                  val options = ScalaNative.ScalaNativeOptions()
-
-                  Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-                    .withJars(appArtifacts.fetchResult.files)
-                    .withOptions(options)
-                    .withVerbosity(verbosity)
-              }
+              val params0 = params(desc, appArtifacts, infoEntries, mainClass, dest)
 
               writing(genDest, verbosity, Some(currentTime)) {
-                Generator.generate(params, genDest)
+                Generator.generate(params0, genDest)
               }
 
             case Right((_, prebuilt)) =>
