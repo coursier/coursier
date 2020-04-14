@@ -8,7 +8,7 @@ import coursier.launcher.internal.FileUtil
 
 object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
-  // TODO Get isWindows via the params? Along with some kind of CommandRunner?
+  // TODO Get some kind of CommandRunner via the params?
   // That would allow to unit test the logic here.
 
   private def executable(dir: File, name: String, pathExtensionsOpt: Option[Seq[String]]): Option[File] =
@@ -105,7 +105,6 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       case Left(retCode) =>
         sys.error(s"Error running native-image (exit code: $retCode)")
       case Right(()) =>
-        FileUtil.tryMakeExecutable(output) // do we really need that?
     }
   }
 
