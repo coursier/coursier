@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +19,11 @@ public class Util {
             Pattern.compile(Pattern.quote("${") + "[^" + Pattern.quote("{[()]}") + "]*" + Pattern.quote("}"));
 
     public static Map<String, String> expandProperties(Map<String, String> properties) {
+        return expandProperties(System.getProperties(), properties);
+    }
+    public static Map<String, String> expandProperties(
+        Properties systemProperties,
+        Map<String, String> properties) {
 
         final Map<String, String> resolved = new LinkedHashMap<>(properties.size());
         final Map<String, String> withProps = new LinkedHashMap<>(properties.size());
@@ -47,7 +53,7 @@ public class Util {
                 String subKey = value.substring(start + 2, end - 1);
                 String subValue = resolved.get(subKey);
                 if (subValue == null)
-                    subValue = System.getProperty(subKey);
+                    subValue = systemProperties.getProperty(subKey);
                 if (subValue == null)
                     subValue = ""; // throw instead?
                 value = value.substring(0, start) + subValue + value.substring(end);
