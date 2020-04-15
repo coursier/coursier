@@ -54,6 +54,18 @@ object UtilTests extends TestSuite {
         val expected = Seq("something" -> "value FOO", "other" -> map("other")).sorted
         assert(toSet == expected)
       }
+
+      "optional value" - {
+        val map = Map("something" -> "value", "foo?" -> "A")
+        val sysProps = new Properties
+        sysProps.setProperty("foo", "FOO")
+        val toSet = Util.expandProperties(sysProps, map.asJava)
+          .asScala
+          .toVector
+          .sorted
+        val expected = Seq("something" -> "value")
+        assert(toSet == expected)
+      }
     }
   }
 

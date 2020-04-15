@@ -31,18 +31,28 @@ public class Util {
         for (String k : properties.keySet()) {
             String value = properties.get(k);
 
-            Matcher matcher = propertyRegex.matcher(value);
-            if (matcher.find()) {
-                withProps.put(k, value);
-            } else {
-                resolved.put(k, value);
+            String actualKey = k;
+            boolean process = true;
+
+            if (k.endsWith("?")) {
+                actualKey = k.substring(0, k.length() - 1);
+                process = !systemProperties.containsKey(actualKey);
+            }
+
+            if (process) {
+                Matcher matcher = propertyRegex.matcher(value);
+                if (matcher.find()) {
+                    withProps.put(actualKey, value);
+                } else {
+                    resolved.put(actualKey, value);
+                }
             }
         }
 
         // we don't go recursive here - dynamic properties can only reference static ones
 
         for (String k : withProps.keySet()) {
-            String value = properties.get(k);
+            String value = withProps.get(k);
 
             Matcher matcher = propertyRegex.matcher(value);
 
