@@ -297,7 +297,7 @@ object Launch extends CaseApp[LaunchOptions] {
       // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
       for ((k, v) <- jcp.iterator ++ jlp.iterator ++ props.iterator)
         m.put(k, v)
-      val m0 = coursier.paths.Util.expandProperties(m)
+      val m0 = coursier.paths.Util.expandProperties(System.getProperties, m)
       // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
       if (params.fork && props.forall(_._1 != "java.class.path"))
         m0.remove("java.class.path")

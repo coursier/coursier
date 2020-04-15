@@ -17,7 +17,9 @@ class Props {
 
     static void setExtraProperties(ClassLoader loader) throws IOException {
         String resource = ClassLoaders.resourceDir + "bootstrap.properties";
-        Map<String,String> properties = Util.loadPropertiesMap(loader.getResourceAsStream(resource));
+        Map<String,String> properties = Util.loadPropertiesMap(
+            System.getProperties(),
+            loader.getResourceAsStream(resource));
         for (Map.Entry<String, String> ent : properties.entrySet()) {
             System.setProperty(ent.getKey(), ent.getValue());
         }
