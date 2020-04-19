@@ -8,8 +8,8 @@ object Deps {
 
   private object versions {
     def argonautShapeless = "1.2.0-M11"
-    def fastParse = "2.2.4"
-    def http4s = "0.21.3"
+    def fastParse = "2.3.0"
+    def http4s = "0.18.26"
     def jsoniterScala = "2.1.14"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
@@ -57,7 +57,7 @@ object Deps {
     // other settings.
 
     def argonautShapeless = setting("com.github.alexarchambault" %%% "argonaut-shapeless_6.2" % versions.argonautShapeless)
-    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.1.2")
+    def catsEffect = setting("org.typelevel" %%% "cats-effect" % "2.1.3")
     def fastParse = setting("com.lihaoyi" %%% "fastparse" % versions.fastParse)
     def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "1.0.0")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "1.0.0")

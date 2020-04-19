@@ -2,8 +2,11 @@ package coursier.paths
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import java.util.Properties
 
 import utest._
+
+import scala.collection.JavaConverters._
 
 object UtilTests extends TestSuite {
 
@@ -24,6 +27,44 @@ object UtilTests extends TestSuite {
         Util.createDirectories(link) // should not throw
       } finally {
         deleteRecursive(tmpDir.toFile)
+      }
+    }
+
+    "property expansion" - {
+      "simple" - {
+        val map = Map("something" -> "value", "other" -> "a")
+        val sysProps = new Properties
+        sysProps.setProperty("foo", "FOO")
+        val toSet = Util.expandProperties(sysProps, map.asJava)
+          .asScala
+          .toVector
+          .sorted
+        val expected = map.toVector.sorted
+        assert(toSet == expected)
+      }
+
+      "substitution" - {
+        val map = Map("something" -> "value ${foo}", "other" -> "a")
+        val sysProps = new Properties
+        sysProps.setProperty("foo", "FOO")
+        val toSet = Util.expandProperties(sysProps, map.asJava)
+          .asScala
+          .toVector
+          .sorted
+        val expected = Seq("something" -> "value FOO", "other" -> map("other")).sorted
+        assert(toSet == expected)
+      }
+
+      "optional value" - {
+        val map = Map("something" -> "value", "foo?" -> "A")
+        val sysProps = new Properties
+        sysProps.setProperty("foo", "FOO")
+        val toSet = Util.expandProperties(sysProps, map.asJava)
+          .asScala
+          .toVector
+          .sorted
+        val expected = Seq("something" -> "value")
+        assert(toSet == expected)
       }
     }
   }
