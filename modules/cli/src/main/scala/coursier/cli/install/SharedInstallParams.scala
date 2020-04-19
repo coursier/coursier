@@ -32,9 +32,7 @@ final case class SharedInstallParams(
 
 object SharedInstallParams {
 
-  lazy val defaultDir = {
-    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
-  }
+  lazy val defaultDir = InstallDir.defaultDir
 
   private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
     v.either match {
