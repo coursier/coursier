@@ -362,14 +362,43 @@ object Resolve extends CaseApp[ResolveOptions] {
     withApp: (T, RawAppDescriptor) => T
   ): (T, Seq[String]) = {
 
-    val (appIds, deps) = args.partition(s => s.count(_ == ':') <= 1)
+    val (inlineAppIds, args0) = args.partition(s => s.startsWith("{") || s.dropWhile(_ != ':').startsWith(":{"))
+    val (appIds, deps) = args0.partition(s => s.count(_ == ':') <= 1)
 
-    if (appIds.lengthCompare(1) > 0) {
+    if (inlineAppIds.length + appIds.length > 1) {
       System.err.println(s"Error: only at most one app can be passed as dependency")
       sys.exit(1)
     }
 
-    val descOpt = appIds.headOption.map { id =>
+    val inlineDescOpt = inlineAppIds.headOption.map { input =>
+
+      val (nameOpt, json) = {
+        val input0 = input.trim
+        val idx = input0.indexOf(":{")
+        if (idx >= 0)
+          (Some(input.take(idx)).filter(_.nonEmpty), input.drop(idx + 1))
+        else
+          (None, input)
+      }
+
+      val e = for {
+        rawDesc <- RawAppDescriptor.parse(json)
+      } yield {
+        rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(nameOpt))
+      }
+
+      e match {
+        case Left(err) =>
+          System.err.println(err)
+          sys.exit(1)
+        case Right(res) => res
+      }
+    }
+
+    def descOpt = appIds.headOption.map { id =>
 
       val e = for {
         info <- channels.appDescriptor(id)
@@ -397,7 +426,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       }
     }
 
-    descOpt.fold((options, args)) { desc =>
+    inlineDescOpt.orElse(descOpt).fold((options, args)) { desc =>
       // add desc.dependencies in deps at the former app id position? (to retain the order)
       (withApp(options, desc), desc.dependencies ++ deps)
     }

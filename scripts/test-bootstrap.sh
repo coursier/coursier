@@ -312,6 +312,34 @@ resolveRules() {
     --rule 'SameVersion(com.fasterxml.jackson.core:jackson-*)'
 }
 
+launchInlineApp() {
+  local OUT="$("$COURSIER" launch '{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from inline echo app command." 1>&2
+    exit 1
+  fi
+}
+
+launchInlineAppWithId() {
+  local OUT="$("$COURSIER" launch 'echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from inline echo app with id command." 1>&2
+    exit 1
+  fi
+}
+
+installInlineApp() {
+  local DIR="target/test-install"
+  rm -rf "$DIR"
+  "$COURSIER" install --install-dir "$DIR" 'echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}'
+  local OUT="$("$DIR/echo" foo)"
+  rm -rf "$DIR"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from installed inline echo app command." 1>&2
+    exit 1
+  fi
+}
+
 nailgun
 fork
 nonStaticMainClass
@@ -339,3 +367,7 @@ launcherAssembly
 launcherAssemblyPreambleInSource
 
 resolveRules
+
+launchInlineApp
+launchInlineAppWithId
+installInlineApp

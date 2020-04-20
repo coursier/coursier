@@ -26,21 +26,30 @@ import dataclass._
 
   def appDescriptor(id: String): Task[AppInfo] = {
 
-    val (actualId, overrideVersionOpt) = {
+    val (inlineOpt, actualId, overrideVersionOpt) = {
       val idx = id.indexOf(':')
       if (idx < 0)
-        (id, None)
-      else
-        (id.take(idx), Some(id.drop(idx + 1)))
+        (None, id, None)
+      else if (id.length > idx + 1 && id.charAt(idx + 1) == '{') {
+        (Some(id.drop(idx + 1)), id.take(idx), None)
+      } else
+        (None, id.take(idx), Some(id.drop(idx + 1)))
     }
 
     for {
 
-      t0 <- find(actualId).flatMap {
-        case None => Task.fail(new Channels.AppNotFound(actualId, channels))
-        case Some(res) => Task.point(res)
+      t0 <- {
+        inlineOpt match {
+          case None =>
+            find(actualId).flatMap {
+              case None => Task.fail(new Channels.AppNotFound(actualId, channels))
+              case Some((channel, _, descRepr)) => Task.point((channel, descRepr))
+            }
+          case Some(inline) =>
+            Task.point((Channel.Inline(), inline.getBytes(StandardCharsets.UTF_8)))
+        }
       }
-      (channel, _, descRepr) = t0
+      (channel, descRepr) = t0
 
       _ = if (verbosity >= 1)
         System.err.println(s"Found app $actualId in channel ${channel.repr}")
@@ -184,6 +193,8 @@ import dataclass._
           fromUrl(u)
         case d: Channel.FromDirectory =>
           fromDirectory(d)
+        case _: Channel.Inline =>
+          Task.point(None)
       }
       .foldLeft(Task.point(Option.empty[(Channel, String, Array[Byte])])) { (acc, elem) =>
         acc.flatMap {
