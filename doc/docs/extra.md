@@ -8,7 +8,7 @@ title: Extra
 
 E.g. to print the dependency tree of `io.circe:circe-core:0.4.1`,
 ```
-$ coursier resolve -t io.circe:circe-core_2.11:0.4.1
+$ cs resolve -t io.circe:circe-core_2.11:0.4.1
   Result:
 └─ io.circe:circe-core_2.11:0.4.1
    ├─ io.circe:circe-numbers_2.11:0.4.1
@@ -48,7 +48,7 @@ They highlight in red version bumps that may not be binary compatible, changing 
 
 The `coursier bootstrap` command generates tiny bootstrap launchers (~30 kB). These are able to download their dependencies upon first launch, then launch the corresponding application. E.g. to generate a launcher for scalafmt,
 ```
-$ coursier bootstrap com.geirsson:scalafmt-cli_2.11:0.2.3 -o scalafmt
+$ cs bootstrap com.geirsson:scalafmt-cli_2.11:0.2.3 -o scalafmt
 ```
 
 This generates a `scalafmt` file, which is a tiny JAR, corresponding to the `bootstrap` sub-project of coursier. It contains resource files, with the URLs of the various dependencies of scalafmt. On first launch, these are downloaded under `~/.coursier/bootstrap/com.geirsson/scalafmt-cli_2.11` (following the organization and name of the first dependency - note that this directory can be changed with the `-D` option). Nothing needs to be downloaded once all the dependencies are there, and the application is then launched straightaway.
@@ -57,7 +57,7 @@ This generates a `scalafmt` file, which is a tiny JAR, corresponding to the `boo
 
 To use artifacts from repositories requiring credentials, pass the user and password via the repository URL, like
 ```
-$ coursier fetch -r https://user:pass@company.com/repo com.company:lib:0.1.0
+$ cs fetch -r https://user:pass@company.com/repo com.company:lib:0.1.0
 ```
 
 From sbt, add the setting `coursierUseSbtCredentials := true` for sbt-coursier to use the credentials set via the `credentials` key. This manual step was added in order for the `credentials` setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.

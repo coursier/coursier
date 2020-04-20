@@ -18,7 +18,7 @@ $ export COURSIER_CREDENTIALS="
     artifacts.foo.com(the realm) alex:my-pass
     oss.sonatype.org alex-sonatype:aLeXsOnAtYpE
 "
-$ coursier fetch -r https://artifacts.foo.com/maven …
+$ cs fetch -r https://artifacts.foo.com/maven …
 ```
 
 It should contain lines like
@@ -34,7 +34,7 @@ are ignored too.
 From the CLI, you can also pass those explicitly via the `--credentials` option,
 like
 ```bash
-$ coursier fetch -r https://artifacts.foo.com/maven \
+$ cs fetch -r https://artifacts.foo.com/maven \
     --credentials "artifacts.foo.com(the realm) alex:my-pass" \
     --credentials "oss.sonatype.org alex-sonatype:aLeXsOnAtYpE" \
     …
@@ -94,7 +94,7 @@ if that's a possibility.
 
 The CLI still accepts credentials passed along specific repositories, like
 ```bash
-$ coursier fetch -r https://user:password@artifacts.foo.com/maven …
+$ cs fetch -r https://user:password@artifacts.foo.com/maven …
 ```
 
 The API accept those too, when creating a repository, for example,
