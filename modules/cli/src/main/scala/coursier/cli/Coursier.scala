@@ -17,6 +17,7 @@ import coursier.cli.publish.Publish
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.core.Version
+import coursier.install.InstallDir
 import coursier.launcher.internal.{FileUtil, Windows}
 import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
@@ -57,19 +58,25 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     new String(b, StandardCharsets.UTF_8)
   }
 
-  override def main(args: Array[String]): Unit = {
-    if (args.isEmpty && Windows.isWindows) {
-      Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
+  private def runSetup(): Unit = {
+    Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
 
-      // https://stackoverflow.com/questions/26184409/java-console-prompt-for-enter-input-before-moving-on/26184535#26184535
-      println("Press \"ENTER\" to continue...")
-      val scanner = new Scanner(System.in)
-      scanner.nextLine()
-    } else if (args.isEmpty)
-      helpAsked()
-    else
-      super.main(args)
+    // https://stackoverflow.com/questions/26184409/java-console-prompt-for-enter-input-before-moving-on/26184535#26184535
+    println("Press \"ENTER\" to continue...")
+    val scanner = new Scanner(System.in)
+    scanner.nextLine()
   }
+
+  private def isInstalledLauncher: Boolean =
+    System.getenv(InstallDir.isInstalledLauncherEnvVar) == "true"
+
+  override def main(args: Array[String]): Unit =
+    if (args.nonEmpty)
+      super.main(args)
+    else if (Windows.isWindows && !isInstalledLauncher)
+      runSetup()
+    else
+      helpAsked()
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
