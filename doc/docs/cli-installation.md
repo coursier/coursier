@@ -4,9 +4,6 @@ title: Installation
 
 ## Native launcher
 
-> The commands below install the native launcher as `cs`, which can be
-substituted to `coursier` in the various examples on this website.
-
 ### Linux
 
 On Linux, download and run the coursier launcher with
@@ -46,6 +43,9 @@ On Windows, use
 
 In case you run into any issue with the [native launcher](#native-launcher),
 a JAR-based launcher is available.
+
+> The commands below install the JAR-based launcher as `coursier`, which can be
+substituted to `cs` in the various examples on this website.
 
 ### Linux / macOS
 

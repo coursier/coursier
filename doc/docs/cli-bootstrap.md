@@ -215,7 +215,7 @@ sources is an option for you.
 `bootstrap` can generate
 [Scala Native](https://www.scala-native.org)-based native launchers:
 ```bash
-$ coursier bootstrap echo-native -o echo --native
+$ cs bootstrap echo-native -o echo --native
 [info] Linking (1457 ms)
 [info] Discovered 614 classes and 4200 methods
 [info] Optimizing (debug mode) (2157 ms)

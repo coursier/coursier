@@ -19,7 +19,7 @@ Usage: scalafmt [options] [<file>...]
 Pass arguments to the launched program, by adding `--` after the coursier
 arguments, like
 ```bash
-$ coursier launch org.scalameta::scalafmt-cli:2.4.2 -- --version
+$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --version
 ```
 
 ## Main class
