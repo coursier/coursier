@@ -2,7 +2,7 @@ package coursier.core
 
 import coursier.core.DependencySet.Sets
 
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.IntMap
 import scala.collection.mutable
 
 final class DependencySet private (
@@ -103,11 +103,11 @@ object DependencySet {
 
 
   private object Sets {
-    def empty[T]: Sets[T] = Sets(TreeMap.empty, Map.empty, Map.empty)
+    def empty[T]: Sets[T] = Sets(IntMap.empty, Map.empty, Map.empty)
   }
 
   private final case class Sets[T] private (
-    required: TreeMap[Int, Set[T]],
+    required: IntMap[Set[T]],
     children: Map[T, Set[T]],
     parents: Map[T, T]
   ) {
