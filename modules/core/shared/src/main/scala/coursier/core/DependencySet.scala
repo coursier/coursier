@@ -2,8 +2,7 @@ package coursier.core
 
 import coursier.core.DependencySet.Sets
 
-import scala.collection.immutable.TreeMap
-import scala.collection.mutable
+import scala.collection.immutable.IntMap
 
 final class DependencySet private (
   val set: Set[Dependency],
@@ -54,14 +53,13 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
         val l = m.getOrElse(dep0, Sets.empty[Dependency]).add(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
-        m(dep0) = l
+        m += ((dep0, l))
       }
-      new DependencySet(set ++ dependencies, m.toMap)
+      new DependencySet(set ++ dependencies, m)
     }
 
   def remove(dependencies: Iterable[Dependency]): DependencySet =
@@ -71,8 +69,7 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
         val prev = m.getOrElse(dep0, Sets.empty) // getOrElse useful if we're passed duplicated stuff in dependencies
@@ -86,7 +83,7 @@ final class DependencySet private (
         }
       }
 
-      new DependencySet(set -- dependencies, m.toMap)
+      new DependencySet(set -- dependencies, m)
     }
 
   def setValues(newSet: Set[Dependency]): DependencySet = {
@@ -103,11 +100,11 @@ object DependencySet {
 
 
   private object Sets {
-    def empty[T]: Sets[T] = Sets(TreeMap.empty, Map.empty, Map.empty)
+    def empty[T]: Sets[T] = Sets(IntMap.empty, Map.empty, Map.empty)
   }
 
   private final case class Sets[T] private (
-    required: TreeMap[Int, Set[T]],
+    required: IntMap[Set[T]],
     children: Map[T, Set[T]],
     parents: Map[T, T]
   ) {
