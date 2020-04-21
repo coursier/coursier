@@ -649,7 +649,7 @@ lazy val addBootstrapJarResourceInTests = Seq(
   }.value
 )
 
-lazy val addPathsSources = Seq(
+lazy val addPathsSources = Def.settings(
   addDirectoriesSources,
   unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(Compile).in(paths).value
 )

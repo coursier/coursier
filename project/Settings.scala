@@ -503,19 +503,33 @@ object Settings {
   // This is required to use it from the bootstrap module, whose jar is launched as is (so shouldn't require dependencies).
   // This is done for the other use of it too, from the cache module, not to have to manage two ways of depending on it.
   lazy val addDirectoriesSources = {
-    unmanagedSourceDirectories.in(Compile) += {
-      val baseDir = baseDirectory.in(LocalRootProject).value
-      val directoriesDir = baseDir / "modules" / "directories" / "src" / "main" / "java"
-      if (!directoriesDir.exists())
+
+    def ensureDirectoriesInitialized(baseDir: File): File = {
+      val directoriesDir = baseDir / "modules" / "directories"
+      val srcDir = directoriesDir / "src"
+      if (!srcDir.exists())
         gitLock.synchronized {
-          if (!directoriesDir.exists()) {
+          if (!srcDir.exists()) {
             val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/directories")
             runCommand(cmd, baseDir)
           }
         }
-
+      assert(srcDir.exists(), s"$srcDir not found after submodule init")
       directoriesDir
     }
+
+    Def.settings(
+      unmanagedSourceDirectories.in(Compile) += {
+        val baseDir = baseDirectory.in(LocalRootProject).value
+        val directoriesDir = ensureDirectoriesInitialized(baseDir)
+        directoriesDir / "src" / "main" / "java"
+      },
+      unmanagedResourceDirectories.in(Compile) += {
+        val baseDir = baseDirectory.in(LocalRootProject).value
+        val directoriesDir = ensureDirectoriesInitialized(baseDir)
+        directoriesDir / "src" / "main" / "resources"
+      }
+    )
   }
 
   lazy val addWindowsAnsiPsSources = {
