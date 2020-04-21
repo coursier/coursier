@@ -27,7 +27,6 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     params: BootstrapParams,
     pool: ExecutorService,
     dependencyArgs: Seq[String],
-    userArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
   ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)], String)] =
@@ -179,13 +178,13 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
       val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
       val channels = initialParams.sharedLaunch.resolve.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
       val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
-      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
+      val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
       res
     }
 
@@ -204,8 +203,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val t = task(
       params,
       pool,
-      deps,
-      Nil
+      deps
     )
 
     val (res, scalaVersion, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
@@ -229,7 +227,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var wroteBat = false
 
     val javaOptions =
-      if (params.specific.assembly)
+      if (params.specific.assembly || params.specific.manifestJar)
         params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
       else
         params.specific.javaOptions
@@ -277,20 +275,20 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         val graalvmVersion = params.specific.graalvmVersionOpt.getOrElse("latest.release")
 
-        val javaHomeTask = for {
-          baseHandle <- JvmCache.default
-          handle = baseHandle.withCache(
+        val handle = JvmCache()
+          .withCache(
             params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger())
           )
-          home <- handle.get(s"graalvm:$graalvmVersion")
-        } yield home
+          .withDefaultIndex
+        val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
         val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)
           .withJars(files.map(_._2))
           .withGraalvmVersion(params.specific.graalvmVersionOpt)
           .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
-          .withGraalvmOptions(params.specific.graalvmOptions)
+          .withGraalvmOptions(params.specific.graalvmOptions ++ args.unparsed)
+          .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
           .withJavaHome(javaHome)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
       } else {
@@ -305,6 +303,17 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             .withFiles(files.map(_._2))
             .withMainClass(mainClass)
             .withRules(params.specific.assemblyRules)
+            .withPreambleOpt(
+              if (params.specific.withPreamble)
+                Some(
+                  coursier.launcher.Preamble()
+                    .withJavaOpts(javaOptions)
+                )
+              else
+                None
+            )
+        else if (params.specific.manifestJar)
+          Parameters.ManifestJar(files.map(_._2), mainClass)
             .withPreambleOpt(
               if (params.specific.withPreamble)
                 Some(
@@ -329,7 +338,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             params.sharedLaunch.artifact.artifactTypes,
             scalaVersion,
             platformOpt,
-            params.sharedLaunch.resolve.classpathOrder
+            params.sharedLaunch.resolve.classpathOrder.getOrElse(true),
           )
 
           val main = {
@@ -341,11 +350,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             case (name, artifacts) =>
               val artifactFiles0 = artifacts.map(a => (a, artifactFiles.getOrElse(a, sys.error("should not happen"))))
               classloaderContent(params.specific.bootstrapPackaging, artifactFiles0)
-                .copy(loaderName = name)
+                .withLoaderName(name)
           }
 
           Parameters.Bootstrap(content, mainClass)
-            .withJavaOpts(javaOptions)
             .withJavaProperties(params.sharedLaunch.properties)
             .withDeterministic(params.specific.deterministicOutput)
             .withPreambleOpt(

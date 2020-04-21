@@ -81,7 +81,7 @@ object JvmCacheTests extends TestSuite {
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
             .withDefaultVersionOpt(None)
-            .withIndex(index)
+            .withIndex(Task.point(index))
 
           val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
           val javaExec = new File(home, "bin/java")
@@ -100,7 +100,7 @@ object JvmCacheTests extends TestSuite {
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
             .withDefaultVersionOpt(None)
-            .withIndex(index)
+            .withIndex(Task.point(index))
 
           val home = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
           val javaExec = new File(home, "bin/java")
@@ -119,7 +119,7 @@ object JvmCacheTests extends TestSuite {
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
             .withDefaultVersionOpt(None)
-            .withIndex(index)
+            .withIndex(Task.point(index))
 
           val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
           assert(home.getName == "Home")

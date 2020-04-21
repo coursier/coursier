@@ -241,6 +241,7 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     pureJava,
     dontPublish,
     addPathsSources,
+    addWindowsAnsiPsSources,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.Launcher"),
     proguardedBootstrap("coursier.bootstrap.launcher.Launcher", resourceBased = false)
   )
@@ -263,6 +264,7 @@ lazy val launcher = project("launcher")
     coursierPrefix,
     addBootstrapJarAsResource,
     generatePropertyFile("coursier/launcher"),
+    crossScalaVersions += "2.11.12",
     libs += Deps.dataClass % Provided
   )
 
@@ -351,10 +353,12 @@ lazy val cli = project("cli")
           Deps.argonautShapeless,
           Deps.caseApp,
           Deps.catsCore,
+          Deps.dataClass % Provided,
           Deps.monadlessCats,
           Deps.monadlessStdlib,
           Deps.junit % Test, // to be able to run tests with pants
-          Deps.scalatest % Test
+          Deps.scalatest % Test,
+          Deps.scalatestJunit % Test
         )
       else
         Seq()

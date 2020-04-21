@@ -8,6 +8,7 @@ import java.util.Locale
 
 import coursier.cache.{Cache, CacheLocks, CacheLogger, FileCache}
 import coursier.cache.internal.ThreadUtil
+import coursier.core.Version
 import coursier.paths.CoursierPaths
 import coursier.util.{Artifact, Task}
 import dataclass.data
@@ -23,12 +24,13 @@ import scala.util.control.NonFatal
   defaultJdkNameOpt: Option[String] = Some(JvmCache.defaultJdkName),
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
   defaultLogger: Option[JvmCacheLogger] = None,
-  index: Option[JvmIndex] = None,
+  index: Option[Task[JvmIndex]] = None,
   maxWaitDuration: Option[Duration] = Some(1.minute),
   durationBetweenChecks: FiniteDuration = 2.seconds,
   scheduledExecutor: Option[ScheduledExecutorService] = Some(JvmCache.defaultScheduledExecutor),
   currentTime: () => Instant = () => Instant.now(),
-  unArchiver: UnArchiver = UnArchiver.default()
+  unArchiver: UnArchiver = UnArchiver.default(),
+  handleLoggerLifecycle: Boolean = true
 ) {
 
   def withDefaultLogger(logger: JvmCacheLogger): JvmCache =
@@ -43,7 +45,7 @@ import scala.util.control.NonFatal
     tmpDir: File
   ) =
     withLockFor(dir) {
-      logger0.extracting(entry.id, entry.url, dir)
+      logger0.extracting(entry.id, archive.getAbsolutePath, dir)
       val dir0 = try {
 
         JvmCache.deleteRecursive(tmpDir)
@@ -51,14 +53,14 @@ import scala.util.control.NonFatal
 
         val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
           case Array() =>
-            throw new Exception(s"$archive is empty (from ${entry.url})")
+            throw new JvmCache.EmptyArchive(archive, entry.url)
           case Array(rootDir0) =>
             if (rootDir0.isDirectory)
               rootDir0
             else
-              throw new Exception(s"$archive does not contain a directory (from ${entry.url})")
+              throw new JvmCache.NoDirectoryFoundInArchive(archive, entry.url)
           case other =>
-            throw new Exception(s"Unexpected content at the root of $archive (from ${entry.url}): ${other.toSeq}")
+            throw new JvmCache.UnexpectedContentInArchive(archive, entry.url, other.map(_.getName).toSeq)
         }
         Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
         JvmCache.deleteRecursive(tmpDir)
@@ -72,12 +74,43 @@ import scala.util.control.NonFatal
       dir0
     }
 
+  private def tryRemove(
+    id: String,
+    dir: File,
+    logger0: JvmCacheLogger
+  ): Option[Boolean] =
+    withLockFor(dir) {
+      // TODO logger0.removing(id, dir)
+      dir.exists() && {
+        try JvmCache.deleteRecursive(dir)
+        catch {
+          case NonFatal(e) =>
+            // TODO logger0.removingFailed(id, dir, e)
+            throw e
+        }
+        // TODO logger0.removed(id, dir)
+        true
+      }
+    }
+
+  def getIfInstalled(id: String): Task[Option[(String, File)]] = {
+    entry(id).flatMap {
+      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+      case Right(entry0) =>
+        val dir = baseDirectoryOf(entry0.id)
+        Task.delay(dir.isDirectory).map {
+          case true => Some((entry0.id, JvmCache.finalDirectory(dir, os)))
+          case false => None
+        }
+    }
+  }
+
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger],
     installIfNeeded: Boolean
   ): Task[File] = {
-    val dir = directory(entry)
+    val dir = baseDirectoryOf(entry.id)
     val tmpDir = tempDirectory(dir)
     val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
 
@@ -87,47 +120,85 @@ import scala.util.control.NonFatal
         Task.delay(dir.isDirectory).flatMap {
           case true => Task.point(dir)
           case false =>
-            cache.file(Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))).run.flatMap {
-              case Left(err) => Task.fail(err)
-              case Right(archive) =>
-                val tryExtract0 = Task.delay {
-                  tryExtract(
-                    entry,
-                    dir,
-                    logger0,
-                    archive,
-                    tmpDir
-                  )
-                }
+            if (installIfNeeded) {
+              val maybeArchiveTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+                cache.file(Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))).run
+              }
+              maybeArchiveTask.flatMap {
+                case Left(err) => Task.fail(err)
+                case Right(archive) =>
+                  val tryExtract0 = Task.delay {
+                    tryExtract(
+                      entry,
+                      dir,
+                      logger0,
+                      archive,
+                      tmpDir
+                    )
+                  }
 
-                tryExtract0.flatMap {
-                  case Some(dir) => Task.point(dir)
-                  case None =>
-                    (maxWaitDuration, scheduledExecutor) match {
-                      case (Some(max), Some(executor)) =>
+                  tryExtract0.flatMap {
+                    case Some(dir) => Task.point(dir)
+                    case None =>
+                      (maxWaitDuration, scheduledExecutor) match {
+                        case (Some(max), Some(executor)) =>
 
-                        val shouldTryAgainTask = Task.delay {
-                          val now = currentTime()
-                          val elapsedMs = now.toEpochMilli - initialAttempt.toEpochMilli
-                          elapsedMs < max.toMillis
-                        }
+                          val shouldTryAgainTask = Task.delay {
+                            val now = currentTime()
+                            val elapsedMs = now.toEpochMilli - initialAttempt.toEpochMilli
+                            elapsedMs < max.toMillis
+                          }
 
-                        shouldTryAgainTask.flatMap {
-                          case false =>
-                            Task.fail(new Exception(s"Directory $dir still locked after $max"))
-                          case true =>
-                            Task.completeAfter(executor, durationBetweenChecks)
-                              .flatMap { _ => task }
-                        }
+                          shouldTryAgainTask.flatMap {
+                            case false =>
+                              Task.fail(new JvmCache.TimeoutOnLockedDirectory(dir, max))
+                            case true =>
+                              Task.completeAfter(executor, durationBetweenChecks)
+                                .flatMap { _ => task }
+                          }
 
-                      case _ =>
-                        Task.fail(new Exception(s"Directory $dir is locked"))
-                    }
-                }
-            }
+                        case _ =>
+                          Task.fail(new JvmCache.LockedDirectory(dir))
+                      }
+                  }
+              }
+            } else
+              Task.fail(new JvmCache.JvmNotFound(entry.id, dir))
         }
 
         task.map(JvmCache.finalDirectory(_, os))
+    }
+  }
+
+  def entry(id: String): Task[Either[String, JvmIndexEntry]] =
+    JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+      case None =>
+        Task.fail(new JvmCache.MalformedJvmId(id))
+      case Some((name, ver)) =>
+        index match {
+          case None => Task.fail(new JvmCache.NoIndexSpecified)
+          case Some(indexTask) =>
+            indexTask.flatMap { index0 =>
+              Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
+            }
+        }
+    }
+
+  def delete(id: String): Task[Option[Boolean]] =
+    delete(id, None)
+
+  def delete(
+    id: String,
+    logger: Option[JvmCacheLogger]
+  ): Task[Option[Boolean]] = {
+    val dir = baseDirectoryOf(id)
+    val logger0 = logger.orElse(defaultLogger).getOrElse(JvmCacheLogger.nop)
+
+    Task.delay(dir.isDirectory).flatMap {
+      case true =>
+        Task.delay(tryRemove(id, dir, logger0))
+      case false =>
+        Task.point(Some(false))
     }
   }
 
@@ -143,20 +214,32 @@ import scala.util.control.NonFatal
     get(entry, None, installIfNeeded = true)
 
   def get(id: String): Task[File] =
-    index match {
-      case None => Task.fail(new Exception("No index specified"))
-      case Some(index0) =>
-        JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
-          case None =>
-            Task.fail(new Exception(s"Malformed JVM id '$id'"))
-          case Some((name, ver)) =>
-            index0.lookup(name, ver, Some(os), Some(architecture)) match {
-              case Left(err) => Task.fail(new Exception(err))
-              case Right(entry) =>
-                get(entry)
-            }
-        }
+    get(id, installIfNeeded = true)
+  def get(id: String, installIfNeeded: Boolean): Task[File] =
+    entry(id).flatMap {
+      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+      case Right(entry0) => get(entry0, None, installIfNeeded)
     }
+
+  def idOf(javaHome: File): Option[String] = {
+
+    val javaHomeRoot =
+      if (os == "darwin")
+        Option(javaHome.getParentFile)
+          .flatMap(f => Option(f.getParentFile))
+          .getOrElse(javaHome)
+      else
+        javaHome
+
+    val isManaged = Option(javaHomeRoot.getParentFile)
+      .exists(_.toPath.normalize.toAbsolutePath == baseDirectory.toPath.normalize.toAbsolutePath)
+
+    if (isManaged)
+      Some(javaHomeRoot.getName)
+    else
+      None
+  }
+
 
   private def withLockFor[T](dir: File)(f: => T): Option[T] =
     CacheLocks.withLockOr(baseDirectory, dir)(Some(f), Some(None))
@@ -174,38 +257,52 @@ import scala.util.control.NonFatal
     directory(entry.id)
   }
 
-  def directory(id: String): File = {
+  private def baseDirectoryOf(id: String): File = {
     assert(!id.contains("/"))
     new File(baseDirectory, id)
   }
 
+  def directory(id: String): File =
+    JvmCache.finalDirectory(baseDirectoryOf(id), os)
+
   def installed(): Task[Seq[String]] =
     Task.delay {
-      baseDirectory
-        .listFiles()
+      Option(baseDirectory.listFiles())
+        .map(_.toVector)
+        .getOrElse(Vector.empty)
         .filter { f =>
           !f.getName.startsWith(".") &&
             f.isDirectory
             // TODO Check that a java executable is there too?
         }
         .map(_.getName)
-        .toVector
+        .map { id =>
+          val idx = id.indexOf('@')
+          if (idx < 0)
+            (id, "", Version(""))
+          else
+            (id.take(idx), "@", Version(id.drop(idx + 1)))
+        }
         .sorted
+        .map {
+          case (name, sep, ver) =>
+            name + sep + ver.repr
+        }
     }
 
-  def withIndex(index: JvmIndex): JvmCache =
+  def withIndex(index: Task[JvmIndex]): JvmCache =
     withIndex(Some(index))
 
-  def loadDefaultIndex: Task[JvmCache] =
-    JvmIndex.load(cache)
-      .map(withIndex(_))
+  def withDefaultIndex: JvmCache = {
+    val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+      JvmIndex.load(cache)
+    }
+    withIndex(indexTask)
+  }
 
 }
 
 object JvmCache {
-
-  def default: Task[JvmCache] =
-    JvmCache().loadDefaultIndex
 
   def defaultBaseDirectory: File =
     defaultBaseDirectory0
@@ -271,24 +368,42 @@ object JvmCache {
   }
 
 
-  private lazy val defaultBaseDirectory0: File = {
-
-    val fromProps = Option(System.getProperty("coursier.jvm-dir")).map(new File(_))
-    def fromEnv = Option(System.getenv("COURSIER_JVM_DIR")).map(new File(_))
-    def default = {
-      val dataDir = CoursierPaths.dataLocalDirectory()
-      new File(dataDir, "jvm")
-    }
-
-    fromProps
-      .orElse(fromEnv)
-      .getOrElse(default)
-  }
+  private lazy val defaultBaseDirectory0: File =
+    CoursierPaths.jvmCacheDirectory()
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
       f.listFiles().foreach(deleteRecursive)
     f.delete()
   }
+
+  sealed abstract class JvmCacheException(message: String, parent: Throwable = null)
+    extends Exception(message, parent)
+
+  final class EmptyArchive(val archive: File, val archiveUrl: String)
+    extends JvmCacheException(s"$archive is empty (from $archiveUrl)")
+  final class NoDirectoryFoundInArchive(val archive: File, val archiveUrl: String)
+    extends JvmCacheException(s"$archive does not contain a directory (from $archiveUrl)")
+
+  final class UnexpectedContentInArchive(val archive: File, val archiveUrl: String, val rootFileNames: Seq[String])
+    extends JvmCacheException(s"Unexpected content at the root of $archive (from $archiveUrl): ${rootFileNames.mkString(", ")}")
+
+  final class TimeoutOnLockedDirectory(val directory: File, val timeout: Duration)
+    extends JvmCacheException(s"Directory $directory is locked")
+
+  final class LockedDirectory(val directory: File)
+    extends JvmCacheException(s"Directory $directory is locked")
+
+  final class JvmNotFound(val id: String, val expectedLocation: File)
+    extends JvmCacheException(s"JVM $id not found at $expectedLocation")
+
+  final class NoIndexSpecified
+    extends JvmCacheException("No index specified")
+
+  final class MalformedJvmId(val id: String)
+    extends JvmCacheException(s"Malformed JVM id '$id'")
+
+  final class JvmNotFoundInIndex(val id: String, val reason: String)
+    extends JvmCacheException(s"JVM $id not found in index: $reason")
 
 }

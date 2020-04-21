@@ -1,9 +1,11 @@
 package coursier.install
 
+import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
 
 import coursier.core.Module
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
+import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
   def repr: String
@@ -11,14 +13,19 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  final case class FromModule(module: Module) extends Channel {
+  @data class FromModule(module: Module) extends Channel {
     def repr: String =
       module.repr
   }
 
-  final case class FromUrl(url: String) extends Channel {
+  @data class FromUrl(url: String) extends Channel {
     def repr: String =
       url
+  }
+
+  @data class FromDirectory(path: Path) extends Channel {
+    def repr: String =
+      path.toString
   }
 
   def module(module: Module): FromModule =
@@ -55,6 +62,9 @@ object Channel {
   }
 
   def parse(s: String): Either[String, Channel] =
+    parse(s, FileSystems.getDefault)
+
+  def parse(s: String, fs: FileSystem): Either[String, Channel] =
     if (s.contains("://"))
       Right(Channel.url(s))
     else if ((s.startsWith("gh:") || s.startsWith("github:")) && s.contains("/")) {
@@ -86,10 +96,12 @@ object Channel {
           val url = ghUrl(org, name, branch, path0)
           FromUrl(url)
       }
-    } else
+    } else if (s.contains(":"))
       ModuleParser.javaOrScalaModule(s).flatMap {
         case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
         case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
       }
+    else
+      Right(FromDirectory(fs.getPath(s).toAbsolutePath))
 
 }

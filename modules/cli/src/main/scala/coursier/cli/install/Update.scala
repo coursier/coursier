@@ -29,11 +29,14 @@ object Update extends CaseApp[UpdateOptions] {
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
-    val installDir =
-      InstallDir(params.shared.dir, cache)
-        .withGraalvmParamsOpt(params.shared.graalvmParamsOpt)
-        .withCoursierRepositories(params.shared.repositories)
+    val graalvmHome = { version: String =>
+      params.sharedJava.javaHome(cache, params.output.verbosity)
+        .get(s"graalvm:$version")
+    }
+
+    val installDir = params.shared.installDir(cache)
         .withVerbosity(params.output.verbosity)
+        .withNativeImageJavaHome(Some(graalvmHome))
 
     val tasks = names.map { name =>
       installDir.maybeUpdate(
@@ -44,10 +47,13 @@ object Update extends CaseApp[UpdateOptions] {
         now,
         params.force
       ).map {
-        case true =>
+        case None =>
+          if (params.output.verbosity >= 0)
+            System.err.println(s"Could not update $name (concurrent operation ongoing)")
+        case Some(true) =>
           if (params.output.verbosity >= 0)
             System.err.println(s"Updated $name")
-        case false =>
+        case Some(false) =>
       }
     }
 
@@ -55,6 +61,14 @@ object Update extends CaseApp[UpdateOptions] {
       for (_ <- acc; _ <- t) yield ()
     }
 
-    task.unsafeRun()(cache.ec)
+    try task.unsafeRun()(cache.ec)
+    catch {
+      case e: InstallDir.InstallDirException =>
+        System.err.println(e.getMessage)
+        if (params.output.verbosity >= 2)
+          throw e
+        else
+          sys.exit(1)
+    }
   }
 }

@@ -12,7 +12,7 @@ import dataclass.data
   // https://docs.microsoft.com/fr-fr/dotnet/api/system.environment.setenvironmentvariable?view=netframework-4.8#System_Environment_SetEnvironmentVariable_System_String_System_String_System_EnvironmentVariableTarget_
 
   private def getEnvironmentVariable(name: String): Option[String] = {
-    val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name))
+    val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name)).stripSuffix(System.lineSeparator())
     if (output == "null") // if ever the actual value is "null", we'll miss it
       None
     else
@@ -21,6 +21,9 @@ import dataclass.data
 
   private def setEnvironmentVariable(name: String, value: String): Unit =
     powershellRunner.runScript(WindowsEnvVarUpdater.setEnvVarScript(name, value))
+
+  private def clearEnvironmentVariable(name: String): Unit =
+    powershellRunner.runScript(WindowsEnvVarUpdater.clearEnvVarScript(name))
 
   def applyUpdate(update: EnvironmentUpdate): Boolean = {
 
@@ -51,6 +54,38 @@ import dataclass.data
     setSomething
   }
 
+  def tryRevertUpdate(update: EnvironmentUpdate): Boolean = {
+
+    // Beware, these are not an atomic operation overall
+    // (we might discard values added by others between our get and our set)
+
+    var setSomething = false
+
+    for ((k, v) <- update.set) {
+      val formerValueOpt = getEnvironmentVariable(k)
+      val wasUpdated = formerValueOpt.exists(_ == v)
+      if (wasUpdated) {
+        clearEnvironmentVariable(k)
+        setSomething = true
+      }
+    }
+
+    for ((k, v) <- update.pathLikeAppends; formerValue <- getEnvironmentVariable(k)) {
+      val parts = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator)
+      val isInList = parts.contains(v)
+      if (isInList) {
+        val newValue = parts.filter(_ != v)
+        if (newValue.isEmpty)
+          clearEnvironmentVariable(k)
+        else
+          setEnvironmentVariable(k, newValue.mkString(WindowsEnvVarUpdater.windowsPathSeparator))
+        setSomething = true
+      }
+    }
+
+    setSomething
+  }
+
 }
 
 object WindowsEnvVarUpdater {
@@ -61,6 +96,10 @@ object WindowsEnvVarUpdater {
   private def setEnvVarScript(name: String, value: String): String =
     // FIXME value might need some escaping here
     s"""[Environment]::SetEnvironmentVariable("$name", "$value", "User")
+       |""".stripMargin
+  private def clearEnvVarScript(name: String): String =
+    // FIXME value might need some escaping here
+    s"""[Environment]::SetEnvironmentVariable("$name", $$null, "User")
        |""".stripMargin
 
   private def windowsPathSeparator: String =

@@ -28,6 +28,10 @@ object SharedChannelParams {
       if (options.defaultChannels) Channels.defaultChannels
       else Nil
 
+    val contribChannels =
+      if (options.contrib) Channels.contribChannels
+      else Nil
+
     val fileChannelsV =
       if (options.fileChannels) {
         val configDir = coursier.paths.CoursierPaths.configDirectory()
@@ -51,7 +55,7 @@ object SharedChannelParams {
     (channelsV, fileChannelsV).mapN {
       (channels, fileChannels) =>
         SharedChannelParams(
-          (channels ++ fileChannels ++ defaultChannels).distinct
+          (channels ++ fileChannels ++ defaultChannels ++ contribChannels).distinct
         )
     }
   }

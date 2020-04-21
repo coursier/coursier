@@ -9,6 +9,8 @@ import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import dataclass._
+import coursier.core.Parse
+import coursier.core.Latest
 
 @data class AppDescriptor(
   repositories: Seq[Repository] = Nil,
@@ -126,7 +128,7 @@ import dataclass._
     cache: Cache[Task],
     platformOpt: Option[Platform],
     verbosity: Int
-  ): Either[String, (String, Option[String], Seq[Dependency])] = {
+  ): Either[AppArtifacts.AppArtifactsException, (String, Option[String], Seq[Dependency])] = {
 
     val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
 
@@ -142,7 +144,11 @@ import dataclass._
       val platformOpt0 = platformOpt.filter(_ => hasPlatformDeps)
       if (onlyJavaDeps)
         Right((scala.util.Properties.versionNumberString, None)) // shouldn't matter… pass an invalid - unused at the end - version instead?
-      else
+      else {
+       def scalaDeps = dependencies.collect {
+         case s: JavaOrScalaDependency.ScalaDependency =>
+           s
+       }
         platformOpt0 match {
           case Some(platform) =>
             AppDescriptor.dependenciesMaxScalaVersionAndPlatform(
@@ -152,7 +158,8 @@ import dataclass._
               constraintOpt,
               verbosity,
               platform
-            ).map { case (v, p) => (v, Some(platform.suffix(p))) }.toRight("No scala version found")
+            ).map { case (v, p) => (v, Some(platform.suffix(p))) }
+              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
             AppDescriptor.dependenciesMaxScalaVersion(
               cache,
@@ -160,8 +167,10 @@ import dataclass._
               dependencies,
               constraintOpt,
               verbosity
-            ).map(v => (v, None)).toRight("No scala version found")
+            ).map(v => (v, None))
+              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
         }
+      }
     }
 
     t.map {
@@ -175,10 +184,10 @@ import dataclass._
   }
 
   // TODO Change return type to Task[Option[String]] (and don't call unsafeRun via Resolve.run())
-  def retainedMainVersion(
+  def candidateMainVersions(
     cache: Cache[Task],
     verbosity: Int
-  ): Option[String] = {
+  ): Iterator[String] = {
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
@@ -195,24 +204,48 @@ import dataclass._
       case Right(t) => t
     }
 
-    val hasFullCrossVersionDeps = dependencies.exists {
-      case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
-      case _ => false
+    if (deps.isEmpty)
+      Iterator.empty
+    else {
+
+      def versions() = coursier.Versions()
+        .withModule(deps.head.module)
+        .withRepositories(repositories)
+        .withCache(cache)
+        .result()
+        .unsafeRun()(cache.ec)
+        .versions
+
+      Latest(deps.head.version) match {
+        case Some(kind) =>
+          versions().candidates(kind)
+        case None =>
+          val c = Parse.versionConstraint(deps.head.version)
+          if (c.preferred.isEmpty)
+            versions().candidatesInInterval(c.interval)
+          else {
+            val hasFullCrossVersionDeps = dependencies.exists {
+              case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
+              case _ => false
+            }
+
+            val resolutionParams = ResolutionParams()
+              .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+
+            val res = coursier.Resolve()
+              .withDependencies(deps.take(1).map(_.withTransitive(false)))
+              .withRepositories(repositories)
+              .withResolutionParams(resolutionParams)
+              .withCache(cache)
+              .run()
+
+            res.retainedVersions.get(deps.head.module)
+              .flatMap(v => res.projectCache.get((deps.head.module, v)))
+              .map(_._2.version)
+              .iterator
+          }
+      }
     }
-
-    val resolutionParams = ResolutionParams()
-      .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
-
-    val res = coursier.Resolve()
-      .withDependencies(deps.take(1).map(_.withTransitive(false)))
-      .withRepositories(repositories)
-      .withResolutionParams(resolutionParams)
-      .withCache(cache)
-      .run()
-
-    res.retainedVersions.get(deps.head.module)
-      .flatMap(v => res.projectCache.get((deps.head.module, v)))
-      .map(_._2.version)
   }
 
   // Adds the final version of the first dependency in the java properties
@@ -255,6 +288,7 @@ import dataclass._
 object AppDescriptor {
 
   @data class GraalvmOptions(
+    version: Option[String] = None,
     options: Seq[String] = Nil
   )
 

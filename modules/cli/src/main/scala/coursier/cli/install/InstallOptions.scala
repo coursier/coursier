@@ -1,14 +1,10 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.options.{CacheOptions, OutputOptions}
+import coursier.cli.jvm.SharedJavaOptions
+import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions}
 
 final case class InstallOptions(
-
-  @Help("Repository - for multiple repositories, separate with comma and/or add this option multiple times (e.g. -r central,ivy2local -r sonatype:snapshots, or equivalently -r central,ivy2local,sonatype:snapshots)")
-  @Value("maven|sonatype:$repo|ivy2local|bintray:$org/$repo|bintray-ivy:$org/$repo|typesafe:ivy-$repo|typesafe:$repo|sbt-plugin:$repo|ivy:$pattern")
-  @Short("r")
-    repository: List[String] = Nil,
 
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
@@ -21,6 +17,12 @@ final case class InstallOptions(
 
   @Recurse
     sharedChannelOptions: SharedChannelOptions = SharedChannelOptions(),
+
+  @Recurse
+    sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
+
+  @Recurse
+    envOptions: EnvOptions = EnvOptions(),
 
   addChannel: List[String] = Nil,
 

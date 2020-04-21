@@ -8,9 +8,6 @@ set ERROR_CODE=0
 @REM set local scope for the variables with windows NT shell
 if "%OS%"=="Windows_NT" @setlocal
 
-@REM ==== START VALIDATION ====
-if not "%JAVA_HOME%" == "" goto OkJHome
-
 @REM Decide how to startup depending on the version of windows
 
 @REM -- Win98ME

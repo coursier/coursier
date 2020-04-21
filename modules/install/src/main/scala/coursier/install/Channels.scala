@@ -2,6 +2,7 @@ package coursier.install
 
 import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
@@ -42,7 +43,7 @@ import dataclass._
       (channel, _, descRepr) = t0
 
       _ = if (verbosity >= 1)
-        System.err.println(s"Found app $actualId in channel $channel")
+        System.err.println(s"Found app $actualId in channel ${channel.repr}")
 
       strRepr = new String(descRepr, StandardCharsets.UTF_8)
 
@@ -146,6 +147,34 @@ import dataclass._
       }
     }
 
+    def fromDirectory(channel: Channel.FromDirectory): Task[Option[(Channel, String, Array[Byte])]] = {
+
+      val f = channel.path.resolve(s"$id.json")
+
+      for {
+        contentOpt <- Task.delay {
+          if (Files.isRegularFile(f)) {
+            val b = Files.readAllBytes(f)
+            Some(new String(b, StandardCharsets.UTF_8))
+          } else
+            None
+        }
+        objOpt <- Task.fromEither {
+          contentOpt match {
+            case None => Right(None)
+            case Some(content) =>
+              Parse.decodeEither(content)(decodeObj)
+                .left.map(err => new Exception(s"Error decoding $f: $err"))
+                .map(Some(_))
+          }
+        }
+      } yield {
+        objOpt.map { obj =>
+          (channel, f.toString, encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8))
+        }
+      }
+    }
+
     channels
       .toStream
       .map {
@@ -153,6 +182,8 @@ import dataclass._
           fromModule(m)
         case u: Channel.FromUrl =>
           fromUrl(u)
+        case d: Channel.FromDirectory =>
+          fromDirectory(d)
       }
       .foldLeft(Task.point(Option.empty[(Channel, String, Array[Byte])])) { (acc, elem) =>
         acc.flatMap {
@@ -172,8 +203,17 @@ object Channels {
       Channel.module(mod"io.get-coursier:apps")
     )
 
+  private lazy val contribChannels0 =
+    // TODO Allow to customize that via env vars / Java properties
+    Seq(
+      Channel.module(mod"io.get-coursier:apps-contrib")
+    )
+
   def defaultChannels: Seq[Channel] =
     defaultChannels0
+  def contribChannels: Seq[Channel] =
+    contribChannels0
+
 
   private def repositoriesRepr(repositories: Seq[Repository]): Seq[String] =
     repositories.toList.flatMap {

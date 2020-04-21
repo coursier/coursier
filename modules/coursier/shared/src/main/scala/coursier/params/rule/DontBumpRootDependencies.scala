@@ -4,8 +4,9 @@ import coursier.core.{Dependency, Module, Parse, Resolution, Version}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
+import dataclass.data
 
-final case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
+@data class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
 
   import DontBumpRootDependencies._
 

@@ -46,7 +46,9 @@ class Util {
     }
 
     // http://stackoverflow.com/questions/872272/how-to-reference-another-property-in-java-util-properties/27724276#27724276
-    static Map<String,String> loadPropertiesMap(InputStream s) throws IOException {
+    static Map<String,String> loadPropertiesMap(
+        Properties systemProperties,
+        InputStream s) throws IOException {
         final Map<String, String> ordered = new LinkedHashMap<>();
         //Hack to use properties class to parse but our map for preserved order
         Properties bp = new Properties() {
@@ -58,7 +60,7 @@ class Util {
         };
         bp.load(s);
 
-        return coursier.paths.Util.expandProperties(ordered);
+        return coursier.paths.Util.expandProperties(systemProperties, ordered);
     }
 
     static String mainJarPath() throws URISyntaxException {

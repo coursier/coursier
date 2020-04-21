@@ -5,7 +5,7 @@ import java.util.Locale
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.{Cache, FileCache}
-import coursier.core.{Parse, Version}
+import coursier.core.{Latest, Parse, Version}
 import coursier.util.{Artifact, Task}
 import dataclass.data
 
@@ -43,17 +43,19 @@ object JvmIndex {
         case (os, m1) =>
           os -> m1.map {
             case (arch, m2) =>
-              arch -> m2.map {
+              arch -> m2.flatMap {
                 case (jdkName @ "jdk@graalvm", m3) =>
-                  jdkName -> m3.map {
+                  val jdk8 = jdkName -> m3.map {
                     case (version, url) =>
                       version -> url.replaceAllLiterally("-java11-", "-java8-")
                   }
-                case (jdkName, m3) =>
-                  jdkName -> m3.map {
-                    case (version, url) =>
-                      version -> url
+                  val jdk11 = s"$jdkName-java11" -> m3.collect {
+                    case (version, url) if url.contains("-java8-") || url.contains("-java11-") =>
+                      version -> url.replaceAllLiterally("-java8-", "-java11-")
                   }
+                  Seq(jdk8, jdk11).filter(_._2.nonEmpty)
+                case (jdkName, m3) =>
+                  Seq(jdkName -> m3)
               }
           }
       }
@@ -121,25 +123,35 @@ object JvmIndex {
     jdkNamePrefix: Option[String] = Some("jdk@")
   ): Either[String, JvmIndexEntry] = {
 
-    def fromVersionConstraint(versionIndex: Map[String, String]) = {
+    def fromVersionConstraint(versionIndex: Map[String, String]) =
+      Latest(version) match {
+        case Some(_) =>
+          // TODO Filter versions depending on latest kind
+          Right(versionIndex.maxBy { case (v, _) => Version(v) })
+        case None =>
+          val maybeConstraint = Some(Parse.versionConstraint(version))
+            .filter(c => c.isValid && c.preferred.isEmpty)
+            .orElse(
+              Some(Parse.versionConstraint(version + "+"))
+                .filter(c => c.isValid && c.preferred.isEmpty)
+            )
+            .toRight(s"Invalid version constraint '$version'")
 
-      val maybeConstraint = Some(Parse.versionConstraint(version))
-        .filter(_.isValid)
-        .toRight(s"Invalid version constraint '$version'")
+          maybeConstraint.flatMap { c =>
+            assert(c.preferred.isEmpty)
+            val inInterval = versionIndex.filterKeys(s => c.interval.contains(Version(s)))
+            if (inInterval.isEmpty)
+              Left(s"No $name version matching '$version' found")
+            else {
+              val preferredInInterval = inInterval.filterKeys(s => c.preferred.contains(Version(s)))
+              val map =
+                if (preferredInInterval.isEmpty) inInterval
+                else preferredInInterval
+              val retained = map.maxBy { case (v, _) => Version(v) }
+              Right(retained)
+            }
+          }
 
-      maybeConstraint.flatMap { c =>
-        val inInterval = versionIndex.filterKeys(s => c.interval.contains(Version(s)))
-        if (inInterval.isEmpty)
-          Left(s"No $name version matching '$version' found")
-        else {
-          val preferredInInterval = inInterval.filterKeys(s => c.preferred.contains(Version(s)))
-          val map =
-            if (preferredInInterval.isEmpty) inInterval
-            else preferredInInterval
-          val retained = map.maxBy { case (v, _) => Version(v) }
-          Right(retained)
-        }
-      }
     }
 
     for {
@@ -157,4 +169,22 @@ object JvmIndex {
       (archiveType, url) = archiveTypeUrl
     } yield JvmIndexEntry(os, arch, name, retainedVersion, archiveType, url)
   }
+
+  def available(
+    os: Option[String] = None,
+    arch: Option[String] = None,
+    jdkNamePrefix: Option[String] = Some("jdk@")
+  ): Either[String, Map[String, Map[String, String]]] =
+    for {
+      os <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
+      arch <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      osIndex <- content.get(os).toRight(s"No JVM found for OS $os")
+      archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
+    } yield {
+      archIndex.map {
+        case (name, versionMap) =>
+          val name0 = jdkNamePrefix.fold(name)(name.stripPrefix)
+          name0 -> versionMap
+      }
+    }
 }

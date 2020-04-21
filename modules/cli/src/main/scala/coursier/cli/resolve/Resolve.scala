@@ -2,7 +2,7 @@ package coursier.cli.resolve
 
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{Executors, ExecutorService, ThreadFactory}
 
 import caseapp._
 import cats.data.Validated
@@ -27,7 +27,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     * Tries to parse get dependencies via Scala Index lookups.
     */
   def handleScaladexDependencies(
-    params: ResolveParams,
+    params: SharedResolveParams,
     pool: ExecutorService,
     scalaVersion: String
   ): Task[List[Dependency]] =
@@ -102,7 +102,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
 
   private[cli] def depsAndReposOrError(
-    params: ResolveParams,
+    params: SharedResolveParams,
     args: Seq[String],
     cache: Cache[Task]
   ) = {
@@ -139,7 +139,6 @@ object Resolve extends CaseApp[ResolveOptions] {
             params.dependency.platformOpt,
             params.output.verbosity
           )
-          .left.map(err => new Exception(err))
       }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
@@ -192,23 +191,107 @@ object Resolve extends CaseApp[ResolveOptions] {
     }
   }
 
-
-  // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
-  def task(
+  def printTask(
     params: ResolveParams,
     pool: ExecutorService,
     // stdout / stderr not used everywhere (added mostly for testing)
     stdout: PrintStream,
     stderr: PrintStream,
     args: Seq[String],
-    printOutput: Boolean = true,
-    force: Boolean = false
-  ): Task[(Resolution, String, Option[String])] = {
+    benchmark: Int = 0,
+    benchmarkCache: Boolean = false
+  ): Task[Unit] = {
+    val task0 = task(
+      params.shared,
+      pool,
+      stdout,
+      stderr,
+      args,
+      params.forcePrint,
+      benchmark,
+      benchmarkCache
+    )
+
+    val finalTask =
+      params.retry match {
+        case None => task0
+        case Some((period, maxAttempts)) =>
+          // meh
+          val scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactory {
+              val defaultThreadFactory = Executors.defaultThreadFactory()
+              def newThread(r: Runnable) = {
+                val t = defaultThreadFactory.newThread(r)
+                t.setDaemon(true)
+                t.setName("retry-handler")
+                t
+              }
+            }
+          )
+          val delay = Task.completeAfter(scheduler, period)
+          def helper(count: Int): Task[(Resolution, String, Option[String], Option[ResolutionError])] =
+            task0.attempt.flatMap {
+              case Left(e) =>
+                if (count >= maxAttempts) {
+                  val ex = e match {
+                    case _: ResolveException => new ResolveException(s"Resolution still failing after $maxAttempts attempts: ${e.getMessage}", e)
+                    case _ => new Exception(s"Resolution still failing after $maxAttempts attempts", e)
+                  }
+                  Task.fail(ex)
+                } else {
+                  val print = Task.delay {
+                    // TODO Better printing of error (getMessage for relevent types, …)
+                    stderr.println(s"Attempt $count failed: $e")
+                  }
+                  for {
+                    _ <- print
+                    _ <- delay
+                    res <- helper(count + 1)
+                  } yield res
+                }
+              case Right(res) => Task.point(res)
+            }
+          helper(1)
+      }
+
+    finalTask.flatMap {
+      case (res, scalaVersion, platformOpt, errorOpt) =>
+        val outputToStdout = errorOpt.isEmpty || params.forcePrint
+        if (outputToStdout || params.output.verbosity >= 2)
+          Task.delay {
+            Output.printResolutionResult(
+              printResultStdout = outputToStdout,
+              params,
+              scalaVersion,
+              platformOpt,
+              res,
+              stdout,
+              stderr,
+              colors = !RefreshLogger.defaultFallbackMode
+            )
+          }
+        else
+          Task.point(())
+    }
+  }
+
+  // Roughly runs two kinds of side effects under the hood: printing output and asking things to the cache
+  def task(
+    params: SharedResolveParams,
+    pool: ExecutorService,
+    // stdout / stderr not used everywhere (added mostly for testing)
+    stdout: PrintStream,
+    stderr: PrintStream,
+    args: Seq[String],
+    force: Boolean = false,
+    benchmark: Int = 0,
+    benchmarkCache: Boolean = false
+  ): Task[(Resolution, String, Option[String], Option[ResolutionError])] = {
 
     val cache = params.cache.cache(
       pool,
       params.output.logger(),
-      inMemoryCache = params.benchmark != 0 && params.benchmarkCache
+      inMemoryCache = benchmark != 0 && benchmarkCache
     )
 
     val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
@@ -227,15 +310,15 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       Output.printDependencies(params0.output, params0.resolution, deps0, stdout, stderr)
 
-      val (res, _, errors) = unlift {
+      val (res, _, errorOpt) = unlift {
         coursier.Resolve()
           .withDependencies(deps0)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
           .withCache(cache)
           .transformResolution { t =>
-            if (params0.benchmark == 0) t
-            else benchmark(math.abs(params0.benchmark))(t)
+            if (benchmark == 0) t
+            else Resolve.benchmark(math.abs(benchmark))(t)
           }
           .transformFetcher { f =>
             if (params0.output.verbosity >= 2) {
@@ -252,37 +335,21 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(ex: ResolutionError) =>
-              if (force || params0.output.forcePrint)
-                Task.point((ex.resolution, Nil, ex.errors))
+              if (force)
+                Task.point((ex.resolution, Nil, Some(ex)))
               else
                 Task.fail(new ResolveException("Resolution error: " + ex.getMessage, ex))
             case e =>
-              Task.fromEither(e.map { case (r, w) => (r, w, Nil) })
+              Task.fromEither(e.map { case (r, w) => (r, w, None) })
           }
       }
 
       // TODO Print warnings
 
-      val valid = errors.isEmpty
-
-      val outputToStdout = printOutput && (valid || params0.output.forcePrint)
-      if (outputToStdout || params0.output.verbosity >= 2) {
-        Output.printResolutionResult(
-          printResultStdout = outputToStdout,
-          params0,
-          scalaVersion,
-          platformOpt,
-          res,
-          stdout,
-          stderr,
-          colors = !RefreshLogger.defaultFallbackMode
-        )
-      }
-
-      for (err <- errors)
+      for (ex <- errorOpt; err <- ex.errors)
         stderr.println(err.getMessage)
 
-      (res, scalaVersion, platformOpt)
+      (res, scalaVersion, platformOpt, errorOpt)
     }
   }
 
@@ -309,7 +376,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
-            case Left(e) => Task.fail(e)
+            case Left(e) => Task.fail(new Exception(e))
             case Right(res) => Task.point(Right(res))
           }
           .unsafeRun()(channels.cache.ec)
@@ -346,7 +413,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       val channels = initialParams.repositories.channels
       pool = Sync.fixedThreadPool(initialParams.cache.parallel)
       val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val channels0 = Channels(channels, initialRepositories, cache)
+      val channels0 = Channels(channels.channels, initialRepositories, cache)
       val res = handleApps(options, args.all, channels0)(_.addApp(_))
       res
     }
@@ -364,14 +431,25 @@ object Resolve extends CaseApp[ResolveOptions] {
       pool = Sync.fixedThreadPool(params.cache.parallel)
     val ec = ExecutionContext.fromExecutorService(pool)
 
-    val t = task(params, pool, System.out, System.err, deps)
+    val t = printTask(
+      params,
+      pool,
+      System.out,
+      System.err,
+      deps,
+      benchmark = params.benchmark,
+      benchmarkCache = params.benchmarkCache
+    )
 
     t.attempt.unsafeRun()(ec) match {
       case Left(e: ResolveException) if params.output.verbosity <= 1 =>
-        Output.errPrintln(e.message)
+        Output.errPrintln(e.getMessage)
         sys.exit(1)
-      case Left(e) => throw e
-      case Right(_) =>
+      case Left(e: AppArtifacts.AppArtifactsException) if params.output.verbosity <= 1 =>
+        Output.errPrintln(e.getMessage)
+        sys.exit(1)
+      case Left(e) => throw new Exception(e)
+      case Right(()) =>
     }
   }
 

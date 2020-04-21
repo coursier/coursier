@@ -15,6 +15,8 @@ final case class BootstrapSpecificOptions(
     hybrid: Option[Boolean] = None,
   @Help("Generate a GraalVM native image")
     nativeImage: Option[Boolean] = None,
+  @Help("When generating a GraalVM native image, merge the classpath into an assembly prior to passing it to native-image")
+    intermediateAssembly: Boolean = false,
   @Help("GraalVM version to use to generate native images")
   @Short("graalvm")
     graalvmVersion: Option[String] = None,
@@ -31,6 +33,8 @@ final case class BootstrapSpecificOptions(
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
+  @Help("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
+    manifestJar: Option[Boolean] = None,
   @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false else)")
     bat: Option[Boolean] = None,
   @Help("Add assembly rule")

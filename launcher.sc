@@ -1,7 +1,4 @@
 
-import $ivy.`com.softwaremill.sttp.client::core:2.0.0-RC6`
-import $ivy.`com.lihaoyi::ujson:0.9.5`
-
 import $file.scripts.shared.GenerateLauncher
 import $file.scripts.shared.Sign
 import $file.scripts.shared.UploadGhRelease
@@ -25,8 +22,11 @@ private def initialLauncher(
 
   def packLauncher: String = {
     val path = "modules/cli/target/pack/bin/coursier"
+    val sbtPath =
+      if (Util.os == "win") "sbt"
+      else "./sbt"
     if (!Files.exists(Paths.get(path)))
-      Util.run(Seq("sbt", "cli/pack"))
+      Util.run(Seq(sbtPath, "cli/pack"))
     path
   }
 
@@ -51,18 +51,6 @@ private val pgpSecret = Option(System.getenv("PGP_SECRET"))
 
 private val dryRun = false
 
-private def doWaitForSync(
-  initialLauncher: String,
-  version: String
-): Unit =
-  WaitForSync(
-    initialLauncher,
-    s"io.get-coursier::coursier-cli:$version",
-    Seq("--no-default", "-r", "central", "-r", "typesafe:ivy-releases"),
-    "sonatype:public",
-    attempts = 25
-  )
-
 @main
 def uploadJavaLauncher(): Unit = {
 
@@ -74,13 +62,21 @@ def uploadJavaLauncher(): Unit = {
 
   println(version)
 
-  doWaitForSync(initialLauncher0, version)
+  val module = s"io.get-coursier::coursier-cli:$version"
+
+  WaitForSync(
+    initialLauncher0,
+    module,
+    Seq("--no-default", "-r", "central", "-r", "typesafe:ivy-releases"),
+    "sonatype:public",
+    attempts = 25
+  )
 
   val javaLauncher = "./coursier"
 
   GenerateLauncher(
     initialLauncher0,
-    module = s"io.get-coursier::coursier-cli:$version",
+    module = module,
     extraArgs = Seq(
       "--no-default",
       "-r", "central",
@@ -186,25 +182,36 @@ def signDummyFiles(): Unit =
   )
 
 @main
-def uploadNativeImage(): Unit = {
-  val token = if (dryRun) "" else ghToken()
+def generateNativeImage(
+  version: String = Version.latestFromTag,
+  output: String = "./cs",
+  allowIvy2Local: Boolean = true
+): Unit = {
   val initialLauncher0 = initialLauncher(None, None)
-  val dest = "./cs"
-  val version = Version.latestFromTravisTag
   GenerateLauncher.nativeImage(
     initialLauncher0,
     module = s"io.get-coursier::coursier-cli:$version",
-    extraArgs = Seq(
-      "--no-default",
-      "-r", "central",
-      "-r", "typesafe:ivy-releases",
-    ),
-    output = dest,
+    extraArgs =
+      (if (allowIvy2Local) Nil else Seq("--no-default")) ++
+      Seq(
+        "-r", "central",
+        "-r", "typesafe:ivy-releases",
+      ),
+    output = output,
     mainClass = "coursier.cli.Coursier",
     // sometimes getting command-too-long errors when starting native-image
     // with the full classpath, without this
     useAssembly = Util.os == "win"
   )
+}
+
+
+@main
+def uploadNativeImage(): Unit = {
+  val token = if (dryRun) "" else ghToken()
+  val dest = "./cs"
+  val version = Version.latestFromTravisTag
+  generateNativeImage(version, dest, allowIvy2Local = false)
 
   // TODO Check that we are on the right CPU too?
   val platformSuffix = Util.os match {

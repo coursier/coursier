@@ -3,9 +3,8 @@ package coursier.cli.complete
 import caseapp.core.RemainingArgs
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{OutputParams, RepositoryParams}
+import coursier.cli.params.{CacheParams, OutputParams, RepositoryParams}
 import coursier.core.Repository
-import coursier.params.CacheParams
 
 final case class CompleteParams(
   cache: CacheParams,

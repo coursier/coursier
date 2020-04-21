@@ -42,7 +42,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
                 if (remaining.isEmpty)
                   parameters.content.drop(1)
                 else {
-                  val c0 = c.copy(entries = remaining)
+                  val c0 = c.withEntries(remaining)
                   c0 +: parameters.content.drop(1)
                 }
               }
@@ -81,9 +81,14 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     val bootstrapJar =
       FileUtil.readFully {
         val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
-        if (is == null)
-          throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
-        is
+        if (is == null) {
+          val is0 = BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
+          if (is0 == null)
+            throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
+          else
+            is0
+        } else
+          is
       }
 
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
@@ -136,8 +141,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     for ((c, idx) <- content0.zipWithIndex) {
 
       val urls = c.entries.collect {
-        case ClassPathEntry.Url(url) =>
-          url
+        case u: ClassPathEntry.Url =>
+          u.url
       }
       val resources = c.entries.collect {
         case r: ClassPathEntry.Resource =>

@@ -8,11 +8,12 @@ import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
+import dataclass.data
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
-final case class MockCache[F[_]](
+@data class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
   writeMissing: Boolean,

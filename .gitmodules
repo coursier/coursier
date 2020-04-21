@@ -7,3 +7,6 @@
 [submodule "modules/tests/handmade-metadata"]
 	path = modules/tests/handmade-metadata
 	url = https://github.com/coursier/handmade-metadata.git
+[submodule "modules/windows-ansi"]
+	path = modules/windows-ansi
+	url = https://github.com/alexarchambault/windows-ansi.git

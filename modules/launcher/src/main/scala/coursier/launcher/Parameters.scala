@@ -5,6 +5,7 @@ import java.nio.file.{Path, Paths}
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
+import coursier.launcher.internal.Windows
 import dataclass.data
 
 sealed abstract class Parameters extends Product with Serializable {
@@ -35,7 +36,6 @@ object Parameters {
   @data class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
-    javaOpts: Seq[String] = Nil,
     javaProperties: Seq[(String, String)] = Nil,
     bootstrapResourcePathOpt: Option[String] = None,
     deterministic: Boolean = true,
@@ -69,6 +69,16 @@ object Parameters {
         preambleOpt
   }
 
+  @data class ManifestJar(
+    classpath: Seq[File],
+    mainClass: String,
+    preambleOpt: Option[Preamble] = Some(Preamble())
+  ) extends Parameters {
+
+    def withPreamble(preamble: Preamble): ManifestJar =
+      withPreambleOpt(Some(preamble))
+  }
+
   @data class NativeImage(
     mainClass: String,
     fetch: Seq[String] => Seq[File],
@@ -78,7 +88,11 @@ object Parameters {
     graalvmOptions: Seq[String] = Nil,
     javaHome: Option[File] = None, // needs a "JVMCI-enabled JDK" (like GraalVM)
     nameOpt: Option[String] = None,
-    verbosity: Int = 0
+    verbosity: Int = 0,
+    intermediateAssembly: Boolean = false,
+    windowsPathExtensions: Option[Seq[String]] =
+      if (Windows.isWindows) Some(Windows.pathExtensions) else None,
+    isWindows: Boolean = Windows.isWindows
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =
@@ -90,7 +104,7 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
-  @data case class ScalaNative(
+  @data class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
     nativeVersion: String,
@@ -104,7 +118,7 @@ object Parameters {
 
   object ScalaNative {
 
-    @data case class ScalaNativeOptions(
+    @data class ScalaNativeOptions(
       gcOpt: Option[String] = None,
       modeOpt: Option[String] = None,
       linkStubs: Boolean = true,

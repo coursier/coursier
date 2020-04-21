@@ -41,6 +41,8 @@ object SharedRepositoryParser {
       }
     } else if (s == "jitpack")
       Right(Repositories.jitpack)
+    else if (s == "clojars")
+      Right(Repositories.clojars)
     else
       Right(MavenRepository(s))
 

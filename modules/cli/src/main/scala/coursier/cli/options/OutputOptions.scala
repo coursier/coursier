@@ -14,17 +14,9 @@ final case class OutputOptions(
 
   @Help("Force display of progress bars")
   @Short("P")
-    progress: Boolean = false,
+    progress: Boolean = false
 
-  @Help("Force printing / generating results, even if errored")
-  @Short("F")
-    forcePrint: Boolean = false
-
-) {
-
-  val verbosityLevel = Tag.unwrap(verbose) - Tag.unwrap(quiet)
-
-}
+)
 
 object OutputOptions {
   implicit val parser = Parser[OutputOptions]

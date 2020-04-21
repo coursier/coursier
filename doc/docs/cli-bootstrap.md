@@ -2,124 +2,347 @@
 title: bootstrap
 ---
 
-Like the [`fetch` command](cli-fetch.md), `bootstrap` resolves and fetches the
-JARs of one or more dependencies. Like the [`launch` command](cli-launch.md),
-it tries to find a [main class](cli-launch.md#main-class) in those JARs
-(unless `-M` specifies one already). But unlike [`launch`](cli-launch.md), the
-`bootstrap` command doesn't launch this main class straightaway. Instead, it
-generates a (usually tiny) JAR, that can be renamed, copied, moved to another
-machine or OS, and is able to download and launch the corresponding application.
+`bootstrap` creates binary launchers from one or more dependencies.
 
-For example,
 ```bash
-$ coursier bootstrap com.geirsson:scalafmt-cli_2.12:1.5.1 -o scalafmt
+$ cs bootstrap org.scalameta::scalafmt-cli:2.4.2 -o scalafmt
 $ ./scalafmt --version
-scalafmt 1.5.1
+scalafmt 2.4.2
 ```
 
-## bootstrap content
+## Launcher types
 
-The generated bootstraps are tiny Java apps, that upon launch, successively
-- read a list of URLs for one of their resource files,
-- read a main class name from another of their resource files,
-- download the URLs missing from the coursier cache,
-- get all the files corresponding to these URLs from the coursier cache,
-- load those files in a class loader,
-- find the main class by reflection,
-- call the main method of the main class, which actually runs the application.
+### Bootstraps
 
-Overall, this "bootstraps" the application, hence the name.
-
-All of that logic is handled by a small Java application, which currently
-corresponds to the [`bootstrap-launcher` module](https://github.com/coursier/coursier/tree/bf9925778096eb24a3d3018079688d4255499457/modules/bootstrap-launcher)
-of the coursier sources. A bootstrap consists of that module classes,
-along with resource files (for the artifact URLs and main class to load) that
-are specific to each application to launch.
-
-## Java options
-
-The generated bootstraps automatically pass their arguments starting with
-`-J` to Java, stripping the leading `-J`, e.g.
+This is the default. When generating a launcher like
 ```bash
-$ coursier bootstrap com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main -o amm
+$ cs bootstrap scalafmt -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 user  group    26K  apr 8 23:28 scalafmt
+$ ./scalafmt --version
+scalafmt 2.4.2
+```
+the generated `scalafmt` file is a JAR containing a tiny Java application,
+along with a URL list as a resource (the URLs of the JARs of scalafmt, in
+`coursier/bootstrap/launcher/bootstrap-jar-urls`).
+```bash
+$ unzip -c scalafmt coursier/bootstrap/launcher/bootstrap-jar-urls
+https://repo1.maven.org/maven2/com/geirsson/junit-interface/0.11.9/junit-interface-0.11.9.jar
+https://repo1.maven.org/maven2/com/geirsson/metaconfig-core_2.13/0.9.8/metaconfig-core_2.13-0.9.8.jar
+https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.9.8/metaconfig-typesafe-config_2.13-0.9.8.jar
+https://repo1.maven.org/maven2/com/github/scopt/scopt_2.13/3.7.1/scopt_2.13-3.7.1.jar
+…
+```
+It also contains a shell preamble, that basically calls `java -jar $0`, so that
+`scalafmt` is self-executable.
+```bash
+$ head -25 scalafmt
+#!/usr/bin/env sh
+
+…
+set -- "$@" -jar "$0"
+…
+exec java $JAVA_OPTS "$@"
+```
+Running it calls `java` on the script itself,
+which starts the tiny Java application mentioned above. That application
+reads the URL list, and ensures all of these are available in the coursier cache
+(it downloads them if necessary). It then loads them from the coursier cache
+in a `java.net.URLClassLoader`,
+and starts the actual application from it.
+
+### Standalone bootstraps
+
+These are very similar to simple [bootstraps](#bootstraps) above, except
+they are more heavyweight, as they embed all the JARs of the application:
+```
+$ cs bootstrap scalafmt --standalone -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 user  group    35M  apr 8 23:41 scalafmt
+```
+Here, `scalafmt` contains the same tiny Java application as above,
+along with the same shell preamble to make it self-executable.
+Unlike simple bootstraps, it doesn't contain a URL list, but contains
+all the scalafmt JARs as resources, under `coursier/bootstrap/launcher/jars/`:
+```bash
+$ unzip -l scalafmt
+…
+   168411  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-cli_2.13-2.4.2.jar
+  5721063  09-18-2019 08:59   coursier/bootstrap/launcher/jars/scala-library-2.13.1.jar
+  1119106  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-core_2.13-2.4.2.jar
+   136879  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-dynamic_2.13-2.4.2.jar
+…
+```
+It also contains a resource list, in `coursier/bootstrap/launcher/bootstrap-jar-resources`:
+```bash
+$ unzip -c scalafmt coursier/bootstrap/launcher/bootstrap-jar-resources
+common_2.13-4.3.0.jar
+config-1.4.0.jar
+diffutils-1.3.0.jar
+fansi_2.13-0.2.7.jar
+fastparse-utils_2.13-1.0.1.jar
+…
+```
+When running `scalafmt`, instead of loading URLs via the coursier cache,
+the tiny startup Java application loads JARs from this list via its own resources.
+That makes these standalone bootstrap runnable even with no network connection
+and an empty coursier cache. They are more heavyweight, as they embed the full
+class path of the application to start.
+
+Standalone bootstraps are very similar to the JARs generated by [One-JAR](http://one-jar.sourceforge.net).
+
+### Manifest-based launchers
+
+These are even more lightweight than [standard bootstraps](#bootstraps), but
+are only meant to be used by the same user / on the same machine.
+```bash
+$ cs bootstrap scalafmt --manifest-jar -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 alexandre  staff   1,6K  8 avr 23:53 scalafmt
+```
+These are also a JAR, and contain the same shell preamble as standard and standalone
+bootstraps. As a JAR, they contain only one file:
+```bash
+$ unzip -l scalafmt
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     4686  04-08-2020 21:53   META-INF/MANIFEST.MF
+---------                     -------
+     4686                     1 file
+```
+That only file is the JAR manifest. It contains a `Class-Path` field,
+listing the paths to the application JAR in the local coursier cache:
+```bash
+$ unzip -c scalafmt META-INF/MANIFEST.MF
+Manifest-Version: 1.0
+Class-Path: /Users/alexandre/.coursier/cache/v1/https/repo1.maven.org/
+ maven2/org/scalameta/scalafmt-cli_2.13/2.4.2/scalafmt-cli_2.13-2.4.2.
+ jar /Users/alexandre/.coursier/cache/v1/https/repo1.maven.org/maven2/
+ org/scala-lang/scala-library/2.13.1/scala-library-2.13.1.jar /Users/a
+ …
+Main-Class: org.scalafmt.cli.Cli
+```
+Upon start-up, `java` loads the JARs from the `Class-Path` field,
+and starts the main class from `Main-Class`.
+
+### Assemblies
+
+`bootstrap` can generate [assemblies](https://github.com/sbt/sbt-assembly),
+aka "fat" JARs:
+```bash
+$ cs bootstrap scalafmt --assembly -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 user  group    35M  apr 9 00:12 scalafmt
+```
+
+Assemblies merge together the JARs of the application, so that they
+form a single large JAR.
+```bash
+$ unzip -l scalafmt
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+       59  04-08-2020 22:11   META-INF/MANIFEST.MF
+        0  02-23-2020 00:05   org/
+        0  02-23-2020 00:05   org/scalafmt/
+        0  02-23-2020 00:05   org/scalafmt/cli/
+      944  02-23-2020 00:05   org/scalafmt/cli/Cache.class
+     2046  02-23-2020 00:05   org/scalafmt/cli/Terminal.class
+…
+```
+
+`bootstrap` puts the same preamble as [standard bootstraps](#bootstraps) in
+assemblies
+```bash
+$ head -25 scalafmt
+#!/usr/bin/env sh
+
+…
+set -- "$@" -jar "$0"
+…
+exec java $JAVA_OPTS "$@"
+```
+
+Some of the application JARs may contain files with the same path. When merging those
+JARs, these conflicting files have to be either merged, or discarded.
+`bootstrap` has a default set of sensible "rules" handling the most common cases.
+These can be disabled with `--default-assembly-rules=false`.
+Custom rules can be passed with `--assembly-rule`, like
+```bash
+$ cs bootstrap scalafmt --assembly -o scalafmt --assembly-rule exclude:logback.xml
+```
+See `cs bootstrap --help` for the format of the rules accepted by `--assembly-rule`.
+
+### GraalVM native-image
+
+`bootstrap` can generate native executables via
+[GraalVM native image](https://www.graalvm.org/docs/reference-manual/native-image), like
+```bash
+$ cs bootstrap echo-java --native-image -o echo
+$ ls -lh echo
+-rwxr-xr-x  1 user  group   2,8M  apr 9 00:49 echo
+$ ./echo foo
+foo
+```
+
+This command automatically fetches and extracts a GraalVM Community edition archive,
+like the [`java` command of coursier](cli-java.md) does, then uses it to call
+`native-image`.
+
+You can pass an explicit GraalVM version via `--graalvm-version` or `--graalvm`, like
+```bash
+$ cs bootstrap echo-java --native-image --graalvm 19.3 -o echo
+```
+Note that this option accepts short versions. So as of writing this, `19.3` gets automatically
+expanded to `19.3.1`.
+
+You can pass custom options to native-image via `--graalvm-option` or
+`--graalvm-opt`, or after a `--`, like
+```bash
+$ cs bootstrap echo-java --native-image --graalvm 19.3 -o echo \
+    --graalvm-opt --no-fallback \
+    -- \
+      --enable-all-security-services \
+      --initialize-at-build-time
+```
+Note that it can be more convenient to pass arguments
+to native-image via
+[a native-image.properties resource](https://medium.com/graalvm/simplifying-native-image-generation-with-maven-plugin-and-embeddable-configuration-d5b283b92f57#e114)
+rather than on the command-line, if adding it to the original application
+sources is an option for you.
+
+### Scala native
+
+`bootstrap` can generate
+[Scala Native](https://www.scala-native.org)-based native launchers:
+```bash
+$ cs bootstrap echo-native -o echo --native
+[info] Linking (1457 ms)
+[info] Discovered 614 classes and 4200 methods
+[info] Optimizing (debug mode) (2157 ms)
+[info] Generating intermediate code (1657 ms)
+[info] Produced 4 files
+…
+[info] Linking native code (immix gc, none lto) (207 ms)
+[info] Total (13172 ms)
+Wrote …/echo
+$ ls -lh echo
+-rwxr-xr-x  1 user  group   1,6M  apr 9 00:57 echo
+```
+
+Note that this requires coursier to be launched via its [JVM launcher](cli-installation.md#jar-based-launcher).
+Install it with `cs install coursier`, or replace `coursier` in the command above with `cs launch coursier --`, like
+```
+$ cs launch coursier -- bootstrap echo-native -o echo --native
+```
+
+This requires the application you want a launcher for to be cross-compiled to
+Scala Native, and its Scala Native artifacts to be published to Maven or Ivy
+repositories. The [echo](https://github.com/coursier/echo) project of
+coursier has
+[such a module](https://github.com/coursier/echo/tree/master/native),
+published as
+[`io.get-coursier:echo_native0.3_2.11`](https://repo1.maven.org/maven2/io/get-coursier/echo_native0.3_2.11).
+
+In order to generate a launcher for such a published application, you'll need to
+have your environment
+[set up for Scala Native](https://www.scala-native.org/en/v0.3.8/user/setup.html#installing-clang-and-runtime-dependencies).
+
+Linking flags during the linking phase can be adjusted via `LDFLAGS` in the
+environment.
+
+## Notes
+
+### Local artifacts
+
+When generating [standard bootstraps](#bootstraps), some of the JARs
+may come from local repositories, like `~/.ivy2/local`. The URL
+of these is like `file:///home/user/.ivy/local/org/name/0.1/jars/name.jar`.
+Relying on those URLs, which are specific to the current machine / user,
+would make the bootstrap non-portable. To circumvent that, such local artifacts
+are embedded as resources in the bootstraps, like [standalone bootstraps](#standalone-bootstraps)
+do. That makes the generated bootstraps slightly more heavyweight, but also
+more portable. If you wish to disable that behavior, pass `--embed-files=false`
+when generating the bootstrap, like
+```bash
+$ cs bootstrap scalafmt:2.0.5-SNAPSHOT -o scalafmt --embed-files=false
+```
+
+### Preamble
+
+If you wish [standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),
+[assemblies](#assemblies), not to contain a shell preamble, disable the preamble with `--preamble=false`, like
+```
+$ cs bootstrap scalafmt -o scalafmt --preamble=false
+$ ./scalafmt # not self-executable anymore
+zsh: exec format error: ./scalafmt
+$ java -jar scalafmt --version
+scalafmt 2.4.2
+```
+
+### Java options
+
+[Standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),
+and [assemblies](#assemblies), with the default shell preamble,
+automatically pass their arguments starting with
+`-J` to Java, stripping the leading `-J`, like
+```bash
+$ cs bootstrap ammonite -o amm
 $ ./amm -J-Dfoo=bar
 Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 @ sys.props("foo")
 res0: String = "bar"
 ```
 
-Alternatively, one can hard-code Java options when generating the bootstrap,
-by passing `--java-opt` options, like
+Alternatively, one can hard-code Java options when generating these launchers,
+`--java-opt`, like
 ```bash
-$ coursier bootstrap com.lihaoyi:ammonite_2.12.8:1.6.0 -M ammonite.Main -o amm \
+$ cs bootstrap ammonite -o amm \
     --java-opt -Dfoo=bar
 $ ./amm
 Loading...
-Welcome to the Ammonite Repl 1.6.0
-(Scala 2.12.8 Java 1.8.0_121)
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
 @ sys.props("foo")
 res0: String = "bar"
 ```
 
-## Windows
+### Windows
 
-The launchers generated by the `bootstrap` command contain a shell preamble,
-and are made executable, so that even though they are JARs, they can be run
-straightaway on Linux and OS X. On Windows, the `bootstrap` command also
-generates a `.bat` file along with the launcher (simply appending `.bat` to the
-launcher file name). This `.bat` file allows one to run the launcher on Windows
-nonetheless, almost as on Linux / OS X.
-
-To generate this `.bat` file on Linux or OS X (to offer to download it for
-example), pass `--bat` to the bootstrap command, like
-```bash
-$ coursier bootstrap com.geirsson:scalafmt-cli_2.12:1.5.1 -o scalafmt --bat
-$ ls -lh scalafmt*
--rwxr-xr-x  1 user  group    18K  8 jan 15:24 scalafmt
--rw-r--r--  1 user  group   2,0K  8 jan 15:24 scalafmt.bat
+[Standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),
+and [assemblies](#assemblies), generate launchers with a shell preamble.
+These can't be run as-is from the Windows terminal.
+When generating those on Windows, a `.bat` file is automatically generated along
+them, like
+```bat
+> cs bootstrap scalafmt -o scalafmt
+> dir
+…
+scalafmt
+scalafmt.bat
+…
+```
+If both files are present, the launcher can be run directly, like
+```bat
+> scalafmt --version
+scalafmt 2.4.2
 ```
 
-Inversely, to disable generating it on Windows, pass `--bat=false` to the
-`bootstrap` command.
-
-## Standalone bootstraps
-
-Rather than having the launcher download its JARs upon first launch, one may
-prefer to ship those JARs along with the launcher. The `--standalone` option
-allows just that. This options adds the application JARs as resources in the
-launcher. This inflates the launcher size, but that allows it to run without
-relying on the coursier cache or downloading things.
-
-Use like
+If you wish to generate that `.bat` file on Linux or macOS, pass `--bat=true`, like
 ```bash
-$ coursier bootstrap com.geirsson:scalafmt-cli_2.12:1.5.1 -o scalafmt --standalone
-$ ls -lh scalafmt
--rwxr-xr-x  1 alexandre  staff    15M  8 jan 15:31 scalafmt
-$ ./scalafmt --version
-scalafmt 1.5.1
+$ cs bootstrap scalafmt -o scalafmt --bat=true
+Wrote .../scalafmt
+Wrote .../scalafmt.bat
+$ ls -lh
+-rwxr-xr-x    1 user  group    26K  apr 9 00:30 scalafmt
+-rw-r--r--    1 user  group   2,1K  apr 9 00:30 scalafmt.bat
 ```
 
-Standalone bootstraps should be similar to JARs generated by
-[One-JAR](http://one-jar.sourceforge.net). Note that although they ship with
-all their dependencies like so-called [uber JARs](http://maven.apache.org/plugins/maven-shade-plugin/) or [assemblies](https://github.com/sbt/sbt-assembly),
-they differ from them in the sense that:
-- dependencies are still kept separate (each dependency stays in its own JAR, themselves added as JARs to the launcher - these are JARs in JARs), so that no
-conflict has to be resolved,
-- the launchers can't be added as is to a classpath, like standard JARs, or
-assemblies / uber JARs. This prevents using them as is to package spark jobs
-in particular.
-
-## Local artifacts
-
-Some of the JARs of the dependencies passed to the `bootstrap` command may
-correspond to local files (e.g. from the local `~/.ivy2/local` repository)
-rather than files from remote repositories. In that case, these local files
-are going to be included as _resources_, rather than via a URL, in the
-generated launchers. That allows these launchers to be copied to other
-machines, and work fine even without the original local repositories.
-To disable that behavior, pass `--embed-files=false` to the `bootstrap`
-command. Note that this only applies when the `--standalone` option is
-not passed - if it is, JARs are added as resources to the launcher
-nevertheless.
+Inversely, disable generating it on Windows with `--bat=false`.
+```bat
+> cs bootstrap scalafmt -o scalafmt --bat=false
+> dir
+…
+scalafmt
+…
+> scalafmt & :: no bat file, doesn't work anymore
+```

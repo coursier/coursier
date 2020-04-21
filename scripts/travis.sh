@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -evx
 
-setupCoursierBinDir() {
-  mkdir -p bin
-  cp coursier bin/
-  export PATH="$(pwd)/bin:$PATH"
-}
-
 isScalaJs() {
   [ "$SCALA_JS" = 1 ]
 }
@@ -48,6 +42,9 @@ checkBinaryCompatibility() {
 }
 
 testBootstrap() {
+  # check that the launcher module compiles fine
+  sbt "++2.11.12 compile"
+
   scripts/test-bootstrap.sh
 }
 
@@ -59,8 +56,6 @@ testNativeBootstrap() {
     exit 1
   fi
 }
-
-setupCoursierBinDir
 
 if isScalaJs; then
   jsCompile

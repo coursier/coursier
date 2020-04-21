@@ -1,14 +1,16 @@
 package coursier.core
 
-import scala.annotation.tailrec
 import coursier.core.compatibility._
+import dataclass.data
+
+import scala.annotation.tailrec
 
 /**
  *  Used internally by Resolver.
  *
  *  Same kind of ordering as aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
  */
-final case class Version(repr: String) extends Ordered[Version] {
+@data class Version(repr: String) extends Ordered[Version] {
   lazy val items: Vector[Version.Item] = Version.items(repr)
   def compare(other: Version) = Version.listCompare(items, other.items)
   def isEmpty = items.forall(_.isEmpty)
@@ -21,11 +23,11 @@ object Version {
   sealed abstract class Item extends Ordered[Item] {
     def compare(other: Item): Int =
       (this, other) match {
-        case (Number(a), Number(b)) => a.compare(b)
-        case (BigNumber(a), BigNumber(b)) => a.compare(b)
-        case (Number(a), BigNumber(b)) => -b.compare(a)
-        case (BigNumber(a), Number(b)) => a.compare(b)
-        case (a @ Tag(_), b @ Tag(_)) => a.compareTag(b)
+        case (a: Number, b: Number) => a.value.compare(b.value)
+        case (a: BigNumber, b: BigNumber) => a.value.compare(b.value)
+        case (a: Number, b: BigNumber) => -b.value.compare(a.value)
+        case (a: BigNumber, b: Number) => a.value.compare(b.value)
+        case (a: Tag, b: Tag) => a.compareTag(b)
         case _ =>
           val rel0 = compareToEmpty
           val rel1 = other.compareToEmpty
@@ -43,13 +45,13 @@ object Version {
     def repr: String
     def next: Numeric
   }
-  final case class Number(value: Int) extends Numeric {
+  @data class Number(value: Int) extends Numeric {
     val order = 0
     def next: Number = Number(value + 1)
     def repr: String = value.toString
     override def compareToEmpty = value.compare(0)
   }
-  final case class BigNumber(value: BigInt) extends Numeric {
+  @data class BigNumber(value: BigInt) extends Numeric {
     val order = 0
     def next: BigNumber = BigNumber(value + 1)
     def repr: String = value.toString
@@ -59,7 +61,7 @@ object Version {
   /**
    * Tags represent prerelease tags, typically appearing after - for SemVer compatible versions.
    */
-  final case class Tag(value: String) extends Item {
+  @data class Tag(value: String) extends Item {
     val order = -1
     private val otherLevel = -5
     lazy val level: Int =
@@ -82,7 +84,7 @@ object Version {
       else levelComp
     }
   }
-  final case class BuildMetadata(value: String) extends Item {
+  @data class BuildMetadata(value: String) extends Item {
     val order = 1
     override def compareToEmpty = 0
   }

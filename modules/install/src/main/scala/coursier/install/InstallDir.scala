@@ -3,14 +3,16 @@ package coursier.install
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.Instant
 import java.util.Locale
+import java.util.zip.ZipEntry
 
 import coursier.Fetch
 import coursier.cache.{ArtifactError, Cache, FileCache}
 import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
+import coursier.env.EnvironmentUpdate
 import coursier.launcher.{AssemblyGenerator, BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Generator, NativeImageGenerator, Parameters, Preamble, ScalaNativeGenerator}
 import coursier.launcher.internal.FileUtil
 import coursier.launcher.native.NativeBuilder
@@ -29,25 +31,32 @@ import scala.util.control.NonFatal
   coursierRepositories: Seq[Repository] = Nil,
   platform: Option[String] = InstallDir.platform(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
-  os: String = System.getProperty("os.name", "")
+  os: String = System.getProperty("os.name", ""),
+  nativeImageJavaHome: Option[String => Task[File]] = None,
+  onlyPrebuilt: Boolean = false,
+  preferPrebuilt: Boolean = true
 ) {
 
   private lazy val isWindows =
     os.toLowerCase(Locale.ROOT).contains("windows")
 
+  private lazy val auxExtension =
+    if (isWindows) ".exe"
+    else ""
+
   import InstallDir._
 
   // TODO Make that return a Task[Boolean] instead
   def createOrUpdate(
-    appInfo: AppInfo,
-  ): Boolean =
+    appInfo: AppInfo
+  ): Option[Boolean] =
     createOrUpdate(appInfo, Instant.now(), force = false)
 
   // TODO Make that return a Task[Boolean] instead
   def createOrUpdate(
     appInfo: AppInfo,
     currentTime: Instant
-  ): Boolean =
+  ): Option[Boolean] =
     createOrUpdate(appInfo, currentTime, force = false)
 
   // TODO Make that return a Task[Boolean] instead
@@ -55,7 +64,7 @@ import scala.util.control.NonFatal
     appInfo: AppInfo,
     currentTime: Instant,
     force: Boolean
-  ): Boolean = {
+  ): Option[Boolean] = {
 
     val name = appInfo.appDescriptor.nameOpt
       .getOrElse(appInfo.source.id)
@@ -70,6 +79,122 @@ import scala.util.control.NonFatal
     )
   }
 
+  def delete(appName: String): Option[Boolean] = {
+    val launcher = actualDest(baseDir.resolve(appName))
+    Updatable.delete(baseDir, launcher, auxExtension, verbosity)
+  }
+
+  private def actualDest(dest: Path): Path =
+    if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
+    else dest
+
+  private[install] def params(
+    desc: AppDescriptor,
+    appArtifacts: AppArtifacts,
+    infoEntries: Seq[(ZipEntry, Array[Byte])],
+    mainClass: String,
+    dest: Path
+  ): Parameters =
+    desc.launcherType match {
+      case LauncherType.DummyJar =>
+        Parameters.Bootstrap(Nil, mainClass)
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+          .withDeterministic(true)
+          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+          .withExtraZipEntries(infoEntries)
+
+      case _: LauncherType.BootstrapLike =>
+        val isStandalone = desc.launcherType != LauncherType.Bootstrap
+        val sharedContentOpt =
+          if (appArtifacts.shared.isEmpty) None
+          else {
+            val entries = appArtifacts.shared.map {
+              case (a, f) =>
+                classpathEntry(a, f, forceResource = isStandalone)
+            }
+
+            Some(ClassLoaderContent(entries))
+          }
+        val mainContent = ClassLoaderContent(
+          appArtifacts.fetchResult.artifacts.map {
+            case (a, f) =>
+              classpathEntry(a, f, forceResource = isStandalone)
+          }
+        )
+
+        Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+          .withDeterministic(true)
+          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+          .withExtraZipEntries(infoEntries)
+
+      case LauncherType.Assembly =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        // FIXME Allow to adjust merge rules?
+        Parameters.Assembly()
+          .withPreamble(
+            Preamble()
+              .withOsKind(isWindows)
+              .callsItself(isWindows)
+              .withJavaOpts(desc.javaOptions)
+          )
+          .withFiles(appArtifacts.fetchResult.files)
+          .withMainClass(mainClass)
+          .withExtraZipEntries(infoEntries)
+
+      case LauncherType.DummyNative =>
+        Parameters.DummyNative()
+
+      case LauncherType.GraalvmNativeImage =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        val fetch = simpleFetch(cache, coursierRepositories)
+
+        val graalvmHomeOpt = for {
+          ver <- desc.graalvmOptions.flatMap(_.version)
+            .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
+          home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
+        } yield home
+
+        Parameters.NativeImage(mainClass, fetch)
+          .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
+          .withGraalvmVersion(graalvmParamsOpt.flatMap(_.defaultVersion))
+          .withJars(appArtifacts.fetchResult.files)
+          .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
+          .withJavaHome(graalvmHomeOpt)
+          .withVerbosity(verbosity)
+
+      case LauncherType.ScalaNative =>
+
+        assert(appArtifacts.shared.isEmpty) // just in case
+
+        val fetch = simpleFetch(cache, coursierRepositories)
+        val nativeVersion = appArtifacts.platformSuffixOpt
+          .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
+        // FIXME Allow options to be tweaked
+        val options = ScalaNative.ScalaNativeOptions()
+
+        Parameters.ScalaNative(fetch, mainClass, nativeVersion)
+          .withJars(appArtifacts.fetchResult.files)
+          .withOptions(options)
+          .withVerbosity(verbosity)
+    }
+
   // TODO Remove that override
   private[coursier] def createOrUpdate(
     descOpt: Option[(AppDescriptor, Array[Byte])],
@@ -77,14 +202,9 @@ import scala.util.control.NonFatal
     dest: Path,
     currentTime: Instant = Instant.now(),
     force: Boolean = false
-  ): Boolean = {
+  ): Option[Boolean] = {
 
-    val dest0 =
-      if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
-      else dest
-    val auxExtension =
-      if (isWindows) ".exe"
-      else ""
+    val dest0 = actualDest(dest)
 
     // values before the `(tmpDest, tmpAux) =>` need to be evaluated when we hold the lock of Updatable.writing
     def update: (Path, Path) => Boolean = {
@@ -106,22 +226,22 @@ import scala.util.control.NonFatal
           None
       }
 
-      val prebuiltOpt0 = prebuiltOpt(desc, cache, verbosity)
+      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt)
 
-      val appArtifacts = prebuiltOpt0 match {
-        case None => desc.artifacts(cache, verbosity)
-        case Some(_) => AppArtifacts.empty
+      val appArtifacts = prebuiltOrNotFoundUrls0 match {
+        case Left(_) => desc.artifacts(cache, verbosity)
+        case Right(_) => AppArtifacts.empty
       }
 
       val lock0 = {
-        val artifacts = prebuiltOpt0.map(Seq(_)).getOrElse {
+        val artifacts = prebuiltOrNotFoundUrls0.map(Seq(_)).getOrElse {
           appArtifacts.fetchResult.artifacts.filterNot(appArtifacts.shared.toSet)
         }
         ArtifactsLock.ofArtifacts(artifacts)
       }
 
       val sharedLockOpt =
-        if (appArtifacts.shared.isEmpty || prebuiltOpt0.nonEmpty)
+        if (appArtifacts.shared.isEmpty || prebuiltOrNotFoundUrls0.isRight)
           None
         else
           Some(ArtifactsLock.ofArtifacts(appArtifacts.shared))
@@ -164,107 +284,21 @@ import scala.util.control.NonFatal
             if (desc.launcherType.isNative) tmpAux
             else tmpDest
 
-          prebuiltOpt0 match {
-            case None =>
-              val params = desc.launcherType match {
-                case LauncherType.DummyJar =>
-                  Parameters.Bootstrap(Nil, mainClass)
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                    .withDeterministic(true)
-                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                    .withExtraZipEntries(infoEntries)
+          prebuiltOrNotFoundUrls0 match {
+            case Left(notFoundUrls) =>
 
-                case _: LauncherType.BootstrapLike =>
-                  val isStandalone = desc.launcherType != LauncherType.Bootstrap
-                  val sharedContentOpt =
-                    if (appArtifacts.shared.isEmpty) None
-                    else {
-                      val entries = appArtifacts.shared.map {
-                        case (a, f) =>
-                          classpathEntry(a, f, forceResource = isStandalone)
-                      }
+              if (onlyPrebuilt && desc.launcherType.isNative)
+                throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
-                      Some(ClassLoaderContent(entries))
-                    }
-                  val mainContent = ClassLoaderContent(
-                    appArtifacts.fetchResult.artifacts.map {
-                      case (a, f) =>
-                        classpathEntry(a, f, forceResource = isStandalone)
-                    }
-                  )
-
-                  Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-                    .withDeterministic(true)
-                    .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-                    .withExtraZipEntries(infoEntries)
-
-                case LauncherType.Assembly =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  // FIXME Allow to adjust merge rules?
-                  Parameters.Assembly()
-                    .withPreamble(
-                      Preamble()
-                        .withOsKind(isWindows)
-                        .callsItself(isWindows)
-                        .withJavaOpts(desc.javaOptions)
-                    )
-                    .withFiles(appArtifacts.fetchResult.files)
-                    .withMainClass(mainClass)
-                    .withExtraZipEntries(infoEntries)
-
-                case LauncherType.DummyNative =>
-                  Parameters.DummyNative()
-
-                case LauncherType.GraalvmNativeImage =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  val fetch = simpleFetch(cache, coursierRepositories)
-
-                  Parameters.NativeImage(mainClass, fetch)
-                    .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
-                    .withJars(appArtifacts.fetchResult.files)
-                    .withNameOpt(Some(desc.nameOpt.getOrElse(dest0.getFileName.toString)))
-                    .withVerbosity(verbosity)
-
-                case LauncherType.ScalaNative =>
-
-                  assert(appArtifacts.shared.isEmpty) // just in case
-
-                  val fetch = simpleFetch(cache, coursierRepositories)
-                  val nativeVersion = appArtifacts.platformSuffixOpt
-                    .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
-                  // FIXME Allow options to be tweaked
-                  val options = ScalaNative.ScalaNativeOptions()
-
-                  Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-                    .withJars(appArtifacts.fetchResult.files)
-                    .withOptions(options)
-                    .withVerbosity(verbosity)
-              }
+              val params0 = params(desc, appArtifacts, infoEntries, mainClass, dest)
 
               writing(genDest, verbosity, Some(currentTime)) {
-                Generator.generate(params, genDest)
+                Generator.generate(params0, genDest)
               }
 
-            case Some((_, prebuilt)) =>
+            case Right((_, prebuilt)) =>
               Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
-              FileUtil.tryMakeExecutable(prebuilt.toPath)
+              FileUtil.tryMakeExecutable(genDest)
           }
 
           if (desc.launcherType.isNative) {
@@ -289,8 +323,6 @@ import scala.util.control.NonFatal
 
     Updatable.writing(baseDir, dest0, auxExtension, verbosity) { (tmpDest, tmpAux) =>
       update(tmpDest, tmpAux)
-    }.getOrElse {
-      sys.error(s"Could not acquire lock for $dest0")
     }
   }
 
@@ -299,7 +331,7 @@ import scala.util.control.NonFatal
     update: Source => Task[Option[(String, Array[Byte])]],
     currentTime: Instant = Instant.now(),
     force: Boolean = false
-  ): Task[Boolean] =
+  ): Task[Option[Boolean]] =
     for {
       _ <- Task.delay {
         if (verbosity >= 2)
@@ -330,8 +362,8 @@ import scala.util.control.NonFatal
           info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
       }
 
-      written <- Task.delay {
-        val written0 = InstallDir(baseDir, cache)
+      writtenOpt <- Task.delay {
+        val writtenOpt0 = InstallDir(baseDir, cache)
           .withVerbosity(verbosity)
           .withGraalvmParamsOpt(graalvmParamsOpt)
           .withCoursierRepositories(coursierRepositories)
@@ -340,19 +372,32 @@ import scala.util.control.NonFatal
             currentTime,
             force
           )
-        if (!written0 && verbosity >= 1)
+        if (!writtenOpt0.exists(!_) && verbosity >= 1)
           System.err.println(s"No new update for $name\n")
-        written0
+        writtenOpt0
       }
-    } yield written
+    } yield writtenOpt
+
+  def envUpdate: EnvironmentUpdate =
+    EnvironmentUpdate()
+      .withPathLikeAppends(Seq("PATH" -> baseDir.toAbsolutePath.toString))
 
 }
 
 object InstallDir {
 
-  private lazy val defaultDir0: Path =
-    // TODO Take some env var / Java props into account too
-    coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+  private lazy val defaultDir0: Path = {
+
+    val fromEnv = Option(System.getenv("COURSIER_BIN_DIR")).filter(_.nonEmpty)
+      .orElse(Option(System.getenv("COURSIER_INSTALL_DIR")).filter(_.nonEmpty))
+
+    def fromProps = Option(System.getProperty("coursier.install.dir"))
+
+    def default = coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
+
+    fromEnv.orElse(fromProps).map(Paths.get(_))
+      .getOrElse(default)
+  }
 
   def defaultDir: Path =
     defaultDir0
@@ -420,48 +465,75 @@ object InstallDir {
     t
   }
 
-  private def prebuiltOpt(
+
+  private def candidatePrebuiltArtifacts(
     desc: AppDescriptor,
     cache: Cache[Task],
-    verbosity: Int
-  ): Option[(Artifact, File)] =
-    desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).flatMap { pattern =>
-      val version = desc.retainedMainVersion(cache, verbosity)
-        .orElse(desc.mainVersionOpt)
-        .getOrElse("")
-      val baseUrl = pattern
-        .replaceAllLiterally("${version}", version)
-        .replaceAllLiterally("${platform}", platform.getOrElse(""))
-      val urls = platformExtensions.map(ext => baseUrl + ext) ++ Seq(baseUrl)
-
-      val iterator = urls.iterator.flatMap { url =>
-        if (verbosity >= 2)
-          System.err.println(s"Checking prebuilt launcher at $url")
-        // FIXME Make this changing all the time? Allow to change that?
-        val artifact = Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
-        cache.loggerOpt.foreach(_.init())
-        val maybeFile =
-          try cache.file(artifact).run.unsafeRun()(cache.ec)
-          finally cache.loggerOpt.foreach(_.stop())
-        maybeFile match {
-          case Left(e: ArtifactError.NotFound) =>
-            if (verbosity >= 2)
-              System.err.println(s"No prebuilt launcher found at $url")
-            Iterator.empty
-          case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
-          case Right(f) =>
-            if (verbosity >= 1) {
-              val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-              System.err.println(s"Found prebuilt launcher at $url ($size)")
-            }
-            Iterator.single((artifact, f))
-        }
+    verbosity: Int,
+    platform: Option[String],
+    platformExtensions: Seq[String],
+    preferPrebuilt: Boolean
+  ): Option[Seq[Artifact]] =
+    desc.prebuiltLauncher.filter(_ => desc.launcherType.isNative).map { pattern =>
+      val it = {
+        val it0 = desc.candidateMainVersions(cache, verbosity)
+        if (it0.hasNext) it0
+        else desc.mainVersionOpt.iterator
       }
+      it
+        // check the latest 5 versions if preferPrebuilt is true
+        // FIXME Don't hardcode that number?
+        .take(if (preferPrebuilt) 5 else 1)
+        .flatMap { version =>
+          val baseUrl = pattern
+            .replaceAllLiterally("${version}", version)
+            .replaceAllLiterally("${platform}", platform.getOrElse(""))
+          platformExtensions.iterator.map(ext => (version, baseUrl + ext)) ++ Iterator.single((version, baseUrl))
+        }
+        .map {
+          case (version, url) =>
+            // FIXME Make this changing all the time? Allow to change that?
+            Artifact(url).withChanging(version.endsWith("SNAPSHOT"))
+        }
+        .toVector
+    }
 
-      if (iterator.hasNext)
-        Some(iterator.next())
-      else
-        None
+  private def prebuiltOrNotFoundUrls(
+    desc: AppDescriptor,
+    cache: Cache[Task],
+    verbosity: Int,
+    platform: Option[String],
+    platformExtensions: Seq[String],
+    preferPrebuilt: Boolean
+  ): Either[Seq[String], (Artifact, File)] =
+    candidatePrebuiltArtifacts(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt).toRight(Nil).flatMap { artifacts =>
+
+        val iterator = artifacts.iterator.flatMap { artifact =>
+          if (verbosity >= 2)
+            System.err.println(s"Checking prebuilt launcher at ${artifact.url}")
+          cache.loggerOpt.foreach(_.init())
+          val maybeFile =
+            try cache.file(artifact).run.unsafeRun()(cache.ec)
+            finally cache.loggerOpt.foreach(_.stop())
+          maybeFile match {
+            case Left(e: ArtifactError.NotFound) =>
+              if (verbosity >= 2)
+                System.err.println(s"No prebuilt launcher found at ${artifact.url}")
+              Iterator.empty
+            case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
+            case Right(f) =>
+              if (verbosity >= 1) {
+                val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
+                System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
+              }
+              Iterator.single((artifact, f))
+          }
+        }
+
+        if (iterator.hasNext)
+          Right(iterator.next())
+        else
+          Left(artifacts.map(_.url))
     }
 
   def auxName(name: String, auxExtension: String): String = {
@@ -509,17 +581,28 @@ object InstallDir {
     Option(System.getProperty("os.name"))
       .flatMap(platform(_))
 
-  sealed abstract class AppGeneratorException(message: String, cause: Throwable = null)
+  sealed abstract class InstallDirException(message: String, cause: Throwable = null)
     extends Exception(message, cause)
 
-  final class NoMainClassFound extends AppGeneratorException("No main class found")
+  final class NoMainClassFound extends InstallDirException("No main class found")
 
   // FIXME Keep more details
-  final class NoScalaVersionFound extends AppGeneratorException("No scala version found")
+  final class NoScalaVersionFound extends InstallDirException("No scala version found")
 
-  final class LauncherNotFound(path: Path) extends AppGeneratorException(s"$path not found")
+  final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
 
-  final class CannotReadAppDescriptionInLauncher(path: Path)
-    extends AppGeneratorException(s"Cannot read app description in $path")
+  final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
+    extends InstallDirException(
+      if (candidateUrls.isEmpty)
+        "No prebuilt binary available"
+      else
+        s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
+    )
+
+  final class CannotReadAppDescriptionInLauncher(val path: Path)
+    extends InstallDirException(s"Cannot read app description in $path")
+
+  final class NotAnApplication(val path: Path)
+    extends InstallDirException(s"File $path wasn't installed by cs install")
 
 }

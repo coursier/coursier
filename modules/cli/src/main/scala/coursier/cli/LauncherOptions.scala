@@ -5,6 +5,8 @@ import caseapp.{Hidden, Parser}
 
 final case class LauncherOptions(
   @Hidden
+  version: Boolean = false,
+  @Hidden
     completions: Option[String] = None,
 
   @Hidden

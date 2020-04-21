@@ -14,6 +14,7 @@ final case class BootstrapSpecificParams(
   embedFiles: Boolean,
   javaOptions: Seq[String],
   assembly: Boolean,
+  manifestJar: Boolean,
   createBatFile: Boolean,
   assemblyRules: Seq[MergeRule],
   withPreamble: Boolean,
@@ -21,6 +22,7 @@ final case class BootstrapSpecificParams(
   proguarded: Boolean,
   hybrid: Boolean,
   nativeImage: Boolean,
+  nativeImageIntermediateAssembly: Boolean,
   graalvmVersionOpt: Option[String],
   graalvmJvmOptions: Seq[String],
   graalvmOptions: Seq[String],
@@ -51,16 +53,23 @@ object BootstrapSpecificParams {
       else
         (options.graalvmJvmOption.filter(_.nonEmpty), options.graalvmOption.filter(_.nonEmpty))
 
+    val assembly = options.assembly.getOrElse(false)
+    val manifestJar = options.manifestJar.getOrElse(false)
+    val standalone = options.standalone.getOrElse(false)
+    val hybrid = options.hybrid.getOrElse(false)
+    val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
+
     val validateOutputType = {
       val count = Seq(
-        options.assembly.exists(identity),
-        options.standalone.exists(identity),
-        options.hybrid.exists(identity),
-        options.nativeImage.exists(identity) || graalvmVersion.nonEmpty,
+        assembly,
+        manifestJar,
+        standalone,
+        hybrid,
+        nativeImage,
         native
       ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly, --standalone, --hybrid, --native-image, or --native, can be specified")
+        Validated.invalidNel("Only one of --assembly (or -a), --manifest-jar, --standalone (or -s), --hybrid, --native-image, or --native (or -S), can be specified")
       else
         Validated.validNel(())
     }
@@ -94,11 +103,6 @@ object BootstrapSpecificParams {
 
     val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
 
-    val assembly = options.assembly.getOrElse(false)
-    val standalone = options.standalone.getOrElse(false)
-    val hybrid = options.hybrid.getOrElse(false)
-    val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
-
     (validateOutputType, rulesV).mapN {
       (_, rules) =>
         val javaOptions = options.javaOpt
@@ -109,6 +113,7 @@ object BootstrapSpecificParams {
           options.embedFiles,
           javaOptions,
           assembly,
+          manifestJar,
           createBatFile,
           prependRules ++ rules,
           options.preamble,
@@ -116,6 +121,7 @@ object BootstrapSpecificParams {
           options.proguarded,
           hybrid,
           nativeImage,
+          options.intermediateAssembly,
           graalvmVersion,
           graalvmJvmOptions,
           graalvmOptions,

@@ -6,16 +6,17 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
-import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams}
+import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 
 @RunWith(classOf[JUnitRunner])
-class ResolveTests extends FlatSpec with BeforeAndAfterAll {
+class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
@@ -24,6 +25,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     pool.shutdown()
   }
 
+  def paramsOrThrow(options: SharedResolveOptions): ResolveParams =
+    paramsOrThrow(ResolveOptions(sharedResolveOptions = options))
   def paramsOrThrow(options: ResolveOptions): ResolveParams =
     ResolveParams(options) match {
       case Validated.Invalid(errors) =>
@@ -43,7 +46,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -76,7 +79,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -101,9 +104,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
   it should "print results anyway" in {
     val options = ResolveOptions(
-      outputOptions = OutputOptions(
-        forcePrint = true
-      )
+      forcePrint = true
     )
     val args = RemainingArgs(
       Seq("ioi.get-coursier:coursier-core_2.12:1.1.0-M9", "io.get-coursier:coursier-cache_2.12:1.1.0-M9"),
@@ -115,27 +116,27 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     val params = paramsOrThrow(options)
 
     val ps = new PrintStream(stdout, true, "UTF-8")
-    Resolve.task(params, pool, ps, ps, args.all)
+    Resolve.printTask(params, pool, ps, ps, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
       .replace(sys.props("user.home"), "HOME")
     val expectedOutput =
-      """io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
+      """Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
+        |  not found: HOME/.ivy2/local/ioi.get-coursier/coursier-core_2.12/1.1.0-M9/ivys/ivy.xml
+        |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
+        |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
         |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
         |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
         |org.scala-lang:scala-library:2.12.7:default
         |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
-        |Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
-        |  not found: HOME/.ivy2/local/ioi.get-coursier/coursier-core_2.12/1.1.0-M9/ivys/ivy.xml
-        |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
         |""".stripMargin
 
     assert(output === expectedOutput)
   }
 
   it should "resolve sbt plugins" in {
-    val options = ResolveOptions(
+    val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
         sbtPlugin = List(
           "io.get-coursier:sbt-coursier:1.1.0-M9",
@@ -149,7 +150,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -282,7 +283,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
   }
 
   it should "resolve sbt 0.13 plugins" in {
-    val options = ResolveOptions(
+    val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
         sbtPlugin = List("org.scalameta:sbt-metals:0.7.0"),
         sbtVersion = "0.13"
@@ -294,7 +295,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
 
     val params = paramsOrThrow(options)
 
-    Resolve.task(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
+    Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -304,8 +305,8 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
   }
 
   it should "resolve the main artifact first in classpath order" in {
-    val options = ResolveOptions(
-      classpathOrder = true
+    val options = SharedResolveOptions(
+      classpathOrder = Option(true)
     )
     val args = RemainingArgs(
       Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M9"),
@@ -317,7 +318,7 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     val params = paramsOrThrow(options)
 
     val ps = new PrintStream(stdout, true, "UTF-8")
-    Resolve.task(params, pool, ps, ps, args.all)
+    Resolve.printTask(params, pool, ps, ps, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
@@ -335,16 +336,16 @@ class ResolveTests extends FlatSpec with BeforeAndAfterAll {
     val params = paramsOrThrow(options)
 
     val ps = new PrintStream(stdout, true, "UTF-8")
-    Resolve.task(params, pool, ps, ps, args.all)
+    Resolve.printTask(params, pool, ps, ps, args.all)
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
     val expectedOutput =
       """https://repo1.maven.org/maven2/com/github/alexarchambault/case-app_2.13/2.0.0-M9/case-app_2.13-2.0.0-M9.jar
         |https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
-        |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
         |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-annotations_2.13/2.0.0-M9/case-app-annotations_2.13-2.0.0-M9.jar
         |https://repo1.maven.org/maven2/com/github/alexarchambault/case-app-util_2.13/2.0.0-M9/case-app-util_2.13-2.0.0-M9.jar
+        |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
         |""".stripMargin
 
     assert(output == expectedOutput)

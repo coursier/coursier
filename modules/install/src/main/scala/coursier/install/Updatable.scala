@@ -31,14 +31,17 @@ object Updatable {
     }
   }
 
-  def writing[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int)(f: (Path, Path) => T): Option[T] = {
+  private final case class RelatedFiles(
+    dest: Path,
+    aux: Path,
+    tmpDest: Path,
+    tmpAux: Path
+  ) {
+    def list: Seq[Path] =
+      Seq(dest, aux, tmpDest, tmpAux)
+  }
 
-    // Ensuring we're the only process trying to write dest
-    // - acquiring a lock while writing
-    // - writing things to a temp file (tmpDest)
-    // - atomic move to final dest, so that no borked launcher are exposed at any time, even during launcher generation
-    //   Things these moves aren't actually atomic, because we move two files sometimes, and REPLACE_EXISTING doesn't
-    //   seem to work along with ATOMIC_MOVE.
+  private def relatedFiles(dest: Path, auxExtension: String): RelatedFiles = {
 
     val auxName0 = InstallDir.auxName(dest.getFileName.toString, auxExtension)
 
@@ -48,23 +51,39 @@ object Updatable {
     val aux = dir.resolve(auxName0)
     val tmpAux = dir.resolve(s"$auxName0.part")
 
+    RelatedFiles(dest, aux, tmpDest, tmpAux)
+  }
+
+  def writing[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int)(f: (Path, Path) => T): Option[T] = {
+
+    // Ensuring we're the only process trying to write dest
+    // - acquiring a lock while writing
+    // - writing things to a temp file (tmpDest)
+    // - atomic move to final dest, so that no borked launcher are exposed at any time, even during launcher generation
+    //   Things these moves aren't actually atomic, because we move two files sometimes, and REPLACE_EXISTING doesn't
+    //   seem to work along with ATOMIC_MOVE.
+
+    val files = relatedFiles(dest, auxExtension)
+
+    val dir = dest.getParent
+
     def get: T = {
-      Files.deleteIfExists(tmpDest)
-      Files.deleteIfExists(tmpAux)
+      Files.deleteIfExists(files.tmpDest)
+      Files.deleteIfExists(files.tmpAux)
 
-      val res = f(tmpDest, tmpAux)
+      val res = f(files.tmpDest, files.tmpAux)
 
-      val updated = Files.isRegularFile(tmpDest) || Files.isRegularFile(tmpAux)
+      val updated = Files.isRegularFile(files.tmpDest) || Files.isRegularFile(files.tmpAux)
 
-      if (Files.isRegularFile(tmpDest)) {
+      if (Files.isRegularFile(files.tmpDest)) {
 
         if (verbosity >= 2) {
-          System.err.println(s"Wrote $tmpDest")
-          System.err.println(s"Moving $tmpDest to $dest")
+          System.err.println(s"Wrote ${files.tmpDest}")
+          System.err.println(s"Moving ${files.tmpDest} to $dest")
         }
         Files.deleteIfExists(dest) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
         Files.move(
-          tmpDest,
+          files.tmpDest,
           dest,
           StandardCopyOption.ATOMIC_MOVE
         )
@@ -73,21 +92,22 @@ object Updatable {
       } else if (updated)
         Files.deleteIfExists(dest)
 
-      if (Files.isRegularFile(tmpAux)) {
+      if (Files.isRegularFile(files.tmpAux)) {
         if (verbosity >= 2) {
-          System.err.println(s"Wrote $tmpAux")
-          System.err.println(s"Moving $tmpAux to $aux")
+          System.err.println(s"Wrote ${files.tmpAux}")
+          System.err.println(s"Moving ${files.tmpAux} to ${files.aux}")
         }
-        Files.deleteIfExists(aux) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+        FileUtil.tryHideWindows(files.tmpAux)
+        Files.deleteIfExists(files.aux) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
         Files.move(
-          tmpAux,
-          aux,
+          files.tmpAux,
+          files.aux,
           StandardCopyOption.ATOMIC_MOVE
         )
         if (verbosity == 1)
-          System.err.println(s"Wrote $aux")
+          System.err.println(s"Wrote ${files.aux}")
       } else if (updated)
-        Files.deleteIfExists(aux)
+        Files.deleteIfExists(files.aux)
 
       res
     }
@@ -95,5 +115,25 @@ object Updatable {
     CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
   }
 
+  def delete[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int): Option[Boolean] = {
+
+    if (InfoFile.isInfoFile(dest)) {
+
+      val files = relatedFiles(dest, auxExtension)
+
+      def get: Boolean = {
+
+        val foundSomething = files.list.exists(Files.exists(_))
+
+        foundSomething && {
+          files.list.foreach(Files.deleteIfExists(_))
+          true
+        }
+      }
+
+      CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
+    } else
+      throw new InstallDir.NotAnApplication(dest)
+  }
 
 }

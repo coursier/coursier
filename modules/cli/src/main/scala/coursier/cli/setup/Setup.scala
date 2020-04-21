@@ -1,210 +1,100 @@
 package coursier.cli.setup
 
+import java.io.File
+import java.util.Locale
+
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
-import coursier.cache.Cache
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
-import coursier.jvm.{JvmCacheLogger, JavaHome}
+import coursier.jvm.JvmCache
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 object Setup extends CaseApp[SetupOptions] {
 
-  private def confirm(message: String): Task[Boolean] =
-    Task.delay {
-      // TODO
-      System.out.println(message + " [Y/n]\nY")
-      true
-    }
-
-  def maybeInstallJvm(
-    coursierCache: Cache[Task],
-    envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-    jvmCacheLogger: JvmCacheLogger
-  ): Task[Unit] =
-    for {
-      baseHandle <- JavaHome.default
-      handle = baseHandle
-        .withJvmCacheLogger(jvmCacheLogger)
-        .withCoursierCache(coursierCache)
-
-      javaHomeOpt <- handle.system()
-
-      idJavaHomeOpt <- javaHomeOpt match {
-        case Some(javaHome) =>
-          System.out.println(s"Found a JVM installed under $javaHome.") // Task.delay(…)
-          Task.point(Some(JavaHome.systemId -> javaHome))
-        case None =>
-          confirm("No JVM found, should we try to install one?").flatMap {
-            case false =>
-              Task.point(None)
-            case true =>
-              System.out.println("No JVM found, trying to install one.") // Task.delay(…)
-              baseHandle.getWithRetainedId(JavaHome.defaultJvm).map(Some(_))
-          }
-      }
-
-      envUpdate = idJavaHomeOpt match {
-        case Some((id, javaHome)) =>
-          handle.environmentFor(id, javaHome)
-        case None =>
-          EnvironmentUpdate.empty
-      }
-
-      updatedSomething <- {
-
-        envVarUpdater match {
-          case Left(windowsEnvVarUpdater) =>
-            if (envUpdate.isEmpty) Task.point(false)
-            else {
-              confirm(s"Should we update the ${(envUpdate.set.map(_._1) ++ envUpdate.pathLikeAppends.map(_._1)).mkString(", ")} environment variable(s)?")
-                .flatMap {
-                  case false => Task.point(false)
-                  case true =>
-                    Task.delay {
-                      windowsEnvVarUpdater.applyUpdate(envUpdate)
-                    }
-                }
-            }
-          case Right(profileUpdater) =>
-            lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
-              Task.point(false)
-            else {
-              val profileFilesStr = profileFiles.map(_.toString.replaceAllLiterally(sys.props("user.home"), "~"))
-              confirm(s"Should we update ${profileFilesStr.mkString(", ")}?").flatMap {
-                case false => Task.point(false)
-                case true =>
-                  Task.delay {
-                    profileUpdater.applyUpdate(envUpdate, "JVM installed by coursier")
-                  }
-              }
-            }
-        }
-      }
-
-      _ <- {
-        if (updatedSomething)
-          Task.delay {
-            val messageStart =
-              if (envVarUpdater.isLeft)
-                "Some global environment variables were updated."
-              else
-                "Some shell configuration files were updated."
-
-            val message =
-              messageStart + " It is recommended to close this terminal once " +
-                "the setup command is done, and open a new one " +
-                "for the changes to be taken into account."
-
-            println(message)
-          }
-        else
-          Task.point(())
-      }
-
-    } yield ()
-
-  def maybeSetupPath(
-    installDir: InstallDir,
-    envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
-  ): Task[Unit] = {
-
-    val binDir = installDir.baseDir
-    val binDirStr = binDir.toAbsolutePath.toString.replaceAllLiterally(sys.props("user.home"), "~")
-
-    val envUpdate = EnvironmentUpdate()
-      .withPathLikeAppends(Seq("PATH" -> binDir.toAbsolutePath.toString))
-
-    envVarUpdater match {
-      case Left(windowsEnvVarUpdater) =>
-        confirm(s"Should we add $binDirStr to your PATH?").flatMap {
-          case false => Task.point(())
-          case true =>
-            Task.delay {
-              windowsEnvVarUpdater.applyUpdate(envUpdate)
-            }
-        }
-      case Right(profileUpdater) =>
-        val profileFilesStr = profileUpdater.profileFiles().map(_.toString.replaceAllLiterally(sys.props("user.home"), "~"))
-        confirm(s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?").flatMap {
-          case false => Task.point(())
-          case true =>
-            Task.delay {
-              profileUpdater.applyUpdate(envUpdate, "coursier install directory")
-            }
-        }
-    }
-  }
-
-  def maybeInstallApps(
-    installDir: InstallDir,
-    channels: Channels,
-    appIds: Seq[String]
-  ): Task[Unit] = {
-
-    val tasks = appIds
-      .map { id =>
-        for {
-          appInfo <- channels.appDescriptor(id)
-          _ <- Task.delay(installDir.createOrUpdate(appInfo))
-        } yield ()
-      }
-
-    tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t))
-  }
-
-
-  def defaultAppList: Seq[String] =
-    Seq(
-      "ammonite",
-      "cs",
-      "coursier",
-      "scala",
-      "scalac",
-      "sbt-launcher",
-      "scalafmt"
-    )
-
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
 
     val params = SetupParams(options).exitOnError()
 
-    val pool = Sync.fixedThreadPool(params.sharedJava.cache.parallel)
-    val logger = params.sharedJava.output.logger()
-    val jvmCacheLogger = params.sharedJava.jvmCacheLogger()
-    val cache = params.sharedJava.cache.cache(pool, logger)
+    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val logger = params.output.logger()
+    val cache = params.cache.cache(pool, logger)
 
-    val envVarUpdater =
-      if (Windows.isWindows)
-        Left(WindowsEnvVarUpdater())
+    val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
+
+    val envVarUpdaterOpt =
+      if (params.env.env) None
+      else Some(params.env.envVarUpdater)
+
+    val graalvmHome = { version: String =>
+      javaHome.get(s"graalvm:$version")
+    }
+
+    val installCache = cache.withLogger(params.output.logger(byFileType = true))
+    val installDir = params.sharedInstall.installDir(installCache)
+      .withVerbosity(params.output.verbosity)
+      .withNativeImageJavaHome(Some(graalvmHome))
+    val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
+      .withVerbosity(params.output.verbosity)
+
+    val confirm =
+      if (params.yes)
+        Confirm.YesToAll()
       else
-        Right(
-          ProfileUpdater()
-            .withHome(params.homeOpt.orElse(ProfileUpdater.defaultHome))
-        )
-
-    val installDir = InstallDir(params.sharedInstall.dir, cache)
-      .withVerbosity(params.sharedJava.output.verbosity)
-      .withGraalvmParamsOpt(params.sharedInstall.graalvmParamsOpt)
-      .withCoursierRepositories(params.sharedInstall.repositories)
-
-    val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, cache)
-      .withVerbosity(params.sharedJava.output.verbosity)
+        Confirm.ConsoleInput().withIndent(2)
 
     val tasks = Seq(
-      maybeInstallJvm(cache, envVarUpdater, jvmCacheLogger),
-      maybeSetupPath(installDir, envVarUpdater),
-      maybeInstallApps(installDir, channels, defaultAppList)
+      MaybeInstallJvm(
+        cache,
+        envVarUpdaterOpt,
+        javaHome,
+        confirm,
+        params.sharedJava.id
+      ),
+      MaybeSetupPath(
+        installDir,
+        envVarUpdaterOpt,
+        EnvironmentUpdate.defaultGetEnv,
+        File.pathSeparator,
+        confirm
+      ),
+      MaybeInstallApps(installDir, channels, params.apps)
     )
 
-    val task = tasks.foldLeft(Task.point(()))((acc, t) => acc.flatMap(_ => t))
+    val init =
+      if (params.tryRevert) {
+        val message = "Warning: the --try-revert option is experimental. Keep going only if you know what you are doing."
+        confirm.confirm(message, default = false)
+      } else
+        Task.point(())
+    val task = tasks.foldLeft(init) { (acc, step) =>
+      val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.err)
+      acc.flatMap(_ => t)
+    }
 
-    logger.use {
-      // TODO Better error messages for relevant exceptions
-      task.unsafeRun()(cache.ec)
+    if (params.banner && !params.tryRevert)
+      // from https://github.com/scala/scala/blob/eb1ea8b367f9b240afc0b16184396fa3bbf7e37c/project/VersionUtil.scala#L34-L39
+      System.err.println(
+        """
+          |     ________ ___   / /  ___
+          |    / __/ __// _ | / /  / _ |
+          |  __\ \/ /__/ __ |/ /__/ __ |
+          | /____/\___/_/ |_/____/_/ | |
+          |                          |/
+          |""".stripMargin
+      )
+
+    // TODO Better error messages for relevant exceptions
+    try task.unsafeRun()(cache.ec)
+    catch {
+      case e: InstallDir.InstallDirException if params.output.verbosity <= 1 =>
+        System.err.println(e.getMessage)
+        sys.exit(1)
+      case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
+        System.err.println(e.getMessage)
+        sys.exit(1)
     }
   }
 }

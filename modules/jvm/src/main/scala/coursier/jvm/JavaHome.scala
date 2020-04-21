@@ -1,7 +1,9 @@
 package coursier.jvm
 
-import java.io.File
+import java.io.{File, IOException}
 import java.nio.charset.Charset
+import java.nio.file.{Files, Path}
+import java.util.Locale
 
 import coursier.cache.{Cache, CacheLogger}
 import coursier.cache.internal.FileUtil
@@ -14,7 +16,9 @@ import dataclass.data
   installIfNeeded: Boolean = true,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmIndex.defaultOs(),
-  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default()
+  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default(),
+  pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
+  allowSystem: Boolean = true
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -29,51 +33,89 @@ import dataclass.data
       this.cache.map(_.withCache(cache))
     )
 
-  def withDefaultCache: Task[JavaHome] =
-    JvmCache.default.map(withCache(_))
-
 
   def default(): Task[File] =
     get(JavaHome.defaultId)
 
   def system(): Task[Option[File]] =
-    Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
-      case None =>
-        if (os == "darwin")
-          Task.delay {
-            // FIXME What happens if no JDK is installed?
-            val outputOrRetCode = commandOutput
-              .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
-            outputOrRetCode
-              .toOption
-              .map(_.trim)
-              .filter(_.nonEmpty)
-              .map(new File(_))
-          }
-        else
-          Task.delay {
+    if (allowSystem)
+      Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
+        case None =>
+          if (os == "darwin")
+            Task.delay {
+              // FIXME What happens if no JDK is installed?
+              val outputOrRetCode = commandOutput
+                .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
+              outputOrRetCode
+                .toOption
+                .map(_.trim)
+                .filter(_.nonEmpty)
+                .map(new File(_))
+            }
+          else
+            Task.delay {
 
-            val outputOrRetCode = commandOutput
-              .run(Seq("java", "-XshowSettings:properties", "-version"), keepErrStream = true)
+              val outputOrRetCode =
+                try {
+                  commandOutput
+                    .run(
+                      Seq("java", "-XshowSettings:properties", "-version"),
+                      keepErrStream = true,
+                      // Setting this makes cs-java fail.
+                      // This prevents us (possibly cs-java) to call ourselves,
+                      // which could call ourselves again, etc. indefinitely.
+                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                    )
+                    .toOption
+                } catch {
+                  case _: IOException =>
+                    None
+                }
 
-            outputOrRetCode
-              .toOption
-              .flatMap { output =>
-                val it = output
-                  .linesIterator
-                  .map(_.trim)
-                  .filter(_.startsWith("java.home = "))
-                  .map(_.stripPrefix("java.home = "))
-                if (it.hasNext)
-                  Some(it.next())
-                    .map(new File(_))
-                else
-                  None
-              }
-          }
-      case Some(home) =>
-        Task.point(Some(new File(home)))
-    }
+              outputOrRetCode
+                .flatMap { output =>
+                  val it = output
+                    .linesIterator
+                    .map(_.trim)
+                    .filter(_.startsWith("java.home = "))
+                    .map(_.stripPrefix("java.home = "))
+                  if (it.hasNext)
+                    Some(it.next())
+                      .map(new File(_))
+                  else
+                    None
+                }
+            }
+        case Some(home) =>
+          Task.point(Some(new File(home)))
+      }
+    else
+      Task.point(None)
+
+  def getIfInstalled(id: String): Task[Option[File]] =
+    getWithRetainedIdIfInstalled(id)
+      .map(_.map(_._2))
+
+  def getWithRetainedIdIfInstalled(id: String): Task[Option[(String, File)]] =
+    if (id == JavaHome.systemId)
+      system().map(_.map(JavaHome.systemId -> _))
+    else if (id.startsWith(JavaHome.systemId + "|"))
+      system().flatMap {
+        case None => getWithRetainedIdIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
+        case Some(dir) => Task.point(Some(JavaHome.systemId -> dir))
+      }
+    else
+      cache match {
+        case None => Task.point(None)
+        case Some(cache0) =>
+          val id0 =
+            if (id == JavaHome.defaultId)
+              JavaHome.defaultJvm
+            else
+              id
+
+          cache0.getIfInstalled(id0)
+      }
 
   def get(id: String): Task[File] =
     getWithRetainedId(id)
@@ -100,7 +142,15 @@ import dataclass.data
       cache match {
         case None => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
-          cache0.get(id0).map(id -> _)
+          cache0.get(id0, installIfNeeded).map(id -> _)
+      }
+    }
+
+  def javaBin(id: String): Task[Path] =
+    get(id).flatMap { home =>
+      JavaHome.javaBin(home.toPath, pathExtensions) match {
+        case Some(exe) => Task.point(exe)
+        case None => Task.fail(new Exception(s"${new File(home, "java/bin")} not found"))
       }
     }
 
@@ -115,12 +165,6 @@ import dataclass.data
 }
 
 object JavaHome {
-
-  // TODO Load the content of JvmIndex lazily / later, and only if it is required
-  // (it's not when looking at the system JVM for example), so that we can get
-  // this one as is, rather than wrapped in Task[_].
-  def default: Task[JavaHome] =
-    JavaHome().withDefaultCache
 
   def systemId: String =
     "system"
@@ -147,18 +191,67 @@ object JavaHome {
       EnvironmentUpdate.empty.withSet(Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
     }
 
+  private def executable(
+    dir: Path,
+    name: String,
+    pathExtensionsOpt: Option[Seq[String]]
+  ): Option[Path] =
+    pathExtensionsOpt match {
+      case Some(pathExtensions) =>
+        pathExtensions
+          .toStream
+          .map(ext => dir.resolve(name + ext))
+          .filter(Files.exists(_))
+          .headOption
+      case None =>
+        Some(dir.resolve(name))
+    }
+
+  def javaBin(
+    javaHome: Path,
+    pathExtensionsOpt: Option[Seq[String]]
+  ): Option[Path] =
+    executable(javaHome.resolve("bin"), "java", pathExtensionsOpt)
+
+  def defaultPathExtensions: Option[Seq[String]] = {
+    val isWindows = System.getProperty("os.name", "")
+      .toLowerCase(Locale.ROOT)
+      .contains("windows")
+    if (isWindows)
+      Option(System.getenv("pathext"))
+        .map(_.split(File.pathSeparator).toSeq)
+    else
+      None
+  }
+
   trait CommandOutput {
-    def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String]
+    final def run(
+      command: Seq[String],
+      keepErrStream: Boolean
+    ): Either[Int, String] =
+      run(command, keepErrStream, Nil)
+    def run(
+      command: Seq[String],
+      keepErrStream: Boolean,
+      extraEnv: Seq[(String, String)]
+    ): Either[Int, String]
   }
 
   object CommandOutput {
     private final class DefaultCommandOutput extends CommandOutput {
-      def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] = {
+      def run(
+        command: Seq[String],
+        keepErrStream: Boolean,
+        extraEnv: Seq[(String, String)]
+      ): Either[Int, String] = {
         val b = new ProcessBuilder(command: _*)
         b.redirectInput(ProcessBuilder.Redirect.INHERIT)
         b.redirectOutput(ProcessBuilder.Redirect.PIPE)
         b.redirectError(ProcessBuilder.Redirect.PIPE)
         b.redirectErrorStream(true)
+        val env = b.environment()
+        for ((k, v) <- extraEnv)
+          env.put(k, v)
         val p = b.start()
         p.getOutputStream.close()
         val output = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
@@ -173,11 +266,88 @@ object JavaHome {
     def default(): CommandOutput =
       new DefaultCommandOutput
 
-    def apply(f: (Seq[String], Boolean) => Either[Int, String]): CommandOutput =
+    def apply(f: (Seq[String], Boolean, Seq[(String, String)]) => Either[Int, String]): CommandOutput =
       new CommandOutput {
-        def run(command: Seq[String], keepErrStream: Boolean): Either[Int, String] =
-          f(command, keepErrStream)
+        def run(
+          command: Seq[String],
+          keepErrStream: Boolean,
+          extraEnv: Seq[(String, String)]
+        ): Either[Int, String] =
+          f(command, keepErrStream, extraEnv)
       }
+  }
+
+  private[coursier] def csJavaFailVariable: String =
+    "__CS_JAVA_FAIL"
+
+  private def maybeRemovePath(
+    cacheDirectory: Path,
+    getEnv: String => Option[String],
+    pathSeparator: String
+  ): Option[String] = {
+    val fs = cacheDirectory.getFileSystem
+    // remove former Java bin dir from PATH
+    for {
+      previousPath <- getEnv("PATH")
+      previousHome <- getEnv("JAVA_HOME").map(fs.getPath(_))
+      if previousHome.startsWith(cacheDirectory)
+      previousPath0 = previousPath.split(pathSeparator)
+      removeIdx = previousPath0.indexWhere { entry =>
+        val p0 = fs.getPath(entry)
+        // FIXME Make that more strict?
+        p0.startsWith(previousHome) && p0.endsWith("bin")
+      }
+      if removeIdx >= 0
+    } yield {
+      val newPath = previousPath0.take(removeIdx) ++ previousPath0.drop(removeIdx + 1)
+      // FIXME Not sure escaping is fine in all cases…
+      s"""export PATH="${newPath.mkString(pathSeparator)}"""" + "\n"
+    }
+  }
+
+  def finalScript(
+    envUpdate: EnvironmentUpdate,
+    cacheDirectory: Path,
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = File.pathSeparator
+  ): String = {
+
+    val preamble =
+      if (getEnv("CS_FORMER_JAVA_HOME").isEmpty) {
+        val saveJavaHome = """export CS_FORMER_JAVA_HOME="$JAVA_HOME""""
+        saveJavaHome + "\n"
+      } else if (envUpdate.pathLikeAppends.exists(_._1 == "PATH")) {
+        val updatedPathOpt = maybeRemovePath(cacheDirectory, getEnv, pathSeparator)
+        updatedPathOpt.getOrElse("")
+      } else
+        ""
+
+    preamble + envUpdate.script + "\n"
+  }
+
+  def disableScript(
+    cacheDirectory: Path,
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = File.pathSeparator,
+    isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
+  ): String = {
+
+    val maybeReinstateFormerJavaHome =
+      getEnv("CS_FORMER_JAVA_HOME") match {
+        case None => ""
+        case Some("") =>
+          """unset JAVA_HOME""" + "\n" +
+            """unset CS_FORMER_JAVA_HOME""" + "\n"
+        case Some(_) =>
+          """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
+            """unset CS_FORMER_JAVA_HOME""" + "\n"
+      }
+
+    val maybeRemovePath0 =
+      if (isMacOs) ""
+      else maybeRemovePath(cacheDirectory, getEnv, pathSeparator).getOrElse("")
+
+    maybeReinstateFormerJavaHome + maybeRemovePath0
   }
 
 }

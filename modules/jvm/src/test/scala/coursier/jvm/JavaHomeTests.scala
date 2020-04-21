@@ -11,7 +11,7 @@ object JavaHomeTests extends TestSuite {
 
   private val forbidCommands: JavaHome.CommandOutput =
     new JavaHome.CommandOutput {
-      def run(command: Seq[String], keepErrorStream: Boolean): Either[Int, String] =
+      def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
         throw new Exception("should not run commands")
     }
 
@@ -55,7 +55,7 @@ object JavaHomeTests extends TestSuite {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean): Either[Int, String] =
+          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
             if (command == Seq("/usr/libexec/java_home"))
               Right("/Library/JVMs/oracle-41")
             else
@@ -76,7 +76,7 @@ object JavaHomeTests extends TestSuite {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean): Either[Int, String] =
+          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
             if (command == Seq("java", "-XshowSettings:properties", "-version")) {
               if (keepErrorStream)
                 Right(
