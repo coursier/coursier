@@ -340,6 +340,23 @@ installInlineApp() {
   fi
 }
 
+enVarInstalledApp() {
+  local DIR="target/test-install-2"
+  rm -rf "$DIR"
+  "$COURSIER" install --install-dir "$DIR" 'env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}'
+  local CS_JVM_LAUNCHER_OUT="$("$DIR/env" CS_JVM_LAUNCHER)"
+  local IS_CS_INSTALLED_LAUNCHER_OUT="$("$DIR/env" IS_CS_INSTALLED_LAUNCHER)"
+  # rm -rf "$DIR"
+  if [ "$CS_JVM_LAUNCHER_OUT" != true ]; then
+    echo "Error: unexpected value of CS_JVM_LAUNCHER from installed app." 1>&2
+    exit 1
+  fi
+  if [ "$IS_CS_INSTALLED_LAUNCHER_OUT" != true ]; then
+    echo "Error: unexpected value of IS_CS_INSTALLED_LAUNCHER from installed app." 1>&2
+    exit 1
+  fi
+}
+
 nailgun
 fork
 nonStaticMainClass
@@ -371,3 +388,5 @@ resolveRules
 launchInlineApp
 launchInlineAppWithId
 installInlineApp
+
+enVarInstalledApp
