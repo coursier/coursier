@@ -41,7 +41,7 @@ jobs:
       jdk: openjdk11
       script: sbt scala212 test:compile testsJVM/test
     - env: SCALA_VERSION=2.12 NATIVE=1
-      before_script: curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+      before_script: curl -f https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
     - env: SCALA_VERSION=2.12 SCALA_JS=1
     - name: "Website"
       script: amm website.sc generate

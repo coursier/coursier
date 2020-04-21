@@ -15,23 +15,23 @@ mkdir -p bin
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 
   rm -f sbt
-  curl -Lo bin/sbt "https://github.com/coursier/sbt-launcher/releases/download/v$SBT_LAUNCHER_VERSION/csbt"
-  curl -Lo bin/sbt.bat "https://github.com/coursier/sbt-launcher/releases/download/v$SBT_LAUNCHER_VERSION/csbt.bat"
+  curl -fLo bin/sbt "https://github.com/coursier/sbt-launcher/releases/download/v$SBT_LAUNCHER_VERSION/csbt"
+  curl -fLo bin/sbt.bat "https://github.com/coursier/sbt-launcher/releases/download/v$SBT_LAUNCHER_VERSION/csbt.bat"
   
-  curl -Lo bin/amm.bat "https://github.com/lihaoyi/Ammonite/releases/download/$AMMONITE_VERSION/2.12-$AMMONITE_VERSION"
+  curl -fLo bin/amm.bat "https://github.com/lihaoyi/Ammonite/releases/download/$AMMONITE_VERSION/2.12-$AMMONITE_VERSION"
   
-  curl -Lo bin/coursier "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier"
-  curl -Lo bin/coursier.bat "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier.bat"
+  curl -fLo bin/coursier "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier"
+  curl -fLo bin/coursier.bat "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier.bat"
 
 else
 
-  curl -Lo bin/sbt "https://raw.githubusercontent.com/coursier/sbt-extras/$SBT_EXTRAS_COMMIT/sbt"
+  curl -fLo bin/sbt "https://raw.githubusercontent.com/coursier/sbt-extras/$SBT_EXTRAS_COMMIT/sbt"
   chmod +x bin/sbt
 
-  (echo "#!/usr/bin/env sh" && curl -L "https://github.com/lihaoyi/Ammonite/releases/download/$AMMONITE_VERSION/2.12-$AMMONITE_VERSION") > bin/amm
+  (echo "#!/usr/bin/env sh" && curl -fL "https://github.com/lihaoyi/Ammonite/releases/download/$AMMONITE_VERSION/2.12-$AMMONITE_VERSION") > bin/amm
   chmod +x bin/amm
 
-  curl -Lo bin/coursier "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier"
+  curl -fLo bin/coursier "https://github.com/coursier/coursier/releases/download/v$COURSIER_VERSION/coursier"
   chmod +x bin/coursier
 
 fi

@@ -18,8 +18,7 @@ Some of its logic is handled via [Ammonite](https://ammonite.io).
 Ensure [Ammonite](https://ammonite.io) `1.6.x` is installed. Alternatively,
 fetch it via
 ```bash
-$ (echo "#!/usr/bin/env sh" && curl -L https://github.com/lihaoyi/Ammonite/releases/download/1.6.2/2.12-1.6.2) > amm
-$ chmod +x amm
+$ cs bootstrap ammonite:2.0.4 -o amm
 ```
 Then run `./amm` rather than just `amm` below.
 

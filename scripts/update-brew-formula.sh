@@ -26,10 +26,10 @@ git config user.name "Travis-CI"
 git config user.email "invalid@travis-ci.com"
 
 JAR_URL="https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/coursier"
-curl --fail -Lo jar-launcher "$JAR_URL"
+curl -fLo jar-launcher "$JAR_URL"
 
 URL="https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/cs-x86_64-apple-darwin"
-curl --fail -Lo launcher "$URL"
+curl -fLo launcher "$URL"
 
 JAR_SHA256="$(openssl dgst -sha256 -binary < jar-launcher | xxd -p -c 256)"
 rm -f jar-launcher
