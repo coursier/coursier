@@ -8,7 +8,7 @@ title: Installation
 
 On Linux, download and run the coursier launcher with
 ```bash
-$ curl -Lo cs https://git.io/coursier-cli-linux &&
+$ curl -fLo cs https://git.io/coursier-cli-linux &&
     chmod +x cs &&
     ./cs --help
 ```
@@ -17,7 +17,7 @@ $ curl -Lo cs https://git.io/coursier-cli-linux &&
 
 Download and run the coursier launcher with
 ```bash
-$ curl -Lo cs https://git.io/coursier-cli-macos &&
+$ curl -fLo cs https://git.io/coursier-cli-macos &&
     chmod +x cs &&
     (xattr -d com.apple.quarantine cs || true) &&
     ./cs --help
@@ -51,7 +51,7 @@ substituted to `cs` in the various examples on this website.
 
 Download and run the launcher with
 ```bash
-$ curl -Lo coursier https://git.io/coursier-cli &&
+$ curl -fLo coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
     ./coursier --help
 ```
