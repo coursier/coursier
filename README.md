@@ -20,3 +20,9 @@ People are expected to follow the [Scala Code of Conduct](https://www.scala-lang
 when discussing coursier on GitHub, Gitter channel, or other venues.
 
 Feel free to open an issue if you notice a bug, have an idea for a feature, or have a question about the code. Pull requests are also gladly accepted.
+
+## Acknowledgments
+
+<img src="https://scala.epfl.ch/resources/img/scala-center-swirl.png" width="40px" />
+
+Large parts of the developments in coursier since Sep. 2018 have been funded by the [Scala Center](https://scala.epfl.ch), through the employment or contracting of myself (Alexandre Archambault).
