@@ -34,7 +34,9 @@ import scala.util.control.NonFatal
   os: String = System.getProperty("os.name", ""),
   nativeImageJavaHome: Option[String => Task[File]] = None,
   onlyPrebuilt: Boolean = false,
-  preferPrebuilt: Boolean = true
+  preferPrebuilt: Boolean = true,
+  basePreamble: Preamble = Preamble()
+    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true")
 ) {
 
   private lazy val isWindows =
@@ -88,6 +90,11 @@ import scala.util.control.NonFatal
     if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
 
+  private def baseJarPreamble: Preamble =
+    basePreamble.addExtraEnvVar(InstallDir.isJvmLauncherEnvVar, "true")
+  private def baseNativePreamble: Preamble =
+    basePreamble.addExtraEnvVar(InstallDir.isNativeLauncherEnvVar, "true")
+
   private[install] def params(
     desc: AppDescriptor,
     appArtifacts: AppArtifacts,
@@ -99,7 +106,7 @@ import scala.util.control.NonFatal
       case LauncherType.DummyJar =>
         Parameters.Bootstrap(Nil, mainClass)
           .withPreamble(
-            Preamble()
+            baseJarPreamble
               .withOsKind(isWindows)
               .callsItself(isWindows)
               .withJavaOpts(desc.javaOptions)
@@ -130,7 +137,7 @@ import scala.util.control.NonFatal
 
         Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
           .withPreamble(
-            Preamble()
+            baseJarPreamble
               .withOsKind(isWindows)
               .callsItself(isWindows)
               .withJavaOpts(desc.javaOptions)
@@ -147,7 +154,7 @@ import scala.util.control.NonFatal
         // FIXME Allow to adjust merge rules?
         Parameters.Assembly()
           .withPreamble(
-            Preamble()
+            baseJarPreamble
               .withOsKind(isWindows)
               .callsItself(isWindows)
               .withJavaOpts(desc.javaOptions)
@@ -304,11 +311,11 @@ import scala.util.control.NonFatal
           if (desc.launcherType.isNative) {
             val preamble =
               if (isWindows)
-                Preamble()
+                baseNativePreamble
                   .withKind(Preamble.Kind.Bat)
                   .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
               else
-                Preamble()
+                baseNativePreamble
                   .withKind(Preamble.Kind.Sh)
                   .withCommand(""""$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "") + "\"") // FIXME needs directory
             writing(tmpDest, verbosity, Some(currentTime)) {
@@ -385,6 +392,10 @@ import scala.util.control.NonFatal
 }
 
 object InstallDir {
+
+  val isInstalledLauncherEnvVar: String = "IS_CS_INSTALLED_LAUNCHER"
+  val isJvmLauncherEnvVar: String = "CS_JVM_LAUNCHER"
+  val isNativeLauncherEnvVar: String = "CS_NATIVE_LAUNCHER"
 
   private lazy val defaultDir0: Path = {
 

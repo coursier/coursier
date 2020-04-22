@@ -312,6 +312,51 @@ resolveRules() {
     --rule 'SameVersion(com.fasterxml.jackson.core:jackson-*)'
 }
 
+launchInlineApp() {
+  local OUT="$("$COURSIER" launch '{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from inline echo app command." 1>&2
+    exit 1
+  fi
+}
+
+launchInlineAppWithId() {
+  local OUT="$("$COURSIER" launch 'echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from inline echo app with id command." 1>&2
+    exit 1
+  fi
+}
+
+installInlineApp() {
+  local DIR="target/test-install"
+  rm -rf "$DIR"
+  "$COURSIER" install --install-dir "$DIR" 'echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}'
+  local OUT="$("$DIR/echo" foo)"
+  rm -rf "$DIR"
+  if [ "$OUT" != foo ]; then
+    echo "Error: unexpected output from installed inline echo app command." 1>&2
+    exit 1
+  fi
+}
+
+enVarInstalledApp() {
+  local DIR="target/test-install-2"
+  rm -rf "$DIR"
+  "$COURSIER" install --install-dir "$DIR" 'env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}'
+  local CS_JVM_LAUNCHER_OUT="$("$DIR/env" CS_JVM_LAUNCHER)"
+  local IS_CS_INSTALLED_LAUNCHER_OUT="$("$DIR/env" IS_CS_INSTALLED_LAUNCHER)"
+  # rm -rf "$DIR"
+  if [ "$CS_JVM_LAUNCHER_OUT" != true ]; then
+    echo "Error: unexpected value of CS_JVM_LAUNCHER from installed app." 1>&2
+    exit 1
+  fi
+  if [ "$IS_CS_INSTALLED_LAUNCHER_OUT" != true ]; then
+    echo "Error: unexpected value of IS_CS_INSTALLED_LAUNCHER from installed app." 1>&2
+    exit 1
+  fi
+}
+
 nailgun
 fork
 nonStaticMainClass
@@ -339,3 +384,9 @@ launcherAssembly
 launcherAssemblyPreambleInSource
 
 resolveRules
+
+launchInlineApp
+launchInlineAppWithId
+installInlineApp
+
+enVarInstalledApp

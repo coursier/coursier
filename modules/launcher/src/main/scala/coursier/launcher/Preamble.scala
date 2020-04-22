@@ -11,7 +11,8 @@ import scala.io.{Codec, Source}
   kind: Preamble.Kind = Preamble.Kind.Sh,
   javaOpts: Seq[String] = Nil,
   jarPath: Option[String] = None,
-  command: Option[String] = None
+  command: Option[String] = None,
+  extraEnv: Map[String, String] = Map.empty
 ) {
 
   def withOsKind(isWindows: Boolean): Preamble =
@@ -29,7 +30,15 @@ import scala.io.{Codec, Source}
   def withCommand(command: String): Preamble =
     withCommand(Some(command))
 
+  def addExtraEnvVar(key: String, value: String): Preamble =
+    withExtraEnv(extraEnv + (key -> value))
+
   def sh: Array[Byte] = {
+    val setVars = extraEnv
+      .toVector
+      .sorted
+      // escaping possibly a bit loose :-|
+      .map { case (k, v) => s"""export $k="$v"""" }
     val lines = command match {
       case None =>
         val javaCmd = Seq("java") ++
@@ -37,17 +46,19 @@ import scala.io.{Codec, Source}
           javaOpts.map(s => "'" + s.replace("'", "\\'") + "'") ++
           Seq("$JAVA_OPTS", "\"$@\"")
 
-        Seq(
-          "#!/usr/bin/env sh",
-          Preamble.shArgsPartitioner(jarPath.getOrElse("$0")),
-          "exec " + javaCmd.mkString(" ")
-        )
+        Seq("#!/usr/bin/env sh") ++
+          setVars ++
+          Seq(
+            Preamble.shArgsPartitioner(jarPath.getOrElse("$0")),
+            "exec " + javaCmd.mkString(" ")
+          )
 
       case Some(c) =>
-        Seq(
-          "#!/usr/bin/env sh",
-          "exec " + c + " \"$@\""
-        )
+        Seq("#!/usr/bin/env sh") ++
+          setVars ++
+          Seq(
+            "exec " + c + " \"$@\""
+          )
     }
 
     lines.mkString("", "\n", "\n").getBytes(StandardCharsets.UTF_8)
@@ -65,7 +76,18 @@ import scala.io.{Codec, Source}
         Preamble.batCommandTemplate
           .replace("@COMMAND@", c)
     }
-    content.getBytes(Charset.defaultCharset())
+
+    val content0 = content.replace(
+      "@EXTRA_VARS@",
+      extraEnv
+        .toVector
+        .sorted
+        // FIXME no escaping :|
+        .map { case (k, v) => s"set $k=$v\r\n" }
+        .mkString
+    )
+
+    content0.getBytes(Charset.defaultCharset())
   }
 
   def value: Array[Byte] =

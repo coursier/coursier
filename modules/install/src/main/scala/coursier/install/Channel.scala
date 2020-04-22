@@ -28,6 +28,11 @@ object Channel {
       path.toString
   }
 
+  @data class Inline() extends Channel {
+    def repr: String =
+      "inline"
+  }
+
   def module(module: Module): FromModule =
     FromModule(module)
 
@@ -65,7 +70,9 @@ object Channel {
     parse(s, FileSystems.getDefault)
 
   def parse(s: String, fs: FileSystem): Either[String, Channel] =
-    if (s.contains("://"))
+    if (s == "inline")
+      Right(Inline())
+    else if (s.contains("://"))
       Right(Channel.url(s))
     else if ((s.startsWith("gh:") || s.startsWith("github:")) && s.contains("/")) {
 
