@@ -25,8 +25,8 @@ final class DependencySet private (
   override def toString: String =
     s"DependencySet($set, ${grouped.size} groups)"
 
-  assert(grouped.iterator.map(_._2.size).sum == set.size, s"${grouped.iterator.map(_._2.size).sum} != ${set.size}")
-  assert(grouped.forall { case (dep, l) => l.forall(_.moduleVersion == dep.moduleVersion) })
+//  assert(grouped.iterator.map(_._2.size).sum == set.size, s"${grouped.iterator.map(_._2.size).sum} != ${set.size}")
+//  assert(grouped.forall { case (dep, l) => l.forall(_.moduleVersion == dep.moduleVersion) })
 
   lazy val minimizedSet: Set[Dependency] =
     grouped.iterator.flatMap(_._2.children.keysIterator).toSet
