@@ -457,12 +457,11 @@ object Resolution {
 
   private def substitute(properties0: Seq[(String, String)]): Seq[(String, String)] = {
 
-    val done = properties0
+    val done: Map[String, String] = properties0.iterator
       .collect {
         case kv @ (_, value) if !hasProps(value) =>
           kv
-      }
-      .toMap
+      }.toMap // `ys.iterator.map(f).toMap` is an cross compatible version of `ys.map(f)(collection.breakOut)`
 
     var didSubstitutions = false
 
@@ -885,7 +884,7 @@ object Resolution {
       .groupBy(_._1)
       .mapValues(_.map(_._2).toVector)
       .filterKeys(knownDeps)
-      .toVector.toMap // Eagerly evaluate filterKeys/mapValues
+      .toMap // Eagerly evaluate filterKeys/mapValues
   }
 
   /**
