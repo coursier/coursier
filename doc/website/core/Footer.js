@@ -43,12 +43,6 @@ class Footer extends React.Component {
               <img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&label=stars&logo=github&style=social" />
             </a>
           </div>
-          <div>
-            <h5>Funding</h5>
-            <a href="https://scala.epfl.ch" target="_blank">
-              <img src="https://scala.epfl.ch/resources/img/scala-center-logo-top.png" height="40px" />
-            </a>
-          </div>
         </section>
         <section className="copyright">{this.props.config.copyright}</section>
       </footer>
