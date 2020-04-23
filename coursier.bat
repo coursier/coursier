@@ -1,5 +1,7 @@
 @echo off
 
+
+
 @REM set %HOME% to equivalent of $HOME
 if "%HOME%" == "" (set HOME=%HOMEDRIVE%%HOMEPATH%)
 
