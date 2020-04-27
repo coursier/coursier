@@ -11,7 +11,7 @@ The CLI of coursier has a number of commands to deal with dependencies and artif
 - `java` and `java-home` [install, run, and get the home directory of JVMs](#java),
 - `setup` [checks if your system has a JVM and the standard Scala applications](#setup), and installs them if needed.
 
-See [Installation](#cli-installation.md) for how to install the
+See [Installation](cli-installation.md) for how to install the
 CLI of coursier.
 
 This page succinctly describes each of these commands. More
