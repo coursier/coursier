@@ -99,13 +99,13 @@ java -jar dist/coursier-cli.jar fetch --help
 
 ## Build the web demo
 
-coursier is cross-compiled to scala-js, and can run in the browser. It has a [demo web site](https://coursier.github.io/coursier/#demo), that runs resolutions straight from your web browser.
+coursier is cross-compiled to scala-js, and can run in the browser. It has a [demo web site](https://get-coursier.io/demo/), that runs resolutions straight from your web browser.
 
 Its sources are in the `web` module.
 
 To build and test this demo site locally, you can do
 ```
-$ sbt web/fastOptJS
+$ sbt web/fastOptJS::webpack
 $ open modules/web/target/scala-2.12/classes/index.html
 ```
 (on Linux, use `xdg-open` instead of `open`)
