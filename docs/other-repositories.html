@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>In the CLI and the high level API, the default repositories are</p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-12">
+  <meta name="docsearch:version" content="2.0.0-RC6-13">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Repositories · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../versions"><h3>2.0.0-RC6-12</h3></a>
+     <a href="../../versions"><h3>2.0.0-RC6-13</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -194,8 +194,8 @@
            <li>the Ivy2 local repository, <code>~/.ivy2/local</code>,</li> 
            <li><a href="https://repo1.maven.org/maven2">Maven Central</a>.</li> 
           </ul> <p>(Only Maven Central from Scala.JS.)</p> <p>These can be changed via the <code>COURSIER_REPOSITORIES</code> environment variable, which should contain a list of repositories, separated by <code>|</code>. Repositories are parsed the same way as the <code>-r</code> option in the CLI, like</p> <pre><code class="hljs">$ <span class="hljs-builtin-name">export</span> <span class="hljs-attribute">COURSIER_REPOSITORIES</span>=<span class="hljs-string">"ivy2Local|central|sonatype:releases|jitpack|https://corporate.com/repo"</span>
-</code></pre> <p>From the CLI, one can add extra repositories to a particular command with the <code>-r</code> option, like</p> <pre><code class="hljs css language-bash">$ coursier fetch -r jitpack sh.almond:scala-kernel_2.12.8:0.2.2
-</code></pre> <p>One can ignore the default repositories above or the ones from <code>COURSIER_REPOSITORIES</code> by passing <code>--no-default</code>, like</p> <pre><code class="hljs css language-bash">$ coursier fetch --no-default \
+</code></pre> <p>From the CLI, one can add extra repositories to a particular command with the <code>-r</code> option, like</p> <pre><code class="hljs css language-bash">$ cs fetch -r jitpack sh.almond:scala-kernel_2.12.8:0.2.2
+</code></pre> <p>One can ignore the default repositories above or the ones from <code>COURSIER_REPOSITORIES</code> by passing <code>--no-default</code>, like</p> <pre><code class="hljs css language-bash">$ cs fetch --no-default \
   -r central -r sonatype:snapshots \
   org.scalameta:scalafmt-cli_2.12:2.0.0-RC4+29-f2154330-SNAPSHOT
 </code></pre> </span>

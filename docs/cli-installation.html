@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<h2><a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;native-launcher&quot;></a><a href=&quot;#native-launcher&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;><svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;><path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;></path></svg></a>Native launcher</h2>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-12">
+  <meta name="docsearch:version" content="2.0.0-RC6-13">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Installation · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../versions"><h3>2.0.0-RC6-12</h3></a>
+     <a href="../../versions"><h3>2.0.0-RC6-13</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -192,19 +192,16 @@
          <span><h2><a class="anchor" aria-hidden="true" id="native-launcher"></a><a href="cli-installation.html#native-launcher" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Native launcher</h2> 
-          <blockquote> 
-           <p>The commands below install the native launcher as <code>cs</code>, which can be substituted to <code>coursier</code> in the various examples on this website.</p> 
-          </blockquote> <h3><a class="anchor" aria-hidden="true" id="linux"></a><a href="cli-installation.html#linux" aria-hidden="true" class="hash-link">
+            </svg></a>Native launcher</h2> <h3><a class="anchor" aria-hidden="true" id="linux"></a><a href="cli-installation.html#linux" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Linux</h3> <p>On Linux, download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-linux &amp;&amp;
+            </svg></a>Linux</h3> <p>On Linux, download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -fLo cs https://git.io/coursier-cli-linux &amp;&amp;
     chmod +x cs &amp;&amp;
     ./cs --<span class="hljs-built_in">help</span>
 </code></pre> <h3><a class="anchor" aria-hidden="true" id="macos"></a><a href="cli-installation.html#macos" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>macOS</h3> <p>Download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo cs https://git.io/coursier-cli-macos &amp;&amp;
+            </svg></a>macOS</h3> <p>Download and run the coursier launcher with</p> <pre><code class="hljs css language-bash">$ curl -fLo cs https://git.io/coursier-cli-macos &amp;&amp;
     chmod +x cs &amp;&amp;
     (xattr -d com.apple.quarantine cs || <span class="hljs-literal">true</span>) &amp;&amp;
     ./cs --<span class="hljs-built_in">help</span>
@@ -218,10 +215,13 @@ $ cs --<span class="hljs-built_in">help</span>
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="jar-based-launcher"></a><a href="cli-installation.html#jar-based-launcher" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>JAR-based launcher</h2> <p>In case you run into any issue with the <a href="cli-installation.html#native-launcher">native launcher</a>, a JAR-based launcher is available.</p> <h3><a class="anchor" aria-hidden="true" id="linux-macos"></a><a href="cli-installation.html#linux-macos" aria-hidden="true" class="hash-link">
+            </svg></a>JAR-based launcher</h2> <p>In case you run into any issue with the <a href="cli-installation.html#native-launcher">native launcher</a>, a JAR-based launcher is available.</p> 
+          <blockquote> 
+           <p>The commands below install the JAR-based launcher as <code>coursier</code>, which can be substituted to <code>cs</code> in the various examples on this website.</p> 
+          </blockquote> <h3><a class="anchor" aria-hidden="true" id="linux-macos"></a><a href="cli-installation.html#linux-macos" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Linux / macOS</h3> <p>Download and run the launcher with</p> <pre><code class="hljs css language-bash">$ curl -Lo coursier https://git.io/coursier-cli &amp;&amp;
+            </svg></a>Linux / macOS</h3> <p>Download and run the launcher with</p> <pre><code class="hljs css language-bash">$ curl -fLo coursier https://git.io/coursier-cli &amp;&amp;
     chmod +x coursier &amp;&amp;
     ./coursier --<span class="hljs-built_in">help</span>
 </code></pre> <p>Note that the JAR-based launcher requires Java 8 or later to run. That is, a command like <code>java -version</code> should print a version &gt;= 8.</p> <p>The JAR-based launcher weights only about 25 kB and can be easily embedded as is in other projects. It downloads the artifacts required to launch coursier on the first run.</p> <p>Alternatively, on macOS, the JAR-based launcher can be installed via <a href="https://brew.sh">homebrew</a> with</p> <pre><code class="hljs css language-bash">$ brew install coursier/formulas/coursier
@@ -304,22 +304,22 @@ cp scripts/_coursier ~/.zsh/completion/
            <tbody> 
             <tr>
              <td>Linux</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-pc-linux</a></td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-pc-linux</a></td>
              <td><code>2.0.0-RC3-1</code></td>
             </tr> 
             <tr>
              <td>macOS</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-apple-darwin</a></td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-apple-darwin</a></td>
              <td><code>2.0.0-RC3-1</code></td>
             </tr> 
             <tr>
              <td>Windows</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/cs-x86_64-pc-win32.exe</a></td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/cs-x86_64-pc-win32.exe</a></td>
              <td><code>2.0.0-RC6</code></td>
             </tr> 
             <tr>
              <td>Any (needs JVM)</td>
-             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/coursier">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-12/coursier</a></td>
+             <td><a href="https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/coursier">https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-13/coursier</a></td>
              <td><code>1.1.0-M9</code></td>
             </tr> 
             <tr>

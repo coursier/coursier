@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p><em>Direct former README import (possibly not up-to-date)</em></p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-12">
+  <meta name="docsearch:version" content="2.0.0-RC6-13">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Extra · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../versions"><h3>2.0.0-RC6-12</h3></a>
+     <a href="../../versions"><h3>2.0.0-RC6-13</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -192,7 +192,7 @@
          <span><p><em>Direct former README import (possibly not up-to-date)</em></p> <h2><a class="anchor" aria-hidden="true" id="printing-trees"></a><a href="extra.html#printing-trees" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Printing trees</h2> <p>E.g. to print the dependency tree of <code>io.circe:circe-core:0.4.1</code>,</p> <pre><code class="hljs">$ coursier resolve -t io.circe:circe-core_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.4</span><span class="hljs-number">.1</span>
+            </svg></a>Printing trees</h2> <p>E.g. to print the dependency tree of <code>io.circe:circe-core:0.4.1</code>,</p> <pre><code class="hljs">$ cs resolve -t io.circe:circe-core_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.4</span><span class="hljs-number">.1</span>
   Result:
 └─ io.circe:circe-core_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.4</span><span class="hljs-number">.1</span>
    ├─ io.circe:circe-numbers_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.4</span><span class="hljs-number">.1</span>
@@ -219,11 +219,11 @@ io.<span class="hljs-keyword">get</span>-coursier:coursier_2<span class="hljs-nu
 </code></pre> <p>Note that this command can be scoped to sub-projects, like <code>proj/coursierDependencyTree</code>.</p> <p>The printed trees highlight version bumps, that only change the patch number, in yellow. The <code>2.11.7 -&gt; 2.11.8</code> above mean that the parent dependency wanted version <code>2.11.7</code>, but version <code>2.11.8</code> landed in the classpath, pulled in this version by other dependencies.</p> <p>They highlight in red version bumps that may not be binary compatible, changing major or minor version number.</p> <h2><a class="anchor" aria-hidden="true" id="generating-bootstrap-launchers"></a><a href="extra.html#generating-bootstrap-launchers" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Generating bootstrap launchers</h2> <p>The <code>coursier bootstrap</code> command generates tiny bootstrap launchers (~30 kB). These are able to download their dependencies upon first launch, then launch the corresponding application. E.g. to generate a launcher for scalafmt,</p> <pre><code class="hljs">$ coursier bootstrap com.geirsson:scalafmt-cli_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.2</span><span class="hljs-number">.3</span> -o scalafmt
+            </svg></a>Generating bootstrap launchers</h2> <p>The <code>coursier bootstrap</code> command generates tiny bootstrap launchers (~30 kB). These are able to download their dependencies upon first launch, then launch the corresponding application. E.g. to generate a launcher for scalafmt,</p> <pre><code class="hljs">$ cs bootstrap com.geirsson:scalafmt-cli_2<span class="hljs-number">.11</span>:<span class="hljs-number">0.2</span><span class="hljs-number">.3</span> -o scalafmt
 </code></pre> <p>This generates a <code>scalafmt</code> file, which is a tiny JAR, corresponding to the <code>bootstrap</code> sub-project of coursier. It contains resource files, with the URLs of the various dependencies of scalafmt. On first launch, these are downloaded under <code>~/.coursier/bootstrap/com.geirsson/scalafmt-cli_2.11</code> (following the organization and name of the first dependency - note that this directory can be changed with the <code>-D</code> option). Nothing needs to be downloaded once all the dependencies are there, and the application is then launched straightaway.</p> <h2><a class="anchor" aria-hidden="true" id="credentials"></a><a href="extra.html#credentials" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Credentials</h2> <p>To use artifacts from repositories requiring credentials, pass the user and password via the repository URL, like</p> <pre><code class="hljs">$ coursier fetch -r <span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/user:pass@company.com/repo</span> com.<span class="hljs-symbol">company:</span><span class="hljs-class"><span class="hljs-keyword">lib</span>:0.1.0</span>
+            </svg></a>Credentials</h2> <p>To use artifacts from repositories requiring credentials, pass the user and password via the repository URL, like</p> <pre><code class="hljs">$ cs fetch -r <span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/user:pass@company.com/repo</span> com.<span class="hljs-symbol">company:</span><span class="hljs-class"><span class="hljs-keyword">lib</span>:0.1.0</span>
 </code></pre> <p>From sbt, add the setting <code>coursierUseSbtCredentials := true</code> for sbt-coursier to use the credentials set via the <code>credentials</code> key. This manual step was added in order for the <code>credentials</code> setting not to be checked if not needed, as it seems to acquire some (good ol') global lock when checked, which sbt-coursier aims at avoiding.</p> <h2><a class="anchor" aria-hidden="true" id="extra-protocols"></a><a href="extra.html#extra-protocols" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>

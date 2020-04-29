@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>launch · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p><code>launch</code> launches applications from one or more dependencies.</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC6-12">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="launch · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p><code>launch</code> launches applications from one or more dependencies.</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../../versions"><h3>2.0.0-RC6-12</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../../docs/2.0.0-RC6-12/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-installation">Installation</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-fetch">fetch</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-install">install</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-java">java</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cli-setup">setup</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/other-version-handling">Version handling</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-12/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-launch.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">launch</h1>
+       </header>
+       <article>
+        <div>
+         <span><p><code>launch</code> launches applications from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --<span class="hljs-built_in">help</span>
+scalafmt 2.4.2
+Usage: scalafmt [options] [&lt;file&gt;...]
+
+  -h, --<span class="hljs-built_in">help</span>               prints this usage text
+  -v, --version            <span class="hljs-built_in">print</span> version
+…
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="arguments"></a><a href="index.html#arguments" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Arguments</h2> <p>Pass arguments to the launched program, by adding <code>--</code> after the coursier arguments, like</p> <pre><code class="hljs css language-bash">$ coursier launch org.scalameta::scalafmt-cli:2.4.2 -- --version
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="main-class"></a><a href="index.html#main-class" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Main class</h2> <p>If the dependencies don't specify a default main class via their manifest, or if the heuristics of the <code>launch</code> command fails to pick the right manifest, you can specify a main class via <code>-M</code> or <code>--main-class</code>, like</p> <pre><code class="hljs css language-bash">$ cs launch com.lihaoyi:ammonite_2.13.1:2.0.4 -M ammonite.Main
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@
+</code></pre> <p>If a dependency is published by sbt, and contains only one main class, the main class should have been automatically added to the manifest. If it contains several main classes, setting <a href="https://github.com/sbt/sbt/blob/v1.2.8/main/src/main/scala/sbt/Keys.scala#L265"><code>mainClass</code></a> in sbt is required for it to be set in the manifest.</p> <p>In case several of the loaded JARs have manifests with main classes, the <code>launch</code> command applies an heuristic to try to find the "main" one.</p> <p>If the heuristic to find the main class fails, pass <code>-v -v</code> to <code>launch</code> to get more details:</p> <pre><code class="hljs css language-bash">$ cs launch com.geirsson:scalafmt-cli_2.12:1.5.1 -r bintray:scalameta/maven -v -v -- --version
+…
+Found main classes:
+  com.martiansoftware.nailgun.NGServer (vendor: , title: )
+  org.scalafmt.cli.Cli (vendor: com.geirsson, title: cli)
+…
+</code></pre> <p>This prints the main classes of all manifests found, among other things. If you think one of them is the right one, just pass it via <code>-M</code> to <code>launch</code>.</p> <h2><a class="anchor" aria-hidden="true" id="java-options"></a><a href="index.html#java-options" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Java options</h2> <p>With the native coursier launcher, you can pass options to the JVM that <code>launch</code> starts with <code>-J</code> or <code>--java-opt</code>, like</p> <pre><code class="hljs css language-bash">$ cs launch -J -Dfoo=bar -J -Xmx2g ammonite
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@ sys.props(<span class="hljs-string">"foo"</span>)
+res0: String = <span class="hljs-string">"bar"</span>
+</code></pre> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../../docs/2.0.0-RC6-12/cli-fetch"><span class="arrow-prev">← </span><span>fetch</span></a>
+       <a class="docs-next button" href="../../../../docs/2.0.0-RC6-12/cli-bootstrap"><span>bootstrap</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="index.html#arguments">Arguments</a></li>
+      <li><a href="index.html#main-class">Main class</a></li>
+      <li><a href="index.html#java-options">Java options</a></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5><a href="../../../../docs/overview">Docs</a></h5>
+      <a href="../../../../docs/overview">Overview</a>
+      <a href="../../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2020 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>
