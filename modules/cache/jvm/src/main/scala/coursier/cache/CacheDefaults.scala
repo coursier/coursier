@@ -15,7 +15,7 @@ object CacheDefaults {
 
   lazy val location: File = CachePath.defaultCacheDirectory()
 
-  private[coursier] def warnLegacyCacheLocation(): Unit = {
+  def warnLegacyCacheLocation(): Unit = {
     val legacy = new File(new File(System.getProperty("user.home")), ".coursier/cache/v1")
     lazy val disabled = Option(System.getenv("COURSIER_LEGACY_CACHE")).contains("dont-warn") ||
       java.lang.Boolean.getBoolean("coursier.legacy-cache.dont-warn")
