@@ -76,6 +76,12 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // false positives, coursier.core.DependencySet#Sets is private
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.copy"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.DependencySet#Sets.copy$default$1"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.this"),
+        ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.apply"),
+        ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.DependencySet#Sets.required"),
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
       )
