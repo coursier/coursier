@@ -10,7 +10,7 @@ object Deps {
     def argonautShapeless = "1.2.0-M11"
     def fastParse = "2.3.0"
     def http4s = "0.18.26"
-    def jsoniterScala = "2.1.15"
+    def jsoniterScala = "2.2.0"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
