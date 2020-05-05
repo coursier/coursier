@@ -70,13 +70,17 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
   private def isInstalledLauncher: Boolean =
     System.getenv(InstallDir.isInstalledLauncherEnvVar) == "true"
 
-  override def main(args: Array[String]): Unit =
+  override def main(args: Array[String]): Unit = {
+
+    coursier.cache.CacheDefaults.warnLegacyCacheLocation()
+
     if (args.nonEmpty)
       super.main(args)
     else if (Windows.isWindows && !isInstalledLauncher)
       runSetup()
     else
       helpAsked()
+  }
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 

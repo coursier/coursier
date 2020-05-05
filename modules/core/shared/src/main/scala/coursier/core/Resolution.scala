@@ -458,6 +458,7 @@ object Resolution {
   private def substitute(properties0: Seq[(String, String)]): Seq[(String, String)] = {
 
     val done = properties0
+      .iterator
       .collect {
         case kv @ (_, value) if !hasProps(value) =>
           kv
@@ -885,7 +886,7 @@ object Resolution {
       .groupBy(_._1)
       .mapValues(_.map(_._2).toVector)
       .filterKeys(knownDeps)
-      .toVector.toMap // Eagerly evaluate filterKeys/mapValues
+      .toMap // Eagerly evaluate filterKeys/mapValues
   }
 
   /**

@@ -5,7 +5,7 @@ title: Credentials
 Credentials can be passed either:
 - [inline](#inline), via the `COURSIER_CREDENTIALS` environment variable or the `coursier.credentials` Java property,
 - via [a property file](#property-file), or
-- [per repository](#per-repository), the former / legacy way (which suffers some limitations).
+- [per host](#per-host), the former / legacy way (which suffers some limitations).
 
 ## Inline
 

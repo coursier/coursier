@@ -9,8 +9,8 @@ object Deps {
   private object versions {
     def argonautShapeless = "1.2.0-M11"
     def fastParse = "2.3.0"
-    def http4s = "0.21.4"
-    def jsoniterScala = "2.1.15"
+    def http4s = "0.18.26"
+    def jsoniterScala = "2.2.0"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
@@ -19,7 +19,7 @@ object Deps {
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % versions.argonautShapeless
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M16"
   def catsCore = "org.typelevel" %% "cats-core" % "2.1.1"
-  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.2"
+  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def emoji = "com.lightbend" %% "emoji" % "1.2.1"
   def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse

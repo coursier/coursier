@@ -15,6 +15,28 @@ object CacheDefaults {
 
   lazy val location: File = CachePath.defaultCacheDirectory()
 
+  def warnLegacyCacheLocation(): Unit = {
+    val legacy = new File(new File(System.getProperty("user.home")), ".coursier/cache/v1")
+    lazy val disabled = Option(System.getenv("COURSIER_LEGACY_CACHE")).contains("dont-warn") ||
+      java.lang.Boolean.getBoolean("coursier.legacy-cache.dont-warn")
+    if (location == legacy && !disabled) {
+      val colorsEnabled = coursier.paths.Util.useAnsiOutput()
+      val yellow = if (colorsEnabled) Console.YELLOW else ""
+      val reset = if (colorsEnabled) Console.RESET else ""
+      System.err.println(
+       s"""${yellow}Warning${reset}: a legacy coursier cache was found at $location and is currently being used.
+          |
+          |Support for that cache location will be removed in coursier 2.0.0 final, whose release is imminent.
+          |
+          |Follow the instructions at
+          |  https://github.com/coursier/cache-migration#cache-migration
+          |in order to migrate your cache to the newer location.
+          |
+          |""".stripMargin
+      )
+    }
+  }
+
   private def defaultConcurrentDownloadCount = 6
 
   lazy val concurrentDownloadCount: Int =
