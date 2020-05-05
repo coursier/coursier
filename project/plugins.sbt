@@ -2,7 +2,7 @@
 plugins_(
   "com.geirsson"       % "sbt-ci-release"           % "1.5.3",
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
-  "org.scalameta"      % "sbt-mdoc"                 % "2.1.5",
+  "org.scalameta"      % "sbt-mdoc"                 % "2.2.0",
   "com.typesafe"       % "sbt-mima-plugin"          % "0.7.0",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
