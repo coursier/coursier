@@ -41,8 +41,7 @@ object CacheLocks {
       channel = FileChannel.open(
         lockFile,
         StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE,
-        StandardOpenOption.DELETE_ON_CLOSE
+        StandardOpenOption.WRITE
       )
     }
 
@@ -62,6 +61,7 @@ object CacheLocks {
               lock = null
               channel.close()
               channel = null
+              Files.deleteIfExists(lockFile)
             }
         }
         catch {
