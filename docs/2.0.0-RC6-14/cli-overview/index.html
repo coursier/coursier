@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Overview · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC6-14">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="Overview · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../../versions"><h3>2.0.0-RC6-14</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../../docs/2.0.0-RC6-14/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-installation">Installation</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-launch">launch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-install">install</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-java">java</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cli-setup">setup</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/other-version-handling">Version handling</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-14/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-overview.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">Overview</h1>
+       </header>
+       <article>
+        <div>
+         <span><p>The CLI of coursier has a number of commands to deal with dependencies and artifacts:</p> 
+          <ul> 
+           <li><code>resolve</code> <a href="index.html#resolve">lists the transitive dependencies</a> of one or more dependencies,</li> 
+           <li><code>fetch</code> <a href="index.html#fetch">fetches the artifacts</a> of one or more dependencies,</li> 
+           <li><code>launch</code> <a href="index.html#launch">runs applications based on Maven / Ivy dependencies</a>,</li> 
+           <li><code>bootstrap</code> <a href="index.html#bootstrap">generates convenient launchers to run them</a>,</li> 
+           <li><code>install</code> <a href="index.html#install">installs applications based on Maven / Ivy dependencies</a>,</li> 
+           <li><code>java</code> and <code>java-home</code> <a href="index.html#java">install, run, and get the home directory of JVMs</a>,</li> 
+           <li><code>setup</code> <a href="index.html#setup">checks if your system has a JVM and the standard Scala applications</a>, and installs them if needed.</li> 
+          </ul> <p>See <a href="../../../../docs/2.0.0-RC6-14/cli-installation">Installation</a> for how to install the CLI of coursier.</p> <p>This page succinctly describes each of these commands. More details about each them are then given in the dedicated documentation page of each command (see links on the left).</p> <h2><a class="anchor" aria-hidden="true" id="available-commands"></a><a href="index.html#available-commands" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Available commands</h2> <h3><a class="anchor" aria-hidden="true" id="resolve"></a><a href="index.html#resolve" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>resolve</code></h3> <p><code>resolve</code> lists the transitive dependencies of one or more other dependencies. Use like</p> <pre><code class="hljs css language-bash">$ cs resolve io.circe::circe-generic:0.12.3
+com.chuusai:shapeless_2.13:2.3.3:default
+io.circe:circe-core_2.13:0.12.3:default
+io.circe:circe-generic_2.13:0.12.3:default
+io.circe:circe-numbers_2.13:0.12.3:default
+org.scala-lang:scala-library:2.13.0:default
+org.typelevel:cats-core_2.13:2.0.0:default
+org.typelevel:cats-kernel_2.13:2.0.0:default
+org.typelevel:cats-macros_2.13:2.0.0:default
+</code></pre> <p>Note that this only relies on metadata files (POMs in particular), and doesn't download any JAR.</p> <p><code>resolve</code> has more options, to <a href="../../../../docs/2.0.0-RC6-14/cli-resolve#tree">print trees</a>, <a href="../../../../docs/2.0.0-RC6-14/cli-resolve#what-depends-on">find which dependency brings another one</a>, etc. See <a href="../../../../docs/2.0.0-RC6-14/cli-resolve">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="fetch"></a><a href="index.html#fetch" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>fetch</code></h3> <p><code>fetch</code> fetches the JARs of one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs fetch io.circe::circe-generic:0.12.3
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-generic_2.13/0.12.3/circe-generic_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.12.3/circe-core_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/io/circe/circe-numbers_2.13/0.12.3/circe-numbers_2.13-0.12.3.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-core_2.13/2.0.0/cats-core_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-macros_2.13/2.0.0/cats-macros_2.13-2.0.0.jar
+/path/to/coursier/cache/https/repo1.maven.org/maven2/org/typelevel/cats-kernel_2.13/2.0.0/cats-kernel_2.13-2.0.0.jar
+</code></pre> <p><code>fetch</code> has more options, to <a href="../../../../docs/2.0.0-RC6-14/cli-fetch#classpath-format">join its output with the path separator</a>, fetch <a href="../../../../docs/2.0.0-RC6-14/cli-fetch#source-jars">source JARs</a>, fetch <a href="../../../../docs/2.0.0-RC6-14/cli-fetch#javadoc">javadoc</a>, etc. See <a href="../../../../docs/2.0.0-RC6-14/cli-fetch">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="launch"></a><a href="index.html#launch" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>launch</code></h3> <p><code>launch</code> launches applications from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --<span class="hljs-built_in">help</span>
+scalafmt 2.4.2
+Usage: scalafmt [options] [&lt;file&gt;...]
+
+  -h, --<span class="hljs-built_in">help</span>               prints this usage text
+  -v, --version            <span class="hljs-built_in">print</span> version
+…
+</code></pre> <p>Arguments can be passed to the application after <code>--</code>.</p> <p><code>launch</code> has more options, to <a href="../../../../docs/2.0.0-RC6-14/cli-launch#main-class">specify a main class</a>, <a href="../../../../docs/2.0.0-RC6-14/cli-launch#java-options">pass Java options</a>, etc. See <a href="../../../../docs/2.0.0-RC6-14/cli-launch">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="bootstrap"></a><a href="index.html#bootstrap" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>bootstrap</code></h3> <p><code>bootstrap</code> creates binary launchers from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs bootstrap org.scalameta::scalafmt-cli:2.4.2 -o scalafmt
+$ ./scalafmt --version
+scalafmt 2.4.2
+</code></pre> <p><code>bootstrap</code> can generate a <a href="../../../../docs/2.0.0-RC6-14/cli-bootstrap#launcher-types">variety of launchers</a>, including native ones like <a href="../../../../docs/2.0.0-RC6-14/cli-bootstrap#graalvm-native-image">GraalVM native images</a> or <a href="../../../../docs/2.0.0-RC6-14/cli-bootstrap#scala-native">Scala Native executables</a>. See <a href="../../../../docs/2.0.0-RC6-14/cli-bootstrap">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="install"></a><a href="index.html#install" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>install</code></h3> <p>The <code>install</code> command creates launchers for applications in the <a href="https://get-coursier.io/docs/cli-install.html#installation-directory">installation directory</a> (<code>~/.local/share/coursier/bin</code> on Linux):</p> <pre><code class="hljs css language-bash">$ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class="hljs-variable">$(cs install --env)</span>"</span> <span class="hljs-comment"># add installation directory in PATH in the current session</span>
+$ cs install scalafmt
+$ scalafmt --version
+scalafmt 2.4.2
+</code></pre> <p>One can run <code>cs install --setup</code> to <a href="https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally">update</a> profile files (Linux / macOS) or user environment variables (Windows), to add the installation directory to <code>PATH</code>.</p> <p>See <a href="../../../../docs/2.0.0-RC6-14/cli-install">the dedicated page</a> for more details.</p> <h3><a class="anchor" aria-hidden="true" id="java"></a><a href="index.html#java" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>java</code></h3> <p>The <code>java</code> command manages JVMs. For example, the following command</p> <pre><code class="hljs css language-bash">$ cs java --jvm 11 -version
+openjdk version <span class="hljs-string">"11.0.6"</span> 2020-01-14
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
+</code></pre> <p>will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the <a href="https://get-coursier.io/docs/cli-java.html#managed-jvm-directory">managed JVM directory</a>), and run it with <code>-version</code>.</p> <p>It uses the <a href="https://github.com/shyiko/jabba/blob/8c8e6be29610a3d5ea505087a791e9a57f6e48a6/index.json">index</a> of jabba to know where to download JVM archives, and assumes AdoptOpenJDK if only a version is passed.</p> <p>The <code>java-home</code> command prints the Java home of a JVM, like</p> <pre><code class="hljs css language-bash">$ cs java-home --jvm 9
+~/Library/Caches/Coursier/jvm/adopt@1.9.0-0/Contents/Home
+</code></pre> <p>One can <a href="https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally">update</a> profile files (Linux / macOS) or user environment variables (Windows) for a specific JVM with <code>--setup</code>, like</p> <pre><code class="hljs css language-bash">$ cs java --jvm openjdk:1.14 --setup
+</code></pre> <p>(This updates <code>JAVA_HOME</code> and <code>PATH</code>.)</p> <p>You don't have to update these environment variables if you prefer not to. For example, one can just get a Java home with</p> <pre><code class="hljs css language-bash">$ cs java-home --jvm graalvm:20
+~/Library/Caches/Coursier/jvm/graalvm@20.0.0/Contents/Home
+</code></pre> <p>or set environment variables only for the current session with</p> <pre><code class="hljs css language-bash">$ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class="hljs-variable">$(cs java --env --jvm 11)</span>"</span>
+$ java -version
+openjdk version <span class="hljs-string">"11.0.6"</span> 2020-01-14
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
+</code></pre> <p>These two commands only write things in the coursier cache, and the <a href="https://get-coursier.io/docs/cli-java.html#managed-jvm-directory">managed JVM directory</a>, which is a cache too (both of these directories live under <code>~/.cache/coursier</code> on Linux, <code>~/Library/Caches/Coursier</code> on macOS).</p> <p>The <a href="../../../../docs/2.0.0-RC6-14/cli-java">dedicated page</a> gives more details about the <code>java</code> and <code>java-home</code> commands.</p> <h3><a class="anchor" aria-hidden="true" id="setup"></a><a href="index.html#setup" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a><code>setup</code></h3> <p><code>setup</code> ensures that:</p> 
+          <ul> 
+           <li>a JVM is installed on your machine,</li> 
+           <li>the installation directory of the <a href="index.html#install"><code>install</code></a> command is in your <code>PATH</code>,</li> 
+           <li>the standard Scala applications are installed on your system.</li> 
+          </ul> <p><code>setup</code> is a "repackaging" of features of the <a href="index.html#java"><code>java</code></a> and <a href="index.html#install"><code>install</code></a> commands. One doesn't have to run <code>setup</code> for the other commands to work fine, it's just a convenience.</p> <p>The features that <code>setup</code> wraps up are not tied to each other. You can rely on the <code>java</code> or <code>java-home</code> commands while managing applications with your preferred package manager. Or you can manage JVMs any other way while using the <code>install</code> command. <code>setup</code> only conveniently sets them up in one go, and it only sets up a JVM if it doesn't find one already installed.</p> <p>See the <a href="../../../../docs/2.0.0-RC6-14/cli-setup">dedicated page</a> for more details about what the <code>setup</code> command does.</p> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../../docs/2.0.0-RC6-14/sbt-pgp-coursier"><span class="arrow-prev">← </span><span>sbt-pgp-coursier</span></a>
+       <a class="docs-next button" href="../../../../docs/2.0.0-RC6-14/cli-installation"><span>Installation</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="index.html#available-commands">Available commands</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#resolve"><code>resolve</code></a></li>
+        <li><a href="index.html#fetch"><code>fetch</code></a></li>
+        <li><a href="index.html#launch"><code>launch</code></a></li>
+        <li><a href="index.html#bootstrap"><code>bootstrap</code></a></li>
+        <li><a href="index.html#install"><code>install</code></a></li>
+        <li><a href="index.html#java"><code>java</code></a></li>
+        <li><a href="index.html#setup"><code>setup</code></a></li>
+       </ul></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5><a href="../../../../docs/overview">Docs</a></h5>
+      <a href="../../../../docs/overview">Overview</a>
+      <a href="../../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2020 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>
