@@ -36,7 +36,7 @@ object Deps {
   def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
   def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.30"
-  def svm = "org.graalvm.nativeimage" % "svm" % "19.3.1"
+  def svm = "org.graalvm.nativeimage" % "svm" % "19.3.2"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
   def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.2"
