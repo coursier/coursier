@@ -9,8 +9,8 @@ object Deps {
   private object versions {
     def argonautShapeless = "1.2.0-M11"
     def fastParse = "2.3.0"
-    def http4s = "0.21.4"
-    def jsoniterScala = "2.2.1"
+    def http4s = "0.18.26"
+    def jsoniterScala = "2.2.3"
     def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
@@ -46,7 +46,7 @@ object Deps {
   def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
   def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-  def scalatest = "org.scalatest" %% "scalatest" % "3.1.1"
+  def scalatest = "org.scalatest" %% "scalatest" % "3.1.2"
   def scalatestJunit = "org.scalatestplus" %% "junit-4-12" % "3.1.1.0"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % versions.scalaz
