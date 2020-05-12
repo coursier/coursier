@@ -434,8 +434,8 @@ lazy val web = project("web")
       "bootstrap-treeview" -> "1.2.0",
       "graphdracula" -> "1.2.1",
       "webpack-raphael" -> "2.1.4",
-      "react" -> "16.7.0",
-      "react-dom" -> "16.7.0",
+      "react" -> "16.13.1",
+      "react-dom" -> "16.13.1",
       "requirejs" -> "2.3.6",
       "sax" -> "1.2.4"
     ),
