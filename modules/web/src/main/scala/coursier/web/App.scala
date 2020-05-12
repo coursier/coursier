@@ -374,7 +374,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(mod"io.get-coursier:coursier-cache_2.12", "1.1.0-M7") // DEBUG
+      Dependency(mod"io.get-coursier:coursier_2.13", "2.0.0-RC6-15") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),
