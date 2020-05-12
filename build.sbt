@@ -56,6 +56,7 @@ inThisBuild(List(
 
 lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     shading("coursier.util.shaded"),
     libs ++= Seq(
@@ -78,6 +79,7 @@ lazy val utilJs = util.js
 lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     shading("coursier.core.shaded"),
     utest,
@@ -159,6 +161,7 @@ lazy val paths = project("paths")
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     shading("coursier.cache.shaded"),
     shadeNamespaces ++= Set("io.github.soc"),
@@ -200,6 +203,7 @@ lazy val cacheJs = cache.js
 
 lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     libs += Deps.scalazConcurrent
   )
@@ -220,6 +224,7 @@ lazy val scalazJs = scalaz.js
 
 lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .settings(
     name := "cats-interop",
     shared,
