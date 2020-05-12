@@ -10,7 +10,6 @@ import com.lightbend.sbt.SbtProguard
 import com.lightbend.sbt.SbtProguard.autoImport._
 import com.jsuereth.sbtpgp._
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
-import coursier.ShadingPlugin.autoImport._
 import Aliases._
 import ScalaVersion._
 import sbt.util.FileInfo
@@ -253,19 +252,6 @@ object Settings {
         }
       }
     )
-
-  def shading(namespace: String) =
-    inConfig(_root_.coursier.ShadingPlugin.Shading)(PgpSettings.projectSettings) ++
-       // Why does this have to be repeated here?
-       // Can't figure out why configuration gets lost without this in particular...
-      _root_.coursier.ShadingPlugin.projectSettings ++
-      Seq(
-        shadingNamespace := namespace,
-        publish := publish.in(Shading).value,
-        publishLocal := publishLocal.in(Shading).value,
-        PgpKeys.publishSigned := PgpKeys.publishSigned.in(Shading).value,
-        PgpKeys.publishLocalSigned := PgpKeys.publishLocalSigned.in(Shading).value
-      )
 
   // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
   lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {

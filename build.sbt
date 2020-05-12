@@ -57,11 +57,10 @@ inThisBuild(List(
 lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.util.shaded"),
-    libs ++= Seq(
-      Deps.jsoup % "shaded"
-    ),
-    shadeNamespaces ++= Set("org.jsoup")
+    libs += Deps.jsoup,
+    shadedModules += Deps.jsoup.module,
+    shadingRules += ShadingRule.moveUnder("org.jsoup", "coursier.util.shaded"),
+    validNamespaces += "coursier"
   )
   .settings(
     shared,
@@ -79,16 +78,19 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.core.shaded"),
     utest,
     libs ++= Seq(
-      Deps.fastParse % "shaded",
+      Deps.fastParse,
       Deps.scalaXml
     ),
-    shadeNamespaces ++= Set(
-      "fastparse",
-      "sourcecode"
-    ),
+    shadedModules += Deps.fastParse.module,
+    shadingRules ++= {
+      val shadeUnder = "coursier.core.shaded"
+      val shadeNamespaces = Seq("fastparse", "geny", "sourcecode")
+      for (ns <- shadeNamespaces)
+        yield ShadingRule.moveUnder(ns, shadeUnder)
+    },
+    validNamespaces += "coursier",
     generatePropertyFile("coursier")
   )
   .jsSettings(
@@ -160,8 +162,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.cache.shaded"),
-    shadeNamespaces ++= Set("io.github.soc"),
+    shadingRules += ShadingRule.moveUnder("io.github.soc", "coursier.cache.shaded"),
+    validNamespaces += "coursier",
     addPathsSources,
     libraryDependencies ++= Seq(
       Deps.svm % Provided,
@@ -454,12 +456,16 @@ lazy val okhttp = project("okhttp")
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
-    shading("coursier.core.shaded"), // shading only fastparse, that core shades too, so shading things under the same namespace
-    libs += Deps.fastParse % "shaded",
-    shadeNamespaces ++= Set(
-      "fastparse",
-      "sourcecode"
-    ),
+    libs += Deps.fastParse,
+    shadedModules += Deps.fastParse.module,
+    shadingRules ++= {
+      // shading under the same library as core, under the same namespace
+      val shadeUnder = "coursier.core.shaded"
+      val shadeNamespaces = Seq("fastparse", "geny", "sourcecode")
+      for (ns <- shadeNamespaces)
+        yield ShadingRule.moveUnder(ns, shadeUnder)
+    },
+    validNamespaces += "coursier",
     Mima.previousArtifacts,
     Mima.coursierFilters
   )
