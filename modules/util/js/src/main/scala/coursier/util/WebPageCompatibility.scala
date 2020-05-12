@@ -9,7 +9,7 @@ private[coursier] abstract class WebPageCompatibility {
   // FIXME Won't work in the browser
   lazy val cheerio = g.require("cheerio")
 
-  lazy val jqueryAvailable = !js.isUndefined(g.$)
+  lazy val jqueryAvailable = js.typeOf(g.$) != "undefined"
 
   def listWebPageRawElements(page: String): Iterator[String] = {
 
