@@ -202,7 +202,7 @@ object Launch extends CaseApp[LaunchOptions] {
     val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
         val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))))
-        val artifacts = coursier.Artifacts.artifacts0(
+        val artifacts = coursier.Artifacts.artifacts(
           subRes,
           artifactParams.classifiers,
           Option(artifactParams.mainArtifacts).map(x => x),

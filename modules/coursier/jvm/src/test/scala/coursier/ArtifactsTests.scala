@@ -269,7 +269,7 @@ object ArtifactsTests extends TestSuite {
           .future()
       }
 
-      val artifacts = Artifacts.artifacts0(res, Set.empty, None, None, true).map(_._3).distinct
+      val artifacts = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
       val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
 
       assert(groupedArtifacts.length == 2)

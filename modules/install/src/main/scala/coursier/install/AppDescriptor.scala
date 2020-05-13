@@ -104,7 +104,7 @@ import coursier.core.Latest
             Dependency(module, ver)
           }
         )
-        val l = coursier.Artifacts.artifacts0(
+        val l = coursier.Artifacts.artifacts(
           subRes,
           classifiers,
           Some(mainArtifacts),

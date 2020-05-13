@@ -188,7 +188,7 @@ import dataclass.data
         .withResolution(resolution)
         .ioResult
       S.map(fetchIO_) { res =>
-        Fetch.Result(resolution, res.detailedArtifacts, res.extraArtifacts)
+        Fetch.Result(resolution, res.fullDetailedArtifacts, res.fullExtraArtifacts)
       }
     }
   }
@@ -233,17 +233,48 @@ object Fetch {
 
   @data class Result(
     resolution: Resolution = Resolution(),
-    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] = Nil,
-    extraArtifacts: Seq[(Artifact, File)] = Nil
+    fullDetailedArtifacts: Seq[(Dependency, Publication, Artifact, Option[File])] = Nil,
+    fullExtraArtifacts: Seq[(Artifact, Option[File])] = Nil
   ) {
 
-    def artifacts: Seq[(Artifact, File)] = {
-      val artifacts = detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+    def detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] =
+      fullDetailedArtifacts.collect {
+        case (dep, pub, art, Some(file)) =>
+          (dep, pub, art, file)
+      }
+
+    def extraArtifacts: Seq[(Artifact, File)] =
+      fullExtraArtifacts
+        .collect {
+          case (art, Some(file)) =>
+            (art, file)
+        }
+        .distinct
+
+    def artifacts: Seq[(Artifact, File)] =
+      fullArtifacts
+        .collect {
+          case (art, Some(file)) =>
+            (art, file)
+        }
+
+    def fullArtifacts: Seq[(Artifact, Option[File])] = {
+      val artifacts = fullDetailedArtifacts.map { case (_, _, a, f) => (a, f) } ++
+        fullExtraArtifacts
       artifacts.distinct
     }
 
     def files: Seq[File] =
-      artifacts.map(_._2).distinct
+      artifacts
+        .map(_._2)
+        .distinct
+
+    @deprecated("Use withFullDetailedArtifacts instead", "2.0.0-RC6-15")
+    def withDetailedArtifacts(detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]): Result =
+      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) => (dep, pub, art, Some(file)) })
+    @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
+    def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
+      withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
   }
 
   def apply(): Fetch[Task] =
