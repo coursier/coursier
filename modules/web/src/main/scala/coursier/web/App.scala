@@ -111,7 +111,7 @@ object App {
     .build
 
   object icon {
-    def apply(id: String) = <.span(^.`class` := s"glyphicon glyphicon-$id", ^.aria.hidden := "true")
+    def apply(id: String) = <.span(^.`class` := s"glyphicon glyphicon-$id", ^.aria.hidden := true)
     def ok = apply("ok")
     def edit = apply("pencil")
     def remove = apply("remove")
@@ -126,7 +126,7 @@ object App {
           <.div(^.`class` := "modal-dialog", <.div(^.`class` := "modal-content",
             <.div(^.`class` := "modal-header",
               <.button(^.`type` := "button", ^.`class` := "close", Attr("data-dismiss") := "modal", ^.aria.label := "Close",
-                <.span(^.aria.hidden := "true", dangerouslySetInnerHtml := "&times;")
+                <.span(^.aria.hidden := true, dangerouslySetInnerHtml := "&times;")
               ),
               <.h4(^.`class` := "modal-title", ^.id := "moduleEditTitle", "Dependency")
             ),
@@ -230,7 +230,7 @@ object App {
           <.div(^.`class` := "modal-dialog", <.div(^.`class` := "modal-content",
             <.div(^.`class` := "modal-header",
               <.button(^.`type` := "button", ^.`class` := "close", Attr("data-dismiss") := "modal", ^.aria.label := "Close",
-                <.span(^.aria.hidden := "true", dangerouslySetInnerHtml := "&times;")
+                <.span(^.aria.hidden := true, dangerouslySetInnerHtml := "&times;")
               ),
               <.h4(^.`class` := "modal-title", ^.id := "repoEditTitle", "Repository")
             ),
@@ -374,7 +374,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(mod"io.get-coursier:coursier-cache_2.12", "1.1.0-M7") // DEBUG
+      Dependency(mod"io.get-coursier:coursier_2.13", "2.0.0-RC6-15") // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),

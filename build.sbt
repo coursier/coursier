@@ -25,6 +25,7 @@ inThisBuild(List(
 
 lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     libs += Deps.jsoup,
     shadedModules += Deps.jsoup.module,
@@ -46,6 +47,7 @@ lazy val utilJs = util.js
 lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     utest,
     libs ++= Seq(
@@ -130,6 +132,7 @@ lazy val paths = project("paths")
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .dependsOn(util)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     shadingRules += ShadingRule.moveUnder("io.github.soc", "coursier.cache.shaded"),
     validNamespaces += "coursier",
@@ -171,6 +174,7 @@ lazy val cacheJs = cache.js
 
 lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     libs += Deps.scalazConcurrent
   )
@@ -191,6 +195,7 @@ lazy val scalazJs = scalaz.js
 
 lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
+  .jsConfigure(_.disablePlugins(MimaPlugin))
   .settings(
     name := "cats-interop",
     shared,
@@ -405,8 +410,8 @@ lazy val web = project("web")
       "bootstrap-treeview" -> "1.2.0",
       "graphdracula" -> "1.2.1",
       "webpack-raphael" -> "2.1.4",
-      "react" -> "15.6.1",
-      "react-dom" -> "15.6.1",
+      "react" -> "16.13.1",
+      "react-dom" -> "16.13.1",
       "requirejs" -> "2.3.6",
       "sax" -> "1.2.4"
     ),

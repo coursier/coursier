@@ -23,18 +23,20 @@ package object compatibility {
     def letter: Boolean = between(c, 'a', 'z') || between(c, 'A', 'Z')
   }
 
-  def newFromXmlDomOrGlobal(name: String) = {
-    var defn = g.selectDynamic(name)
-    if (js.isUndefined(defn))
-      defn = g.require("xmldom").selectDynamic(name)
-
+  lazy val DOMParser = {
+    val defn =
+      if (js.typeOf(g.DOMParser) == "undefined") g.require("xmldom").DOMParser
+      else g.DOMParser
     js.Dynamic.newInstance(defn)()
   }
-
-  lazy val DOMParser = newFromXmlDomOrGlobal("DOMParser")
-  lazy val XMLSerializer = newFromXmlDomOrGlobal("XMLSerializer")
+  lazy val XMLSerializer = {
+    val defn =
+      if (js.typeOf(g.XMLSerializer) == "undefined") g.require("xmldom").XMLSerializer
+      else g.XMLSerializer
+    js.Dynamic.newInstance(defn)()
+  }
   lazy val sax =
-    if (js.isUndefined(g.sax))
+    if (js.typeOf(g.sax) == "undefined")
       g.require("sax")
     else
       g.sax

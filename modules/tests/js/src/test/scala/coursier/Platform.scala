@@ -17,7 +17,7 @@ object Platform {
 
   /** Available if we're running on node, and package xhr2 is installed */
   lazy val xhr =
-    if (js.isUndefined(g.XMLHttpRequest))
+    if (js.typeOf(g.XMLHttpRequest) == "undefined")
       g.require("xhr2")
     else
       g.XMLHttpRequest

@@ -7,7 +7,7 @@ import sbt.Keys._
 object Deps {
 
   private object versions {
-    def argonautShapeless = "1.2.0-M11"
+    def argonautShapeless = "1.2.0-M12"
     def fastParse = "2.3.0"
     def http4s = "0.18.26"
     def jsoniterScala = "2.2.3"
@@ -61,7 +61,7 @@ object Deps {
     def fastParse = setting("com.lihaoyi" %%% "fastparse" % versions.fastParse)
     def scalaJsDom = setting("org.scala-js" %%% "scalajs-dom" % "1.0.0")
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "1.0.0")
-    def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.3.1")
+    def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.7.0")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
     def utest = setting("com.lihaoyi" %%% "utest" % "0.7.4")
   }

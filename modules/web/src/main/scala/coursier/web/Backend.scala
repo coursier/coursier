@@ -176,6 +176,7 @@ final class Backend($: BackendScope[_, State]) {
         case Success(_) =>
         case Failure(t) =>
           println(s"Caught exception: $t")
+          println(t.getStackTrace.map("  " + _ + "\n").mkString)
       }
 
       ()
