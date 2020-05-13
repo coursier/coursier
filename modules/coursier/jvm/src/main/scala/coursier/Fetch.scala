@@ -45,6 +45,8 @@ import dataclass.data
     artifacts.artifactTypesOpt
   def extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] =
     artifacts.extraArtifactsSeq
+  def transformArtifacts: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] =
+    artifacts.transformArtifacts
 
   def classpathOrder: Boolean =
     artifacts.classpathOrder
@@ -170,6 +172,9 @@ import dataclass.data
     withArtifacts(artifacts.withExtraArtifactsSeq(Nil))
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Fetch[F] =
     withArtifacts(artifacts.withExtraArtifactsSeq(l))
+
+  def addTransformArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]): Fetch[F] =
+    withArtifacts(artifacts.addTransformArtifacts(f))
 
   def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
     withArtifacts(artifacts.withClasspathOrder(classpathOrder))

@@ -11,7 +11,7 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.data
+import dataclass._
 
 @data class Artifacts[F[_]](
   cache: Cache[F],
@@ -21,7 +21,9 @@ import dataclass.data
   artifactTypesOpt: Option[Set[Type]] = None,
   otherCaches: Seq[Cache[F]] = Nil,
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
-  classpathOrder: Boolean = true
+  classpathOrder: Boolean = true,
+  @since
+  transformArtifacts: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] = Nil,
 )(implicit
   sync: Sync[F]
 ) {
@@ -44,22 +46,27 @@ import dataclass.data
     withExtraArtifactsSeq(Nil)
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
     withExtraArtifactsSeq(l)
+  def addTransformArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]): Artifacts[F] =
+    withTransformArtifacts(transformArtifacts :+ f)
 
   def io: F[Seq[(Artifact, File)]] =
     S.map(ioResult)(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
 
-    val a = resolutions
-      .flatMap { r =>
-        Artifacts.artifacts0(
-          r,
-          classifiers,
-          mainArtifactsOpt,
-          artifactTypesOpt,
-          classpathOrder
-        )
-      }
+    val transformArtifacts0 = Function.chain(transformArtifacts)
+    val a = transformArtifacts0 {
+      resolutions
+        .flatMap { r =>
+          Artifacts.artifacts0(
+            r,
+            classifiers,
+            mainArtifactsOpt,
+            artifactTypesOpt,
+            classpathOrder
+          )
+        }
+    }
 
     val byArtifact = a
       .map {
@@ -68,7 +75,6 @@ import dataclass.data
       .toMap
 
     val allArtifacts = (a.map(_._3) ++ extraArtifacts(a)).distinct
-
     val res = Artifacts.fetchArtifacts(
       allArtifacts,
       cache,
