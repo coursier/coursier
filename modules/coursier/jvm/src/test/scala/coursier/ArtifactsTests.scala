@@ -56,7 +56,7 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    'transformArtifacts - async {
+    'extraArtifacts - async {
 
       val res = await {
         Resolve()
@@ -74,6 +74,44 @@ object ArtifactsTests extends TestSuite {
             l.flatMap {
               case (_, _, a) =>
                 a.extra.get("sig").toSeq
+            }
+          }
+          .future()
+      }
+
+      val urls = artifacts.map(_._1.url).distinct.sorted
+
+      val expectedUrls = Seq(
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.2/shapeless_2.12-2.3.2.jar",
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.2/shapeless_2.12-2.3.2.jar.asc",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.0/scala-library-2.12.0.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.0/scala-library-2.12.0.jar.asc",
+        "https://repo1.maven.org/maven2/org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar",
+        "https://repo1.maven.org/maven2/org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar.asc"
+      )
+
+      assert(urls == expectedUrls)
+    }
+
+    'transformArtifacts - async {
+
+      val res = await {
+        Resolve()
+          .noMirrors
+          .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
+          .withCache(cache)
+          .future()
+      }
+
+      val artifacts = await {
+        Artifacts()
+          .withResolution(res)
+          .withCache(cache)
+          .addTransformArtifacts { l =>
+            l.flatMap {
+              case elem @ (d, p, a) =>
+                val extra = a.extra.get("sig").toSeq.map(a0 => (d, p, a0))
+                elem +: extra
             }
           }
           .future()
@@ -231,7 +269,7 @@ object ArtifactsTests extends TestSuite {
           .future()
       }
 
-      val artifacts = Artifacts.artifacts0(res, Set.empty, None, None, true).map(_._3).distinct
+      val artifacts = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
       val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
 
       assert(groupedArtifacts.length == 2)

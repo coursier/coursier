@@ -81,7 +81,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val perLoaderArtifacts = perLoaderResolutions
       .map { subRes =>
-        coursier.Artifacts.artifacts0(
+        coursier.Artifacts.artifacts(
           subRes,
           classifiers,
           mainArtifacts,

@@ -11,7 +11,7 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.data
+import dataclass._
 
 @data class Artifacts[F[_]](
   cache: Cache[F],
@@ -21,7 +21,9 @@ import dataclass.data
   artifactTypesOpt: Option[Set[Type]] = None,
   otherCaches: Seq[Cache[F]] = Nil,
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
-  classpathOrder: Boolean = true
+  classpathOrder: Boolean = true,
+  @since
+  transformArtifacts: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] = Nil,
 )(implicit
   sync: Sync[F]
 ) {
@@ -44,31 +46,37 @@ import dataclass.data
     withExtraArtifactsSeq(Nil)
   def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
     withExtraArtifactsSeq(l)
+  def addTransformArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]): Artifacts[F] =
+    withTransformArtifacts(transformArtifacts :+ f)
 
   def io: F[Seq[(Artifact, File)]] =
     S.map(ioResult)(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
 
-    val a = resolutions
-      .flatMap { r =>
-        Artifacts.artifacts0(
-          r,
-          classifiers,
-          mainArtifactsOpt,
-          artifactTypesOpt,
-          classpathOrder
-        )
-      }
+    val transformArtifacts0 = Function.chain(transformArtifacts)
+    val a = transformArtifacts0 {
+      resolutions
+        .flatMap { r =>
+          Artifacts.artifacts(
+            r,
+            classifiers,
+            mainArtifactsOpt,
+            artifactTypesOpt,
+            classpathOrder
+          )
+        }
+    }
 
     val byArtifact = a
       .map {
         case (d, p, a) => (a, (d, p))
       }
+      .groupBy(_._1)
+      .mapValues(_.map(_._2).distinct)
       .toMap
 
     val allArtifacts = (a.map(_._3) ++ extraArtifacts(a)).distinct
-
     val res = Artifacts.fetchArtifacts(
       allArtifacts,
       cache,
@@ -81,8 +89,11 @@ import dataclass.data
           byArtifact.get(a) match {
             case None =>
               (Nil, Seq((a, f)))
-            case Some((d, p)) =>
-              (Seq((d, p, a, f)), Nil)
+            case Some(depPubs) =>
+              val l = depPubs.map {
+                case (d, p) => (d, p, a, f)
+              }
+              (l, Nil)
           }
       }
 
@@ -99,15 +110,48 @@ object Artifacts {
 
 
   @data class Result(
-    detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)],
-    extraArtifacts: Seq[(Artifact, File)]
+    fullDetailedArtifacts: Seq[(Dependency, Publication, Artifact, Option[File])],
+    fullExtraArtifacts: Seq[(Artifact, Option[File])]
   ) {
 
     def artifacts: Seq[(Artifact, File)] =
-      detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+      fullArtifacts
+        .collect {
+          case (art, Some(file)) =>
+            (art, file)
+        }
+
+    def detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] =
+      fullDetailedArtifacts
+        .collect {
+          case (dep, pub, art, Some(file)) =>
+            (dep, pub, art, file)
+        }
+        .distinct
+
+    def extraArtifacts: Seq[(Artifact, File)] =
+      fullExtraArtifacts.collect {
+        case (art, Some(file)) =>
+          (art, file)
+      }
 
     def files: Seq[File] =
-      artifacts.map(_._2)
+      fullArtifacts
+        .flatMap(_._2.toSeq)
+        .distinct
+
+    def fullArtifacts: Seq[(Artifact, Option[File])] = {
+      val artifacts = fullDetailedArtifacts.map { case (_, _, a, f) => (a, f) } ++
+        fullExtraArtifacts
+      artifacts.distinct
+    }
+
+    @deprecated("Use withFullDetailedArtifacts instead", "2.0.0-RC6-15")
+    def withDetailedArtifacts(detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]): Result =
+      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) => (dep, pub, art, Some(file)) })
+    @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
+    def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
+      withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
   }
 
 
@@ -176,7 +220,7 @@ object Artifacts {
   }
 
 
-  private[coursier] def artifacts0(
+  def artifacts(
     resolution: Resolution,
     classifiers: Set[Classifier],
     mainArtifactsOpt: Option[Boolean],
@@ -238,7 +282,7 @@ object Artifacts {
     otherCaches: Cache[F]*
   )(implicit
      S: Sync[F]
-  ): F[Seq[(Artifact, File)]] = {
+  ): F[Seq[(Artifact, Option[File])]] = {
 
     val groupedArtifacts = groupArtifacts(artifacts)
 
@@ -295,17 +339,23 @@ object Artifacts {
           artifactToFile += artifact -> f
       }
 
+      def result(withIgnoredErrors: Boolean): Seq[(Artifact, Option[File])] = {
+        val withFiles = artifactToFile.toList.map { case (a, f) => (a, Some(f)) }
+        def noFiles = ignoredErrors.map { case (a, _) => (a, None) }
+        reorder(if (withIgnoredErrors) withFiles ++ noFiles else withFiles)
+      }
+
       if (otherCaches.isEmpty) {
         if (errors.isEmpty)
-          S.point(reorder(artifactToFile.toList))
+          S.point(result(true))
         else
           S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
       } else {
         if (errors.isEmpty && ignoredErrors.isEmpty)
-          S.point(reorder(artifactToFile.toList))
+          S.point(result(false))
         else
           S.map(fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*)) { l =>
-            reorder(artifactToFile.toList ++ l)
+            reorder(result(false) ++ l)
           }
       }
     }

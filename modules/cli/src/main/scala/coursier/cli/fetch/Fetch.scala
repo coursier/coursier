@@ -40,7 +40,7 @@ object Fetch extends CaseApp[FetchOptions] {
     for {
       t <- resolveTask
       (res, scalaVersion, platformOpt, _) = t
-      artifacts = coursier.Artifacts.artifacts0(
+      artifacts = coursier.Artifacts.artifacts(
         res,
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?
@@ -61,7 +61,7 @@ object Fetch extends CaseApp[FetchOptions] {
               val report = JsonOutput.report(
                 res,
                 artifacts,
-                artifactFiles,
+                artifactFiles.collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
                 printExclusions = false
               )
@@ -72,7 +72,7 @@ object Fetch extends CaseApp[FetchOptions] {
             Task.point(())
         }
       }
-    } yield (res, scalaVersion, platformOpt, artifactFiles)
+    } yield (res, scalaVersion, platformOpt, artifactFiles.collect { case (a, Some(f)) => a -> f })
   }
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
