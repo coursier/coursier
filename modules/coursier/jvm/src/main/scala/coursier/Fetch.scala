@@ -237,11 +237,13 @@ object Fetch {
     extraArtifacts: Seq[(Artifact, File)] = Nil
   ) {
 
-    def artifacts: Seq[(Artifact, File)] =
-      detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+    def artifacts: Seq[(Artifact, File)] = {
+      val artifacts = detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+      artifacts.distinct
+    }
 
     def files: Seq[File] =
-      artifacts.map(_._2)
+      artifacts.map(_._2).distinct
   }
 
   def apply(): Fetch[Task] =

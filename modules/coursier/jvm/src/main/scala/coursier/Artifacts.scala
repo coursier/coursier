@@ -72,6 +72,8 @@ import dataclass._
       .map {
         case (d, p, a) => (a, (d, p))
       }
+      .groupBy(_._1)
+      .mapValues(_.map(_._2).distinct)
       .toMap
 
     val allArtifacts = (a.map(_._3) ++ extraArtifacts(a)).distinct
@@ -87,8 +89,11 @@ import dataclass._
           byArtifact.get(a) match {
             case None =>
               (Nil, Seq((a, f)))
-            case Some((d, p)) =>
-              (Seq((d, p, a, f)), Nil)
+            case Some(depPubs) =>
+              val l = depPubs.map {
+                case (d, p) => (d, p, a, f)
+              }
+              (l, Nil)
           }
       }
 
@@ -109,11 +114,13 @@ object Artifacts {
     extraArtifacts: Seq[(Artifact, File)]
   ) {
 
-    def artifacts: Seq[(Artifact, File)] =
-      detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+    def artifacts: Seq[(Artifact, File)] = {
+      val artifacts = detailedArtifacts.map { case (_, _, a, f) => (a, f) } ++ extraArtifacts
+      artifacts.distinct
+    }
 
     def files: Seq[File] =
-      artifacts.map(_._2)
+      artifacts.map(_._2).distinct
   }
 
 
