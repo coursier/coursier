@@ -350,8 +350,7 @@ object Launch extends CaseApp[LaunchOptions] {
       (deps0, repositories, scalaVersion, _) = depsAndReposOrError0
       files <- {
         val params0 = params.shared.resolve.copy(
-          resolution = params.shared.resolve.resolution
-            .withScalaVersionOpt(params.shared.resolve.resolution.scalaVersionOpt.map(_ => scalaVersion))
+          resolution = params.shared.resolve.updatedResolution(scalaVersion)
         )
         coursier.Fetch(cache)
           .withDependencies(deps0)
