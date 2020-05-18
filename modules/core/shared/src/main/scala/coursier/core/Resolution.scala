@@ -1240,7 +1240,7 @@ object Resolution {
 
     val rootDeps = updatedRootDependencies
       .map(withDefaultConfig(_, defaultConfiguration))
-      .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
+      .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
       .toList
 
     helper(rootDeps, DependencySet.empty).toVector

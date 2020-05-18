@@ -99,6 +99,8 @@ object TestHelpers extends PlatformTestHelpers {
         }
       ).split('\n').toSeq.filter(_.nonEmpty)
 
+    if (result0 != expected)
+      println(s"In $path:")
     for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
       println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
 
