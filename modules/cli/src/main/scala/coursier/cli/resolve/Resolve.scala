@@ -154,10 +154,6 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val deps0 = Dependencies.addExclusions(
         deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
-        params.dependency.exclude.map { m =>
-          val m0 = m.module(scalaVersion)
-          (m0.organization, m0.name)
-        },
         params.dependency.perModuleExclude.map {
           case (k, s) =>
             k.module(scalaVersion) -> s.map(_.module(scalaVersion))
@@ -300,8 +296,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
-        resolution = params.resolution
-          .withScalaVersionOpt(params.resolution.scalaVersionOpt.map(_ => scalaVersion))
+        resolution = params.updatedResolution(scalaVersion)
       )
 
       val scaladexDeps = unlift(handleScaladexDependencies(params0, pool, scalaVersion))

@@ -350,4 +350,39 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
 
     assert(output == expectedOutput)
   }
+
+  it should "exclude root dependencies" in {
+    val options = SharedResolveOptions(
+      dependencyOptions = DependencyOptions(
+        exclude = List("com.chuusai::shapeless")
+      ),
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val args = RemainingArgs(
+      Seq(
+        "com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12",
+        "com.chuusai::shapeless:2.3.3"
+      ),
+      Nil
+    )
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, "UTF-8")
+    val expectedOutput =
+      """com.github.alexarchambault:argonaut-shapeless_6.2_2.13:1.2.0-M12:default
+        |io.argonaut:argonaut_2.13:6.2.4:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |org.scala-lang:scala-reflect:2.13.2:default
+        |""".stripMargin
+    assert(output == expectedOutput)
+  }
 }
