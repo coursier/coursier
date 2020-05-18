@@ -109,7 +109,7 @@ object Mima {
         // removed private[coursier] method
         ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.Artifacts.artifacts0"),
         // ignore shaded-stuff related errors
-        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.internal.shaded."))
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
       )
     }
   }
