@@ -715,6 +715,32 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(subRes))
     }
 
+    "initial resolution" - async {
+
+      val res0 = await {
+        resolve
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+          .future()
+      }
+
+      await(validateDependencies(res0))
+
+      val res1 = await {
+        resolve
+          .withInitialResolution(Some(res0))
+          .addRepositories(Repositories.typesafeIvy("releases"))
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:2.0.0-RC6-16")
+          .future()
+      }
+
+      await(validateDependencies(res0))
+
+      assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M8")))
+      assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "2.0.0-RC6-16")))
+      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"))
+      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"))
+    }
+
     "config handling" - async {
 
       // if config handling gets messed up, like the "default" config of some dependencies ends up being pulled

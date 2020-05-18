@@ -25,7 +25,9 @@ import dataclass.{data, since}
   mirrors: Seq[Mirror] = Nil,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
-  transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None
+  transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None,
+  @since
+  initialResolution: Option[Resolution] = None
 )(implicit
   sync: Sync[F]
 ) {
@@ -101,7 +103,7 @@ import dataclass.{data, since}
 
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
 
-    val initialRes = Resolve.initialResolution(finalDependencies, resolutionParams)
+    val initialRes = Resolve.initialResolution(finalDependencies, resolutionParams, initialResolution)
 
     def run(res: Resolution): F[Resolution] = {
       val t = Resolve.runProcess(res, fetch, resolutionParams.maxIterations, cache.loggerOpt)(S)
@@ -204,7 +206,8 @@ object Resolve extends PlatformResolve {
 
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],
-    params: ResolutionParams = ResolutionParams()
+    params: ResolutionParams = ResolutionParams(),
+    initialResolutionOpt: Option[Resolution] = None
   ): Resolution = {
 
     val forceScalaVersions =
@@ -251,7 +254,9 @@ object Resolve extends PlatformResolve {
         }
     }
 
-    Resolution()
+    val baseRes = initialResolutionOpt.getOrElse(Resolution())
+
+    baseRes
       .withRootDependencies(dependencies)
       .withDependencySet(DependencySet.empty)
       .withForceVersions(params.forceVersion ++ forceScalaVersions)
