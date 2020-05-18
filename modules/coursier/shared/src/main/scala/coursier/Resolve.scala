@@ -251,38 +251,39 @@ object Resolve extends PlatformResolve {
         }
     }
 
-    coursier.core.Resolution(
-      rootDependencies = dependencies,
-      dependencySet = DependencySet.empty,
-      forceVersions = params.forceVersion ++ forceScalaVersions,
-      conflicts = Set.empty,
-      projectCache = Map.empty,
-      errorCache = Map.empty,
-      finalDependenciesCache = Map.empty,
-      filter = Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional),
-      reconciliation = reconciliation,
-      osInfo = params.osInfoOpt.getOrElse {
-        if (params.useSystemOsInfo)
-          // call from Sync[F].delay?
-          Activation.Os.fromProperties(sys.props.toMap)
-        else
-          Activation.Os.empty
-      },
-      jdkVersion = params.jdkVersionOpt.orElse {
-        if (params.useSystemJdkVersion)
-          // call from Sync[F].delay?
-          sys.props.get("java.version").flatMap(coursier.core.Parse.version)
-        else
-          None
-      },
-      userActivations =
+    Resolution()
+      .withRootDependencies(dependencies)
+      .withDependencySet(DependencySet.empty)
+      .withForceVersions(params.forceVersion ++ forceScalaVersions)
+      .withConflicts(Set.empty)
+      .withFilter(Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional))
+      .withReconciliation(reconciliation)
+      .withOsInfo(
+        params.osInfoOpt.getOrElse {
+          if (params.useSystemOsInfo)
+            // call from Sync[F].delay?
+            Activation.Os.fromProperties(sys.props.toMap)
+          else
+            Activation.Os.empty
+        }
+      )
+      .withJdkVersion(
+        params.jdkVersionOpt.orElse {
+          if (params.useSystemJdkVersion)
+            // call from Sync[F].delay?
+            sys.props.get("java.version").flatMap(coursier.core.Parse.version)
+          else
+            None
+        }
+      )
+      .withUserActivations(
         if (params.profiles.isEmpty) None
-        else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap),
-      mapDependencies = mapDependencies,
-      extraProperties = params.properties,
-      forceProperties = params.forcedProperties,
-      defaultConfiguration = params.defaultConfiguration
-    )
+        else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
+      )
+      .withMapDependencies(mapDependencies)
+      .withExtraProperties(params.properties)
+      .withForceProperties(params.forcedProperties)
+      .withDefaultConfiguration(params.defaultConfiguration)
   }
 
   private[coursier] def runProcess[F[_]](
