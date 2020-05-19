@@ -48,8 +48,27 @@ object IvyXml {
       } yield (Configuration(from.trim), Configuration(to.trim))
     }
 
+  private def exclude(node0: Node): Seq[(Configuration, (Organization, ModuleName))] = {
+    val org = Organization(node0.attribute("org").getOrElse("*"))
+    val name = ModuleName(
+      node0.attribute("module").toOption
+        .orElse(node0.attribute("name").toOption)
+        .getOrElse("*")
+    )
+    val confs = node0
+      .attribute("conf")
+      .toOption
+      .filter(_.nonEmpty)
+      .fold(Seq(Configuration.all))(_.split(',').map(Configuration(_)))
+    confs.map(_ -> (org, name))
+  }
+
   // FIXME Errors ignored as above - warnings should be reported at least for anything suspicious
-  private def dependencies(node: Node): Seq[(Configuration, Dependency)] =
+  private def dependencies(
+    node: Node,
+    globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
+    globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean
+  ): Seq[(Configuration, Dependency)] =
     node.children
       .filter(_.label == "dependency")
       .flatMap { node =>
@@ -69,22 +88,10 @@ object IvyXml {
         val excludes = node
           .children
           .filter(_.label == "exclude")
-          .flatMap { node0 =>
-            val org = Organization(node0.attribute("org").getOrElse("*"))
-            val name = ModuleName(
-              node0.attribute("module").toOption
-                .orElse(node0.attribute("name").toOption)
-                .getOrElse("*")
-            )
-            val confs = node0
-              .attribute("conf")
-              .toOption
-              .filter(_.nonEmpty)
-              .fold(Seq(Configuration.all))(_.split(',').map(Configuration(_)))
-            confs.map(_ -> (org, name))
-          }
-          .groupBy { case (conf, _) => conf }
-          .map { case (conf, l) => conf -> l.map { case (_, e) => e }.toSet }
+          .flatMap(exclude)
+          .groupBy(_._1)
+          .mapValues(_.map(_._2).toSet)
+          .toMap
 
         val allConfsExcludes = excludes.getOrElse(Configuration.all, Set.empty)
 
@@ -108,13 +115,17 @@ object IvyXml {
           version <- node.attribute("rev").toOption.toSeq
           rawConf <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
+          if globalExcludesFilter(fromConf, org, name)
           pub <- publications
         } yield {
           fromConf -> Dependency(
             Module(org, name, attr.toMap),
             version,
             toConf,
-            allConfsExcludes ++ excludes.getOrElse(fromConf, Set.empty),
+            globalExcludes.getOrElse(Configuration.all, Set.empty) ++
+            globalExcludes.getOrElse(fromConf, Set.empty) ++
+              allConfsExcludes ++
+              excludes.getOrElse(fromConf, Set.empty),
             pub, // should come from possible artifact nodes
             optional = false,
             transitive = transitive
@@ -157,7 +168,24 @@ object IvyXml {
       val dependenciesNodeOpt = node.children
         .find(_.label == "dependencies")
 
-      val dependencies0 = dependenciesNodeOpt.map(dependencies).getOrElse(Nil)
+      val globalExcludes = dependenciesNodeOpt
+        .map(_.children)
+        .getOrElse(Nil)
+        .filter(_.label == "exclude")
+        .flatMap(exclude)
+        .groupBy(_._1)
+        .mapValues(_.map(_._2).toSet)
+        .toMap
+      val filter = {
+        val filters = globalExcludes.mapValues(set => Exclusions(set)).toMap
+        val allConfFilter = filters.get(Configuration.all)
+        (conf: Configuration, org: Organization, name: ModuleName) =>
+          allConfFilter.forall(_(org, name)) && {
+            val confFilter = filters.get(conf)
+            confFilter.forall(_(org, name))
+          }
+      }
+      val dependencies0 = dependenciesNodeOpt.map(dependencies(_, globalExcludes, filter)).getOrElse(Nil)
 
       val configurationsNodeOpt = node.children
         .find(_.label == "configurations")
