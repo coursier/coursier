@@ -263,7 +263,7 @@ object Resolve extends CaseApp[ResolveOptions] {
               res,
               stdout,
               stderr,
-              colors = !RefreshLogger.defaultFallbackMode
+              colors = coursier.paths.Util.useColorOutput()
             )
           }
         else
