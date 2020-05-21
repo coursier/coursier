@@ -397,17 +397,16 @@ object ResolveTests extends TestSuite {
 
         error match {
           case c: ResolutionError.ConflictingDependencies =>
-            val expectedModules = Set(mod"io.netty:netty-codec-http2", mod"io.grpc:grpc-core")
+            val expectedModules = Set(mod"io.grpc:grpc-core")
             val modules = c.dependencies.map(_.module)
             assert(modules == expectedModules)
             val expectedVersions = Map(
-              mod"io.netty:netty-codec-http2" -> Set("[4.1.8.Final]", "[4.1.16.Final]"),
-              mod"io.grpc:grpc-core" -> Set("1.2.0", "1.5.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
+              mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
             )
             val versions = c.dependencies.groupBy(_.module).mapValues(_.map(_.version)).iterator.toMap
             assert(versions == expectedVersions)
           case _ =>
-            ???
+            sys.error(s"Unexpected error: $error")
         }
       }
     }
