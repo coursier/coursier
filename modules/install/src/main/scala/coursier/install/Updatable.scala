@@ -13,23 +13,24 @@ import scala.util.control.NonFatal
 
 object Updatable {
 
-  def list(dir: Path): Seq[String] = {
-
-    var s: Stream[Path] = null
-    try {
-      s = Files.list(dir)
-      s.iterator()
-        .asScala
-        .filter(p => !p.getFileName.toString.startsWith("."))
-        .filter(InfoFile.isInfoFile)
-        .map(_.getFileName.toString)
-        .toVector
-        .sorted
-    } finally {
-      if (s != null)
-        s.close()
-    }
-  }
+  def list(dir: Path): Seq[String] =
+    if (Files.isDirectory(dir)) {
+      var s: Stream[Path] = null
+      try {
+        s = Files.list(dir)
+        s.iterator()
+          .asScala
+          .filter(p => !p.getFileName.toString.startsWith("."))
+          .filter(InfoFile.isInfoFile)
+          .map(_.getFileName.toString)
+          .toVector
+          .sorted
+      } finally {
+        if (s != null)
+          s.close()
+      }
+    } else
+      Nil
 
   private final case class RelatedFiles(
     dest: Path,
