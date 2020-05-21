@@ -3,6 +3,7 @@ package coursier.graph
 import coursier.core.{Module, Parse, Resolution, Version, VersionConstraint, VersionInterval}
 import coursier.util.Print.Colors
 import coursier.util.{Print, Tree}
+import coursier.util.Print.compatibleVersions
 import dataclass.data
 
 @data class Conflict(
@@ -33,7 +34,7 @@ object Conflict {
 
     def repr: String = {
 
-      val colors0 = Colors.get(coursier.core.compatibility.hasConsole)
+      val colors0 = Colors.get(coursier.core.compatibility.coloredOutput)
 
       val treeRepr = Tree(Seq(tree).toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(_.dependees)
         .render { node =>

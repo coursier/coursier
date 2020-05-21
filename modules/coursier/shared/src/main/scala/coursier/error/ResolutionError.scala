@@ -43,7 +43,7 @@ object ResolutionError {
       {
         val roots = resolution.conflicts.map(_.module)
         val trees = ReverseModuleTree(resolution, roots = roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes)))
-        val colors0 = Colors.get(coursier.core.compatibility.hasConsole)
+        val colors0 = Colors.get(coursier.core.compatibility.coloredOutput)
 
         val renderedTrees = trees.map { t =>
           val rendered = Tree(t.dependees.toVector)(_.dependees)

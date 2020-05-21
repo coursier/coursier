@@ -134,6 +134,11 @@ package object compatibility {
 
   def regexLookbehind: String = ":"
 
+  def coloredOutput: Boolean =
+    // most CIs support colored output now…
+    true
+
+  @deprecated("Unused internally, likely to be removed in the future", "2.0.0-RC6-19")
   def hasConsole: Boolean =
     true // no System.console in Scala.JS
 

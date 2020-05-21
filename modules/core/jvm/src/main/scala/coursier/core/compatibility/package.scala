@@ -1,6 +1,7 @@
 package coursier.core
 
 import java.io.CharArrayReader
+import java.util.Locale
 
 import coursier.util.{SaxHandler, Xml}
 
@@ -178,6 +179,20 @@ package object compatibility {
 
   def regexLookbehind: String = "<="
 
+  def coloredOutput: Boolean =
+    // Same as coursier.paths.Util.useColorOutput()
+    System.getenv("INSIDE_EMACS") == null &&
+      Option(System.getenv("COURSIER_PROGRESS"))
+        .map(_.toLowerCase(Locale.ROOT))
+        .collect {
+          case "true" | "1" | "enable" => true
+          case "false" | "0" | "disable" => false
+        }
+        .getOrElse {
+          System.getenv("COURSIER_NO_TERM") == null
+        }
+
+  @deprecated("Unused internally, likely to be removed in the future", "2.0.0-RC6-19")
   def hasConsole: Boolean =
     System.console() != null
 
