@@ -85,6 +85,36 @@ public class Util {
         }
     }
 
+    private static volatile Boolean useColorOutput0 = null;
+    private static boolean computeUseColorOutput() {
+
+        if (System.getenv("INSIDE_EMACS") != null)
+            return false;
+
+        boolean disableViaEnv;
+        String envProgress = System.getenv("COURSIER_PROGRESS");
+        if (envProgress != null && (envProgress.equalsIgnoreCase("true") || envProgress.equalsIgnoreCase("enable") || envProgress.equalsIgnoreCase("1"))) {
+            disableViaEnv = false;
+        } else if (envProgress != null && (envProgress.equalsIgnoreCase("false") || envProgress.equalsIgnoreCase("disable") || envProgress.equalsIgnoreCase("0"))) {
+            disableViaEnv = true;
+        } else {
+            disableViaEnv = System.getenv("COURSIER_NO_TERM") != null;
+        }
+
+        if (disableViaEnv)
+            return false;
+
+        return true;
+    }
+
+    // a bit more loose than useAnsiOutput (doesn't look at System.console() == null or System.getenv("CI"))
+    public static boolean useColorOutput() {
+        if (useColorOutput0 == null) {
+            useColorOutput0 = computeUseColorOutput();
+        }
+        return useColorOutput0;
+    }
+
     private static volatile Boolean useAnsiOutput0 = null;
     private static boolean computeUseAnsiOutput() {
 

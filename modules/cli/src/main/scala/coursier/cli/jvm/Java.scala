@@ -134,11 +134,12 @@ object Java extends CaseApp[JavaOptions] {
       } else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()
         val fullEnv = (sys.env ++ extraEnv)
-          .toArray
+          .iterator
           .map {
             case (k, v) =>
               s"$k=$v"
           }
+          .toArray
           .sorted
         Execve.execve(javaBin.getAbsolutePath, (javaBin.getAbsolutePath +: args0).toArray, fullEnv)
         System.err.println("should not happen")
