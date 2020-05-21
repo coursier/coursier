@@ -109,11 +109,15 @@ object Launch extends CaseApp[LaunchOptions] {
         if (verbosity >= 1)
           System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
         if (execve0) {
-          Execve.execve(
-            new File(javaPath).getAbsolutePath,
-            cmd.toArray,
-            extraEnv.transientUpdates().map { case (k, v) => s"$k=$v" }.toArray
-          )
+          val fullEnv = (sys.env ++ extraEnv.transientUpdates())
+            .iterator
+            .map {
+              case (k, v) =>
+                s"$k=$v"
+            }
+            .toArray
+            .sorted
+          Execve.execve(new File(javaPath).getAbsolutePath, cmd.toArray, fullEnv)
           // execve should not return
           sys.error("something went wrong")
         } else {
