@@ -14,13 +14,13 @@ final case class SharedResolveParams(
   resolution: ResolutionParams,
   classpathOrder: Option[Boolean]
 ) {
-  def updatedResolution(scalaVersion: String): ResolutionParams =
+  def updatedResolution(scalaVersionOpt: Option[String]): ResolutionParams =
     resolution
-      .withScalaVersionOpt(resolution.scalaVersionOpt.map(_ => scalaVersion))
+      .withScalaVersionOpt(resolution.scalaVersionOpt.flatMap(_ => scalaVersionOpt))
       .withExclusions(
         dependency.exclude
           .map { m =>
-            val m0 = m.module(scalaVersion)
+            val m0 = m.module(scalaVersionOpt.getOrElse(""))
             (m0.organization, m0.name)
           }
       )

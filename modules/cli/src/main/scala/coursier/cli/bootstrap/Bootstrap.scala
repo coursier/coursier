@@ -29,10 +29,10 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     dependencyArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)], String)] =
+  ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], String)] =
     for {
       t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
-      (res, scalaVersion, platformOpt, files) = t
+      (res, scalaVersionOpt, platformOpt, files) = t
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
@@ -54,7 +54,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             }
         }
       }
-    } yield (res, scalaVersion, platformOpt, files, mainClass)
+    } yield (res, scalaVersionOpt, platformOpt, files, mainClass)
 
   private def parentLoadersArtifacts(
     loaderDependencies: Seq[(String, Seq[JavaOrScalaDependency])],
@@ -62,7 +62,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     classifiers: Set[Classifier],
     mainArtifacts: Option[Boolean],
     artifactTypes: Set[Type],
-    scalaVersion: String,
+    scalaVersionOpt: Option[String],
     platformOpt: Option[String],
     classpathOrder: Boolean
   ): Seq[(String, Seq[Artifact])] = {
@@ -72,8 +72,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
         case (_, deps) =>
           res.subset(deps.map { dep =>
             dep.dependency(
-              JavaOrScalaModule.scalaBinaryVersion(scalaVersion),
-              scalaVersion,
+              JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
+              scalaVersionOpt.getOrElse(""),
               platformOpt.getOrElse("")
             )
           })
@@ -206,7 +206,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       deps
     )
 
-    val (res, scalaVersion, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
+    val (res, scalaVersionOpt, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
       case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
         System.err.println(e.message)
         sys.exit(1)
@@ -336,7 +336,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             params.sharedLaunch.artifact.classifiers,
             Option(params.sharedLaunch.artifact.mainArtifacts).map(x => x),
             params.sharedLaunch.artifact.artifactTypes,
-            scalaVersion,
+            scalaVersionOpt,
             platformOpt,
             params.sharedLaunch.resolve.classpathOrder.getOrElse(true),
           )

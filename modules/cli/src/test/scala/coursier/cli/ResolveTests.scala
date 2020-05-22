@@ -385,4 +385,99 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |""".stripMargin
     assert(output == expectedOutput)
   }
+
+  def output(options: SharedResolveOptions, args: String*): String = {
+
+    val stdout = new ByteArrayOutputStream
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, args)
+      .unsafeRun()(ec)
+
+    new String(stdout.toByteArray, "UTF-8")
+  }
+
+  it should "ignore binary scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val output0 = output(
+      options,
+      "org.scala-lang:scala-library:2.12.11"
+    )
+    val expectedOutput =
+      """org.scala-lang:scala-library:2.12.11:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "ignore full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.2")
+      )
+    )
+    val output0 = output(
+      options,
+      "org.scala-lang:scala-library:2.12.11"
+    )
+    val expectedOutput =
+      """org.scala-lang:scala-library:2.12.11:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use binary scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.2")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use lower full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.1")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.1:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
 }

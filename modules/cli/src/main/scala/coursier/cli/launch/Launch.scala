@@ -194,7 +194,7 @@ object Launch extends CaseApp[LaunchOptions] {
   def loaderHierarchy(
     res: Resolution,
     files: Seq[(Artifact, File)],
-    scalaVersion: String,
+    scalaVersionOpt: Option[String],
     platformOpt: Option[String],
     sharedLoaderParams: SharedLoaderParams,
     artifactParams: ArtifactParams,
@@ -205,7 +205,7 @@ object Launch extends CaseApp[LaunchOptions] {
     val alreadyAdded = Set.empty[File] // unused???
     val parents = sharedLoaderParams.loaderNames.map { name =>
         val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-        val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))))
+        val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")), scalaVersionOpt.getOrElse(""), platformOpt.getOrElse(""))))
         val artifacts = coursier.Artifacts.artifacts(
           subRes,
           artifactParams.classifiers,
@@ -351,10 +351,10 @@ object Launch extends CaseApp[LaunchOptions] {
 
     for {
       depsAndReposOrError0 <- Task.fromEither(Resolve.depsAndReposOrError(params.shared.resolve, dependencyArgs, cache))
-      (deps0, repositories, scalaVersion, _) = depsAndReposOrError0
+      (deps0, repositories, scalaVersionOpt, _) = depsAndReposOrError0
       files <- {
         val params0 = params.shared.resolve.copy(
-          resolution = params.shared.resolve.updatedResolution(scalaVersion)
+          resolution = params.shared.resolve.updatedResolution(scalaVersionOpt)
         )
         coursier.Fetch(cache)
           .withDependencies(deps0)
@@ -430,7 +430,7 @@ object Launch extends CaseApp[LaunchOptions] {
   ): Task[(String, () => Option[Int])] =
     for {
       t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
-      (res, scalaVersion, platformOpt, files) = t
+      (res, scalaVersionOpt, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
       javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache(pool, params.shared.resolve.output.logger()))
@@ -444,7 +444,7 @@ object Launch extends CaseApp[LaunchOptions] {
           loaderHierarchy(
             res,
             files,
-            scalaVersion,
+            scalaVersionOpt,
             platformOpt,
             params.shared.sharedLoader,
             params.shared.artifact,
