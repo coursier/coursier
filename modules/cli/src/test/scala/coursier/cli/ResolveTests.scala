@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
-import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams, SharedResolveOptions}
+import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterAll
@@ -479,5 +479,33 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |org.scala-lang:scala-library:2.13.1:default
         |""".stripMargin
     assert(output0 == expectedOutput)
+  }
+
+  it should "use full scala version and not list those available" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.1")
+      )
+    )
+    val success =
+      try {
+        output(
+          options,
+          // non existing module
+          // resolution should try to resolve 'com.chuusaiz:shapeless_2.13:2.3.3' nonetheless
+          "com.chuusaiz::shapeless:2.3.3"
+        )
+        true
+      } catch {
+        case e: ResolveException =>
+          val expectedMessage =
+            """Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
+              |  not found: HOME/.ivy2/local/com.chuusaiz/shapeless_2.13/2.3.3/ivys/ivy.xml
+              |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
+          val message = e.message.replace(System.getProperty("user.home"), "HOME")
+          assert(message == expectedMessage)
+          false
+      }
+    assert(!success, "Expected a resolution exception")
   }
 }

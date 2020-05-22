@@ -166,14 +166,19 @@ import coursier.core.Latest
             ).map { case (v, p) => (Some(v), Some(platform.suffix(p))) }
               .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
-            AppDescriptor.dependenciesMaxScalaVersion(
-              cache,
-              repositories,
-              dependencies,
-              constraintOpt,
-              verbosity
-            ).map(v => (Some(v), None))
-              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
+            scalaVersionOpt match {
+              case Some(v) if v.split('.').length >= 3 && constraintOpt.forall(_.preferred.nonEmpty) =>
+                Right((Some(v), None))
+              case _ =>
+                AppDescriptor.dependenciesMaxScalaVersion(
+                  cache,
+                  repositories,
+                  dependencies,
+                  constraintOpt,
+                  verbosity
+                ).map(v => (Some(v), None))
+                  .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
+                }
         }
       }
     }
