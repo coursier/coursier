@@ -124,7 +124,7 @@ object Resolve extends CaseApp[ResolveOptions] {
         )
       }
 
-      val (scalaVersion, platformOpt, deps) = unlift {
+      val (scalaVersionOpt, platformOpt, deps) = unlift {
         AppDescriptor()
           .withDependencies(javaOrScalaDeps)
           .withRepositories(params.repositories.repositories)
@@ -140,6 +140,11 @@ object Resolve extends CaseApp[ResolveOptions] {
             params.output.verbosity
           )
       }
+      val scalaVersion = scalaVersionOpt
+        .getOrElse {
+          // we should only have Java dependencies in that case
+          ""
+        }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
         val m0 = m.map {
@@ -183,7 +188,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           )
       }
 
-      (deps0, repositories, scalaVersion, platformOpt)
+      (deps0, repositories, scalaVersionOpt, platformOpt)
     }
   }
 
@@ -225,7 +230,7 @@ object Resolve extends CaseApp[ResolveOptions] {
             }
           )
           val delay = Task.completeAfter(scheduler, period)
-          def helper(count: Int): Task[(Resolution, String, Option[String], Option[ResolutionError])] =
+          def helper(count: Int): Task[(Resolution, Option[String], Option[String], Option[ResolutionError])] =
             task0.attempt.flatMap {
               case Left(e) =>
                 if (count >= maxAttempts) {
@@ -251,14 +256,14 @@ object Resolve extends CaseApp[ResolveOptions] {
       }
 
     finalTask.flatMap {
-      case (res, scalaVersion, platformOpt, errorOpt) =>
+      case (res, scalaVersionOpt, platformOpt, errorOpt) =>
         val outputToStdout = errorOpt.isEmpty || params.forcePrint
         if (outputToStdout || params.output.verbosity >= 2)
           Task.delay {
             Output.printResolutionResult(
               printResultStdout = outputToStdout,
               params,
-              scalaVersion,
+              scalaVersionOpt,
               platformOpt,
               res,
               stdout,
@@ -282,7 +287,7 @@ object Resolve extends CaseApp[ResolveOptions] {
     force: Boolean = false,
     benchmark: Int = 0,
     benchmarkCache: Boolean = false
-  ): Task[(Resolution, String, Option[String], Option[ResolutionError])] = {
+  ): Task[(Resolution, Option[String], Option[String], Option[ResolutionError])] = {
 
     val cache = params.cache.cache(
       pool,
@@ -294,12 +299,12 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     lift {
 
-      val (deps, repositories, scalaVersion, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
+      val (deps, repositories, scalaVersionOpt, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
-        resolution = params.updatedResolution(scalaVersion)
+        resolution = params.updatedResolution(scalaVersionOpt)
       )
 
-      val scaladexDeps = unlift(handleScaladexDependencies(params0, pool, scalaVersion))
+      val scaladexDeps = unlift(handleScaladexDependencies(params0, pool, scalaVersionOpt.getOrElse(scala.util.Properties.versionNumberString)))
 
       val deps0 = deps ++ scaladexDeps
 
@@ -344,7 +349,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       for (ex <- errorOpt; err <- ex.errors)
         stderr.println(err.getMessage)
 
-      (res, scalaVersion, platformOpt, errorOpt)
+      (res, scalaVersionOpt, platformOpt, errorOpt)
     }
   }
 

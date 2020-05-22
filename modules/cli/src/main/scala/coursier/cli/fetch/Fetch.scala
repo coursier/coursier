@@ -22,7 +22,7 @@ object Fetch extends CaseApp[FetchOptions] {
     args: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, String, Option[String], Seq[(Artifact, File)])] = {
+  ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)])] = {
 
     val resolveTask = coursier.cli.resolve.Resolve.task(
       params.resolve,
@@ -39,7 +39,7 @@ object Fetch extends CaseApp[FetchOptions] {
 
     for {
       t <- resolveTask
-      (res, scalaVersion, platformOpt, _) = t
+      (res, scalaVersionOpt, platformOpt, _) = t
       artifacts = coursier.Artifacts.artifacts(
         res,
         params.artifact.classifiers,
@@ -72,7 +72,7 @@ object Fetch extends CaseApp[FetchOptions] {
             Task.point(())
         }
       }
-    } yield (res, scalaVersion, platformOpt, artifactFiles.collect { case (a, Some(f)) => a -> f })
+    } yield (res, scalaVersionOpt, platformOpt, artifactFiles.collect { case (a, Some(f)) => a -> f })
   }
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
