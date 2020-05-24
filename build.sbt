@@ -424,7 +424,10 @@ lazy val okhttp = project("okhttp")
   .settings(
     shared,
     coursierPrefix,
-    libs += Deps.okhttpUrlConnection
+    libs ++= List(
+      Deps.okhttpUrlConnection,
+      Deps.scalatest % Test
+    )
   )
 
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
