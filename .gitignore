@@ -24,3 +24,5 @@ processed-docs/
 
 bin/
 
+# Ammonite BSP (via metals)
+.ammonite/
