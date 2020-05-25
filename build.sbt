@@ -418,15 +418,6 @@ lazy val web = project("web")
     browserifyBundle("sax")
   )
 
-lazy val okhttp = project("okhttp")
-  .disablePlugins(MimaPlugin)
-  .dependsOn(cacheJvm)
-  .settings(
-    shared,
-    coursierPrefix,
-    libs += Deps.okhttpUrlConnection
-  )
-
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
@@ -512,7 +503,6 @@ lazy val jvmProjects = project("jvmProjects")
     publish,
     install,
     cli,
-    okhttp,
     coursierJvm,
     `launcher-native_03`,
     `launcher-native_040M2`
@@ -567,7 +557,6 @@ lazy val `coursier-repo` = project("coursier-repo")
     scalazJvm,
     scalazJs,
     web,
-    okhttp,
     coursierJvm,
     coursierJs,
     `launcher-native_03`,
