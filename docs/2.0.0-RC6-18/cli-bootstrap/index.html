@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charSet="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>bootstrap · Coursier</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="generator" content="Docusaurus">
+  <meta name="description" content="<p><code>bootstrap</code> creates binary launchers from one or more dependencies.</p>
+">
+  <meta name="docsearch:version" content="2.0.0-RC6-18">
+  <meta name="docsearch:language" content="en">
+  <meta property="og:title" content="bootstrap · Coursier">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://get-coursier.io/">
+  <meta property="og:description" content="<p><code>bootstrap</code> creates binary launchers from one or more dependencies.</p>
+">
+  <meta name="twitter:card" content="summary">
+  <link rel="shortcut icon" href="../../../../undefined">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+  <link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed">
+  <link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed">
+  <script type="text/javascript" src="https://buttons.github.io/buttons.js"></script>
+  <link rel="stylesheet" href="../../../../css/main.css">
+  <script src="/js/codetabs.js"></script>
+ </head>
+ <body class="sideNavVisible separateOnPageNav">
+  <div class="fixedHeaderContainer">
+   <div class="headerWrapper wrapper">
+    <header>
+     <a href="../../../.."><h2 class="headerTitle">Coursier</h2></a>
+     <a href="../../../../versions"><h3>2.0.0-RC6-18</h3></a>
+     <div class="navigationWrapper navigationSlider">
+      <nav class="slidingNav">
+       <ul class="nav-site nav-site-internal">
+        <li class="siteNavGroupActive"><a href="../../../../docs/2.0.0-RC6-18/overview" target="_self">Docs</a></li>
+        <li class=""><a href="../../../../blog" target="_self">Blog</a></li>
+        <li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li>
+        <li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"></li>
+       </ul>
+      </nav>
+     </div>
+    </header>
+   </div>
+  </div>
+  <div class="navPusher">
+   <div class="docMainWrapper wrapper">
+    <div class="container docsNavContainer" id="docsNav">
+     <nav class="toc">
+      <div class="toggleNav">
+       <section class="navWrapper wrapper">
+        <div class="navBreadcrumb wrapper">
+         <div class="navToggle" id="navToggler">
+          <div class="hamburger-menu">
+           <div class="line1"></div>
+           <div class="line2"></div>
+           <div class="line3"></div>
+          </div>
+         </div>
+         <h2><i>›</i><span>Command-line</span></h2>
+         <div class="tocToggler" id="tocToggler">
+          <i class="icon-toc"></i>
+         </div>
+        </div>
+        <div class="navGroups">
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Intro</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/overview-motivations">Motivations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/overview-in-the-wild">Users</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">sbt plugins</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/sbt-coursier">sbt-coursier</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/sbt-pgp-coursier">sbt-pgp-coursier</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Command-line</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-overview">Overview</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-installation">Installation</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-resolve">resolve</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-fetch">fetch</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-launch">launch</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-bootstrap">bootstrap</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-install">install</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-java">java</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cli-setup">setup</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">API</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/api">API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/api-low-level">Low-level API</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/api-scala-js">Scala.js</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Other</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/cache">Cache</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/other-repositories">Repositories</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/other-credentials">Credentials</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/other-proxy">Proxy</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/json-report">JSON report</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/extra">Extra</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/limitations">Limitations</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/other-version-handling">Version handling</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/faq">FAQ</a></li>
+          </ul>
+         </div>
+         <div class="navGroup">
+          <h3 class="navGroupCategoryTitle">Development</h3>
+          <ul class="">
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/dev-contributing">Contributing</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/dev-cli">CLI</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../../docs/2.0.0-RC6-18/dev-website">Website</a></li>
+          </ul>
+         </div>
+        </div>
+       </section>
+      </div>
+      <script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script>
+     </nav>
+    </div>
+    <div class="container mainContainer">
+     <div class="wrapper">
+      <div class="post">
+       <header class="postHeader">
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-bootstrap.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">bootstrap</h1>
+       </header>
+       <article>
+        <div>
+         <span><p><code>bootstrap</code> creates binary launchers from one or more dependencies.</p> <pre><code class="hljs css language-bash">$ cs bootstrap org.scalameta::scalafmt-cli:2.4.2 -o scalafmt
+$ ./scalafmt --version
+scalafmt 2.4.2
+</code></pre> <h2><a class="anchor" aria-hidden="true" id="launcher-types"></a><a href="index.html#launcher-types" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Launcher types</h2> <h3><a class="anchor" aria-hidden="true" id="bootstraps"></a><a href="index.html#bootstraps" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Bootstraps</h3> <p>This is the default. When generating a launcher like</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 user  group    26K  apr 8 23:28 scalafmt
+$ ./scalafmt --version
+scalafmt 2.4.2
+</code></pre> <p>the generated <code>scalafmt</code> file is a JAR containing a tiny Java application, along with a URL list as a resource (the URLs of the JARs of scalafmt, in <code>coursier/bootstrap/launcher/bootstrap-jar-urls</code>).</p> <pre><code class="hljs css language-bash">$ unzip -c scalafmt coursier/bootstrap/launcher/bootstrap-jar-urls
+https://repo1.maven.org/maven2/com/geirsson/junit-interface/0.11.9/junit-interface-0.11.9.jar
+https://repo1.maven.org/maven2/com/geirsson/metaconfig-core_2.13/0.9.8/metaconfig-core_2.13-0.9.8.jar
+https://repo1.maven.org/maven2/com/geirsson/metaconfig-typesafe-config_2.13/0.9.8/metaconfig-typesafe-config_2.13-0.9.8.jar
+https://repo1.maven.org/maven2/com/github/scopt/scopt_2.13/3.7.1/scopt_2.13-3.7.1.jar
+…
+</code></pre> <p>It also contains a shell preamble, that basically calls <code>java -jar $0</code>, so that <code>scalafmt</code> is self-executable.</p> <pre><code class="hljs css language-bash">$ head -25 scalafmt
+<span class="hljs-meta">#!/usr/bin/env sh </span>
+…
+<span class="hljs-built_in">set</span> -- <span class="hljs-string">"<span class="hljs-variable">$@</span>"</span> -jar <span class="hljs-string">"<span class="hljs-variable">$0</span>"</span>
+…
+<span class="hljs-built_in">exec</span> java <span class="hljs-variable">$JAVA_OPTS</span> <span class="hljs-string">"<span class="hljs-variable">$@</span>"</span>
+</code></pre> <p>Running it calls <code>java</code> on the script itself, which starts the tiny Java application mentioned above. That application reads the URL list, and ensures all of these are available in the coursier cache (it downloads them if necessary). It then loads them from the coursier cache in a <code>java.net.URLClassLoader</code>, and starts the actual application from it.</p> <h3><a class="anchor" aria-hidden="true" id="standalone-bootstraps"></a><a href="index.html#standalone-bootstraps" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Standalone bootstraps</h3> <p>These are very similar to simple <a href="index.html#bootstraps">bootstraps</a> above, except they are more heavyweight, as they embed all the JARs of the application:</p> <pre><code class="hljs">$ cs bootstrap scalafmt --standalone -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1<span class="hljs-built_in"> user </span><span class="hljs-built_in"> group </span>   35M  apr 8 23:41 scalafmt
+</code></pre> <p>Here, <code>scalafmt</code> contains the same tiny Java application as above, along with the same shell preamble to make it self-executable. Unlike simple bootstraps, it doesn't contain a URL list, but contains all the scalafmt JARs as resources, under <code>coursier/bootstrap/launcher/jars/</code>:</p> <pre><code class="hljs css language-bash">$ unzip -l scalafmt
+…
+   168411  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-cli_2.13-2.4.2.jar
+  5721063  09-18-2019 08:59   coursier/bootstrap/launcher/jars/scala-library-2.13.1.jar
+  1119106  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-core_2.13-2.4.2.jar
+   136879  02-23-2020 00:06   coursier/bootstrap/launcher/jars/scalafmt-dynamic_2.13-2.4.2.jar
+…
+</code></pre> <p>It also contains a resource list, in <code>coursier/bootstrap/launcher/bootstrap-jar-resources</code>:</p> <pre><code class="hljs css language-bash">$ unzip -c scalafmt coursier/bootstrap/launcher/bootstrap-jar-resources
+common_2.13-4.3.0.jar
+config-1.4.0.jar
+diffutils-1.3.0.jar
+fansi_2.13-0.2.7.jar
+fastparse-utils_2.13-1.0.1.jar
+…
+</code></pre> <p>When running <code>scalafmt</code>, instead of loading URLs via the coursier cache, the tiny startup Java application loads JARs from this list via its own resources. That makes these standalone bootstrap runnable even with no network connection and an empty coursier cache. They are more heavyweight, as they embed the full class path of the application to start.</p> <p>Standalone bootstraps are very similar to the JARs generated by <a href="http://one-jar.sourceforge.net">One-JAR</a>.</p> <h3><a class="anchor" aria-hidden="true" id="manifest-based-launchers"></a><a href="index.html#manifest-based-launchers" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Manifest-based launchers</h3> <p>These are even more lightweight than <a href="index.html#bootstraps">standard bootstraps</a>, but are only meant to be used by the same user / on the same machine.</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt --manifest-jar -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 alexandre  staff   1,6K  8 avr 23:53 scalafmt
+</code></pre> <p>These are also a JAR, and contain the same shell preamble as standard and standalone bootstraps. As a JAR, they contain only one file:</p> <pre><code class="hljs css language-bash">$ unzip -l scalafmt
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     4686  04-08-2020 21:53   META-INF/MANIFEST.MF
+---------                     -------
+     4686                     1 file
+</code></pre> <p>That only file is the JAR manifest. It contains a <code>Class-Path</code> field, listing the paths to the application JAR in the local coursier cache:</p> <pre><code class="hljs css language-bash">$ unzip -c scalafmt META-INF/MANIFEST.MF
+Manifest-Version: 1.0
+Class-Path: /Users/alexandre/.coursier/cache/v1/https/repo1.maven.org/
+ maven2/org/scalameta/scalafmt-cli_2.13/2.4.2/scalafmt-cli_2.13-2.4.2.
+ jar /Users/alexandre/.coursier/cache/v1/https/repo1.maven.org/maven2/
+ org/scala-lang/scala-library/2.13.1/scala-library-2.13.1.jar /Users/a
+ …
+Main-Class: org.scalafmt.cli.Cli
+</code></pre> <p>Upon start-up, <code>java</code> loads the JARs from the <code>Class-Path</code> field, and starts the main class from <code>Main-Class</code>.</p> <h3><a class="anchor" aria-hidden="true" id="assemblies"></a><a href="index.html#assemblies" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Assemblies</h3> <p><code>bootstrap</code> can generate <a href="https://github.com/sbt/sbt-assembly">assemblies</a>, aka "fat" JARs:</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt --assembly -o scalafmt
+$ ls -lh scalafmt
+-rwxr-xr-x  1 user  group    35M  apr 9 00:12 scalafmt
+</code></pre> <p>Assemblies merge together the JARs of the application, so that they form a single large JAR.</p> <pre><code class="hljs css language-bash">$ unzip -l scalafmt
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+       59  04-08-2020 22:11   META-INF/MANIFEST.MF
+        0  02-23-2020 00:05   org/
+        0  02-23-2020 00:05   org/scalafmt/
+        0  02-23-2020 00:05   org/scalafmt/cli/
+      944  02-23-2020 00:05   org/scalafmt/cli/Cache.class
+     2046  02-23-2020 00:05   org/scalafmt/cli/Terminal.class
+…
+</code></pre> <p><code>bootstrap</code> puts the same preamble as <a href="index.html#bootstraps">standard bootstraps</a> in assemblies</p> <pre><code class="hljs css language-bash">$ head -25 scalafmt
+<span class="hljs-meta">#!/usr/bin/env sh </span>
+…
+<span class="hljs-built_in">set</span> -- <span class="hljs-string">"<span class="hljs-variable">$@</span>"</span> -jar <span class="hljs-string">"<span class="hljs-variable">$0</span>"</span>
+…
+<span class="hljs-built_in">exec</span> java <span class="hljs-variable">$JAVA_OPTS</span> <span class="hljs-string">"<span class="hljs-variable">$@</span>"</span>
+</code></pre> <p>Some of the application JARs may contain files with the same path. When merging those JARs, these conflicting files have to be either merged, or discarded. <code>bootstrap</code> has a default set of sensible "rules" handling the most common cases. These can be disabled with <code>--default-assembly-rules=false</code>. Custom rules can be passed with <code>--assembly-rule</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt --assembly -o scalafmt --assembly-rule exclude:logback.xml
+</code></pre> <p>See <code>cs bootstrap --help</code> for the format of the rules accepted by <code>--assembly-rule</code>.</p> <h3><a class="anchor" aria-hidden="true" id="graalvm-native-image"></a><a href="index.html#graalvm-native-image" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>GraalVM native-image</h3> <p><code>bootstrap</code> can generate native executables via <a href="https://www.graalvm.org/docs/reference-manual/native-image">GraalVM native image</a>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap <span class="hljs-built_in">echo</span>-java --native-image -o <span class="hljs-built_in">echo</span>
+$ ls -lh <span class="hljs-built_in">echo</span>
+-rwxr-xr-x  1 user  group   2,8M  apr 9 00:49 <span class="hljs-built_in">echo</span>
+$ ./<span class="hljs-built_in">echo</span> foo
+foo
+</code></pre> <p>This command automatically fetches and extracts a GraalVM Community edition archive, like the <a href="../../../../docs/2.0.0-RC6-18/cli-java"><code>java</code> command of coursier</a> does, then uses it to call <code>native-image</code>.</p> <p>You can pass an explicit GraalVM version via <code>--graalvm-version</code> or <code>--graalvm</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap <span class="hljs-built_in">echo</span>-java --native-image --graalvm 19.3 -o <span class="hljs-built_in">echo</span>
+</code></pre> <p>Note that this option accepts short versions. So as of writing this, <code>19.3</code> gets automatically expanded to <code>19.3.1</code>.</p> <p>You can pass custom options to native-image via <code>--graalvm-option</code> or <code>--graalvm-opt</code>, or after a <code>--</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap <span class="hljs-built_in">echo</span>-java --native-image --graalvm 19.3 -o <span class="hljs-built_in">echo</span> \
+    --graalvm-opt --no-fallback \
+    -- \
+      --<span class="hljs-built_in">enable</span>-all-security-services \
+      --initialize-at-build-time
+</code></pre> <p>Note that it can be more convenient to pass arguments to native-image via <a href="https://medium.com/graalvm/simplifying-native-image-generation-with-maven-plugin-and-embeddable-configuration-d5b283b92f57#e114">a native-image.properties resource</a> rather than on the command-line, if adding it to the original application sources is an option for you.</p> <h3><a class="anchor" aria-hidden="true" id="scala-native"></a><a href="index.html#scala-native" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Scala native</h3> <p><code>bootstrap</code> can generate <a href="https://www.scala-native.org">Scala Native</a>-based native launchers:</p> <pre><code class="hljs css language-bash">$ cs bootstrap <span class="hljs-built_in">echo</span>-native -o <span class="hljs-built_in">echo</span> --native
+[info] Linking (1457 ms)
+[info] Discovered 614 classes and 4200 methods
+[info] Optimizing (debug mode) (2157 ms)
+[info] Generating intermediate code (1657 ms)
+[info] Produced 4 files
+…
+[info] Linking native code (immix gc, none lto) (207 ms)
+[info] Total (13172 ms)
+Wrote …/<span class="hljs-built_in">echo</span>
+$ ls -lh <span class="hljs-built_in">echo</span>
+-rwxr-xr-x  1 user  group   1,6M  apr 9 00:57 <span class="hljs-built_in">echo</span>
+</code></pre> <p>Note that this requires coursier to be launched via its <a href="../../../../docs/2.0.0-RC6-18/cli-installation#jar-based-launcher">JVM launcher</a>. Install it with <code>cs install coursier</code>, or replace <code>coursier</code> in the command above with <code>cs launch coursier --</code>, like</p> <pre><code class="hljs"><span class="hljs-meta">$</span><span class="bash"> cs launch coursier -- bootstrap <span class="hljs-built_in">echo</span>-native -o <span class="hljs-built_in">echo</span> --native</span>
+</code></pre> <p>This requires the application you want a launcher for to be cross-compiled to Scala Native, and its Scala Native artifacts to be published to Maven or Ivy repositories. The <a href="https://github.com/coursier/echo">echo</a> project of coursier has <a href="https://github.com/coursier/echo/tree/master/native">such a module</a>, published as <a href="https://repo1.maven.org/maven2/io/get-coursier/echo_native0.3_2.11"><code>io.get-coursier:echo_native0.3_2.11</code></a>.</p> <p>In order to generate a launcher for such a published application, you'll need to have your environment <a href="https://www.scala-native.org/en/v0.3.8/user/setup.html#installing-clang-and-runtime-dependencies">set up for Scala Native</a>.</p> <p>Linking flags during the linking phase can be adjusted via <code>LDFLAGS</code> in the environment.</p> <h2><a class="anchor" aria-hidden="true" id="notes"></a><a href="index.html#notes" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Notes</h2> <h3><a class="anchor" aria-hidden="true" id="local-artifacts"></a><a href="index.html#local-artifacts" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Local artifacts</h3> <p>When generating <a href="index.html#bootstraps">standard bootstraps</a>, some of the JARs may come from local repositories, like <code>~/.ivy2/local</code>. The URL of these is like <code>file:///home/user/.ivy/local/org/name/0.1/jars/name.jar</code>. Relying on those URLs, which are specific to the current machine / user, would make the bootstrap non-portable. To circumvent that, such local artifacts are embedded as resources in the bootstraps, like <a href="index.html#standalone-bootstraps">standalone bootstraps</a> do. That makes the generated bootstraps slightly more heavyweight, but also more portable. If you wish to disable that behavior, pass <code>--embed-files=false</code> when generating the bootstrap, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt:2.0.5-SNAPSHOT -o scalafmt --embed-files=<span class="hljs-literal">false</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="preamble"></a><a href="index.html#preamble" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Preamble</h3> <p>If you wish <a href="index.html#bootstraps">standard bootstraps</a>, <a href="index.html#standalone-bootstraps">standalone bootstraps</a>, <a href="index.html#assemblies">assemblies</a>, not to contain a shell preamble, disable the preamble with <code>--preamble=false</code>, like</p> <pre><code class="hljs"><span class="hljs-variable">$ </span>cs bootstrap scalafmt -o scalafmt --preamble=<span class="hljs-keyword">false</span>
+<span class="hljs-variable">$ </span>./scalafmt <span class="hljs-comment"># not self-executable anymore</span>
+<span class="hljs-symbol">zsh:</span> exec format <span class="hljs-symbol">error:</span> ./scalafmt
+<span class="hljs-variable">$ </span>java -jar scalafmt --version
+scalafmt <span class="hljs-number">2.4</span>.<span class="hljs-number">2</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="java-options"></a><a href="index.html#java-options" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Java options</h3> <p><a href="index.html#bootstraps">Standard bootstraps</a>, <a href="index.html#standalone-bootstraps">standalone bootstraps</a>, and <a href="index.html#assemblies">assemblies</a>, with the default shell preamble, automatically pass their arguments starting with <code>-J</code> to Java, stripping the leading <code>-J</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap ammonite -o amm
+$ ./amm -J-Dfoo=bar
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@ sys.props(<span class="hljs-string">"foo"</span>)
+res0: String = <span class="hljs-string">"bar"</span>
+</code></pre> <p>Alternatively, one can hard-code Java options when generating these launchers, <code>--java-opt</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap ammonite -o amm \
+    --java-opt -Dfoo=bar
+$ ./amm
+Loading...
+Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+@ sys.props(<span class="hljs-string">"foo"</span>)
+res0: String = <span class="hljs-string">"bar"</span>
+</code></pre> <h3><a class="anchor" aria-hidden="true" id="windows"></a><a href="index.html#windows" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Windows</h3> <p><a href="index.html#bootstraps">Standard bootstraps</a>, <a href="index.html#standalone-bootstraps">standalone bootstraps</a>, and <a href="index.html#assemblies">assemblies</a>, generate launchers with a shell preamble. These can't be run as-is from the Windows terminal. When generating those on Windows, a <code>.bat</code> file is automatically generated along them, like</p> <pre><code class="hljs css language-bat">&gt; cs bootstrap scalafmt -o scalafmt
+&gt; <span class="hljs-built_in">dir</span>
+…
+scalafmt
+scalafmt.bat
+…
+</code></pre> <p>If both files are present, the launcher can be run directly, like</p> <pre><code class="hljs css language-bat">&gt; scalafmt --version
+scalafmt <span class="hljs-number">2</span>.<span class="hljs-number">4</span>.<span class="hljs-number">2</span>
+</code></pre> <p>If you wish to generate that <code>.bat</code> file on Linux or macOS, pass <code>--bat=true</code>, like</p> <pre><code class="hljs css language-bash">$ cs bootstrap scalafmt -o scalafmt --bat=<span class="hljs-literal">true</span>
+Wrote .../scalafmt
+Wrote .../scalafmt.bat
+$ ls -lh
+-rwxr-xr-x    1 user  group    26K  apr 9 00:30 scalafmt
+-rw-r--r--    1 user  group   2,1K  apr 9 00:30 scalafmt.bat
+</code></pre> <p>Inversely, disable generating it on Windows with <code>--bat=false</code>.</p> <pre><code class="hljs css language-bat">&gt; cs bootstrap scalafmt -o scalafmt --bat=false
+&gt; <span class="hljs-built_in">dir</span>
+…
+scalafmt
+…
+&gt; scalafmt &amp; :: no bat file, doesn't work anymore
+</code></pre> </span>
+        </div>
+       </article>
+      </div>
+      <div class="docs-prevnext">
+       <a class="docs-prev button" href="../../../../docs/2.0.0-RC6-18/cli-launch"><span class="arrow-prev">← </span><span>launch</span></a>
+       <a class="docs-next button" href="../../../../docs/2.0.0-RC6-18/cli-install"><span>install</span><span class="arrow-next"> →</span></a>
+      </div>
+     </div>
+    </div>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="index.html#launcher-types">Launcher types</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#bootstraps">Bootstraps</a></li>
+        <li><a href="index.html#standalone-bootstraps">Standalone bootstraps</a></li>
+        <li><a href="index.html#manifest-based-launchers">Manifest-based launchers</a></li>
+        <li><a href="index.html#assemblies">Assemblies</a></li>
+        <li><a href="index.html#graalvm-native-image">GraalVM native-image</a></li>
+        <li><a href="index.html#scala-native">Scala native</a></li>
+       </ul></li>
+      <li><a href="index.html#notes">Notes</a>
+       <ul class="toc-headings">
+        <li><a href="index.html#local-artifacts">Local artifacts</a></li>
+        <li><a href="index.html#preamble">Preamble</a></li>
+        <li><a href="index.html#java-options">Java options</a></li>
+        <li><a href="index.html#windows">Windows</a></li>
+       </ul></li>
+     </ul>
+    </nav>
+   </div>
+   <footer class="nav-footer" id="footer">
+    <section class="sitemap">
+     <h2><a href="../../../.." class="nav-home">Coursier</a></h2>
+     <div>
+      <h5><a href="../../../../docs/overview">Docs</a></h5>
+      <a href="../../../../docs/overview">Overview</a>
+      <a href="../../../../docs/cli-overview">Install CLI</a>
+      <a href="../../../../docs/sbt-coursier">Setup sbt</a>
+      <a href="../../../../docs/api">Use the API</a>
+     </div>
+     <div>
+      <h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5>
+      <a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"></a>
+      <a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"></a>
+     </div>
+    </section>
+    <section class="copyright">
+     Copyright © 2020 coursier contributors
+    </section>
+   </footer>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
+  <script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script>
+  <script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script>
+ </body>
+</html>
