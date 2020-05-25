@@ -11,7 +11,6 @@ object Deps {
     def fastParse = "2.3.0"
     def http4s = "0.18.26"
     def jsoniterScala = "2.2.3"
-    def okhttp = "3.13.1"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
   }
@@ -32,9 +31,7 @@ object Deps {
   def junit = "junit" % "junit" % "4.13"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   def mavenModel = "org.apache.maven" % "maven-model" % "3.6.3"
-  // staying before 3.14.0 to the URLStreamHandlerFactory implementation
-  def okhttp = "com.squareup.okhttp3" % "okhttp" % versions.okhttp
-  def okhttpUrlConnection = "com.squareup.okhttp3" % "okhttp-urlconnection" % versions.okhttp
+  def okhttp = "com.squareup.okhttp3" % "okhttp" % "3.13.1"
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.30"
   def svm = "org.graalvm.nativeimage" % "svm" % "19.3.2"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
