@@ -810,7 +810,7 @@ object Resolution {
   lazy val nextDependenciesAndConflicts: (Seq[Dependency], Seq[Dependency], Map[Module, String]) =
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
-      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ dependencySet.minimizedSet ++ transitiveDependencies,
+      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ transitiveDependencies,
       forceVersions,
       reconciliation
     )
@@ -1240,7 +1240,7 @@ object Resolution {
 
     val rootDeps = updatedRootDependencies
       .map(withDefaultConfig(_, defaultConfiguration))
-      .map(dep => updated(dep, withRetainedVersions = false, withFallbackConfig = true))
+      .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
       .toList
 
     helper(rootDeps, DependencySet.empty).toVector
@@ -1351,10 +1351,13 @@ object Resolution {
       .map(withDefaultConfig(_, defaultConfiguration))
       .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
 
+    val allDependencies = helper(dependencies0.toSet)
+    val subsetForceVersions = allDependencies.map(_.moduleVersion).toMap
+
     copyWithCache(
       rootDependencies = dependencies0,
-      dependencySet = dependencySet.setValues(helper(dependencies0.toSet))
+      dependencySet = dependencySet.setValues(allDependencies)
       // don't know if something should be done about conflicts
-    )
+    ).withForceVersions(subsetForceVersions ++ forceVersions)
   }
 }

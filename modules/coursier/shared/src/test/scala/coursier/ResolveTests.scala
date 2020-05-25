@@ -397,17 +397,16 @@ object ResolveTests extends TestSuite {
 
         error match {
           case c: ResolutionError.ConflictingDependencies =>
-            val expectedModules = Set(mod"io.netty:netty-codec-http2", mod"io.grpc:grpc-core")
+            val expectedModules = Set(mod"io.grpc:grpc-core")
             val modules = c.dependencies.map(_.module)
             assert(modules == expectedModules)
             val expectedVersions = Map(
-              mod"io.netty:netty-codec-http2" -> Set("[4.1.8.Final]", "[4.1.16.Final]"),
-              mod"io.grpc:grpc-core" -> Set("1.2.0", "1.5.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
+              mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
             )
             val versions = c.dependencies.groupBy(_.module).mapValues(_.map(_.version)).iterator.toMap
             assert(versions == expectedVersions)
           case _ =>
-            ???
+            sys.error(s"Unexpected error: $error")
         }
       }
     }
@@ -491,6 +490,37 @@ object ResolveTests extends TestSuite {
 
         assert(handmadeArtifacts.nonEmpty)
         assert(handmadeArtifacts.forall(!_.optional))
+      }
+
+      "global excludes" - async {
+
+        val resolve0 = resolve
+          .withRepositories(Seq(
+            Repositories.central,
+            IvyRepository.parse(handmadeMetadataBase + "fake-ivy/[defaultPattern]")
+              .fold(sys.error, identity)
+          ))
+
+        val res = await {
+          resolve0
+            .addDependencies(
+              dep"io.get-coursier.test:sbt-coursier-exclude-dependencies-2_2.12:0.1.0-SNAPSHOT"
+            )
+            .future()
+        }
+
+        await(validateDependencies(res))
+
+        val urls = res.dependencyArtifacts()
+          .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
+          .toSet
+        val expectedUrls = Set(
+          "file:///handmade-metadata/fake-ivy/io.get-coursier.test/sbt-coursier-exclude-dependencies-2_2.12/0.1.0-SNAPSHOT/jars/sbt-coursier-exclude-dependencies-2_2.12.jar",
+          "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
+          "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M11/argonaut-shapeless_6.2_2.12-1.2.0-M11.jar"
+        )
+
+        assert(urls == expectedUrls)
       }
     }
 
@@ -713,6 +743,32 @@ object ResolveTests extends TestSuite {
 
       val subRes = res.subset(Seq(json4s))
       await(validateDependencies(subRes))
+    }
+
+    "initial resolution" - async {
+
+      val res0 = await {
+        resolve
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+          .future()
+      }
+
+      await(validateDependencies(res0))
+
+      val res1 = await {
+        resolve
+          .withInitialResolution(Some(res0))
+          .addRepositories(Repositories.typesafeIvy("releases"))
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:2.0.0-RC6-16")
+          .future()
+      }
+
+      await(validateDependencies(res0))
+
+      assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M8")))
+      assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "2.0.0-RC6-16")))
+      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"))
+      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"))
     }
 
     "config handling" - async {

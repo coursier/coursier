@@ -5,7 +5,7 @@ import java.net.{URL, URLDecoder}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.scaladex.Scaladex
-import coursier.core.{Configuration, Dependency, Module, ModuleName, Organization}
+import coursier.core.{Configuration, Dependency, Exclusions, Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{InMemoryRepository, Task}
 
@@ -103,22 +103,22 @@ object Dependencies {
 
   def addExclusions(
     dep: Dependency,
-    exclude: Set[(Organization, ModuleName)],
     perModuleExclude: Map[Module, Set[Module]],
   ): Dependency =
-    dep.withExclusions(
-      dep.exclusions |
-        perModuleExclude.getOrElse(dep.module, Set()).map { m => (m.organization, m.name) } |
-        exclude
-    )
+    perModuleExclude.get(dep.module) match {
+      case None => dep
+      case Some(exclusions) =>
+        dep.withExclusions(
+          Exclusions.minimize(dep.exclusions ++ exclusions.map(m => (m.organization, m.name)))
+        )
+    }
 
   def addExclusions(
     deps: Seq[Dependency],
-    exclude: Set[(Organization, ModuleName)],
     perModuleExclude: Map[Module, Set[Module]],
   ): Seq[Dependency] =
     deps.map { dep =>
-      addExclusions(dep, exclude, perModuleExclude)
+      addExclusions(dep, perModuleExclude)
     }
 
 }

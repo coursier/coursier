@@ -20,7 +20,7 @@ object CacheDefaults {
     lazy val disabled = Option(System.getenv("COURSIER_LEGACY_CACHE")).contains("dont-warn") ||
       java.lang.Boolean.getBoolean("coursier.legacy-cache.dont-warn")
     if (location == legacy && !disabled) {
-      val colorsEnabled = coursier.paths.Util.useAnsiOutput()
+      val colorsEnabled = coursier.paths.Util.useColorOutput()
       val yellow = if (colorsEnabled) Console.YELLOW else ""
       val reset = if (colorsEnabled) Console.RESET else ""
       System.err.println(

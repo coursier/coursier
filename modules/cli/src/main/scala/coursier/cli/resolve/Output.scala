@@ -42,7 +42,7 @@ object Output {
   def printResolutionResult(
     printResultStdout: Boolean,
     params: ResolveParams,
-    scalaVersion: String,
+    scalaVersionOpt: Option[String],
     platformOpt: Option[String],
     res: Resolution,
     stdout: PrintStream,
@@ -58,7 +58,7 @@ object Output {
       val depsStr =
         if (params.whatDependsOn.nonEmpty) {
           val matchers = params.whatDependsOn
-            .map(_.module(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion))
+            .map(_.module(JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")), scalaVersionOpt.getOrElse("")))
             .map(ModuleMatcher(_))
           Print.dependencyTree(
             res,

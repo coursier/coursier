@@ -159,6 +159,49 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
+    "no two versions of a dependency" - async {
+
+      val res = await {
+        Resolve()
+          .noMirrors
+          .addDependencies(
+            dep"io.get-coursier:coursier-core_2.12:2.0.0-RC6",
+            dep"io.get-coursier:coursier_2.12:2.0.0-RC6-16"
+          )
+          .withCache(cache)
+          .future()
+      }
+
+      val artifacts = await {
+        Artifacts()
+          .withResolution(res)
+          .withCache(cache)
+          .future()
+      }
+
+      val urls = artifacts.map(_._1.url)
+
+      // FIXME I don't like that order… scala-library should be last, as most others depend on it, so
+      // should appear *before* it on the class path.
+      val expectedUrls = Seq(
+        "https://repo1.maven.org/maven2/io/get-coursier/coursier-core_2.12/2.0.0-RC6-16/coursier-core_2.12-2.0.0-RC6-16.jar",
+        "https://repo1.maven.org/maven2/io/get-coursier/coursier_2.12/2.0.0-RC6-16/coursier_2.12-2.0.0-RC6-16.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.10/scala-library-2.12.10.jar",
+        "https://repo1.maven.org/maven2/io/get-coursier/coursier-util_2.12/2.0.0-RC6-16/coursier-util_2.12-2.0.0-RC6-16.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_2.12/1.3.0/scala-xml_2.12-1.3.0.jar",
+        "https://repo1.maven.org/maven2/io/get-coursier/coursier-cache_2.12/2.0.0-RC6-16/coursier-cache_2.12-2.0.0-RC6-16.jar",
+        "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M12/argonaut-shapeless_6.2_2.12-1.2.0-M12.jar",
+        "https://repo1.maven.org/maven2/io/github/alexarchambault/windows-ansi/windows-ansi/0.0.3/windows-ansi-0.0.3.jar",
+        "https://repo1.maven.org/maven2/io/argonaut/argonaut_2.12/6.2.4/argonaut_2.12-6.2.4.jar",
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.3/shapeless_2.12-2.3.3.jar",
+        "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.18/jansi-1.18.jar",
+        "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.10/scala-reflect-2.12.10.jar",
+        "https://repo1.maven.org/maven2/org/typelevel/macro-compat_2.12/1.1.1/macro-compat_2.12-1.1.1.jar"
+      )
+
+      assert(urls == expectedUrls)
+    }
+
     "in memory repo" - async {
 
       val inMemoryRepo = InMemoryRepository(Map(

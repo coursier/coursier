@@ -13,7 +13,18 @@ final case class SharedResolveParams(
   dependency: DependencyParams,
   resolution: ResolutionParams,
   classpathOrder: Option[Boolean]
-)
+) {
+  def updatedResolution(scalaVersionOpt: Option[String]): ResolutionParams =
+    resolution
+      .withScalaVersionOpt(resolution.scalaVersionOpt.flatMap(_ => scalaVersionOpt))
+      .withExclusions(
+        dependency.exclude
+          .map { m =>
+            val m0 = m.module(scalaVersionOpt.getOrElse(""))
+            (m0.organization, m0.name)
+          }
+      )
+}
 
 object SharedResolveParams {
   def apply(options: SharedResolveOptions): ValidatedNel[String, SharedResolveParams] = {

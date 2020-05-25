@@ -6,6 +6,8 @@ import coursier.graph.ReverseModuleTree
 import coursier.params.rule.Rule
 import coursier.util.{Print, Tree}
 import coursier.util.Print.{Colors, compatibleVersions}
+import coursier.core.Parse
+import coursier.core.Version
 
 sealed abstract class ResolutionError(
   val resolution: Resolution,
@@ -43,7 +45,7 @@ object ResolutionError {
       {
         val roots = resolution.conflicts.map(_.module)
         val trees = ReverseModuleTree(resolution, roots = roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes)))
-        val colors0 = Colors.get(coursier.core.compatibility.hasConsole)
+        val colors0 = Colors.get(coursier.core.compatibility.coloredOutput)
 
         val renderedTrees = trees.map { t =>
           val rendered = Tree(t.dependees.toVector)(_.dependees)
@@ -68,7 +70,19 @@ object ResolutionError {
                 s"${node.module}:${node.reconciledVersion}"
             }
 
-          s"${t.module.repr}:${t.dependees.map(_.dependsOnVersion).distinct.mkString(" or ")} wanted by\n\n" +
+          val dependeesWantVersions = t.dependees
+            .map(_.dependsOnVersion)
+            .distinct
+            .map { ver =>
+              val constraint = Parse.versionConstraint(ver)
+              val sortWith = constraint.preferred.headOption
+                .orElse(constraint.interval.from)
+                .getOrElse(Version(""))
+              ((constraint.preferred.isEmpty, sortWith), ver)
+            }
+            .sortBy(_._1)
+            .map(_._2)
+          s"${t.module.repr}:${dependeesWantVersions.mkString(" or ")} wanted by\n\n" +
             rendered + "\n"
         }
 

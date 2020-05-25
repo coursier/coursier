@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
-import coursier.cli.resolve.{Resolve, ResolveOptions, ResolveParams, SharedResolveOptions}
+import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterAll
@@ -349,5 +349,163 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |""".stripMargin
 
     assert(output == expectedOutput)
+  }
+
+  it should "exclude root dependencies" in {
+    val options = SharedResolveOptions(
+      dependencyOptions = DependencyOptions(
+        exclude = List("com.chuusai::shapeless")
+      ),
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val args = RemainingArgs(
+      Seq(
+        "com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12",
+        "com.chuusai::shapeless:2.3.3"
+      ),
+      Nil
+    )
+
+    val stdout = new ByteArrayOutputStream
+
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, args.all)
+      .unsafeRun()(ec)
+
+    val output = new String(stdout.toByteArray, "UTF-8")
+    val expectedOutput =
+      """com.github.alexarchambault:argonaut-shapeless_6.2_2.13:1.2.0-M12:default
+        |io.argonaut:argonaut_2.13:6.2.4:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |org.scala-lang:scala-reflect:2.13.2:default
+        |""".stripMargin
+    assert(output == expectedOutput)
+  }
+
+  def output(options: SharedResolveOptions, args: String*): String = {
+
+    val stdout = new ByteArrayOutputStream
+    val params = paramsOrThrow(options)
+
+    val ps = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, args)
+      .unsafeRun()(ec)
+
+    new String(stdout.toByteArray, "UTF-8")
+  }
+
+  it should "ignore binary scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val output0 = output(
+      options,
+      "org.scala-lang:scala-library:2.12.11"
+    )
+    val expectedOutput =
+      """org.scala-lang:scala-library:2.12.11:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "ignore full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.2")
+      )
+    )
+    val output0 = output(
+      options,
+      "org.scala-lang:scala-library:2.12.11"
+    )
+    val expectedOutput =
+      """org.scala-lang:scala-library:2.12.11:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use binary scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.2")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.2:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use lower full scala version" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.1")
+      )
+    )
+    val output0 = output(
+      options,
+      "com.chuusai::shapeless:2.3.3"
+    )
+    val expectedOutput =
+      """com.chuusai:shapeless_2.13:2.3.3:default
+        |org.scala-lang:scala-library:2.13.1:default
+        |""".stripMargin
+    assert(output0 == expectedOutput)
+  }
+
+  it should "use full scala version and not list those available" in {
+    val options = SharedResolveOptions(
+      resolutionOptions = ResolutionOptions(
+        scalaVersion = Some("2.13.1")
+      )
+    )
+    val success =
+      try {
+        output(
+          options,
+          // non existing module
+          // resolution should try to resolve 'com.chuusaiz:shapeless_2.13:2.3.3' nonetheless
+          "com.chuusaiz::shapeless:2.3.3"
+        )
+        true
+      } catch {
+        case e: ResolveException =>
+          val expectedMessage =
+            """Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
+              |  not found: HOME/.ivy2/local/com.chuusaiz/shapeless_2.13/2.3.3/ivys/ivy.xml
+              |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
+          val message = e.message.replace(System.getProperty("user.home"), "HOME")
+          assert(message == expectedMessage)
+          false
+      }
+    assert(!success, "Expected a resolution exception")
   }
 }

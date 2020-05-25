@@ -54,7 +54,7 @@ import coursier.core.Latest
       case _ => None
     }
 
-    val (scalaVersion, platformSuffixOpt, deps) = processDependencies(
+    val (scalaVersionOpt, platformSuffixOpt, deps) = processDependencies(
       cache,
       platformOpt,
       verbosity
@@ -63,13 +63,18 @@ import coursier.core.Latest
       case Right(t) => t
     }
 
+    val scalaVersion = scalaVersionOpt.getOrElse {
+      // shouldn't matter, we should only have Java dependencies in that case
+      scala.util.Properties.versionNumberString
+    }
+
     val hasFullCrossVersionDeps = dependencies.exists {
       case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
       case _ => false
     }
 
     val resolutionParams = ResolutionParams()
-      .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+      .withScalaVersionOpt(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
     val res: Fetch.Result = Fetch()
       .withDependencies(deps)
@@ -128,7 +133,7 @@ import coursier.core.Latest
     cache: Cache[Task],
     platformOpt: Option[Platform],
     verbosity: Int
-  ): Either[AppArtifacts.AppArtifactsException, (String, Option[String], Seq[Dependency])] = {
+  ): Either[AppArtifacts.AppArtifactsException, (Option[String], Option[String], Seq[Dependency])] = {
 
     val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
 
@@ -143,7 +148,7 @@ import coursier.core.Latest
       }
       val platformOpt0 = platformOpt.filter(_ => hasPlatformDeps)
       if (onlyJavaDeps)
-        Right((scala.util.Properties.versionNumberString, None)) // shouldn't matter… pass an invalid - unused at the end - version instead?
+        Right((None, None))
       else {
        def scalaDeps = dependencies.collect {
          case s: JavaOrScalaDependency.ScalaDependency =>
@@ -158,28 +163,34 @@ import coursier.core.Latest
               constraintOpt,
               verbosity,
               platform
-            ).map { case (v, p) => (v, Some(platform.suffix(p))) }
+            ).map { case (v, p) => (Some(v), Some(platform.suffix(p))) }
               .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
-            AppDescriptor.dependenciesMaxScalaVersion(
-              cache,
-              repositories,
-              dependencies,
-              constraintOpt,
-              verbosity
-            ).map(v => (v, None))
-              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
+            scalaVersionOpt match {
+              case Some(v) if v.split('.').length >= 3 && constraintOpt.forall(_.preferred.nonEmpty) =>
+                Right((Some(v), None))
+              case _ =>
+                AppDescriptor.dependenciesMaxScalaVersion(
+                  cache,
+                  repositories,
+                  dependencies,
+                  constraintOpt,
+                  verbosity
+                ).map(v => (Some(v), None))
+                  .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
+                }
         }
       }
     }
 
     t.map {
-      case (scalaVersion, pfVerOpt) =>
+      case (scalaVersionOpt, pfVerOpt) =>
         val l = dependencies
           .map(pfVerOpt.fold[JavaOrScalaDependency => JavaOrScalaDependency](identity)(pfVer => _.withPlatform(pfVer)))
-          .map(_.dependency(scalaVersion))
+          // if scalaVersionOpt is empty, we should only have Java dependencies
+          .map(_.dependency(scalaVersionOpt.getOrElse("")))
 
-        (scalaVersion, pfVerOpt, l)
+        (scalaVersionOpt, pfVerOpt, l)
     }
   }
 
@@ -195,7 +206,7 @@ import coursier.core.Latest
       case _ => None
     }
 
-    val (scalaVersion, _, deps) = processDependencies(
+    val (scalaVersionOpt, _, deps) = processDependencies(
       cache,
       platformOpt,
       verbosity
@@ -230,7 +241,7 @@ import coursier.core.Latest
             }
 
             val resolutionParams = ResolutionParams()
-              .withScalaVersionOpt(Some(scalaVersion).filter(_ => hasFullCrossVersionDeps))
+              .withScalaVersionOpt(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
             val res = coursier.Resolve()
               .withDependencies(deps.take(1).map(_.withTransitive(false)))
