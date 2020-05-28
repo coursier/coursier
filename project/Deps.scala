@@ -16,7 +16,7 @@ object Deps {
   }
 
   def argonautShapeless = "com.github.alexarchambault" %% "argonaut-shapeless_6.2" % versions.argonautShapeless
-  def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0-M16"
+  def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0"
   def catsCore = "org.typelevel" %% "cats-core" % "2.1.1"
   def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
