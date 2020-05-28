@@ -367,7 +367,7 @@ object ResolveRulesTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(
-              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0",
               dep"io.argonaut:argonaut_2.11:6.1"
             )
             .withResolutionParams(params)
@@ -401,7 +401,7 @@ object ResolveRulesTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(
-              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0",
               dep"io.argonaut:argonaut_2.11:6.1"
             )
             .withResolutionParams(params)
@@ -439,7 +439,7 @@ object ResolveRulesTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(
-              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
+              dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0",
               dep"io.argonaut:argonaut_2.11:6.2"
             )
             .withResolutionParams(params)

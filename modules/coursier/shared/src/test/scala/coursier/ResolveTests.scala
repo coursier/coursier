@@ -338,7 +338,7 @@ object ResolveTests extends TestSuite {
     'exclusions - {
 
       val resolve0 = resolve
-        .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
+        .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0")
 
       'check - async {
         val res = await {
@@ -517,7 +517,7 @@ object ResolveTests extends TestSuite {
         val expectedUrls = Set(
           "file:///handmade-metadata/fake-ivy/io.get-coursier.test/sbt-coursier-exclude-dependencies-2_2.12/0.1.0-SNAPSHOT/jars/sbt-coursier-exclude-dependencies-2_2.12.jar",
           "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
-          "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M11/argonaut-shapeless_6.2_2.12-1.2.0-M11.jar"
+          "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0/argonaut-shapeless_6.2_2.12-1.2.0-M11.jar"
         )
 
         assert(urls == expectedUrls)
@@ -573,7 +573,7 @@ object ResolveTests extends TestSuite {
           val res = await {
             resolve
               .addDependencies(
-                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11",
+                dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0",
                 dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
               )
               .io
