@@ -53,6 +53,11 @@ object RepositoryParserTests extends TestSuite {
       assert(res.exists(isMavenRepo))
     }
 
+    "jcenter" - {
+      val res = RepositoryParser.repository("jcenter")
+      assert(res.exists(isMavenRepo))
+    }
+
     "ivy with metadata" - {
       val mainPattern =
         "http://repo/cache/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]"
