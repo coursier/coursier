@@ -9,7 +9,7 @@ object DefaultAppList {
       "coursier",
       "scala",
       "scalac",
-      "sbt-launcher",
+      "sbt",
       "scalafmt"
     )
 
