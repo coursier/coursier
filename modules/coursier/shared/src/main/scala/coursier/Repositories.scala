@@ -34,4 +34,6 @@ object Repositories {
     MavenRepository("https://jitpack.io")
   def clojars: MavenRepository =
     MavenRepository("https://repo.clojars.org")
+  def jcenter: MavenRepository =
+    MavenRepository("https://jcenter.bintray.com")
 }
