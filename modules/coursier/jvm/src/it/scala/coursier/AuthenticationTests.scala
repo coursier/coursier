@@ -30,35 +30,39 @@ object AuthenticationTests extends TestSuite {
     }
   }
 
+  private def testCredentials(credentials: DirectCredentials): Unit = {
+    val result = withTmpDir { dir =>
+      Resolve()
+        .noMirrors
+        .withRepositories(Seq(
+          MavenRepository(testRepo),
+          Repositories.central
+        ))
+        .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
+        .withCache(
+          FileCache()
+            .noCredentials
+            .withLocation(dir.toFile)
+            .addCredentials(credentials)
+        )
+        .run()
+    }
+    val modules = result.minDependencies.map(_.module)
+    val expectedModules = Set(mod"com.abc:test")
+    assert(modules == expectedModules)
+  }
+
   val tests = Tests {
 
     * - {
-      val result = withTmpDir { dir =>
-        Resolve()
-          .noMirrors
-          .withRepositories(Seq(
-            MavenRepository(testRepo),
-            Repositories.central
-          ))
-          .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
-          .withCache(
-            FileCache()
-              .noCredentials
-              .withLocation(dir.toFile)
-              .addCredentials(
-                DirectCredentials()
-                  .withHost(testHost)
-                  .withUsername(user)
-                  .withPassword(password)
-                  .withMatchHost(true)
-                  .withHttpsOnly(false)
-              )
-          )
-          .run()
+      testCredentials {
+        DirectCredentials()
+          .withHost(testHost)
+          .withUsername(user)
+          .withPassword(password)
+          .withMatchHost(true)
+          .withHttpsOnly(false)
       }
-      val modules = result.minDependencies.map(_.module)
-      val expectedModules = Set(mod"com.abc:test")
-      assert(modules == expectedModules)
     }
 
   }
