@@ -10,7 +10,7 @@ On Linux, download and run the coursier launcher with
 ```bash
 $ curl -fLo cs https://git.io/coursier-cli-linux &&
     chmod +x cs &&
-    ./cs --help
+    ./cs
 ```
 
 ### macOS
@@ -20,7 +20,7 @@ Download and run the coursier launcher with
 $ curl -fLo cs https://git.io/coursier-cli-macos &&
     chmod +x cs &&
     (xattr -d com.apple.quarantine cs || true) &&
-    ./cs --help
+    ./cs
 ```
 
 Note the `xattr` command to circumvent notarization on macOS Catalina.
@@ -28,7 +28,7 @@ Note the `xattr` command to circumvent notarization on macOS Catalina.
 Alternatively, the native launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
 $ brew install coursier/formulas/coursier
-$ cs --help
+$ cs
 ```
 
 ### Windows
@@ -53,7 +53,7 @@ Download and run the launcher with
 ```bash
 $ curl -fLo coursier https://git.io/coursier-cli &&
     chmod +x coursier &&
-    ./coursier --help
+    ./coursier
 ```
 
 Note that the JAR-based launcher requires Java 8 or later to run.
@@ -66,7 +66,7 @@ It downloads the artifacts required to launch coursier on the first run.
 Alternatively, on macOS, the JAR-based launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
 $ brew install coursier/formulas/coursier
-$ coursier --help
+$ coursier
 ```
 
 ### Windows
