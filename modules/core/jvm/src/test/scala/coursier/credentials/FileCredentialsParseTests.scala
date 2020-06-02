@@ -22,11 +22,9 @@ object FileCredentialsParseTests extends TestSuite {
       val expected = Seq(
         DirectCredentials("127.0.0.1", "secure", "sEcUrE", Some("secure realm"))
           .withOptional(true)
-          .withMatchHost(false)
           .withHttpsOnly(true),
         DirectCredentials("127.0.0.1", "simple", "SiMpLe", Some("simple realm"))
           .withOptional(true)
-          .withMatchHost(false)
           .withHttpsOnly(false)
       )
 

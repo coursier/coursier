@@ -5,7 +5,8 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.cache.FileCache
-import coursier.credentials.DirectCredentials
+import coursier.credentials.{DirectCredentials, FileCredentials}
+import coursier.parse.CredentialsParser
 import utest._
 
 object AuthenticationTests extends TestSuite {
@@ -63,6 +64,27 @@ object AuthenticationTests extends TestSuite {
           .withMatchHost(true)
           .withHttpsOnly(false)
       }
+    }
+
+    * - {
+      val credentialsStr = s"$testHost $user:$password"
+      val credentials = CredentialsParser.parse(credentialsStr) match {
+        case Left(error) => sys.error(s"Error parsing credentials: $error")
+        case Right(c) => c
+      }
+      testCredentials(credentials)
+    }
+
+    * - {
+      val content =
+       s"""foo.username=$user
+          |foo.password=$password
+          |foo.host=$testHost
+          |""".stripMargin
+      val allCredentials = FileCredentials.parse(content, s"'$content'")
+      assert(allCredentials.length == 1)
+      val credentials = allCredentials.head
+      testCredentials(credentials)
     }
 
   }
