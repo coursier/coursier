@@ -1,10 +1,10 @@
 package coursier.graph
 
-import coursier.core.{Module, Parse, Resolution, VersionConstraint, VersionInterval}
+import coursier.core.{Module, Parse, Resolution, VersionConstraint}
 import coursier.util.Print.Colors
 import coursier.util.{Print, Tree}
 import coursier.util.Print.compatibleVersions
-import coursier.version.VersionCompatibility
+import coursier.version.{VersionCompatibility, VersionInterval}
 import dataclass.data
 
 @data class Conflict(

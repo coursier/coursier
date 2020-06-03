@@ -2,7 +2,7 @@ package coursier.util
 
 import coursier.core._
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
-import coursier.version.Version
+import coursier.version.{Version, VersionInterval}
 import dataclass.data
 
 object Print {

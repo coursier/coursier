@@ -1,5 +1,7 @@
 package coursier.core
 
+import coursier.version.VersionInterval
+
 /**
  * Represents a reconciliation strategy given a dependency conflict.
  */
