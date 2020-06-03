@@ -1,9 +1,10 @@
 package coursier.params.rule
 
-import coursier.core.{Module, Resolution, Version}
+import coursier.core.{Module, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatcher
+import coursier.version.Version
 import dataclass.data
 
 /**

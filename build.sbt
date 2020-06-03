@@ -76,7 +76,10 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     Mima.previousArtifacts,
     Mima.coreFilters,
     dontPublishScalaJsIn("2.11"),
-    libs += Deps.dataClass % Provided
+    libs ++= Seq(
+      Deps.dataClass % Provided,
+      Deps.cross.csVersions.value
+    )
   )
 
 lazy val coreJvm = core.jvm

@@ -38,7 +38,6 @@ object Deps {
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
   def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.2"
   def plexusContainerDefault = "org.codehaus.plexus" % "plexus-container-default" % "2.1.0" // plexus-archiver needs its loggers
-
   def scalaAsync = "org.scala-lang.modules" %% "scala-async" % "0.10.0"
   def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
   def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
@@ -60,6 +59,7 @@ object Deps {
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "1.0.0")
     def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.7.0")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
+    def csVersions = setting("io.get-coursier" %%% "versions" % "0.1.0")
     def utest = setting("com.lihaoyi" %%% "utest" % "0.7.4")
   }
 

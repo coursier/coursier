@@ -11,6 +11,7 @@ import coursier.internal.Typelevel
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
+import coursier.version.VersionParse
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -276,7 +277,7 @@ object Resolve extends PlatformResolve {
         params.jdkVersionOpt.orElse {
           if (params.useSystemJdkVersion)
             // call from Sync[F].delay?
-            sys.props.get("java.version").flatMap(coursier.core.Parse.version)
+            sys.props.get("java.version").flatMap(VersionParse.version)
           else
             None
         }

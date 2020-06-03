@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.Traverse.TraverseOps
+import coursier.version.VersionParse
 
 object Pom {
   import coursier.util.Xml._
@@ -105,10 +106,10 @@ object Pom {
     )
 
     val jdk = text(node, "jdk", "").toOption.flatMap { s =>
-      Parse.versionInterval(s)
-        .orElse(Parse.multiVersionInterval(s))
+      VersionParse.versionInterval(s)
+        .orElse(VersionParse.multiVersionInterval(s))
         .map(Left(_))
-        .orElse(Parse.version(s).map(v => Right(Seq(v))))
+        .orElse(VersionParse.version(s).map(v => Right(Seq(v))))
     }
 
     val activation = Activation(properties, os, jdk)

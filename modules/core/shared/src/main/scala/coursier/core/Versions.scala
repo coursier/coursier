@@ -1,5 +1,6 @@
 package coursier.core
 
+import coursier.version.{Version, VersionInterval}
 import dataclass.data
 
 @data class Versions(

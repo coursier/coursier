@@ -6,12 +6,13 @@ import java.time.{Instant, ZoneOffset}
 import coursier.publish
 import coursier.publish.{Content, Pom}
 import coursier.publish.dir.DirContent
-import coursier.core.{ModuleName, Organization, Version}
+import coursier.core.{ModuleName, Organization}
 import coursier.maven.MavenRepository
 import coursier.publish.Pom.{Developer, License}
 import coursier.publish.download.Download
 import coursier.publish.download.logger.DownloadLogger
 import coursier.util.Task
+import coursier.version.Version
 
 import scala.xml.{Elem, XML}
 

@@ -1,6 +1,7 @@
 package coursier.maven
 
 import coursier.core._
+import coursier.version.{Version, VersionInterval, VersionParse}
 import coursier.util.SaxHandler
 
 import scala.collection.mutable.ListBuffer
@@ -441,10 +442,10 @@ object PomParser {
         (state, content) =>
           val s = content
           state.profileActivationJdkOpt =
-            Parse.versionInterval(s)
-              .orElse(Parse.multiVersionInterval(s))
+            VersionParse.versionInterval(s)
+              .orElse(VersionParse.multiVersionInterval(s))
               .map(Left(_))
-              .orElse(Parse.version(s).map(v => Right(Seq(v))))
+              .orElse(VersionParse.version(s).map(v => Right(Seq(v))))
       }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: prefix,

@@ -2,6 +2,7 @@ package coursier.core
 
 import java.util.concurrent.ConcurrentHashMap
 
+import coursier.version.Version
 import coursier.util.Artifact
 
 import scala.annotation.tailrec

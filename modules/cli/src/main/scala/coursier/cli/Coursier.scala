@@ -16,9 +16,9 @@ import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.{Setup, SetupOptions}
-import coursier.core.Version
 import coursier.install.InstallDir
 import coursier.launcher.internal.{FileUtil, Windows}
+import coursier.version.Version
 import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 

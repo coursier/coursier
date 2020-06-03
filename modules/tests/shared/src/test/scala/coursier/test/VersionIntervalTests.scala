@@ -2,6 +2,7 @@ package coursier
 package test
 
 import coursier.core._
+import coursier.version.{Version, VersionConstraint, VersionInterval, VersionParse}
 import utest._
 
 object VersionIntervalTests extends TestSuite {
@@ -132,7 +133,7 @@ object VersionIntervalTests extends TestSuite {
       val v28 = Version("2.8")
 
       'basic{
-        val itv = Parse.versionInterval("[2.2,)").get
+        val itv = VersionParse.versionInterval("[2.2,)").get
 
         assert(!itv.contains(v21))
         assert(itv.contains(v22))
@@ -140,7 +141,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itv.contains(v24))
       }
       'open{
-        val itv = Parse.versionInterval("(2.2,)").get
+        val itv = VersionParse.versionInterval("(2.2,)").get
 
         assert(!itv.contains(v21))
         assert(!itv.contains(v22))
@@ -148,7 +149,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itv.contains(v24))
       }
       'segment{
-        val itv = Parse.versionInterval("[2.2,2.8]").get
+        val itv = VersionParse.versionInterval("[2.2,2.8]").get
 
         assert(!itv.contains(v21))
         assert(itv.contains(v22))
@@ -164,156 +165,156 @@ object VersionIntervalTests extends TestSuite {
     'parse{
       'malformed{
         val s2 = "(1.1)"
-        val itv2 = Parse.versionInterval(s2)
+        val itv2 = VersionParse.versionInterval(s2)
         assert(itv2 == None)
 
         val s3 = "()"
-        val itv3 = Parse.versionInterval(s3)
+        val itv3 = VersionParse.versionInterval(s3)
         assert(itv3 == None)
 
         val s4 = "[1.1,1.3"
-        val itv4 = Parse.versionInterval(s4)
+        val itv4 = VersionParse.versionInterval(s4)
         assert(itv4 == None)
 
         val s5 = "1.1,1.3)"
-        val itv5 = Parse.versionInterval(s5)
+        val itv5 = VersionParse.versionInterval(s5)
         assert(itv5 == None)
       }
       'basic {
         val s1 = "[1.1,1.3]"
-        val itv1 = Parse.versionInterval(s1)
+        val itv1 = VersionParse.versionInterval(s1)
         assert(itv1 == Some(VersionInterval(Some(Version("1.1")), Some(Version("1.3")), true, true)))
 
         val s2 = "(1.1,1.3]"
-        val itv2 = Parse.versionInterval(s2)
+        val itv2 = VersionParse.versionInterval(s2)
         assert(itv2 == Some(VersionInterval(Some(Version("1.1")), Some(Version("1.3")), false, true)))
 
         val s3 = "[1.1,1.3)"
-        val itv3 = Parse.versionInterval(s3)
+        val itv3 = VersionParse.versionInterval(s3)
         assert(itv3 == Some(VersionInterval(Some(Version("1.1")), Some(Version("1.3")), true, false)))
 
         val s4 = "(1.1,1.3)"
-        val itv4 = Parse.versionInterval(s4)
+        val itv4 = VersionParse.versionInterval(s4)
         assert(itv4 == Some(VersionInterval(Some(Version("1.1")), Some(Version("1.3")), false, false)))
 
         val s5 = "(1.11.0, 1.12.0]"
-        val itv5 = Parse.versionInterval(s5)
+        val itv5 = VersionParse.versionInterval(s5)
         assert(itv5 == Some(VersionInterval(Some(Version("1.11.0")), Some(Version("1.12.0")), false, true)))
       }
       'leftEmptyVersions {
         val s1 = "[,1.3]"
-        val itv1 = Parse.versionInterval(s1)
+        val itv1 = VersionParse.versionInterval(s1)
         assert(itv1 == Some(VersionInterval(None, Some(Version("1.3")), true, true)))
         assert(!itv1.get.isValid)
 
         val s2 = "(,1.3]"
-        val itv2 = Parse.versionInterval(s2)
+        val itv2 = VersionParse.versionInterval(s2)
         assert(itv2 == Some(VersionInterval(None, Some(Version("1.3")), false, true)))
         assert(itv2.get.isValid)
 
         val s3 = "[,1.3)"
-        val itv3 = Parse.versionInterval(s3)
+        val itv3 = VersionParse.versionInterval(s3)
         assert(itv3 == Some(VersionInterval(None, Some(Version("1.3")), true, false)))
         assert(!itv3.get.isValid)
 
         val s4 = "(,1.3)"
-        val itv4 = Parse.versionInterval(s4)
+        val itv4 = VersionParse.versionInterval(s4)
         assert(itv4 == Some(VersionInterval(None, Some(Version("1.3")), false, false)))
         assert(itv4.get.isValid)
       }
       'rightEmptyVersions {
         val s1 = "[1.3,]"
-        val itv1 = Parse.versionInterval(s1)
+        val itv1 = VersionParse.versionInterval(s1)
         assert(itv1 == Some(VersionInterval(Some(Version("1.3")), None, true, true)))
         assert(!itv1.get.isValid)
 
         val s2 = "(1.3,]"
-        val itv2 = Parse.versionInterval(s2)
+        val itv2 = VersionParse.versionInterval(s2)
         assert(itv2 == Some(VersionInterval(Some(Version("1.3")), None, false, true)))
         assert(!itv2.get.isValid)
 
         val s3 = "[1.3,)"
-        val itv3 = Parse.versionInterval(s3)
+        val itv3 = VersionParse.versionInterval(s3)
         assert(itv3 == Some(VersionInterval(Some(Version("1.3")), None, true, false)))
         assert(itv3.get.isValid)
 
         val s4 = "(1.3,)"
-        val itv4 = Parse.versionInterval(s4)
+        val itv4 = VersionParse.versionInterval(s4)
         assert(itv4 == Some(VersionInterval(Some(Version("1.3")), None, false, false)))
         assert(itv4.get.isValid)
       }
       'bothEmptyVersions {
         val s1 = "[,]"
-        val itv1 = Parse.versionInterval(s1)
+        val itv1 = VersionParse.versionInterval(s1)
         assert(itv1 == Some(VersionInterval(None, None, true, true)))
         assert(!itv1.get.isValid)
 
         val s2 = "(,]"
-        val itv2 = Parse.versionInterval(s2)
+        val itv2 = VersionParse.versionInterval(s2)
         assert(itv2 == Some(VersionInterval(None, None, false, true)))
         assert(!itv2.get.isValid)
 
         val s3 = "[,)"
-        val itv3 = Parse.versionInterval(s3)
+        val itv3 = VersionParse.versionInterval(s3)
         assert(itv3 == Some(VersionInterval(None, None, true, false)))
         assert(!itv3.get.isValid)
 
         val s4 = "(,]"
-        val itv4 = Parse.versionInterval(s4)
+        val itv4 = VersionParse.versionInterval(s4)
         assert(itv4 == Some(VersionInterval(None, None, false, true)))
         assert(!itv4.get.isValid)
       }
 
       'fixedVersion - {
         * - {
-          val itv = Parse.versionInterval("[1.2]")
+          val itv = VersionParse.versionInterval("[1.2]")
           assert(itv == Some(VersionInterval(Some(Version("1.2")), Some(Version("1.2")), true, true)))
         }
 
         * - {
-          val itv = Parse.versionInterval("[1.2)")
+          val itv = VersionParse.versionInterval("[1.2)")
           assert(itv.isEmpty)
         }
 
         * - {
-          val itv = Parse.versionInterval("(1.2]")
+          val itv = VersionParse.versionInterval("(1.2]")
           assert(itv.isEmpty)
         }
 
         * - {
-          val itv = Parse.versionInterval("(1.2)")
+          val itv = VersionParse.versionInterval("(1.2)")
           assert(itv.isEmpty)
         }
 
         * - {
-          val itv = Parse.versionInterval("[]")
+          val itv = VersionParse.versionInterval("[]")
           assert(itv.isEmpty)
         }
 
         * - {
-          val itv = Parse.versionInterval("[0.0]")
+          val itv = VersionParse.versionInterval("[0.0]")
           assert(itv.isEmpty)
         }
       }
 
       'multiRange - {
         * - {
-          val itv = Parse.multiVersionInterval("[1.0,2.0)")
+          val itv = VersionParse.multiVersionInterval("[1.0,2.0)")
           assert(itv == Some(VersionInterval(Some(Version("1.0")), Some(Version("2.0")), fromIncluded = true, toIncluded = false)))
         }
 
         * - {
-          val itv = Parse.multiVersionInterval("[1.0,2.0),[3.0,4.0)")
+          val itv = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0)")
           assert(itv == Some(VersionInterval(Some(Version("3.0")), Some(Version("4.0")), fromIncluded = true, toIncluded = false)))
         }
 
         * - {
-          val itv = Parse.multiVersionInterval("[1.0,2.0),[3.0,4.0),[5.0,6.0)")
+          val itv = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0),[5.0,6.0)")
           assert(itv == Some(VersionInterval(Some(Version("5.0")), Some(Version("6.0")), fromIncluded = true, toIncluded = false)))
         }
 
         * - {
-          val itv = Parse.multiVersionInterval("(1.0,2.0),[3.0,4.0),(5.0,6.0)")
+          val itv = VersionParse.multiVersionInterval("(1.0,2.0),[3.0,4.0),(5.0,6.0)")
           assert(itv == Some(VersionInterval(Some(Version("5.0")), Some(Version("6.0")), fromIncluded = false, toIncluded = false)))
         }
       }
@@ -322,18 +323,18 @@ object VersionIntervalTests extends TestSuite {
     'constraint{
       'none{
         val s1 = "(,)"
-        val c1 = Parse.versionInterval(s1).map(_.constraint)
+        val c1 = VersionParse.versionInterval(s1).map(_.constraint)
         assert(c1 == Some(VersionConstraint.all))
       }
       'preferred{
         val s1 = "[1.3,)"
-        val c1 = Parse.versionInterval(s1).map(_.constraint)
-        assert(c1 == Some(VersionConstraint.preferred(Parse.version("1.3").get)))
+        val c1 = VersionParse.versionInterval(s1).map(_.constraint)
+        assert(c1 == Some(VersionConstraint.preferred(VersionParse.version("1.3").get)))
       }
       'interval{
         val s1 = "[1.3,2.4)"
-        val c1 = Parse.versionInterval(s1).map(_.constraint)
-        assert(c1 == Some(VersionConstraint.interval(VersionInterval(Parse.version("1.3"), Parse.version("2.4"), true, false))))
+        val c1 = VersionParse.versionInterval(s1).map(_.constraint)
+        assert(c1 == Some(VersionConstraint.interval(VersionInterval(VersionParse.version("1.3"), VersionParse.version("2.4"), true, false))))
       }
     }
   }

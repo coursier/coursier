@@ -1,9 +1,10 @@
 package coursier.params.rule
 
-import coursier.core.{Dependency, Module, Parse, Resolution, Version}
+import coursier.core.{Dependency, Module, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
+import coursier.version.{Version, VersionParse}
 import dataclass.data
 
 @data class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
@@ -27,7 +28,7 @@ import dataclass.data
       }
       .filter {
         case (dep, selectedVer) =>
-          val wanted = Parse.versionConstraint(dep.version)
+          val wanted = VersionParse.versionConstraint(dep.version)
           if (wanted.preferred.nonEmpty)
             !wanted.preferred.contains(selectedVer)
           else

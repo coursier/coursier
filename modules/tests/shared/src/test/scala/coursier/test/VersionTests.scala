@@ -1,11 +1,10 @@
 package coursier
 package test
 
+import coursier.version.Version
 import utest._
 
 object VersionTests extends TestSuite {
-
-  import core.Version
 
   def compare(first: String, second: String) =
     Version(first).compare(Version(second))
