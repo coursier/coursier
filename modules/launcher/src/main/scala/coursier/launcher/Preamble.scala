@@ -3,7 +3,7 @@ package coursier.launcher
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
-import dataclass.data
+import dataclass._
 
 import scala.io.{Codec, Source}
 
@@ -12,7 +12,9 @@ import scala.io.{Codec, Source}
   javaOpts: Seq[String] = Nil,
   jarPath: Option[String] = None,
   command: Option[String] = None,
-  extraEnv: Map[String, String] = Map.empty
+  extraEnv: Map[String, String] = Map.empty,
+  @since
+  jvmOptionFile: Option[String] = None
 ) {
 
   def withOsKind(isWindows: Boolean): Preamble =
@@ -44,14 +46,16 @@ import scala.io.{Codec, Source}
         val javaCmd = Seq("java") ++
           // escaping possibly a bit loose :-|
           javaOpts.map(s => "'" + s.replace("'", "\\'") + "'") ++
+          jvmOptionFile.toSeq.map(_ => "${extra_jvm_opts[@]}") ++
           Seq("$JAVA_OPTS", "\"$@\"")
 
-        Seq("#!/usr/bin/env sh") ++
+        val sh = jvmOptionFile.fold("sh")(_ => "bash")
+
+        Seq(s"#!/usr/bin/env $sh") ++
           setVars ++
-          Seq(
-            Preamble.shArgsPartitioner(jarPath.getOrElse("$0")),
-            "exec " + javaCmd.mkString(" ")
-          )
+          Seq(Preamble.shArgsPartitioner(jarPath.getOrElse("$0"))) ++
+          jvmOptionFile.toSeq.map(f => Preamble.bashJvmOptFile(f)) ++
+          Seq("exec " + javaCmd.mkString(" "))
 
       case Some(c) =>
         Seq("#!/usr/bin/env sh") ++
@@ -126,7 +130,7 @@ object Preamble {
     readResource("coursier/launcher/launcher.bat")
 
 
-  private def shArgsPartitioner(jarPath: String) = {
+  private def shArgsPartitioner(jarPath: String): String = {
     val bs = "\\"
     s"""nargs=$$#
        |
@@ -152,5 +156,24 @@ object Preamble {
        |shift "$$nargs"
        |""".stripMargin
   }
+
+  // adapted from https://github.com/paulp/sbt-extras/blob/fa06c268993aa72fc094dce06a71182827aad395/sbt#L486-L493
+  // and https://github.com/paulp/sbt-extras/blob/fa06c268993aa72fc094dce06a71182827aad395/sbt#L589
+  private def bashJvmOptFile(fileName: String): String =
+    s"""jvm_opts_file="$fileName"
+       |
+       |# skip #-styled comments and blank lines
+       |readConfigFile() {
+       |  local end=false
+       |  until $$end; do
+       |    read -r || end=true
+       |    [[ $$REPLY =~ ^# ]] || [[ -z $$REPLY ]] || echo "$$REPLY"
+       |  done <"$$1"
+       |}
+       |
+       |if [ -f "$$jvm_opts_file" ]; then
+       |  while read -r opt; do extra_jvm_opts+=("$$opt"); done < <(readConfigFile "$$jvm_opts_file")
+       |fi
+       |""".stripMargin
 
 }

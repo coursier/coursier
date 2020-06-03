@@ -24,7 +24,9 @@ import scala.language.implicitConversions
   name: Option[String] = None,
   graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
   @since
-  prebuilt: Option[String] = None
+  prebuilt: Option[String] = None,
+  @since
+  jvmOptionFile: Option[String] = None
 ) {
   def isEmpty: Boolean =
     this == RawAppDescriptor(Nil)
@@ -116,6 +118,7 @@ import scala.language.implicitConversions
           .withNameOpt(name)
           .withGraalvmOptions(graalvm.map(_.graalvmOptions))
           .withPrebuiltLauncher(prebuilt)
+          .withJvmOptionFile(jvmOptionFile)
     }
   }
   def repr: String =
@@ -225,7 +228,8 @@ object RawAppDescriptor {
     scalaVersion: Option[String] = None,
     name: Option[String] = None,
     graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
-    prebuilt: Option[String] = None
+    prebuilt: Option[String] = None,
+    jvmOptionFile: Option[String] = None
   ) {
     def get: RawAppDescriptor = {
       var d = RawAppDescriptor(dependencies)
@@ -240,6 +244,7 @@ object RawAppDescriptor {
         .withName(name)
         .withGraalvm(graalvm)
         .withPrebuilt(prebuilt)
+        .withJvmOptionFile(jvmOptionFile)
       for (t <- launcherType)
         d = d.withLauncherType(t)
       for (p <- properties)
@@ -263,7 +268,8 @@ object RawAppDescriptor {
       scalaVersion = desc.scalaVersion,
       name = desc.name,
       graalvm = desc.graalvm,
-      prebuilt = desc.prebuilt
+      prebuilt = desc.prebuilt,
+      jvmOptionFile = desc.jvmOptionFile
     )
 
   implicit val encoder: EncodeJson[RawAppDescriptor] =

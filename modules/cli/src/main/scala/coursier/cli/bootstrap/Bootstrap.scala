@@ -298,31 +298,25 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           sys.exit(1)
         }
 
+        val preambleOpt =
+          if (params.specific.withPreamble)
+            Some(
+              coursier.launcher.Preamble()
+                .withJavaOpts(javaOptions)
+                .withJvmOptionFile(params.specific.jvmOptionFile)
+            )
+          else
+            None
+
         if (params.specific.assembly)
           Parameters.Assembly()
             .withFiles(files.map(_._2))
             .withMainClass(mainClass)
             .withRules(params.specific.assemblyRules)
-            .withPreambleOpt(
-              if (params.specific.withPreamble)
-                Some(
-                  coursier.launcher.Preamble()
-                    .withJavaOpts(javaOptions)
-                )
-              else
-                None
-            )
+            .withPreambleOpt(preambleOpt)
         else if (params.specific.manifestJar)
           Parameters.ManifestJar(files.map(_._2), mainClass)
-            .withPreambleOpt(
-              if (params.specific.withPreamble)
-                Some(
-                  coursier.launcher.Preamble()
-                    .withJavaOpts(javaOptions)
-                )
-              else
-                None
-            )
+            .withPreambleOpt(preambleOpt)
         else {
 
           val artifactFiles = files.toMap
@@ -356,15 +350,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           Parameters.Bootstrap(content, mainClass)
             .withJavaProperties(params.sharedLaunch.properties)
             .withDeterministic(params.specific.deterministicOutput)
-            .withPreambleOpt(
-              if (params.specific.withPreamble)
-                Some(
-                  Preamble()
-                    .withJavaOpts(javaOptions)
-                )
-              else
-                None
-              )
+            .withPreambleOpt(preambleOpt)
             .withProguarded(params.specific.proguarded)
             .withHybridAssembly(params.specific.hybrid)
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)

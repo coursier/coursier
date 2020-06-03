@@ -30,6 +30,7 @@ final case class BootstrapSpecificOptions(
   @Value("option")
   @Short("J")
     javaOpt: List[String] = Nil,
+  jvmOptionFile: Option[String] = None,
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
@@ -66,7 +67,8 @@ final case class BootstrapSpecificOptions(
       javaOpt = app.javaOptions ++ javaOpt,
       standalone = standalone.orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
       assembly = assembly.orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None),
-      nativeImage = nativeImage.orElse(if (count == 0 && app.launcherType == "graalvm-native-image") Some(true) else None)
+      nativeImage = nativeImage.orElse(if (count == 0 && app.launcherType == "graalvm-native-image") Some(true) else None),
+      jvmOptionFile = jvmOptionFile.orElse(app.jvmOptionFile)
     )
   }
 }
