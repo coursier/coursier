@@ -31,35 +31,6 @@ object Parse {
         None
     }
 
-  def versionInterval(s: String): Option[VersionInterval] = {
-
-    def parseBounds(fromIncluded: Boolean, toIncluded: Boolean, s: String) = {
-
-      val commaIdx = s.indexOf(',')
-
-      if (commaIdx >= 0) {
-        val strFrom = s.take(commaIdx)
-        val strTo = s.drop(commaIdx + 1)
-
-        for {
-          from <- if (strFrom.isEmpty) Some(None) else version(strFrom).map(Some(_))
-          to <- if (strTo.isEmpty) Some(None) else version(strTo).map(Some(_))
-        } yield VersionInterval(from.filterNot(_.isEmpty), to.filterNot(_.isEmpty), from.forall(!_.isEmpty) && fromIncluded, toIncluded)
-      } else if (s.nonEmpty && fromIncluded && toIncluded)
-        for (v <- version(s) if !v.isEmpty)
-          yield VersionInterval(Some(v), Some(v), fromIncluded, toIncluded)
-      else
-        None
-    }
-
-    for {
-      fromIncluded <- if (s.startsWith("[")) Some(true) else if (s.startsWith("(")) Some(false) else None
-      toIncluded <- if (s.endsWith("]")) Some(true) else if (s.endsWith(")")) Some(false) else None
-      s0 = s.drop(1).dropRight(1)
-      itv <- parseBounds(fromIncluded, toIncluded, s0)
-    } yield itv
-  }
-
   val fallbackConfigRegex = {
     val noPar = "([^" + quote("()") + "]*)"
     "^" + noPar + quote("(") + noPar + quote(")") + "$"

@@ -106,7 +106,7 @@ object Pom {
     )
 
     val jdk = text(node, "jdk", "").toOption.flatMap { s =>
-      Parse.versionInterval(s)
+      VersionParse.versionInterval(s)
         .orElse(VersionParse.multiVersionInterval(s))
         .map(Left(_))
         .orElse(Parse.version(s).map(v => Right(Seq(v))))

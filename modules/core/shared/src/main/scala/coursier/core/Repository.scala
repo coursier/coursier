@@ -26,7 +26,7 @@ trait Repository extends Serializable with ArtifactSource {
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] =
-    Parse.versionInterval(version)
+    VersionParse.versionInterval(version)
       .orElse(VersionParse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
