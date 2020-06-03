@@ -2,7 +2,7 @@ package coursier.util
 
 import coursier.core._
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
-import coursier.version.{Version, VersionInterval}
+import coursier.version.{Version, VersionInterval, VersionParse}
 import dataclass.data
 
 object Print {
@@ -82,7 +82,7 @@ object Print {
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
 
-    val c = Parse.versionConstraint(compatibleWith)
+    val c = VersionParse.versionConstraint(compatibleWith)
     if (c.interval == VersionInterval.zero)
       compatibleWith.split('.').take(2).toSeq == selected.split('.').take(2).toSeq
     else

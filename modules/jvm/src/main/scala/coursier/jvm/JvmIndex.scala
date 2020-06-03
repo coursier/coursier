@@ -5,9 +5,9 @@ import java.util.Locale
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.{Cache, FileCache}
-import coursier.core.{Latest, Parse}
+import coursier.core.Latest
 import coursier.util.{Artifact, Task}
-import coursier.version.Version
+import coursier.version.{Version, VersionParse}
 import dataclass.data
 
 import scala.util.{Failure, Success, Try}
@@ -130,10 +130,10 @@ object JvmIndex {
           // TODO Filter versions depending on latest kind
           Right(versionIndex.maxBy { case (v, _) => Version(v) })
         case None =>
-          val maybeConstraint = Some(Parse.versionConstraint(version))
+          val maybeConstraint = Some(VersionParse.versionConstraint(version))
             .filter(c => c.isValid && c.preferred.isEmpty)
             .orElse(
-              Some(Parse.versionConstraint(version + "+"))
+              Some(VersionParse.versionConstraint(version + "+"))
                 .filter(c => c.isValid && c.preferred.isEmpty)
             )
             .toRight(s"Invalid version constraint '$version'")

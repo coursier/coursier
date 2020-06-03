@@ -2,7 +2,7 @@ package coursier
 package core
 
 import coursier.util.{EitherT, Gather, Monad}
-import coursier.version.{Version, VersionConstraint, VersionInterval}
+import coursier.version.{Version, VersionConstraint, VersionInterval, VersionParse}
 
 import scala.annotation.tailrec
 import dataclass.data
@@ -342,7 +342,7 @@ object ResolutionProcess {
 
       val parsed = versions.map(s => Latest(s).toRight(s))
       val latest = parsed.collect { case Right(l) => l }
-      val other = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
+      val other = parsed.collect { case Left(v) => VersionParse.versionConstraint(v) }
       assert(latest.length == 1)
       assert(other.length == 1)
 
@@ -356,7 +356,7 @@ object ResolutionProcess {
         case Some(kind) =>
           getLatest0(Right((kind, None)))
         case None =>
-          val c = Parse.versionConstraint(version)
+          val c = VersionParse.versionConstraint(version)
           if (c.interval == VersionInterval.zero)
             fetchs.foldLeft(get(fetch))(_ orElse get(_))
           else

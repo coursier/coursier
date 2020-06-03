@@ -1,6 +1,6 @@
 package coursier.core
 
-import coursier.version.{VersionConstraint, VersionInterval}
+import coursier.version.{VersionConstraint, VersionInterval, VersionParse}
 
 /**
  * Represents a reconciliation strategy given a dependency conflict.
@@ -57,7 +57,7 @@ object Reconciliation {
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
           else {
-            val parsedConstraints = standard.map(Parse.versionConstraint)
+            val parsedConstraints = standard.map(VersionParse.versionConstraint)
             VersionConstraint.merge(parsedConstraints: _*)
               .flatMap(_.repr)
           }
@@ -68,7 +68,7 @@ object Reconciliation {
         else if (latests.isEmpty)
           retainedStandard
         else {
-          val parsedIntervals = standard.map(Parse.versionConstraint)
+          val parsedIntervals = standard.map(VersionParse.versionConstraint)
             .filter(_.preferred.isEmpty) // only keep intervals
             .filter(_.interval != VersionInterval.zero) // not interval matching any version
 
@@ -95,7 +95,7 @@ object Reconciliation {
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
           else {
-            val parsedConstraints = standard.map(Parse.versionConstraint)
+            val parsedConstraints = standard.map(VersionParse.versionConstraint)
             VersionConstraint.merge(parsedConstraints: _*)
               .getOrElse(VersionConstraint.relaxedMerge(parsedConstraints: _*))
               .repr

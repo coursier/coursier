@@ -8,7 +8,7 @@ import coursier.{Dependency, Fetch, moduleString}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.{Version, VersionConstraint, VersionParse}
 import dataclass._
 
 @data class AppDescriptor(
@@ -136,7 +136,7 @@ import dataclass._
     verbosity: Int
   ): Either[AppArtifacts.AppArtifactsException, (Option[String], Option[String], Seq[Dependency])] = {
 
-    val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
+    val constraintOpt = scalaVersionOpt.map(VersionParse.versionConstraint)
 
     val t = {
       val onlyJavaDeps = dependencies.forall {
@@ -232,7 +232,7 @@ import dataclass._
         case Some(kind) =>
           versions().candidates(kind)
         case None =>
-          val c = Parse.versionConstraint(deps.head.version)
+          val c = VersionParse.versionConstraint(deps.head.version)
           if (c.preferred.isEmpty)
             versions().candidatesInInterval(c.interval)
           else {
@@ -327,7 +327,7 @@ object AppDescriptor {
       }
 
       latestVersions(dep.version) || {
-        val constraint = coursier.core.Parse.versionConstraint(dep.version)
+        val constraint = VersionParse.versionConstraint(dep.version)
         val preferredSet = constraint.preferred.toSet
         if (preferredSet.isEmpty)
           depVersions.exists { v =>

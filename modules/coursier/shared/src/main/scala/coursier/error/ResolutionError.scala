@@ -1,12 +1,12 @@
 package coursier.error
 
-import coursier.core.{Dependency, Module, Parse, Resolution}
+import coursier.core.{Dependency, Module, Resolution}
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
 import coursier.params.rule.Rule
 import coursier.util.{Print, Tree}
 import coursier.util.Print.{Colors, compatibleVersions}
-import coursier.version.Version
+import coursier.version.{Version, VersionParse}
 
 sealed abstract class ResolutionError(
   val resolution: Resolution,
@@ -73,7 +73,7 @@ object ResolutionError {
             .map(_.dependsOnVersion)
             .distinct
             .map { ver =>
-              val constraint = Parse.versionConstraint(ver)
+              val constraint = VersionParse.versionConstraint(ver)
               val sortWith = constraint.preferred.headOption
                 .orElse(constraint.interval.from)
                 .getOrElse(Version(""))
