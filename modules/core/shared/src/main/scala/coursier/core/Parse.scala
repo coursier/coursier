@@ -60,21 +60,6 @@ object Parse {
     } yield itv
   }
 
-  private val multiVersionIntervalSplit = ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
-
-  def multiVersionInterval(s: String): Option[VersionInterval] = {
-
-    // TODO Use a full-fledged (fastparsed-based) parser for this and versionInterval above
-
-    val openCount = s.count(c => c == '[' || c == '(')
-    val closeCount = s.count(c => c == ']' || c == ')')
-
-    if (openCount == closeCount && openCount >= 1)
-      versionInterval(multiVersionIntervalSplit.split(s).last)
-    else
-      None
-  }
-
   val fallbackConfigRegex = {
     val noPar = "([^" + quote("()") + "]*)"
     "^" + noPar + quote("(") + noPar + quote(")") + "$"

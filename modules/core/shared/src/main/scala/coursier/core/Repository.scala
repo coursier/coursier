@@ -3,6 +3,7 @@ package coursier.core
 import coursier.core.compatibility.encodeURIComponent
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Monad}
+import coursier.version.VersionParse
 import dataclass.data
 
 trait Repository extends Serializable with ArtifactSource {
@@ -26,7 +27,7 @@ trait Repository extends Serializable with ArtifactSource {
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] =
     Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
+      .orElse(VersionParse.multiVersionInterval(version))
       .orElse(Parse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
         case None =>
