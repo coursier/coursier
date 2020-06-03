@@ -13,24 +13,6 @@ object Parse {
     else Some(Version(trimmed))
   }
 
-  // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
-  private val latestSubRevision = "(.*[^.-])([.-]?)[+]".r
-
-  def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
-    s match {
-      case latestSubRevision(prefix, delim) =>
-        for {
-          from <- version(prefix)
-          if from.items.nonEmpty
-          max = (if (delim.isEmpty) "." else delim) + "max"
-          to <- version(prefix + max)
-          // the contrary would mean something went wrong in the loose substitution above
-          if from.items.init == to.items.dropRight(1).init
-        } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = true)
-      case _ =>
-        None
-    }
-
   val fallbackConfigRegex = {
     val noPar = "([^" + quote("()") + "]*)"
     "^" + noPar + quote("(") + noPar + quote(")") + "$"

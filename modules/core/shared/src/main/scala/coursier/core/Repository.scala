@@ -28,7 +28,7 @@ trait Repository extends Serializable with ArtifactSource {
   ): EitherT[F, String, (ArtifactSource, Project)] =
     VersionParse.versionInterval(version)
       .orElse(VersionParse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
+      .orElse(VersionParse.ivyLatestSubRevisionInterval(version))
       .filter(_.isValid) match {
         case None =>
           find(module, version, fetch)
