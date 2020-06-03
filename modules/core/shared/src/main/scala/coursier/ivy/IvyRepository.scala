@@ -2,7 +2,7 @@ package coursier.ivy
 
 import coursier.core._
 import coursier.maven.{MavenAttributes, MavenComplete}
-import coursier.version.Version
+import coursier.version.{Version, VersionParse}
 import coursier.util.{Artifact, EitherT, Monad}
 import dataclass._
 
@@ -213,7 +213,7 @@ import dataclass._
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch,
       prefix
-    ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
+    ).map(_.map(t => t._1 -> t._2.map(VersionParse.version).collect { case Some(v) => v }))
 
   override protected def fetchVersions[F[_]](
     module: Module,

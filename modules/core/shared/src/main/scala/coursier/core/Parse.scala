@@ -2,16 +2,7 @@ package coursier.core
 
 import java.util.regex.Pattern.quote
 
-import coursier.core.compatibility._
-import coursier.version.{Version, VersionConstraint, VersionInterval}
-
 object Parse {
-
-  def version(s: String): Option[Version] = {
-    val trimmed = s.trim
-    if (trimmed.isEmpty || trimmed.exists(c => c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit)) None
-    else Some(Version(trimmed))
-  }
 
   val fallbackConfigRegex = {
     val noPar = "([^" + quote("()") + "]*)"

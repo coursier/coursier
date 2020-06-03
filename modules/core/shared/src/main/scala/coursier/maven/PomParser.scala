@@ -445,7 +445,7 @@ object PomParser {
             VersionParse.versionInterval(s)
               .orElse(VersionParse.multiVersionInterval(s))
               .map(Left(_))
-              .orElse(Parse.version(s).map(v => Right(Seq(v))))
+              .orElse(VersionParse.version(s).map(v => Right(Seq(v))))
       }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: prefix,

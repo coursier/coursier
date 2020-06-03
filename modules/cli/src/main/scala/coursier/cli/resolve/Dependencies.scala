@@ -8,6 +8,7 @@ import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, Exclusions, Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{InMemoryRepository, Task}
+import coursier.version.VersionParse
 
 object Dependencies {
 
@@ -33,7 +34,7 @@ object Dependencies {
         val (keptVer, modVers0) = m
           .map {
             case (v, l) =>
-              val ver = coursier.core.Parse.version(v)
+              val ver = VersionParse.version(v)
                 .getOrElse(???) // FIXME
 
               ver -> l

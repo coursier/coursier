@@ -1,13 +1,13 @@
 package coursier.test
 
-import coursier.core.{Activation, Parse}
+import coursier.core.Activation
 import coursier.core.Activation.Os
 import coursier.version.VersionParse
 import utest._
 
 object ActivationTests extends TestSuite {
 
-  def parseVersion(s: String) = Parse.version(s).getOrElse(???)
+  def parseVersion(s: String) = VersionParse.version(s).getOrElse(???)
   def parseVersionInterval(s: String) = VersionParse.versionInterval(s).getOrElse(???)
 
   val macOs = Os(

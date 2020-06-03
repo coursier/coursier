@@ -329,12 +329,12 @@ object VersionIntervalTests extends TestSuite {
       'preferred{
         val s1 = "[1.3,)"
         val c1 = VersionParse.versionInterval(s1).map(_.constraint)
-        assert(c1 == Some(VersionConstraint.preferred(Parse.version("1.3").get)))
+        assert(c1 == Some(VersionConstraint.preferred(VersionParse.version("1.3").get)))
       }
       'interval{
         val s1 = "[1.3,2.4)"
         val c1 = VersionParse.versionInterval(s1).map(_.constraint)
-        assert(c1 == Some(VersionConstraint.interval(VersionInterval(Parse.version("1.3"), Parse.version("2.4"), true, false))))
+        assert(c1 == Some(VersionConstraint.interval(VersionInterval(VersionParse.version("1.3"), VersionParse.version("2.4"), true, false))))
       }
     }
   }
