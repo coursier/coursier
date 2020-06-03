@@ -3,7 +3,7 @@ package coursier.core
 import java.util.regex.Pattern.quote
 
 import coursier.core.compatibility._
-import coursier.version.{Version, VersionInterval}
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 
 object Parse {
 

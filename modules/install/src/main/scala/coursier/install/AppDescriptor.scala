@@ -3,12 +3,12 @@ package coursier.install
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Classifier, Latest, Module, Parse, Repository, Resolution, Type, VersionConstraint}
+import coursier.core.{Classifier, Latest, Module, Parse, Repository, Resolution, Type}
 import coursier.{Dependency, Fetch, moduleString}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
-import coursier.version.Version
+import coursier.version.{Version, VersionConstraint}
 import dataclass._
 
 @data class AppDescriptor(

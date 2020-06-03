@@ -2,7 +2,7 @@ package coursier
 package test
 
 import coursier.core._
-import coursier.version.{Version, VersionInterval}
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 import utest._
 
 object VersionConstraintTests extends TestSuite {
