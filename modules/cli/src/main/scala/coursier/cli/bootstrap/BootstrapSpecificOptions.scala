@@ -30,6 +30,7 @@ final case class BootstrapSpecificOptions(
   @Value("option")
   @Short("J")
     javaOpt: List[String] = Nil,
+  jvmOptionFile: Option[String] = None,
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
