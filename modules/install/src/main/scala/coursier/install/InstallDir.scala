@@ -90,8 +90,12 @@ import scala.util.control.NonFatal
     if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
 
-  private def baseJarPreamble: Preamble =
+  private def baseJarPreamble(desc: AppDescriptor): Preamble =
     basePreamble.addExtraEnvVar(InstallDir.isJvmLauncherEnvVar, "true")
+      .withOsKind(isWindows)
+      .callsItself(isWindows)
+      .withJavaOpts(desc.javaOptions)
+      .withJvmOptionFile(desc.jvmOptionFile)
   private def baseNativePreamble: Preamble =
     basePreamble.addExtraEnvVar(InstallDir.isNativeLauncherEnvVar, "true")
 
@@ -101,16 +105,14 @@ import scala.util.control.NonFatal
     infoEntries: Seq[(ZipEntry, Array[Byte])],
     mainClass: String,
     dest: Path
-  ): Parameters =
+  ): Parameters = {
+
+    val baseJarPreamble0 = baseJarPreamble(desc)
+
     desc.launcherType match {
       case LauncherType.DummyJar =>
         Parameters.Bootstrap(Nil, mainClass)
-          .withPreamble(
-            baseJarPreamble
-              .withOsKind(isWindows)
-              .callsItself(isWindows)
-              .withJavaOpts(desc.javaOptions)
-          )
+          .withPreamble(baseJarPreamble0)
           .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
           .withDeterministic(true)
           .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
@@ -136,12 +138,7 @@ import scala.util.control.NonFatal
         )
 
         Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
-          .withPreamble(
-            baseJarPreamble
-              .withOsKind(isWindows)
-              .callsItself(isWindows)
-              .withJavaOpts(desc.javaOptions)
-          )
+          .withPreamble(baseJarPreamble0)
           .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
           .withDeterministic(true)
           .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
@@ -153,12 +150,7 @@ import scala.util.control.NonFatal
 
         // FIXME Allow to adjust merge rules?
         Parameters.Assembly()
-          .withPreamble(
-            baseJarPreamble
-              .withOsKind(isWindows)
-              .callsItself(isWindows)
-              .withJavaOpts(desc.javaOptions)
-          )
+          .withPreamble(baseJarPreamble0)
           .withFiles(appArtifacts.fetchResult.files)
           .withMainClass(mainClass)
           .withExtraZipEntries(infoEntries)
@@ -201,6 +193,7 @@ import scala.util.control.NonFatal
           .withOptions(options)
           .withVerbosity(verbosity)
     }
+  }
 
   // TODO Remove that override
   private[coursier] def createOrUpdate(

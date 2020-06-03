@@ -3,14 +3,12 @@ package coursier.install
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Classifier, Module, Repository, Resolution, Type, Version, VersionConstraint}
+import coursier.core.{Classifier, Latest, Module, Parse, Repository, Resolution, Type, Version, VersionConstraint}
 import coursier.{Dependency, Fetch, moduleString}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import dataclass._
-import coursier.core.Parse
-import coursier.core.Latest
 
 @data class AppDescriptor(
   repositories: Seq[Repository] = Nil,
@@ -28,7 +26,9 @@ import coursier.core.Latest
   nameOpt: Option[String] = None,
   graalvmOptions: Option[AppDescriptor.GraalvmOptions] = None,
   @since
-  prebuiltLauncher: Option[String] = None
+  prebuiltLauncher: Option[String] = None,
+  @since
+  jvmOptionFile: Option[String] = None
 ) {
   def overrideVersion(ver: String): AppDescriptor =
     withDependencies {

@@ -157,6 +157,8 @@ object Preamble {
        |""".stripMargin
   }
 
+  // adapted from https://github.com/paulp/sbt-extras/blob/fa06c268993aa72fc094dce06a71182827aad395/sbt#L486-L493
+  // and https://github.com/paulp/sbt-extras/blob/fa06c268993aa72fc094dce06a71182827aad395/sbt#L589
   private def bashJvmOptFile(fileName: String): String =
     s"""jvm_opts_file="$fileName"
        |
