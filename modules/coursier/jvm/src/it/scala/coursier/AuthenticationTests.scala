@@ -5,7 +5,8 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.cache.FileCache
-import coursier.credentials.DirectCredentials
+import coursier.credentials.{DirectCredentials, FileCredentials}
+import coursier.parse.CredentialsParser
 import utest._
 
 object AuthenticationTests extends TestSuite {
@@ -30,35 +31,60 @@ object AuthenticationTests extends TestSuite {
     }
   }
 
+  private def testCredentials(credentials: DirectCredentials): Unit = {
+    val result = withTmpDir { dir =>
+      Resolve()
+        .noMirrors
+        .withRepositories(Seq(
+          MavenRepository(testRepo),
+          Repositories.central
+        ))
+        .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
+        .withCache(
+          FileCache()
+            .noCredentials
+            .withLocation(dir.toFile)
+            .addCredentials(credentials)
+        )
+        .run()
+    }
+    val modules = result.minDependencies.map(_.module)
+    val expectedModules = Set(mod"com.abc:test")
+    assert(modules == expectedModules)
+  }
+
   val tests = Tests {
 
     * - {
-      val result = withTmpDir { dir =>
-        Resolve()
-          .noMirrors
-          .withRepositories(Seq(
-            MavenRepository(testRepo),
-            Repositories.central
-          ))
-          .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
-          .withCache(
-            FileCache()
-              .noCredentials
-              .withLocation(dir.toFile)
-              .addCredentials(
-                DirectCredentials()
-                  .withHost(testHost)
-                  .withUsername(user)
-                  .withPassword(password)
-                  .withMatchHost(true)
-                  .withHttpsOnly(false)
-              )
-          )
-          .run()
+      testCredentials {
+        DirectCredentials()
+          .withHost(testHost)
+          .withUsername(user)
+          .withPassword(password)
+          .withMatchHost(true)
+          .withHttpsOnly(false)
       }
-      val modules = result.minDependencies.map(_.module)
-      val expectedModules = Set(mod"com.abc:test")
-      assert(modules == expectedModules)
+    }
+
+    * - {
+      val credentialsStr = s"$testHost $user:$password"
+      val credentials = CredentialsParser.parse(credentialsStr) match {
+        case Left(error) => sys.error(s"Error parsing credentials: $error")
+        case Right(c) => c
+      }
+      testCredentials(credentials)
+    }
+
+    * - {
+      val content =
+       s"""foo.username=$user
+          |foo.password=$password
+          |foo.host=$testHost
+          |""".stripMargin
+      val allCredentials = FileCredentials.parse(content, s"'$content'")
+      assert(allCredentials.length == 1)
+      val credentials = allCredentials.head
+      testCredentials(credentials)
     }
 
   }

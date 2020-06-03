@@ -16,8 +16,8 @@ import dataclass._
   @since
   optional: Boolean = true,
   @since
-  matchHost: Boolean = false,
-  httpsOnly: Boolean = true,
+  matchHost: Boolean = DirectCredentials.defaultMatchHost,
+  httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
   passOnRedirect: Boolean = false
 ) extends Credentials {
 
@@ -74,4 +74,9 @@ object DirectCredentials {
 
   def apply(host: String, username: String, password: String): DirectCredentials = DirectCredentials(host, Some(username), Some(Password(password)))
   def apply(host: String, username: String, password: String, realm: Option[String]): DirectCredentials = DirectCredentials(host, Some(username), Some(Password(password)), realm)
+
+  def defaultMatchHost: Boolean =
+    true
+  def defaultHttpsOnly: Boolean =
+    false
 }
