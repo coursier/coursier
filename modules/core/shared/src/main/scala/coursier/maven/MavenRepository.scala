@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
+import coursier.version.Version
 import coursier.util.{Artifact, EitherT, Monad, WebPage}
 import dataclass._
 

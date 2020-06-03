@@ -2,6 +2,7 @@ package coursier.ivy
 
 import coursier.core._
 import coursier.maven.{MavenAttributes, MavenComplete}
+import coursier.version.Version
 import coursier.util.{Artifact, EitherT, Monad}
 import dataclass._
 

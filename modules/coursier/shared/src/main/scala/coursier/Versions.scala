@@ -1,9 +1,9 @@
 package coursier
 
 import coursier.cache.Cache
-import coursier.core.Version
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
+import coursier.version.Version
 import dataclass._
 
 @data class Versions[F[_]](

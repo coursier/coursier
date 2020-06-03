@@ -8,9 +8,9 @@ import java.util.Locale
 
 import coursier.cache.{Cache, CacheLocks, CacheLogger, FileCache}
 import coursier.cache.internal.ThreadUtil
-import coursier.core.Version
 import coursier.paths.CoursierPaths
 import coursier.util.{Artifact, Task}
+import coursier.version.Version
 import dataclass.data
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}

@@ -1,9 +1,10 @@
 package coursier.graph
 
-import coursier.core.{Module, Parse, Resolution, Version, VersionConstraint, VersionInterval}
+import coursier.core.{Module, Parse, Resolution, VersionConstraint, VersionInterval}
 import coursier.util.Print.Colors
 import coursier.util.{Print, Tree}
 import coursier.util.Print.compatibleVersions
+import coursier.version.VersionCompatibility
 import dataclass.data
 
 @data class Conflict(
@@ -68,17 +69,10 @@ object Conflict {
     val tree = ReverseModuleTree(resolution, withExclusions = withExclusions)
 
     def compatible(wanted: String, selected: String): Boolean =
-      wanted == selected || {
-        val c = Parse.versionConstraint(wanted)
-        val v = Version(selected)
-        if (c.interval == VersionInterval.zero) {
-          if (semVer)
-            c.preferred.exists(_.items.take(2) == v.items.take(2))
-          else
-            c.preferred.contains(v)
-        } else
-          c.interval.contains(v)
-      }
+      if (semVer)
+        VersionCompatibility.PackVer.isCompatible(wanted, selected)
+      else
+        VersionCompatibility.Strict.isCompatible(wanted, selected)
 
     val transitive = tree.flatMap { t =>
       t.dependees.collect {

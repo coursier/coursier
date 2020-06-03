@@ -2,6 +2,7 @@ package coursier
 package core
 
 import coursier.util.{EitherT, Gather, Monad}
+import coursier.version.Version
 
 import scala.annotation.tailrec
 import dataclass.data

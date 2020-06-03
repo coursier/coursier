@@ -5,8 +5,9 @@ import java.util.Locale
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.{Cache, FileCache}
-import coursier.core.{Latest, Parse, Version}
+import coursier.core.{Latest, Parse}
 import coursier.util.{Artifact, Task}
+import coursier.version.Version
 import dataclass.data
 
 import scala.util.{Failure, Success, Try}

@@ -1,9 +1,10 @@
 package coursier.params.rule
 
-import coursier.core.{Dependency, Module, Parse, Resolution, Version}
+import coursier.core.{Dependency, Module, Parse, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
+import coursier.version.Version
 import dataclass.data
 
 @data class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {

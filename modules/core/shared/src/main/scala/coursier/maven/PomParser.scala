@@ -1,6 +1,7 @@
 package coursier.maven
 
 import coursier.core._
+import coursier.version.Version
 import coursier.util.SaxHandler
 
 import scala.collection.mutable.ListBuffer

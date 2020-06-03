@@ -1,5 +1,6 @@
 package coursier.core
 
+import coursier.version.Version
 import dataclass.data
 
 import scala.annotation.tailrec
@@ -90,7 +91,7 @@ object VersionConstraint {
         val sorted = cs.sortBy { c =>
           c.preferred.headOption
             .orElse(c.interval.from)
-            .getOrElse(Version.zero)
+            .getOrElse(Version("0"))
         }
         val reversed = sorted.reverse
         mergeByTwo(reversed.head, reversed.tail)

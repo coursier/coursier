@@ -146,7 +146,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       .map(_.stripPrefix("native"))
       .toSet
       .toVector
-      .map(coursier.core.Version(_))
+      .map(coursier.version.Version(_))
       .sorted
       .lastOption
       .map(_.repr)

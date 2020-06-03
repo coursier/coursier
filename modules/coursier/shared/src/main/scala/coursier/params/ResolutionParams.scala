@@ -1,8 +1,9 @@
 package coursier.params
 
-import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation, Version}
+import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation}
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
+import coursier.version.Version
 import dataclass.data
 
 @data class ResolutionParams(
