@@ -21,14 +21,14 @@ class Coursier < Formula
   depends_on :java => "1.8+"
 
   def install
-    unless build.without? "zsh-completion"
-      FileUtils.mkdir_p "completions/zsh"
-      system "bash", "-c", "bash ./coursier --completions zsh > completions/zsh/_coursier"
-      zsh_completion.install "completions/zsh/_coursier"
-    end
-
     bin.install 'cs-x86_64-apple-darwin' => "cs"
     resource("jar-launcher").stage { bin.install "coursier" }
+
+    unless build.without? "zsh-completions"
+      chmod 0555, bin/"coursier"
+      output = Utils.popen_read("#{bin}/coursier --completions zsh")
+      (zsh_completion/"_coursier").write output
+    end
   end
 
   test do
