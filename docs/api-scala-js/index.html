@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>The core modules of coursier are cross-compiled and published for</p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-20">
+  <meta name="docsearch:version" content="2.0.0-RC6-21">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="Scala.js · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../../versions"><h3>2.0.0-RC6-20</h3></a>
+     <a href="../../../versions"><h3>2.0.0-RC6-21</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -190,10 +190,10 @@
        <article>
         <div>
          <span><p>The core modules of coursier are cross-compiled and published for <a href="https://www.scala-js.org">Scala.js</a>. This allows to run resolutions from Node.js or from the browser, via Scala.js. Note that only the core module of coursier, running resolutions, is cross-compiled. The cache module is not, so that one cannot rely on the cache of coursier from Scala.js.</p> <p>As a substitute to the cache module, a module named <a href="https://repo1.maven.org/maven2/io/get-coursier/coursier-fetch-js_sjs0.6_2.12"><code>fetch-js</code></a> is published for Scala.js, allowing one to fetch metadata and possibly artifacts via XMLHttpRequests.</p> <p>From sbt, one can depend on the core and fetch modules via</p> <pre><code class="hljs css language-scala">libraryDependencies ++= <span class="hljs-type">Seq</span>(
-  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.0.0-RC6-20"</span>,
-  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-fetch-js"</span> % <span class="hljs-string">"2.0.0-RC6-20"</span>
+  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.0.0-RC6-21"</span>,
+  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-fetch-js"</span> % <span class="hljs-string">"2.0.0-RC6-21"</span>
 )
-</code></pre> <p>or simply via the <code>coursier</code> module, which aggregates both,</p> <pre><code class="hljs css language-scala">libraryDependencies += <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.0.0-RC6-20"</span>
+</code></pre> <p>or simply via the <code>coursier</code> module, which aggregates both,</p> <pre><code class="hljs css language-scala">libraryDependencies += <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.0.0-RC6-21"</span>
 </code></pre> <p>As an illustration, coursier has <a href="../demo">an in-browser demo</a>, that allows one to run resolutions entirely from the browser.</p> </span>
         </div>
        </article>
