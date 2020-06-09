@@ -5,6 +5,7 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 
 import dataclass.data
+import java.nio.file.FileAlreadyExistsException
 
 @data class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,
@@ -92,7 +93,7 @@ import dataclass.data
         .filter(Files.exists(_))
         .map(f => new String(Files.readAllBytes(f), charset))
       for (updatedContent <- updated(contentOpt.getOrElse(""))) {
-        Option(file.getParent).map(Files.createDirectories(_))
+        Option(file.getParent).map(ProfileUpdater.createDirectories(_))
         Files.write(file, updatedContent.getBytes(charset))
         updatedSomething = true
       }
@@ -127,7 +128,7 @@ import dataclass.data
         .filter(Files.exists(_))
         .map(f => new String(Files.readAllBytes(f), charset))
       for (updatedContent <- updated(contentOpt.getOrElse(""))) {
-        Option(file.getParent).map(Files.createDirectories(_))
+        Option(file.getParent).map(ProfileUpdater.createDirectories(_))
         Files.write(file, updatedContent.getBytes(charset))
         updatedSomething = true
       }
@@ -180,4 +181,12 @@ import dataclass.data
 object ProfileUpdater {
   def defaultHome: Option[Path] =
     Some(Paths.get(System.getProperty("user.home")))
+
+  private[env] def createDirectories(path: Path): Unit =
+    try Files.createDirectories(path)
+    catch {
+      case _: FileAlreadyExistsException if Files.isDirectory(path) =>
+        // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
+    }
+
 }

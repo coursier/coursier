@@ -7,6 +7,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import coursier.cache.{Cache, MockCache}
+import coursier.paths.Util
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,7 +59,7 @@ abstract class PlatformTestHelpers {
 
   def maybeWriteTextResource(path: String, content: String): Unit = {
     val p = Paths.get(path)
-    Files.createDirectories(p.getParent)
+    Util.createDirectories(p.getParent)
     Files.write(p, content.getBytes(StandardCharsets.UTF_8))
   }
 

@@ -8,6 +8,7 @@ import java.nio.file.Files
 import cats.effect.IO
 import coursier.cache.TestUtil._
 import coursier.credentials.{Credentials, DirectCredentials}
+import coursier.paths.Util
 import coursier.util.{Artifact, Sync, Task}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location}
@@ -1009,7 +1010,7 @@ object FileCacheTests extends TestSuite {
       withTmpDir { dir =>
         val url = "https://foo-does-no-exist-zzzzzzz/a.pom"
         val cacheFile = dir.resolve(url.replace("://", "/"))
-        Files.createDirectories(cacheFile.getParent)
+        Util.createDirectories(cacheFile.getParent)
         Files.write(cacheFile, Array.emptyByteArray)
         val c = fileCache0()
           .withLocation(dir.toFile)

@@ -100,9 +100,9 @@ class Download {
                     try {
 
                         out = CachePath.withStructureLock(cacheDir, () -> {
-                            Files.createDirectories(tmpDest.toPath().getParent());
-                            Files.createDirectories(lockFile.toPath().getParent());
-                            Files.createDirectories(dest.toPath().getParent());
+                            coursier.paths.Util.createDirectories(tmpDest.toPath().getParent());
+                            coursier.paths.Util.createDirectories(lockFile.toPath().getParent());
+                            coursier.paths.Util.createDirectories(dest.toPath().getParent());
 
                             return new FileOutputStream(lockFile);
                         });

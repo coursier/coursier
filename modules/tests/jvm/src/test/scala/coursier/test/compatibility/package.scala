@@ -6,6 +6,7 @@ import java.nio.file.{Files, Paths}
 
 import coursier.cache.MockCache
 import coursier.core.Repository
+import coursier.paths.Util
 import coursier.util.{Sync, Task}
 import coursier.Platform
 
@@ -50,7 +51,7 @@ package object compatibility {
   def tryCreate(path: String, content: String): Unit =
     if (fillChunks) {
       val path0 = baseResources.resolve(path)
-      Files.createDirectories(path0.getParent)
+      Util.createDirectories(path0.getParent)
       Files.write(path0, content.getBytes(UTF_8))
     }
 
