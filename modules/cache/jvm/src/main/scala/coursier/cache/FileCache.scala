@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService
 import coursier.cache.internal.FileUtil
 import coursier.core.Authentication
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
-import coursier.paths.CachePath
+import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
@@ -387,7 +387,7 @@ import dataclass.data
                   val result =
                     try {
                       val out = CacheLocks.withStructureLock(location) {
-                        Files.createDirectories(tmp.toPath.getParent);
+                        Util.createDirectories(tmp.toPath.getParent);
                         new FileOutputStream(tmp, partialDownload)
                       }
                       try readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L, bufferSize)
@@ -399,16 +399,16 @@ import dataclass.data
                   for ((key, data) <- auxiliaryData) {
                     val dest = auxiliaryFile(file, key)
                     val tmpDest = CachePath.temporaryFile(dest)
-                    Files.createDirectories(tmpDest.toPath.getParent)
+                    Util.createDirectories(tmpDest.toPath.getParent)
                     Files.write(tmpDest.toPath, data)
                     for (lastModified <- lastModifiedOpt)
                       tmpDest.setLastModified(lastModified)
-                    Files.createDirectories(dest.toPath.getParent)
+                    Util.createDirectories(dest.toPath.getParent)
                     Files.move(tmpDest.toPath, dest.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
 
                   CacheLocks.withStructureLock(location) {
-                    Files.createDirectories(file.toPath.getParent)
+                    Util.createDirectories(file.toPath.getParent)
                     Files.move(tmp.toPath, file.toPath, StandardCopyOption.ATOMIC_MOVE)
                   }
 
@@ -526,7 +526,7 @@ import dataclass.data
           S.schedule[Either[ArtifactError, Unit]](pool) {
             if (cacheErrors0) {
               val p = errFile0.toPath
-              Files.createDirectories(p.getParent)
+              Util.createDirectories(p.getParent)
               Files.write(p, Array.emptyByteArray)
             }
 

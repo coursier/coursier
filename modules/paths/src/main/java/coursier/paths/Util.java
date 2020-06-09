@@ -79,6 +79,7 @@ public class Util {
         try {
             Files.createDirectories(path);
         } catch (FileAlreadyExistsException ex) {
+            // see https://bugs.openjdk.java.net/browse/JDK-8130464
             // Files.createDirectories does that check too, but with LinkOptions.NOFOLLOW_LINKS
             if (!Files.isDirectory(path))
                 throw ex;

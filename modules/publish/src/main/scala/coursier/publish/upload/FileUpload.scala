@@ -3,6 +3,7 @@ package coursier.publish.upload
 import java.nio.file.{Files, Path}
 
 import coursier.core.Authentication
+import coursier.paths.Util
 import coursier.publish.upload.logger.UploadLogger
 import coursier.util.Task
 
@@ -27,7 +28,7 @@ final case class FileUpload(base: Path) extends Upload {
       Task.delay {
         logger.uploading(url, loggingId, Some(content.length))
         val errorOpt = try {
-          Files.createDirectories(p.getParent)
+          Util.createDirectories(p.getParent)
           Files.write(p, content)
           None
         } catch {

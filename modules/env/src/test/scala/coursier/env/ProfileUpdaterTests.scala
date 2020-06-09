@@ -33,7 +33,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
         |# foo
         |
         |""".stripMargin
-    Files.createDirectories(home)
+    ProfileUpdater.createDirectories(home)
     Files.write(home.resolve(".profile"), initialContent.getBytes("UTF-8"))
 
     val updater = ProfileUpdater()
@@ -123,7 +123,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     val fs = Jimfs.newFileSystem(Configuration.unix())
 
     val bashProfilePath = fs.getPath("/home/alex/.bash_profile")
-    Files.createDirectories(bashProfilePath.getParent)
+    ProfileUpdater.createDirectories(bashProfilePath.getParent)
     Files.write(bashProfilePath, Array.emptyByteArray)
 
     val home = fs.getPath("/home/alex")
@@ -294,7 +294,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
         |# foo
         |
         |""".stripMargin
-    Files.createDirectories(home)
+    ProfileUpdater.createDirectories(home)
     Files.write(home.resolve(".profile"), initialContent.getBytes("UTF-8"))
 
     val updater = ProfileUpdater()

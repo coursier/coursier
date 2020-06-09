@@ -11,6 +11,7 @@ import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.launcher.internal.Windows
+import coursier.paths.Util
 import coursier.util.Sync
 
 object Install extends CaseApp[InstallOptions] {
@@ -26,7 +27,7 @@ object Install extends CaseApp[InstallOptions] {
       if (params.output.verbosity >= 0 && !Files.isDirectory(params.shared.dir))
         System.err.println(s"Warning: ${params.shared.dir} doesn't seem to be a directory")
     } else
-      Files.createDirectories(params.shared.dir)
+      Util.createDirectories(params.shared.dir)
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
@@ -57,7 +58,7 @@ object Install extends CaseApp[InstallOptions] {
 
       if (params.output.verbosity >= 1)
         System.err.println(s"Writing $f")
-      Files.createDirectories(f.toPath.getParent)
+      Util.createDirectories(f.toPath.getParent)
       Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
     } else if (params.env.env)
       println(installDir.envUpdate.script)

@@ -7,6 +7,7 @@ import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
 import coursier.cache.internal.MockCacheEscape
+import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import dataclass.data
 
@@ -77,7 +78,7 @@ import scala.util.{Failure, Success, Try}
         case false =>
           if (writeMissing) {
             val f = S.schedule[Either[ArtifactError, Path]](pool) {
-              Files.createDirectories(path.getParent)
+              Util.createDirectories(path.getParent)
               def is(): InputStream =
                 if (dummyArtifact(artifact))
                   new ByteArrayInputStream(Array.emptyByteArray)

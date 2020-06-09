@@ -5,7 +5,7 @@ import java.nio.channels.{FileLock, OverlappingFileLockException}
 import java.nio.file.{Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
-import coursier.paths.CachePath
+import coursier.paths.{CachePath, Util}
 
 import scala.annotation.tailrec
 import java.nio.channels.FileChannel
@@ -37,7 +37,7 @@ object CacheLocks {
     var channel: FileChannel = null
 
     withStructureLock(cache) {
-      Files.createDirectories(lockFile.getParent)
+      Util.createDirectories(lockFile.getParent)
       channel = FileChannel.open(
         lockFile,
         StandardOpenOption.CREATE,
