@@ -16,6 +16,7 @@ import sbt.util.FileInfo
 import scalajsbundler.Npm
 import java.io.ByteArrayOutputStream
 import java.{util => ju}
+import sbtcompatibility.SbtCompatibilityPlugin.autoImport._
 
 object Settings {
 
@@ -36,7 +37,7 @@ object Settings {
     CrossVersion.partialVersion(scalaVersion.value).exists(_ >= (2, 13))
   }
 
-  lazy val javaScalaPluginShared = Seq(
+  lazy val javaScalaPluginShared = Def.settings(
     scalazBintrayRepository,
     sonatypeRepository("releases"),
     crossScalaVersions := ScalaVersion.versions, // defined for all projects to trump sbt-doge
@@ -65,7 +66,8 @@ object Settings {
     scalacOptions ++= {
       if (isAtLeastScala213.value) Seq("-Ymacro-annotations")
       else Nil
-    }
+    },
+    compatibilityReconciliations += "org.scala-lang.modules" %% "*" % "semver"
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
     if (prop == "0" || prop == "false")
