@@ -38,7 +38,7 @@ runJvmTests() {
 }
 
 checkBinaryCompatibility() {
-  sbt scalaFromEnv compatibilityCheck
+  sbt scalaFromEnv evictionCheck compatibilityCheck
 }
 
 testBootstrap() {
