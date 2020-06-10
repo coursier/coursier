@@ -117,6 +117,7 @@ lazy val `proxy-tests` = project("proxy-tests")
       Deps.scalaAsync,
       Deps.slf4JNop
     ),
+    evictionRules += "com.google.guava" % "guava" % "always",
     utest,
     sharedTestResources
   )
@@ -339,6 +340,7 @@ lazy val cli = project("cli")
       else
         Seq()
     },
+    evictionRules += "org.typelevel" %% "cats*" % "always",
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
     onlyIn("2.12")
   )
