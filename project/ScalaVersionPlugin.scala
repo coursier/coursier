@@ -19,7 +19,7 @@ object ScalaVersionPlugin extends AutoPlugin {
         }
     },
     commands += Command("scalaFromEnv")(_ => Parser.success(())) { (st, _) =>
-      val sv = sys.env.get("SCALA_VERSION") match {
+      val sv = Option(System.getenv("SCALA_VERSION")) match {
         case None =>
           throw new Exception("SCALA_VERSION not set")
         case Some(s) if s.count(_ == '.') == 1 =>

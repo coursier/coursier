@@ -59,7 +59,7 @@ object CacheDefaults {
       }
 
   lazy val ttl: Option[Duration] = {
-    val fromEnv = sys.env.get("COURSIER_TTL").flatMap(parseDuration(_).toOption)
+    val fromEnv = Option(System.getenv("COURSIER_TTL")).flatMap(parseDuration(_).toOption)
     def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).toOption)
     def default = 24.hours
 
@@ -97,7 +97,7 @@ object CacheDefaults {
   val bufferSize = 1024 * 1024
 
   private def credentialPropOpt =
-    sys.env.get("COURSIER_CREDENTIALS")
+    Option(System.getenv("COURSIER_CREDENTIALS"))
       .orElse(sys.props.get("coursier.credentials"))
       .map(s => s.dropWhile(_.isSpaceChar))
 
@@ -169,7 +169,7 @@ object CacheDefaults {
       }
 
     val fromEnv = fromOption(
-      sys.env.get("COURSIER_MODE"),
+      Option(System.getenv("COURSIER_MODE")),
       "COURSIER_MODE environment variable"
     )
 

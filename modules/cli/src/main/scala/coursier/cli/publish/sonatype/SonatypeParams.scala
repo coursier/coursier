@@ -49,7 +49,7 @@ object SonatypeParams {
 
     val authV = (options.user, options.password) match {
       case (None, None) =>
-        (sys.env.get("SONATYPE_USERNAME"), sys.env.get("SONATYPE_PASSWORD")) match {
+        (Option(System.getenv("SONATYPE_USERNAME")), Option(System.getenv("SONATYPE_PASSWORD"))) match {
           case (Some(u), Some(p)) =>
             Validated.validNel(Some(Authentication(u, p)))
           case _ =>

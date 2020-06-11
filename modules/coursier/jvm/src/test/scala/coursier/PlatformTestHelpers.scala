@@ -35,8 +35,7 @@ abstract class PlatformTestHelpers {
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  val writeMockData = sys.env
-    .get("FETCH_MOCK_DATA")
+  val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
 
   val cache: Cache[Task] =

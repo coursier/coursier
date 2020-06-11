@@ -10,9 +10,12 @@ object HttpAuthenticationTests extends TestSuite {
   val tests = Tests {
     'httpAuthentication - {
 
-      val testRepo = sys.env.getOrElse("TEST_REPOSITORY", sys.error("TEST_REPOSITORY not set"))
-      val user = sys.env.getOrElse("TEST_REPOSITORY_USER", sys.error("TEST_REPOSITORY_USER not set"))
-      val password = sys.env.getOrElse("TEST_REPOSITORY_PASSWORD", sys.error("TEST_REPOSITORY_PASSWORD not set"))
+      val testRepo = Option(System.getenv("TEST_REPOSITORY"))
+        .getOrElse(sys.error("TEST_REPOSITORY not set"))
+      val user = Option(System.getenv("TEST_REPOSITORY_USER"))
+        .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
+      val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
+        .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
 
       * - {
         // no authentication -> should fail

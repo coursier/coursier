@@ -8,7 +8,8 @@ object HttpHttpsRedirectionTests extends TestSuite {
 
   val tests = Tests {
 
-    val testRepo = sys.env.getOrElse("TEST_REDIRECT_REPOSITORY", sys.error("TEST_REDIRECT_REPOSITORY not set"))
+    val testRepo = Option(System.getenv("TEST_REDIRECT_REPOSITORY"))
+      .getOrElse(sys.error("TEST_REDIRECT_REPOSITORY not set"))
     val deps = Seq(Dependency(mod"com.chuusai:shapeless_2.12", "2.3.2"))
 
     // typer error in 2.11.12 if we make that a lazy val

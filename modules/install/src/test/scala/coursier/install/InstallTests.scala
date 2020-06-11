@@ -26,8 +26,7 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
     dir
   }
 
-  private val writeMockData = sys.env
-    .get("FETCH_MOCK_DATA")
+  private val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
 
   private val cache: Cache[Task] =
