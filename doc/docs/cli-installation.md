@@ -38,6 +38,7 @@ On Windows, use
 > bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
 > .\cs --help
 ```
+Note that this must be run with `cmd.exe`, not `PowerShell`.
 
 ## JAR-based launcher
 
