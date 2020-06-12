@@ -1,22 +1,23 @@
 
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.Locale
+import java.util.{Arrays, Locale}
 
+import Aliases._
+import com.jsuereth.sbtpgp._
+import com.lightbend.sbt.SbtProguard
+import com.lightbend.sbt.SbtProguard.autoImport._
+import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import sbt._
 import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
-import com.lightbend.sbt.SbtProguard
-import com.lightbend.sbt.SbtProguard.autoImport._
-import com.jsuereth.sbtpgp._
-import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
-import Aliases._
-import ScalaVersion._
 import sbt.util.FileInfo
-import scalajsbundler.Npm
-import java.io.ByteArrayOutputStream
-import java.{util => ju}
 import sbtcompatibility.SbtCompatibilityPlugin.autoImport._
+import scalajsbundler.Npm
+import ScalaVersion._
+
+import scala.util.Try
 
 object Settings {
 
@@ -148,7 +149,7 @@ object Settings {
         .filter(Files.exists(_))
         .map(p => Files.readAllBytes(p))
 
-      if (currentContentOpt.forall(b0 => !ju.Arrays.equals(b, b0))) {
+      if (currentContentOpt.forall(b0 => !Arrays.equals(b, b0))) {
         val w = new java.io.FileOutputStream(f)
         w.write(b)
         w.close()
@@ -551,9 +552,31 @@ object Settings {
       else
         "bootstrap.jar"
 
+    val isProguard7OrHigher = Def.setting {
+      val ver = proguardVersion.in(Proguard).value
+      val majorOpt = Try(ver.takeWhile(_.isDigit).toInt).toOption
+      majorOpt.exists(_ >= 7)
+    }
+
     Seq(
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
+      libraryDependencies := {
+        val previous = libraryDependencies.value
+        val ver = proguardVersion.in(Proguard).value
+        if (isProguard7OrHigher.value) {
+          val filteredPrevious = previous
+            .filter(m => (m.organization, m.name) != ("net.sf.proguard", "proguard-base"))
+          filteredPrevious :+ ("com.guardsquare" % "proguard-base" % ver % Proguard)
+        } else
+          previous
+      },
+      resolvers ++= {
+        if (isProguard7OrHigher.value)
+          Seq(Resolver.bintrayRepo("guardsquare", "proguard"))
+        else
+          Nil
+      },
       proguardOptions.in(Proguard) ++= Seq(
         "-dontnote",
         "-dontwarn",
