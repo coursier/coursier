@@ -14,6 +14,7 @@ import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
 import sbt.util.FileInfo
 import sbtcompatibility.SbtCompatibilityPlugin.autoImport._
+import sbtevictionrules.EvictionRulesPlugin.autoImport._
 import scalajsbundler.Npm
 import ScalaVersion._
 
@@ -68,6 +69,7 @@ object Settings {
       if (isAtLeastScala213.value) Seq("-Ymacro-annotations")
       else Nil
     },
+    evictionRules += "org.scala-js" %% "scalajs-library" % "semver",
     compatibilityReconciliations += "org.scala-lang.modules" %% "*" % "semver"
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)

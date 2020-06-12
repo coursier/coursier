@@ -7,7 +7,7 @@ import sbt.Keys._
 object Deps {
 
   private object versions {
-    def argonautShapeless = "1.2.0-M12"
+    def argonautShapeless = "1.2.0"
     def fastParse = "2.3.0"
     def http4s = "0.18.26"
     def jsoniterScala = "2.2.4"
