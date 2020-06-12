@@ -354,11 +354,13 @@ object JvmCache {
   }
 
 
-  private def finalDirectory(dir: File, os: String): File =
-    if (os == "darwin")
-      new File(dir, "Contents/Home")
+  private def finalDirectory(dir: File, os: String): File = {
+    lazy val contentsHome = new File(dir, "Contents/Home")
+    if (os == "darwin" && contentsHome.isDirectory)
+      contentsHome
     else
       dir
+  }
 
   private lazy val defaultScheduledExecutor: ScheduledExecutorService = {
     val e = new ScheduledThreadPoolExecutor(1, ThreadUtil.daemonThreadFactory())
