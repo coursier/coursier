@@ -3,7 +3,7 @@ package coursier.cli.util
 object Guard {
   def apply(): Unit = {
     val experimental =
-      sys.env.get("COURSIER_EXPERIMENTAL").exists(s => s == "1" || s == "true") ||
+      Option(System.getenv("COURSIER_EXPERIMENTAL")).exists(s => s == "1" || s == "true") ||
         java.lang.Boolean.getBoolean("coursier.experimental")
     if (!experimental) {
       System.err.println(

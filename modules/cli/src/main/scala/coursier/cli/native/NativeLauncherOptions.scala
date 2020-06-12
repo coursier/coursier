@@ -62,7 +62,7 @@ final case class NativeLauncherOptions(
     val prependDefaultLinkingOptions = nativeDefaultLinkingOptions
     val linkingOptions = {
       val ldflags =
-        if (nativeUseLdflags) sys.env.get("LDFLAGS").toSeq.flatMap(_.split("\\s+"))
+        if (nativeUseLdflags) Option(System.getenv("LDFLAGS")).toSeq.flatMap(_.split("\\s+"))
         else Nil
       ldflags ++ nativeLinkingOption
     }

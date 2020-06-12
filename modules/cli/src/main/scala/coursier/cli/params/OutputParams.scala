@@ -26,7 +26,7 @@ final case class OutputParams(
         else
           RefreshLogger.defaultDisplay(
             loggerFallbackMode,
-            quiet = verbosity == -1 || sys.env.contains("CI")
+            quiet = verbosity == -1 || Option(System.getenv("CI")).nonEmpty
           )
       )
     else

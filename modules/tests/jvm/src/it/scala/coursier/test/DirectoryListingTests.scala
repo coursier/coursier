@@ -7,11 +7,13 @@ import utest._
 
 object DirectoryListingTests extends TestSuite {
 
-  val user = sys.env("TEST_REPOSITORY_USER")
-  val password = sys.env("TEST_REPOSITORY_PASSWORD")
+  val user = Option(System.getenv("TEST_REPOSITORY_USER"))
+    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
+  val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
+    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
 
   val repo = MavenRepository(
-    sys.env.getOrElse("TEST_REPOSITORY", sys.error("TEST_REPOSITORY not set")),
+    Option(System.getenv("TEST_REPOSITORY")).getOrElse(sys.error("TEST_REPOSITORY not set")),
     authentication = Some(Authentication(user, password))
   )
 

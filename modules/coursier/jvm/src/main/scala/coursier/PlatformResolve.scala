@@ -37,8 +37,7 @@ abstract class PlatformResolve {
       }
     }
 
-    val fromEnvOpt = sys.env
-      .get("COURSIER_REPOSITORIES")
+    val fromEnvOpt = Option(System.getenv("COURSIER_REPOSITORIES"))
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "environment variable COURSIER_REPOSITORIES"))
 

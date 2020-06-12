@@ -82,7 +82,7 @@ object RepositoryParams {
         ghTokenOpt match {
           case Some(token) => Validated.validNel(token)
           case None =>
-            sys.env.get("GH_TOKEN") match {
+            Option(System.getenv("GH_TOKEN")) match {
               case Some(token) => Validated.validNel(token)
               case None => Validated.invalidNel("No GitHub token specified")
             }
@@ -128,7 +128,7 @@ object RepositoryParams {
 
     val repositoryV =
       options.github.map(fromGitHub)
-        .orElse(options.bintray.map(fromBintray(_, options.bintrayApiKey.orElse(sys.env.get("BINTRAY_API_KEY")))))
+        .orElse(options.bintray.map(fromBintray(_, options.bintrayApiKey.orElse(Option(System.getenv("BINTRAY_API_KEY"))))))
         .getOrElse {
           if (sonatype)
             fromSonatype
@@ -138,11 +138,11 @@ object RepositoryParams {
 
 
     def authFromEnv(userVar: String, passVar: String) = {
-      val userV = sys.env.get(userVar) match {
+      val userV = Option(System.getenv(userVar)) match {
         case None => Validated.invalidNel(s"User environment variable $userVar not set")
         case Some(u) => Validated.validNel(u)
       }
-      val passV = sys.env.get(passVar) match {
+      val passV = Option(System.getenv(passVar)) match {
         case None => Validated.invalidNel(s"Password environment variable $passVar not set")
         case Some(u) => Validated.validNel(u)
       }
@@ -179,7 +179,7 @@ object RepositoryParams {
             }
           else {
             val varName = s.stripPrefix("env:")
-            sys.env.get(varName) match {
+            Option(System.getenv(varName)) match {
               case None =>
                 Validated.invalidNel(s"Authentication environment variable $varName not set")
               case Some(v) =>
