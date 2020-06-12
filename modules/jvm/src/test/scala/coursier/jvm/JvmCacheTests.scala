@@ -62,7 +62,8 @@ object JvmCacheTests extends TestSuite {
           |  "darwin": {
           |    "the-arch": {
           |      "jdk@the-jdk": {
-          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-macos.tar.gz"
+          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-macos.tar.gz",
+          |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
           |      }
           |    }
           |  }
@@ -127,6 +128,26 @@ object JvmCacheTests extends TestSuite {
           val javaExec = new File(home, "bin/java")
           val output = Seq(javaExec.getAbsolutePath, "-version").!!
           val expectedOutput = "the jdk 1.1\n"
+          assert(output == expectedOutput)
+        }
+      }
+
+      "no Contents/Home directory on macOS" - {
+        withTempDir("jvm-cache-tests-") { tmpDir =>
+          val jvmCache = JvmCache()
+            .withBaseDirectory(tmpDir.toFile)
+            .withCache(cache)
+            .withOs("darwin")
+            .withArchitecture("the-arch")
+            .withDefaultJdkNameOpt(None)
+            .withDefaultVersionOpt(None)
+            .withIndex(Task.point(index))
+
+          val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
+          assert(home.getName == "the-jdk@1.2")
+          val javaExec = new File(home, "bin/java")
+          val output = Seq(javaExec.getAbsolutePath, "-version").!!
+          val expectedOutput = "the jdk 1.2\n"
           assert(output == expectedOutput)
         }
       }
