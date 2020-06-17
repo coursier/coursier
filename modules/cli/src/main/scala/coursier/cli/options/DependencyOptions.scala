@@ -29,9 +29,6 @@ final case class DependencyOptions(
   @Help("Add sbt plugin dependencies")
     sbtPlugin: List[String] = Nil,
 
-  @Help("Add dependencies via Scaladex lookups")
-    scaladex: List[String] = Nil,
-
   scalaJs: Boolean = false,
 
   @Help("Enable scala-native")
