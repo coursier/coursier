@@ -109,10 +109,14 @@ class Download {
             completionService.submit(() -> {
                 // fourth argument is false because we don't want to store local files when bootstrapping
                 final File dest = CachePath.localFile(url.toString(), cacheDir, null, false);
+                boolean retry = true;
+                boolean warnedConcurrentDownload = false;
 
-                if (!dest.exists()) {
-                    final File tmpDest = CachePath.temporaryFile(dest);
-                    final File lockFile = CachePath.lockFile(tmpDest);
+                final File tmpDest = CachePath.temporaryFile(dest);
+                final File lockFile = CachePath.lockFile(tmpDest);
+
+                while (!dest.exists() && retry) {
+                    retry = false;
 
                     try (FileOutputStream out = CachePath.withStructureLock(cacheDir, () -> {
                         coursier.paths.Util.createDirectories(tmpDest.toPath().getParent());
@@ -123,9 +127,14 @@ class Download {
                     })) {
 
                         try (FileLock lock = out.getChannel().tryLock()) {
-                            if (lock == null)
-                                throw new RuntimeException("Ongoing concurrent download for " + url);
-                            else
+                            if (lock == null) {
+                                if (!warnedConcurrentDownload) {
+                                    System.err.println("Waiting for ongoing concurrent download for " + url);
+                                    warnedConcurrentDownload = true;
+                                }
+                                Thread.sleep(20L);
+                                retry = true;
+                            } else
                                 try {
                                     doDownload(url, tmpDest, dest);
                                 }
@@ -134,7 +143,19 @@ class Download {
                                 }
                         }
                         catch (OverlappingFileLockException e) {
-                            throw new RuntimeException("Ongoing concurrent download for " + url);
+                            if (!warnedConcurrentDownload) {
+                                System.err.println("Waiting for ongoing concurrent download for " + url);
+                                warnedConcurrentDownload = true;
+                            }
+                            Thread.sleep(20L);
+                            retry = true;
+                        }
+                        catch (IOException e) {
+                            if (e.getMessage().contains("Resource deadlock avoided")) {
+                                Thread.sleep(200L);
+                                retry = true;
+                            } else
+                                throw e;
                         }
                     } catch (Exception e) {
                         System.err.println("Error while downloading " + url + ": " + e.getMessage() + ", ignoring it");
