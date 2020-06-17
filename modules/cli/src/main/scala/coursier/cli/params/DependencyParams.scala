@@ -15,7 +15,6 @@ final case class DependencyParams(
   perModuleExclude: Map[JavaOrScalaModule, Set[JavaOrScalaModule]], // FIXME key should be Module
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
-  scaladexLookups: Seq[String],
   platformOpt: Option[Platform]
 ) {
   def native: Boolean =
@@ -161,11 +160,6 @@ object DependencyParams {
         Validated.validNel(l)
     }
 
-    val scaladexLookups = options
-      .scaladex
-      .map(_.trim)
-      .filter(_.nonEmpty)
-
     val platformOptV = (options.scalaJs, options.native) match {
       case (false, false) => Validated.validNel(None)
       case (true, false) => Validated.validNel(Some(Platform.JS))
@@ -180,7 +174,6 @@ object DependencyParams {
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
-          scaladexLookups,
           platformOpt
         )
     }

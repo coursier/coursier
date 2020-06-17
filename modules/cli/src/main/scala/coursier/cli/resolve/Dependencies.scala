@@ -4,55 +4,11 @@ import java.net.{URL, URLDecoder}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.scaladex.Scaladex
 import coursier.core.{Configuration, Dependency, Exclusions, Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
-import coursier.util.{InMemoryRepository, Task}
 
 object Dependencies {
 
-  /**
-    * Tries to get a dependency, like "scalafmt", via a Scala Index lookup.
-    */
-  def handleScaladexDependency(
-    rawDependency: String,
-    scalaVersion: String,
-    scaladex: Scaladex[Task],
-    verbosity: Int
-  ): Task[Either[String, List[Dependency]]] = {
-
-    val deps = scaladex.dependencies(
-      rawDependency,
-      scalaVersion,
-      if (verbosity >= 2) Console.err.println(_) else _ => ()
-    )
-
-    deps.map { modVers =>
-      val m = modVers.groupBy(_._2)
-      if (m.size > 1) {
-        val (keptVer, modVers0) = m
-          .map {
-            case (v, l) =>
-              val ver = coursier.core.Parse.version(v)
-                .getOrElse(???) // FIXME
-
-              ver -> l
-          }
-          .maxBy(_._1)
-
-        if (verbosity >= 1)
-          Console.err.println(s"Keeping version ${keptVer.repr}")
-
-        modVers0
-      } else
-        modVers
-    }.run.map(_.map { modVers =>
-      modVers.toList.map {
-        case (mod, ver) =>
-          coursier.Dependency(mod, ver)
-      }
-    })
-  }
 
   /**
     * Tries to parse dependencies as a simple dependencies.

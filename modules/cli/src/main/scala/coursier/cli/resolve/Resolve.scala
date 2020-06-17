@@ -5,13 +5,10 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.{Executors, ExecutorService, ThreadFactory}
 
 import caseapp._
-import cats.data.Validated
-import cats.implicits._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.install.Install
-import coursier.cli.scaladex.Scaladex
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
@@ -26,52 +23,6 @@ object Resolve extends CaseApp[ResolveOptions] {
   /**
     * Tries to parse get dependencies via Scala Index lookups.
     */
-  def handleScaladexDependencies(
-    params: SharedResolveParams,
-    pool: ExecutorService,
-    scalaVersion: String
-  ): Task[List[Dependency]] =
-    if (params.dependency.scaladexLookups.isEmpty)
-      Task.point(Nil)
-    else {
-
-      val logger = params.output.logger()
-
-      val scaladex = Scaladex.withCache(params.cache.cache(pool, logger).fetch)
-
-      val tasks = params.dependency.scaladexLookups.map { s =>
-        Dependencies.handleScaladexDependency(s, scalaVersion, scaladex, params.output.verbosity)
-          .map {
-            case Left(error) => Validated.invalidNel(error)
-            case Right(l) => Validated.validNel(l)
-          }
-      }
-
-      lift {
-        logger.init()
-
-        try {
-          val l = unlift(Gather[Task].gather(tasks))
-
-          l.toList.flatSequence.toEither match {
-            case Right(l0) => l0
-            case Left(errs) =>
-              unlift {
-                Task.fail(
-                  new ResolveException(
-                    s"Error during Scaladex lookups:\n" +
-                      errs.toList.map("  " + _).mkString("\n")
-                  )
-                )
-              }
-          }
-        }
-        finally {
-          logger.stop()
-        }
-      }
-    }
-
   private def benchmark[T](iterations: Int): Task[T] => Task[T] = { run =>
 
     val res = lift {
@@ -304,15 +255,11 @@ object Resolve extends CaseApp[ResolveOptions] {
         resolution = params.updatedResolution(scalaVersionOpt)
       )
 
-      val scaladexDeps = unlift(handleScaladexDependencies(params0, pool, scalaVersionOpt.getOrElse(scala.util.Properties.versionNumberString)))
-
-      val deps0 = deps ++ scaladexDeps
-
-      Output.printDependencies(params0.output, params0.resolution, deps0, stdout, stderr)
+      Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
 
       val (res, _, errorOpt) = unlift {
         coursier.Resolve()
-          .withDependencies(deps0)
+          .withDependencies(deps)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
           .withCache(cache)
