@@ -59,6 +59,26 @@ class Download {
         }
     }
 
+    private static void doDownload(URL url, File tmpDest, File dest) throws IOException {
+        URLConnection conn = url.openConnection();
+        long lastModified = conn.getLastModified();
+        int size = conn.getContentLength();
+        InputStream s = conn.getInputStream();
+        byte[] b = Util.readFullySync(s);
+        // Seems java.net.HttpURLConnection doesn't always throw if the connection gets
+        // abruptly closed during transfer, hence this extra check.
+        if (size >= 0 && b.length != size) {
+            throw new RuntimeException(
+                    "Error downloading " + url + " " +
+                            "(expected " + size + " B, got " + b.length + " B), " +
+                            "try again");
+        }
+        tmpDest.deleteOnExit();
+        Util.writeBytesToFile(tmpDest, b);
+        tmpDest.setLastModified(lastModified);
+        Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+    }
+
     private static List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
 
         CompletionService<URL> completionService =
@@ -91,66 +111,34 @@ class Download {
                 final File dest = CachePath.localFile(url.toString(), cacheDir, null, false);
 
                 if (!dest.exists()) {
-                    FileOutputStream out = null;
-                    FileLock lock = null;
-
                     final File tmpDest = CachePath.temporaryFile(dest);
                     final File lockFile = CachePath.lockFile(tmpDest);
 
-                    try {
+                    try (FileOutputStream out = CachePath.withStructureLock(cacheDir, () -> {
+                        coursier.paths.Util.createDirectories(tmpDest.toPath().getParent());
+                        coursier.paths.Util.createDirectories(lockFile.toPath().getParent());
+                        coursier.paths.Util.createDirectories(dest.toPath().getParent());
 
-                        out = CachePath.withStructureLock(cacheDir, () -> {
-                            coursier.paths.Util.createDirectories(tmpDest.toPath().getParent());
-                            coursier.paths.Util.createDirectories(lockFile.toPath().getParent());
-                            coursier.paths.Util.createDirectories(dest.toPath().getParent());
+                        return new FileOutputStream(lockFile);
+                    })) {
 
-                            return new FileOutputStream(lockFile);
-                        });
-
-                        try {
-                            lock = out.getChannel().tryLock();
+                        try (FileLock lock = out.getChannel().tryLock()) {
                             if (lock == null)
                                 throw new RuntimeException("Ongoing concurrent download for " + url);
                             else
                                 try {
-                                    URLConnection conn = url.openConnection();
-                                    long lastModified = conn.getLastModified();
-                                    int size = conn.getContentLength();
-                                    InputStream s = conn.getInputStream();
-                                    byte[] b = Util.readFullySync(s);
-                                    // Seems java.net.HttpURLConnection doesn't always throw if the connection gets
-                                    // abruptly closed during transfer, hence this extra check.
-                                    if (size >= 0 && b.length != size) {
-                                        throw new RuntimeException(
-                                                "Error downloading " + url + " " +
-                                                        "(expected " + size + " B, got " + b.length + " B), " +
-                                                        "try again");
-                                    }
-                                    tmpDest.deleteOnExit();
-                                    Util.writeBytesToFile(tmpDest, b);
-                                    tmpDest.setLastModified(lastModified);
-                                    Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                                    doDownload(url, tmpDest, dest);
                                 }
                                 finally {
-                                    lock.release();
-                                    lock = null;
-                                    out.close();
-                                    out = null;
                                     lockFile.delete();
                                 }
                         }
                         catch (OverlappingFileLockException e) {
                             throw new RuntimeException("Ongoing concurrent download for " + url);
                         }
-                        finally {
-                            if (lock != null) lock.release();
-                        }
                     } catch (Exception e) {
                         System.err.println("Error while downloading " + url + ": " + e.getMessage() + ", ignoring it");
                         throw e;
-                    }
-                    finally {
-                        if (out != null) out.close();
                     }
                 }
 
