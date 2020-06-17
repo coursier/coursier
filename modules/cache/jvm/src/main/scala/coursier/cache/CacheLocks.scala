@@ -1,14 +1,13 @@
 package coursier.cache
 
-import java.io.File
-import java.nio.channels.{FileLock, OverlappingFileLockException}
+import java.io.{File, IOException}
+import java.nio.channels.{FileChannel, FileLock, OverlappingFileLockException}
 import java.nio.file.{Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.paths.{CachePath, Util}
 
 import scala.annotation.tailrec
-import java.nio.channels.FileChannel
 
 object CacheLocks {
 
@@ -51,8 +50,23 @@ object CacheLocks {
       val resOpt = {
         var lock: FileLock = null
         try {
-          lock = channel.tryLock()
-          if (lock == null)
+          // kind of meh…
+          // same workaround as https://github.com/sbt/launcher/blob/24b07ded3edab14f574cbfb2064e6e30cc048618/launcher-implementation/src/main/scala/xsbt/boot/Locks.scala#L55-L71
+          // for those pesky "Resource deadlock avoided" errors
+          var deadlockAvoided = false
+
+          lock =
+            try channel.tryLock()
+            catch {
+              case ex: IOException if ex.getMessage == "Resource deadlock avoided" =>
+                deadlockAvoided = true
+                Thread.sleep(200L)
+                null
+            }
+
+          if (deadlockAvoided)
+            None
+          else if (lock == null)
             ifLocked
           else
             try Some(f)
