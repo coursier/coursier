@@ -10,6 +10,7 @@ import caseapp.core.parser.Parser
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
+import coursier.cli.get.Get
 import coursier.cli.install.{Install, List, Uninstall, Update}
 import coursier.cli.jvm.{Java, JavaHome}
 import coursier.cli.launch.Launch
@@ -117,27 +118,29 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Complete.run(completeOptions, args)
       case Inr(Inr(Inl(fetchOptions))) =>
         Fetch.run(fetchOptions, args)
-      case Inr(Inr(Inr(Inl(installOptions)))) =>
+      case Inr(Inr(Inr(Inl(getOptions)))) =>
+        Get.run(getOptions, args)
+      case Inr(Inr(Inr(Inr(Inl(installOptions))))) =>
         Install.run(installOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(javaOptions))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inl(javaOptions)))))) =>
         Java.run(javaOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions)))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions))))))) =>
         JavaHome.run(javaHomeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(listOptions)))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(listOptions))))))))) =>
         List.run(listOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions)))))))))) =>
         Publish.run(publishOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions))))))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions)))))))))))) =>
         Setup.run(setupOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions)))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))))) =>
         Uninstall.run(uninstallOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
         cnil.impossible
     }
 
