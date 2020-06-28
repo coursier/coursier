@@ -357,7 +357,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         exclude = List("com.chuusai::shapeless")
       ),
       resolutionOptions = ResolutionOptions(
-        scalaVersion = Some("2.13")
+        scalaVersion = Some("2.13.2")
       )
     )
     val args = RemainingArgs(
@@ -433,7 +433,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
   it should "use binary scala version" in {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
-        scalaVersion = Some("2.13")
+        scalaVersion = Some("2.11")
       )
     )
     val output0 = output(
@@ -441,8 +441,9 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
       "com.chuusai::shapeless:2.3.3"
     )
     val expectedOutput =
-      """com.chuusai:shapeless_2.13:2.3.3:default
-        |org.scala-lang:scala-library:2.13.2:default
+      """com.chuusai:shapeless_2.11:2.3.3:default
+        |org.scala-lang:scala-library:2.11.12:default
+        |org.typelevel:macro-compat_2.11:1.1.1:default
         |""".stripMargin
     assert(output0 == expectedOutput)
   }
