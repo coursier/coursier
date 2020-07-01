@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import io.github.soc.directories.ProjectDirectories;
+import dev.dirs.ProjectDirectories;
 
 /**
  * Computes Coursier's directories according to the standard
