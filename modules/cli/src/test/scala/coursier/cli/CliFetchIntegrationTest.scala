@@ -614,9 +614,9 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
           val urlInJsonFile2 = depNodes2.head.file.get
           val inCoursierCache =
-            urlInJsonFile2.contains("/.coursier/") || // Former cache path
-              urlInJsonFile2.contains("/coursier/") || // New cache path, Linux
-              urlInJsonFile2.contains("/Coursier/") // New cache path, OS X
+            urlInJsonFile2.contains("/coursier/") || // Linux
+              urlInJsonFile2.contains("/Coursier/") || // macOS
+              urlInJsonFile2.contains("\\Coursier\\") // Windows?
           assert(inCoursierCache && urlInJsonFile2.contains(testFile.toString))
         }
       }

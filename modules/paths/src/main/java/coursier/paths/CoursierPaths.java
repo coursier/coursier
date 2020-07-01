@@ -52,23 +52,10 @@ public final class CoursierPaths {
 
         File baseXdgDir = new File(coursierDirectories().cacheDir);
         File xdgDir = new File(baseXdgDir, dirName);
-        String xdgPath = xdgDir.getAbsolutePath();
 
-        if (baseXdgDir.isDirectory())
-            path = xdgPath;
+        Util.createDirectories(xdgDir.toPath());
 
-        if (path == null) {
-            File coursierDotFile = new File(System.getProperty("user.home") + "/.coursier");
-            if (coursierDotFile.isDirectory())
-                path = System.getProperty("user.home") + "/.coursier/cache/" + dirName + "/";
-        }
-
-        if (path == null) {
-            path = xdgPath;
-            Util.createDirectories(xdgDir.toPath());
-        }
-
-        return path;
+        return xdgDir.getAbsolutePath();
     }
 
     public static File cacheDirectory() throws IOException {
