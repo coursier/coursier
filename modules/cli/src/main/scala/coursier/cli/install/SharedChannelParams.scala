@@ -34,10 +34,12 @@ object SharedChannelParams {
 
     val fileChannelsV =
       if (options.fileChannels) {
-        val configDir = coursier.paths.CoursierPaths.configDirectory()
-        val channelDir = new File(configDir, "channels")
-        val files = Option(channelDir.listFiles())
-          .getOrElse(Array.empty[File])
+        val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
+        val files = configDirs
+          .flatMap { configDir =>
+            val channelDir = new File(configDir, "channels")
+            Option(channelDir.listFiles()).getOrElse(Array.empty[File])
+          }
           .filter(f => !f.getName.startsWith("."))
         val rawChannels = files.toList.flatMap { f =>
           val b = Files.readAllBytes(f.toPath)

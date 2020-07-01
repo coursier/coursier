@@ -21,21 +21,30 @@ public class Mirror {
     return new Mirror(from, to, type);
   }
 
-  public static File defaultConfigFile() throws IOException {
+  public static File[] defaultConfigFiles() throws IOException {
 
     String fromEnv = System.getenv("COURSIER_MIRRORS");
     if (fromEnv != null && !fromEnv.isEmpty()) {
-      return new File(fromEnv);
+      return new File[] { new File(fromEnv) };
     }
 
     String fromProps = System.getProperty("coursier.mirrors");
     if (fromProps != null && !fromProps.isEmpty()) {
-      return new File(fromProps);
+      return new File[] { new File(fromProps) };
     }
 
-    File configDir = coursier.paths.CoursierPaths.configDirectory();
-    File propFile = new File(configDir, "mirror.properties");
-    return propFile;
+    File[] configDirs = coursier.paths.CoursierPaths.configDirectories();
+    ArrayList<File> configFiles = new ArrayList<>();
+    for (File configDir : configDirs) {
+      File propFile = new File(configDir, "mirror.properties");
+      configFiles.add(propFile);
+    }
+    return configFiles.toArray(new File[configFiles.size()]);
+  }
+
+  @Deprecated
+  public static File defaultConfigFile() throws IOException {
+    return defaultConfigFiles()[0];
   }
 
   public static File extraConfigFile() throws IOException {

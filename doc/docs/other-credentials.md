@@ -48,7 +48,7 @@ Only `--credentials` and `--credential-file` are considered then.
 
 Credentials can be passed via property files too. By default,
 `~/.config/coursier/credentials.properties` is read
-(`~/Library/Preferences/Coursier/credentials.properties` on OS X).
+(`~/Library/Application Support/Coursier/credentials.properties` on OS X).
 
 ### Format
 

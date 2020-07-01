@@ -88,20 +88,20 @@ object CacheDefaults {
   def credentials: Seq[Credentials] =
     if (credentialPropOpt.isEmpty) {
       // Warn if those files have group and others read permissions?
-      val configDir = coursier.paths.CoursierPaths.configDirectory()
-      val mainCredentialsFile = new File(configDir, "credentials.properties")
+      val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
+      val mainCredentialsFiles = configDirs.map(configDir => new File(configDir, "credentials.properties"))
       val otherFiles = {
         // delay listing files until credentials are really needed?
-        val dir = new File(configDir, "credentials")
-        val files = dir.listFiles(new FilenameFilter {
+        val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
+        val files = dirs.flatMap(dir => Option(dir.listFiles(new FilenameFilter {
           def accept(dir: File, name: String): Boolean =
             !name.startsWith(".") && name.endsWith(".properties")
-        })
+        })).toSeq.flatten)
         Option(files).toSeq.flatten.map { f =>
           FileCredentials(f.getAbsolutePath, optional = true) // non optional?
         }
       }
-      FileCredentials(mainCredentialsFile.getAbsolutePath, optional = true) +: otherFiles
+      mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++ otherFiles
     } else
       credentialPropOpt
         .filter(isPropFile)

@@ -45,7 +45,7 @@ object Install extends CaseApp[InstallOptions] {
 
       // TODO Move to install module
 
-      val configDir = coursier.paths.CoursierPaths.configDirectory()
+      val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
       val channelDir = new File(configDir, "channels")
 
       // FIXME May not be fine with concurrency (two process doing this in parallel)
