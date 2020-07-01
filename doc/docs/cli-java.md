@@ -165,7 +165,7 @@ $ eval "$(cs java --disable)" # reverts both commands above
 The default directory for JVMs managed by coursier is OS-specific:
 - Linux: `~/.cache/coursier/jvm`
 - macOS: `~/Library/Caches/Coursier/jvm`
-- Windows:
+- Windows: `%LOCALAPPDATA%\Coursier\Cache\jvm`, typically looking like `C:\Users\Alex\AppData\Local\Coursier\Cache\jvm`
 
 It can be changed via
 - the `COURSIER_JVM_CACHE` environment variable, or
