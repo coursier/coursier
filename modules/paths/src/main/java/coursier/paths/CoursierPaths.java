@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import io.github.soc.directories.ProjectDirectories;
+import dev.dirs.ProjectDirectories;
 
 /**
  * Computes Coursier's directories according to the standard
@@ -26,7 +26,7 @@ public final class CoursierPaths {
     private static volatile File jvmCacheDirectory0 = null;
 
     private static final Object configDirectoryLock = new Object();
-    private static volatile File configDirectory0 = null;
+    private static volatile File[] configDirectories0 = null;
 
     private static final Object dataLocalDirectoryLock = new Object();
     private static volatile File dataLocalDirectory0 = null;
@@ -94,28 +94,47 @@ public final class CoursierPaths {
         return coursierDirectories0;
     }
 
-    private static String computeConfigDirectory() throws IOException {
+    private static File[] computeConfigDirectories() throws IOException {
         String path = System.getenv("COURSIER_CONFIG_DIR");
 
         if (path == null)
             path = System.getProperty("coursier.config-dir");
 
         if (path != null)
-          return path;
+            return new File[] { new File(path).getAbsoluteFile() };
 
-        return coursierDirectories().configDir;
+        String configDir = coursierDirectories().configDir;
+        String preferenceDir = coursierDirectories().preferenceDir;
+        if (configDir.equals(preferenceDir))
+            return new File[] {
+                new File(configDir).getAbsoluteFile(),
+            };
+        else
+            return new File[] {
+                new File(configDir).getAbsoluteFile(),
+                new File(preferenceDir).getAbsoluteFile()
+            };
     }
 
-    public static File configDirectory() throws IOException {
+    public static File[] configDirectories() throws IOException {
 
-        if (configDirectory0 == null)
+        if (configDirectories0 == null)
             synchronized (configDirectoryLock) {
-                if (configDirectory0 == null) {
-                    configDirectory0 = new File(computeConfigDirectory()).getAbsoluteFile();
+                if (configDirectories0 == null) {
+                    configDirectories0 = computeConfigDirectories();
                 }
             }
 
-        return configDirectory0;
+        return configDirectories0.clone();
+    }
+
+    @Deprecated
+    public static File configDirectory() throws IOException {
+        return configDirectories()[0];
+    }
+
+    public static File defaultConfigDirectory() throws IOException {
+        return configDirectories()[0];
     }
 
     private static String computeDataLocalDirectory() throws IOException {

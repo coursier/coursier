@@ -8,7 +8,7 @@ import coursier.parse.RepositoryParser
 abstract class PlatformResolve {
 
   def defaultMirrorConfFiles: Seq[MirrorConfFile] = {
-    val files = Seq(coursier.paths.Mirror.defaultConfigFile()) ++
+    val files = coursier.paths.Mirror.defaultConfigFiles().toSeq ++
       Option(coursier.paths.Mirror.extraConfigFile()).toSeq
     files.map { f =>
       // Warn if f has group and others read permissions?

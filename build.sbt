@@ -135,7 +135,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
-    shadingRules += ShadingRule.moveUnder("io.github.soc", "coursier.cache.shaded"),
+    shadingRules += ShadingRule.moveUnder("dev.dirs", "coursier.cache.shaded.dirs"),
     validNamespaces += "coursier",
     addPathsSources,
     libraryDependencies ++= Seq(
