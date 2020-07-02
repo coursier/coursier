@@ -334,7 +334,7 @@ object JvmCache {
     def defaultJdk =
       defaultJdkNameOpt.flatMap { defaultName =>
         if (id.headOption.exists(_.isDigit))
-          Some((defaultName, "1." + id.stripPrefix("1.").stripSuffix("+") + "+")) // FIXME "1." stuff is specific to some JDKs
+          Some((defaultName, id.stripSuffix("+") + "+"))
         else
           None
       }
