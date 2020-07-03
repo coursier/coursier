@@ -1,8 +1,13 @@
 package coursier.jvm
 
 import java.io.File
+import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicBoolean
 
+import coursier.cache.MockCache
 import coursier.env.EnvironmentUpdate
+import coursier.internal.InMemoryCache
+import coursier.util.{Sync, Task}
 import utest._
 
 import scala.concurrent.ExecutionContext
@@ -14,6 +19,18 @@ object JavaHomeTests extends TestSuite {
       def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
         throw new Exception("should not run commands")
     }
+
+  private val poolInitialized = new AtomicBoolean(false)
+  private lazy val pool = {
+    val p = Sync.fixedThreadPool(6)
+    poolInitialized.set(true)
+    p
+  }
+  private implicit val ec = ExecutionContext.fromExecutorService(pool)
+
+  override def utestAfterAll(): Unit =
+    if (poolInitialized.getAndSet(false))
+      pool.shutdown()
 
   val tests = Tests {
 
@@ -107,6 +124,51 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
+    test("prefer installed JVM over more recent one in index") {
+      val strIndex =
+        """{
+          |  "the-os": {
+          |    "the-arch": {
+          |      "jdk@the-jdk": {
+          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1.tar.gz",
+          |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
+          |      }
+          |    }
+          |  }
+          |}
+          |""".stripMargin
+      val index = JvmIndex.fromString(strIndex).fold(throw _, identity)
+
+      JvmCacheTests.withTempDir { tmpDir =>
+        val csCache = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
+        val cache = JvmCache()
+          .withBaseDirectory(tmpDir.toFile)
+          .withCache(csCache)
+          .withOs("the-os")
+          .withArchitecture("the-arch")
+          .withIndex(Task.point(index))
+        val home = JavaHome()
+          .withGetEnv(Some(_ => None))
+          .withCommandOutput(forbidCommands)
+          .withOs("the-os")
+          .withCache(cache)
+
+        val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun()
+        assert(initialCheckRes.isEmpty)
+
+        home.get("the-jdk:1.1").unsafeRun() // install 1.1
+
+        val entry = index.lookup("the-jdk", "1", Some("the-os"), Some("the-arch"))
+        assert(entry.exists(_.version == "1.2"))
+
+        val ifInstalled = home.getWithRetainedIdIfInstalled("the-jdk:1").unsafeRun()
+        assert(ifInstalled.nonEmpty)
+        assert(ifInstalled.map(_._1).contains("the-jdk@1.1"))
+
+        val (installedId, _) = home.getWithRetainedId("the-jdk:1").unsafeRun()
+        assert(installedId == "the-jdk@1.1")
+      }
+    }
   }
 
 }

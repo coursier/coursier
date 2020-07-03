@@ -13,7 +13,9 @@ final case class SharedJavaParams(
   jvm: Option[String],
   jvmDir: Path,
   allowSystemJvm: Boolean,
-  requireSystemJvm: Boolean
+  requireSystemJvm: Boolean,
+  localOnly: Boolean,
+  update: Boolean
 ) {
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
@@ -27,6 +29,8 @@ final case class SharedJavaParams(
       .withCache(jvmCache)
       .withJvmCacheLogger(jvmCacheLogger(verbosity))
       .withAllowSystem(allowSystemJvm)
+      .withInstallIfNeeded(!localOnly)
+      .withUpdate(update)
     (jvmCache, javaHome)
   }
   def javaHome(cache: Cache[Task], verbosity: Int): coursier.jvm.JavaHome = {
@@ -76,7 +80,9 @@ object SharedJavaParams {
         jvm,
         jvmDir,
         allowSystem,
-        requireSystem
+        requireSystem,
+        options.localOnly,
+        options.update
       )
     }
   }

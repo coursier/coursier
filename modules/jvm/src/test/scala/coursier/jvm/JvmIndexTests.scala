@@ -19,31 +19,32 @@ object JvmIndexTests extends TestSuite {
             "19.1.4" -> "zip+https://foo.com/jdk-19.1.4.zip",
             "20.1" -> "zip+https://foo.com/jdk-20.1.zip",
           )
-        )))
+        ))),
+        jdkNamePrefix = Some(prefix)
       )
 
       val entry194 = JvmIndexEntry(os, arch, "foo", "19.1.4", ArchiveType.Zip, "https://foo.com/jdk-19.1.4.zip")
 
       test {
-        val res = index.lookup("foo", "19.1", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
+        val res = index.lookup("foo", "19.1", os = Some(os), arch = Some(arch))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
       test {
-        val res = index.lookup("foo", "19.1+", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
+        val res = index.lookup("foo", "19.1+", os = Some(os), arch = Some(arch))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
       test {
-        val res = index.lookup("foo", "19.1.4", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
+        val res = index.lookup("foo", "19.1.4", os = Some(os), arch = Some(arch))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
       test {
-        val res = index.lookup("foo", "19.1.5", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
+        val res = index.lookup("foo", "19.1.5", os = Some(os), arch = Some(arch))
         assert(res.isLeft)
       }
     }

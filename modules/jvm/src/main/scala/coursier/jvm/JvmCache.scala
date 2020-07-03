@@ -93,9 +93,13 @@ import scala.util.control.NonFatal
       }
     }
 
-  def getIfInstalled(id: String): Task[Option[(String, File)]] = {
-    entry(id).flatMap {
-      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+  def getIfInstalled(id: String): Task[Option[(String, File)]] =
+    installedEntry(id).flatMap {
+      case Left(err) =>
+        entry(id).flatMap {
+          case Left(err0) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err0))
+          case Right(_) => Task.point(None)
+        }
       case Right(entry0) =>
         val dir = baseDirectoryOf(entry0.id)
         Task.delay(dir.isDirectory).map {
@@ -103,7 +107,6 @@ import scala.util.control.NonFatal
           case false => None
         }
     }
-  }
 
   def get(
     entry: JvmIndexEntry,
@@ -170,7 +173,7 @@ import scala.util.control.NonFatal
     }
   }
 
-  def entry(id: String): Task[Either[String, JvmIndexEntry]] =
+  private def entry0(id: String, onlyInstalled: Boolean): Task[Either[String, JvmIndexEntry]] =
     JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
       case None =>
         Task.fail(new JvmCache.MalformedJvmId(id))
@@ -178,11 +181,29 @@ import scala.util.control.NonFatal
         index match {
           case None => Task.fail(new JvmCache.NoIndexSpecified)
           case Some(indexTask) =>
-            indexTask.flatMap { index0 =>
-              Task.point(index0.lookup(name, ver, Some(os), Some(architecture)))
-            }
+            for {
+              fullIndex <- indexTask
+              index0 <- {
+                if (onlyInstalled)
+                  installed().map { installedIds =>
+                    val prefix = fullIndex.jdkNamePrefix.getOrElse("")
+                    val installedNameVersionSet = installedIds
+                      .map(_.split("@", 2))
+                      .collect { case Array(k, v) => (prefix + k, v) }
+                      .toSet
+                    fullIndex.filterIds(os, architecture)((name, ver) => installedNameVersionSet((name, ver)))
+                  }
+                else
+                  Task.point(fullIndex)
+              }
+            } yield index0.lookup(name, ver, Some(os), Some(architecture))
         }
     }
+
+  def entry(id: String): Task[Either[String, JvmIndexEntry]] =
+    entry0(id, onlyInstalled = false)
+  def installedEntry(id: String): Task[Either[String, JvmIndexEntry]] =
+    entry0(id, onlyInstalled = true)
 
   def delete(id: String): Task[Option[Boolean]] =
     delete(id, None)

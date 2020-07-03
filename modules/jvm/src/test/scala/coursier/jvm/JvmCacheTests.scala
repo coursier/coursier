@@ -19,10 +19,10 @@ object JvmCacheTests extends TestSuite {
     f.delete()
   }
 
-  private def withTempDir[T](prefix: String)(f: Path => T): T = {
+  def withTempDir[T](f: Path => T): T = {
     var dir: Path = null
     try {
-      dir = Files.createTempDirectory(prefix)
+      dir = Files.createTempDirectory("jvm-cache-tests-")
       f(dir)
     } finally {
       if (dir != null)
@@ -41,7 +41,7 @@ object JvmCacheTests extends TestSuite {
     if (poolInitialized.getAndSet(false))
       pool.shutdown()
 
-  private val mockDataLocation = {
+  val mockDataLocation = {
     val dir = Paths.get("modules/jvm/src/test/resources/mock-cache")
     assert(Files.isDirectory(dir))
     dir
@@ -74,7 +74,7 @@ object JvmCacheTests extends TestSuite {
       val cache = MockCache.create[Task](mockDataLocation, pool)
 
       "specific version" - {
-        withTempDir("jvm-cache-tests-") { tmpDir =>
+        withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
             .withCache(cache)
@@ -93,7 +93,7 @@ object JvmCacheTests extends TestSuite {
       }
 
       "version range" - {
-        withTempDir("jvm-cache-tests-") { tmpDir =>
+        withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
             .withCache(cache)
@@ -112,7 +112,7 @@ object JvmCacheTests extends TestSuite {
       }
 
       "Contents/Home directory on macOS" - {
-        withTempDir("jvm-cache-tests-") { tmpDir =>
+        withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
             .withCache(cache)
@@ -133,7 +133,7 @@ object JvmCacheTests extends TestSuite {
       }
 
       "no Contents/Home directory on macOS" - {
-        withTempDir("jvm-cache-tests-") { tmpDir =>
+        withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
             .withCache(cache)

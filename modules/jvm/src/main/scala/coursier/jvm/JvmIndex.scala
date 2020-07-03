@@ -111,16 +111,37 @@ object JvmIndex {
   }
 }
 
-@data class JvmIndex(content: Map[String, Map[String, Map[String, Map[String, String]]]]) {
+@data class JvmIndex(
+  content: Map[String, Map[String, Map[String, Map[String, String]]]],
+  jdkNamePrefix: Option[String] = Some("jdk@")
+) {
 
   import JvmIndex.parseDescriptor
+
+  def filterIds(os: String, arch: String)(f: (String, String) => Boolean): JvmIndex =
+    withContent(
+      content.map {
+        case (`os`, osIndex) =>
+          os -> osIndex.map {
+            case (`arch`, archIndex) =>
+              val updated = archIndex
+                .map {
+                  case (name, versionMap) =>
+                    name -> versionMap.filterKeys(v => f(name, v)).toMap
+                }
+                .filter(_._2.nonEmpty)
+              arch -> updated
+            case other => other
+          }
+        case other => other
+      }
+    )
 
   def lookup(
     name: String,
     version: String,
     os: Option[String] = None,
-    arch: Option[String] = None,
-    jdkNamePrefix: Option[String] = Some("jdk@")
+    arch: Option[String] = None
   ): Either[String, JvmIndexEntry] = {
 
     def fromVersionConstraint(versionIndex: Map[String, String], version: String) =
