@@ -6,7 +6,7 @@ object JvmIndexTests extends TestSuite {
 
   val tests = Tests {
 
-    "version in range" - {
+    test("version in range") {
       val os = "the-os"
       val arch = "the-arch"
       val prefix = "prefix@"
@@ -24,25 +24,25 @@ object JvmIndexTests extends TestSuite {
 
       val entry194 = JvmIndexEntry(os, arch, "foo", "19.1.4", ArchiveType.Zip, "https://foo.com/jdk-19.1.4.zip")
 
-      * - {
+      test {
         val res = index.lookup("foo", "19.1", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
-      * - {
+      test {
         val res = index.lookup("foo", "19.1+", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
-      * - {
+      test {
         val res = index.lookup("foo", "19.1.4", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
         val expected = Right(entry194)
         assert(res == expected)
       }
 
-      * - {
+      test {
         val res = index.lookup("foo", "19.1.5", os = Some(os), arch = Some(arch), jdkNamePrefix = Some(prefix))
         assert(res.isLeft)
       }
