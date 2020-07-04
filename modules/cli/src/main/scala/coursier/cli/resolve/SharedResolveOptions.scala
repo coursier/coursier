@@ -46,6 +46,13 @@ final case class SharedResolveOptions(
         scalaVersion = resolutionOptions.scalaVersion.orElse(
           app.scalaVersion
         )
+      ),
+      cacheOptions = cacheOptions.copy(
+        ttl = cacheOptions.ttl.orElse(
+          // if an app is passed, and we have everything to start it locally,
+          // start the app straightaway, no need to check for updates
+          Some("Inf")
+        )
       )
     )
 }

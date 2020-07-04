@@ -25,7 +25,7 @@ final case class CacheOptions(
   @Help("TTL duration (e.g. \"24 hours\")")
   @Value("duration")
   @Short("l")
-    ttl: String = "",
+    ttl: Option[String] = None,
 
   @Help("Maximum number of parallel downloads (default: 6)")
   @Short("n")
@@ -80,14 +80,18 @@ final case class CacheOptions(
             )
         }
 
-    val ttlV =
-      if (ttl.isEmpty)
-        Validated.validNel(defaultTtl)
-      else
-        CacheDefaults.parseDuration(ttl) match {
-          case Left(e) => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
-          case Right(d) => Validated.validNel(Some(d))
-        }
+    val ttlV = {
+      val ttlOpt = ttl.map(_.trim).filter(_.nonEmpty)
+      ttlOpt match {
+        case None =>
+          Validated.validNel(defaultTtl)
+        case Some(ttlStr) =>
+          CacheDefaults.parseDuration(ttlStr) match {
+            case Left(e) => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
+            case Right(d) => Validated.validNel(Some(d))
+          }
+      }
+    }
 
     val parallelV =
       if (parallel > 0)
