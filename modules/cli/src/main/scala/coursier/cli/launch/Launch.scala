@@ -26,6 +26,7 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
+import scala.util.control.NonFatal
 
 object Launch extends CaseApp[LaunchOptions] {
 
@@ -278,6 +279,20 @@ object Launch extends CaseApp[LaunchOptions] {
       } else
         (Nil, None)
 
+    val (pythonProps, pythonEnv) =
+      if (params.python || params.jep)
+        try {
+          val home = Jep.pythonHome()
+          (Seq("jna.library.path" -> new File(home + "/lib").getAbsolutePath), EnvironmentUpdate(Seq("PYTHONHOME" -> home), Nil))
+        } catch {
+          case NonFatal(e) =>
+            if (params.shared.resolve.output.verbosity >= 1)
+              System.err.println(s"Cannot get python home: $e")
+            (Nil, EnvironmentUpdate.empty)
+        }
+      else
+        (Nil, EnvironmentUpdate.empty)
+
     val extraJars = params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq
     val hierarchy0 =
       if (extraJars.isEmpty) hierarchy
@@ -299,7 +314,7 @@ object Launch extends CaseApp[LaunchOptions] {
     val properties0 = {
       val m = new java.util.LinkedHashMap[String, String]
       // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
-      for ((k, v) <- jcp.iterator ++ jlp.iterator ++ props.iterator)
+      for ((k, v) <- jcp.iterator ++ jlp.iterator ++ pythonProps.iterator ++ props.iterator)
         m.put(k, v)
       val m0 = coursier.paths.Util.expandProperties(System.getProperties, m)
       // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
@@ -323,7 +338,7 @@ object Launch extends CaseApp[LaunchOptions] {
         javaPath,
         params.javaOptions,
         properties0,
-        extraEnv,
+        pythonEnv + extraEnv,
         params.shared.resolve.output.verbosity,
         params.execve
       )
