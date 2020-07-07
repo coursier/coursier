@@ -111,19 +111,40 @@ object JvmIndex {
   }
 }
 
-@data class JvmIndex(content: Map[String, Map[String, Map[String, Map[String, String]]]]) {
+@data class JvmIndex(
+  content: Map[String, Map[String, Map[String, Map[String, String]]]],
+  jdkNamePrefix: Option[String] = Some("jdk@")
+) {
 
   import JvmIndex.parseDescriptor
+
+  def filterIds(os: String, arch: String)(f: (String, String) => Boolean): JvmIndex =
+    withContent(
+      content.map {
+        case (`os`, osIndex) =>
+          os -> osIndex.map {
+            case (`arch`, archIndex) =>
+              val updated = archIndex
+                .map {
+                  case (name, versionMap) =>
+                    name -> versionMap.filterKeys(v => f(name, v)).toMap
+                }
+                .filter(_._2.nonEmpty)
+              arch -> updated
+            case other => other
+          }
+        case other => other
+      }
+    )
 
   def lookup(
     name: String,
     version: String,
     os: Option[String] = None,
-    arch: Option[String] = None,
-    jdkNamePrefix: Option[String] = Some("jdk@")
+    arch: Option[String] = None
   ): Either[String, JvmIndexEntry] = {
 
-    def fromVersionConstraint(versionIndex: Map[String, String]) =
+    def fromVersionConstraint(versionIndex: Map[String, String], version: String) =
       Latest(version) match {
         case Some(_) =>
           // TODO Filter versions depending on latest kind
@@ -160,10 +181,19 @@ object JvmIndex {
       osIndex <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
       versionIndex <- archIndex.get(jdkNamePrefix.getOrElse("") + name).toRight(s"JVM $name not found")
+      needs1Prefix = versionIndex.keysIterator.forall(_.startsWith("1."))
+      version0 =
+        if (needs1Prefix) {
+          if (version.startsWith("1.") || version == "1" || version == "1+")
+            version
+          else
+            "1." + version
+        } else
+          version
       retainedVersionUrlDescriptor <- versionIndex
-        .get(version)
-        .map(url => Right((version, url)))
-        .getOrElse(fromVersionConstraint(versionIndex))
+        .get(version0)
+        .map(url => Right((version0, url)))
+        .getOrElse(fromVersionConstraint(versionIndex, version0))
       (retainedVersion, urlDescriptor) = retainedVersionUrlDescriptor
       archiveTypeUrl <- parseDescriptor(urlDescriptor)
       (archiveType, url) = archiveTypeUrl

@@ -9,7 +9,7 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.cache.internal.FileUtil
 import coursier.env.EnvironmentUpdate
 import coursier.util.Task
-import dataclass.data
+import dataclass._
 
 @data class JavaHome(
   cache: Option[JvmCache] = None,
@@ -18,7 +18,9 @@ import dataclass.data
   os: String = JvmIndex.defaultOs(),
   commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
-  allowSystem: Boolean = true
+  allowSystem: Boolean = true,
+  @since
+  update: Boolean = false
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -122,6 +124,15 @@ import dataclass.data
       .map(_._2)
 
   def getWithRetainedId(id: String): Task[(String, File)] =
+    if (update)
+      getWithRetainedId0(id)
+    else
+      getWithRetainedIdIfInstalled(id).flatMap {
+        case Some(res) => Task.point(res)
+        case None => getWithRetainedId0(id)
+      }
+
+  private def getWithRetainedId0(id: String): Task[(String, File)] =
     if (id == JavaHome.systemId)
       system().flatMap {
         case None => Task.fail(new Exception("No system JVM found"))
@@ -142,7 +153,7 @@ import dataclass.data
       cache match {
         case None => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
-          cache0.get(id0, installIfNeeded).map(id -> _)
+          cache0.get(id0, installIfNeeded).map(home => cache0.idOf(home).getOrElse(id0) -> home)
       }
     }
 
