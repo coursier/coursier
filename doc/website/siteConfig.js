@@ -42,7 +42,7 @@ const siteConfig = {
 
   editUrl: 'https://github.com/coursier/coursier/edit/master/doc/docs/',
 
-  twitter: true,
+  twitter: false,
 
   algolia: {
     apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
