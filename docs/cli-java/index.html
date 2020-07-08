@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>The <code>java</code> and <code>java-home</code> commands fetch and install JVMs.</p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-21">
+  <meta name="docsearch:version" content="2.0.0-RC6-22">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="java · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../../versions"><h3>2.0.0-RC6-21</h3></a>
+     <a href="../../../versions"><h3>2.0.0-RC6-22</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -263,7 +263,7 @@ $ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class
           <ul> 
            <li>Linux: <code>~/.cache/coursier/jvm</code></li> 
            <li>macOS: <code>~/Library/Caches/Coursier/jvm</code></li> 
-           <li>Windows:</li> 
+           <li>Windows: <code>%LOCALAPPDATA%\Coursier\Cache\jvm</code>, typically looking like <code>C:\Users\Alex\AppData\Local\Coursier\Cache\jvm</code></li> 
           </ul> <p>It can be changed via</p> 
           <ul> 
            <li>the <code>COURSIER_JVM_CACHE</code> environment variable, or</li> 
@@ -332,7 +332,6 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
    </footer>
   </div>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-  <script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script>
   <script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
