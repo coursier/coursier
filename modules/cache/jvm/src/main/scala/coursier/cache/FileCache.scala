@@ -245,7 +245,7 @@ import dataclass.data
             else if (cacheErrors && errFile0.exists()) {
               val ts = errFile0.lastModified()
               val now = System.currentTimeMillis()
-              if (ts > 0L && now < ts + ttl.fold(0L)(_.toMillis))
+              if (ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis)))
                 Left(new ArtifactError.NotFound(url))
               else
                 Right(())
