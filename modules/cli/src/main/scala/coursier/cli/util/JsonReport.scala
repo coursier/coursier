@@ -133,23 +133,21 @@ final case class JsonElem(dep: Dependency,
     if (excluded)
       Nil
     else {
-      val dep0 = dep.withVersion(reconciledVersion)
-
       val dependencies = resolution.dependenciesOf(
-        dep0,
+        dep,
         withRetainedVersions = false
       ).sortBy { trDep =>
         (trDep.module.organization, trDep.module.name, trDep.version)
       }.map { d =>
-        if (overrideClassifiers.contains(dep0.attributes.classifier))
-          d.withAttributes(d.attributes.withClassifier(dep0.attributes.classifier))
+        if (overrideClassifiers.contains(dep.attributes.classifier))
+          d.withAttributes(d.attributes.withClassifier(dep.attributes.classifier))
         else
           d
       }
 
       def excluded = resolution
         .dependenciesOf(
-          dep0.withExclusions(Set.empty),
+          dep.withExclusions(Set.empty),
           withRetainedVersions = false
         )
         .sortBy { trDep =>

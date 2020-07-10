@@ -969,6 +969,49 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
+  "grpc-core" should "have dependencies" in {
+    withFile() { (jsonFile, _) =>
+      val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
+      val params = paramsOrThrow(options)
+
+      Fetch.task(params, pool, Seq("io.grpc:grpc-netty-shaded:1.29.0"))
+        .unsafeRun()(ec)
+
+      val node: ReportNode = getReportFromJson(jsonFile)
+
+      val grpcCoreNode = node
+        .dependencies
+        .find(_.coord == "io.grpc:grpc-core:1.29.0")
+        .getOrElse {
+          sys.error("grpc-core:1.29.0 not found in JSON report")
+        }
+
+      assert(grpcCoreNode.dependencies.toSet == Set(
+        "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
+        "org.codehaus.mojo:animal-sniffer-annotations:1.18",
+        "com.google.j2objc:j2objc-annotations:1.3",
+        "com.google.code.findbugs:jsr305:3.0.2",
+        "com.google.android:annotations:4.1.1.4",
+        "io.grpc:grpc-context:1.29.0",
+        "com.google.code.gson:gson:2.8.6",
+        "io.grpc:grpc-api:1.29.0",
+        "com.google.errorprone:error_prone_annotations:2.3.4",
+        "com.google.guava:failureaccess:1.0.1",
+        "io.perfmark:perfmark-api:0.19.0",
+        "com.google.guava:guava:28.2-android",
+        "org.checkerframework:checker-compat-qual:2.5.5"
+      ))
+
+      assert(grpcCoreNode.directDependencies.toSet == Set(
+        "com.google.android:annotations:4.1.1.4",
+        "com.google.code.gson:gson:2.8.6",
+        "io.grpc:grpc-api:1.29.0",
+        "com.google.errorprone:error_prone_annotations:2.3.4",
+        "io.perfmark:perfmark-api:0.19.0"
+      ))
+    }
+  }
+
   "Bad pom resolve" should "succeed with retry" in withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
