@@ -90,44 +90,45 @@ object Fetch extends CaseApp[FetchOptions] {
       res
     }
 
-    FetchParams(options0) match {
+    val params = FetchParams(options0) match {
       case Validated.Invalid(errors) =>
         for (err <- errors.toList)
           Output.errPrintln(err)
         sys.exit(1)
-      case Validated.Valid(params) =>
-
-        if (pool == null)
-          pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
-        val ec = ExecutionContext.fromExecutorService(pool)
-
-        val t = task(params, pool, deps)
-
-        t.attempt.unsafeRun()(ec) match {
-          case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
-            Output.errPrintln(e.message)
-            sys.exit(1)
-          case Left(e: coursier.error.FetchError) if params.resolve.output.verbosity <= 1 =>
-            Output.errPrintln(e.getMessage)
-            sys.exit(1)
-          case Left(e) => throw e
-          case Right((_, _, _, files)) =>
-            // Some progress lines seem to be scraped without this.
-            Console.out.flush()
-
-            val out =
-              if (options.classpath)
-                files
-                  .map(_._2.toString)
-                  .mkString(File.pathSeparator)
-              else
-                files
-                  .map(_._2.toString)
-                  .mkString("\n")
-
-            println(out)
-        }
+      case Validated.Valid(p) => p
     }
+
+    if (pool == null)
+      pool = Sync.fixedThreadPool(params.resolve.cache.parallel)
+    val ec = ExecutionContext.fromExecutorService(pool)
+
+    val t = task(params, pool, deps)
+
+    val (_, _, _, files) = t.attempt.unsafeRun()(ec) match {
+      case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
+        Output.errPrintln(e.message)
+        sys.exit(1)
+      case Left(e: coursier.error.FetchError) if params.resolve.output.verbosity <= 1 =>
+        Output.errPrintln(e.getMessage)
+        sys.exit(1)
+      case Left(e) => throw e
+      case Right(t) => t
+    }
+
+    // Some progress lines seem to be scraped without this.
+    Console.out.flush()
+
+    val out =
+      if (options.classpath)
+        files
+          .map(_._2.toString)
+          .mkString(File.pathSeparator)
+      else
+        files
+          .map(_._2.toString)
+          .mkString("\n")
+
+    println(out)
   }
 
 }
