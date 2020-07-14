@@ -49,7 +49,6 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
-    utest,
     libs ++= Seq(
       Deps.fastParse,
       Deps.scalaXml
@@ -72,6 +71,7 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   )
   .settings(
     shared,
+    utest,
     coursierPrefix,
     Mima.previousArtifacts,
     Mima.coreFilters,
