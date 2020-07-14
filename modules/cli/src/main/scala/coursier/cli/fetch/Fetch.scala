@@ -126,7 +126,7 @@ object Fetch extends CaseApp[FetchOptions] {
       else
         files
           .map(_._2.toString)
-          .mkString("\n")
+          .mkString(System.lineSeparator())
 
     println(out)
   }
