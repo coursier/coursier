@@ -119,16 +119,17 @@ object Fetch extends CaseApp[FetchOptions] {
     Console.out.flush()
 
     val out =
-      if (options.classpath)
+      if (files.isEmpty) ""
+      else if (options.classpath)
         files
           .map(_._2.toString)
-          .mkString(File.pathSeparator)
+          .mkString(File.pathSeparator) + System.lineSeparator()
       else
         files
-          .map(_._2.toString)
-          .mkString(System.lineSeparator())
+          .map(_._2.toString + System.lineSeparator())
+          .mkString
 
-    println(out)
+    print(out)
   }
 
 }
