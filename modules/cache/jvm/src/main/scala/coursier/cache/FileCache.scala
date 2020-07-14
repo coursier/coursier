@@ -681,16 +681,38 @@ import scala.util.control.NonFatal
                 Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
 
               case Some(sum) =>
-                val md = MessageDigest.getInstance(sumType)
+                /**
+                  * Store computed cache in files so we don't have to recompute them over and over.
+                  */
+                val calculatedSum: BigInteger = {
+                  val cacheFile = auxiliaryFile(localFile0, sumType + ".computed")
+                  val cacheFilePath = cacheFile.toPath
 
-                var is: FileInputStream = null
-                try {
-                  is = new FileInputStream(localFile0)
-                  FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
-                } finally is.close()
+                  val digested: Array[Byte] =
+                    try Files.readAllBytes(cacheFilePath) catch {
+                      case _: java.nio.file.NoSuchFileException =>
+                        val md = MessageDigest.getInstance(sumType)
 
-                val digest = md.digest()
-                val calculatedSum = new BigInteger(1, digest)
+                        var is: FileInputStream = null
+                        try {
+                          is = new FileInputStream(localFile0)
+                          FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
+                        } finally is.close()
+
+                        val bytes = md.digest()
+
+                        /* Atomically write file. In the case of multiple processes/threads which all compute this
+                         *  digest, last thread wins. This should be fine as long as files are completely written.
+                         */
+                        val tmpFile = File.createTempFile(s"coursier", cacheFile.getName).toPath
+                        Files.write(tmpFile, bytes)
+                        Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
+
+                        bytes
+                    }
+
+                  new BigInteger(1, digested)
+                }
 
                 if (sum == calculatedSum)
                   Right(())
