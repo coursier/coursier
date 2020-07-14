@@ -38,6 +38,7 @@ import dataclass.data
 
     def isStable(ver: String): Boolean =
       !ver.endsWith("SNAPSHOT") &&
+      !ver.exists(_.isLetter) &&
         ver
           .split(Array('.', '-'))
           .forall(_.lengthCompare(5) <= 0)
