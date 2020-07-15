@@ -48,7 +48,8 @@ final case class CacheParams(
 
   def cache(
     pool: ExecutorService,
-    logger: CacheLogger
+    logger: CacheLogger,
+    overrideTtl: Option[Duration] = None
   ): FileCache[Task] = {
 
     var c = FileCache[Task]()
@@ -57,7 +58,7 @@ final case class CacheParams(
       .withChecksums(checksum)
       .withLogger(logger)
       .withPool(pool)
-      .withTtl(ttl)
+      .withTtl(overrideTtl.orElse(ttl))
       .withRetry(retryCount)
       .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
       .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)

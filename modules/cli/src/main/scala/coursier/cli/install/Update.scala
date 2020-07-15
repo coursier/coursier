@@ -7,6 +7,8 @@ import caseapp.core.RemainingArgs
 import coursier.install.{Channels, InstallDir, Updatable}
 import coursier.util.{Sync, Task}
 
+import scala.concurrent.duration.Duration
+
 object Update extends CaseApp[UpdateOptions] {
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
 
@@ -28,9 +30,10 @@ object Update extends CaseApp[UpdateOptions] {
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
+    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val graalvmHome = { version: String =>
-      params.sharedJava.javaHome(cache, params.output.verbosity)
+      params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
         .get(s"graalvm:$version")
     }
 

@@ -12,6 +12,8 @@ import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
+import scala.concurrent.duration.Duration
+
 object Java extends CaseApp[JavaOptions] {
   override def stopAtFirstUnrecognized = true
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
@@ -34,8 +36,9 @@ object Java extends CaseApp[JavaOptions] {
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
     val coursierCache = params.cache.cache(pool, logger)
+    val noUpdateCoursierCache = params.cache.cache(pool, logger, overrideTtl = Some(Duration.Inf))
 
-    val (jvmCache, javaHome) = params.shared.cacheAndHome(coursierCache, params.output.verbosity)
+    val (jvmCache, javaHome) = params.shared.cacheAndHome(coursierCache, noUpdateCoursierCache, params.output.verbosity)
 
     if (params.installed) {
       val task =

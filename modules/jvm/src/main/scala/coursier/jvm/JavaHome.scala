@@ -20,7 +20,8 @@ import dataclass._
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,
   @since
-  update: Boolean = false
+  update: Boolean = false,
+  noUpdateCache: Option[JvmCache] = None
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
@@ -107,7 +108,7 @@ import dataclass._
         case Some(dir) => Task.point(Some(JavaHome.systemId -> dir))
       }
     else
-      cache match {
+      noUpdateCache.orElse(cache) match {
         case None => Task.point(None)
         case Some(cache0) =>
           val id0 =

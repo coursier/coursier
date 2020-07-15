@@ -14,6 +14,8 @@ import coursier.launcher.internal.Windows
 import coursier.paths.Util
 import coursier.util.Sync
 
+import scala.concurrent.duration.Duration
+
 object Install extends CaseApp[InstallOptions] {
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
@@ -31,9 +33,10 @@ object Install extends CaseApp[InstallOptions] {
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
+    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val graalvmHome = { version: String =>
-      params.sharedJava.javaHome(cache, params.output.verbosity)
+      params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
         .get(s"graalvm:$version")
     }
 
