@@ -12,6 +12,8 @@ import coursier.jvm.JvmCache
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
+import scala.concurrent.duration.Duration
+
 object Setup extends CaseApp[SetupOptions] {
 
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
@@ -21,8 +23,9 @@ object Setup extends CaseApp[SetupOptions] {
     val pool = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
     val cache = params.cache.cache(pool, logger)
+    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val javaHome = params.sharedJava.javaHome(cache, params.output.verbosity)
+    val javaHome = params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
 
     val envVarUpdaterOpt =
       if (params.env.env) None

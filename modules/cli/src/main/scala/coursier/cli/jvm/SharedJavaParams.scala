@@ -20,21 +20,26 @@ final case class SharedJavaParams(
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
 
-  def cacheAndHome(cache: Cache[Task], verbosity: Int): (JvmCache, coursier.jvm.JavaHome) = {
+  def cacheAndHome(cache: Cache[Task], noUpdateCache: Cache[Task], verbosity: Int): (JvmCache, coursier.jvm.JavaHome) = {
+    val noUpdateJvmCache = JvmCache()
+      .withBaseDirectory(jvmDir.toFile)
+      .withCache(noUpdateCache)
+      .withDefaultIndex
     val jvmCache = JvmCache()
       .withBaseDirectory(jvmDir.toFile)
       .withCache(cache)
       .withDefaultIndex
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
+      .withNoUpdateCache(Some(noUpdateJvmCache))
       .withJvmCacheLogger(jvmCacheLogger(verbosity))
       .withAllowSystem(allowSystemJvm)
       .withInstallIfNeeded(!localOnly)
       .withUpdate(update)
     (jvmCache, javaHome)
   }
-  def javaHome(cache: Cache[Task], verbosity: Int): coursier.jvm.JavaHome = {
-    val (_, home) = cacheAndHome(cache, verbosity)
+  def javaHome(cache: Cache[Task], noUpdateCache: Cache[Task], verbosity: Int): coursier.jvm.JavaHome = {
+    val (_, home) = cacheAndHome(cache, noUpdateCache, verbosity)
     home
   }
 

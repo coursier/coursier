@@ -4,10 +4,10 @@ import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
 
-import coursier.cache.MockCache
+import coursier.cache.{ArtifactError, Cache, MockCache}
 import coursier.env.EnvironmentUpdate
 import coursier.internal.InMemoryCache
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, EitherT, Sync, Task}
 import utest._
 
 import scala.concurrent.ExecutionContext
@@ -140,6 +140,13 @@ object JavaHomeTests extends TestSuite {
       val index = JvmIndex.fromString(strIndex).fold(throw _, identity)
 
       JvmCacheTests.withTempDir { tmpDir =>
+        val failCache: Cache[Task] =
+          new Cache[Task] {
+            val ec = ExecutionContext.fromExecutorService(pool)
+            val fetch = _ => EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
+            def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
+              EitherT[Task, ArtifactError, File](Task.fail(new Exception("This cache must not be used")))
+          }
         val csCache = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
         val cache = JvmCache()
           .withBaseDirectory(tmpDir.toFile)
@@ -152,9 +159,15 @@ object JavaHomeTests extends TestSuite {
           .withCommandOutput(forbidCommands)
           .withOs("the-os")
           .withCache(cache)
+        val noUpdateHome = home
+          .withNoUpdateCache(Some(cache))
+          .withCache(cache.withCache(failCache))
 
         val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun()
         assert(initialCheckRes.isEmpty)
+
+        val noUpdateInitialCheckRes = noUpdateHome.getIfInstalled("the-jdk:1.1").unsafeRun()
+        assert(noUpdateInitialCheckRes.isEmpty)
 
         home.get("the-jdk:1.1").unsafeRun() // install 1.1
 
