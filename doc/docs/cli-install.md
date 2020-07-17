@@ -362,6 +362,9 @@ JAR-based channels should be the most reliable kind of channels for end-users
 versions can be manually inspected if needed), but are the less straightforward
 to setup.
 
+[This giter8 template](https://github.com/coursier/coursier-channel.g8) facilitates
+and describes how to create your own JAR-based channel.
+
 ### URL-based channels
 
 These channels consist in a single JSON file, containing a JSON object.
