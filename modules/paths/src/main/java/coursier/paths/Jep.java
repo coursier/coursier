@@ -118,4 +118,36 @@ public class Jep {
     return version;
   }
 
+  public static String pythonHome() throws Exception {
+
+    String fromEnv = System.getenv("PYTHONHOME");
+    if (fromEnv != null && !fromEnv.isEmpty())
+      return fromEnv;
+
+    String fromProps = System.getProperty("python.home");
+    if (fromProps != null && !fromProps.isEmpty())
+      return fromProps;
+
+    String python = "python";
+    if (existsInPath("python3"))
+      python = "python3";
+
+    ProcessBuilder b = new ProcessBuilder(python, "-c", "import sys;print(sys.prefix)")
+      .redirectInput(ProcessBuilder.Redirect.PIPE)
+      .redirectOutput(ProcessBuilder.Redirect.PIPE)
+      .redirectError(ProcessBuilder.Redirect.INHERIT);
+    Process p = b.start();
+    p.getOutputStream().close(); // close sub-process stdin
+
+    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
+    int retValue = p.waitFor();
+    if (retValue != 0) {
+      if (!output.isEmpty())
+        output = "\n" + output;
+      throw new JepException("Error running " + python + " -c 'import sys; print(sys.prefix)' (return code: " + retValue + ")" + output);
+    }
+
+    return output.trim();
+  }
+
 }

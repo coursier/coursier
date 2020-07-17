@@ -45,6 +45,14 @@ object SharedRepositoryParser {
       Right(Repositories.clojars)
     else if (s == "jcenter")
       Right(Repositories.jcenter)
+    else if (s == "google")
+      Right(Repositories.google)
+    else if (s == "gcs")
+      Right(Repositories.centralGcs)
+    else if (s == "gcs-eu")
+      Right(Repositories.centralGcsEu)
+    else if (s == "gcs-asia")
+      Right(Repositories.centralGcsAsia)
     else
       Right(MavenRepository(s))
 
