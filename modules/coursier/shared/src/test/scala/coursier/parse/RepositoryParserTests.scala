@@ -58,6 +58,26 @@ object RepositoryParserTests extends TestSuite {
       assert(res.exists(isMavenRepo))
     }
 
+    "google" - {
+      val res = RepositoryParser.repository("google")
+      assert(res.exists(isMavenRepo))
+    }
+
+    "gcs" - {
+      val res = RepositoryParser.repository("gcs")
+      assert(res.exists(isMavenRepo))
+    }
+
+    "gcs-eu" - {
+      val res = RepositoryParser.repository("gcs-eu")
+      assert(res.exists(isMavenRepo))
+    }
+
+    "gcs-asia" - {
+      val res = RepositoryParser.repository("gcs-asia")
+      assert(res.exists(isMavenRepo))
+    }
+
     "ivy with metadata" - {
       val mainPattern =
         "http://repo/cache/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]"

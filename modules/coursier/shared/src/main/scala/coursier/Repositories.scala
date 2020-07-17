@@ -36,4 +36,14 @@ object Repositories {
     MavenRepository("https://repo.clojars.org")
   def jcenter: MavenRepository =
     MavenRepository("https://jcenter.bintray.com")
+  def google: MavenRepository =
+    MavenRepository("https://maven.google.com")
+
+  // https://storage-download.googleapis.com/maven-central/index.html
+  def centralGcs: MavenRepository =
+    MavenRepository("https://maven-central.storage-download.googleapis.com/maven2")
+  def centralGcsEu: MavenRepository =
+    MavenRepository("https://maven-central-eu.storage-download.googleapis.com/maven2")
+  def centralGcsAsia: MavenRepository =
+    MavenRepository("https://maven-central-asia.storage-download.googleapis.com/maven2")
 }
