@@ -18,12 +18,21 @@ abstract class PlatformResolve {
 
   lazy val defaultRepositories: Seq[Repository] = {
 
+    val spaceSep = "\\s+".r
+
     def fromString(str: String, origin: String): Option[Seq[Repository]] = {
 
-      val l = str
-        .split('|')
-        .toSeq
-        .filter(_.nonEmpty)
+      val l =
+        if (spaceSep.findFirstIn(str).isEmpty)
+          str
+            .split('|')
+            .toSeq
+            .filter(_.nonEmpty)
+        else
+          spaceSep
+            .split(str)
+            .toSeq
+            .filter(_.nonEmpty)
 
       RepositoryParser.repositories(l).either match {
         case Left(errs) =>
@@ -38,11 +47,13 @@ abstract class PlatformResolve {
     }
 
     val fromEnvOpt = Option(System.getenv("COURSIER_REPOSITORIES"))
+      .map(_.trim)
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "environment variable COURSIER_REPOSITORIES"))
 
     val fromPropsOpt = sys.props
       .get("coursier.repositories")
+      .map(_.trim)
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "Java property coursier.repositories"))
 
