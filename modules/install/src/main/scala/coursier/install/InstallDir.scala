@@ -86,6 +86,9 @@ import scala.util.control.NonFatal
     Updatable.delete(baseDir, launcher, auxExtension, verbosity)
   }
 
+  private[install] def actualDest(name: String): Path =
+    actualDest(baseDir.resolve(name))
+
   private def actualDest(dest: Path): Path =
     if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest

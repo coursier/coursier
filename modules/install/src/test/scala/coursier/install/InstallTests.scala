@@ -10,6 +10,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
+import coursier.launcher.Preamble
 import coursier.util.{Sync, Task}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
@@ -130,11 +131,24 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
     fis.close()
   }
 
-  private def appDescriptor(raw: RawAppDescriptor) = {
+  private def appInfo(raw: RawAppDescriptor, id: String): AppInfo = {
     val appDesc = raw.appDescriptor.toOption.get
     val descRepr = raw.repr.getBytes(StandardCharsets.UTF_8)
-    (appDesc, descRepr)
+    val rawSource = RawSource(Nil, "inline", id)
+    AppInfo(
+      appDesc,
+      descRepr,
+      rawSource.source.toOption.getOrElse(???),
+      rawSource.repr.getBytes(StandardCharsets.UTF_8)
+    )
   }
+
+  private def installDir(tmpDir: Path) =
+    InstallDir(tmpDir, cache)
+      .withOs("linux")
+      .withPlatform(InstallDir.platform("linux"))
+      .withPlatformExtensions(InstallDir.platformExtensions("linux"))
+      .withBasePreamble(Preamble())
 
   override protected def afterAll(): Unit = {
     pool.shutdown()
@@ -142,22 +156,19 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   it should "generate an echo launcher" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
+    val id = "echo"
+    val appInfo0 = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-        .withRepositories(List("central"))
+        .withRepositories(List("central")),
+      id
     )
 
-    val launcher = tmpDir.resolve("echo")
+    val installDir0 = installDir(tmpDir)
 
-    val installDir = InstallDir(tmpDir, cache)
-
-    val created = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher
-    )
-
+    val created = installDir0.createOrUpdate(appInfo0)
     assert(created.exists(identity))
+
+    val launcher = installDir0.actualDest(id)
     assert(Files.isRegularFile(launcher))
 
     val urls = stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-urls")
@@ -174,23 +185,20 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   it should "generate an echo assembly" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
+    val id = "echo"
+    val appInfo0 = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
         .withRepositories(List("central"))
-        .withLauncherType("assembly")
+        .withLauncherType("assembly"),
+      id
     )
 
-    val launcher = tmpDir.resolve("echo")
+    val installDir0 = installDir(tmpDir)
 
-    val installDir = InstallDir(tmpDir, cache)
-
-    val created = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher
-    )
-
+    val created = installDir0.createOrUpdate(appInfo0)
     assert(created.exists(identity))
+
+    val launcher = installDir0.actualDest(id)
     assert(Files.isRegularFile(launcher))
 
     assertHasEntry(launcher.toFile, "coursier/echo/Echo.class")
@@ -202,23 +210,20 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   it should "generate an echo standalone launcher" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
+    val id = "echo"
+    val appInfo0 = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
         .withRepositories(List("central"))
-        .withLauncherType("standalone")
+        .withLauncherType("standalone"),
+      id
     )
 
-    val launcher = tmpDir.resolve("echo")
+    val installDir0 = installDir(tmpDir)
 
-    val installDir = InstallDir(tmpDir, cache)
-
-    val created = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher
-    )
-
+    val created = installDir0.createOrUpdate(appInfo0)
     assert(created.exists(identity))
+
+    val launcher = installDir0.actualDest(id)
     assert(Files.isRegularFile(launcher))
 
     assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/ResourcesLauncher.class")
@@ -237,23 +242,20 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   it should "not update an already up-to-date launcher" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
+    val id = "echo"
+    val appInfo0 = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-        .withRepositories(List("central"))
+        .withRepositories(List("central")),
+      id
     )
 
-    val launcher = tmpDir.resolve("echo")
-
-    val installDir = InstallDir(tmpDir, cache)
+    val installDir0 = installDir(tmpDir)
       .withVerbosity(1)
 
-    val created = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher
-    )
-
+    val created = installDir0.createOrUpdate(appInfo0)
     assert(created.exists(identity))
+
+    val launcher = installDir0.actualDest(id)
     assert(Files.isRegularFile(launcher))
 
     def testRun(): Unit = {
@@ -264,12 +266,7 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
     testRun()
 
-    val updated = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher
-    )
-
+    val updated = installDir0.createOrUpdate(appInfo0)
     assert(updated.exists(!_))
 
     testRun()
@@ -277,31 +274,28 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   it should "update a launcher" in withTempDir { tmpDir =>
 
-    val (appDesc, descRepr) = appDescriptor(
+    val id = "echo"
+    val appInfo0 = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
         .withRepositories(List("central"))
-        .withLauncherType("standalone") // easier to test
+        .withLauncherType("standalone"), // easier to test
+      id
     )
 
-    val launcher = tmpDir.resolve("echo")
+    val installDir0 = installDir(tmpDir)
+      .withVerbosity(1)
 
     val now = {
       val t = Instant.now()
       t.minusNanos(t.getNano) // seems nano part isn't persisted
     }
 
-    val installDir = InstallDir(tmpDir, cache)
-      .withVerbosity(1)
-
-    val created = installDir.createOrUpdate(
-      Some((appDesc, descRepr)),
-      None,
-      launcher,
-      currentTime = now.plusSeconds(-30)
-    )
-
-    Predef.assert(Files.getLastModifiedTime(launcher).toInstant == now.plusSeconds(-30), s"now=$now, 30s before=${now.plusSeconds(-30)}")
+    val created = installDir0.createOrUpdate(appInfo0, currentTime = now.plusSeconds(-30))
     assert(created.exists(identity))
+
+    val launcher = installDir0.actualDest(id)
+    Predef.assert(Files.getLastModifiedTime(launcher).toInstant == now.plusSeconds(-30), s"now=$now, 30s before=${now.plusSeconds(-30)}")
+
     assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
     assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
 
@@ -313,18 +307,14 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
 
     testRun()
 
-    val (newAppDesc, newDescRepr) = appDescriptor(
+    val newAppInfo = appInfo(
       RawAppDescriptor(List("io.get-coursier:echo:1.0.2")) // bump version
         .withRepositories(List("central"))
-        .withLauncherType("standalone") // easier to test
+        .withLauncherType("standalone"), // easier to test
+      "echo"
     )
 
-    val updated = installDir.createOrUpdate(
-      Some((newAppDesc, newDescRepr)),
-      None,
-      launcher,
-      currentTime = now
-    )
+    val updated = installDir0.createOrUpdate(newAppInfo, currentTime = now)
 
     // randomly seeing the old file on OS X if we don't check that :|
     assert(Files.getLastModifiedTime(launcher).toInstant == now)
@@ -337,16 +327,15 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
   }
 
   // it should "generate a native echo launcher via native-image" in withTempDir { tmpDir =>
-
-  //   val (appDesc, descRepr) = appDescriptor(
+  //   val id = "echo"
+  //   val appInfo0 = appInfo(
   //     RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
   //       .withRepositories(List("central"))
-  //       .withLauncherType("graalvm-native-image")
+  //       .withLauncherType("graalvm-native-image"),
+  //     id
   //   )
 
-  //   val launcher = tmpDir.resolve("echo")
-
-  //   val installDir = InstallDir(tmpDir, cache)
+  //   val installDir0 = installDir(tmpDir)
   //     .withVerbosity(1)
   //     .withGraalvmParamsOpt {
   //       Option(System.getenv("GRAALVM_HOME"))
@@ -364,13 +353,10 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
   //     }
   //   )
 
-  //   val created = installDir.createOrUpdate(
-  //     Some((appDesc, descRepr)),
-  //     None,
-  //     launcher
-  //   )
-
+  //   val created = installDir0.createOrUpdate(appInfo0)
   //   assert(created)
+
+  //   val launcher = installDir0.actualDest(id)
   //   assert(Files.isRegularFile(launcher))
 
   //   assertNativeExecutable(launcher.toFile)
@@ -385,11 +371,11 @@ class InstallTests extends AnyFlatSpec with BeforeAndAfterAll {
     val app = tmpDir.resolve("foo")
     Files.write(app, Array.emptyByteArray)
 
-    val installDir = InstallDir(tmpDir, cache)
+    val installDir0 = installDir(tmpDir)
       .withVerbosity(1)
 
     val gotException = try {
-      installDir.delete("foo")
+      installDir0.delete("foo")
       false
     } catch {
       case _: InstallDir.NotAnApplication =>
