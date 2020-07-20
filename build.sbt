@@ -289,11 +289,11 @@ lazy val install = project("install")
   .settings(
     shared,
     coursierPrefix,
+    utest,
     libs ++= Seq(
       Deps.argonautShapeless,
       Deps.catsCore,
-      Deps.dataClass % Provided,
-      Deps.scalatest % Test
+      Deps.dataClass % Provided
     ),
     addBootstrapJarResourceInTests
   )
