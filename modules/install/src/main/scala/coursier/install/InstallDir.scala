@@ -366,15 +366,7 @@ import scala.util.control.NonFatal
       }
 
       writtenOpt <- Task.delay {
-        val writtenOpt0 = InstallDir(baseDir, cache)
-          .withVerbosity(verbosity)
-          .withGraalvmParamsOpt(graalvmParamsOpt)
-          .withCoursierRepositories(coursierRepositories)
-          .createOrUpdate(
-            appInfo,
-            currentTime,
-            force
-          )
+        val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
         if (!writtenOpt0.exists(!_) && verbosity >= 1)
           System.err.println(s"No new update for $name\n")
         writtenOpt0
