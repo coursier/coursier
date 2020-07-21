@@ -359,7 +359,15 @@ object InstallTests extends TestSuite {
           "echo"
         )
 
-        val updated = installDir0.createOrUpdate(newAppInfo, currentTime = now)
+        val updated = installDir0.maybeUpdate(
+          id,
+          src =>
+            if (src == newAppInfo.source)
+              Task.point(Some(("inline", newAppInfo.appDescriptorBytes)))
+            else
+              Task.fail(new Exception(s"Invalid source: $src")),
+          currentTime = now
+        ).unsafeRun()(cache.ec)
 
         // randomly seeing the old file on OS X if we don't check that :|
         assert(Files.getLastModifiedTime(launcher).toInstant == now)

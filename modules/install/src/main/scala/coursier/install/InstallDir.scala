@@ -341,7 +341,7 @@ import scala.util.control.NonFatal
           System.err.println(s"Looking at $name")
       }
 
-      launcher = baseDir.resolve(name)
+      launcher = actualDest(name)
 
       sourceAndBytes <- Task.fromEither(InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher")))
       (source, sourceBytes) = sourceAndBytes
