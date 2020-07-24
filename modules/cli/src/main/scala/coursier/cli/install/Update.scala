@@ -4,7 +4,7 @@ import java.time.Instant
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
-import coursier.install.{Channels, InstallDir, Updatable}
+import coursier.install.{Channels, InstallDir}
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
@@ -20,12 +20,6 @@ object Update extends CaseApp[UpdateOptions] {
       case Right(p) => p
     }
 
-    val names =
-      if (args.all.isEmpty)
-        Updatable.list(params.shared.dir)
-      else
-        args.all
-
     val now = Instant.now()
 
     val pool = Sync.fixedThreadPool(params.cache.parallel)
@@ -38,8 +32,14 @@ object Update extends CaseApp[UpdateOptions] {
     }
 
     val installDir = params.shared.installDir(cache)
-        .withVerbosity(params.output.verbosity)
-        .withNativeImageJavaHome(Some(graalvmHome))
+      .withVerbosity(params.output.verbosity)
+      .withNativeImageJavaHome(Some(graalvmHome))
+
+    val names =
+      if (args.all.isEmpty)
+        installDir.list()
+      else
+        args.all
 
     val tasks = names.map { name =>
       installDir.maybeUpdate(

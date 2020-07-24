@@ -2,7 +2,6 @@ package coursier.install
 
 import java.nio.channels.{FileChannel, FileLock}
 import java.nio.file.{Files, Path, StandardOpenOption, StandardCopyOption}
-import java.util.stream.Stream
 
 import coursier.cache.CacheLocks
 import coursier.launcher.internal.FileUtil
@@ -12,25 +11,6 @@ import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 object Updatable {
-
-  def list(dir: Path): Seq[String] =
-    if (Files.isDirectory(dir)) {
-      var s: Stream[Path] = null
-      try {
-        s = Files.list(dir)
-        s.iterator()
-          .asScala
-          .filter(p => !p.getFileName.toString.startsWith("."))
-          .filter(InfoFile.isInfoFile)
-          .map(_.getFileName.toString)
-          .toVector
-          .sorted
-      } finally {
-        if (s != null)
-          s.close()
-      }
-    } else
-      Nil
 
   private final case class RelatedFiles(
     dest: Path,

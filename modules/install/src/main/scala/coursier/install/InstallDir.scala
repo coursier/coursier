@@ -6,6 +6,7 @@ import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.Instant
 import java.util.Locale
+import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
 import coursier.Fetch
@@ -20,6 +21,7 @@ import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
 import dataclass._
 
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 @data class InstallDir(
@@ -84,6 +86,15 @@ import scala.util.control.NonFatal
   def delete(appName: String): Option[Boolean] = {
     val launcher = actualDest(baseDir.resolve(appName))
     Updatable.delete(baseDir, launcher, auxExtension, verbosity)
+  }
+
+  private[install] def actualDest(name: String): Path =
+    actualDest(baseDir.resolve(name))
+
+  private def actualName(dest: Path): String = {
+    val name = dest.getFileName.toString
+    if (isWindows) name.stripSuffix(".bat")
+    else name
   }
 
   private def actualDest(dest: Path): Path =
@@ -338,7 +349,7 @@ import scala.util.control.NonFatal
           System.err.println(s"Looking at $name")
       }
 
-      launcher = baseDir.resolve(name)
+      launcher = actualDest(name)
 
       sourceAndBytes <- Task.fromEither(InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher")))
       (source, sourceBytes) = sourceAndBytes
@@ -363,15 +374,7 @@ import scala.util.control.NonFatal
       }
 
       writtenOpt <- Task.delay {
-        val writtenOpt0 = InstallDir(baseDir, cache)
-          .withVerbosity(verbosity)
-          .withGraalvmParamsOpt(graalvmParamsOpt)
-          .withCoursierRepositories(coursierRepositories)
-          .createOrUpdate(
-            appInfo,
-            currentTime,
-            force
-          )
+        val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
         if (!writtenOpt0.exists(!_) && verbosity >= 1)
           System.err.println(s"No new update for $name\n")
         writtenOpt0
@@ -382,6 +385,24 @@ import scala.util.control.NonFatal
     EnvironmentUpdate()
       .withPathLikeAppends(Seq("PATH" -> baseDir.toAbsolutePath.toString))
 
+  def list(): Seq[String] =
+    if (Files.isDirectory(baseDir)) {
+      var s: Stream[Path] = null
+      try {
+        s = Files.list(baseDir)
+        s.iterator()
+          .asScala
+          .filter(p => !p.getFileName.toString.startsWith("."))
+          .filter(InfoFile.isInfoFile)
+          .map(actualName)
+          .toVector
+          .sorted
+      } finally {
+        if (s != null)
+          s.close()
+      }
+    } else
+      Nil
 }
 
 object InstallDir {

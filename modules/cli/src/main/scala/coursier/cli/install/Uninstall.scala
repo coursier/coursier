@@ -11,18 +11,8 @@ import coursier.util.Artifact
 import coursier.cache.ArtifactError
 import java.io.File
 import scala.concurrent.ExecutionContext
-import coursier.install.Updatable
 
 object Uninstall extends CaseApp[UninstallOptions] {
-
-  private final class NoopCache extends Cache[Task] {
-    def ec = ExecutionContext.global
-    def fetch: Cache.Fetch[Task] =
-      _ => EitherT(Task.point[Either[String, String]](Left("unexpected download attempt")))
-    def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
-      EitherT(Task.point[Either[ArtifactError, File]](Left(new ArtifactError.DownloadError("unexpected download attempt", None))))
-  }
-
 
   def run(options: UninstallOptions, args: RemainingArgs): Unit = {
 
@@ -47,7 +37,7 @@ object Uninstall extends CaseApp[UninstallOptions] {
       .withVerbosity(params.verbosity)
 
     val list =
-      if (params.all) Updatable.list(params.dir)
+      if (params.all) installDir.list()
       else args0
 
     if (list.isEmpty) {

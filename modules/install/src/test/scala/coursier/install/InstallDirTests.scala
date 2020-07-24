@@ -1,33 +1,34 @@
 package coursier.install
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.flatspec.AnyFlatSpec
 import java.nio.file.Paths
 import coursier.launcher.Parameters
+import utest._
 
-class InstallDirTests extends AnyFlatSpec with BeforeAndAfterAll {
+object InstallDirTests extends TestSuite {
 
-  it should "pass the GraalVM version to launcher params" in {
+  val tests = Tests {
+    test("pass the GraalVM version to launcher params") {
 
-    val version = "X.Y.Z"
+      val version = "X.Y.Z"
 
-    val installDir = InstallDir()
-      .withGraalvmParamsOpt(Some(GraalvmParams(Some(version), Nil)))
+      val installDir = InstallDir()
+        .withGraalvmParamsOpt(Some(GraalvmParams(Some(version), Nil)))
 
-    val params = installDir.params(
-      AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),
-      AppArtifacts(),
-      Nil,
-      "main.class",
-      Paths.get("/foo")
-    )
+      val params = installDir.params(
+        AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),
+        AppArtifacts(),
+        Nil,
+        "main.class",
+        Paths.get("/foo")
+      )
 
-    val nativeParams = params match {
-      case n: Parameters.NativeImage => n
-      case _ => sys.error(s"Unrecognized parameters type: $params")
+      val nativeParams = params match {
+        case n: Parameters.NativeImage => n
+        case _ => sys.error(s"Unrecognized parameters type: $params")
+      }
+
+      assert(nativeParams.graalvmVersion == Some(version))
     }
-
-    assert(nativeParams.graalvmVersion == Some(version))
   }
 
 }
