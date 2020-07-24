@@ -9,6 +9,6 @@ object List extends CaseApp[ListOptions] {
     val params = ListParams(options)
     val installDir = InstallDir(params.installPath, new NoopCache)
     val names = installDir.list()
-    System.err.print(names.map(_ + System.lineSeparator).mkString)
+    print(names.map(_ + System.lineSeparator).mkString)
   }
 }
