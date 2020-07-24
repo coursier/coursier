@@ -2,12 +2,13 @@ package coursier.cli.install
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
-import coursier.install.Updatable
+import coursier.install.InstallDir
 
 object List extends CaseApp[ListOptions] {
   def run(options: ListOptions, args: RemainingArgs): Unit = {
     val params = ListParams(options)
-    val names = Updatable.list(params.installPath)
+    val installDir = InstallDir(params.installPath, new NoopCache)
+    val names = installDir.list()
     System.err.print(names.map(_ + System.lineSeparator).mkString)
   }
 }

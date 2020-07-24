@@ -195,6 +195,10 @@ object InstallTests extends TestSuite {
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
+
+        val appList = installDir0.list()
+        val expectedAppList = Seq(id)
+        assert(appList == expectedAppList)
       }
 
       test("linux") - run("linux")
