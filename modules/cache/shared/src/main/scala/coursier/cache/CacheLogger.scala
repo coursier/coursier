@@ -38,13 +38,12 @@ trait CacheLogger {
 object CacheLogger {
   final class Using[T](logger: CacheLogger) {
     def apply[F[_]](task: F[T])(implicit sync: Sync[F]): F[T] =
-      sync.delay(logger.init()).flatMap { _ =>
-        sync.attempt(task).flatMap { a =>
-          sync.delay(logger.stop()).flatMap { _ =>
-            sync.fromAttempt(a)
-          }
-        }
-      }
+      for {
+        _ <- sync.delay(logger.init())
+        a <- sync.attempt(task)
+        _ <- sync.delay(logger.stop())
+        t <- sync.fromAttempt(a)
+      } yield t
   }
   def nop: CacheLogger =
     new CacheLogger {}

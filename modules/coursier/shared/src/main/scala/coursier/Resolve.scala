@@ -156,14 +156,13 @@ import dataclass.{data, since}
           }
       }
 
-    run(initialRes).flatMap(validate0).flatMap { res0 =>
-      recurseOnRules(res0, resolutionParams.actualRules).flatMap {
-        case (res0, conflicts) =>
-          validateAllRules(res0, resolutionParams.actualRules).map { _ =>
-            (res0, conflicts)
-          }
-      }
-    }
+    for {
+      res0 <- run(initialRes)
+      res1 <- validate0(res0)
+      t <- recurseOnRules(res1, resolutionParams.actualRules)
+      (res2, conflicts) = t
+      _ <- validateAllRules(res2, resolutionParams.actualRules)
+    } yield (res2, conflicts)
   }
 
   def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] =
@@ -304,16 +303,8 @@ object Resolve extends PlatformResolve {
       .run(fetch, maxIterations)
 
     loggerOpt match {
-      case None =>
-        task
-      case Some(logger) =>
-        S.delay(logger.init()).flatMap { _ =>
-          S.attempt(task).flatMap { a =>
-            S.delay(logger.stop()).flatMap { _ =>
-              S.fromAttempt(a)
-            }
-          }
-        }
+      case None => task
+      case Some(logger) => logger.using(task)
     }
   }
 

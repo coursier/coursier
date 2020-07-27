@@ -423,11 +423,10 @@ object ResolutionProcess {
       .toVector
       .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])])) {
         (acc, l) =>
-          acc.flatMap { v =>
-            fetch(l).map { e =>
-              v ++ e
-            }
-          }
+          for {
+            v <- acc
+            e <- fetch(l)
+          } yield v ++ e
       }
   }
 

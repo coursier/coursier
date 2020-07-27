@@ -62,13 +62,7 @@ import dataclass._
       }
 
     val t0 = cache.loggerOpt.fold(t) { logger =>
-      F.delay(logger.init()).flatMap { _ =>
-        F.attempt(t).flatMap { e =>
-          F.delay(logger.stop()).flatMap { _ =>
-            F.fromAttempt(e)
-          }
-        }
-      }
+      logger.using(t)
     }
 
     t0.map { l =>

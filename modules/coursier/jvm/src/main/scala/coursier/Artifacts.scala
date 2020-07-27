@@ -302,27 +302,17 @@ object Artifacts {
 
     // sequential accumulation (we don't have higher level libraries to ease that here…)
     val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
-      // for (l <- acc; l0 <- f) yield l ++ l0
-      acc.flatMap { l =>
-        f.map { l0 =>
-          l ++ l0
-        }
-      }
+      for {
+        l <- acc
+        l0 <- f
+      } yield l ++ l0
     }
 
     val loggerOpt = cache.loggerOpt
 
     val task = loggerOpt match {
-      case None =>
-        gathered
-      case Some(logger) =>
-        S.delay(logger.init(sizeHint = Some(artifacts.length))).flatMap { _ =>
-          S.attempt(gathered).flatMap { a =>
-            S.delay(logger.stop()).flatMap { _ =>
-              S.fromAttempt(a)
-            }
-          }
-        }
+      case None => gathered
+      case Some(logger) => logger.using(gathered)
     }
 
     task.flatMap { results =>
