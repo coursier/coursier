@@ -21,10 +21,14 @@ object Get extends CaseApp[GetOptions] {
     val cache = params.cache.cache(pool, params.output.logger())
 
     val artifacts = args.all.map { rawUrl =>
-      if (rawUrl.endsWith("?changing") || rawUrl.endsWith("?changing=true"))
-        Artifact(rawUrl).withChanging(true)
+      if (rawUrl.endsWith("?changing"))
+        Artifact(rawUrl.stripSuffix("?changing")).withChanging(true)
+      else if (rawUrl.endsWith("?changing=true"))
+        Artifact(rawUrl.stripSuffix("?changing=true")).withChanging(true)
+      else if (rawUrl.endsWith("?changing=false"))
+        Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(true)
       else
-        Artifact(rawUrl)
+        Artifact(rawUrl).withChanging(params.changing)
     }
 
     if (artifacts.isEmpty)
