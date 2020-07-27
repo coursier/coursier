@@ -4,7 +4,7 @@ import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.net.{HttpURLConnection, URLConnection}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{FileAlreadyExistsException, Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -701,12 +701,16 @@ import scala.util.control.NonFatal
 
                         val bytes = md.digest()
 
-                        /* Atomically write file. In the case of multiple processes/threads which all compute this
-                         *  digest, last thread wins. This should be fine as long as files are completely written.
-                         */
-                        val tmpFile = File.createTempFile(s"coursier", cacheFile.getName).toPath
-                        Files.write(tmpFile, bytes)
-                        Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
+                        // Atomically write file by using a temp file in the same directory
+                        val tmpFile = File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
+                        try {
+                          Files.write(tmpFile, bytes)
+                          try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
+                          catch {
+                            // In the case of multiple processes/threads which all compute this digest, first thread wins.
+                            case _: FileAlreadyExistsException => ()
+                          }
+                        } finally Files.deleteIfExists(tmpFile)
 
                         bytes
                     }
