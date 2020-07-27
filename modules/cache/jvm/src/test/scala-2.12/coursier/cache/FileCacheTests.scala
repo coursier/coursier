@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Paths, StandardCopyOption, StandardOpenOption}
 import java.util
 
 import cats.effect.IO
@@ -1077,6 +1077,60 @@ object FileCacheTests extends TestSuite {
             val actual = Files.readAllBytes(computedPath)
             assert(util.Arrays.equals(actual, expected))
           case Left(e) => throw e
+        }
+      }
+    }
+
+    // todo: should probably refactor so we get a fresh folder for each test run
+    "wrong stored digest should fail" - {
+      val fooXml = Option(getClass.getResource("/data/foo.xml")) match {
+        case Some(resourceStr) => resourceStr.toURI.toASCIIString.substring("file:".length)
+        case None => throw new Exception("data/foo.xml resource not found")
+      }
+      val fooSha1 = fooXml + ".sha1"
+
+      // copy to foo_fail to not clobber other tests
+      val fooFailXml = fooXml.replaceAllLiterally("foo", "foo_fail")
+      val fooFailSha1 = fooSha1.replaceAllLiterally("foo", "foo_fail")
+
+      Files.copy(Paths.get(fooXml), Paths.get(fooFailXml), StandardCopyOption.REPLACE_EXISTING)
+      Files.copy(Paths.get(fooSha1), Paths.get(fooFailSha1), StandardCopyOption.REPLACE_EXISTING)
+
+      val computedPath = {
+        val file = new File(fooFailXml)
+        Paths.get(s"${file.getParent}/.${file.getName}__sha1.computed")
+      }
+
+      // delete if remaining for earlier test run
+      Files.deleteIfExists(computedPath)
+
+      val artifact = Artifact(
+        "file:" + fooFailXml,
+        Map("SHA-1" -> ("file:" + fooFailSha1)),
+        Map(),
+        changing = false,
+        optional = false,
+        None
+      )
+
+      * - async {
+        val Right(file: File) = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-1")))
+            .file(artifact)
+            .run
+            .future()
+        }
+
+        Files.write(computedPath, Array(1: Byte, 2: Byte, 3: Byte))
+
+        val Left(_: coursier.cache.ArtifactError.WrongChecksum) = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-1")))
+            .withRetry(0)
+            .file(artifact)
+            .run
+            .future()
         }
       }
     }
