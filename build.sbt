@@ -38,7 +38,10 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
     Mima.previousArtifacts,
     Mima.utilFilters,
     dontPublishScalaJsIn("2.11"),
-    libs += Deps.dataClass % Provided
+    libs ++= Seq(
+      Deps.dataClass % Provided,
+      Deps.simulacrum % Provided
+    )
   )
 
 lazy val utilJvm = util.jvm

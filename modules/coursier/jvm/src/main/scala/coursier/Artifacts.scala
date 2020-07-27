@@ -7,6 +7,7 @@ import coursier.cache.{ArtifactError, Cache}
 import coursier.core.Publication
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
+import coursier.util.Monad.ops._
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
@@ -50,7 +51,7 @@ import dataclass._
     withTransformArtifacts(transformArtifacts :+ f)
 
   def io: F[Seq[(Artifact, File)]] =
-    S.map(ioResult)(_.artifacts)
+    ioResult.map(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
 
@@ -83,7 +84,7 @@ import dataclass._
       otherCaches: _*
     )(S)
 
-    S.map(res) { l =>
+    res.map { l =>
       val l0 = l.map {
         case (a, f) =>
           byArtifact.get(a) match {
@@ -294,7 +295,7 @@ object Artifacts {
     val tasks = groupedArtifacts.map { l =>
       val tasks0 = l.map { artifact =>
         val file0 = cache.file(artifact)
-        S.map(file0.run)(artifact.->)
+        file0.run.map(artifact.->)
       }
       S.gather(tasks0)
     }
@@ -302,8 +303,8 @@ object Artifacts {
     // sequential accumulation (we don't have higher level libraries to ease that here…)
     val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
       // for (l <- acc; l0 <- f) yield l ++ l0
-      S.bind(acc) { l =>
-        S.map(f) { l0 =>
+      acc.flatMap { l =>
+        f.map { l0 =>
           l ++ l0
         }
       }
@@ -315,16 +316,16 @@ object Artifacts {
       case None =>
         gathered
       case Some(logger) =>
-        S.bind(S.delay(logger.init(sizeHint = Some(artifacts.length)))) { _ =>
-          S.bind(S.attempt(gathered)) { a =>
-            S.bind(S.delay(logger.stop())) { _ =>
+        S.delay(logger.init(sizeHint = Some(artifacts.length))).flatMap { _ =>
+          S.attempt(gathered).flatMap { a =>
+            S.delay(logger.stop()).flatMap { _ =>
               S.fromAttempt(a)
             }
           }
         }
     }
 
-    S.bind(task) { results =>
+    task.flatMap { results =>
 
       val ignoredErrors = new mutable.ListBuffer[(Artifact, ArtifactError)]
       val errors = new mutable.ListBuffer[(Artifact, ArtifactError)]
@@ -354,7 +355,7 @@ object Artifacts {
         if (errors.isEmpty && ignoredErrors.isEmpty)
           S.point(result(false))
         else
-          S.map(fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*)) { l =>
+          fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*).map { l =>
             reorder(result(false) ++ l)
           }
       }

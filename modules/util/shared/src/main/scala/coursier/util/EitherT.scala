@@ -1,15 +1,17 @@
 package coursier.util
 
+import coursier.util.Monad.ops._
+
 final case class EitherT[F[_], L, R](run: F[Either[L, R]]) {
 
   def map[S](f: R => S)(implicit M: Monad[F]): EitherT[F, L, S] =
     EitherT(
-      M.map(run)(e => e.map(f))
+      run.map(_.map(f))
     )
 
   def flatMap[S](f: R => EitherT[F, L, S])(implicit M: Monad[F]): EitherT[F, L, S] =
     EitherT(
-      M.bind(run) {
+      run.flatMap {
         case Left(l) =>
           M.point(Left(l))
         case Right(r) =>
@@ -19,12 +21,12 @@ final case class EitherT[F[_], L, R](run: F[Either[L, R]]) {
 
   def leftMap[M](f: L => M)(implicit M: Monad[F]): EitherT[F, M, R] =
     EitherT(
-      M.map(run)(e => e.left.map(f))
+      run.map(_.left.map(f))
     )
 
   def leftFlatMap[S](f: L => EitherT[F, S, R])(implicit M: Monad[F]): EitherT[F, S, R] =
     EitherT(
-      M.bind(run) {
+      run.flatMap {
         case Left(l) =>
           f(l).run
         case Right(r) =>
@@ -34,7 +36,7 @@ final case class EitherT[F[_], L, R](run: F[Either[L, R]]) {
 
   def orElse(other: => EitherT[F, L, R])(implicit M: Monad[F]): EitherT[F, L, R] =
     EitherT(
-      M.bind(run) {
+      run.flatMap {
         case Left(_) =>
           other.run
         case Right(r) =>

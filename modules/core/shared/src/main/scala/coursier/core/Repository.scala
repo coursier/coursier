@@ -3,6 +3,7 @@ package coursier.core
 import coursier.core.compatibility.encodeURIComponent
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Monad}
+import coursier.util.Monad.ops._
 import dataclass.data
 
 trait Repository extends Serializable with ArtifactSource {
@@ -153,7 +154,7 @@ object Repository {
       val idx = orgInput.input.lastIndexOf('.')
       if (idx > 0) {
         val truncatedInput = Complete.Input.Org(orgInput.input.take(idx))
-        F.bind(hasOrg(truncatedInput, partial = true)) {
+        hasOrg(truncatedInput, partial = true).flatMap {
           case false =>
             F.point(false)
           case true =>
@@ -173,7 +174,7 @@ object Repository {
     def sbtAttrStub: Boolean = false
 
     def hasModule(module: Module, sbtAttrStub: Boolean = sbtAttrStub)(implicit F: Monad[F]): F[Boolean] =
-      F.bind(hasOrg(Complete.Input.Org(module.organization.value), partial = false)) {
+      hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
         case false => F.point(false)
         case true =>
           val prefix = s"${module.organization.value}:"
@@ -213,20 +214,20 @@ object Repository {
           if (idx < 0)
             org(orgInput)
           else
-            F.bind(hasOrg(Complete.Input.Org(orgInput.input.take(idx)), partial = true)) {
+            hasOrg(Complete.Input.Org(orgInput.input.take(idx)), partial = true).flatMap {
               case false => empty
               case true => org(orgInput)
             }
         case nameInput: Complete.Input.Name =>
-          F.bind(hasOrg(nameInput.orgInput, partial = false)) {
+          hasOrg(nameInput.orgInput, partial = false).flatMap {
             case false => empty
             case true => name(nameInput)
           }
         case verInput: Complete.Input.Ver =>
-          F.bind(hasOrg(verInput.orgInput, partial = false)) {
+          hasOrg(verInput.orgInput, partial = false).flatMap {
             case false => empty
             case true =>
-              F.bind(hasName(verInput.nameInput)) {
+              hasName(verInput.nameInput).flatMap {
                 case false => empty
                 case true => ver(verInput)
               }

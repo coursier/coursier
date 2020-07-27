@@ -3,6 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{Artifact, EitherT, Monad, WebPage}
+import coursier.util.Monad.ops._
 import dataclass._
 
 object MavenRepository {
@@ -259,7 +260,7 @@ object MavenRepository {
 
     val viaMetadata = EitherT[F, String, (Versions, String)] {
       val artifact = versionsArtifact(module)
-      F.map(fetch(artifact).run) { eitherStr =>
+      fetch(artifact).run.map { eitherStr =>
         for {
           str <- eitherStr
           xml <- compatibility.xmlParseDom(str)
@@ -286,7 +287,7 @@ object MavenRepository {
       snapshotVersioningArtifact(module, version) match {
         case None => F.point(Left("Not supported"))
         case Some(artifact) =>
-          F.map(fetch(artifact).run) { eitherStr =>
+          fetch(artifact).run.map { eitherStr =>
             for {
               str <- eitherStr
               xml <- compatibility.xmlParseDom(str)
@@ -323,9 +324,9 @@ object MavenRepository {
           }
         }
 
-      val res = F.bind(findVersioning(module, version, None, fetch).run) { eitherProj =>
+      val res = findVersioning(module, version, None, fetch).run.flatMap { eitherProj =>
         if (eitherProj.isLeft && isSnapshot(version))
-          F.map(withSnapshotVersioning.run)(eitherProj0 =>
+          withSnapshotVersioning.run.map(eitherProj0 =>
             if (eitherProj0.isLeft)
               eitherProj
             else
@@ -336,7 +337,7 @@ object MavenRepository {
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      F.map(res)(_.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
+      res.map(_.map(proj => (this, proj.withActualVersionOpt(Some(version)))))
     }
 
   private[maven] def artifactFor(url: String, changing: Boolean) =

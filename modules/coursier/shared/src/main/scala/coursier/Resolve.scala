@@ -11,6 +11,7 @@ import coursier.internal.Typelevel
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
+import coursier.util.Monad.ops._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -55,7 +56,7 @@ import dataclass.{data, since}
   }
 
   def finalRepositories: F[Seq[Repository]] =
-    S.map(allMirrors)(Mirror.replace(repositories, _))
+    allMirrors.map(Mirror.replace(repositories, _))
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)
@@ -98,7 +99,7 @@ import dataclass.{data, since}
 
   private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
     val fetchs = cache.fetchs
-    S.map(finalRepositories)(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail)(S))
+    finalRepositories.map(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail)(S))
   }
 
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
@@ -128,14 +129,14 @@ import dataclass.{data, since}
             case Left(c) =>
               S.fromAttempt(Left(c))
             case Right(Left(c)) =>
-              S.map(recurseOnRules(res, t)) {
+              recurseOnRules(res, t).map {
                 case (res0, conflicts) =>
                   (res0, c :: conflicts)
               }
             case Right(Right(None)) =>
               recurseOnRules(res, t)
             case Right(Right(Some(newRes))) =>
-              S.bind(S.bind(run(newRes.withDependencySet(DependencySet.empty)))(validate0)) { res0 =>
+              run(newRes.withDependencySet(DependencySet.empty)).flatMap(validate0).flatMap { res0 =>
                 // FIXME check that the rule passes after it tried to address itself
                 recurseOnRules(res0, t)
               }
@@ -155,10 +156,10 @@ import dataclass.{data, since}
           }
       }
 
-    S.bind(S.bind(run(initialRes))(validate0)) { res0 =>
-      S.bind(recurseOnRules(res0, resolutionParams.actualRules)) {
+    run(initialRes).flatMap(validate0).flatMap { res0 =>
+      recurseOnRules(res0, resolutionParams.actualRules).flatMap {
         case (res0, conflicts) =>
-          S.map(validateAllRules(res0, resolutionParams.actualRules)) { _ =>
+          validateAllRules(res0, resolutionParams.actualRules).map { _ =>
             (res0, conflicts)
           }
       }
@@ -166,13 +167,13 @@ import dataclass.{data, since}
   }
 
   def ioWithConflicts: F[(Resolution, Seq[UnsatisfiedRule])] =
-    S.bind(fetchVia) { f =>
+    fetchVia.flatMap { f =>
       val fetchVia0 = transformFetcher(f)
       ioWithConflicts0(fetchVia0)
     }
 
   def io: F[Resolution] =
-    S.map(ioWithConflicts)(_._1)
+    ioWithConflicts.map(_._1)
 
 }
 
@@ -306,9 +307,9 @@ object Resolve extends PlatformResolve {
       case None =>
         task
       case Some(logger) =>
-        S.bind(S.delay(logger.init())) { _ =>
-          S.bind(S.attempt(task)) { a =>
-            S.bind(S.delay(logger.stop())) { _ =>
+        S.delay(logger.init()).flatMap { _ =>
+          S.attempt(task).flatMap { a =>
+            S.delay(logger.stop()).flatMap { _ =>
               S.fromAttempt(a)
             }
           }

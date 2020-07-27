@@ -4,6 +4,7 @@ import coursier.cache.Cache
 import coursier.core.Version
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
+import coursier.util.Monad.ops._
 import dataclass._
 
 @data class Versions[F[_]](
@@ -35,10 +36,10 @@ import dataclass._
     withModuleOpt(Some(module))
 
   def versions(): F[coursier.core.Versions] =
-    F.map(result())(_.versions)
+    result().map(_.versions)
 
   def finalRepositories: F[Seq[Repository]] =
-    F.map(allMirrors)(Mirror.replace(repositories, _))
+    allMirrors.map(Mirror.replace(repositories, _))
 
   private def allMirrors0 =
     mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
@@ -49,28 +50,28 @@ import dataclass._
   def result(): F[Versions.Result] = {
 
     val t =
-      F.bind(finalRepositories) { repositories =>
+      finalRepositories.flatMap { repositories =>
         F.gather(
           for {
             mod <- moduleOpt.toSeq
             repo <- repositories
           } yield {
-            F.map(repo.versions(mod, cache.fetch).run)(repo -> _.map(_._1))
+            repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
           }
         )
       }
 
     val t0 = cache.loggerOpt.fold(t) { logger =>
-      F.bind(F.delay(logger.init())) { _ =>
-        F.bind(F.attempt(t)) { e =>
-          F.bind(F.delay(logger.stop())) { _ =>
+      F.delay(logger.init()).flatMap { _ =>
+        F.attempt(t).flatMap { e =>
+          F.delay(logger.stop()).flatMap { _ =>
             F.fromAttempt(e)
           }
         }
       }
     }
 
-    F.map(t0) { l =>
+    t0.map { l =>
       Versions.Result(l)
     }
   }

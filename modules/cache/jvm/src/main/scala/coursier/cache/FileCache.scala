@@ -8,19 +8,20 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.ExecutorService
+import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.cache.internal.FileUtil
 import coursier.core.Authentication
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
-import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
+import coursier.util.Monad.ops._
+import dataclass.data
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
-import dataclass.data
 
 @data class FileCache[F[_]](
   location: File,
@@ -114,7 +115,7 @@ import dataclass.data
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger
     ): EitherT[F, ArtifactError, Option[Long]] =
-      EitherT(S.bind(allCredentials) { allCredentials0 =>
+      EitherT(allCredentials.flatMap { allCredentials0 =>
         S.schedule(pool) {
           var conn: URLConnection = null
 
@@ -256,10 +257,11 @@ import dataclass.data
 
       def checkNeeded = ttl.fold(S.point(true)) { ttl =>
         if (ttl.isFinite)
-          S.bind(lastCheck(file)) {
+          lastCheck(file).flatMap {
             case None => S.point(true)
             case Some(ts) =>
-              S.map(S.schedule(pool)(System.currentTimeMillis()))(_ > ts + ttl.toMillis)
+              S.schedule(pool)(System.currentTimeMillis())
+                .map(_ > ts + ttl.toMillis)
           }
         else
           S.point(false)
@@ -279,17 +281,17 @@ import dataclass.data
 
       checkErrFile.flatMap { _ =>
         EitherT {
-          S.bind(fileExists(file)) {
+          fileExists(file).flatMap {
             case false =>
               S.point(Right(true))
             case true =>
-              S.bind(checkNeeded) {
+              checkNeeded.flatMap {
                 case false =>
                   S.point(Right(false))
                 case true if !checkRemote =>
                   S.point(Right(true))
                 case true if checkRemote =>
-                  S.bind(check.run) {
+                  check.run.flatMap {
                     case Right(false) =>
                       S.schedule(pool) {
                         doTouchCheckFile(file, url, updateLinks = false)
@@ -309,7 +311,7 @@ import dataclass.data
       url: String,
       keepHeaderChecksums: Boolean
     ): EitherT[F, ArtifactError, Unit] =
-      EitherT(S.bind(allCredentials) { allCredentials0 =>
+      EitherT(allCredentials.flatMap { allCredentials0 =>
         S.schedule(pool) {
 
           val tmp = CachePath.temporaryFile(file)
@@ -545,11 +547,11 @@ import dataclass.data
         }
 
       EitherT {
-        S.bind(remote(file, url, keepHeaderChecksums).run) {
+        remote(file, url, keepHeaderChecksums).run.flatMap {
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
-            S.map(createErrFile.run)(_ => err: Either[ArtifactError, Unit])
+            createErrFile.run.map(_ => err: Either[ArtifactError, Unit])
           case other =>
-            S.map(deleteErrFile.run)(_ => other)
+            deleteErrFile.run.map(_ => other)
         }
       }
     }
@@ -621,7 +623,7 @@ import dataclass.data
             }
           }
 
-        S.map(res.run)((file, url) -> _)
+        res.run.map((file, url) -> _)
     }
 
     val mainTask = res(artifact.url, keepHeaderChecksums = true)
@@ -631,14 +633,14 @@ import dataclass.data
         res(url, keepHeaderChecksums = false)
       }
 
-    S.bind(mainTask) { r =>
+    mainTask.flatMap { r =>
       val l0 = r match {
         case ((f, _), Right(())) =>
           val l = checksums
             .toSeq
             .map { c =>
               val candidate = auxiliaryFile(f, c)
-              S.map(S.delay(candidate.exists())) {
+              S.delay(candidate.exists()).map {
                 case false =>
                   checksumRes(c).toSeq
                 case true =>
@@ -646,7 +648,7 @@ import dataclass.data
                   Seq(S.point[((File, String), Either[ArtifactError, Unit])](((candidate, url), Right(()))))
               }
             }
-          S.bind(S.gather(l))(l => S.gather(l.flatten))
+          S.gather(l).flatMap(l => S.gather(l.flatten))
         case _ =>
           val l = checksums
             .toSeq
@@ -656,7 +658,7 @@ import dataclass.data
           S.gather(l)
       }
 
-      S.map(l0)(r +: _)
+      l0.map(r +: _)
     }
   }
 
@@ -720,7 +722,7 @@ import dataclass.data
     retry: Int = retry
   ): EitherT[F, ArtifactError, File] = {
 
-    val artifact0 = S.map(allCredentials) { allCredentials =>
+    val artifact0 = allCredentials.map { allCredentials =>
       if (artifact.authentication.isEmpty) {
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
@@ -730,7 +732,7 @@ import dataclass.data
         artifact
     }
 
-    EitherT[F, ArtifactError, Artifact](S.map(artifact0)(Right(_)))
+    EitherT[F, ArtifactError, Artifact](artifact0.map(Right(_)))
       .flatMap { a =>
         filePerPolicy0(a, policy, retry)
       }
@@ -743,11 +745,11 @@ import dataclass.data
   ): EitherT[F, ArtifactError, File] = {
 
     EitherT {
-      S.map(download(
+      download(
         artifact,
         checksums = checksums0.collect { case Some(c) => c }.toSet,
         cachePolicy = policy
-      )) { results =>
+      ).map { results =>
         val resultsMap = results
           .map {
             case ((_, u), b) => u -> b
