@@ -3,7 +3,8 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
+import java.util
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
@@ -1022,6 +1023,79 @@ object FileCacheTests extends TestSuite {
         assert(res.left.exists(_.contains("java.net.UnknownHostException")))
       }
     }
+
+    "stored digests work" - {
+      val dummyFileUri = Option(getClass.getResource("/data/foo.xml"))
+        .map(_.toURI.toASCIIString)
+        .getOrElse {
+          throw new Exception("data/foo.xml resource not found")
+        }
+
+      val artifact = Artifact(
+        dummyFileUri,
+        Map(
+          "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
+          "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
+          "SHA-1" -> s"$dummyFileUri.sha1",
+          "MD5" -> s"$dummyFileUri.md5"
+        ),
+        Map(),
+        changing = false,
+        optional = false,
+        None
+      )
+
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-1")))
+            .file(artifact)
+            .run
+            .future()
+        }
+        res match {
+          case Right(file: File) =>
+            val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__sha1.computed")
+            val expected = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
+            val actual = Files.readAllBytes(computedPath)
+            assert(util.Arrays.equals(actual, expected))
+          case Left(e) => throw e
+        }
+      }
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("MD5")))
+            .file(artifact)
+            .run
+            .future()
+        }
+        res match {
+          case Right(file: File) =>
+            val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__md5.computed")
+            val expected = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
+            val actual = Files.readAllBytes(computedPath)
+            assert(util.Arrays.equals(actual, expected))
+          case Left(e) => throw e
+        }
+      }
+    }
   }
 
+  // https://stackoverflow.com/questions/6650650/hex-encoded-string-to-byte-array/28157958#28157958
+  def stringToByteArray(s: String): Array[Byte] = {
+    val byteArray = new Array[Byte](s.length / 2)
+    val strBytes = new Array[String](s.length / 2)
+    var k = 0
+    var i = 0
+    while (i < s.length) {
+      val j = i + 2
+      strBytes(k) = s.substring(i, j)
+      byteArray(k) = Integer.parseInt(strBytes(k), 16).toByte
+      k += 1
+
+      i = i + 2
+    }
+    byteArray
+  }
 }
