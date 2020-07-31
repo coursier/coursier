@@ -4,7 +4,7 @@ plugins_(
   "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
   "org.scalameta"      % "sbt-mdoc"                 % "2.2.1",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",
-  "com.lightbend.sbt"  % "sbt-proguard"             % "0.3.0",
+  "com.lightbend.sbt"  % "sbt-proguard"             % "0.4.0",
   "org.scala-js"       % "sbt-scalajs"              % "1.0.1",
   "ch.epfl.scala"      % "sbt-scalajs-bundler"      % "0.17.0",
   "org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0",
