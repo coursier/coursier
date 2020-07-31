@@ -552,31 +552,9 @@ object Settings {
       else
         "bootstrap.jar"
 
-    val isProguard7OrHigher = Def.setting {
-      val ver = proguardVersion.in(Proguard).value
-      val majorOpt = Try(ver.takeWhile(_.isDigit).toInt).toOption
-      majorOpt.exists(_ >= 7)
-    }
-
     Seq(
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
-      libraryDependencies := {
-        val previous = libraryDependencies.value
-        val ver = proguardVersion.in(Proguard).value
-        if (isProguard7OrHigher.value) {
-          val filteredPrevious = previous
-            .filter(m => (m.organization, m.name) != ("net.sf.proguard", "proguard-base"))
-          filteredPrevious :+ ("com.guardsquare" % "proguard-base" % ver % Proguard)
-        } else
-          previous
-      },
-      resolvers ++= {
-        if (isProguard7OrHigher.value)
-          Seq(Resolver.bintrayRepo("guardsquare", "proguard"))
-        else
-          Nil
-      },
       proguardOptions.in(Proguard) ++= Seq(
         "-dontnote",
         "-dontwarn",
