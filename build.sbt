@@ -417,7 +417,8 @@ lazy val web = project("web")
       "requirejs" -> "2.3.6",
       "sax" -> "1.2.4"
     ),
-    browserifyBundle("sax")
+    browserifyBundle("sax"),
+    evictionRules += "org.scala-js" % "scalajs-dom_*" % "semver"
   )
 
 lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
