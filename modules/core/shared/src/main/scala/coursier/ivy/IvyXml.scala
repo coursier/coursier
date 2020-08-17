@@ -163,7 +163,12 @@ object IvyXml {
       modVer <- info(infoNode)
     } yield {
 
-      val (module, version) = modVer
+      val (module0, version) = modVer
+      val (extraInfo, attr) = module0.attributes
+        .partition(_._1.startsWith("info."))
+      val module =
+        if (extraInfo.isEmpty) module0
+        else module0.withAttributes(attr)
 
       val dependenciesNodeOpt = node.children
         .find(_.label == "dependencies")
@@ -222,15 +227,15 @@ object IvyXml {
         version,
         dependencies0,
         configurations0.toMap,
-        None,
-        Nil,
-        Nil,
-        Nil,
-        None,
-        None,
-        None,
+        parent = None,
+        dependencyManagement = Nil,
+        properties = extraInfo.toSeq,
+        profiles = Nil,
+        versions = None,
+        snapshotVersioning = None,
+        packagingOpt = None,
         relocated = false,
-        None,
+        actualVersionOpt = None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
           Seq(Configuration.all -> Publication(module.name.value, Type.jar, Extension.jar, Classifier.empty))

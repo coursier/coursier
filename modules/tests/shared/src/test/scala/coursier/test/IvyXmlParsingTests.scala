@@ -45,5 +45,20 @@ object IvyXmlParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+
+    'infoWithExtraInfo {
+      val node = """
+        <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+          <info organisation="com.github.gseitz" module="sbt-release" revision="1.0.12" status="release"
+          e:sbtVersion="1.0" e:scalaVersion="2.12" e:info.versionScheme="semver-spec">
+          </info>
+        </ivy-module>
+      """
+
+      val result = IvyXml.project(xmlParseDom(node).toOption.get).map(_.properties)
+      val expected = Right(Seq("info.versionScheme" -> "semver-spec"))
+
+      assert(result == expected)
+    }
   }
 }

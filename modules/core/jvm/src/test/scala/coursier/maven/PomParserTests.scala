@@ -67,5 +67,25 @@ object PomParserTests extends TestSuite {
       assert(scm.exists(_.connection.contains("scm:git:git@github.com:coursier/coursier.git")))
       assert(scm.exists(_.developerConnection.contains("foo")))
     }
+
+    "properties are parsed" - {
+      val success = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com.example</groupId>
+          |    <artifactId>awesome-project</artifactId>
+          |    <version>1.0-SNAPSHOT</version>
+          |
+          |    <properties>
+          |        <info.versionScheme>semver-spec</info.versionScheme>
+          |    </properties>
+          |</project>""".stripMargin
+      )
+      assert(success.isRight)
+      val properties = success.toOption.get.properties
+      val expected = Seq("info.versionScheme" -> "semver-spec")
+      assert(properties == expected)
+    }
   }
 }

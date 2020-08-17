@@ -63,7 +63,7 @@ package object compatibility {
         (0 until attr.length)
           .map(idx => attr(idx))
           .map { a =>
-            (Option(a.prefix).getOrElse(""), a.name, a.value)
+            (Option(node.lookupNamespaceURI(a.prefix)).getOrElse(""), a.localName, a.value)
           }
       }
 
