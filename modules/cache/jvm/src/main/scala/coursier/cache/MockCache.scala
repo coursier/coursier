@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService
 import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
+import coursier.util.Monad.ops._
 import dataclass.data
 
 import scala.concurrent.ExecutionContext
@@ -62,21 +63,21 @@ import scala.util.{Failure, Success, Try}
 
       val fromExtraData = extraData.foldLeft(S.point(Option.empty[Path])) {
         (acc, p) =>
-          S.bind(acc) {
+          acc.flatMap {
             case Some(_) => acc
             case None =>
               val path = p.resolve(MockCacheEscape.urlAsPath(artifact.url))
-              S.map[Boolean, Option[Path]](S.schedule(pool)(Files.exists(path))) {
+              S.schedule(pool)(Files.exists(path)).map {
                 case true => Some(path)
                 case false => None
               }
           }
       }
 
-      val init0 = S.bind[Boolean, Either[ArtifactError, Path]](S.schedule(pool)(Files.exists(path))) {
-        case true => S.point(Right(path))
+      val init0 = S.schedule(pool)(Files.exists(path)).flatMap {
+        case true => S.point(Right(path)): F[Either[ArtifactError, Path]]
         case false =>
-          if (writeMissing) {
+          val res: F[Either[ArtifactError, Path]] = if (writeMissing) {
             val f = S.schedule[Either[ArtifactError, Path]](pool) {
               Util.createDirectories(path.getParent)
               def is(): InputStream =
@@ -95,11 +96,12 @@ import scala.util.{Failure, Success, Try}
             }
           } else
             S.point(Left(new ArtifactError.NotFound(path.toString)))
+          res
       }
 
-      val e = S.bind[Option[Path], Either[ArtifactError, Path]](fromExtraData) {
+      val e = fromExtraData.flatMap {
         case None => init0
-        case Some(f) => S.point(Right(f))
+        case Some(f) => S.point(Right(f)): F[Either[ArtifactError, Path]]
       }
       EitherT[F, ArtifactError, Path](e)
         .map(_.toFile)

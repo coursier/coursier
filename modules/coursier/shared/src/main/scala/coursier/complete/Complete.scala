@@ -3,6 +3,7 @@ package coursier.complete
 import coursier.Resolve
 import coursier.cache.Cache
 import coursier.core.Repository
+import coursier.util.Monad.ops._
 import coursier.util.Sync
 import dataclass.data
 import coursier.util.Task
@@ -37,7 +38,7 @@ import coursier.util.Task
     withScalaBinaryVersionOpt(Some(version))
 
   def complete(): F[(Int, Seq[String])] =
-    F.map(result())(r => (r.from, r.completions))
+    result().map(r => (r.from, r.completions))
 
   def result(): F[Complete.Result] = {
 
@@ -48,26 +49,20 @@ import coursier.util.Task
       Repository.Complete.parse(input, scalaVersionOpt.getOrElse(""), scalaBinaryVersionOpt.getOrElse(""))
     )
 
-    val t = F.bind(inputF) { input0 =>
-      F.map(F.gather(
+    val t = inputF.flatMap { input0 =>
+      F.gather(
         completers.map {
           case (repo, c) =>
-            F.map(c.complete(input0))(e => repo -> e.map(_.completions))
+            c.complete(input0).map(e => repo -> e.map(_.completions))
         }
-      ))((input0, _))
+      ).map((input0, _))
     }
 
     val t0 = cache.loggerOpt.fold(t) { logger =>
-      F.bind(F.delay(logger.init())) { _ =>
-        F.bind(F.attempt(t)) { e =>
-          F.bind(F.delay(logger.stop())) { _ =>
-            F.fromAttempt(e)
-          }
-        }
-      }
+      logger.using(t)
     }
 
-    F.map(t0) {
+    t0.map {
       case (input0, l) =>
         Complete.Result(input0, l)
     }

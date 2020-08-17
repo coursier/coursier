@@ -2,6 +2,7 @@ package coursier
 package core
 
 import coursier.util.{EitherT, Gather, Monad}
+import coursier.util.Monad.ops._
 
 import scala.annotation.tailrec
 import dataclass.data
@@ -23,7 +24,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
         case done: Done =>
           F.point(done.resolution)
         case missing0: Missing =>
-          F.bind(ResolutionProcess.fetchAll[F](missing0.missing, fetch))(result =>
+          ResolutionProcess.fetchAll[F](missing0.missing, fetch).flatMap(result =>
             missing0.next0(result).run[F](fetch, maxIterations0)
           )
         case cont: Continue =>
@@ -44,7 +45,8 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
       case _: Done =>
         F.point(this)
       case missing0: Missing =>
-        F.map(ResolutionProcess.fetchAll(missing0.missing, fetch))(result => missing0.next0(result))
+        ResolutionProcess.fetchAll(missing0.missing, fetch)
+          .map(result => missing0.next0(result))
       case cont: Continue =>
         if (fastForward)
           cont.nextNoCont.next(fetch, fastForward = fastForward)
@@ -300,15 +302,15 @@ object ResolutionProcess {
 
       val task0 = lookups.foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
         case (acc, (_, eitherProjTask)) =>
-          F.bind(acc) {
+          acc.flatMap {
             case Left(errors) =>
-              F.map(eitherProjTask)(_.left.map(error => error +: errors))
+              eitherProjTask.map(_.left.map(error => error +: errors))
             case res@Right(_) =>
               F.point(res)
           }
       }
 
-      val task = F.map(task0)(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
+      val task = task0.map(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
       EitherT(task)
     }
 
@@ -324,7 +326,7 @@ object ResolutionProcess {
               .find(module, v.repr, fetch)
               .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
 
-          F.bind(lookups) { results =>
+          lookups.flatMap { results =>
             EitherT(F.point(versionOrError(results, ver))).flatMap {
               case (v, repo) =>
                 fetchs.foldLeft(getLatest(v, repo, fetch))(_ orElse getLatest(v, repo, _))
@@ -371,14 +373,12 @@ object ResolutionProcess {
     F: Gather[F]
   ): Fetch[F] =
     modVers =>
-      F.map(
-        F.gather {
-          modVers.map {
-            case (module, version) =>
-              F.map(fetchOne(repositories, module, version, fetch, fetchs).run)(d => (module, version) -> d)
-          }
+      F.gather {
+        modVers.map {
+          case (module, version) =>
+            fetchOne(repositories, module, version, fetch, fetchs).run.map(d => (module, version) -> d)
         }
-      )(_.toSeq)
+      }.map(_.toSeq)
 
 
 
@@ -423,11 +423,10 @@ object ResolutionProcess {
       .toVector
       .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])])) {
         (acc, l) =>
-          F.bind(acc) { v =>
-            F.map(fetch(l)) { e =>
-              v ++ e
-            }
-          }
+          for {
+            v <- acc
+            e <- fetch(l)
+          } yield v ++ e
       }
   }
 

@@ -9,6 +9,7 @@ import coursier.error.CoursierError
 import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}
 import coursier.util.{Artifact, Sync, Task}
+import coursier.util.Monad.ops._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -51,7 +52,7 @@ import dataclass.data
   def classpathOrder: Boolean =
     artifacts.classpathOrder
 
-  private def S = resolve.sync
+  private implicit def S = resolve.sync
 
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 
@@ -183,7 +184,7 @@ import dataclass.data
 
     val resolutionIO = resolve.io
 
-    S.bind(resolutionIO) { resolution =>
+    resolutionIO.flatMap { resolution =>
       val fetchIO_ = artifacts
         .withResolution(resolution)
         .ioResult
@@ -209,7 +210,7 @@ import dataclass.data
           case Some(files) =>
             S.point(files)
           case None =>
-            S.bind(ioResult) { res =>
+            ioResult.flatMap { res =>
               val artifacts = res.artifacts
               val files = res.files
 

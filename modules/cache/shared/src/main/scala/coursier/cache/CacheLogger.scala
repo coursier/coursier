@@ -1,6 +1,7 @@
 package coursier.cache
 
 import coursier.util.{Sync, Task}
+import coursier.util.Monad.ops._
 
 trait CacheLogger {
   def foundLocally(url: String): Unit = {}
@@ -37,13 +38,12 @@ trait CacheLogger {
 object CacheLogger {
   final class Using[T](logger: CacheLogger) {
     def apply[F[_]](task: F[T])(implicit sync: Sync[F]): F[T] =
-      sync.bind(sync.delay(logger.init())) { _ =>
-        sync.bind(sync.attempt(task)) { a =>
-          sync.bind(sync.delay(logger.stop())) { _ =>
-            sync.fromAttempt(a)
-          }
-        }
-      }
+      for {
+        _ <- sync.delay(logger.init())
+        a <- sync.attempt(task)
+        _ <- sync.delay(logger.stop())
+        t <- sync.fromAttempt(a)
+      } yield t
   }
   def nop: CacheLogger =
     new CacheLogger {}

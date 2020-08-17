@@ -13,7 +13,8 @@ final case class GetOptions(
   @Name("0")
     zero: Boolean = false,
   separator: Option[String] = None,
-  force: Boolean = false
+  force: Boolean = false,
+  changing: Boolean = false
 )
 
 object GetOptions {

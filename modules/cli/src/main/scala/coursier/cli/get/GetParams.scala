@@ -8,7 +8,8 @@ final case class GetParams(
   cache: CacheParams,
   output: OutputParams,
   separator: String,
-  force: Boolean
+  force: Boolean,
+  changing: Boolean
 )
 
 object GetParams {
@@ -30,7 +31,8 @@ object GetParams {
           cache,
           output,
           separator,
-          options.force
+          options.force,
+          options.changing
         )
     }
   }
