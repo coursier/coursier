@@ -164,10 +164,11 @@ object IvyXml {
     } yield {
 
       val (module0, version) = modVer
-      val (extraInfo, attr) = module0.attributes partition { case (k, v) => k.startsWith("info.") }
+      val (extraInfo, attr) = module0.attributes
+        .partition(_._1.startsWith("info."))
       val module =
-        if (extraInfo.nonEmpty) module0.withAttributes(attr)
-        else module0
+        if (extraInfo.isEmpty) module0
+        else module0.withAttributes(attr)
 
       val dependenciesNodeOpt = node.children
         .find(_.label == "dependencies")
