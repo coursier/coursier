@@ -87,5 +87,100 @@ object PomParserTests extends TestSuite {
       val expected = Seq("info.versionScheme" -> "semver-spec")
       assert(properties == expected)
     }
+
+    "licenses are optional" - {
+      val success = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |  <modelVersion>4.0.0</modelVersion>
+          |  <groupId>com.example</groupId>
+          |  <artifactId>awesome-project</artifactId>
+          |  <version>1.0-SNAPSHOT</version>
+          |</project>""".stripMargin
+      )
+      assert(success.isRight)
+      val licenses = success.toOption.get.info.licenses
+      val expected = Seq()
+      assert(licenses == expected)
+    }
+
+    "licenses with just name and url" - {
+      val success = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |  <modelVersion>4.0.0</modelVersion>
+          |  <groupId>com.example</groupId>
+          |  <artifactId>awesome-project</artifactId>
+          |  <version>1.0-SNAPSHOT</version>
+          |  <licenses>
+          |    <license>
+          |      <name>Apache License, Version 2.0</name>
+          |      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          |    </license>
+          |  </licenses>
+          |</project>""".stripMargin
+      )
+      assert(success.isRight)
+      val licenses = success.toOption.get.info.licenses
+      val expected = Seq(
+        "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt")
+      )
+      assert(licenses == expected)
+    }
+
+    "multiple licenses with just name and url" - {
+      val success = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |  <modelVersion>4.0.0</modelVersion>
+          |  <groupId>com.example</groupId>
+          |  <artifactId>awesome-project</artifactId>
+          |  <version>1.0-SNAPSHOT</version>
+          |  <licenses>
+          |    <license>
+          |      <name>Apache License, Version 2.0</name>
+          |      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          |    </license>
+          |    <license>
+          |      <name>Fake Awesome License 3.0</name>
+          |      <url>https://fake-awesome-license.org</url>
+          |    </license>
+          |  </licenses>
+          |</project>""".stripMargin
+      )
+      assert(success.isRight)
+      val licenses = success.toOption.get.info.licenses
+      val expected = Seq(
+        "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt"),
+        "Fake Awesome License 3.0" -> Some("https://fake-awesome-license.org")
+      )
+      assert(licenses == expected)
+    }
+
+    "license with maven only details" - {
+      val success = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |  <modelVersion>4.0.0</modelVersion>
+          |  <groupId>com.example</groupId>
+          |  <artifactId>awesome-project</artifactId>
+          |  <version>1.0-SNAPSHOT</version>
+          |  <licenses>
+          |    <license>
+          |      <name>Apache License, Version 2.0</name>
+          |      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          |      <distribution>repo</distribution>
+          |      <comments>Very insightful comment</comments>
+          |    </license>
+          |  </licenses>
+          |</project>""".stripMargin
+      )
+      assert(success.isRight)
+      val licenses = success.toOption.get.info.licenses
+      val expected = Seq(
+        "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt")
+      )
+      assert(licenses == expected)
+    }
   }
 }

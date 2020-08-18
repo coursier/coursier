@@ -95,7 +95,9 @@ object PomParser {
 
     var description = ""
     var url = ""
-    val licenses = Nil // TODO
+    var licenses = new ListBuffer[(String, Option[String])]
+    var licenseName = ""
+    var licenseUrl = Option.empty[String]
     val developers = Nil // TODO
     val publication = Option.empty[Versions.DateTime] // TODO
     var scmOpt = Option.empty[Info.Scm]
@@ -352,6 +354,11 @@ object PomParser {
     (s, scm) => {
       s.scmOpt = Some(scm)
     }
+  ) ++ licenseHandlers(
+    "license" :: "licenses" :: "project" :: Nil,
+    (s, n, u) => {
+      s.licenses += n -> u
+    }
   )
 
   private def profileHandlers(prefix: List[String], add: (State, Profile) => Unit) =
@@ -583,6 +590,24 @@ object PomParser {
       content("developerConnection" :: prefix) {
         (state, content) =>
           state.scmDeveloperConnection = Some(content)
+      }
+    )
+
+  private def licenseHandlers(prefix: List[String], add: (State, String, Option[String]) => Unit) =
+    Seq(
+      new SectionHandler(prefix) {
+        def start(state: State): Unit = {}
+        def end(state: State): Unit = {
+          add(state, state.licenseName, state.licenseUrl)
+        }
+      },
+      content("name" :: prefix) {
+        (state, content) =>
+          state.licenseName = content
+      },
+      content("url" :: prefix) {
+        (state, content) =>
+          state.licenseUrl = Some(content)
       }
     )
 }
