@@ -257,13 +257,60 @@ object Attributes {
 @data class Info(
   description: String,
   homePage: String,
-  licenses: Seq[(String, Option[String])],
   developers: Seq[Info.Developer],
   publication: Option[Versions.DateTime],
-  scm: Option[Info.Scm]
-)
+  scm: Option[Info.Scm],
+  licenseInfo: Seq[Info.License]
+) {
+  def licenses: Seq[(String, Option[String])] = licenseInfo.map(li => li.name -> li.url)
+
+  def withLicenses(license: Seq[(String, Option[String])]) = {
+    new Info(
+      description,
+      homePage,
+      developers,
+      publication,
+      scm,
+      license.map(l => Info.License(l._1, l._2, None, None))
+    )
+  }
+
+  def this(
+    description: String,
+    homePage: String,
+    licenses: Seq[(String, Option[String])],
+    developers: Seq[Info.Developer],
+    publication: Option[Versions.DateTime],
+    scm: Option[Info.Scm]
+  ) = {
+    this(
+      description,
+      homePage,
+      developers,
+      publication,
+      scm,
+      licenses.map(l => Info.License(l._1, l._2, None, None))
+      )
+  }
+}
 
 object Info {
+  def apply(
+    description: String,
+    homePage: String,
+    licenses: Seq[(String, Option[String])],
+    developers: Seq[Info.Developer],
+    publication: Option[Versions.DateTime],
+    scm: Option[Info.Scm]
+  ): Info = new Info(
+    description,
+    homePage,
+    developers,
+    publication,
+    scm,
+    licenseInfo = licenses.map(l => License(l._1, l._2, None, None))
+  )
+
   @data class Developer(
     id: String,
     name: String,
@@ -276,7 +323,14 @@ object Info {
     developerConnection: Option[String]
   )
 
-  val empty = Info("", "", Nil, Nil, None, None)
+  @data class License(
+    name: String,
+    url: Option[String],
+    distribution: Option[String], // Maven-specific
+    comments: Option[String] // Maven-specific
+  )
+
+  val empty = Info("", "", Nil, None, None, Nil)
 }
 
 // Maven-specific

@@ -95,9 +95,12 @@ object PomParser {
 
     var description = ""
     var url = ""
-    var licenses = new ListBuffer[(String, Option[String])]
+    val licenses = Nil // Left in for binary compat
+    val licenseInfo = new ListBuffer[Info.License]
     var licenseName = ""
     var licenseUrl = Option.empty[String]
+    var licenseDistribution = Option.empty[String]
+    var licenseComments = Option.empty[String]
     val developers = Nil // TODO
     val publication = Option.empty[Versions.DateTime] // TODO
     var scmOpt = Option.empty[Info.Scm]
@@ -242,10 +245,10 @@ object PomParser {
           Info(
             description,
             url,
-            licenses,
             developers,
             publication,
-            scmOpt
+            scmOpt,
+            licenseInfo.toSeq
           )
         )
       }
@@ -356,8 +359,8 @@ object PomParser {
     }
   ) ++ licenseHandlers(
     "license" :: "licenses" :: "project" :: Nil,
-    (s, n, u) => {
-      s.licenses += n -> u
+    (s, l) => {
+      s.licenseInfo += l
     }
   )
 
@@ -593,21 +596,35 @@ object PomParser {
       }
     )
 
-  private def licenseHandlers(prefix: List[String], add: (State, String, Option[String]) => Unit) =
+  private def licenseHandlers(prefix: List[String], add: (State, Info.License) => Unit) =
     Seq(
       new SectionHandler(prefix) {
         def start(state: State): Unit = {}
         def end(state: State): Unit = {
-          add(state, state.licenseName, state.licenseUrl)
+          val license = Info.License(
+              state.licenseName,
+              state.licenseUrl,
+              state.licenseDistribution,
+              state.licenseComments
+            )
+          add(state, license)
         }
       },
       content("name" :: prefix) {
-        (state, content) =>
-          state.licenseName = content
+        (state, name) =>
+          state.licenseName = name
       },
       content("url" :: prefix) {
-        (state, content) =>
-          state.licenseUrl = Some(content)
+        (state, url) =>
+          state.licenseUrl = Some(url)
+      },
+      content("distribution" :: prefix) {
+        (state, distribution) =>
+          state.licenseDistribution = Some(distribution)
+      },
+      content("comments" :: prefix) {
+        (state, comments) =>
+          state.licenseComments = Some(comments)
       }
     )
 }
