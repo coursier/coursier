@@ -13,11 +13,15 @@ final `coursier` launcher generated upon each release relies on the
 `coursier bootstrap` command, itself pulling a proguarded assembly of the
 cli module of coursier.
 
+Also note that coursier relies on a slightly different sbt than the default sbt
+launcher so you'll want to use the `./sbt` in the project for all of the sbt
+related commands.
+
 ## Batch mode
 
 From freshly cloned sources, run
 ```bash
-$ sbt cli/pack
+$ ./sbt cli/pack
 ```
 to build a CLI launcher from sources.
 This builds a
@@ -32,7 +36,7 @@ $ modules/cli/target/pack/bin/coursier launch io.get-coursier:echo:1.0.1 -- foo
 
 In a terminal window, run
 ```bash
-sbt "~cli/pack"
+./sbt "~cli/pack"
 ```
 
 This builds a `modules/cli/target/pack` directory like above, then
