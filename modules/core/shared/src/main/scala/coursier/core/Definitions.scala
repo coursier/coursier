@@ -290,7 +290,7 @@ object Attributes {
       publication,
       scm,
       licenses.map(l => Info.License(l._1, l._2, None, None))
-      )
+    )
   }
 }
 

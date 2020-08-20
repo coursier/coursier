@@ -95,7 +95,6 @@ object PomParser {
 
     var description = ""
     var url = ""
-    val licenses = Nil // Left in for binary compat
     val licenseInfo = new ListBuffer[Info.License]
     var licenseName = ""
     var licenseUrl = Option.empty[String]
