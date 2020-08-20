@@ -82,6 +82,10 @@ object Mima {
         ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.this"),
         ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.apply"),
         ProblemFilters.exclude[IncompatibleResultTypeProblem]("coursier.core.DependencySet#Sets.required"),
+
+        // PomParser#State is private, so this can be ignored
+        ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
+
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
       )
