@@ -411,21 +411,7 @@ object InstallDir {
   val isJvmLauncherEnvVar: String = "CS_JVM_LAUNCHER"
   val isNativeLauncherEnvVar: String = "CS_NATIVE_LAUNCHER"
 
-  private lazy val defaultDir0: Path = {
-
-    val fromEnv = Option(System.getenv("COURSIER_BIN_DIR")).filter(_.nonEmpty)
-      .orElse(Option(System.getenv("COURSIER_INSTALL_DIR")).filter(_.nonEmpty))
-
-    def fromProps = Option(System.getProperty("coursier.install.dir"))
-
-    def default = coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
-
-    fromEnv.orElse(fromProps).map(Paths.get(_))
-      .getOrElse(default)
-  }
-
-  def defaultDir: Path =
-    defaultDir0
+  def defaultDir: Path = coursier.paths.CoursierPaths.dataLocalDirectory().toPath.resolve("bin")
 
   private def classpathEntry(a: Artifact, f: File, forceResource: Boolean = false): ClassPathEntry =
     if (forceResource || a.changing || a.url.startsWith("file:"))
