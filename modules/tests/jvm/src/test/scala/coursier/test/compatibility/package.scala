@@ -40,6 +40,8 @@ package object compatibility {
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
+  def artifactWithProxy[F[_]: Sync](proxy: java.net.Proxy): Repository.Fetch[F] =
+    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).withProxy(Some(proxy)).fetch
 
   val taskArtifact = artifact[Task]
 

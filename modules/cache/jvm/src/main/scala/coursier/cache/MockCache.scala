@@ -10,7 +10,7 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
+import dataclass._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -21,7 +21,9 @@ import scala.util.{Failure, Success, Try}
   writeMissing: Boolean,
   pool: ExecutorService,
   S: Sync[F],
-  dummyArtifact: Artifact => Boolean = _ => false
+  dummyArtifact: Artifact => Boolean = _ => false,
+  @since
+  proxy: Option[java.net.Proxy] = None
 ) extends Cache[F] {
 
   private implicit def S0 = S
@@ -32,10 +34,11 @@ import scala.util.{Failure, Success, Try}
       if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
-    if (artifact0.url.startsWith("http://localhost:"))
+    if (proxy.nonEmpty || artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
         ConnectionBuilder(artifact0.url)
           .withAuthentication(artifact0.authentication)
+          .withProxy(proxy)
           .connection()
           .getInputStream,
         if (links) Some(artifact0.url) else None

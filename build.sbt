@@ -123,7 +123,7 @@ lazy val `proxy-tests` = project("proxy-tests")
       Deps.slf4JNop
     ),
     evictionRules += "com.google.guava" % "guava" % "always",
-    utest,
+    utest("coursier.test.CustomFramework"),
     sharedTestResources
   )
 

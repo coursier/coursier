@@ -169,9 +169,11 @@ object Settings {
     testOnly.in(Test) := {}
   )
 
-  lazy val utest = Seq(
+  lazy val utest: Seq[Setting[_]] = utest("utest.runner.Framework")
+
+  def utest(framework: String): Seq[Setting[_]] = Seq(
     libs += Deps.cross.utest.value % Test,
-    testFrameworks += new TestFramework("utest.runner.Framework")
+    testFrameworks += new TestFramework(framework)
   )
 
   lazy val webjarBintrayRepository = {

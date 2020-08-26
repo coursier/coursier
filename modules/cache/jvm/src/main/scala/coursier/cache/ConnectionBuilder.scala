@@ -1,6 +1,6 @@
 package coursier.cache
 
-import java.net.URLConnection
+import java.net.{Proxy, URLConnection}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.core.Authentication
@@ -17,7 +17,8 @@ import dataclass.data
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   method: String = "GET",
-  maxRedirectionsOpt: Option[Int] = Some(20)
+  maxRedirectionsOpt: Option[Int] = Some(20),
+  proxy: Option[Proxy] = None
 ) {
 
   def connection(): URLConnection = {
@@ -37,6 +38,7 @@ import dataclass.data
       autoCredentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
+      proxy,
       method,
       None,
       redirectionCount = 0,

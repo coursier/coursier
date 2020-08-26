@@ -229,7 +229,8 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      maxRedirectionsOpt = maxRedirectionsOpt
+      maxRedirectionsOpt = maxRedirectionsOpt,
+      None
     ).connection()
 
   private[cache] final case class Args(
@@ -242,6 +243,7 @@ object CacheUrl {
     autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    proxyOpt: Option[Proxy],
     method: String,
     authRealm: Option[String],
     redirectionCount: Int,
@@ -271,7 +273,8 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      maxRedirectionsOpt
+      maxRedirectionsOpt,
+      None
     ).connectionMaybePartial()
 
   @tailrec
@@ -283,7 +286,13 @@ object CacheUrl {
 
     val res: Either[Args, (URLConnection, Boolean)] =
       try {
-        conn = url(url0).openConnection()
+        conn = {
+          val jnUrl = url(url0)
+          proxyOpt match {
+            case None => jnUrl.openConnection()
+            case Some(proxy) => jnUrl.openConnection(proxy)
+          }
+        }
         val authOpt = authentication.filter { a =>
           a.realmOpt.forall(authRealm.contains) &&
             !a.optional
@@ -406,5 +415,43 @@ object CacheUrl {
       case _ =>
     }
   }
+
+  // seems there's no way to pass proxy authentication per connection…
+  // see https://stackoverflow.com/questions/34877470/basic-proxy-authentication-for-https-urls-returns-http-1-0-407-proxy-authenticat
+  def setupProxyAuth(credentials: Map[(String, String, String), (String, String)]): Unit = {
+    Authenticator.setDefault(
+      new Authenticator {
+        override def getPasswordAuthentication = {
+          val key = (getRequestingProtocol, getRequestingHost, getRequestingPort.toString)
+          credentials.get(key) match {
+            case None =>
+              super.getPasswordAuthentication
+            case Some((user, password)) =>
+              new PasswordAuthentication(user, password.toCharArray)
+          }
+        }
+      }
+    )
+    if (System.getProperty("jdk.http.auth.tunneling.disabledSchemes") == null)
+      System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "")
+  }
+
+  def setupProxyAuth(): Unit = {
+    def authOpt(scheme: String): Option[((String, String, String), (String, String))] =
+      for {
+        host <- sys.props.get(s"${scheme}.proxyHost")
+        port <- sys.props.get(s"${scheme}.proxyPort")
+        user <- sys.props.get(s"${scheme}.proxyUser")
+        password <- sys.props.get(s"${scheme}.proxyPassword")
+      } yield (scheme, host, port) -> (user, password)
+    val httpAuthOpt = authOpt("http")
+    val httpsAuthOpt = authOpt("https")
+    val map = (httpAuthOpt.iterator ++ httpsAuthOpt.iterator).toMap
+    if (map.nonEmpty)
+      setupProxyAuth(map)
+  }
+
+  def disableProxyAuth(): Unit =
+    Authenticator.setDefault(null)
 
 }

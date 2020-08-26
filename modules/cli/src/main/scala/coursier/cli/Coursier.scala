@@ -7,6 +7,7 @@ import java.util.Scanner
 import caseapp.core.RemainingArgs
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
+import coursier.cache.CacheUrl
 import coursier.cli.bootstrap.Bootstrap
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
@@ -39,6 +40,8 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         if (doThrow)
            throw e
     }
+
+  CacheUrl.setupProxyAuth()
 
   override val appName = "Coursier"
   override val progName =

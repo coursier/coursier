@@ -18,7 +18,8 @@ object DockerServer {
     // can't find a way to get back a randomly assigned port (even following https://github.com/spotify/docker-client/issues/625)
     // so that one has to be specified
     portMapping: (Int, Int),
-    timeout: Duration = 2.minutes
+    timeout: Duration = 2.minutes,
+    healthCheck: Boolean = true
   ): DockerServer = {
 
     val (imagePort, hostPort) = portMapping
@@ -58,8 +59,7 @@ object DockerServer {
       log(s"starting container $id")
       docker.startContainer(id)
 
-      val base: String =
-        s"http://localhost:$hostPort/$basePath"
+      val base = s"http://localhost:$hostPort/$basePath"
 
       log(s"waiting for $image server to be up-and-running")
 
@@ -87,7 +87,10 @@ object DockerServer {
         else
           Int.MaxValue
 
-      loop(retryCount)
+      if (healthCheck)
+        loop(retryCount)
+      else
+        Thread.sleep(retryDuration.toMillis)
 
       DockerServer(base, () => shutdown())
     } catch {
