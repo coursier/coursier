@@ -8,6 +8,7 @@ import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
+import dataclass.data
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.annotation.tailrec
@@ -206,6 +207,7 @@ object CacheUrl {
     }
 
 
+  @deprecated("Create a ConnectionBuilder() and call connection() on it instead", "2.0.0")
   def urlConnection(
     url0: String,
     authentication: Option[Authentication],
@@ -216,8 +218,8 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
     maxRedirectionsOpt: Option[Int] = Some(20)
-  ): URLConnection = {
-    val (c, partial) = urlConnectionMaybePartial(
+  ): URLConnection =
+    ConnectionBuilder(
       url0,
       authentication,
       0L,
@@ -228,12 +230,9 @@ object CacheUrl {
       hostnameVerifierOpt,
       method,
       maxRedirectionsOpt = maxRedirectionsOpt
-    )
-    assert(!partial)
-    c
-  }
+    ).connection()
 
-  private final case class Args(
+  private[cache] final case class Args(
     initialUrl: String,
     url0: String,
     authentication: Option[Authentication],
@@ -249,6 +248,7 @@ object CacheUrl {
     maxRedirectionsOpt: Option[Int]
   )
 
+  @deprecated("Create a ConnectionBuilder() and call connectionMaybePartial() on it instead", "2.0.0")
   def urlConnectionMaybePartial(
     url0: String,
     authentication: Option[Authentication],
@@ -261,8 +261,7 @@ object CacheUrl {
     method: String,
     maxRedirectionsOpt: Option[Int]
   ): (URLConnection, Boolean) =
-    urlConnectionMaybePartial(Args(
-      url0,
+    ConnectionBuilder(
       url0,
       authentication,
       alreadyDownloaded,
@@ -272,13 +271,11 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      None,
-      redirectionCount = 0,
       maxRedirectionsOpt
-    ))
+    ).connectionMaybePartial()
 
   @tailrec
-  private def urlConnectionMaybePartial(args: Args): (URLConnection, Boolean) = {
+  private[cache] def urlConnectionMaybePartial(args: Args): (URLConnection, Boolean) = {
 
     import args._
 

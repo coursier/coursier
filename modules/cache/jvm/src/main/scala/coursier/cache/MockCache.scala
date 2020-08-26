@@ -34,7 +34,10 @@ import scala.util.{Failure, Success, Try}
 
     if (artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
-        CacheUrl.urlConnection(artifact0.url, artifact0.authentication).getInputStream,
+        ConnectionBuilder(artifact0.url)
+          .withAuthentication(artifact0.authentication)
+          .connection()
+          .getInputStream,
         if (links) Some(artifact0.url) else None
       ))
     else
