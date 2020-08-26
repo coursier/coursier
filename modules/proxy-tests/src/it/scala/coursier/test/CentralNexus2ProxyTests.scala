@@ -4,7 +4,11 @@ import coursier.maven.MavenRepository
 
 object CentralNexus2ProxyTests extends CentralTests {
 
-  val repo = NexusDocker("sonatype/nexus:2.14.4", "nexus/content/repositories/central", 9081)
+  val repo = DockerServer(
+    "sonatype/nexus:2.14.4",
+    "nexus/content/repositories/central",
+    8081 -> 9081
+  )
 
   override def utestAfterAll(): Unit =
     repo.shutdown()
