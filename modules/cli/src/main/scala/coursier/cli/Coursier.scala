@@ -27,6 +27,8 @@ import scala.util.control.NonFatal
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
+  val isGraalvmNativeImage = sys.props.contains("org.graalvm.nativeimage.imagecode")
+
   if (System.console() != null && Windows.isWindows)
     try WindowsAnsi.setup()
     catch {
@@ -40,7 +42,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   override val appName = "Coursier"
   override val progName =
-    if (sys.props.contains("org.graalvm.nativeimage.imagecode")) "cs"
+    if (isGraalvmNativeImage) "cs"
     else "coursier"
   override val appVersion = coursier.util.Properties.version
 
@@ -73,8 +75,29 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   override def main(args: Array[String]): Unit = {
 
-    if (args.nonEmpty)
-      super.main(args)
+    val csArgs =
+      if (isGraalvmNativeImage) {
+        // process -J* args ourselves
+
+        val (jvmArgs, csArgs0) = args.partition(_.startsWith("-J"))
+
+        for (jvmArg <- jvmArgs) {
+          val arg = jvmArg.stripPrefix("-J")
+          if (arg.startsWith("-D"))
+            arg.stripPrefix("-D").split("=", 2) match {
+              case Array(k) => System.setProperty(k, "")
+              case Array(k, v) => System.setProperty(k, v)
+            }
+          else
+            System.err.println(s"Warning: ignoring unhandled -J argument: $jvmArg")
+        }
+
+        csArgs0
+      } else
+        args
+
+    if (csArgs.nonEmpty)
+      super.main(csArgs)
     else if (Windows.isWindows && !isInstalledLauncher)
       runSetup()
     else
