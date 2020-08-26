@@ -4,8 +4,7 @@ import caseapp._
 
 final case class SinglePackageOptions(
 
-  @Name("J")
-    jar: Option[String] = None,
+  jar: Option[String] = None,
 
   @Name("P")
     pom: Option[String] = None,

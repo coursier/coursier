@@ -28,7 +28,6 @@ final case class BootstrapSpecificOptions(
     embedFiles: Boolean = true,
   @Help("Add Java command-line options in the generated launcher.")
   @Value("option")
-  @Short("J")
     javaOpt: List[String] = Nil,
   jvmOptionFile: Option[String] = None,
   @Help("Generate an assembly rather than a bootstrap jar")
