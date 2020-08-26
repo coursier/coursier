@@ -16,7 +16,6 @@ final case class LaunchOptions(
 
   @Help("Add Java command-line options, when forking")
   @Value("option")
-  @Short("J")
     javaOpt: List[String] = Nil,
 
   fetchCacheIKnowWhatImDoing: Option[String] = None,
