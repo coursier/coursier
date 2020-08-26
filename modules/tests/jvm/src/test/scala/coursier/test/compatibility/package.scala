@@ -31,7 +31,7 @@ package object compatibility {
 
   private val baseRepo = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir))
+    assert(Files.isDirectory(dir), s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here")
     dir
   }
 

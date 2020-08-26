@@ -29,7 +29,11 @@ object Aliases {
       }
     )
 
-  def hasITs = itSettings
+  def hasITs = Def.settings(
+    itSettings,
+    fork.in(Test) := true,
+    baseDirectory.in(Test) := baseDirectory.in(ThisBuild).value
+  )
 
   def ShadingPlugin = coursier.ShadingPlugin
 
