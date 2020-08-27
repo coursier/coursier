@@ -78,7 +78,7 @@ class HomeSplash extends React.Component {
             <Button href='https://github.com/coursier/coursier'>Code</Button>
           </PromoSection>
           <PromoSection>
-            <Button href={docUrl('cli-overview', language)}>Install CLI</Button>
+            <Button href={docUrl('cli-installation', language)}>Install CLI</Button>
             <Button href={docUrl('sbt-coursier', language)}>Setup sbt</Button>
             <Button href={docUrl('api', language)}>Use the API</Button>
           </PromoSection>

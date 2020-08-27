@@ -15,7 +15,8 @@ proceed on the [Gitter channel](https://gitter.im/coursier/coursier).
       `git submodule update --init`  which will clone down the necessary
       submodules for the project.
   - Use the local `./sbt` rather than your machine sbt as it behaves slightly
-      different than the default sbt launcher.
+      different than the default sbt launcher. You get the following compile
+      error if you use the machine sbt: `not found: value sbtCoursierVersion`.
 
 ##  Ensuring binary compatibility
 
