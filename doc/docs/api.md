@@ -14,6 +14,14 @@ It exposes a few objects under the `coursier` namespace, most notably
 `coursier.Resolve` and `coursier.Fetch`, allowing to resolve dependencies
 and fetch their artifacts.
 
+To get started with the high level API, add the settings below to `build.sbt`
+```scala
+// build.sbt
+@EXTRA_SBT@libraryDependencies ++= Seq(
+  "io.get-coursier" %% "coursier" % "@VERSION@",
+)
+```
+
 ## Resolve
 
 `coursier.Resolve` allows to run resolutions, that is
