@@ -8,6 +8,7 @@ import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
+import dataclass.data
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.annotation.tailrec
@@ -206,6 +207,7 @@ object CacheUrl {
     }
 
 
+  @deprecated("Create a ConnectionBuilder() and call connection() on it instead", "2.0.0")
   def urlConnection(
     url0: String,
     authentication: Option[Authentication],
@@ -216,8 +218,8 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
     method: String = "GET",
     maxRedirectionsOpt: Option[Int] = Some(20)
-  ): URLConnection = {
-    val (c, partial) = urlConnectionMaybePartial(
+  ): URLConnection =
+    ConnectionBuilder(
       url0,
       authentication,
       0L,
@@ -227,13 +229,11 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      maxRedirectionsOpt = maxRedirectionsOpt
-    )
-    assert(!partial)
-    c
-  }
+      maxRedirectionsOpt = maxRedirectionsOpt,
+      None
+    ).connection()
 
-  private final case class Args(
+  private[cache] final case class Args(
     initialUrl: String,
     url0: String,
     authentication: Option[Authentication],
@@ -243,12 +243,14 @@ object CacheUrl {
     autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    proxyOpt: Option[Proxy],
     method: String,
     authRealm: Option[String],
     redirectionCount: Int,
     maxRedirectionsOpt: Option[Int]
   )
 
+  @deprecated("Create a ConnectionBuilder() and call connectionMaybePartial() on it instead", "2.0.0")
   def urlConnectionMaybePartial(
     url0: String,
     authentication: Option[Authentication],
@@ -261,8 +263,7 @@ object CacheUrl {
     method: String,
     maxRedirectionsOpt: Option[Int]
   ): (URLConnection, Boolean) =
-    urlConnectionMaybePartial(Args(
-      url0,
+    ConnectionBuilder(
       url0,
       authentication,
       alreadyDownloaded,
@@ -272,13 +273,12 @@ object CacheUrl {
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       method,
-      None,
-      redirectionCount = 0,
-      maxRedirectionsOpt
-    ))
+      maxRedirectionsOpt,
+      None
+    ).connectionMaybePartial()
 
   @tailrec
-  private def urlConnectionMaybePartial(args: Args): (URLConnection, Boolean) = {
+  private[cache] def urlConnectionMaybePartial(args: Args): (URLConnection, Boolean) = {
 
     import args._
 
@@ -286,7 +286,13 @@ object CacheUrl {
 
     val res: Either[Args, (URLConnection, Boolean)] =
       try {
-        conn = url(url0).openConnection()
+        conn = {
+          val jnUrl = url(url0)
+          proxyOpt match {
+            case None => jnUrl.openConnection()
+            case Some(proxy) => jnUrl.openConnection(proxy)
+          }
+        }
         val authOpt = authentication.filter { a =>
           a.realmOpt.forall(authRealm.contains) &&
             !a.optional
@@ -409,5 +415,43 @@ object CacheUrl {
       case _ =>
     }
   }
+
+  // seems there's no way to pass proxy authentication per connection…
+  // see https://stackoverflow.com/questions/34877470/basic-proxy-authentication-for-https-urls-returns-http-1-0-407-proxy-authenticat
+  def setupProxyAuth(credentials: Map[(String, String, String), (String, String)]): Unit = {
+    Authenticator.setDefault(
+      new Authenticator {
+        override def getPasswordAuthentication = {
+          val key = (getRequestingProtocol, getRequestingHost, getRequestingPort.toString)
+          credentials.get(key) match {
+            case None =>
+              super.getPasswordAuthentication
+            case Some((user, password)) =>
+              new PasswordAuthentication(user, password.toCharArray)
+          }
+        }
+      }
+    )
+    if (System.getProperty("jdk.http.auth.tunneling.disabledSchemes") == null)
+      System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "")
+  }
+
+  def setupProxyAuth(): Unit = {
+    def authOpt(scheme: String): Option[((String, String, String), (String, String))] =
+      for {
+        host <- sys.props.get(s"${scheme}.proxyHost")
+        port <- sys.props.get(s"${scheme}.proxyPort")
+        user <- sys.props.get(s"${scheme}.proxyUser")
+        password <- sys.props.get(s"${scheme}.proxyPassword")
+      } yield (scheme, host, port) -> (user, password)
+    val httpAuthOpt = authOpt("http")
+    val httpsAuthOpt = authOpt("https")
+    val map = (httpAuthOpt.iterator ++ httpsAuthOpt.iterator).toMap
+    if (map.nonEmpty)
+      setupProxyAuth(map)
+  }
+
+  def disableProxyAuth(): Unit =
+    Authenticator.setDefault(null)
 
 }

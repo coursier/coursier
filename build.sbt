@@ -96,11 +96,13 @@ lazy val tests = crossProject("tests")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     dontPublish,
-    hasITs,
     coursierPrefix,
     libs += Deps.scalaAsync,
     utest,
     sharedTestResources
+  )
+  .jvmSettings(
+    hasITs
   )
 
 lazy val testsJvm = tests.jvm
@@ -121,7 +123,7 @@ lazy val `proxy-tests` = project("proxy-tests")
       Deps.slf4JNop
     ),
     evictionRules += "com.google.guava" % "guava" % "always",
-    utest,
+    utest("coursier.test.CustomFramework"),
     sharedTestResources
   )
 
@@ -448,7 +450,6 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .configs(Integration)
   .settings(
     shared,
-    hasITs,
     dontPublishScalaJsIn("2.11"),
     libs += Deps.scalaReflect.value % Provided,
     publishGeneratedSources,
@@ -458,6 +459,9 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
       Deps.cross.argonautShapeless.value,
       Deps.dataClass % Provided
     )
+  )
+  .jvmSettings(
+    hasITs
   )
 
 lazy val coursierJvm = coursier.jvm

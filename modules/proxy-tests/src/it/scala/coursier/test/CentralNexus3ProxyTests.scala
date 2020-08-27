@@ -6,10 +6,10 @@ import scala.concurrent.duration.DurationInt
 
 object CentralNexus3ProxyTests extends CentralTests {
 
-  val repo = NexusDocker(
+  val repo = DockerServer(
     "sonatype/nexus3:3.3.1",
     "repository/maven-central/", // 400 error without the trailing '/'
-    9082,
+    8081 -> 9082,
     timeout = 3.minutes // !!!
   )
 

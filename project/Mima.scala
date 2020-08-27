@@ -97,6 +97,9 @@ object Mima {
       import com.typesafe.tools.mima.core._
 
       Seq(
+        // private class
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl#Args")),
+        (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl$Args")),
         // ignore shaded-stuff related errors
         (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.shaded."))
       )

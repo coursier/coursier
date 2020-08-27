@@ -9,18 +9,20 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
 
-final case class NexusDocker(base: String, shutdown: () => Unit)
+final case class DockerServer(base: String, shutdown: () => Unit)
 
-object NexusDocker {
+object DockerServer {
   def apply(
     image: String,
     basePath: String,
     // can't find a way to get back a randomly assigned port (even following https://github.com/spotify/docker-client/issues/625)
     // so that one has to be specified
-    hostPort: Int,
-    timeout: Duration = 2.minutes
-  ): NexusDocker = {
+    portMapping: (Int, Int),
+    timeout: Duration = 2.minutes,
+    healthCheck: Boolean = true
+  ): DockerServer = {
 
+    val (imagePort, hostPort) = portMapping
     val addr = s"localhost:$hostPort"
 
     def log(s: String): Unit =
@@ -29,7 +31,7 @@ object NexusDocker {
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull(image)
 
-    val portBindings = Map("8081" -> Seq(PortBinding.of("0.0.0.0", hostPort)).asJava)
+    val portBindings = Map(imagePort.toString -> Seq(PortBinding.of("0.0.0.0", hostPort)).asJava)
 
     val hostConfig = HostConfig.builder().portBindings(portBindings.asJava).build()
 
@@ -57,10 +59,9 @@ object NexusDocker {
       log(s"starting container $id")
       docker.startContainer(id)
 
-      val base: String =
-        s"http://localhost:$hostPort/$basePath"
+      val base = s"http://localhost:$hostPort/$basePath"
 
-      log(s"waiting for nexus server to be up-and-running")
+      log(s"waiting for $image server to be up-and-running")
 
       val retryDuration = 2.seconds
 
@@ -70,7 +71,7 @@ object NexusDocker {
           val url = new java.net.URL(base)
           try {
             FileUtil.readFully(url.openStream())
-            log("nexus up")
+            log(s"$image up")
           } catch {
             case e: java.io.IOException =>
               log(s"Caught $e, retrying in $retryDuration")
@@ -86,9 +87,12 @@ object NexusDocker {
         else
           Int.MaxValue
 
-      loop(retryCount)
+      if (healthCheck)
+        loop(retryCount)
+      else
+        Thread.sleep(retryDuration.toMillis)
 
-      NexusDocker(base, () => shutdown())
+      DockerServer(base, () => shutdown())
     } catch {
       case t: Throwable =>
         shutdown()

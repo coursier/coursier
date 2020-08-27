@@ -120,17 +120,16 @@ import scala.util.control.NonFatal
           var conn: URLConnection = null
 
           try {
-            conn = CacheUrl.urlConnection(
-              url,
-              artifact.authentication,
-              followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-              followHttpsToHttpRedirections = followHttpsToHttpRedirections,
-              credentials = allCredentials0,
-              sslSocketFactoryOpt,
-              hostnameVerifierOpt,
-              method = "HEAD",
-              maxRedirectionsOpt = maxRedirections
-            )
+            conn = ConnectionBuilder(url)
+              .withAuthentication(artifact.authentication)
+              .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
+              .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
+              .withAutoCredentials(allCredentials0)
+              .withSslSocketFactoryOpt(sslSocketFactoryOpt)
+              .withHostnameVerifierOpt(hostnameVerifierOpt)
+              .withMethod("HEAD")
+              .withMaxRedirectionsOpt(maxRedirections)
+              .connection()
 
             conn match {
               case c: HttpURLConnection =>
