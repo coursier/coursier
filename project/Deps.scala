@@ -61,7 +61,7 @@ object Deps {
     def scalaJsJquery = setting("be.doeraene" %%% "scalajs-jquery" % "1.0.0")
     def scalaJsReact = setting("com.github.japgolly.scalajs-react" %%% "core" % "1.7.0")
     def scalazCore = setting("org.scalaz" %%% "scalaz-core" % versions.scalaz)
-    def utest = setting("com.lihaoyi" %%% "utest" % "0.7.4")
+    def utest = setting("com.lihaoyi" %%% "utest" % "0.7.5")
   }
 
   def proguardVersion = "7.0.0"
