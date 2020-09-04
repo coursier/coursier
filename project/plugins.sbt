@@ -1,7 +1,7 @@
 
 plugins_(
   "com.geirsson"       % "sbt-ci-release"           % "1.5.3",
-  "pl.project13.scala" % "sbt-jmh"                  % "0.3.7",
+  "pl.project13.scala" % "sbt-jmh"                  % "0.4.0",
   "org.scalameta"      % "sbt-mdoc"                 % "2.2.1",
   "org.xerial.sbt"     % "sbt-pack"                 % "0.12",
   "com.lightbend.sbt"  % "sbt-proguard"             % "0.4.0",
