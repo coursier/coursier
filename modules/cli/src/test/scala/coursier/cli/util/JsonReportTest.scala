@@ -2,11 +2,8 @@ package coursier.cli.util
 
 import argonaut.Parse
 import coursier.cli.CliTestLib
-import org.junit.runner.RunWith
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class JsonReportTest extends AnyFlatSpec with CliTestLib {
   "empty JsonReport" should "be empty" in {
     val report: String = JsonReport[String](IndexedSeq(), Map())(

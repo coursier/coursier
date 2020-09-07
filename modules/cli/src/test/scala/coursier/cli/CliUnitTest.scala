@@ -6,12 +6,9 @@ import coursier.moduleString
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
 import coursier.parse.JavaOrScalaModule
-import org.junit.runner.RunWith
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.junit.JUnitRunner
 
 
-@RunWith(classOf[JUnitRunner])
 class CliUnitTest extends AnyFlatSpec {
 
   def withFile(content: String)(testCode: (File, FileWriter) => Any) {

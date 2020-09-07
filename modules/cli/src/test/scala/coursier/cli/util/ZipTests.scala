@@ -5,11 +5,8 @@ import java.util.Random
 import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
 
 import coursier.launcher.internal.Zip
-import org.junit.runner.RunWith
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ZipTests extends AnyFlatSpec {
 
   "zipEntries" should "be fine with custom deflaters" in {

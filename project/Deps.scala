@@ -28,7 +28,6 @@ object Deps {
   def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
   def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala
   def jsoup = "org.jsoup" % "jsoup" % "1.13.1"
-  def junit = "junit" % "junit" % "4.13"
   def logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   def mavenModel = "org.apache.maven" % "maven-model" % "3.6.3"
   def okhttp = "com.squareup.okhttp3" % "okhttp" % "3.13.1"
@@ -45,7 +44,6 @@ object Deps {
   def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   def scalatest = "org.scalatest" %% "scalatest" % "3.2.0"
-  def scalatestJunit = "org.scalatestplus" %% "junit-4-12" % "3.1.2.0"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % versions.scalaz
   def windowsAnsi = "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"

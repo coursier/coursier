@@ -22,15 +22,12 @@ import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
 import coursier.install.MainClass
 import coursier.util.Sync
-import org.junit.runner.RunWith
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source
 
-@RunWith(classOf[JUnitRunner])
 class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers {
 
   val pool = Sync.fixedThreadPool(6)

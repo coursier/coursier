@@ -10,14 +10,11 @@ import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOpt
 import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.launcher.BootstrapGenerator.resourceDir
-import org.junit.runner.RunWith
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.junit.JUnitRunner
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
   */
-@RunWith(classOf[JUnitRunner])
 class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
 
   private def zipEntryContent(zis: ZipInputStream, path: String): Array[Byte] = {

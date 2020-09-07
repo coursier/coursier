@@ -8,14 +8,11 @@ import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
 import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
-import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.junit.JUnitRunner
 
 import scala.concurrent.ExecutionContext
 
-@RunWith(classOf[JUnitRunner])
 class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
 
   val pool = Sync.fixedThreadPool(6)
