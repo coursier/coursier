@@ -48,7 +48,8 @@ object Settings {
       "-feature",
       "-deprecation",
       "-language:higherKinds",
-      "-language:implicitConversions"
+      "-language:implicitConversions",
+      "-Xasync"
     ),
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaBinaryVersion.value) match {
