@@ -283,9 +283,9 @@ lazy val env = project("env")
     coursierPrefix,
     libs ++= Seq(
       Deps.dataClass % Provided,
-      Deps.jimfs % Test,
-      Deps.scalatest % Test
-    )
+      Deps.jimfs % Test
+    ),
+    utest
   )
 
 lazy val install = project("install")

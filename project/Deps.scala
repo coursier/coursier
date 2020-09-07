@@ -43,7 +43,6 @@ object Deps {
   def scalaNativeTools03 = "org.scala-native" %% "tools" % "0.3.9"
   def scalaNativeTools040M2 = "org.scala-native" %% "tools" % "0.4.0-M2"
   def scalaReflect = setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-  def scalatest = "org.scalatest" %% "scalatest" % "3.2.0"
   def scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
   def scalazConcurrent = "org.scalaz" %% "scalaz-concurrent" % versions.scalaz
   def windowsAnsi = "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
