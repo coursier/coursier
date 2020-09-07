@@ -5,11 +5,12 @@ import java.util.Random
 import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
 
 import coursier.launcher.internal.Zip
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
-class ZipTests extends AnyFlatSpec {
+object ZipTests extends TestSuite {
 
-  "zipEntries" should "be fine with custom deflaters" in {
+  val tests = Tests {
+  test("zipEntries should be fine with custom deflaters") {
 
     // Inspired by https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2297c301250b25e3b80301c58daf3ea0R621
 
@@ -42,5 +43,5 @@ class ZipTests extends AnyFlatSpec {
     zos.close()
     assert(entryNames == Vector("entry.dat"))
   }
-
+  }
 }

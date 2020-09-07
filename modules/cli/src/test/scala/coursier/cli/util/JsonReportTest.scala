@@ -2,10 +2,11 @@ package coursier.cli.util
 
 import argonaut.Parse
 import coursier.cli.CliTestLib
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
-class JsonReportTest extends AnyFlatSpec with CliTestLib {
-  "empty JsonReport" should "be empty" in {
+object JsonReportTest extends TestSuite with CliTestLib {
+  val tests = Tests {
+  test("empty JsonReport should be empty") {
     val report: String = JsonReport[String](IndexedSeq(), Map())(
       children = _ => Seq(),
       reconciledVersionStr = _ => "",
@@ -18,7 +19,7 @@ class JsonReportTest extends AnyFlatSpec with CliTestLib {
       report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}")
   }
 
-  "JsonReport containing two deps" should "not be empty" in {
+  test("JsonReport containing two deps should not be empty") {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
     val report: String = JsonReport[String](
       roots = IndexedSeq("a", "b"),
@@ -56,7 +57,7 @@ class JsonReportTest extends AnyFlatSpec with CliTestLib {
 
     assert(reportJson == expectedReportJson)
   }
-  "JsonReport containing two deps" should "be sorted alphabetically regardless of input order" in {
+  test("JsonReport containing two deps should be sorted alphabetically regardless of input order") {
     val children = Map("a" -> Seq("b"), "b" -> Seq())
     val report: String = JsonReport[String](
       roots = IndexedSeq( "b", "a"),
@@ -83,5 +84,6 @@ class JsonReportTest extends AnyFlatSpec with CliTestLib {
     )
 
     assert(reportJson == expectedReportJson)
+  }
   }
 }

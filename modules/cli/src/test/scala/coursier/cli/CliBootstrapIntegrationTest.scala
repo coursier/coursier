@@ -10,12 +10,12 @@ import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOpt
 import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.launcher.BootstrapGenerator.resourceDir
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
   */
-class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
+object CliBootstrapIntegrationTest extends TestSuite with CliTestLib {
 
   private def zipEntryContent(zis: ZipInputStream, path: String): Array[Byte] = {
     val e = zis.getNextEntry
@@ -52,7 +52,8 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
       content.drop(idx)
   }
 
-  "bootstrap" should "not add POMs to the classpath" in withFile() {
+  val tests = Tests {
+  test("not add POMs to the classpath") - withFile() {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
@@ -113,7 +114,7 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
       assert(extensions == Set("jar"))
   }
 
-  "bootstrap" should "accept simple modules via --shared" in withFile() {
+  test("accept simple modules via --shared") - withFile() {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
@@ -173,7 +174,7 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
       assert(extensions == Set("jar"))
   }
 
-  "bootstrap" should "add standard and source JARs to the classpath" in withFile() {
+  test("add standard and source JARs to the classpath") - withFile() {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
@@ -271,79 +272,78 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
         assert(lines.contains("scalameta_2.12-1.7.0-sources.jar"))
     }
 
-  "bootstrap" should "add standard and source JARs to the classpath with classloader isolation" in {
+  test("add standard and source JARs to the classpath with classloader isolation") {
     isolationTest()
   }
 
-  "bootstrap" should "add standard and source JARs to the classpath with classloader isolation in standalone bootstrap" in {
+  test("add standard and source JARs to the classpath with classloader isolation in standalone bootstrap") {
     isolationTest(standalone = Some(true))
   }
 
-  "bootstrap" should "be deterministic when deterministic option is specified" in
-    withFile() {(bootstrapFile, _) =>
-      withFile() {(bootstrapFile2, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
-        val artifactOptions = ArtifactOptions(
-          sources = true,
-          default = Some(true)
-        )
-        val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
-        )
-        val sharedLoaderOptions = SharedLoaderOptions(
-          sharedTarget = List("foo"),
-          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
-        )
-        val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = Some(bootstrapFile.getPath),
-          force = true,
-          deterministic = true
-        )
-        val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions,
-          artifactOptions = artifactOptions,
-          sharedLoaderOptions = sharedLoaderOptions
-        )
-        val bootstrapOptions = BootstrapOptions(
-          sharedLaunchOptions = sharedLaunchOptions,
-          options = bootstrapSpecificOptions
-        )
-        Bootstrap.run(
-          bootstrapOptions,
-          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
-        )
+  test("be deterministic when deterministic option is specified") - withFile() {(bootstrapFile, _) =>
+    withFile() {(bootstrapFile2, _) =>
+      val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
+      val artifactOptions = ArtifactOptions(
+        sources = true,
+        default = Some(true)
+      )
+      val resolveOptions = SharedResolveOptions(
+        repositoryOptions = repositoryOpt
+      )
+      val sharedLoaderOptions = SharedLoaderOptions(
+        sharedTarget = List("foo"),
+        isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+      )
+      val bootstrapSpecificOptions = BootstrapSpecificOptions(
+        output = Some(bootstrapFile.getPath),
+        force = true,
+        deterministic = true
+      )
+      val sharedLaunchOptions = SharedLaunchOptions(
+        resolveOptions = resolveOptions,
+        artifactOptions = artifactOptions,
+        sharedLoaderOptions = sharedLoaderOptions
+      )
+      val bootstrapOptions = BootstrapOptions(
+        sharedLaunchOptions = sharedLaunchOptions,
+        options = bootstrapSpecificOptions
+      )
+      Bootstrap.run(
+        bootstrapOptions,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
 
-        //We need to wait between two runs to ensure we don't accidentally get the same hash
-        Thread.sleep(2000)
+      //We need to wait between two runs to ensure we don't accidentally get the same hash
+      Thread.sleep(2000)
 
-        val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
-          output = Some(bootstrapFile2.getPath)
-        )
-        val bootstrapOptions2 = bootstrapOptions.copy(
-          options = bootstrapSpecificOptions2
-        )
-        Bootstrap.run(
-          bootstrapOptions2,
-          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
-        )
+      val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
+        output = Some(bootstrapFile2.getPath)
+      )
+      val bootstrapOptions2 = bootstrapOptions.copy(
+        options = bootstrapSpecificOptions2
+      )
+      Bootstrap.run(
+        bootstrapOptions2,
+        RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+      )
 
-        val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
-          .digest(actualContent(bootstrapFile))
-          .toSeq
-          .map(b => "%02x".format(b))
-          .mkString
+      val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
+        .digest(actualContent(bootstrapFile))
+        .toSeq
+        .map(b => "%02x".format(b))
+        .mkString
 
-        val bootstrap2SHA256 = MessageDigest.getInstance("SHA-256")
-          .digest(actualContent(bootstrapFile2))
-          .toSeq
-          .map(b => "%02x".format(b))
-          .mkString
+      val bootstrap2SHA256 = MessageDigest.getInstance("SHA-256")
+        .digest(actualContent(bootstrapFile2))
+        .toSeq
+        .map(b => "%02x".format(b))
+        .mkString
 
-        assert(bootstrap1SHA256 == bootstrap2SHA256)
-      }
+      assert(bootstrap1SHA256 == bootstrap2SHA256)
     }
+  }
 
-  "bootstrap" should "rename JAR with the same file name" in withFile() {
+  test("rename JAR with the same file name") - withFile() {
 
     (bootstrapFile, _) =>
       val repositoryOpt = RepositoryOptions(repository = List("bintray:scalacenter/releases"))
@@ -383,7 +383,7 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
       assert(fastparseUtilsLines.distinct.length == 2)
   }
 
-  it should "put everything under the coursier/bootstrap directory in bootstrap" in withFile() {
+  test("put everything under the coursier/bootstrap directory in bootstrap") - withFile() {
     (bootstrapFile, _) =>
 
       val sharedLoaderOptions = SharedLoaderOptions(
@@ -420,5 +420,6 @@ class CliBootstrapIntegrationTest extends AnyFlatSpec with CliTestLib {
       assert(names.exists(_.startsWith("META-INF/")))
       assert(names.exists(_.startsWith("coursier/bootstrap/launcher/")))
       assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/launcher/")))
+  }
   }
 }

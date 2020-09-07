@@ -22,13 +22,12 @@ import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
 import coursier.install.MainClass
 import coursier.util.Sync
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
+import utest._
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source
 
-class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers {
+object CliFetchIntegrationTest extends TestSuite with CliTestLib {
 
   val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
@@ -55,7 +54,8 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
   private val fileNameLength: DepNode => Int = _.file.getOrElse("").length
 
-  "Normal fetch" should "get all files" in {
+  val tests = Tests {
+  test("get all files") {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
@@ -63,7 +63,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
-  "Underscore classifier" should "fetch default files" in {
+  test("fetch default files") {
     val artifactOpt = ArtifactOptions(
       classifier = List("_")
     )
@@ -74,7 +74,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
   }
 
-  "Underscore and source classifier" should "fetch default and source files" in {
+  test("Underscore and source classifier should fetch default and source files") {
     val artifactOpt = ArtifactOptions(
       classifier = List("_"),
       sources = true
@@ -91,7 +91,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     )))
   }
 
-  "Default and source options" should "fetch default and source files" in {
+  test("Default and source options should fetch default and source files") {
     val artifactOpt = ArtifactOptions(
       default = Some(true),
       sources = true
@@ -110,7 +110,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     )))
   }
 
-  "scalafmt-cli fetch" should "discover all main classes" in {
+  test("scalafmt-cli fetch should discover all main classes") {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val (_, _, _, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
@@ -121,7 +121,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     ))
   }
 
-  "scalafix-cli fetch" should "discover all main classes" in {
+  test("scalafix-cli fetch should discover all main classes") {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val (_, _, _, files) = Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
@@ -133,7 +133,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     ))
   }
 
-  "ammonite fetch" should "discover all main classes" in {
+  test("ammonite fetch should discover all main classes") {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
@@ -146,7 +146,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     ))
   }
 
-  "sssio fetch" should "discover all main classes" in {
+  test("sssio fetch should discover all main classes") {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val (_, _, _, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
@@ -158,26 +158,26 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     ))
   }
 
-  "Module level" should "exclude correctly" in withFile(
-    "junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
-    withFile() { (jsonFile, _) =>
-      val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-      val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
-      val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-      val params = paramsOrThrow(options)
+  test("Module level should exclude correctly") {
+    withFile("junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
+      withFile() { (jsonFile, _) =>
+        val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
+        val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
+        val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
+        val params = paramsOrThrow(options)
 
-      val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun()(ec)
-      val filesFetched = files.map(_._2.getName).toSet
-      val expected = Set("junit-4.12.jar")
-      assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
+        val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+          .unsafeRun()(ec)
+        val filesFetched = files.map(_._2.getName).toSet
+        val expected = Set("junit-4.12.jar")
+        Predef.assert(filesFetched.equals(expected), s"files fetched: $filesFetched not matching expected: $expected")
 
-      val node: ReportNode = getReportFromJson(jsonFile)
+        val node: ReportNode = getReportFromJson(jsonFile)
 
-      assert(node.dependencies.length == 1)
-      assert(node.dependencies.head.coord == "junit:junit:4.12")
+        assert(node.dependencies.length == 1)
+        assert(node.dependencies.head.coord == "junit:junit:4.12")
+      }
     }
-
   }
 
   /**
@@ -192,7 +192,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |├─ org.slf4j:slf4j-api:1.6.4
     * |└─ org.xerial.snappy:snappy-java:1.0.4.1
     */
-  "avro exclude xz" should "not fetch xz" in withFile(
+  test("avro exclude xz should not fetch xz") - withFile(
     "org.apache.avro:avro--org.tukaani:xz") { (file, writer) =>
     withFile() { (jsonFile, _) =>
       val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
@@ -240,7 +240,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.4.1
     * |   └─ org.tukaani:xz:1.0
     */
-  "avro excluding xz + commons-compress" should "still fetch xz" in withFile(
+  test("avro excluding xz + commons-compress should still fetch xz") - withFile(
     "org.apache.avro:avro--org.tukaani:xz") {
     (file, writer) =>
 
@@ -277,7 +277,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |│  └─ org.tukaani:xz:1.0 -> 1.1
     * |└─ org.tukaani:xz:1.1
     */
-  "requested xz:1.1" should "not have conflicts" in withFile() {
+  test("requested xz:1.1 should not have conflicts") - withFile() {
     (excludeFile, writer) =>
       withFile() {
         (jsonFile, _) => {
@@ -299,7 +299,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |│  └─ org.tukaani:xz:1.2
     * |└─ org.tukaani:xz:1.1 -> 1.2
     */
-  "org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1" should "have conflicts" in withFile() {
+  test("org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1 should have conflicts") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -320,7 +320,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5
     * |   └─ org.tukaani:xz:1.2
     */
-  "classifier tests" should "have tests.jar" in withFile() {
+  test("classifier tests should have tests.jar") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -338,7 +338,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
 
           assert(compressNode.isDefined)
-          compressNode.get.file.map(f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(fail("Not Defined"))
+          compressNode.get.file.map(f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(sys.error("Not Defined"))
           assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
         }
       }
@@ -351,7 +351,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5
     * |   └─ org.tukaani:xz:1.2
     */
-  "mixed vanilla and classifier " should "have tests.jar and .jar" in withFile() {
+  test("mixed vanilla and classifier  should have tests.jar and .jar") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -375,10 +375,10 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
           assert(compressNodes.length == 2)
           assert(compressNodes.head.coord == "org.apache.commons:commons-compress:1.5")
-          compressNodes.head.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(fail("Not Defined"))
+          compressNodes.head.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(sys.error("Not Defined"))
 
           assert(compressNodes.last.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
-          compressNodes.last.file.map( f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(fail("Not Defined"))
+          compressNodes.last.file.map( f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(sys.error("Not Defined"))
         }
       }
   }
@@ -388,7 +388,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5
     * |   └─ org.tukaani:xz:1.2 // should not be fetched
     */
-  "intransitive" should "only fetch a single jar" in withFile() {
+  test("intransitive should only fetch a single jar") - withFile() {
     (_, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -403,7 +403,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
           val node: ReportNode = getReportFromJson(jsonFile)
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
           assert(compressNode.isDefined)
-          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(fail("Not Defined"))
+          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(sys.error("Not Defined"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -415,7 +415,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5
     * |   └─ org.tukaani:xz:1.2
     */
-  "intransitive classifier" should "only fetch a single tests jar" in withFile() {
+  test("intransitive classifier should only fetch a single tests jar") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -431,7 +431,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.5")
           assert(compressNode.isDefined)
-          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(fail("Not Defined"))
+          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.5-tests.jar"))).orElse(sys.error("Not Defined"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
@@ -443,7 +443,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
     * |   └─ org.tukaani:xz:1.0
     */
-  "classifier with forced version" should "fetch tests jar" in withFile() {
+  test("classifier with forced version should fetch tests jar") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -465,7 +465,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
 
           assert(compressNode.isDefined)
-          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.4.1-tests.jar"))).orElse(fail("Not Defined"))
+          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.4.1-tests.jar"))).orElse(sys.error("Not Defined"))
 
           assert(compressNode.get.dependencies.size == 1)
           assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
@@ -478,7 +478,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
     * |   └─ org.tukaani:xz:1.0 // should not be there
     */
-  "intransitive, classifier, forced version" should "fetch a single tests jar" in withFile() {
+  test("intransitive, classifier, forced version should fetch a single tests jar") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -505,14 +505,14 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
           val compressNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1")
 
           assert(compressNode.isDefined)
-          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.4.1-tests.jar"))).orElse(fail("Not Defined"))
+          compressNode.get.file.map( f => assert(f.contains("commons-compress-1.4.1-tests.jar"))).orElse(sys.error("Not Defined"))
 
           assert(compressNode.get.dependencies.isEmpty)
         }
       }
   }
 
-  "profiles" should "be manually (de)activated" in withFile() {
+  test("profiles should be manually (de)activated") - withFile() {
     (jsonFile, _) =>
       val resolutionOpt = ResolutionOptions(profile = List("scala-2.10", "!scala-2.11"))
       val resolveOpt = SharedResolveOptions(
@@ -533,7 +533,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
       assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
   }
 
-  "com.spotify:helios-testing:0.9.193" should "have dependencies with classifiers" in withFile() {
+  test("com.spotify:helios-testing:0.9.193 should have dependencies with classifiers") - withFile() {
     (excludeFile, _) =>
       withFile() {
         (jsonFile, _) => {
@@ -561,7 +561,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ a:b:c
    */
-  "local file dep url" should "have coursier-fetch-test.jar and cached for second run" in withFile() {
+  test("local file dep url should have coursier-fetch-test.jar and cached for second run") - withFile() {
     (jsonFile, _) => {
       withFile("tada", "coursier-fetch-test", ".jar") {
         (testFile, _) => {
@@ -624,7 +624,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
-  "external dep url" should "fetch junit-4.12.jar" in withFile() {
+  test("external dep url should fetch junit-4.12.jar") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -647,7 +647,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
         .filter(_.coord == "org.apache.commons:commons-compress:1.5")
         .sortBy(fileNameLength)
       assert(depNodes.length == 1)
-      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -655,7 +655,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ h:i:j
    */
-  "external dep url with arbitrary coords" should "fetch junit-4.12.jar" in withFile() {
+  test("external dep url with arbitrary coords should fetch junit-4.12.jar") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -678,7 +678,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
         .filter(_.coord == "h:i:j")
         .sortBy(fileNameLength)
       assert(depNodes.length == 1)
-      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -686,7 +686,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
-  "external dep url with classifier" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
+  test("external dep url with classifier should fetch junit-4.12.jar and classifier gets thrown away") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -715,7 +715,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
       assert(depNodes.length == 1)
       // classifier doesn't matter when we have a url so it is not listed
-      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -725,7 +725,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * |   └─ org.tukaani:xz:1.2
    * |└─ org.tukaani:xz:1.2 // with the file from the URL
    */
-  "external dep url with classifier that is a transitive dep" should "fetch junit-4.12.jar and classifier gets thrown away" in withFile() {
+  test("external dep url with classifier that is a transitive dep should fetch junit-4.12.jar and classifier gets thrown away") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -751,7 +751,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
       assert(coords == Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.2"))
       assert(depNodes.length == 1)
       assert(depNodes.last.file.isDefined)
-      depNodes.last.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.last.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -760,7 +760,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * |└─ org.apache.commons:commons-compress:1.5,classifier=sources
    *     └─ org.tukaani:xz:1.2,classifier=sources
    */
-  "classifier sources" should "fetch sources jar" in withFile() {
+  test("classifier sources should fetch sources jar") - withFile() {
     (jsonFile, _) => {
       val artifactOpt = ArtifactOptions(sources = true)
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath, artifactOptions = artifactOpt)
@@ -783,7 +783,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
       assert(depNodes.length == 1)
       assert(depNodes.head.file.isDefined)
-      depNodes.head.file.map(f => assert(f.contains("1.5-sources.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map(f => assert(f.contains("1.5-sources.jar"))).orElse(sys.error("Not Defined"))
       depNodes.head.dependencies.foreach(d => {
         assert(d.contains(":sources:"))
       })
@@ -801,7 +801,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * |└─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
    * |   └─ org.codehaus.jackson:jackson-core-asl:1.8.8
    */
-  "external dep url with another dep" should "fetch junit-4.12.jar and jars for jackson-mapper" in withFile() {
+  test("external dep url with another dep should fetch junit-4.12.jar and jars for jackson-mapper") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -826,13 +826,13 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
         .filter(_.coord == "org.apache.commons:commons-compress:1.5")
         .sortBy(fileNameLength)
       assert(compressNodes.length == 1)
-      compressNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      compressNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
 
       val jacksonMapperNodes = depNodes
         .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
         .sortBy(fileNameLength)
       assert(jacksonMapperNodes.length == 1)
-      jacksonMapperNodes.head.file.map( f => assert(f.contains("org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"))).orElse(fail("Not Defined"))
+      jacksonMapperNodes.head.file.map( f => assert(f.contains("org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"))).orElse(sys.error("Not Defined"))
       assert(jacksonMapperNodes.head.dependencies.size == 1)
       assert(jacksonMapperNodes.head.dependencies.head == "org.codehaus.jackson:jackson-core-asl:1.8.8")
 
@@ -840,7 +840,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
         .filter(_.coord == "org.codehaus.jackson:jackson-core-asl:1.8.8")
         .sortBy(fileNameLength)
       assert(jacksonCoreNodes.length == 1)
-      jacksonCoreNodes.head.file.map( f => assert(f.contains("org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"))).orElse(fail("Not Defined"))
+      jacksonCoreNodes.head.file.map( f => assert(f.contains("org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -848,7 +848,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    *  Error
    */
-  "external dep url with forced version" should "throw an error" in withFile() {
+  test("external dep url with forced version should throw an error") - withFile() {
     (jsonFile, _) => {
       val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
       val resolveOpt = SharedResolveOptions(
@@ -859,7 +859,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
       val externalUrl = encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-      assertThrows[Exception]({
+      val thrownException = try {
         Fetch.task(
           params,
           pool,
@@ -867,7 +867,12 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
             "org.apache.commons:commons-compress:1.5,url=" + externalUrl
           )
         ).unsafeRun()(ec)
-      })
+        false
+      } catch {
+        case _: Exception =>
+          true
+      }
+      assert(thrownException)
     }
   }
 
@@ -875,7 +880,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ org.apache.commons:commons-compress:1.5
    */
-  "external dep url with the same forced version" should "fetch junit-4.12.jar" in withFile() {
+  test("external dep url with the same forced version should fetch junit-4.12.jar") - withFile() {
     (jsonFile, _) => {
       val resolutionOpt = ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.5"))
       val resolveOpt = SharedResolveOptions(
@@ -898,7 +903,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
       val depNodes: Seq[DepNode] = node.dependencies
       assert(depNodes.length == 1)
-      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -906,7 +911,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * Result:
    * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
    */
-  "external dep url on higher version" should "fetch junit-4.12.jar" in withFile() {
+  test("external dep url on higher version should fetch junit-4.12.jar") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -929,7 +934,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
         .filter(_.coord == "org.apache.commons:commons-compress:1.5")
         .sortBy(fileNameLength)
       assert(depNodes.length == 1)
-      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(fail("Not Defined"))
+      depNodes.head.file.map( f => assert(f.contains("junit/junit/4.12/junit-4.12.jar"))).orElse(sys.error("Not Defined"))
     }
   }
 
@@ -938,7 +943,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
    * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
    * |   └─ org.tukaani:xz:1.2
    */
-  "external dep url on lower version" should "fetch higher version" in withFile() {
+  test("external dep url on lower version should fetch higher version") - withFile() {
     (jsonFile, _) => {
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -959,14 +964,14 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
 
       val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
       assert(depNode.isDefined)
-      depNode.get.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(fail("Not Defined"))
+      depNode.get.file.map( f => assert(f.contains("commons-compress-1.5.jar"))).orElse(sys.error("Not Defined"))
 
       assert(depNode.get.dependencies.size == 1)
       assert(depNode.get.dependencies.head.contains("org.tukaani:xz:1.2"))
     }
   }
 
-  "grpc-core" should "have dependencies" in {
+  test("grpc-core should have dependencies") {
     withFile() { (jsonFile, _) =>
       val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
       val params = paramsOrThrow(options)
@@ -1009,7 +1014,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  "Bad pom resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+  test("Bad pom resolve should succeed with retry") - withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
         val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
@@ -1042,7 +1047,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  "Bad pom sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+  test("Bad pom sha-1 resolve should succeed with retry") - withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
         val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
@@ -1081,7 +1086,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  "Bad jar resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+  test("Bad jar resolve should succeed with retry") - withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
         val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
@@ -1109,7 +1114,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  "Bad jar sha-1 resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+  test("Bad jar sha-1 resolve should succeed with retry") - withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
         val cacheOpt = CacheOptions(cache = Some(dir.getAbsolutePath))
@@ -1145,7 +1150,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  "Wrong range partial artifact resolve" should "succeed with retry" in withTempDir("tmp_dir") {
+  test("Wrong range partial artifact resolve should succeed with retry") - withTempDir("tmp_dir") {
     dir => {
       def runFetchJunit() = {
         val cacheOpt = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
@@ -1175,7 +1180,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  it should "fail because of resolution" in {
+  test("fail because of resolution") - {
     val options = FetchOptions()
     val params = paramsOrThrow(options)
     val a = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
@@ -1191,7 +1196,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     }
   }
 
-  it should "fail to resolve, but try to fetch artifacts anyway" in {
+  test("fail to resolve, but try to fetch artifacts anyway") - {
     val artifactOptions = ArtifactOptions(
       forceFetch = true
     )
@@ -1316,7 +1321,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     assert(urls == expectedUrls)
   }
 
-  it should "not delete file in local Maven repo" in withTempDir("tmp_dir") { tmpDir =>
+  test("not delete file in local Maven repo") - withTempDir("tmp_dir") { tmpDir =>
 
     val pomPath = new File(tmpDir, "org/name/0.1/name-0.1.pom")
     val pomSha1Path = new File(pomPath.getParentFile, pomPath.getName + ".sha1")
@@ -1372,7 +1377,7 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
     assert(pomSha1Path.exists())
   }
 
-  "Scala version range" should "work with fully cross-versioned dependencies" in {
+  test("Scala version range should work with fully cross-versioned dependencies") {
     val resolutionOpt = ResolutionOptions(
       scalaVersion = Some("2.12.+")
     )
@@ -1421,5 +1426,6 @@ class CliFetchIntegrationTest extends AnyFlatSpec with CliTestLib with Matchers 
       "upickle_2.12-0.8.0.jar"
     )
     assert(files.map(_._2.getName).toSet.equals(expectedFiles))
+  }
   }
 }

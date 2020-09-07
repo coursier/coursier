@@ -8,17 +8,16 @@ import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
 import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
 import coursier.util.Sync
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
 import scala.concurrent.ExecutionContext
 
-class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
+object ResolveTests extends TestSuite {
 
   val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
 
-  override protected def afterAll(): Unit = {
+  override def utestAfterAll(): Unit = {
     pool.shutdown()
   }
 
@@ -33,7 +32,8 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     }
 
 
-  it should "print what depends on" in {
+  val tests = Tests {
+  test("print what depends on") {
     val options = ResolveOptions(
       whatDependsOn = List("org.htrace:htrace-core")
     )
@@ -63,10 +63,10 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |            └─ org.apache.spark:spark-sql_2.12:2.4.0
         |""".stripMargin
 
-    assert(output === expectedOutput)
+    assert(output == expectedOutput)
   }
 
-  it should "print what depends on with regex" in {
+  test("print what depends on with regex") {
     val options = ResolveOptions(
       whatDependsOn = List("*:htrace-*")
     )
@@ -96,10 +96,10 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |            └─ org.apache.spark:spark-sql_2.12:2.4.0
         |""".stripMargin
 
-    assert(output === expectedOutput)
+    assert(output == expectedOutput)
   }
 
-  it should "print results anyway" in {
+  test("print results anyway") {
     val options = ResolveOptions(
       forcePrint = true
     )
@@ -129,10 +129,10 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
         |""".stripMargin
 
-    assert(output === expectedOutput)
+    assert(output == expectedOutput)
   }
 
-  it should "resolve sbt plugins" in {
+  test("resolve sbt plugins") {
     val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
         sbtPlugin = List(
@@ -276,10 +276,10 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
         |org.vafer:jdeb:1.3:default
         |""".stripMargin
 
-    assert(output === expectedOutput)
+    assert(output == expectedOutput)
   }
 
-  it should "resolve sbt 0.13 plugins" in {
+  test("resolve sbt 0.13 plugins") {
     val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
         sbtPlugin = List("org.scalameta:sbt-metals:0.7.0"),
@@ -298,10 +298,10 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     val output = new String(stdout.toByteArray, "UTF-8")
     val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
-    assert(output === expectedOutput)
+    assert(output == expectedOutput)
   }
 
-  it should "resolve the main artifact first in classpath order" in {
+  test("resolve the main artifact first in classpath order") {
     val options = SharedResolveOptions(
       classpathOrder = Option(true)
     )
@@ -322,7 +322,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
   }
 
-  it should "print candidate artifact URLs" in {
+  test("print candidate artifact URLs") {
     val options = ResolveOptions(
       candidateUrls = true
     )
@@ -348,7 +348,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output == expectedOutput)
   }
 
-  it should "exclude root dependencies" in {
+  test("exclude root dependencies") {
     val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
         exclude = List("com.chuusai::shapeless")
@@ -395,7 +395,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     new String(stdout.toByteArray, "UTF-8")
   }
 
-  it should "ignore binary scala version" in {
+  test("ignore binary scala version") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.13")
@@ -411,7 +411,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output0 == expectedOutput)
   }
 
-  it should "ignore full scala version" in {
+  test("ignore full scala version") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.13.2")
@@ -427,7 +427,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output0 == expectedOutput)
   }
 
-  it should "use binary scala version" in {
+  test("use binary scala version") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.11")
@@ -445,7 +445,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output0 == expectedOutput)
   }
 
-  it should "use full scala version" in {
+  test("use full scala version") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.13.2")
@@ -462,7 +462,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output0 == expectedOutput)
   }
 
-  it should "use lower full scala version" in {
+  test("use lower full scala version") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.13.1")
@@ -479,7 +479,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
     assert(output0 == expectedOutput)
   }
 
-  it should "use full scala version and not list those available" in {
+  test("use full scala version and not list those available") {
     val options = SharedResolveOptions(
       resolutionOptions = ResolutionOptions(
         scalaVersion = Some("2.13.1")
@@ -504,6 +504,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
           assert(message == expectedMessage)
           false
       }
-    assert(!success, "Expected a resolution exception")
+    Predef.assert(!success, "Expected a resolution exception")
+  }
   }
 }

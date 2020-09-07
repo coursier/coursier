@@ -329,6 +329,7 @@ lazy val cli = project("cli")
     shared,
     coursierPrefix,
     addBootstrapJarResourceInTests,
+    utest,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -337,8 +338,7 @@ lazy val cli = project("cli")
           Deps.catsCore,
           Deps.dataClass % Provided,
           Deps.monadlessCats,
-          Deps.monadlessStdlib,
-          Deps.scalatest % Test
+          Deps.monadlessStdlib
         )
       else
         Seq()

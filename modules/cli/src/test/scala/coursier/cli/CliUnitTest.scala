@@ -6,10 +6,9 @@ import coursier.moduleString
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
 import coursier.parse.JavaOrScalaModule
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
-
-class CliUnitTest extends AnyFlatSpec {
+class CliUnitTest extends TestSuite {
 
   def withFile(content: String)(testCode: (File, FileWriter) => Any) {
     val file = File.createTempFile("hello", "world") // create the fixture
@@ -25,16 +24,17 @@ class CliUnitTest extends AnyFlatSpec {
     }
   }
 
-  "Normal text" should "parse correctly" in withFile(
+  val tests = Tests {
+  test("Normal text should parse correctly") - withFile(
     "org1:name1--org2:name2") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
     val params = DependencyParams(options, None)
       .fold(e => sys.error(e.toString), identity)
     val expected = Map(JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(JavaOrScalaModule.JavaModule(mod"org2:name2")))
-    assert(params.perModuleExclude.equals(expected), s"got ${params.perModuleExclude}")
+    Predef.assert(params.perModuleExclude.equals(expected), s"got ${params.perModuleExclude}")
   }
 
-  "Multiple excludes" should "be combined" in withFile(
+  test("Multiple excludes should be combined") - withFile(
     "org1:name1--org2:name2\n" +
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, _) =>
@@ -49,7 +49,7 @@ class CliUnitTest extends AnyFlatSpec {
     assert(params.perModuleExclude.equals(expected))
   }
 
-  "extra --" should "error" in withFile(
+  test("extra -- should error") - withFile(
     "org1:name1--org2:name2--xxx\n" +
       "org1:name1--org3:name3\n" +
       "org4:name4--org5:name5") { (file, _) =>
@@ -62,7 +62,7 @@ class CliUnitTest extends AnyFlatSpec {
     }
   }
 
-  "child has no name" should "error" in withFile(
+  test("child has no name should error") - withFile(
     "org1:name1--org2:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
     DependencyParams(options, None).toEither match {
@@ -73,7 +73,7 @@ class CliUnitTest extends AnyFlatSpec {
     }
   }
 
-  "child has nothing" should "error" in withFile(
+  test("child has nothing should error") - withFile(
     "org1:name1--:") { (file, _) =>
     val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
     DependencyParams(options, None).toEither match {
@@ -83,5 +83,5 @@ class CliUnitTest extends AnyFlatSpec {
         sys.error(s"Should have errored (got $p)")
     }
   }
-
+  }
 }
