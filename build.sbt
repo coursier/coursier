@@ -345,7 +345,12 @@ lazy val cli = project("cli")
     },
     evictionRules += "org.typelevel" %% "cats*" % "always",
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    onlyIn("2.12")
+    onlyIn("2.12"),
+    fork.in(Test) := true,
+    javaOptions.in(Test) += {
+      val launcher = pack.in(Compile).value.getAbsoluteFile / "bin" / "coursier"
+      s"-Dcoursier-test-launcher=$launcher"
+    }
   )
 
 lazy val `launcher-native_03` = project("launcher-native_03")

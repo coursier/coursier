@@ -82,24 +82,6 @@ nailgun() {
   fi
 }
 
-fork() {
-  local OUT="$("$COURSIER" launch --fork io.get-coursier:echo:1.0.1 -- foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from forked echo command." 1>&2
-    exit 1
-  fi
-}
-
-nonStaticMainClass() {
-  local OUT="$("$COURSIER" launch org.scala-lang:scala-compiler:2.13.0 --main-class scala.tools.nsc.Driver 2>&1 || true)"
-  if echo "$OUT" | grep "Main method in class scala.tools.nsc.Driver is not static"; then
-    :
-  else
-    echo "Error: unexpected output from launch command with non-static main class: $OUT"
-    exit 1
-  fi
-}
-
 simple() {
   "$COURSIER" bootstrap -o cs-echo io.get-coursier:echo:1.0.1
   local OUT="$(./cs-echo foo)"
@@ -137,15 +119,6 @@ javaClassPathInExpansion() {
   GOT="$(./cs-props-1 java.class.path)"
   if [ "$GOT" != "$EXPECTED" ]; then
     echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $GOT)" 1>&2
-    exit 1
-  fi
-}
-
-javaClassPathInExpansionFromLaunch() {
-  EXPECTED="$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
-  GOT="$("$COURSIER" launch --property foo='${java.class.path}' io.get-coursier:props:1.0.2 -- foo)"
-  if [ "$GOT" != "$EXPECTED" ]; then
-    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $CP)" 1>&2
     exit 1
   fi
 }
@@ -321,22 +294,6 @@ resolveRules() {
     --rule 'SameVersion(com.fasterxml.jackson.core:jackson-*)'
 }
 
-launchInlineApp() {
-  local OUT="$("$COURSIER" launch '{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from inline echo app command." 1>&2
-    exit 1
-  fi
-}
-
-launchInlineAppWithId() {
-  local OUT="$("$COURSIER" launch 'echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}' -- foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from inline echo app with id command." 1>&2
-    exit 1
-  fi
-}
-
 installInlineApp() {
   local DIR="target/test-install"
   rm -rf "$DIR"
@@ -367,13 +324,10 @@ enVarInstalledApp() {
 }
 
 nailgun
-fork
-nonStaticMainClass
 simple
 require
 javaClassPathProp
 javaClassPathInExpansion
-javaClassPathInExpansionFromLaunch
 spaceInMainJar
 manifestJar
 hybrid
@@ -395,8 +349,6 @@ launcherAssemblyPreambleInSource
 
 resolveRules
 
-launchInlineApp
-launchInlineAppWithId
 installInlineApp
 
 enVarInstalledApp
