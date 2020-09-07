@@ -4,8 +4,6 @@ import java.io.File
 import java.nio.file.{Files, Path}
 import java.util.Properties
 
-import coursier.paths.Util
-
 import utest._
 
 import scala.collection.JavaConverters._
