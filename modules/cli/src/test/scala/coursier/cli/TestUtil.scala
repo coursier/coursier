@@ -20,15 +20,10 @@ object TestUtil {
     }
   }
 
-  def withTempDir(
-      prefix: String
-  )(testCode: File => Any) {
-    val dir = Files.createTempDirectory(prefix).toFile // create the fixture
-    try {
-      testCode(dir) // "loan" the fixture to the test
-    } finally {
-      cleanDir(dir)
-    }
+  def withTempDir[T](prefix: String)(testCode: File => T): T = {
+    val dir = Files.createTempDirectory(prefix).toFile
+    try testCode(dir)
+    finally cleanDir(dir)
   }
 
   def cleanDir(tmpDir: File): Unit = {
