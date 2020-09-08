@@ -285,7 +285,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
   it should "resolve sbt 0.13 plugins" in {
     val options = SharedResolveOptions(
       dependencyOptions = DependencyOptions(
-        sbtPlugin = List("org.scalameta:sbt-metals:0.7.0"),
+        sbtPlugin = List("org.scalameta:sbt-metals:0.8.0"),
         sbtVersion = "0.13"
       )
     )
@@ -299,7 +299,7 @@ class ResolveTests extends AnyFlatSpec with BeforeAndAfterAll {
       .unsafeRun()(ec)
 
     val output = new String(stdout.toByteArray, "UTF-8")
-    val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
+    val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.8.0:default\n"
 
     assert(output === expectedOutput)
   }
