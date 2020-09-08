@@ -3,8 +3,7 @@ package coursier.cli
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-
-trait CliTestLib {
+object TestUtil {
 
   def withFile(content: String = "",
                fileName: String = "hello",

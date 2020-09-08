@@ -1,10 +1,9 @@
 package coursier.cli.util
 
 import argonaut.Parse
-import coursier.cli.CliTestLib
 import utest._
 
-object JsonReportTest extends TestSuite with CliTestLib {
+object JsonReportTest extends TestSuite {
   val tests = Tests {
     test("empty JsonReport should be empty") {
       val report: String = JsonReport[String](IndexedSeq(), Map())(

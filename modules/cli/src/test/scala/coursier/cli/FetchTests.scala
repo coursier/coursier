@@ -20,6 +20,7 @@ import coursier.cache.FileCache
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
+import coursier.cli.TestUtil.{withFile, withTempDir}
 import coursier.install.MainClass
 import coursier.util.Sync
 import utest._
@@ -27,7 +28,7 @@ import utest._
 import scala.concurrent.ExecutionContext
 import scala.io.Source
 
-object FetchTests extends TestSuite with CliTestLib {
+object FetchTests extends TestSuite {
 
   val pool = Sync.fixedThreadPool(6)
   val ec = ExecutionContext.fromExecutorService(pool)
