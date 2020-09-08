@@ -29,12 +29,8 @@ object LaunchTests extends TestSuite {
 
     test("java class path in expansion from launch") {
       import coursier.dependencyString
-      val output = LauncherTestUtil.output("launch", "--property", s"foo=$${java.class.path}", "io.get-coursier:props:1.0.2", "--", "foo")
-      val expected = coursier.Fetch()
-        .addDependencies(dep"io.get-coursier:props:1.0.2")
-        .run()
-        .map(_.getAbsolutePath)
-        .mkString(File.pathSeparator) + System.lineSeparator()
+      val output = LauncherTestUtil.output("launch", "--property", s"foo=$${java.class.path}", TestUtil.propsDepStr, "--", "foo")
+      val expected = TestUtil.propsCp.mkString(File.pathSeparator) + System.lineSeparator()
       assert(output == expected)
     }
 

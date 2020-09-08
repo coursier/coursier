@@ -60,37 +60,6 @@ generateLauncher
 
 cd "$TMP"
 
-if which ng-nailgun; then
-  NG=ng-nailgun
-else
-  NG=ng
-fi
-
-nailgun() {
-  "$COURSIER" bootstrap \
-    -o echo-ng \
-    --standalone \
-    io.get-coursier:echo:1.0.0 \
-    com.facebook:nailgun-server:1.0.0 \
-    -M com.facebook.nailgun.NGServer
-  java -jar ./echo-ng &
-  sleep 2
-  local OUT="$("$NG" coursier.echo.Echo foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from the nailgun-based echo command." 1>&2
-    exit 1
-  fi
-}
-
-simple() {
-  "$COURSIER" bootstrap -o cs-echo io.get-coursier:echo:1.0.1
-  local OUT="$(./cs-echo foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from bootstrapped echo command." 1>&2
-    exit 1
-  fi
-}
-
 require() {
   if ! "$COURSIER" --require 1.0.3; then
     echo "Error: expected --require 1.0.3 to succeed." 1>&2
@@ -102,95 +71,6 @@ require() {
   fi
 }
 
-
-javaClassPathProp() {
-  "$COURSIER" bootstrap -o cs-props-0 io.get-coursier:props:1.0.2
-  EXPECTED="./cs-props-0:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
-  GOT="$(./cs-props-0 java.class.path)"
-  if [ "$GOT" != "$EXPECTED" ]; then
-    echo "Error: unexpected java.class.path property (expected $EXPECTED, got $CP)" 1>&2
-    exit 1
-  fi
-}
-
-javaClassPathInExpansion() {
-  "$COURSIER" bootstrap -o cs-props-1 --property foo='${java.class.path}' io.get-coursier:props:1.0.2
-  EXPECTED="./cs-props-1:$("$COURSIER" fetch --classpath io.get-coursier:props:1.0.2)"
-  GOT="$(./cs-props-1 java.class.path)"
-  if [ "$GOT" != "$EXPECTED" ]; then
-    echo "Error: unexpected expansion with java.class.path property (expected $EXPECTED, got $GOT)" 1>&2
-    exit 1
-  fi
-}
-
-spaceInMainJar() {
-  mkdir -p "dir with space"
-  "$COURSIER" bootstrap -o "dir with space/cs-props-0" io.get-coursier:props:1.0.2
-  OUTPUT="$("./dir with space/cs-props-0" coursier.mainJar)"
-  if ! echo "$OUTPUT" | grep -q "dir with space"; then
-    echo "Error: unexpected coursier.mainJar property (got $CP, expected \"dir with space\" in it)" 1>&2
-    exit 1
-  fi
-}
-
-manifestJar() {
-  # FIXME We should also inspect the generated launcher to check that it's indeed based on a manifest
-  "$COURSIER" bootstrap -o cs-echo-mf io.get-coursier:echo:1.0.1 --manifest-jar
-  local OUT="$(./cs-echo-mf foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from echo command manifest-jar-based launcher." 1>&2
-    exit 1
-  fi
-}
-
-hybrid() {
-  # FIXME We should also inspect the generated launcher to check that it's indeed an hybrid one
-  "$COURSIER" bootstrap -o cs-echo-hybrid io.get-coursier:echo:1.0.1 --hybrid
-  local OUT="$(./cs-echo-hybrid foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from echo command hybrid launcher." 1>&2
-    exit 1
-  fi
-}
-
-hybridJavaClassPath() {
-  "$COURSIER" bootstrap -o cs-props-hybrid io.get-coursier:props:1.0.2 --hybrid
-  local OUT="$(./cs-props-hybrid java.class.path)"
-  if [ "$OUT" != "./cs-props-hybrid" ]; then
-    echo "Error: unexpected java.class.path from cs-props-hybrid command:" 1>&2
-    ./cs-props-hybrid java.class.path 1>&2
-    exit 1
-  fi
-}
-
-hybridNoUrlInJavaClassPath() {
-  "$COURSIER" bootstrap -o cs-props-hybrid-shared \
-    io.get-coursier:props:1.0.2 \
-    io.get-coursier:echo:1.0.2 \
-    --shared io.get-coursier:echo \
-    --hybrid
-  local OUT="$(./cs-props-hybrid-shared java.class.path)"
-  if [ "$OUT" != "./cs-props-hybrid-shared" ]; then
-    echo "Error: unexpected java.class.path from cs-props-hybrid-shared command:" 1>&2
-    ./cs-props-hybrid-shared java.class.path 1>&2
-    exit 1
-  fi
-}
-
-standalone() {
-  "$COURSIER" bootstrap -o cs-echo-standalone io.get-coursier:echo:1.0.1 --standalone
-  local OUT="$(./cs-echo-standalone foo)"
-  if [ "$OUT" != foo ]; then
-    echo "Error: unexpected output from bootstrapped standalone echo command." 1>&2
-    exit 1
-  fi
-}
-
-scalafmtStandalone() {
-  "$COURSIER" bootstrap -o cs-scalafmt-standalone org.scalameta:scalafmt-cli_2.12:2.0.0-RC4 --standalone
-  # return code 0 is enough
-  ./cs-scalafmt-standalone --help
-}
 
 launcherSimple() {
   ./coursier-test bootstrap -o cs-echo-launcher io.get-coursier:echo:1.0.0
@@ -274,17 +154,6 @@ launcherAssembly() {
   fi
 }
 
-launcherAssemblyPreambleInSource() {
-  # source jar here has a bash preamble, which assembly should ignore
-"$COURSIER" bootstrap \
-  --intransitive io.get-coursier::coursier-cli:1.1.0-M14-2 \
-  -o coursier-test.jar \
-  --assembly \
-  --classifier standalone \
-  -A jar
-./coursier-test.jar --help
-}
-
 resolveRules() {
   # just checking that this doesn't crash with a ClassNotFoundException because
   # of shading
@@ -323,18 +192,7 @@ enVarInstalledApp() {
   fi
 }
 
-nailgun
-simple
 require
-javaClassPathProp
-javaClassPathInExpansion
-spaceInMainJar
-manifestJar
-hybrid
-hybridJavaClassPath
-hybridNoUrlInJavaClassPath
-standalone
-scalafmtStandalone
 
 launcherSimple
 launcherJavaArgs
@@ -345,7 +203,6 @@ launcherJavaPropsJvmOptionFile
 launcherJavaPropsEnv
 launcherJavaPropsEnvMulti
 launcherAssembly
-launcherAssemblyPreambleInSource
 
 resolveRules
 
