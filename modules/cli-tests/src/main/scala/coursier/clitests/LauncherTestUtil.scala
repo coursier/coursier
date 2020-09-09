@@ -1,4 +1,4 @@
-package coursier.cli
+package coursier.clitests
 
 import java.io.File
 import java.nio.charset.Charset
@@ -38,48 +38,56 @@ object LauncherTestUtil {
   def output(
     args: Seq[String],
     keepErrorOutput: Boolean,
-    addCsLauncher: Boolean,
-    directory: File
+    directory: File,
+    extraEnv: Map[String, String]
   ): String =
     doRun(
-      if (addCsLauncher) launcher +: args else args,
-      builder => builder
-        .redirectOutput(ProcessBuilder.Redirect.PIPE)
-        .redirectErrorStream(keepErrorOutput)
-        .directory(directory),
+      args,
+      builder => {
+        val env = builder.environment()
+        for ((k, v) <- extraEnv)
+          env.put(k, v)
+        builder
+          .redirectOutput(ProcessBuilder.Redirect.PIPE)
+          .redirectErrorStream(keepErrorOutput)
+          .directory(directory)
+      },
       p => new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
     )
 
   def output(
     args: Seq[String],
+    keepErrorOutput: Boolean,
+    directory: File
+  ): String =
+    output(args, keepErrorOutput, directory, Map.empty[String, String])
+
+  def output(
+    args: Seq[String],
     keepErrorOutput: Boolean
   ): String =
-    output(args, keepErrorOutput, addCsLauncher = true, directory = new File("."))
+    output(args, keepErrorOutput, directory = new File("."))
 
   def output(args: String*): String =
     output(args, keepErrorOutput = false)
 
-  def run(
+  def tryRun(
     args: Seq[String],
-    addCsLauncher: Boolean,
     directory: File
-  ): Unit =
+  ): Int =
     doRun(
-      if (addCsLauncher) launcher +: args else args,
+      args,
       builder => builder
         .directory(directory),
-      p => {
-        val retCode = p.waitFor()
-        if (retCode != 0)
-          sys.error(s"Error: command '${launcher}${args.map(" " + _).mkString}' exited with code $retCode")
-      }
+      _.waitFor()
     )
 
-  def run(args: String*): Unit =
-    run(
-      args = args,
-      addCsLauncher = true,
-      directory = new File(".")
-    )
-
+  def run(
+    args: Seq[String],
+    directory: File
+  ): Unit = {
+    val retCode = tryRun(args, directory)
+    if (retCode != 0)
+      sys.error(s"Error: command '${launcher}${args.map(" " + _).mkString}' exited with code $retCode")
+  }
 }

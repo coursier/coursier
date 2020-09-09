@@ -9,10 +9,6 @@ isScalaNative() {
   [ "$NATIVE" = 1 ]
 }
 
-bootstrap() {
-  [ "$BOOTSTRAP" = 1 ]
-}
-
 jsCompile() {
   sbt scalaFromEnv js/compile js/test:compile coreJS/fastOptJS cacheJS/fastOptJS testsJS/test:fastOptJS js/test:fastOptJS
 }
@@ -41,13 +37,6 @@ checkBinaryCompatibility() {
   sbt scalaFromEnv evictionCheck compatibilityCheck
 }
 
-testBootstrap() {
-  # check that the launcher module compiles fine
-  sbt "++2.11.12 compile"
-
-  scripts/test-bootstrap.sh
-}
-
 testNativeBootstrap() {
   sbt scalaFromEnv launcher-native_03/publishLocal launcher-native_040M2/publishLocal cli/pack
   modules/cli/target/pack/bin/coursier bootstrap -S -o native-echo io.get-coursier:echo_native0.3_2.11:1.0.1
@@ -62,8 +51,6 @@ if isScalaJs; then
   runJsTests
 elif isScalaNative; then
   testNativeBootstrap
-elif bootstrap; then
-  testBootstrap
 else
   jvmCompile
 

@@ -9,6 +9,8 @@ script: scripts/travis.sh
 addons:
   apt:
     update: true
+    packages:
+      - nailgun
 stages:
   - name: test
   - name: release-snapshot
@@ -25,11 +27,6 @@ stages:
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
   include:
-    - env: SCALA_VERSION=2.12 BOOTSTRAP=1
-      addons:
-        apt:
-          packages:
-            - nailgun
     - env: SCALA_VERSION=2.13
       sudo: required
       services: docker
