@@ -6,9 +6,9 @@ import java.util.Arrays
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import org.scalatest.flatspec.AnyFlatSpec
+import utest._
 
-class ProfileUpdaterTests extends AnyFlatSpec {
+object ProfileUpdaterTests extends TestSuite {
 
   private def indicesOf(string: String, subString: String): Seq[Int] = {
 
@@ -23,7 +23,8 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     helper(0).toVector
   }
 
-  it should "update variable in ~/.profile" in {
+  val tests = Tests {
+  test("update variable in ~/.profile") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
 
@@ -61,7 +62,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(dotProfile.contains(initialContent))
   }
 
-  it should "set variable in ~/.profile" in {
+  test("set variable in ~/.profile") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
     val updater = ProfileUpdater()
@@ -85,7 +86,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(dotProfile.contains(expectedInDotProfile))
   }
 
-  it should "create ~/.profile and ~/.zprofile" in {
+  test("create ~/.profile and ~/.zprofile") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
     val env = Map("SHELL" -> "/bin/zsh")
@@ -119,7 +120,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(dotZprofile.contains(expectedInDotProfileFiles))
   }
 
-  it should "create ~/.profile and ~/.zprofile and update ~/.bash_profile" in {
+  test("create ~/.profile and ~/.zprofile and update ~/.bash_profile") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
 
     val bashProfilePath = fs.getPath("/home/alex/.bash_profile")
@@ -162,7 +163,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(dotBashProfile.contains(expectedInDotProfileFiles))
   }
 
-  it should "take ZDOTDIR into account" in {
+  test("take ZDOTDIR into account") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
     val env = Map("SHELL" -> "/bin/zsh", "ZDOTDIR" -> "/the/zdotdir")
@@ -196,7 +197,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(dotZprofile.contains(expectedInDotProfileFiles))
   }
 
-  it should "be idempotent" in {
+  test("be idempotent") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
     val updater = ProfileUpdater()
@@ -229,7 +230,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(Arrays.equals(dotProfileBytes, newDotProfileBytes))
   }
 
-  it should "update the previous section" in {
+  test("update the previous section") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
     val updater = ProfileUpdater()
@@ -284,7 +285,7 @@ class ProfileUpdaterTests extends AnyFlatSpec {
     assert(endTagIndices.length == 1)
   }
 
-  it should "leave previous content intact" in {
+  test("leave previous content intact") {
     val fs = Jimfs.newFileSystem(Configuration.unix())
     val home = fs.getPath("/home/alex")
 
@@ -329,5 +330,5 @@ class ProfileUpdaterTests extends AnyFlatSpec {
 
     assert(newDotProfile == initialContent)
   }
-
+  }
 }

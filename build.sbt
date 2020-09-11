@@ -283,9 +283,9 @@ lazy val env = project("env")
     coursierPrefix,
     libs ++= Seq(
       Deps.dataClass % Provided,
-      Deps.jimfs % Test,
-      Deps.scalatest % Test
-    )
+      Deps.jimfs % Test
+    ),
+    utest
   )
 
 lazy val install = project("install")
@@ -329,6 +329,7 @@ lazy val cli = project("cli")
     shared,
     coursierPrefix,
     addBootstrapJarResourceInTests,
+    utest,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
         Seq(
@@ -337,17 +338,19 @@ lazy val cli = project("cli")
           Deps.catsCore,
           Deps.dataClass % Provided,
           Deps.monadlessCats,
-          Deps.monadlessStdlib,
-          Deps.junit % Test, // to be able to run tests with pants
-          Deps.scalatest % Test,
-          Deps.scalatestJunit % Test
+          Deps.monadlessStdlib
         )
       else
         Seq()
     },
     evictionRules += "org.typelevel" %% "cats*" % "always",
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
-    onlyIn("2.12")
+    onlyIn("2.12"),
+    fork.in(Test) := true,
+    javaOptions.in(Test) += {
+      val launcher = pack.in(Compile).value.getAbsoluteFile / "bin" / "coursier"
+      s"-Dcoursier-test-launcher=$launcher"
+    }
   )
 
 lazy val `launcher-native_03` = project("launcher-native_03")
