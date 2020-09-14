@@ -2,7 +2,6 @@ package coursier.publish.upload.logger
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
 
-import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.publish.fileset.FileSet
 import coursier.publish.logging.ProgressLogger
 import coursier.publish.upload.Upload
@@ -24,7 +23,7 @@ final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolea
     },
     "files",
     out,
-    doneEmoji = emoji("truck").map(_.toString())
+    doneEmoji = Some("\ud83d\ude9a")
   )
 
   override def uploadingSet(id: Object, fileSet: FileSet): Unit =

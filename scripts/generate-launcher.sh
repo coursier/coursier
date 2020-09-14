@@ -11,7 +11,7 @@ if [[ "$DOWNLOAD_LAUNCHER" == true ]]; then
   LAUNCHER="./coursier-$VERSION"
   curl -fLo "$LAUNCHER" "https://github.com/coursier/coursier/releases/download/v$VERSION/coursier"
   chmod +x "$LAUNCHER"
-  EXTRA_ARGS="launch -r typesafe:ivy-releases io.get-coursier:coursier-cli_2.12:2.0.0-RC2-6 -E io.get-coursier:coursier-okhttp_2.12 --"
+  EXTRA_ARGS="launch io.get-coursier:coursier-cli_2.12:2.0.0-RC2-6 -E io.get-coursier:coursier-okhttp_2.12 --"
 else
   LAUNCHER="$(dirname "$0")/../modules/cli/target/pack/bin/coursier"
   EXTRA_ARGS=""
@@ -27,6 +27,5 @@ MODULE="${MODULE:-"coursier-cli"}"
   "io.get-coursier::$MODULE:$VERSION" \
   --no-default \
   -r central \
-  -r typesafe:ivy-releases \
   -f -o "$OUTPUT" \
   "$@"

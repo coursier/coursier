@@ -67,7 +67,7 @@ def uploadJavaLauncher(): Unit = {
   WaitForSync(
     initialLauncher0,
     module,
-    Seq("--no-default", "-r", "central", "-r", "typesafe:ivy-releases"),
+    Seq("--no-default", "-r", "central"),
     "sonatype:public",
     attempts = 25
   )
@@ -80,7 +80,6 @@ def uploadJavaLauncher(): Unit = {
     extraArgs = Seq(
       "--no-default",
       "-r", "central",
-      "-r", "typesafe:ivy-releases",
     ),
     output = javaLauncher,
     forceBat = true
@@ -137,7 +136,6 @@ def uploadAssembly(): Unit = {
     extraArgs = Seq(
       "--no-default",
       "-r", "central",
-      "-r", "typesafe:ivy-releases",
       "--assembly"
     ),
     output = assembly
@@ -195,7 +193,6 @@ def generateNativeImage(
       (if (allowIvy2Local) Nil else Seq("--no-default")) ++
       Seq(
         "-r", "central",
-        "-r", "typesafe:ivy-releases",
       ),
     output = output,
     mainClass = "coursier.cli.Coursier",

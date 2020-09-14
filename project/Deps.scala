@@ -20,7 +20,6 @@ object Deps {
   def catsCore = "org.typelevel" %% "cats-core" % "2.2.0"
   def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
-  def emoji = "com.lightbend" %% "emoji" % "1.2.1"
   def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s

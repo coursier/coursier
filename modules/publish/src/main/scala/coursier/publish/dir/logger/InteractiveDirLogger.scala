@@ -3,7 +3,6 @@ package coursier.publish.dir.logger
 import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.file.Path
 
-import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.publish.logging.ProgressLogger
 
 final class InteractiveDirLogger(out: OutputStreamWriter, dirName: String, verbosity: Int) extends DirLogger {
@@ -12,7 +11,7 @@ final class InteractiveDirLogger(out: OutputStreamWriter, dirName: String, verbo
     "Read",
     s"files from $dirName",
     out,
-    doneEmoji = emoji("mag").map(_.toString())
+    doneEmoji = Some("\ud83d\udd0d")
   )
 
   override def reading(dir: Path): Unit =
