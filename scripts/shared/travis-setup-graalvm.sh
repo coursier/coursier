@@ -4,5 +4,5 @@ if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 fi
 
 curl -L https://raw.githubusercontent.com/coursier/ci-scripts/master/setup.sh | bash
-eval "$(./cs java --env --jvm graalvm-ce-java8:19.3.1)"
+eval "$(./cs java --env --jvm graalvm-ce-java8:20.1.0)"
 rm -f cs cs.exe
