@@ -10,9 +10,9 @@ plugins_(
   "org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0",
 )
 
-addSbtPlugin(("io.github.alexarchambault.sbt" % "sbt-compatibility" % "0.0.7").exclude("com.typesafe", "sbt-mima-plugin"))
+addSbtPlugin("io.github.alexarchambault.sbt" % "sbt-compatibility" % "0.0.7")
 addSbtPlugin("io.github.alexarchambault.sbt" % "sbt-eviction-rules" % "0.2.0")
-addSbtPlugin("com.github.alexarchambault.tmp" % "sbt-mima-plugin" % "0.7.1-SNAPSHOT")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.0")
 addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.0.0")
 
 def plugins_(modules: ModuleID*) = modules.map(addSbtPlugin)
