@@ -83,6 +83,7 @@ object JvmIndex {
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("x86_64" | "amd64") => Right("amd64")
       case Some("aarch64") => Right("arm64")
+      case Some("arm") => Right("arm")
       case unrecognized => Left(s"Unrecognized CPU architecture: ${unrecognized.getOrElse("")}")
     }
 
