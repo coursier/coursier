@@ -7,7 +7,6 @@ import java.time.Instant
 import java.util.concurrent.ScheduledExecutorService
 
 import caseapp._
-import com.lightbend.emoji.ShortCodes.Defaults.defaultImplicit.emoji
 import coursier.cache.internal.ThreadUtil
 import coursier.publish.checksum.{ChecksumType, Checksums}
 import coursier.publish.fileset.{FileSet, Group}
@@ -252,7 +251,7 @@ object Publish extends CaseApp[PublishOptions] {
         val modules = Group.split(sortedFinalFileSet)
           .collect { case m: Group.Module => m }
           .sortBy(m => (m.organization.value, m.name.value, m.version))
-        out.println(s"\n ${emoji("eyes").mkString} Check results at")
+        out.println("\n \ud83d\udc40 Check results at")
         for (m <- modules) {
           val base = actualReadRepo.root + m.baseDir.map("/" + _).mkString
           out.println(s"  $base")
