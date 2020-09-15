@@ -9,13 +9,14 @@ import caseapp.core.RemainingArgs
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
 import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.SharedResolveOptions
+import coursier.cli.TestUtil.withFile
 import coursier.launcher.BootstrapGenerator.resourceDir
 import utest._
 
 /**
   * Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
   */
-object BootstrapTests extends TestSuite with CliTestLib {
+object BootstrapTests extends TestSuite {
 
   private def zipEntryContent(zis: ZipInputStream, path: String): Array[Byte] = {
     val e = zis.getNextEntry

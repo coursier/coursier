@@ -343,12 +343,42 @@ lazy val cli = project("cli")
     },
     evictionRules += "org.typelevel" %% "cats*" % "always",
     mainClass.in(Compile) := Some("coursier.cli.Coursier"),
+    onlyIn("2.12")
+  )
+
+lazy val `cli-tests` = project("cli-tests")
+  .dependsOn(coursierJvm)
+  .disablePlugins(MimaPlugin)
+  .settings(
+    shared,
+    coursierPrefix,
+    libs ++= Seq(
+      Deps.caseApp,
+      Deps.cross.utest.value
+    ),
+    utest,
     onlyIn("2.12"),
     fork.in(Test) := true,
-    javaOptions.in(Test) += {
-      val launcher = pack.in(Compile).value.getAbsoluteFile / "bin" / "coursier"
-      s"-Dcoursier-test-launcher=$launcher"
-    }
+    javaOptions.in(Test) ++= Def.taskDyn {
+      val task0 = sys.props.get("coursier-test-launcher") match {
+        case None =>
+          Def.task {
+            (pack.in(cli, Compile).value.getAbsoluteFile./("bin/coursier").toString, Option("false"))
+          }
+        case Some(launcher) =>
+          Def.task((launcher, sys.props.get("coursier-test-launcher-accepts-D")))
+      }
+      val actualTask =
+        Def.task {
+          val (launcher0, acceptsDOpt) = task0.value
+          Seq(s"-Dcoursier-test-launcher=$launcher0") ++
+            acceptsDOpt.map(v => s"-Dcoursier-test-launcher-accepts-D=$v").toSeq
+        }
+      if (scalaVersion.value.startsWith("2.12."))
+        actualTask
+      else
+        Def.task(Seq.empty[String])
+    }.value
   )
 
 lazy val `launcher-native_03` = project("launcher-native_03")
@@ -514,6 +544,7 @@ lazy val jvmProjects = project("jvmProjects")
     publish,
     install,
     cli,
+    `cli-tests`,
     coursierJvm,
     `launcher-native_03`,
     `launcher-native_040M2`
@@ -571,7 +602,8 @@ lazy val `coursier-repo` = project("coursier-repo")
     coursierJvm,
     coursierJs,
     `launcher-native_03`,
-    `launcher-native_040M2`
+    `launcher-native_040M2`,
+    `cli-tests`
   )
   .settings(
     shared,

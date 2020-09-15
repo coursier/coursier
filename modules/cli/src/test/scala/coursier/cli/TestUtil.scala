@@ -3,8 +3,9 @@ package coursier.cli
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
+import coursier.dependencyString
 
-trait CliTestLib {
+object TestUtil {
 
   def withFile(content: String = "",
                fileName: String = "hello",
@@ -21,15 +22,13 @@ trait CliTestLib {
     }
   }
 
-  def withTempDir(
-      prefix: String
-  )(testCode: File => Any) {
-    val dir = Files.createTempDirectory(prefix).toFile // create the fixture
-    try {
-      testCode(dir) // "loan" the fixture to the test
-    } finally {
-      cleanDir(dir)
-    }
+  def withTempDir[T](testCode: File => T): T =
+    withTempDir("coursier-cli-test")(testCode)
+
+  def withTempDir[T](prefix: String)(testCode: File => T): T = {
+    val dir = Files.createTempDirectory(prefix).toFile
+    try testCode(dir)
+    finally cleanDir(dir)
   }
 
   def cleanDir(tmpDir: File): Unit = {
