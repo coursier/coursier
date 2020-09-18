@@ -5,6 +5,7 @@ import java.util.Base64
 import dataclass.data
 import java.io.InputStream
 import java.io.ByteArrayOutputStream
+import scala.util.Try
 
 @data class PowershellRunner(
   powershellExePath: String = "powershell.exe",
@@ -41,7 +42,15 @@ import java.io.ByteArrayOutputStream
     if (retCode == 0)
       new String(outputBytes, StandardCharsets.UTF_8)
     else
-      throw new Exception(s"Error running powershell script (exit code: $retCode)")
+      throw new Exception(
+        s"Error running powershell script (exit code: $retCode)\n" +
+          s"Error running command:\n" +
+          command.map("  " + _ + "\n").mkString + "\n" +
+          s"Output:\n" +
+          Try(new String(outputBytes, StandardCharsets.UTF_8))
+            .toOption
+            .getOrElse("[Could not convert output]")
+      )
   }
 
 }
