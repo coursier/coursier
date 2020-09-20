@@ -1,10 +1,12 @@
 if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
 
-  choco install -y windows-sdk-7.1 vcbuildtools kb2519277
+  # https://github.com/oracle/graal/issues/1852#issuecomment-572892384
+  # Already installed
+  # choco install -y visualstudio2017-workload-vctools
 
   # temporary workaround for https://github.com/oracle/graal/issues/1876
   # (should be fixed in GraalVM 20.0)
-  cp "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/advapi32.lib" "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/stdc++.lib"
+  # cp "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/advapi32.lib" "/C/Program Files/Microsoft SDKs/Windows/v7.1/Lib/x64/stdc++.lib"
 
   curl -Lo graalvm.zip https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-windows-amd64-19.3.1.zip
   unzip graalvm.zip
