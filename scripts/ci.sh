@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -evx
 
-if [ "$TEST_TARGET" = "Scala.JS" ]; then
+if [ "$TARGET" = "Scala.JS" ]; then
   sbt scala212 \
     js/compile \
     js/test:compile \
@@ -10,7 +10,7 @@ if [ "$TEST_TARGET" = "Scala.JS" ]; then
     testsJS/test:fastOptJS \
     js/test:fastOptJS \
     js/test
-elif [ "$TEST_TARGET" = "ScalaNative" ]; then
+elif [ "$TARGET" = "ScalaNative" ]; then
   curl -f https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
   sbt scala212 \
@@ -27,8 +27,8 @@ elif [ "$TEST_TARGET" = "ScalaNative" ]; then
     echo "Error: unexpected output from native test bootstrap." 1>&2
     exit 1
   fi
-elif [ "$TEST_TARGET" = "Website" ]; then
-  amm website.sc generate
+elif [ "$TARGET" = "Website" ]; then
+  amm-runner website.sc generate
 else
   sbt scalaFromEnv \
     jvmProjects/compile \
