@@ -43,7 +43,6 @@ jobs:
     - name: "Website"
       script: amm website.sc generate
     - stage: release-snapshot
-      env: DUMMY_PROGUARD=1
       script: sbt ci-release
     - stage: release
       # publishLocal so that proguard and all compilation run before any publishing

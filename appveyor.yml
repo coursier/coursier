@@ -15,7 +15,6 @@ environment:
   TEST_REPOSITORY_PASSWORD: pass
   TEST_REPOSITORY: http://localhost:8080
   TEST_REDIRECT_REPOSITORY: disabled
-  DUMMY_PROGUARD: 1
 build_script:
   - sbt cli/pack
   - cmd: .\modules\cli\target\pack\bin\coursier bootstrap io.get-coursier:echo:1.0.1 -o cs-echo
