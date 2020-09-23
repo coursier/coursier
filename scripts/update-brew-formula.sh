@@ -3,12 +3,18 @@ set -euo pipefail
 
 # TODO Migrate that to an Ammonite script
 
-if [[ ${TRAVIS_TAG} != v* ]]; then
-  echo "Not on a git tag"
+if [ ! -z ${TRAVIS_TAG+x} ] && [ ${TRAVIS_TAG} == v* ]; then
+  VERSION="${TRAVIS_TAG#v}"
+  GIT_USERNAME="Travis-CI"
+  GIT_EMAIL="invalid@travis-ci.com"
+elif [ ! -z ${GITHUB_REF+x} ] && [ ${GITHUB_REF} == refs/tags/v* ]; then
+  VERSION="${GITHUB_REF#refs/tags/v}"
+  GIT_USERNAME="Github Actions"
+  GIT_EMAIL="actions@github.com"
+else
+  echo "Error: could not get current tag" 1>&2
   exit 1
 fi
-
-export VERSION="$(echo "$TRAVIS_TAG" | sed 's@^v@@')"
 
 mkdir -p target
 cd target
@@ -22,13 +28,13 @@ echo "Cloning"
 git clone "https://${GH_TOKEN}@github.com/coursier/homebrew-formulas.git" -q -b master homebrew-formulas
 cd homebrew-formulas
 
-git config user.name "Travis-CI"
-git config user.email "invalid@travis-ci.com"
+git config user.name "$GIT_USERNAME"
+git config user.email "$GIT_EMAIL"
 
-JAR_URL="https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/coursier"
+JAR_URL="https://github.com/coursier/coursier/releases/download/v$VERSION/coursier"
 curl -fLo jar-launcher "$JAR_URL"
 
-URL="https://github.com/coursier/coursier/releases/download/$TRAVIS_TAG/cs-x86_64-apple-darwin"
+URL="https://github.com/coursier/coursier/releases/download/v$VERSION/cs-x86_64-apple-darwin"
 curl -fLo launcher "$URL"
 
 JAR_SHA256="$(openssl dgst -sha256 -binary < jar-launcher | xxd -p -c 256)"
