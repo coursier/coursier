@@ -18,7 +18,8 @@ final case class SharedInstallParams(
   graalvmParamsOpt: Option[GraalvmParams] = None,
   onlyPrebuilt: Boolean,
   platformOpt: Option[String],
-  preferPrebuilt: Boolean
+  preferPrebuilt: Boolean,
+  proguarded: Option[Boolean]
 ) {
 
   def installDir(cache: Cache[Task]): InstallDir =
@@ -28,6 +29,7 @@ final case class SharedInstallParams(
       .withOnlyPrebuilt(onlyPrebuilt)
       .withPlatform(platformOpt)
       .withPreferPrebuilt(preferPrebuilt)
+      .withOverrideProguardedBootstraps(proguarded)
 }
 
 object SharedInstallParams {
@@ -73,7 +75,8 @@ object SharedInstallParams {
         Some(graalvmParams),
         onlyPrebuilt,
         platformOpt,
-        preferPrebuilt
+        preferPrebuilt,
+        options.proguarded
       )
     }
   }

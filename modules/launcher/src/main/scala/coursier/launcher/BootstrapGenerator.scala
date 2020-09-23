@@ -3,7 +3,7 @@ package coursier.launcher
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import java.util.zip.{CRC32, ZipEntry, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipException, ZipInputStream, ZipOutputStream}
 
 import coursier.launcher.internal.{FileUtil, Zip}
 
@@ -94,13 +94,21 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
 
     for ((ent, content) <- extraZipEntries) {
-      outputZip.putNextEntry(ent)
+      try outputZip.putNextEntry(ent)
+      catch {
+        case _: ZipException if ent.isDirectory =>
+          // likely a duplicate entry error, ignoring it for directories
+      }
       outputZip.write(content)
       outputZip.closeEntry()
     }
 
     for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
-      outputZip.putNextEntry(ent)
+      try outputZip.putNextEntry(ent)
+      catch {
+        case _: ZipException if ent.isDirectory =>
+          // likely a duplicate entry error, ignoring it for directories
+      }
       outputZip.write(data)
       outputZip.closeEntry()
     }

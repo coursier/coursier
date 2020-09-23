@@ -151,6 +151,10 @@ object InstallTests extends TestSuite {
       .withPlatform(InstallDir.platform(os))
       .withPlatformExtensions(InstallDir.platformExtensions(os))
       .withBasePreamble(Preamble())
+      .withOverrideProguardedBootstraps {
+        if (sys.props.get("java.version").exists(_.startsWith("1."))) None
+        else Some(false)
+      }
 
   private val currentOs = {
     val os = sys.props.getOrElse("os.name", "").toLowerCase(Locale.ROOT)

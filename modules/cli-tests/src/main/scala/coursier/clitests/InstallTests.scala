@@ -8,6 +8,15 @@ abstract class InstallTests extends TestSuite {
 
   def launcher: String
 
+  def overrideProguarded: Option[Boolean] =
+    None
+
+  private val extraOptions =
+    overrideProguarded match {
+      case None => Nil
+      case Some(value) => Seq(s"--proguarded=$value")
+    }
+
   val tests = Tests {
     test("inline app") {
       TestUtil.withTempDir { tmpDir =>
@@ -17,7 +26,7 @@ abstract class InstallTests extends TestSuite {
             "install",
             "--install-dir", tmpDir.getAbsolutePath,
             """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}"""
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -38,7 +47,7 @@ abstract class InstallTests extends TestSuite {
             "install",
             "--install-dir", tmpDir.getAbsolutePath,
             """env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}"""
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
         val envLauncher = new File(tmpDir, "env").getAbsolutePath

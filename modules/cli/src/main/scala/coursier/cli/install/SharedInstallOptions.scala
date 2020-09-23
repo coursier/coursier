@@ -24,7 +24,9 @@ final case class SharedInstallOptions(
   @Short("r")
     repository: List[String] = Nil,
 
-  defaultRepositories: Boolean = true
+  defaultRepositories: Boolean = true,
+
+  proguarded: Option[Boolean] = None
 
 )
 
