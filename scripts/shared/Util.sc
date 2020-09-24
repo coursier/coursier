@@ -7,8 +7,14 @@ import scala.util.control.NonFatal
 
 private def updateCommand(cmd: Seq[String]): Seq[String] =
   if (os == "win" && cmd.nonEmpty) {
+    val pathExts = Option(System.getenv("PATHEXT"))
+      .getOrElse {
+        System.err.println("Warning: cannot get PATHEXT")
+        ""
+      }
+      .split(File.pathSeparator)
     def candidates(name: String) =
-      Iterator(name + ".bat", name + ".exe", name + ".cmd", name)
+      pathExts.iterator.map(name + _)
 
     // necessary until we can benefit from https://www.oracle.com/technetwork/java/javase/8u231-relnotes-5592812.html#JDK-8221858
     val tail = cmd.tail.map(arg => arg.replaceAllLiterally("\"", "\\\""))
