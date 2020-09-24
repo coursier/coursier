@@ -18,7 +18,8 @@ def nativeImage(
   extraArgs: Seq[String],
   output: String,
   mainClass: String, // FIXME Get from cp / manifest
-  useAssembly: Boolean = false
+  useAssembly: Boolean = false,
+  extraNativeImageOpts: Seq[String] = Nil
 ): Unit = {
 
   val cp =
@@ -62,15 +63,18 @@ def nativeImage(
     if (Util.os == "linux") "3584m"
     else "3g"
 
-  def run(extraNativeImageOpts: String*): Unit = {
+  val graalvmVer = if (Util.os == "win") "20.0.0" else "20.1.0"
+
+  def run(extraNativeImageOpts: Seq[String], extraCsLaunchOpts: Seq[String] = Nil): Unit = {
 
     val cmd = Seq(
       coursierLauncher,
-      "launch",
+      "launch"
+    ) ++ extraCsLaunchOpts ++ Seq(
       // "--jvm", "graalvm:19.3",
       // "--java-opt", s"-Xmx$memm",
       // "--fork",
-      "org.graalvm.nativeimage:svm-driver:19.3.1",
+      s"org.graalvm.nativeimage:svm-driver:$graalvmVer",
       "--",
       "-cp", cp
     ) ++ extraNativeImageOpts ++ Seq(
@@ -84,15 +88,18 @@ def nativeImage(
   }
 
   if (Util.os == "win") {
+    val extraCsOpts = if (coursierLauncher.endsWith("cs") || coursierLauncher.endsWith("cs.bat") || coursierLauncher.endsWith("cs.exe")) Seq("--java-opt", s"-Xmx$mem") else Nil
     // getting weird TLS-related linking errors without this
     val javaSecurityOverrides =
       """security.provider.3=what.we.put.here.doesnt.matter.ButThisHasToBeOverridden
         |""".stripMargin.getBytes
     Util.withTmpFile("java.security.overrides-", ".properties", javaSecurityOverrides) { path =>
-      run(s"-J-Djava.security.properties=$path")
+      run(s"-J-Djava.security.properties=$path" +: extraNativeImageOpts, extraCsOpts)
     }
-  } else
-    run()
+  } else if (Util.os == "linux" && coursierLauncher.endsWith("cs"))
+    run(extraNativeImageOpts, Seq("--java-opt", s"-Xmx$mem"))
+  else
+    run(extraNativeImageOpts)
 }
 
 /**

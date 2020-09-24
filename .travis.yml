@@ -5,8 +5,7 @@ jdk: openjdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
 
-before_install:
-  - source scripts/ci-setup.sh
+before_install: source scripts/ci-setup.sh
 script: scripts/ci.sh
 
 addons:
@@ -53,21 +52,23 @@ jobs:
       script: amm launcher.sc uploadAllJars
     - stage: upload-native-launchers
       name: "Push Linux native image"
-      before_script: source scripts/shared/setup-graalvm.sh
-      script: amm launcher.sc uploadNativeImage
+      before_install: source scripts/ci-setup.sh --jvm graalvm-ce-java8:20.1.0
+      script: CS="$(which cs)" JAVA_OPTS="-Xmx384m" amm launcher.sc uploadNativeImage
     - stage: upload-native-launchers
       name: "Push mac native image"
       os: osx
       osx_image: xcode9.4
       jdk: openjdk9
-      before_script: source scripts/shared/setup-graalvm.sh
-      script: amm launcher.sc uploadNativeImage
+      before_install: "true"
+      script: source scripts/ci-setup.sh --jvm graalvm-ce-java8:20.1.0 && CS="$(which cs)" JAVA_OPTS="-Xmx384m" amm launcher.sc uploadNativeImage
     - stage: upload-native-launchers
       name: "Push Windows native image"
       os: windows
-      language: bash
-      before_script: source scripts/shared/setup-graalvm.sh
-      script: gpg --version && amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
+      language: shell
+      before_install: "true"
+      script: source scripts/ci-setup.sh --jvm graalvm-ce-java8:20.0.0 && gpg --version && JAVA_OPTS="-Xmx384m" bin/amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
+      env:
+        - CS=bin/cs.bat
     - stage: update-brew-formula
       script: scripts/update-brew-formula.sh
     - stage: update-website

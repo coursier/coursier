@@ -1,4 +1,6 @@
 
+// Ammonite 2.1.4-11-307f3d8, scala 2.12.12
+
 import $file.scripts.shared.GenerateLauncher
 import $file.scripts.shared.Sign
 import $file.scripts.shared.UploadGhRelease
@@ -185,7 +187,7 @@ def generateNativeImage(
   output: String = "./cs",
   allowIvy2Local: Boolean = true
 ): Unit = {
-  val initialLauncher0 = initialLauncher(None, None)
+  val initialLauncher0 = sys.env.getOrElse("CS", initialLauncher(None, None))
   GenerateLauncher.nativeImage(
     initialLauncher0,
     module = s"io.get-coursier::coursier-cli:$version",
@@ -193,12 +195,14 @@ def generateNativeImage(
       (if (allowIvy2Local) Nil else Seq("--no-default")) ++
       Seq(
         "-r", "central",
+        "org.scalameta::svm-subs:20.1.0"
       ),
     output = output,
     mainClass = "coursier.cli.Coursier",
     // sometimes getting command-too-long errors when starting native-image
     // with the full classpath, without this
-    useAssembly = Util.os == "win"
+    useAssembly = Util.os == "win",
+    extraNativeImageOpts = Seq("--report-unsupported-elements-at-runtime")
   )
 }
 
