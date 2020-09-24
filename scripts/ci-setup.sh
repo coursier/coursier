@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-if [ "$(expr substr "$(uname -s)" 1 5 2>/dev/null)" != "Linux" -a "$(uname)" != "Darwin" ]; then
-  choco install -y windows-sdk-7.1 vcbuildtools kb2519277
-fi
-
-
 ./scripts/cs-setup.sh
 mkdir -p bin
 ./cs bootstrap -o bin/sbt sbt-launcher io.get-coursier:coursier_2.12:2.0.0-RC6-25

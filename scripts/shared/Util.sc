@@ -14,7 +14,11 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
       }
       .split(File.pathSeparator)
     def candidates(name: String) =
-      pathExts.iterator.map(name + _)
+      pathExts.iterator.map {
+        case "" => name
+        case ext if name.endsWith(ext) => name
+        case ext => name + ext
+      }
 
     // necessary until we can benefit from https://www.oracle.com/technetwork/java/javase/8u231-relnotes-5592812.html#JDK-8221858
     val tail = cmd.tail.map(arg => arg.replaceAllLiterally("\"", "\\\""))

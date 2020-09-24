@@ -11,6 +11,8 @@ if [ "$TARGET" = "Scala.JS" ]; then
     js/test:fastOptJS \
     js/test
 elif [ "$TARGET" = "ScalaNative" ]; then
+  # travis_setup.sh below does that, but doesn't handle directories fine
+  find /usr -name "*libunwind*" -print0 | sudo xargs -0 rm -rf
   curl -f https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
   sbt scala212 \
@@ -28,8 +30,17 @@ elif [ "$TARGET" = "ScalaNative" ]; then
     exit 1
   fi
 elif [ "$TARGET" = "Website" ]; then
+  echo "$PATH"
+  ls bin
+  which cs || true
+  which amm || true
+  which amm-runner || true
   amm-runner website.sc generate
 else
+  if [[ ${SCALA_VERSION} == 2.12* ]]; then
+    sudo apt-get install -y nailgun
+  fi
+
   sbt scalaFromEnv \
     jvmProjects/compile \
     jvmProjects/test:compile

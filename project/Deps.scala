@@ -32,7 +32,8 @@ object Deps {
   def okhttp = "com.squareup.okhttp3" % "okhttp" % "3.13.1"
   def simulacrum = "org.typelevel" %% "simulacrum" % "1.0.0"
   def slf4JNop = "org.slf4j" % "slf4j-nop" % "1.7.30"
-  def svm = "org.graalvm.nativeimage" % "svm" % "19.3.2"
+  def svm = "org.graalvm.nativeimage" % "svm" % "20.1.0"
+  def svmSubs = "org.scalameta" %% "svm-subs" % "20.1.0"
   def monadlessCats = "io.monadless" %% "monadless-cats" % versions.monadless
   def monadlessStdlib = "io.monadless" %% "monadless-stdlib" % versions.monadless
   def plexusArchiver = "org.codehaus.plexus" % "plexus-archiver" % "4.2.2"

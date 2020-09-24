@@ -2,10 +2,9 @@ package coursier.jvm;
 
 import java.io.FileNotFoundException;
 
+import com.oracle.svm.core.CErrorNumber;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
-import com.oracle.svm.core.headers.Errno;
-import com.oracle.svm.core.posix.headers.Unistd;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
@@ -24,11 +23,11 @@ final class ExecveGraalvm {
     CTypeConversion.CCharPointerHolder path0 = CTypeConversion.toCString(path);
     CTypeConversion.CCharPointerPointerHolder command0 = CTypeConversion.toCStrings(command);
     CTypeConversion.CCharPointerPointerHolder env0 = CTypeConversion.toCStrings(env);
-    Unistd.execve(path0.get(), command0.get(), env0.get());
+    GraalvmUnistdExtras.execve(path0.get(), command0.get(), env0.get());
 
-    int n = Errno.errno();
+    int n = CErrorNumber.getCErrorNumber();
     Throwable cause = null;
-    if (n == Errno.ENOENT() || n == Errno.ENOTDIR())
+    if (n == GraalvmErrnoExtras.ENOENT() || n == GraalvmErrnoExtras.ENOTDIR())
       cause = new FileNotFoundException(path);
     throw new ErrnoException(n, cause);
   }

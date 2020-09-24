@@ -335,7 +335,8 @@ lazy val cli = project("cli")
           Deps.catsCore,
           Deps.dataClass % Provided,
           Deps.monadlessCats,
-          Deps.monadlessStdlib
+          Deps.monadlessStdlib,
+          Deps.svmSubs
         )
       else
         Seq()
