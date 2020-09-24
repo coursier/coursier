@@ -1,5 +1,6 @@
 language: java
 os: linux
+dist: xenial
 jdk: openjdk8
 git:
   depth: false # https://stackoverflow.com/a/51727114/3714539
@@ -32,10 +33,8 @@ stages:
 jobs:
   include:
     - env: SCALA_VERSION=2.13
-      sudo: required
       services: docker
     - env: SCALA_VERSION=2.12
-      sudo: required
       services: docker
     - env: SCALA_VERSION=2.12
       jdk: openjdk11
