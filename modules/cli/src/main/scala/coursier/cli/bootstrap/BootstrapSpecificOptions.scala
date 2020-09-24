@@ -50,7 +50,9 @@ final case class BootstrapSpecificOptions(
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
   @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
-    disableJarChecking: Option[Boolean] = None
+    disableJarChecking: Option[Boolean] = None,
+  jvmDir: Option[String] = None,
+  jvmIndex: Option[String] = None
 ) {
   def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
     val count = Seq(

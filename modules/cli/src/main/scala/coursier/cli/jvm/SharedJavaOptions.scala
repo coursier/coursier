@@ -7,5 +7,6 @@ final case class SharedJavaOptions(
   jvmDir: Option[String] = None,
   systemJvm: Option[Boolean] = None,
   localOnly: Boolean = false,
-  update: Boolean = false
+  update: Boolean = false,
+  jvmIndex: Option[String] = None
 )

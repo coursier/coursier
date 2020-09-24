@@ -275,11 +275,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         val graalvmVersion = params.specific.graalvmVersionOpt.getOrElse("latest.release")
 
-        val handle = JvmCache()
-          .withCache(
-            params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger())
-          )
-          .withDefaultIndex
+        val handle = params
+          .specific
+          .jvmCache(params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger()))
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
         val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 

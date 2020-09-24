@@ -4,8 +4,11 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cache.Cache
+import coursier.jvm.{JvmCache, JvmIndex}
 import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
+import coursier.util.Task
 
 final case class BootstrapSpecificParams(
   output: Path,
@@ -27,7 +30,9 @@ final case class BootstrapSpecificParams(
   graalvmVersionOpt: Option[String],
   graalvmJvmOptions: Seq[String],
   graalvmOptions: Seq[String],
-  disableJarCheckingOpt: Option[Boolean]
+  disableJarCheckingOpt: Option[Boolean],
+  jvmDir: Path,
+  jvmIndexUrlOpt: Option[String]
 ) {
   import BootstrapSpecificParams.BootstrapPackaging
   def batOutput: Path =
@@ -38,6 +43,16 @@ final case class BootstrapSpecificParams(
       hybrid,
       embedFiles
     )
+
+  def jvmCache(cache: Cache[Task]): JvmCache = {
+    val c = JvmCache()
+      .withBaseDirectory(jvmDir.toFile)
+      .withCache(cache)
+    jvmIndexUrlOpt match {
+      case None => c.withDefaultIndex
+      case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
+    }
+  }
 }
 
 object BootstrapSpecificParams {
@@ -104,6 +119,16 @@ object BootstrapSpecificParams {
 
     val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
 
+    val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
+      JvmCache.defaultBaseDirectory.toPath
+    }
+
+    val jvmIndex = options
+      .jvmIndex
+      .map(_.trim)
+      .filter(_ != "default")
+      .map(JvmIndex.handleAliases)
+
     (validateOutputType, rulesV).mapN {
       (_, rules) =>
         val javaOptions = options.javaOpt
@@ -128,7 +153,9 @@ object BootstrapSpecificParams {
           graalvmVersion,
           graalvmJvmOptions,
           graalvmOptions,
-          options.disableJarChecking
+          options.disableJarChecking,
+          jvmDir,
+          jvmIndex
         )
     }
   }
