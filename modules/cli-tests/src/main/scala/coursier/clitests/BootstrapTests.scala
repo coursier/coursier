@@ -12,11 +12,23 @@ abstract class BootstrapTests extends TestSuite {
   def launcher: String
   def acceptsDOptions: Boolean = true
 
+  def overrideProguarded: Option[Boolean] =
+    None
+
+  def enableNailgunTest: Boolean =
+    true
+
+  private val extraOptions =
+    overrideProguarded match {
+      case None => Nil
+      case Some(value) => Seq(s"--proguarded=$value")
+    }
+
   val tests = Tests {
     test("simple") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-echo", "io.get-coursier:echo:1.0.1"),
+          args = Seq(launcher, "bootstrap", "-o", "cs-echo", "io.get-coursier:echo:1.0.1") ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -55,7 +67,7 @@ abstract class BootstrapTests extends TestSuite {
             "--java-opt", "-Dfoo=baz",
             "io.get-coursier:props:1.0.2",
             "--jvm-option-file=.propsjvmopts"
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
 
@@ -131,7 +143,7 @@ abstract class BootstrapTests extends TestSuite {
             "--property", "other=thing",
             "--java-opt", "-Dfoo=baz",
             "io.get-coursier:props:1.0.2"
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
 
@@ -164,7 +176,7 @@ abstract class BootstrapTests extends TestSuite {
     test("java.class.path property") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-props-0", TestUtil.propsDepStr),
+          args = Seq(launcher, "bootstrap", "-o", "cs-props-0", TestUtil.propsDepStr) ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -180,7 +192,7 @@ abstract class BootstrapTests extends TestSuite {
     test("java.class.path property in expansion") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-props-1", "--property", "foo=${java.class.path}", TestUtil.propsDepStr),
+          args = Seq(launcher, "bootstrap", "-o", "cs-props-1", "--property", "foo=${java.class.path}", TestUtil.propsDepStr) ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -197,7 +209,7 @@ abstract class BootstrapTests extends TestSuite {
       TestUtil.withTempDir { tmpDir =>
         Files.createDirectories(tmpDir.toPath.resolve("dir with space"))
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "dir with space/cs-props-0", TestUtil.propsDepStr),
+          args = Seq(launcher, "bootstrap", "-o", "dir with space/cs-props-0", TestUtil.propsDepStr) ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -213,7 +225,7 @@ abstract class BootstrapTests extends TestSuite {
     test("manifest jar") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-echo-mf", "io.get-coursier:echo:1.0.1", "--manifest-jar"),
+          args = Seq(launcher, "bootstrap", "-o", "cs-echo-mf", "io.get-coursier:echo:1.0.1", "--manifest-jar") ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -229,7 +241,7 @@ abstract class BootstrapTests extends TestSuite {
     test("hybrid") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-echo-hybrid", "io.get-coursier:echo:1.0.1", "--hybrid"),
+          args = Seq(launcher, "bootstrap", "-o", "cs-echo-hybrid", "io.get-coursier:echo:1.0.1", "--hybrid") ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -245,7 +257,7 @@ abstract class BootstrapTests extends TestSuite {
     test("hybrid java.class.path") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-props-hybrid", TestUtil.propsDepStr, "--hybrid"),
+          args = Seq(launcher, "bootstrap", "-o", "cs-props-hybrid", TestUtil.propsDepStr, "--hybrid") ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -269,7 +281,7 @@ abstract class BootstrapTests extends TestSuite {
             "io.get-coursier:echo:1.0.2",
             "--shared", "io.get-coursier:echo",
             "--hybrid"
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -285,7 +297,7 @@ abstract class BootstrapTests extends TestSuite {
     test("standalone") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
-          args = Seq(launcher, "bootstrap", "-o", "cs-echo-standalone", "io.get-coursier:echo:1.0.1", "--standalone"),
+          args = Seq(launcher, "bootstrap", "-o", "cs-echo-standalone", "io.get-coursier:echo:1.0.1", "--standalone") ++ extraOptions,
           directory = tmpDir
         )
         val output = LauncherTestUtil.output(
@@ -307,7 +319,7 @@ abstract class BootstrapTests extends TestSuite {
             "-o", "cs-scalafmt-standalone",
             "org.scalameta:scalafmt-cli_2.12:2.0.0-RC4",
             "--standalone"
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
         LauncherTestUtil.run(
@@ -329,7 +341,7 @@ abstract class BootstrapTests extends TestSuite {
             "--assembly",
             "--classifier", "standalone",
             "-A", "jar"
-          ),
+          ) ++ extraOptions,
           directory = tmpDir
         )
         LauncherTestUtil.run(
@@ -340,41 +352,42 @@ abstract class BootstrapTests extends TestSuite {
     }
 
     test("nailgun") {
-      TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o", "echo-ng",
-            "--standalone",
-            "io.get-coursier:echo:1.0.0",
-            "com.facebook:nailgun-server:1.0.0",
-            "-M", "com.facebook.nailgun.NGServer"
-          ),
-          directory = tmpDir
-        )
-        var bgProc: Process = null
-        val output = try {
-          bgProc = new ProcessBuilder("java", "-jar", "./echo-ng")
-            .directory(tmpDir)
-            .inheritIO()
-            .start()
-
-          Thread.sleep(2000L)
-
-          LauncherTestUtil.output(
-            Seq(TestUtil.ngCommand, "coursier.echo.Echo", "foo"),
-            keepErrorOutput = false,
+      if (enableNailgunTest)
+        TestUtil.withTempDir { tmpDir =>
+          LauncherTestUtil.run(
+            args = Seq(
+              launcher,
+              "bootstrap",
+              "-o", "echo-ng",
+              "--standalone",
+              "io.get-coursier:echo:1.0.0",
+              "com.facebook:nailgun-server:1.0.0",
+              "-M", "com.facebook.nailgun.NGServer"
+            ) ++ extraOptions,
             directory = tmpDir
           )
-        } finally {
-          if (bgProc != null)
-            bgProc.destroy()
-        }
+          var bgProc: Process = null
+          val output = try {
+            bgProc = new ProcessBuilder("java", "-jar", "./echo-ng")
+              .directory(tmpDir)
+              .inheritIO()
+              .start()
 
-        val expectedOutput = "foo" + System.lineSeparator()
-        assert(output == expectedOutput)
-      }
+            Thread.sleep(2000L)
+
+            LauncherTestUtil.output(
+              Seq(TestUtil.ngCommand, "coursier.echo.Echo", "foo"),
+              keepErrorOutput = false,
+              directory = tmpDir
+            )
+          } finally {
+            if (bgProc != null)
+              bgProc.destroy()
+          }
+
+          val expectedOutput = "foo" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
     }
   }
 }

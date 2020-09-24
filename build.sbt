@@ -244,7 +244,8 @@ lazy val launcher = project("launcher")
   .settings(
     shared,
     coursierPrefix,
-    addBootstrapJarAsResource,
+    mappings.in(Compile, packageBin) ++= bootstrapLaunchersMappings.value,
+    exportJars := true,
     generatePropertyFile("coursier/launcher"),
     crossScalaVersions += "2.11.12",
     libs += Deps.dataClass % Provided
@@ -297,8 +298,7 @@ lazy val install = project("install")
       Deps.argonautShapeless,
       Deps.catsCore,
       Deps.dataClass % Provided
-    ),
-    addBootstrapJarResourceInTests
+    )
   )
 
 lazy val jvm = project("jvm")
@@ -326,7 +326,6 @@ lazy val cli = project("cli")
   .settings(
     shared,
     coursierPrefix,
-    addBootstrapJarResourceInTests,
     utest,
     libs ++= {
       if (scalaBinaryVersion.value == "2.12")
@@ -611,55 +610,32 @@ lazy val `coursier-repo` = project("coursier-repo")
   )
 
 
-lazy val addBootstrapJarAsResource = {
+lazy val bootstrapLaunchersMappings = Def.taskDyn {
 
-  import java.nio.file.Files
-
-  packageBin.in(Compile) := Def.taskDyn {
-
-    val resourcesBootstrapLauncherOptTask: Def.Initialize[Task[Option[File]]] =
-      if (javaMajorVer > 8)
-        Def.task(None)
-      else
-        Def.task {
-          Some(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
-        }
-
-    val originalBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
-    val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
-    val originalResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
-    val source = packageBin.in(Compile).value
-
-    Def.task {
-      val resourcesBootstrapJarOpt: Option[File] = resourcesBootstrapLauncherOptTask.value
-
-      val dest = source.getParentFile / (source.getName.stripSuffix(".jar") + "-with-bootstrap.jar")
-
-      ZipUtil.addToZip(source, dest, Seq(
-        "bootstrap.jar" -> Files.readAllBytes(bootstrapJar.toPath),
-        "bootstrap-orig.jar" -> Files.readAllBytes(originalBootstrapJar.toPath),
-        "bootstrap-resources-orig.jar" -> Files.readAllBytes(originalResourcesBootstrapJar.toPath)
-      ) ++ resourcesBootstrapJarOpt.map { resourcesBootstrapJar =>
-        "bootstrap-resources.jar" -> Files.readAllBytes(resourcesBootstrapJar.toPath)
-      })
-
-      dest
-    }
-  }.value
-}
-
-lazy val addBootstrapJarResourceInTests = Seq(
-  unmanagedResources.in(Test) += proguardedJar.in(`bootstrap-launcher`).in(Compile).value,
-  unmanagedResources.in(Test) ++= Def.taskDyn[Seq[File]] {
+  val resourcesBootstrapLauncherOptTask: Def.Initialize[Task[Option[File]]] =
     if (javaMajorVer > 8)
-    // Running into obscure proguard issues when building that one with JDK 11…
-      Def.task(Nil)
+      Def.task(None)
     else
       Def.task {
-        Seq(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
+        Some(proguardedJar.in(`resources-bootstrap-launcher`).in(Compile).value)
       }
-  }.value
-)
+
+  val originalBootstrapJar = packageBin.in(`bootstrap-launcher`).in(Compile).value
+  val bootstrapJar = proguardedJar.in(`bootstrap-launcher`).in(Compile).value
+  val originalResourcesBootstrapJar = packageBin.in(`resources-bootstrap-launcher`).in(Compile).value
+
+  Def.task {
+    val resourcesBootstrapJarOpt: Option[File] = resourcesBootstrapLauncherOptTask.value
+
+    Seq(
+      bootstrapJar -> "bootstrap.jar",
+      originalBootstrapJar -> "bootstrap-orig.jar",
+      originalResourcesBootstrapJar -> "bootstrap-resources-orig.jar"
+    ) ++ resourcesBootstrapJarOpt.map { resourcesBootstrapJar =>
+      resourcesBootstrapJar -> "bootstrap-resources.jar"
+    }
+  }
+}
 
 lazy val addPathsSources = Def.settings(
   addDirectoriesSources,

@@ -38,7 +38,9 @@ import scala.util.control.NonFatal
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
   basePreamble: Preamble = Preamble()
-    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true")
+    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
+  @since
+    overrideProguardedBootstraps: Option[Boolean] = None
 ) {
 
   private lazy val isWindows =
@@ -148,12 +150,15 @@ import scala.util.control.NonFatal
           }
         )
 
-        Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
+        val params0 = Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
           .withPreamble(baseJarPreamble0)
           .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
           .withDeterministic(true)
           .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
           .withExtraZipEntries(infoEntries)
+
+        overrideProguardedBootstraps
+          .fold(params0)(params0.withProguarded)
 
       case LauncherType.Assembly =>
 

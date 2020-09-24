@@ -30,11 +30,9 @@ trap cleanup EXIT INT TERM
 
 # see https://unix.stackexchange.com/questions/90244/bash-run-command-in-background-and-capture-pid
 runServerBg() {
-  coursier launch \
-    com.lihaoyi:ammonite_2.12.7:1.4.4 \
-    -M ammonite.Main \
-    -- \
-      "$DIR/redirect-server.sc" &
+  cs launch ammonite:2.1.4-11-307f3d8 \
+    --scala 2.12.12 -- \
+    "$DIR/redirect-server.sc" &
   SERVER_PID="$!"
 }
 

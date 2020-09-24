@@ -1,4 +1,6 @@
 
+// Ammonite 2.1.4-11-307f3d8, scala 2.12.12
+
 import $file.scripts.shared.Docusaurus
 import $file.scripts.shared.Util
 import $file.scripts.shared.Version

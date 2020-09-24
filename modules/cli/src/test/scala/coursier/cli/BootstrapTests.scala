@@ -18,6 +18,10 @@ import utest._
   */
 object BootstrapTests extends TestSuite {
 
+  lazy val isJava9Plus: Boolean =
+    sys.props.get("java.version")
+      .exists(!_.startsWith("1."))
+
   private def zipEntryContent(zis: ZipInputStream, path: String): Array[Byte] = {
     val e = zis.getNextEntry
     if (e == null)
@@ -384,12 +388,11 @@ object BootstrapTests extends TestSuite {
         assert(fastparseUtilsLines.distinct.length == 2)
     }
 
-    test("put everything under the coursier/bootstrap directory in bootstrap") - withFile() {
+    def namespaceTest(): Unit = withFile() {
       (bootstrapFile, _) =>
 
         val sharedLoaderOptions = SharedLoaderOptions(
-          sharedTarget = List("launcher"),
-          isolated = List("launcher:org.scala-sbt:launcher-interface:1.0.4")
+          shared = List("org.scala-sbt:launcher-interface")
         )
         val sharedLaunchOptions = SharedLaunchOptions(
           sharedLoaderOptions = sharedLoaderOptions,
@@ -420,7 +423,18 @@ object BootstrapTests extends TestSuite {
         val names = zipEntryNames(zis).toVector
         assert(names.exists(_.startsWith("META-INF/")))
         assert(names.exists(_.startsWith("coursier/bootstrap/launcher/")))
-        assert(names.forall(n => n.startsWith("META-INF/") || n.startsWith("coursier/bootstrap/launcher/")))
+
+        val unexpected = names.filter { name =>
+          !name.startsWith("META-INF/") &&
+            !name.startsWith("coursier/bootstrap/launcher/")
+        }
+
+        assert(unexpected.isEmpty)
+    }
+
+    test("put everything under the coursier/bootstrap directory in proguarded bootstrap") - {
+      if (!isJava9Plus)
+        namespaceTest
     }
   }
 }
