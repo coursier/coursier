@@ -13,8 +13,20 @@ import scala.util.{Failure, Success, Try}
 
 object JvmIndex {
 
+  def handleAliases(indexName: String): String =
+    indexName match {
+      case "cs"    => coursierIndexUrl
+      case "jabba" => jabbaIndexUrl
+      case other   => other
+    }
+
   def defaultIndexUrl: String =
+    jabbaIndexUrl
+
+  def jabbaIndexUrl: String =
     "https://github.com/shyiko/jabba/raw/master/index.json"
+  def coursierIndexUrl: String =
+    "https://github.com/coursier/jvm-index/raw/master/index.json"
 
   private def artifact(url: String) = Artifact(url).withChanging(true)
 

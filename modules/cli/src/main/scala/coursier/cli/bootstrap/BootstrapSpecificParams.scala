@@ -5,7 +5,7 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.Cache
-import coursier.jvm.JvmCache
+import coursier.jvm.{JvmCache, JvmIndex}
 import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
 import coursier.util.Task
@@ -127,6 +127,7 @@ object BootstrapSpecificParams {
       .jvmIndex
       .map(_.trim)
       .filter(_ != "default")
+      .map(JvmIndex.handleAliases)
 
     (validateOutputType, rulesV).mapN {
       (_, rules) =>

@@ -6,7 +6,7 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.Cache
-import coursier.jvm.{JvmCache, JvmCacheLogger}
+import coursier.jvm.{JvmCache, JvmCacheLogger, JvmIndex}
 import coursier.util.Task
 
 final case class SharedJavaParams(
@@ -95,6 +95,7 @@ object SharedJavaParams {
       .jvmIndex
       .map(_.trim)
       .filter(_ != "default")
+      .map(JvmIndex.handleAliases)
 
     checkSystemV.map { _ =>
       SharedJavaParams(
