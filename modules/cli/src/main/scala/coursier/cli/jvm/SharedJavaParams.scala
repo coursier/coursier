@@ -15,20 +15,31 @@ final case class SharedJavaParams(
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
   localOnly: Boolean,
-  update: Boolean
+  update: Boolean,
+  jvmIndexUrlOpt: Option[String]
 ) {
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
 
   def cacheAndHome(cache: Cache[Task], noUpdateCache: Cache[Task], verbosity: Int): (JvmCache, coursier.jvm.JavaHome) = {
-    val noUpdateJvmCache = JvmCache()
-      .withBaseDirectory(jvmDir.toFile)
-      .withCache(noUpdateCache)
-      .withDefaultIndex
-    val jvmCache = JvmCache()
-      .withBaseDirectory(jvmDir.toFile)
-      .withCache(cache)
-      .withDefaultIndex
+    val noUpdateJvmCache = {
+      val c = JvmCache()
+        .withBaseDirectory(jvmDir.toFile)
+        .withCache(noUpdateCache)
+      jvmIndexUrlOpt match {
+        case None => c.withDefaultIndex
+        case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
+      }
+    }
+    val jvmCache = {
+      val c = JvmCache()
+        .withBaseDirectory(jvmDir.toFile)
+        .withCache(cache)
+      jvmIndexUrlOpt match {
+        case None => c.withDefaultIndex
+        case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
+      }
+    }
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
@@ -80,6 +91,11 @@ object SharedJavaParams {
       else
         Validated.validNel(())
 
+    val index = options
+      .jvmIndex
+      .map(_.trim)
+      .filter(_ != "default")
+
     checkSystemV.map { _ =>
       SharedJavaParams(
         jvm,
@@ -87,7 +103,8 @@ object SharedJavaParams {
         allowSystem,
         requireSystem,
         options.localOnly,
-        options.update
+        options.update,
+        index
       )
     }
   }

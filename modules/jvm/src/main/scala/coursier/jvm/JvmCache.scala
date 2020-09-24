@@ -314,6 +314,13 @@ import scala.util.control.NonFatal
   def withIndex(index: Task[JvmIndex]): JvmCache =
     withIndex(Some(index))
 
+  def withIndex(indexUrl: String): JvmCache = {
+    val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+      JvmIndex.load(cache, indexUrl)
+    }
+    withIndex(indexTask)
+  }
+
   def withDefaultIndex: JvmCache = {
     val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
       JvmIndex.load(cache)
