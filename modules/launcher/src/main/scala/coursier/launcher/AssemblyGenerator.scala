@@ -3,7 +3,7 @@ package coursier.launcher
 import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
-import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
 
 import coursier.launcher.internal.{FileUtil, Zip}
 
@@ -143,11 +143,17 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
       ent.setCompressedSize(-1L)
 
-      if (entries.tail.nonEmpty)
+      val content = entries.reverse.toArray.flatMap(_._2)
+
+      if (entries.tail.nonEmpty) {
         ent.setSize(entries.map(_._2.length).sum)
+        val crc = new CRC32
+        crc.update(content)
+        ent.setCrc(crc.getValue)
+      }
 
       zos.putNextEntry(ent)
-      zos.write(entries.reverse.toArray.flatMap(_._2))
+      zos.write(content)
       zos.closeEntry()
     }
   }
