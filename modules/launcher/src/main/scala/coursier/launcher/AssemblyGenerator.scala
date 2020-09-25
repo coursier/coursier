@@ -1,6 +1,6 @@
 package coursier.launcher
 
-import java.io.{File, OutputStream}
+import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
 import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
@@ -18,7 +18,14 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
       for (p <- parameters.preambleOpt.map(_.value))
         os.write(p)
 
-      make(parameters.files, os, parameters.finalAttributes, parameters.rules, parameters.extraZipEntries)
+      make(
+        parameters.files,
+        os,
+        parameters.finalAttributes,
+        parameters.rules,
+        parameters.extraZipEntries,
+        parameters.baseManifest
+      )
     }
 
     FileUtil.tryMakeExecutable(output)
@@ -30,10 +37,13 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     output: OutputStream,
     attributes: Seq[(JarAttributes.Name, String)],
     rules: Seq[MergeRule],
-    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])],
+    baseManifestOpt: Option[Array[Byte]]
   ): Unit = {
 
     val manifest = new java.util.jar.Manifest
+    for (baseManifest <- baseManifestOpt)
+      manifest.read(new ByteArrayInputStream(baseManifest))
     manifest.getMainAttributes.put(JarAttributes.Name.MANIFEST_VERSION, "1.0")
     for ((k, v) <- attributes)
       manifest.getMainAttributes.put(k, v)

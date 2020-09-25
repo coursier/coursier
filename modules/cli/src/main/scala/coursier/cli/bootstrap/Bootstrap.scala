@@ -311,6 +311,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             .withFiles(files.map(_._2))
             .withMainClass(mainClass)
             .withRules(params.specific.assemblyRules)
+            .withBaseManifest(params.specific.baseManifestOpt)
             .withPreambleOpt(preambleOpt)
         else if (params.specific.manifestJar)
           Parameters.ManifestJar(files.map(_._2), mainClass)

@@ -1,6 +1,6 @@
 package coursier.cli.bootstrap
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
@@ -21,6 +21,7 @@ final case class BootstrapSpecificParams(
   manifestJar: Boolean,
   createBatFile: Boolean,
   assemblyRules: Seq[MergeRule],
+  baseManifestOpt: Option[Array[Byte]],
   withPreamble: Boolean,
   deterministicOutput: Boolean,
   proguarded: Boolean,
@@ -129,8 +130,20 @@ object BootstrapSpecificParams {
       .filter(_ != "default")
       .map(JvmIndex.handleAliases)
 
-    (validateOutputType, rulesV).mapN {
-      (_, rules) =>
+    val baseManifestOptV = options.baseManifest.filter(_.nonEmpty) match {
+      case None => Validated.validNel(None)
+      case Some(path) =>
+        val p = Paths.get(path)
+        if (Files.isRegularFile(p))
+          Validated.validNel(Some(Files.readAllBytes(p)))
+        else if (Files.exists(p))
+          Validated.invalidNel(s"Base manifest $path is not a file")
+        else
+          Validated.invalidNel(s"Base manifest $path not found")
+    }
+
+    (validateOutputType, rulesV, baseManifestOptV).mapN {
+      (_, rules, baseManifestOpt) =>
         val javaOptions = options.javaOpt
         val jvmOptionFile = options.jvmOptionFile.map(_.trim).filter(_.nonEmpty)
         BootstrapSpecificParams(
@@ -144,6 +157,7 @@ object BootstrapSpecificParams {
           manifestJar,
           createBatFile,
           prependRules ++ rules,
+          baseManifestOpt,
           options.preamble,
           options.deterministic,
           options.proguarded,
