@@ -24,8 +24,14 @@ if [ -d homebrew-formulas ]; then
   rm -rf homebrew-formulas
 fi
 
+if [ ! -z ${DRY_RUN+x} ] && [ ${DRY_RUN} == true ]; then
+  REPO="https://github.com/coursier/homebrew-formulas.git"
+else
+  REPO="https://${GH_TOKEN}@github.com/coursier/homebrew-formulas.git"
+fi
+
 echo "Cloning"
-git clone "https://${GH_TOKEN}@github.com/coursier/homebrew-formulas.git" -q -b master homebrew-formulas
+git clone "$REPO" -q -b master homebrew-formulas
 cd homebrew-formulas
 
 git config user.name "$GIT_USERNAME"
@@ -57,6 +63,8 @@ MSG="Updates for $VERSION"
 # probably not fine with i18n
 if git status | grep "nothing to commit" >/dev/null 2>&1; then
   echo "Nothing changed"
+elif [ ! -z ${DRY_RUN+x} ] && [ ${DRY_RUN} == true ]; then
+  echo "Dry run, not pushing changes"
 else
   git commit -m "$MSG"
 
