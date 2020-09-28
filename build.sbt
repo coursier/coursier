@@ -359,6 +359,7 @@ lazy val `cli-tests` = project("cli-tests")
     utest,
     onlyIn("2.12"),
     fork.in(Test) := true,
+    baseDirectory.in(Test) := baseDirectory.in(ThisBuild).value,
     javaOptions.in(Test) ++= Def.taskDyn {
       val task0 = sys.props.get("coursier-test-launcher") match {
         case None =>
