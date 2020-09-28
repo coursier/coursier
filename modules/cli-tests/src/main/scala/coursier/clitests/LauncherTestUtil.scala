@@ -8,10 +8,16 @@ import coursier.cache.internal.FileUtil
 
 object LauncherTestUtil {
 
-  lazy val launcher = sys.props.getOrElse(
-    "coursier-test-launcher",
-    sys.error("Java property coursier-test-launcher not set")
-  )
+  lazy val launcher = {
+    val path = sys.props.getOrElse(
+      "coursier-test-launcher",
+      sys.error("Java property coursier-test-launcher not set")
+    )
+    if (path.startsWith("./") || path.startsWith(".\\"))
+      new File(path).getAbsolutePath
+    else
+      path
+  }
 
   private def doRun[T](
     args: Seq[String],
