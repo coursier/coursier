@@ -72,7 +72,7 @@ final class ProgressLogger[T](
               doneEmoji.fold("")(_ + " ")
             else
               tickers(doneCount % tickers.length) + " "
-          out.write(s" $em$processedMessage $doneCount${s.totalOpt.filter(_ => !done).fold("")(t => s" / $t")} $elementName$extra\n")
+          out.write(s" $em$processedMessage $doneCount${s.totalOpt.filter(_ => !done).fold("")(t => s" / $t")} $elementName$extra" + System.lineSeparator())
           printed += 1
         }
 

@@ -86,8 +86,8 @@ object Strict {
     val evicted: Seq[Conflicted]
   ) extends UnsatisfiedRule(
     rule,
-    s"Found evicted dependencies:\n" +
-      evicted.map(_.repr + "\n").mkString
+    s"Found evicted dependencies:" + System.lineSeparator() +
+      evicted.map(_.repr + System.lineSeparator()).mkString
   )
 
   final class UnsatisfiableRule(

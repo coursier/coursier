@@ -73,7 +73,7 @@ object Print {
 
     val l = deps1.map(dependency(_, printExclusions))
     val l0 = if (reorder) l.distinct else l
-    l0.mkString("\n")
+    l0.mkString(System.lineSeparator())
   }
 
   def compatibleVersions(compatibleWith: String, selected: String): Boolean = {
@@ -215,8 +215,8 @@ object Print {
             (s"${c.dependeeModule}:${c.dependeeVersion}", s"wanted version ${c.wantedVersion}" + extra)
           }
 
-          s"$mod:${l.head.version} was selected, but\n" +
-            aligned(messages).map("  " + _ + "\n").mkString
+          s"$mod:${l.head.version} was selected, but" + System.lineSeparator() +
+            aligned(messages).map("  " + _ + System.lineSeparator()).mkString
       }
   }
 

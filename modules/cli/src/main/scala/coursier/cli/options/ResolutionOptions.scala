@@ -81,8 +81,8 @@ final case class ResolutionOptions(
       ).either match {
         case Left(e) =>
           Validated.invalidNel(
-            s"Cannot parse forced versions:\n" +
-              e.map("  " + _).mkString("\n")
+            s"Cannot parse forced versions:" + System.lineSeparator() +
+              e.map("  " + _).mkString(System.lineSeparator())
           )
         case Right(elems) =>
           Validated.validNel(
@@ -133,7 +133,7 @@ final case class ResolutionOptions(
 
     val reconciliationV =
       ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault).either match {
-        case Left(e)      => Validated.invalidNel(e.mkString("\n"))
+        case Left(e)      => Validated.invalidNel(e.mkString(System.lineSeparator()))
         case Right(elems) => Validated.validNel(elems)
       }
 

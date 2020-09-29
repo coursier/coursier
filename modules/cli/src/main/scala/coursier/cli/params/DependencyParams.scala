@@ -31,10 +31,10 @@ object DependencyParams {
       ModuleParser.javaOrScalaModules(options.exclude).either match {
         case Left(errors) =>
           Validated.invalidNel(
-            s"Cannot parse excluded modules:\n" +
+            s"Cannot parse excluded modules:" + System.lineSeparator() +
               errors
                 .map("  " + _)
-                .mkString("\n")
+                .mkString(System.lineSeparator())
           )
 
         case Right(excludes0) =>
@@ -47,10 +47,10 @@ object DependencyParams {
             )
           else
             Validated.invalidNel(
-              s"Excluded modules with attributes not supported:\n" +
+              s"Excluded modules with attributes not supported:" + System.lineSeparator() +
                 excludesWithAttr
                   .map("  " + _)
-                  .mkString("\n")
+                  .mkString(System.lineSeparator())
             )
       }
 
@@ -106,8 +106,8 @@ object DependencyParams {
           case Left(e) =>
             Left(
               NonEmptyList.one(
-                s"Cannot parse intransitive dependencies:\n" +
-                  e.map("  " + _).mkString("\n")
+                s"Cannot parse intransitive dependencies:" + System.lineSeparator() +
+                  e.map("  " + _).mkString(System.lineSeparator())
               )
             )
           case Right(l) =>
@@ -121,8 +121,8 @@ object DependencyParams {
     val sbtPluginDependenciesV = DependencyParser.javaOrScalaDependenciesParams(options.sbtPlugin).either match {
       case Left(e) =>
         Validated.invalidNel(
-          s"Cannot parse sbt plugin dependencies:\n" +
-            e.map("  " + _).mkString("\n")
+          s"Cannot parse sbt plugin dependencies:" + System.lineSeparator() +
+            e.map("  " + _).mkString(System.lineSeparator())
         )
 
       case Right(Seq()) =>

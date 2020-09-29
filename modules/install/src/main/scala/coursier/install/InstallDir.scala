@@ -381,7 +381,7 @@ import scala.util.control.NonFatal
       writtenOpt <- Task.delay {
         val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
         if (!writtenOpt0.exists(!_) && verbosity >= 1)
-          System.err.println(s"No new update for $name\n")
+          System.err.println(s"No new update for $name" + System.lineSeparator())
         writtenOpt0
       }
     } yield writtenOpt

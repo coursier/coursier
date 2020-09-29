@@ -18,12 +18,12 @@ final class InteractiveChecksumLogger(out: Writer, verbosity: Int) extends Check
     underlying.processingSet(id, Some(fs.elements.length))
   override def computing(id: Object, type0: ChecksumType, path: String): Unit = {
     if (verbosity >= 2)
-      out.write(s"Computing ${type0.name} checksum of ${path.repr}\n")
+      out.write(s"Computing ${type0.name} checksum of ${path.repr}" + System.lineSeparator())
     underlying.processing(path, id)
   }
   override def computed(id: Object, type0: ChecksumType, path: String, errorOpt: Option[Throwable]): Unit = {
     if (verbosity >= 2)
-      out.write(s"Computed ${type0.name} checksum of ${path.repr}\n")
+      out.write(s"Computed ${type0.name} checksum of ${path.repr}" + System.lineSeparator())
     underlying.processed(path, id, errorOpt.nonEmpty)
   }
   override def computedSet(id: Object, fs: FileSet): Unit =

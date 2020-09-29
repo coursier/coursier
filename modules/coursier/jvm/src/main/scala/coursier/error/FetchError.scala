@@ -8,8 +8,8 @@ sealed abstract class FetchError(message: String, cause: Throwable = null) exten
 object FetchError {
 
   final class DownloadingArtifacts(val errors: Seq[(Artifact, ArtifactError)]) extends FetchError(
-    "Error fetching artifacts:\n" +
-      errors.map { case (a, e) => s"${a.url}: ${e.describe}\n" }.mkString,
+    "Error fetching artifacts:" + System.lineSeparator() +
+      errors.map { case (a, e) => s"${a.url}: ${e.describe}" + System.lineSeparator() }.mkString,
     errors.headOption.map(_._2).orNull
   )
 

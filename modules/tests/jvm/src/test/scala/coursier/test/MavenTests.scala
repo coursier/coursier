@@ -37,7 +37,7 @@ object MavenTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == mainJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
       }
 
       * - runner.withArtifacts(
@@ -48,7 +48,7 @@ object MavenTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == sourcesJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
       }
     }
   }

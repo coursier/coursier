@@ -210,7 +210,7 @@ class RefreshLogger(
     updateRunnable.newEntry(
       url,
       DownloadInfo(0L, 0L, None, System.currentTimeMillis(), updateCheck = false, watching = false),
-      s"Downloading $url\n"
+      s"Downloading $url" + System.lineSeparator()
     )
 
   override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {

@@ -73,13 +73,13 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
     if (lastInstantOpt.exists(now > _ + 5000L)) {
       val downloads0 = downloads.filter { case (url, _) => previous(url) }
       if (downloads0.nonEmpty) {
-        out.write("Still downloading:\n")
+        out.write("Still downloading:" + System.lineSeparator())
         for ((url, info) <- downloads0) {
           assert(info != null, s"Incoherent state ($url)")
-          out.write(s"$url ${describe(info)}\n")
+          out.write(s"$url ${describe(info)}" + System.lineSeparator())
         }
 
-        out.write("\n")
+        out.write(System.lineSeparator())
 
         out.flush()
         lastInstantOpt = Some(now)

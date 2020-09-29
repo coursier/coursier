@@ -52,8 +52,8 @@ object Dependencies {
 
       case Validated.Invalid(err) =>
         Left(new ResolveException(
-          "Error processing dependencies:\n" +
-            err.toList.map("  " + _).mkString("\n")
+          "Error processing dependencies:" + System.lineSeparator() +
+            err.toList.map("  " + _).mkString(System.lineSeparator())
         ))
     }
 

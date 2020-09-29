@@ -31,7 +31,7 @@ final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int) e
         Some("Fail to list Sonatype profiles")
 
     for (msg <- msgOpt) {
-      out.write(s"$msg\n")
+      out.write(s"$msg" + System.lineSeparator())
       out.flush()
     }
   }

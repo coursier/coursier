@@ -41,9 +41,9 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             Task.delay(MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
-                  "Found main classes:\n" +
-                    m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)\n" }.mkString +
-                    "\n"
+                  "Found main classes:" + System.lineSeparator() +
+                    m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
+                    System.lineSeparator()
                 )
               MainClass.retainedMainClassOpt(m, res.rootDependencies.headOption.map(d => (d.module.organization.value, d.module.name.value))) match {
                 case Some(c) =>

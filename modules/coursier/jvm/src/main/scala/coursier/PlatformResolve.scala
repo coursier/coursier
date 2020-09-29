@@ -37,8 +37,8 @@ abstract class PlatformResolve {
       RepositoryParser.repositories(l).either match {
         case Left(errs) =>
           System.err.println(
-            s"Ignoring $origin, error parsing repositories from it:\n" +
-              errs.map("  " + _ + "\n").mkString
+            s"Ignoring $origin, error parsing repositories from it:" + System.lineSeparator() +
+              errs.map("  " + _ + System.lineSeparator()).mkString
           )
           None
         case Right(repos) =>

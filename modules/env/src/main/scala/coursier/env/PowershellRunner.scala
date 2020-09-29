@@ -43,10 +43,10 @@ import scala.util.Try
       new String(outputBytes, StandardCharsets.UTF_8)
     else
       throw new Exception(
-        s"Error running powershell script (exit code: $retCode)\n" +
-          s"Error running command:\n" +
-          command.map("  " + _ + "\n").mkString + "\n" +
-          s"Output:\n" +
+        s"Error running powershell script (exit code: $retCode)" + System.lineSeparator() +
+          s"Error running command:" + System.lineSeparator() +
+          command.map("  " + _ + System.lineSeparator()).mkString + System.lineSeparator() +
+          "Output:" + System.lineSeparator() +
           Try(new String(outputBytes, StandardCharsets.UTF_8))
             .toOption
             .getOrElse("[Could not convert output]")

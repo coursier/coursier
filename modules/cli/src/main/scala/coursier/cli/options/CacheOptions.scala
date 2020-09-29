@@ -76,7 +76,7 @@ final case class CacheOptions(
             Validated.validNel(cp)
           case Left(errors) =>
             Validated.invalidNel(
-              s"Error parsing modes:\n${errors.map("  "+_).mkString("\n")}"
+              s"Error parsing modes:\n${errors.map("  "+_).mkString(System.lineSeparator())}"
             )
         }
 

@@ -26,7 +26,7 @@ object ResolveTests extends TestSuite {
   def paramsOrThrow(options: ResolveOptions): ResolveParams =
     ResolveParams(options) match {
       case Validated.Invalid(errors) =>
-        sys.error("Got errors:\n" + errors.toList.map(e => s"  $e\n").mkString)
+        sys.error("Got errors:" + System.lineSeparator() + errors.toList.map(e => s"  $e" + System.lineSeparator()).mkString)
       case Validated.Valid(params0) =>
         params0
     }

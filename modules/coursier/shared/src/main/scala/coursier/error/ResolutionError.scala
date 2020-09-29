@@ -31,8 +31,8 @@ object ResolutionError {
     val perRepositoryErrors: Seq[String]
   ) extends Simple(
     resolution,
-    s"Error downloading $module:$version\n" +
-      perRepositoryErrors.map("  " + _.replace("\n", "  \n")).mkString("\n")
+    s"Error downloading $module:$version" + System.lineSeparator() +
+      perRepositoryErrors.map("  " + _.replace(System.lineSeparator(), "  " + System.lineSeparator())).mkString(System.lineSeparator())
   )
 
   // Warning: currently, all conflicts in a resolution end-up in the same ConflictingDependencies instance
@@ -41,7 +41,7 @@ object ResolutionError {
     val dependencies: Set[Dependency]
   ) extends Simple(
     resolution,
-    "Conflicting dependencies:\n" +
+    "Conflicting dependencies:" + System.lineSeparator() +
       {
         val roots = resolution.conflicts.map(_.module)
         val trees = ReverseModuleTree(resolution, roots = roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes)))
@@ -82,11 +82,13 @@ object ResolutionError {
             }
             .sortBy(_._1)
             .map(_._2)
-          s"${t.module.repr}:${dependeesWantVersions.mkString(" or ")} wanted by\n\n" +
-            rendered + "\n"
+          s"${t.module.repr}:${dependeesWantVersions.mkString(" or ")} wanted by" +
+            System.lineSeparator() +
+            System.lineSeparator() +
+            rendered + System.lineSeparator()
         }
 
-        renderedTrees.mkString("\n")
+        renderedTrees.mkString(System.lineSeparator())
       }
   )
 
@@ -97,7 +99,7 @@ object ResolutionError {
   }
 
   final class Several(val head: Simple, val tail: Seq[Simple]) extends ResolutionError(
-    head.resolution, (head +: tail).map(_.getMessage).mkString("\n")
+    head.resolution, (head +: tail).map(_.getMessage).mkString(System.lineSeparator())
   ) {
     def errors: Seq[ResolutionError.Simple] =
       head +: tail
