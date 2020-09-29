@@ -207,6 +207,7 @@ def generateNativeImage(
       "--initialize-at-build-time=scala.meta.internal.svm_subs.UnsafeUtils",
       "--initialize-at-build-time=scala.collection.immutable.VM",
       "--report-unsupported-elements-at-runtime"
+      // "-H:-CheckToolchain" // sometimes needed on Windows, see https://github.com/oracle/graal/issues/2522
     )
   )
 }
