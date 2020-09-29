@@ -18,7 +18,8 @@ abstract class InstallTests extends TestSuite {
     }
 
   val tests = Tests {
-    test("inline app") {
+
+    def inlineApp(): Unit =
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
           args = Seq(
@@ -37,9 +38,12 @@ abstract class InstallTests extends TestSuite {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
       }
+    test("inline app") {
+      if (LauncherTestUtil.isWindows) "disabled"
+      else { inlineApp(); "" }
     }
 
-    test("env vars") {
+    def envVars(): Unit =
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
           args = Seq(
@@ -68,6 +72,9 @@ abstract class InstallTests extends TestSuite {
         val expectedIsCsInstalledLauncherOutput = "true" + System.lineSeparator()
         assert(isCsInstalledLauncherOutput == expectedIsCsInstalledLauncherOutput)
       }
+    test("env vars") {
+      if (LauncherTestUtil.isWindows) "disabled"
+      else { envVars(); "" }
     }
   }
 }

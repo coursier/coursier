@@ -35,16 +35,24 @@ abstract class LaunchTests extends TestSuite {
       assert(output == expected)
     }
 
-    test("inline app") {
+    def inlineApp(): Unit = {
       val output = LauncherTestUtil.output(launcher, "launch", """{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}""", "--", "foo")
       val expected = "foo" + System.lineSeparator()
       assert(output == expected)
     }
+    test("inline app") {
+      if (LauncherTestUtil.isWindows) "disabled"
+      else { inlineApp(); "" }
+    }
 
-    test("inline app with id") {
+    def inlineAppWithId(): Unit = {
       val output = LauncherTestUtil.output(launcher, "launch", """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}""", "--", "foo")
       val expected = "foo" + System.lineSeparator()
       assert(output == expected)
+    }
+    test("inline app with id") {
+      if (LauncherTestUtil.isWindows) "disabled"
+      else { inlineAppWithId(); "" }
     }
   }
 }
