@@ -51,7 +51,7 @@ else
     IT="jvmProjects/it:test"
   fi
 
-  ./scripts/with-redirect-server.sh \
+  ./.github/scripts/with-redirect-server.sh \
     ./modules/tests/handmade-metadata/scripts/with-test-repo.sh \
     sbt scalaFromEnv jvmProjects/test "$IT"
 

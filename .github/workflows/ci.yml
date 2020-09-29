@@ -44,11 +44,11 @@ jobs:
         submodules: true
     - uses: coursier/cache-action@v5
       with:
-        extraFiles: "[\"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+        extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
         extraKey: ${{ matrix.JDK }}-${{ matrix.SCALA_VERSION }}-${{ matrix.TARGET }}
-    - run: scripts/ci-setup.sh --jvm ${{ matrix.JDK }}
+    - run: .github/scripts/ci-setup.sh --jvm ${{ matrix.JDK }}
       shell: bash
-    - run: scripts/ci.sh
+    - run: .github/scripts/ci.sh
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -65,9 +65,9 @@ jobs:
           submodules: true
       - uses: coursier/cache-action@v5
         with:
-          extraFiles: "[\"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
       - uses: olafurpg/setup-gpg@v2
-      - run: scripts/ci-setup.sh --jvm 8
+      - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - name: Release
         run: sbt +publishLocal ci-release
@@ -88,9 +88,9 @@ jobs:
           submodules: true
       - uses: coursier/cache-action@v5
         with:
-          extraFiles: "[\"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
       - uses: olafurpg/setup-gpg@v2
-      - run: scripts/ci-setup.sh --jvm 8
+      - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - run: amm-runner launcher.sc uploadAllJars
         shell: bash
@@ -112,16 +112,16 @@ jobs:
           submodules: true
       - uses: coursier/cache-action@v5
         with:
-          extraFiles: "[\"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
       - uses: olafurpg/setup-gpg@v2
-      - run: scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
+      - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
         shell: bash
       - run: amm launcher.sc uploadNativeImage
         if: runner.os != 'Windows'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - run: gpg --version && amm.bat launcher.sc signDummyFiles && scripts/windows-native-image.bat && gpgconf --kill gpg-agent
+      - run: gpg --version && amm.bat launcher.sc signDummyFiles && .github/scripts/windows-native-image.bat && gpgconf --kill gpg-agent
         if: runner.os == 'Windows'
         shell: bash
         env:
@@ -136,7 +136,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - run: scripts/update-brew-formula.sh
+      - run: .github/scripts/update-brew-formula.sh
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -152,8 +152,8 @@ jobs:
           submodules: true
       - uses: coursier/cache-action@v5
         with:
-          extraFiles: "[\"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
-      - run: scripts/ci-setup.sh --jvm 8
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash

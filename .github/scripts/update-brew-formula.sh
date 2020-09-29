@@ -49,7 +49,7 @@ rm -f jar-launcher
 SHA256="$(openssl dgst -sha256 -binary < launcher | xxd -p -c 256)"
 rm -f launcher
 
-cat "../../scripts/coursier.rb.template" |
+cat "../../.github/scripts/coursier.rb.template" |
   sed 's=@LAUNCHER_VERSION@='"$VERSION"'=g' |
   sed 's=@LAUNCHER_URL@='"$URL"'=g' |
   sed 's=@LAUNCHER_SHA256@='"$SHA256"'=g' |
