@@ -143,7 +143,7 @@ jobs:
 
   update-website:
     needs: update-brew-formula
-    if: github.event_name == 'push' && startsWith(github.ref, 'v')
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
