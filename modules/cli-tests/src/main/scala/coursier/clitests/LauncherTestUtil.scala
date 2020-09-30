@@ -8,10 +8,20 @@ import coursier.cache.internal.FileUtil
 
 object LauncherTestUtil {
 
-  lazy val launcher = sys.props.getOrElse(
-    "coursier-test-launcher",
-    sys.error("Java property coursier-test-launcher not set")
-  )
+  lazy val isWindows = System.getProperty("os.name")
+    .toLowerCase(java.util.Locale.ROOT)
+    .contains("windows")
+
+  lazy val launcher = {
+    val path = sys.props.getOrElse(
+      "coursier-test-launcher",
+      sys.error("Java property coursier-test-launcher not set")
+    )
+    if (path.startsWith("./") || path.startsWith(".\\"))
+      new File(path).getAbsolutePath
+    else
+      path
+  }
 
   private def doRun[T](
     args: Seq[String],
@@ -35,6 +45,27 @@ object LauncherTestUtil {
     }
   }
 
+  private lazy val pathExt = Option(System.getenv("pathext"))
+    .toSeq
+    .flatMap(_.split(File.pathSeparator))
+  def adaptCommandName(name: String, directory: File): String =
+    if (isWindows && pathExt.nonEmpty && (name.startsWith("./") || name.startsWith(".\\")))
+      pathExt
+        .iterator
+        .map(ext => new File(directory, name + ext))
+        .filter(_.canExecute())
+        .map(_.getCanonicalPath)
+        .toStream
+        .headOption
+        .getOrElse(name)
+    else
+      name
+  private def adaptArgs(args: Seq[String], directory: File): Seq[String] =
+    args match {
+      case Seq(h, t @ _*) => adaptCommandName(h, directory) +: t
+      case _ => args
+    }
+
   def output(
     args: Seq[String],
     keepErrorOutput: Boolean,
@@ -42,7 +73,7 @@ object LauncherTestUtil {
     extraEnv: Map[String, String]
   ): String =
     doRun(
-      args,
+      adaptArgs(args, directory),
       builder => {
         val env = builder.environment()
         for ((k, v) <- extraEnv)
@@ -76,7 +107,7 @@ object LauncherTestUtil {
     directory: File
   ): Int =
     doRun(
-      args,
+      adaptArgs(args, directory),
       builder => builder
         .directory(directory),
       _.waitFor()

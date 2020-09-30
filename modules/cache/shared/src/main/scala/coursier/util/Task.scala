@@ -11,7 +11,7 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
   def map[U](f: T => U): Task[U] =
     Task(implicit ec => value(ec).map(f))
   def flatMap[U](f: T => Task[U]): Task[U] =
-    Task(implicit ec => value(ec).flatMap(t => f(t).value(ec)))
+    Task(implicit ec => value(ec).flatMap(t => Task.wrap(f(t)).value(ec)))
 
   def handle[U >: T](f: PartialFunction[Throwable, U]): Task[U] =
     Task(ec => value(ec).recover(f)(ec))
@@ -46,7 +46,7 @@ object Task extends PlatformTaskCompanion {
   }
 
   def delay[A](a: => A): Task[A] =
-    Task(ec => Future(a)(ec))
+    Task(ec => Future(wrap(a))(ec))
 
   def never[A]: Task[A] =
     Task(_ => Promise[A].future)
@@ -73,6 +73,20 @@ object Task extends PlatformTaskCompanion {
 
   def gather: Gather[Task] =
     sync
+
+  // When a thunk throws throwables like IllegalAccessError from Future(...),
+  // Future does NOT catch it, and never completes the Future.
+  // Wrapping such exception in this allows to circumvent that, and have the Future
+  // complete anyway.
+  final class WrappedException(cause: Throwable) extends Throwable(cause)
+  @inline
+  private def wrap[T](t: => T): T =
+    try t
+    catch {
+      // other exceptions can be added here if needed
+      case e: LinkageError =>
+        throw new WrappedException(e)
+    }
 
 }
 

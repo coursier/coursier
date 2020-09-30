@@ -87,7 +87,7 @@ final class OutputFrame(
             if (preamble.length <= width) l
             else l.substring(0, width)
           out.clearLine(2)
-          out.write(l0 + "\n")
+          out.write(l0 + System.lineSeparator())
           count += 1
         }
 
@@ -101,7 +101,7 @@ final class OutputFrame(
             if (l.length <= width) l
             else l.substring(0, width)
           out.clearLine(2)
-          out.write(l0 + "\n")
+          out.write(l0 + System.lineSeparator())
           n += 1
         }
 
@@ -118,7 +118,7 @@ final class OutputFrame(
             if (preamble.length <= width) l
             else l.substring(0, width)
           out.clearLine(2)
-          out.write(l0 + "\n")
+          out.write(l0 + System.lineSeparator())
           count += 1
         }
 

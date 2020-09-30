@@ -43,7 +43,7 @@ final class Tree[A](val roots: IndexedSeq[A], val children: A => Seq[A]) {
 
     val b = new ArrayBuffer[String]
     recursivePrint(roots, Set(), extraPrefix, isRoot = true, b += _)
-    b.mkString("\n")
+    b.mkString(System.lineSeparator())
   }
 
 }

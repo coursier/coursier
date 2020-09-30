@@ -43,6 +43,8 @@ final case class BootstrapSpecificOptions(
     assemblyRule: List[String] = Nil,
   @Help("Add default rules to assembly rule list")
     defaultAssemblyRules: Boolean = true,
+  @Help("Manifest to use as a start when creating a manifest for assemblies")
+    baseManifest: Option[String] = None,
   @Help("Add preamble")
     preamble: Boolean = true,
   @Help("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")

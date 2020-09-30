@@ -6,7 +6,7 @@ import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
 import coursier.launcher.internal.Windows
-import dataclass.data
+import dataclass._
 
 sealed abstract class Parameters extends Product with Serializable {
   def isNative: Boolean = false
@@ -20,7 +20,9 @@ object Parameters {
     attributes: Seq[(JarAttributes.Name, String)] = Nil,
     rules: Seq[MergeRule] = MergeRule.default,
     preambleOpt: Option[Preamble] = Some(Preamble()),
-    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
+    @since("2.0.0-RC6-27")
+    baseManifest: Option[Array[Byte]] = None
   ) extends Parameters {
     def withMainClass(mainClass: String): Assembly =
       withMainClass(Some(mainClass))

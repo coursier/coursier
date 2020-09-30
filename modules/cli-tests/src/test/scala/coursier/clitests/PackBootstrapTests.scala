@@ -13,6 +13,15 @@ object PackBootstrapTests extends BootstrapTests {
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-D value '$other'")
         true
     }
+  override lazy val acceptsJOptions =
+    sys.props.get("coursier-test-launcher-accepts-J").map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("true")  => true
+      case Some("false") => false
+      case None          => !LauncherTestUtil.isWindows
+      case Some(other)   =>
+        System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-J value '$other'")
+        true
+    }
   override lazy val overrideProguarded: Option[Boolean] =
     if (sys.props.get("java.version").exists(!_.startsWith("1.")))
       // It seems bootstrap JARs built on Java 11 fail at runtime with some obscure

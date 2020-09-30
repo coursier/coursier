@@ -23,12 +23,12 @@ final class InteractiveSignerLogger(out: Writer, verbosity: Int) extends SignerL
 
   override def signingElement(id: Object, path: Path): Unit = {
     if (verbosity >= 2)
-      out.write(s"Signing ${path.repr}\n")
+      out.write(s"Signing ${path.repr}" + System.lineSeparator())
     underlying.processing(path.repr, id)
   }
   override def signedElement(id: Object, path: Path, excOpt: Option[Throwable]): Unit = {
     if (verbosity >= 2)
-      out.write(s"Signed ${path.repr}\n")
+      out.write(s"Signed ${path.repr}" + System.lineSeparator())
     underlying.processed(path.repr, id, excOpt.nonEmpty)
   }
 

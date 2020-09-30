@@ -335,7 +335,8 @@ lazy val cli = project("cli")
           Deps.catsCore,
           Deps.dataClass % Provided,
           Deps.monadlessCats,
-          Deps.monadlessStdlib
+          Deps.monadlessStdlib,
+          Deps.svmSubs
         )
       else
         Seq()
@@ -358,20 +359,24 @@ lazy val `cli-tests` = project("cli-tests")
     utest,
     onlyIn("2.12"),
     fork.in(Test) := true,
+    baseDirectory.in(Test) := baseDirectory.in(ThisBuild).value,
     javaOptions.in(Test) ++= Def.taskDyn {
       val task0 = sys.props.get("coursier-test-launcher") match {
         case None =>
           Def.task {
-            (pack.in(cli, Compile).value.getAbsoluteFile./("bin/coursier").toString, Option("false"))
+            val isWindows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
+            val accepts_J = !isWindows
+            (pack.in(cli, Compile).value.getAbsoluteFile./("bin/coursier").toString, Option("false"), Option(accepts_J.toString))
           }
         case Some(launcher) =>
-          Def.task((launcher, sys.props.get("coursier-test-launcher-accepts-D")))
+          Def.task((launcher, sys.props.get("coursier-test-launcher-accepts-D"), sys.props.get("coursier-test-launcher-accepts-J")))
       }
       val actualTask =
         Def.task {
-          val (launcher0, acceptsDOpt) = task0.value
+          val (launcher0, acceptsDOpt, acceptsJOpt) = task0.value
           Seq(s"-Dcoursier-test-launcher=$launcher0") ++
-            acceptsDOpt.map(v => s"-Dcoursier-test-launcher-accepts-D=$v").toSeq
+            acceptsDOpt.map(v => s"-Dcoursier-test-launcher-accepts-D=$v").toSeq ++
+            acceptsJOpt.map(v => s"-Dcoursier-test-launcher-accepts-J=$v").toSeq
         }
       if (scalaVersion.value.startsWith("2.12."))
         actualTask

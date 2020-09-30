@@ -1,0 +1,33 @@
+name: Test native launchers
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+
+  test-native-launchers:
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.OS }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/native-tests.yml\"]"
+      - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
+        shell: bash
+      - run: sbt 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
+        shell: bash
+      - run: amm launcher.sc generateNativeImage --version "2.0-SNAPSHOT" --output cs-test
+        if: runner.os != 'Windows'
+        shell: bash
+      - run: .github/scripts/windows-build-native-image.bat
+        if: runner.os == 'Windows'
+        shell: bash
+      - run: sbt -J-Dcoursier-test-launcher=./cs-test cli-tests/test
+        shell: bash

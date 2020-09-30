@@ -389,8 +389,8 @@ abstract class CentralTests extends TestSuite {
 
           if (nonUnique.nonEmpty)
             println(
-              "Found non unique artifacts:\n" +
-                nonUnique.keys.toVector.map("  " + _).mkString("\n")
+              "Found non unique artifacts:" + System.lineSeparator() +
+                nonUnique.keys.toVector.map("  " + _).mkString(System.lineSeparator())
             )
 
           assert(nonUnique.isEmpty)

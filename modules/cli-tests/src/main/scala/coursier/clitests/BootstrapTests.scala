@@ -11,6 +11,7 @@ abstract class BootstrapTests extends TestSuite {
 
   def launcher: String
   def acceptsDOptions: Boolean = true
+  def acceptsJOptions: Boolean = true
 
   def overrideProguarded: Option[Boolean] =
     None
@@ -39,12 +40,14 @@ abstract class BootstrapTests extends TestSuite {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
-        val outputWithJavaArgs = LauncherTestUtil.output(
-          Seq("./cs-echo", "-J-Dother=thing", "foo", "-J-Dfoo=baz"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        assert(outputWithJavaArgs == expectedOutput)
+        if (acceptsJOptions) {
+          val outputWithJavaArgs = LauncherTestUtil.output(
+            Seq("./cs-echo", "-J-Dother=thing", "foo", "-J-Dfoo=baz"),
+            keepErrorOutput = false,
+            directory = tmpDir
+          )
+          assert(outputWithJavaArgs == expectedOutput)
+        }
 
         val outputWithArgsWithSpace = LauncherTestUtil.output(
           Seq("./cs-echo", "-n foo"),
@@ -87,24 +90,26 @@ abstract class BootstrapTests extends TestSuite {
         val expectedOtherOutput = "thing" + System.lineSeparator()
         assert(otherOutput == expectedOtherOutput)
 
-        val propArgOutput = LauncherTestUtil.output(
-          Seq("./cs-props", "-J-Dhappy=days", "happy"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        val expectedPropArgOutput = "days" + System.lineSeparator()
-        assert(propArgOutput == expectedPropArgOutput)
+        if (acceptsJOptions) {
+          val propArgOutput = LauncherTestUtil.output(
+            Seq("./cs-props", "-J-Dhappy=days", "happy"),
+            keepErrorOutput = false,
+            directory = tmpDir
+          )
+          val expectedPropArgOutput = "days" + System.lineSeparator()
+          assert(propArgOutput == expectedPropArgOutput)
 
-        val optFile = new File(tmpDir, ".propsjvmopts")
-        Files.write(optFile.toPath, ("-Dhappy=days" + System.lineSeparator()).getBytes(Charset.defaultCharset()))
-        val optFileOutput = LauncherTestUtil.output(
-          Seq("./cs-props", "happy"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        Files.delete(optFile.toPath)
-        val expectedOptFileOutput = "days" + System.lineSeparator()
-        assert(optFileOutput == expectedOptFileOutput)
+          val optFile = new File(tmpDir, ".propsjvmopts")
+          Files.write(optFile.toPath, ("-Dhappy=days" + System.lineSeparator()).getBytes(Charset.defaultCharset()))
+          val optFileOutput = LauncherTestUtil.output(
+            Seq("./cs-props", "happy"),
+            keepErrorOutput = false,
+            directory = tmpDir
+          )
+          Files.delete(optFile.toPath)
+          val expectedOptFileOutput = "days" + System.lineSeparator()
+          assert(optFileOutput == expectedOptFileOutput)
+        }
 
         val javaOptsOutput = LauncherTestUtil.output(
           Seq("./cs-props", "happy"),
@@ -184,8 +189,13 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        val expectedOutput = ("./cs-props-0" +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
-        assert(output == expectedOutput)
+        if (LauncherTestUtil.isWindows) {
+          val expectedOutput = (new File(tmpDir, "./cs-props-0").getCanonicalPath +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
+          assert(output.replace("\\\\", "\\") == expectedOutput)
+        } else {
+          val expectedOutput = ("./cs-props-0" +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
 
@@ -200,8 +210,13 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        val expectedOutput = ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
-        assert(output == expectedOutput)
+        if (LauncherTestUtil.isWindows) {
+          val expectedOutput = (new File(tmpDir, "./cs-props-1").getCanonicalPath +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
+          assert(output.replace("\\\\", "\\") == expectedOutput)
+        } else {
+          val expectedOutput = ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator) + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
 
@@ -265,8 +280,13 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        val expectedOutput = "./cs-props-hybrid" + System.lineSeparator()
-        assert(output == expectedOutput)
+        if (LauncherTestUtil.isWindows) {
+          val expectedOutput = new File(tmpDir, "./cs-props-hybrid").getCanonicalPath + System.lineSeparator()
+          assert(output.replace("\\\\", "\\") == expectedOutput)
+        } else {
+          val expectedOutput = "./cs-props-hybrid" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
 
@@ -289,8 +309,13 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        val expectedOutput = "./cs-props-hybrid-shared" + System.lineSeparator()
-        assert(output == expectedOutput)
+        if (LauncherTestUtil.isWindows) {
+          val expectedOutput = new File(tmpDir, "./cs-props-hybrid-shared").getCanonicalPath + System.lineSeparator()
+          assert(output.replace("\\\\", "\\") == expectedOutput)
+        } else {
+          val expectedOutput = "./cs-props-hybrid-shared" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
 

@@ -69,7 +69,7 @@ public class Jep {
     int retValue = p.waitFor();
     if (retValue != 0) {
       if (!output.isEmpty())
-        output = "\n" + output;
+        output = System.lineSeparator() + output;
       throw new JepException("Error running " + pip + " show jep (return code: " + retValue + ")" + output);
     }
 
@@ -143,7 +143,7 @@ public class Jep {
     int retValue = p.waitFor();
     if (retValue != 0) {
       if (!output.isEmpty())
-        output = "\n" + output;
+        output = System.lineSeparator() + output;
       throw new JepException("Error running " + python + " -c 'import sys; print(sys.prefix)' (return code: " + retValue + ")" + output);
     }
 

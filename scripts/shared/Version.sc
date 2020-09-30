@@ -11,16 +11,12 @@ def latestFromTag: String = {
 /**
  * Latest version according to environment variable `TRAVIS_TAG`
  */
-def latestFromTravisTag: String = {
-  val tag = sys.env.getOrElse(
-    "TRAVIS_TAG",
-    sys.error("TRAVIS_TAG not set")
-  )
-  if (tag.startsWith("v"))
-    tag.stripPrefix("v")
-  else
-    sys.error(s"TRAVIS_TAG ('$tag') doesn't start with 'v'")
-}
+def latestFromEnv: String =
+  latestFromTravisTagOpt
+    .orElse(latestFromGitHubRefOpt)
+    .getOrElse {
+      sys.error("TRAVIS_TAG or GITHUB_REF not set")
+    }
 
 /**
  * Latest version according to environment variable `TRAVIS_TAG` if it is set
@@ -32,5 +28,15 @@ def latestFromTravisTagOpt: Option[String] = {
       tag.stripPrefix("v")
     else
       sys.error(s"TRAVIS_TAG ('$tag') doesn't start with 'v'")
+  }
+}
+
+def latestFromGitHubRefOpt: Option[String] = {
+  val tagOpt = sys.env.get("GITHUB_REF").filter(_.nonEmpty)
+  tagOpt.map { tag =>
+    if (tag.startsWith("refs/tags/v"))
+      tag.stripPrefix("refs/tags/v")
+    else
+      sys.error(s"GITHUB_REF ('$tag') doesn't start with 'refs/tags/v'")
   }
 }

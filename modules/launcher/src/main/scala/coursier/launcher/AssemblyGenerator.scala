@@ -1,9 +1,9 @@
 package coursier.launcher
 
-import java.io.{File, OutputStream}
+import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
-import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
 
 import coursier.launcher.internal.{FileUtil, Zip}
 
@@ -18,7 +18,14 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
       for (p <- parameters.preambleOpt.map(_.value))
         os.write(p)
 
-      make(parameters.files, os, parameters.finalAttributes, parameters.rules, parameters.extraZipEntries)
+      make(
+        parameters.files,
+        os,
+        parameters.finalAttributes,
+        parameters.rules,
+        parameters.extraZipEntries,
+        parameters.baseManifest
+      )
     }
 
     FileUtil.tryMakeExecutable(output)
@@ -30,10 +37,13 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     output: OutputStream,
     attributes: Seq[(JarAttributes.Name, String)],
     rules: Seq[MergeRule],
-    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])],
+    baseManifestOpt: Option[Array[Byte]]
   ): Unit = {
 
     val manifest = new java.util.jar.Manifest
+    for (baseManifest <- baseManifestOpt)
+      manifest.read(new ByteArrayInputStream(baseManifest))
     manifest.getMainAttributes.put(JarAttributes.Name.MANIFEST_VERSION, "1.0")
     for ((k, v) <- attributes)
       manifest.getMainAttributes.put(k, v)
@@ -133,11 +143,17 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
       ent.setCompressedSize(-1L)
 
-      if (entries.tail.nonEmpty)
+      val content = entries.reverse.toArray.flatMap(_._2)
+
+      if (entries.tail.nonEmpty) {
         ent.setSize(entries.map(_._2.length).sum)
+        val crc = new CRC32
+        crc.update(content)
+        ent.setCrc(crc.getValue)
+      }
 
       zos.putNextEntry(ent)
-      zos.write(entries.reverse.toArray.flatMap(_._2))
+      zos.write(content)
       zos.closeEntry()
     }
   }

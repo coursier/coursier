@@ -239,9 +239,9 @@ object Launch extends CaseApp[LaunchOptions] {
         Task.delay(MainClass.mainClasses(files)).flatMap { m =>
           if (params.resolve.output.verbosity >= 2)
             System.err.println(
-              "Found main classes:\n" +
-                m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)\n" }.mkString +
-                "\n"
+              "Found main classes:" + System.lineSeparator() +
+                m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
+                System.lineSeparator()
             )
           MainClass.retainedMainClassOpt(m, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))) match {
             case Some(c) =>

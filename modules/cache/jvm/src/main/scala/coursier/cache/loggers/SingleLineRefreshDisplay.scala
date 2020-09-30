@@ -72,7 +72,7 @@ class SingleLineRefreshDisplay(
 
         truncatedPrintln(out, url, width)
         out.clearLine(2)
-        out.write(s"  ${display(info, isDone)}\n")
+        out.write(s"  ${display(info, isDone)}" + System.lineSeparator())
       }
 
       val displayedCount = (done0 ++ downloads).length

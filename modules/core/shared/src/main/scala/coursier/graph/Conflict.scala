@@ -53,9 +53,9 @@ object Conflict {
 
       val assumeCompatibleVersions = Print.compatibleVersions(tree.dependsOnVersion, tree.dependsOnReconciledVersion)
 
-      s"\n${tree.dependsOnModule.repr}:" +
+      System.lineSeparator() + s"${tree.dependsOnModule.repr}:" +
         s"${if (assumeCompatibleVersions) colors0.yellow else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
-        s"(${tree.dependsOnVersion} wanted)\n" + treeRepr
+        s"(${tree.dependsOnVersion} wanted)" + System.lineSeparator() + treeRepr
     }
   }
 

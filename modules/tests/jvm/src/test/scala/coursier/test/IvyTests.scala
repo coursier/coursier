@@ -75,7 +75,7 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.changing)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
         }
       }
 
@@ -93,7 +93,7 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.changing)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
         }
       }
     }
@@ -115,7 +115,7 @@ object IvyTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == mainJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
       }
 
       "test conf" - {
@@ -163,7 +163,7 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.url == testJarUrl)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString("\n")}")
+            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
         }
       }
     }

@@ -25,7 +25,7 @@ private def initialLauncher(
   def packLauncher: String = {
     val path = "modules/cli/target/pack/bin/coursier"
     val sbtPath =
-      if (Util.os == "win") "sbt"
+      if (Util.os == "win") "bin/sbt"
       else "./sbt"
     if (!Files.exists(Paths.get(path)))
       Util.run(Seq(sbtPath, "cli/pack"))
@@ -60,7 +60,7 @@ def uploadJavaLauncher(): Unit = {
 
   val initialLauncher0 = initialLauncher(None, None)
 
-  val version = Version.latestFromTravisTag
+  val version = Version.latestFromEnv
 
   println(version)
 
@@ -131,7 +131,7 @@ def uploadAssembly(): Unit = {
   val token = if (dryRun) "" else ghToken()
   val initialLauncher0 = initialLauncher(None, None)
   val assembly = "./coursier.jar"
-  val version = Version.latestFromTravisTag
+  val version = Version.latestFromEnv
   GenerateLauncher(
     initialLauncher0,
     module = s"io.get-coursier::coursier-cli:$version",
@@ -202,16 +202,21 @@ def generateNativeImage(
     // sometimes getting command-too-long errors when starting native-image
     // with the full classpath, without this
     useAssembly = Util.os == "win",
-    extraNativeImageOpts = Seq("--report-unsupported-elements-at-runtime")
+    extraNativeImageOpts = Seq(
+      // remove upon next release
+      "--initialize-at-build-time=scala.meta.internal.svm_subs.UnsafeUtils",
+      "--initialize-at-build-time=scala.collection.immutable.VM",
+      "--report-unsupported-elements-at-runtime"
+      // "-H:-CheckToolchain" // sometimes needed on Windows, see https://github.com/oracle/graal/issues/2522
+    )
   )
 }
-
 
 @main
 def uploadNativeImage(): Unit = {
   val token = if (dryRun) "" else ghToken()
   val dest = "./cs"
-  val version = Version.latestFromTravisTag
+  val version = Version.latestFromEnv
   generateNativeImage(version, dest, allowIvy2Local = false)
 
   // TODO Check that we are on the right CPU too?
