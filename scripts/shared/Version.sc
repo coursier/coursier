@@ -8,6 +8,10 @@ def latestFromTag: String = {
   cmd.!!.trim.stripPrefix("v")
 }
 
+def latestFromEnvOpt: String =
+  latestFromTravisTagOpt
+    .orElse(latestFromGitHubRefOpt)
+
 /**
  * Latest version according to environment variable `TRAVIS_TAG`
  */
@@ -31,12 +35,7 @@ def latestFromTravisTagOpt: Option[String] = {
   }
 }
 
-def latestFromGitHubRefOpt: Option[String] = {
-  val tagOpt = sys.env.get("GITHUB_REF").filter(_.nonEmpty)
-  tagOpt.map { tag =>
-    if (tag.startsWith("refs/tags/v"))
-      tag.stripPrefix("refs/tags/v")
-    else
-      sys.error(s"GITHUB_REF ('$tag') doesn't start with 'refs/tags/v'")
-  }
-}
+def latestFromGitHubRefOpt: Option[String] =
+  Option(System.getenv("GITHUB_REF"))
+    .filter(_.startsWith("refs/tags/v"))
+    .map(_.stripPrefix("refs/tags/v"))
