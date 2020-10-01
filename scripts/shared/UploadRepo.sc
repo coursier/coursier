@@ -3,6 +3,9 @@ import $file.Util
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 
+import scala.annotation.tailrec
+import scala.util.control.NonFatal
+
 /**
  * Uploads files to a GitHub repository
  *
@@ -15,6 +18,51 @@ import java.nio.file.{Files, Path, StandardCopyOption}
  * @param dryRun Whether to run a dry run (print actions that would have been done, but don't push / upload anything)
  */
 def apply(
+  generatedFiles: Seq[(Path, String)],
+  ghOrg: String,
+  ghProj: String,
+  branch: String,
+  ghToken: String,
+  message: String,
+  dryRun: Boolean
+): Unit = {
+  def proceed(): Unit =
+    doUpload(
+      generatedFiles,
+      ghOrg,
+      ghProj,
+      branch,
+      ghToken,
+      message,
+      dryRun
+    )
+
+  if (dryRun)
+    proceed()
+  else {
+    @tailrec
+    def loop(n: Int): Unit =
+      if (n <= 1) proceed()
+      else {
+        val succeeded = try {
+          proceed()
+          true
+        } catch {
+          case NonFatal(e) =>
+            System.err.println(s"Caught $e, trying again")
+            false
+        }
+
+        if (!succeeded)
+          loop(n - 1)
+      }
+
+    // concurrent attempts to push things to coursier/launchers might collide
+    loop(3)
+  }
+}
+
+private def doUpload(
   generatedFiles: Seq[(Path, String)],
   ghOrg: String,
   ghProj: String,
