@@ -30,8 +30,8 @@ def apply(
     System.err.println(s"Cloning ${repo.replace(ghToken, "****")} in $tmpDir")
     Util.run(Seq("git", "clone", repo, "-q", "-b", branch, tmpDir0.getAbsolutePath))
 
-    Util.run(Seq("git", "config", "user.name", "Travis-CI"), tmpDir0)
-    Util.run(Seq("git", "config", "user.email", "invalid@travis-ci.com"), tmpDir0)
+    Util.run(Seq("git", "config", "user.name", "Github Actions"), tmpDir0)
+    Util.run(Seq("git", "config", "user.email", "actions@github.com"), tmpDir0)
 
     for ((path, name) <- generatedFiles) {
       val dest = tmpDir.resolve(name)
