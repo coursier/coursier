@@ -79,7 +79,7 @@ jobs:
 
   upload-jars:
     needs: publish
-    if: github.event_name == 'push' && startsWith(github.ref, 'v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -99,7 +99,7 @@ jobs:
 
   upload-native-launchers:
     needs: upload-jars
-    if: github.event_name == 'push' && startsWith(github.ref, 'v')
+    if: startsWith(github.ref, 'refs/tags/v')
     strategy:
       fail-fast: false
       matrix:
@@ -129,7 +129,7 @@ jobs:
 
   update-brew-formula:
     needs: upload-native-launchers
-    if: github.event_name == 'push' && startsWith(github.ref, 'v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -162,7 +162,7 @@ jobs:
 
   update-website:
     needs: update-brew-formula
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
