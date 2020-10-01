@@ -13,8 +13,11 @@ import dataclass.data
     val latestOpt = Some(latest).filter(_.nonEmpty)
     val releaseOpt = Some(release).filter(_.nonEmpty)
     def latestFromAvailable = available
+      .filter(v => !latestOpt.contains(v))
+      .filter(v => !releaseOpt.contains(v))
       .map(Version(_))
       .sorted
+      .distinct
       .reverseIterator
       .map(_.repr)
 
@@ -26,8 +29,11 @@ import dataclass.data
     val releaseOpt = Some(release).filter(_.nonEmpty)
     def latestFromAvailable = available
       .filter(!_.endsWith("SNAPSHOT"))
+      .filter(v => !releaseOpt.contains(v))
+      .filter(v => !latestOpt.contains(v))
       .map(Version(_))
       .sorted
+      .distinct
       .reverseIterator
       .map(_.repr)
 
@@ -47,8 +53,11 @@ import dataclass.data
     val releaseOpt = Some(release).filter(_.nonEmpty).filter(isStable)
     def latestFromAvailable = available
       .filter(isStable)
+      .filter(v => !releaseOpt.contains(v))
+      .filter(v => !latestOpt.contains(v))
       .map(Version(_))
       .sorted
+      .distinct
       .reverseIterator
       .map(_.repr)
 
@@ -75,7 +84,9 @@ import dataclass.data
     def fromAvailable = available
       .map(Version(_))
       .filter(itv.contains)
+      .filter(v => !fromRelease.contains(v))
       .sorted
+      .distinct
       .reverseIterator
       .map(_.repr)
 
