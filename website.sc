@@ -65,7 +65,7 @@ def updateWebsite(): Unit = {
 
   val token = if (dryRun) "" else ghToken()
 
-  val versionOpt = "2.0.0-RC6-27" // Version.latestFromEnvOpt
+  val versionOpt = Option("2.0.0-RC6-27") // Version.latestFromEnvOpt
 
   Docusaurus.getVersionedDocs(
     docusaurusDir,
