@@ -5,7 +5,12 @@ set -e
 mkdir -p bin
 ./cs bootstrap -o bin/sbt sbt-launcher io.get-coursier:coursier_2.12:2.0.0-RC6-25
 ./cs bootstrap -o bin/amm ammonite:2.1.4-11-307f3d8 --scala 2.12.12
-./cs install --install-dir bin cs coursier
+
+# temporary
+# ./cs install --install-dir bin cs coursier
+./cs install --install-dir bin coursier
+cp cs bin/
+
 ./cs install --install-dir bin --contrib amm-runner
 export PATH="$(pwd)/bin:$PATH"
 echo "::add-path::$(pwd)/bin"
