@@ -71,6 +71,10 @@ private def updateCommand(cmd: Seq[String]): Seq[String] =
 // Travis CI not masking secrets automatically on its Windows workers
 private def maskSecrets(input: String): String = {
   var s = input
+  val toHide = Seq("GH_TOKEN", "TMP_GH_TOKEN", "PGP_PASSPHRASE", "PGP_SECRET", "SONATYPE_USERNAME", "SONATYPE_PASSWORD")
+    .flatMap(n => Option(System.getenv(n)).toSeq)
+    .filter(_.nonEmpty)
+    .flatMap(s => Seq(s, s.replaceAllLiterally("\"", "\\\"")))
   for (secret <- Seq("GH_TOKEN", "TMP_GH_TOKEN", "PGP_PASSPHRASE", "PGP_SECRET", "SONATYPE_USERNAME", "SONATYPE_PASSWORD").flatMap(n => Option(System.getenv(n)).toSeq).flatMap(s => Seq(s, s.replaceAllLiterally("\"", "\\\""))))
     s = s.replaceAllLiterally(secret, "****")
   s
