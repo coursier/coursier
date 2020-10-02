@@ -8,7 +8,133 @@ on:
   pull_request:
 
 jobs:
+  test:
+    runs-on: ${{ matrix.OS }}
+    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        JDK: ["8"]
+        SCALA_VERSION: ["2.12"]
+        TARGET: ["JVM", "Scala.JS", "Website"]
+        include:
+          - JDK: "8"
+            SCALA_VERSION: "2.13"
+            TARGET: "JVM"
+            OS: "ubuntu-latest"
+          - JDK: "11"
+            SCALA_VERSION: "2.12"
+            TARGET: "JVM"
+            OS: "ubuntu-latest"
+          # Disabled for now, getting weird linking errors
+          # - JDK: "8"
+          #   SCALA_VERSION: "2.12"
+          #   TARGET: "ScalaNative"
+          #   OS: "ubuntu-16.04"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v5
+      with:
+        extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+        extraKey: ${{ matrix.JDK }}-${{ matrix.SCALA_VERSION }}-${{ matrix.TARGET }}
+    - run: .github/scripts/ci-setup.sh --jvm ${{ matrix.JDK }}
+      shell: bash
+    - run: .github/scripts/ci.sh
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        TARGET: ${{ matrix.TARGET }}
+
+  publish:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: olafurpg/setup-gpg@v2
+      - run: .github/scripts/ci-setup.sh --jvm 8
+        shell: bash
+      - name: Release
+        run: sbt +publishLocal ci-release
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+
+  upload-jars:
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: olafurpg/setup-gpg@v2
+      - run: .github/scripts/ci-setup.sh --jvm 8
+        shell: bash
+      - run: amm-runner launcher.sc uploadAllJars
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+
+  upload-native-launchers:
+    needs: upload-jars
+    if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.OS }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: olafurpg/setup-gpg@v2
+      - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
+        shell: bash
+      - run: amm launcher.sc uploadNativeImage
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+      - run: gpg --version && amm.bat launcher.sc signDummyFiles && .github/scripts/windows-native-image.bat && gpgconf --kill gpg-agent
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+
   update-brew-formula:
+    needs: upload-native-launchers
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -17,6 +143,25 @@ jobs:
           fetch-depth: 0
           submodules: true
       - run: .github/scripts/update-brew-formula.sh
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  update-website-latest:
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - run: .github/scripts/ci-setup.sh --jvm 8
+        shell: bash
+      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
