@@ -12,9 +12,8 @@ elif [ ! -z ${GITHUB_REF+x} ] && [ ${GITHUB_REF} == refs/tags/v* ]; then
   GIT_USERNAME="Github Actions"
   GIT_EMAIL="actions@github.com"
 else
-  VERSION="2.0.0-RC6-27"
-  GIT_USERNAME="Github Actions"
-  GIT_EMAIL="actions@github.com"
+  echo "Error: could not get current tag" 1>&2
+  exit 1
 fi
 
 mkdir -p target
