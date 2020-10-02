@@ -8,7 +8,7 @@
   <meta name="generator" content="Docusaurus">
   <meta name="description" content="<p>coursier relies on <a href=&quot;https://github.com/xerial/sbt-pack&quot;>sbt-pack</a> to build</p>
 ">
-  <meta name="docsearch:version" content="2.0.0-RC6-24">
+  <meta name="docsearch:version" content="2.0.0-RC6-27">
   <meta name="docsearch:language" content="en">
   <meta property="og:title" content="CLI · Coursier">
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
    <div class="headerWrapper wrapper">
     <header>
      <a href="../.."><h2 class="headerTitle">Coursier</h2></a>
-     <a href="../../versions"><h3>2.0.0-RC6-24</h3></a>
+     <a href="../../versions"><h3>2.0.0-RC6-27</h3></a>
      <div class="navigationWrapper navigationSlider">
       <nav class="slidingNav">
        <ul class="nav-site nav-site-internal">
@@ -189,15 +189,15 @@
        </header>
        <article>
         <div>
-         <span><p>coursier relies on <a href="https://github.com/xerial/sbt-pack">sbt-pack</a> to build its CLI from sources. <a href="https://github.com/xerial/sbt-pack">sbt-pack</a> conveniently allows to build a launcher for the CLI, either once, or continuously, while watching sources. It has the advantage of not incurring the cost of merging multiple JARs together, like <a href="https://github.com/sbt/sbt-assembly">generating an assembly</a> would.</p> <p>Note that this only applies during development, the final <code>coursier</code> launcher generated upon each release relies on the <code>coursier bootstrap</code> command, itself pulling a proguarded assembly of the cli module of coursier.</p> <h2><a class="anchor" aria-hidden="true" id="batch-mode"></a><a href="dev-cli.html#batch-mode" aria-hidden="true" class="hash-link">
+         <span><p>coursier relies on <a href="https://github.com/xerial/sbt-pack">sbt-pack</a> to build its CLI from sources. <a href="https://github.com/xerial/sbt-pack">sbt-pack</a> conveniently allows to build a launcher for the CLI, either once, or continuously, while watching sources. It has the advantage of not incurring the cost of merging multiple JARs together, like <a href="https://github.com/sbt/sbt-assembly">generating an assembly</a> would.</p> <p>Note that this only applies during development, the final <code>coursier</code> launcher generated upon each release relies on the <code>coursier bootstrap</code> command, itself pulling a proguarded assembly of the cli module of coursier.</p> <p>Also note that coursier relies on a slightly different sbt than the default sbt launcher so you'll want to use the <code>./sbt</code> in the project for all of the sbt related commands.</p> <h2><a class="anchor" aria-hidden="true" id="batch-mode"></a><a href="dev-cli.html#batch-mode" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Batch mode</h2> <p>From freshly cloned sources, run</p> <pre><code class="hljs css language-bash">$ sbt cli/pack
+            </svg></a>Batch mode</h2> <p>From freshly cloned sources, run</p> <pre><code class="hljs css language-bash">$ ./sbt cli/pack
 </code></pre> <p>to build a CLI launcher from sources. This builds a <code>modules/cli/target/pack</code> directory via <a href="https://github.com/xerial/sbt-pack">sbt-pack</a>. This directory contains a coursier launcher, that can be used like</p> <pre><code class="hljs css language-bash">$ modules/cli/target/pack/bin/coursier launch io.get-coursier:<span class="hljs-built_in">echo</span>:1.0.1 -- foo
 </code></pre> <h2><a class="anchor" aria-hidden="true" id="continuous-mode"></a><a href="dev-cli.html#continuous-mode" aria-hidden="true" class="hash-link">
             <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
              <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-            </svg></a>Continuous mode</h2> <p>In a terminal window, run</p> <pre><code class="hljs css language-bash">sbt <span class="hljs-string">"~cli/pack"</span>
+            </svg></a>Continuous mode</h2> <p>In a terminal window, run</p> <pre><code class="hljs css language-bash">./sbt <span class="hljs-string">"~cli/pack"</span>
 </code></pre> <p>This builds a <code>modules/cli/target/pack</code> directory like above, then watches the sources of coursier for changes, and re-builds that directory upon changes.</p> <p>You can then run the coursier CLI from another terminal, like</p> <pre><code class="hljs css language-bash">$ modules/cli/target/pack/bin/coursier launch io.get-coursier:<span class="hljs-built_in">echo</span>:1.0.1 -- foo
 </code></pre> </span>
         </div>
