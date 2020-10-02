@@ -3,11 +3,11 @@ set -euo pipefail
 
 # TODO Migrate that to an Ammonite script
 
-if [ ! -z ${TRAVIS_TAG+x} ] && [ ${TRAVIS_TAG} == v* ]; then
+if [[ ! -z ${TRAVIS_TAG+x} ]] && [[ ${TRAVIS_TAG} == v* ]]; then
   VERSION="${TRAVIS_TAG#v}"
   GIT_USERNAME="Travis-CI"
   GIT_EMAIL="invalid@travis-ci.com"
-elif [ ! -z ${GITHUB_REF+x} ] && [ ${GITHUB_REF} == refs/tags/v* ]; then
+elif [[ ! -z ${GITHUB_REF+x} ]] && [[ ${GITHUB_REF} == refs/tags/v* ]]; then
   VERSION="${GITHUB_REF#refs/tags/v}"
   GIT_USERNAME="Github Actions"
   GIT_EMAIL="actions@github.com"
