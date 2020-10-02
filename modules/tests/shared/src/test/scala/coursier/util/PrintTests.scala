@@ -136,7 +136,7 @@ object PrintTests extends TestSuite {
             |      └─ org.webjars.npm:is-equal-shallow:[0.1.3,0.2)
             |         └─ org.webjars.npm:is-primitive:[2.0.0,3)""".stripMargin
 
-        assert(rendered == expected)
+        assert(rendered.replace("\r\n", "\n") == expected)
       }
     }
   }

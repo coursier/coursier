@@ -57,7 +57,7 @@ object TreeTests extends TestSuite {
     'basic {
       val str = Tree[MutableTree](roots)(_.children.toSeq)
         .render(_.label)
-      assert(str ==
+      assert(str.replace("\r\n", "\n") ==
         """├─ p1
           #│  ├─ c1
           #│  └─ c2
@@ -69,7 +69,7 @@ object TreeTests extends TestSuite {
     'moreNested {
       val str = Tree[MutableTree](moreNestedRoots)(_.children.toSeq)
         .render(_.label)
-      assert(str ==
+      assert(str.replace("\r\n", "\n") ==
         """├─ p1
           #│  └─ c1
           #│     └─ p2
@@ -80,7 +80,7 @@ object TreeTests extends TestSuite {
     'cyclic1 {
       val str: String = Tree[MutableTree](Array(a, e))(_.children.toSeq)
         .render(_.label)
-      assert(str ==
+      assert(str.replace("\r\n", "\n") ==
         """├─ a
           #│  └─ b
           #│     └─ c
@@ -93,7 +93,7 @@ object TreeTests extends TestSuite {
     'cyclic2 {
       val str: String = Tree[MutableTree](Array(a, c))(_.children.toSeq)
         .render(_.label)
-      assert(str ==
+      assert(str.replace("\r\n", "\n") ==
         """├─ a
           #│  └─ b
           #│     └─ c

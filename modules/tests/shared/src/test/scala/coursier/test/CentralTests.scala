@@ -760,7 +760,7 @@ abstract class CentralTests extends TestSuite {
               |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
               |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
           val tree = Print.dependencyTree(res, colors = false)
-          assert(tree == expectedTree)
+          assert(tree.replace("\r\n", "\n") == expectedTree)
         }
       }
 
@@ -920,7 +920,7 @@ abstract class CentralTests extends TestSuite {
               |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |            └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10""".stripMargin
           val tree = Print.dependencyTree(res, reverse = true, colors = false)
-          assert(tree == expectedTree)
+          assert(tree.replace("\r\n", "\n") == expectedTree)
         }
       }
 
@@ -990,7 +990,7 @@ abstract class CentralTests extends TestSuite {
             |         ├─ org.scala-lang:scala-library:2.12.8
             |         └─ org.scala-lang:scala-reflect:2.12.6
             |            └─ org.scala-lang:scala-library:2.12.8""".stripMargin
-        assert(str == expectedStr)
+        assert(str.replace("\r\n", "\n") == expectedStr)
       }
 
       'conflicts - {
