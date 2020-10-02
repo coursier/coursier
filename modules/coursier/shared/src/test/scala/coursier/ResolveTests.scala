@@ -759,7 +759,7 @@ object ResolveTests extends TestSuite {
         resolve
           .withInitialResolution(Some(res0))
           .addRepositories(Repositories.typesafeIvy("releases"))
-          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:2.0.0-RC6-16")
+          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:2.0.06")
           .future()
       }
 
