@@ -108,8 +108,8 @@ def updateVersionedDocs(
     // TODO Check if newVersion is already in versions.json
 
     // FIXME We don't necessarily run on Travis CI
-    Util.run(Seq("git", "config", "user.name", "Travis-CI"), dest.toFile)
-    Util.run(Seq("git", "config", "user.email", "invalid@travis-ci.com"), dest.toFile)
+    Util.run(Seq("git", "config", "user.name", "Github Actions"), dest.toFile)
+    Util.run(Seq("git", "config", "user.email", "actions@github.com"), dest.toFile)
 
     Util.run(Seq("yarn", "run", "version", newVersion), docusaurusDir)
 
@@ -149,8 +149,8 @@ def updateGhPages(
 
   Util.withTmpDir("gh-pages") { dest =>
     Util.run(Seq("git", "clone", remote, "-q", "-b", branch, dest.toString))
-    Util.run(Seq("git", "config", "user.name", "Travis-CI"), dest.toFile)
-    Util.run(Seq("git", "config", "user.email", "invalid@travis-ci.com"), dest.toFile)
+    Util.run(Seq("git", "config", "user.name", "Github Actions"), dest.toFile)
+    Util.run(Seq("git", "config", "user.email", "actions@github.com"), dest.toFile)
 
     val keepList = {
       val f = dest.resolve(".keep")

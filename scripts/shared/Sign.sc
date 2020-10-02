@@ -12,11 +12,8 @@ private def defaultPgpPassphrase: String =
 
 private lazy val gpgOptions: Seq[String] = {
   var opts = Seq("--batch=true", "--yes")
-  Util.os match {
-    case "mac" | "win" =>
-      opts = opts ++ Seq("--pinentry-mode", "loopback")
-    case _ =>
-  }
+  if (Util.os == "win")
+    opts = opts ++ Seq("--pinentry-mode", "loopback")
   opts
 }
 
