@@ -1045,14 +1045,14 @@ object FileCacheTests extends TestSuite {
         None
       )
 
-      * - withTmpDir { dir =>
-        val res = FileCache()
-          .withLocation(dir.toFile)
-          .withChecksums(Seq(Some("SHA-1")))
-          .file(artifact)
-          .run
-          .unsafeRun()
-
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("SHA-1")))
+            .file(artifact)
+            .run
+            .future()
+        }
         res match {
           case Right(file: File) =>
             val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__sha1.computed")
@@ -1062,14 +1062,14 @@ object FileCacheTests extends TestSuite {
           case Left(e) => throw e
         }
       }
-      * - withTmpDir { dir =>
-        val res = FileCache()
-          .withLocation(dir.toFile)
-          .withChecksums(Seq(Some("MD5")))
-          .file(artifact)
-          .run
-          .unsafeRun()
-
+      * - async {
+        val res = await {
+          FileCache()
+            .withChecksums(Seq(Some("MD5")))
+            .file(artifact)
+            .run
+            .future()
+        }
         res match {
           case Right(file: File) =>
             val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__md5.computed")
@@ -1086,37 +1086,47 @@ object FileCacheTests extends TestSuite {
         case Some(resourceStr) => resourceStr.toURI.toASCIIString.substring("file:".length)
         case None => throw new Exception("data/foo.xml resource not found")
       }
+      val fooSha1 = fooXml + ".sha1"
 
-      val artifact = Artifact(
-        "file:" + fooXml,
-        Map("SHA-1" -> ("file:" + (fooXml + ".sha1"))),
-        Map(),
-        changing = false,
-        optional = false,
-        None
-      )
-
-      * - withTmpDir { dir =>
-        val Right(file: File) = FileCache()
-          .withLocation(dir.toFile)
+      * - {
+        val Right(_) = FileCache()
           .withChecksums(Seq(Some("SHA-1")))
-          .file(artifact)
+          .file(Artifact(
+            "file:" + fooXml,
+            Map("SHA-1" -> ("file:" + (fooXml + ".sha1"))),
+            Map(),
+            changing = false,
+            optional = false,
+            None
+          ))
           .run
           .unsafeRun()
 
-        val computedSha1Path =
-          Paths.get(s"${file.getParent}/.${file.getName}__sha1.computed")
+        // copy to temp dir to not clobber other tests
+        withTmpDir { dir =>
+          val fooFailXml = dir.resolve("foo_fail.xml")
+          val fooFailSha1 = dir.resolve("foo_fail.xml.sha1")
+          Files.copy(Paths.get(fooXml), fooFailXml)
+          Files.copy(Paths.get(fooSha1), fooFailSha1)
 
-        Files.write(computedSha1Path, Array[Byte](1, 2, 3))
+          val computedSha1Path = fooFailXml.getParent.resolve("." + fooFailXml.getFileName + "__sha1.computed")
+          Files.write(computedSha1Path, Array[Byte](1, 2, 3))
 
-        val Left(_: coursier.cache.ArtifactError.WrongChecksum) =
-          FileCache()
-            .withLocation(dir.toFile)
-            .withChecksums(Seq(Some("SHA-1")))
-            .withRetry(0)
-            .file(artifact)
-            .run
-            .unsafeRun()
+          val Left(_: coursier.cache.ArtifactError.WrongChecksum) =
+            FileCache()
+              .withChecksums(Seq(Some("SHA-1")))
+              .withRetry(0)
+              .file(Artifact(
+                "file:" + fooFailXml,
+                Map("SHA-1" -> ("file:" + fooFailSha1)),
+                Map(),
+                changing = false,
+                optional = false,
+                None
+              ))
+              .run
+              .unsafeRun()
+        }
       }
     }
   }
