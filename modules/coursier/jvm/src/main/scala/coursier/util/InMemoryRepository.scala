@@ -98,10 +98,21 @@ object InMemoryRepository {
   def apply(
     fallbacks: Map[(Module, String), (URL, Boolean)]
   ): InMemoryRepository =
+    privateApply(fallbacks)
+
+  private[coursier] def privateApply(
+    fallbacks: Map[(Module, String), (URL, Boolean)]
+  ): InMemoryRepository =
     new InMemoryRepository(fallbacks, localArtifactsShouldBeCached = false, None)
 
   @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def apply(
+    fallbacks: Map[(Module, String), (URL, Boolean)],
+    localArtifactsShouldBeCached: Boolean
+  ): InMemoryRepository =
+    privateApply(fallbacks, localArtifactsShouldBeCached)
+
+  private[coursier] def privateApply(
     fallbacks: Map[(Module, String), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean
   ): InMemoryRepository =

@@ -16,11 +16,14 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       case None =>
         Some(new File(dir, name))
       case Some(pathExts) =>
-        pathExts
-          .toStream
+        val it = pathExts
+          .iterator
           .map(ext => new File(dir, s"$name$ext"))
           .filter(_.exists())
-          .headOption
+        if (it.hasNext)
+          Some(it.next())
+        else
+          None
     }
 
 

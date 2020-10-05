@@ -102,7 +102,7 @@ object Resolve extends CaseApp[ResolveOptions] {
           case ((mod, v), url) =>
             ((mod.module(scalaVersion), v), (url, true))
         }
-        InMemoryRepository(
+        InMemoryRepository.privateApply(
           m0,
           params.cache.cacheLocalArtifacts
         )

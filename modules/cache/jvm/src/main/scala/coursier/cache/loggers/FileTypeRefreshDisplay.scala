@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 
 import coursier.cache.internal.ConsoleDim
 
+import scala.collection.compat._
 import scala.concurrent.duration.{Duration, DurationInt}
 
 class FileTypeRefreshDisplay(
@@ -92,6 +93,7 @@ class FileTypeRefreshDisplay(
         case (url, _) =>
           extension(url)
       }
+      .view
       .mapValues(_.size)
       .toVector
       .sortBy(-_._2)

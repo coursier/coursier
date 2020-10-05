@@ -8,16 +8,18 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import utest._
 
+import scala.collection.compat.immutable.LazyList
+
 object ProfileUpdaterTests extends TestSuite {
 
   private def indicesOf(string: String, subString: String): Seq[Int] = {
 
-    def helper(fromIdx: Int): Stream[Int] = {
+    def helper(fromIdx: Int): LazyList[Int] = {
       val newIdx = string.indexOf(subString, fromIdx)
       if (newIdx >= 0)
         newIdx #:: helper(newIdx + 1)
       else
-        Stream.empty
+        LazyList.empty
     }
 
     helper(0).toVector

@@ -8,6 +8,7 @@ import coursier.util.ModuleMatchers
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.collection.compat._
 
 object ResolveTests extends TestSuite {
 
@@ -403,7 +404,7 @@ object ResolveTests extends TestSuite {
             val expectedVersions = Map(
               mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
             )
-            val versions = c.dependencies.groupBy(_.module).mapValues(_.map(_.version)).iterator.toMap
+            val versions = c.dependencies.groupBy(_.module).view.mapValues(_.map(_.version)).iterator.toMap
             assert(versions == expectedVersions)
           case _ =>
             sys.error(s"Unexpected error: $error")

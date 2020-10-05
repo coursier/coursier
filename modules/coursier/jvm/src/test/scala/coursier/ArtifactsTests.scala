@@ -204,7 +204,7 @@ object ArtifactsTests extends TestSuite {
 
     "in memory repo" - async {
 
-      val inMemoryRepo = InMemoryRepository(Map(
+      val inMemoryRepo = InMemoryRepository.privateApply(Map(
         (mod"com.chuusai:shapeless_2.11", "2.3.3") ->
           (new java.net.URL("https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.242/shapeless_2.11-2.3.242.jar"), false)
       ))

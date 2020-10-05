@@ -93,7 +93,7 @@ import dataclass._
           .io
 
         res <- files
-          .toStream
+          .iterator
           .map { f =>
             Task.delay {
               var zf: ZipFile = null
@@ -185,7 +185,7 @@ import dataclass._
     }
 
     channels
-      .toStream
+      .iterator
       .map {
         case m: Channel.FromModule =>
           fromModule(m)

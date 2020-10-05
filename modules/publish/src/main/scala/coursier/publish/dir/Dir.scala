@@ -7,16 +7,17 @@ import coursier.publish.Content
 import coursier.publish.dir.logger.DirLogger
 import coursier.util.Task
 
+import scala.collection.compat.immutable.LazyList
 import scala.jdk.CollectionConverters._
 
 object Dir {
 
   def fileSet(dir: Path, logger: DirLogger): Task[FileSet] = {
 
-    def files(f: Path): Stream[Path] =
+    def files(f: Path): LazyList[Path] =
       if (Files.isRegularFile(f)) {
         logger.element(dir, f)
-        Stream(f)
+        LazyList(f)
       } else if (Files.isDirectory(f)) {
         var s: java.util.stream.Stream[Path] = null
         try {
@@ -24,7 +25,7 @@ object Dir {
           s.iterator()
             .asScala
             .toVector
-            .toStream
+            .to(LazyList)
             .flatMap(files)
         } finally {
           if (s != null)
@@ -32,7 +33,7 @@ object Dir {
         }
       } else
         // ???
-        Stream()
+        LazyList.empty
 
     Task.delay {
       val dir0 = dir.normalize().toAbsolutePath
