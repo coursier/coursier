@@ -10,13 +10,13 @@ import scala.concurrent.{ Future, Promise }
 object JsTests extends TestSuite {
 
   val tests = Tests {
-    'promise{
+    test("promise") {
       val p = Promise[Unit]()
       Future(p.success(()))
       p.future
     }
 
-    'get{
+    test("get") {
       coursier.cache.internal.Platform.get("https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.1.3/logback-classic-1.1.3.pom")
         .map(core.compatibility.xmlParseDom)
         .map{ xml =>
@@ -24,7 +24,7 @@ object JsTests extends TestSuite {
         }
     }
 
-    'getProj{
+    test("getProj") {
       MavenRepository("https://repo1.maven.org/maven2/")
         .find(mod"ch.qos.logback:logback-classic", "1.1.3", Platform.artifact)
         .map{case (_, proj) =>

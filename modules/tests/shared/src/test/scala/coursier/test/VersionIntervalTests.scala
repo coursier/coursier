@@ -7,8 +7,8 @@ import utest._
 object VersionIntervalTests extends TestSuite {
 
   val tests = TestSuite{
-    'invalid{
-      'basic{
+    test("invalid") {
+      test("basic") {
         assert(VersionInterval.zero.isValid)
 
         val itv1 = VersionInterval(None, None, true, true)
@@ -19,7 +19,7 @@ object VersionIntervalTests extends TestSuite {
         assert(!itv2.isValid)
         assert(!itv3.isValid)
       }
-      'halfBounded{
+      test("halfBounded") {
         val itv1 = VersionInterval(Some(Version("1.2")), None, true, true)
         val itv2 = VersionInterval(Some(Version("1.2")), None, false, true)
         val itv3 = VersionInterval(None, Some(Version("1.2")), true, true)
@@ -30,7 +30,7 @@ object VersionIntervalTests extends TestSuite {
         assert(!itv3.isValid)
         assert(!itv4.isValid)
       }
-      'order{
+      test("order") {
         val itv1 = VersionInterval(Some(Version("2")), Some(Version("1")), true, true)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("1")), false, true)
         val itv3 = VersionInterval(Some(Version("2")), Some(Version("1")), true, false)
@@ -41,7 +41,7 @@ object VersionIntervalTests extends TestSuite {
         assert(!itv3.isValid)
         assert(!itv4.isValid)
       }
-      'bound{
+      test("bound") {
         val itv1 = VersionInterval(Some(Version("2")), Some(Version("2")), false, true)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("2")), true, false)
         val itv3 = VersionInterval(Some(Version("2")), Some(Version("2")), false, false)
@@ -55,8 +55,8 @@ object VersionIntervalTests extends TestSuite {
       }
     }
 
-    'merge{
-      'basic{
+    test("merge") {
+      test("basic") {
         val itv0m = VersionInterval.zero.merge(VersionInterval.zero)
         assert(itv0m == Some(VersionInterval.zero))
 
@@ -66,7 +66,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itv1m == Some(itv1))
         assert(itv1m0 == Some(itv1))
       }
-      'noIntersec{
+      test("noIntersec") {
         val itv1 = VersionInterval(Some(Version("1")), Some(Version("2")), true, false)
         val itv2 = VersionInterval(Some(Version("3")), Some(Version("5")), false, true)
         val itvm = itv1 merge itv2
@@ -74,7 +74,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itvm == None)
         assert(itvm0 == None)
       }
-      'noIntersecSameFrontierOpenClose{
+      test("noIntersecSameFrontierOpenClose") {
         val itv1 = VersionInterval(Some(Version("1")), Some(Version("2")), true, false)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("4")), true, true)
         val itvm = itv1 merge itv2
@@ -82,7 +82,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itvm == None)
         assert(itvm0 == None)
       }
-      'noIntersecSameFrontierCloseOpen{
+      test("noIntersecSameFrontierCloseOpen") {
         val itv1 = VersionInterval(Some(Version("1")), Some(Version("2")), true, true)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("4")), false, true)
         val itvm = itv1 merge itv2
@@ -90,7 +90,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itvm == None)
         assert(itvm0 == None)
       }
-      'noIntersecSameFrontierOpenOpen{
+      test("noIntersecSameFrontierOpenOpen") {
         val itv1 = VersionInterval(Some(Version("1")), Some(Version("2")), true, false)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("4")), false, true)
         val itvm = itv1 merge itv2
@@ -98,7 +98,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itvm == None)
         assert(itvm0 == None)
       }
-      'intersecSameFrontierCloseClose{
+      test("intersecSameFrontierCloseClose") {
         val itv1 = VersionInterval(Some(Version("1")), Some(Version("2")), true, true)
         val itv2 = VersionInterval(Some(Version("2")), Some(Version("4")), true, true)
         val itvm = itv1 merge itv2
@@ -107,7 +107,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itvm == Some(expected))
         assert(itvm0 == Some(expected))
       }
-      'intersec{
+      test("intersec") {
         val bools = Seq(true, false)
         for (l1 <- bools; l2 <- bools; r1 <- bools; r2 <- bools) {
           val itv1 = VersionInterval(Some(Version("1")), Some(Version("3")), l1, r1)
@@ -121,7 +121,7 @@ object VersionIntervalTests extends TestSuite {
       }
     }
 
-    'contains{
+    test("contains") {
       val v21 = Version("2.1")
       val v22 = Version("2.2")
       val v23 = Version("2.3")
@@ -131,7 +131,7 @@ object VersionIntervalTests extends TestSuite {
       val v27 = Version("2.7")
       val v28 = Version("2.8")
 
-      'basic{
+      test("basic") {
         val itv = Parse.versionInterval("[2.2,)").get
 
         assert(!itv.contains(v21))
@@ -139,7 +139,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itv.contains(v23))
         assert(itv.contains(v24))
       }
-      'open{
+      test("open") {
         val itv = Parse.versionInterval("(2.2,)").get
 
         assert(!itv.contains(v21))
@@ -147,7 +147,7 @@ object VersionIntervalTests extends TestSuite {
         assert(itv.contains(v23))
         assert(itv.contains(v24))
       }
-      'segment{
+      test("segment") {
         val itv = Parse.versionInterval("[2.2,2.8]").get
 
         assert(!itv.contains(v21))
@@ -161,8 +161,8 @@ object VersionIntervalTests extends TestSuite {
       }
     }
 
-    'parse{
-      'malformed{
+    test("parse") {
+      test("malformed") {
         val s2 = "(1.1)"
         val itv2 = Parse.versionInterval(s2)
         assert(itv2 == None)
@@ -319,18 +319,18 @@ object VersionIntervalTests extends TestSuite {
       }
     }
 
-    'constraint{
-      'none{
+    test("constraint") {
+      test("none") {
         val s1 = "(,)"
         val c1 = Parse.versionInterval(s1).map(_.constraint)
         assert(c1 == Some(VersionConstraint.all))
       }
-      'preferred{
+      test("preferred") {
         val s1 = "[1.3,)"
         val c1 = Parse.versionInterval(s1).map(_.constraint)
         assert(c1 == Some(VersionConstraint.preferred(Parse.version("1.3").get)))
       }
-      'interval{
+      test("interval") {
         val s1 = "[1.3,2.4)"
         val c1 = Parse.versionInterval(s1).map(_.constraint)
         assert(c1 == Some(VersionConstraint.interval(VersionInterval(Parse.version("1.3"), Parse.version("2.4"), true, false))))
