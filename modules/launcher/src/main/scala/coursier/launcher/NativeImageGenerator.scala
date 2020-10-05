@@ -82,7 +82,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         if (parameters.isWindows) {
           val exe = output.getFileName.toString + ".exe"
 
-          import scala.collection.JavaConverters._
+          import scala.jdk.CollectionConverters._
           val s = Files.list(output.getParent)
           val prefix = output.getFileName.toString + "."
           s.iterator().asScala.toVector.foreach { p =>

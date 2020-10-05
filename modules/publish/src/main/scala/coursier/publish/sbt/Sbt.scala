@@ -6,7 +6,7 @@ import java.nio.file.{Files, Path}
 
 import coursier.publish.logging.OutputFrame
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 

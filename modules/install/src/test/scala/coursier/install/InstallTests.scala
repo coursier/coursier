@@ -14,7 +14,7 @@ import coursier.launcher.Preamble
 import coursier.util.{Sync, Task}
 import utest._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object InstallTests extends TestSuite {
 

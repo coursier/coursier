@@ -6,7 +6,7 @@ import coursier.cache.FileCache
 import utest._
 
 import scala.async.Async.{async, await}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object FetchCacheTests extends TestSuite {
 

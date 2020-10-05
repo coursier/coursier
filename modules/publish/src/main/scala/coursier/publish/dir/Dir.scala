@@ -7,7 +7,7 @@ import coursier.publish.Content
 import coursier.publish.dir.logger.DirLogger
 import coursier.util.Task
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object Dir {
 

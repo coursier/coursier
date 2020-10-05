@@ -8,7 +8,7 @@ import java.util.concurrent.{ConcurrentHashMap, Executors, ScheduledFuture, Time
 import coursier.cache.internal.Terminal.Ansi
 import coursier.cache.internal.ThreadUtil
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Displays the progress of some task on a single line.

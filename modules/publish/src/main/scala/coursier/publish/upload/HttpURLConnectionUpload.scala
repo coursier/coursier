@@ -10,7 +10,7 @@ import coursier.core.Authentication
 import coursier.publish.upload.logger.UploadLogger
 import coursier.util.Task
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 

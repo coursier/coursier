@@ -9,7 +9,7 @@ import coursier.core.Authentication
 import coursier.util.Task
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 final case class OkHttpClientUtil(

@@ -7,7 +7,7 @@ import java.util.Properties
 
 import dataclass.data
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 @data class FileCredentials(
   path: String,

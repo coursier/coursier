@@ -7,7 +7,7 @@ import coursier.core.ResolutionProcess
 import coursier.util.Task
 import utest._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
 import scala.util.Try
