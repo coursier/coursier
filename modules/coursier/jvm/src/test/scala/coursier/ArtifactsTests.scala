@@ -12,7 +12,7 @@ object ArtifactsTests extends TestSuite {
 
   val tests = Tests {
 
-    'severalResolutions - async {
+    test("severalResolutions") - async {
 
       val res1 = await {
         Resolve()
@@ -56,7 +56,7 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    'extraArtifacts - async {
+    test("extraArtifacts") - async {
 
       val res = await {
         Resolve()
@@ -93,7 +93,7 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    'transformArtifacts - async {
+    test("transformArtifacts") - async {
 
       val res = await {
         Resolve()
@@ -131,7 +131,7 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    'noDuplicatedArtifacts - async {
+    test("noDuplicatedArtifacts") - async {
 
       val res = await {
         Resolve()

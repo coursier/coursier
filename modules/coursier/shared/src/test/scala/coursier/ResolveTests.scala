@@ -24,7 +24,7 @@ object ResolveTests extends TestSuite {
 
   val tests = Tests {
 
-    'simple - async {
+    test("simple") - async {
 
       val res = await {
         resolve
@@ -35,7 +35,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
     }
 
-    'forceScalaVersion - async {
+    test("forceScalaVersion") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
@@ -53,7 +53,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams))
     }
 
-    'typelevel - async {
+    test("typelevel") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
@@ -71,7 +71,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams))
     }
 
-    'addForceVersion - async {
+    test("addForceVersion") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
@@ -115,8 +115,8 @@ object ResolveTests extends TestSuite {
       }
 
       test("mavenMirror") {
-        'specific - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
-        'all - run(MavenMirror("https://jcenter.bintray.com", "*"))
+        test("specific") - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        test("all") - run(MavenMirror("https://jcenter.bintray.com", "*"))
 
         test("trailingSlash") {
           test("specific") {
@@ -124,7 +124,7 @@ object ResolveTests extends TestSuite {
             * - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
             * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
           }
-          'all - run(MavenMirror("https://jcenter.bintray.com/", "*"))
+          test("all") - run(MavenMirror("https://jcenter.bintray.com/", "*"))
         }
       }
 
@@ -147,7 +147,7 @@ object ResolveTests extends TestSuite {
             Repositories.central
           ))
 
-        'integration - async {
+        test("integration") - async {
 
           val res = await {
             resolve0
@@ -158,7 +158,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'release - async {
+        test("release") - async {
 
           val res = await {
             resolve0
@@ -169,7 +169,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'stable - async {
+        test("stable") - async {
 
           val res = await {
             resolve0
@@ -186,7 +186,7 @@ object ResolveTests extends TestSuite {
         }
 
         test("withInterval") {
-          'in - async {
+          test("in") - async {
 
             val res = await {
               resolve0
@@ -200,7 +200,7 @@ object ResolveTests extends TestSuite {
             await(validateDependencies(res))
           }
 
-          'out - async {
+          test("out") - async {
 
             val res = await {
               resolve0
@@ -238,7 +238,7 @@ object ResolveTests extends TestSuite {
               .fold(sys.error, identity)
           ))
 
-        'integration - async {
+        test("integration") - async {
 
           val res = await {
             resolve0
@@ -255,7 +255,7 @@ object ResolveTests extends TestSuite {
           assert(found == expected)
         }
 
-        'release - async {
+        test("release") - async {
 
           val res = await {
             resolve0
@@ -299,7 +299,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
-      'nonZero - async {
+      test("nonZero") - async {
 
         val res = await {
           resolve
@@ -310,7 +310,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      'plusInVersion - async {
+      test("plusInVersion") - async {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -340,7 +340,7 @@ object ResolveTests extends TestSuite {
       val resolve0 = resolve
         .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
 
-      'check - async {
+      test("check") - async {
         val res = await {
           resolve0
             .future()
@@ -352,7 +352,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      'test - async {
+      test("test") - async {
         val res = await {
           resolve0
             .mapResolutionParams(_.addExclusions((org"io.argonaut", name"*")))

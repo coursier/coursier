@@ -17,7 +17,7 @@ object ResolveRulesTests extends TestSuite {
   val tests = Tests {
 
     test("alwaysFail") {
-      'wrongRuleTryResolve - async {
+      test("wrongRuleTryResolve") - async {
 
         val rule = AlwaysFail(doTryResolve = true)
         // should fail anyway (tryResolve of AlwaysFail does nothing)
@@ -45,7 +45,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'failRuleTryResolve - async {
+      test("failRuleTryResolve") - async {
 
         val rule = AlwaysFail(doTryResolve = false)
         // should fail anyway (tryResolve of AlwaysFail fails anyway)
@@ -73,7 +73,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'failRuleResolution - async {
+      test("failRuleResolution") - async {
 
         val rule = AlwaysFail()
         val ruleRes = RuleResolution.Fail
@@ -152,7 +152,7 @@ object ResolveRulesTests extends TestSuite {
     }
 
     test("strict") {
-      'fail - async {
+      test("fail") - async {
 
         val rule = Strict()
         val ruleRes = RuleResolution.Fail
@@ -333,7 +333,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'viaReconciliation - async {
+      test("viaReconciliation") - async {
 
         val params = ResolutionParams()
           .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)

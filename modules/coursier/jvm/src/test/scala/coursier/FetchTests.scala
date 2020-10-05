@@ -25,7 +25,7 @@ object FetchTests extends TestSuite {
   val tests = Tests {
 
     test("artifactTypes") {
-      'default - async {
+      test("default") - async {
 
         val res = await {
           fetch
@@ -36,7 +36,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
       }
 
-      'sources - async {
+      test("sources") - async {
 
         val classifiers = Set(Classifier.sources)
         val res = await {
@@ -49,7 +49,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
 
-      'mainAndSources - async {
+      test("mainAndSources") - async {
 
         val classifiers = Set(Classifier.sources)
         val mainArtifacts = true
@@ -64,7 +64,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
       }
 
-      'javadoc - async {
+      test("javadoc") - async {
 
         val classifiers = Set(Classifier.javadoc)
         val res = await {
@@ -77,7 +77,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
 
-      'mainAndJavadoc - async {
+      test("mainAndJavadoc") - async {
 
         val classifiers = Set(Classifier.javadoc)
         val mainArtifacts = true
@@ -92,7 +92,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers, mainArtifacts = mainArtifacts))
       }
 
-      'sourcesAndJavadoc - async {
+      test("sourcesAndJavadoc") - async {
 
         val classifiers = Set(Classifier.javadoc, Classifier.sources)
         val res = await {
@@ -106,7 +106,7 @@ object FetchTests extends TestSuite {
       }
 
       test("exotic") {
-        'orbit - async {
+        test("orbit") - async {
           // should be in the default artifact types
           //
 
@@ -235,7 +235,7 @@ object FetchTests extends TestSuite {
     }
 
     test("publications") {
-      'ivy - async {
+      test("ivy") - async {
         val artifactTypes = Seq(Type("info"))
 
         val res = await {
@@ -257,7 +257,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    'subset - async {
+    test("subset") - async {
 
       val res = await {
         fetch

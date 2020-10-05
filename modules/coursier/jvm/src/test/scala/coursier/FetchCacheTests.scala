@@ -47,7 +47,7 @@ object FetchCacheTests extends TestSuite {
 
     import TestHelpers.ec
 
-    'simple - async {
+    test("simple") - async {
 
       val tmpCache = Files.createTempDirectory("coursier-cache-tests")
       val tmpFetchCache = Files.createTempDirectory("coursier-fetch-cache-tests")

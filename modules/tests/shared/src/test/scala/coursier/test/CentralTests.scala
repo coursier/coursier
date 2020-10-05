@@ -244,8 +244,8 @@ abstract class CentralTests extends TestSuite {
         configuration = config
       )
 
-      'compile - check(Configuration.compile)
-      'runtime - check(Configuration.runtime)
+      test("compile") - check(Configuration.compile)
+      test("runtime") - check(Configuration.runtime)
     }
 
     test("optionalScope") {
@@ -552,7 +552,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("entities") {
-      'odash - runner.resolutionCheck(
+      test("odash") - runner.resolutionCheck(
         mod"org.codehaus.plexus:plexus",
         "1.0.4"
       )
@@ -924,7 +924,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'module - async {
+      test("module") - async {
         val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
         val tree = ModuleTree(res)
         val str = Tree(tree.toVector)(_.children).render { t =>
