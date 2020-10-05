@@ -75,7 +75,7 @@ import dataclass.data
             if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
               Task.point(false)
             else {
-              val profileFilesStr = profileFiles.map(_.toString.replaceAllLiterally(sys.props("user.home"), "~"))
+              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               confirm.confirm(s"Should we update ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
                 case false => Task.point(false)
                 case true =>

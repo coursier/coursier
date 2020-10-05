@@ -59,11 +59,11 @@ object JvmIndex {
                 case (jdkName @ "jdk@graalvm", m3) =>
                   val jdk8 = jdkName -> m3.map {
                     case (version, url) =>
-                      version -> url.replaceAllLiterally("-java11-", "-java8-")
+                      version -> url.replace("-java11-", "-java8-")
                   }
                   val jdk11 = s"$jdkName-java11" -> m3.collect {
                     case (version, url) if url.contains("-java8-") || url.contains("-java11-") =>
-                      version -> url.replaceAllLiterally("-java8-", "-java11-")
+                      version -> url.replace("-java8-", "-java11-")
                   }
                   Seq(jdk8, jdk11).filter(_._2.nonEmpty)
                 case (jdkName, m3) =>

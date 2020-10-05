@@ -103,7 +103,7 @@ object MaybeSetupPath {
     path
       .toAbsolutePath
       .toString
-      .replaceAllLiterally(sys.props("user.home"), "~")
+      .replace(sys.props("user.home"), "~")
 
   def headerComment = "coursier install directory"
 

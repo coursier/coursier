@@ -61,7 +61,7 @@ object MavenMetadata {
     // kind of flaky…
     version
       .toLowerCase(Locale.ROOT)
-      .replaceAllLiterally("final", "")
+      .replace("final", "")
       .forall(c => c.isDigit || c == '.' || c == '-')
 
   def update(

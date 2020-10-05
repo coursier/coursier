@@ -516,8 +516,8 @@ object InstallDir {
         .take(if (preferPrebuilt) 5 else 1)
         .flatMap { version =>
           val baseUrl = pattern
-            .replaceAllLiterally("${version}", version)
-            .replaceAllLiterally("${platform}", platform.getOrElse(""))
+            .replace("${version}", version)
+            .replace("${platform}", platform.getOrElse(""))
           platformExtensions.iterator.map(ext => (version, baseUrl + ext)) ++ Iterator.single((version, baseUrl))
         }
         .map {
