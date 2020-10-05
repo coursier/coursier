@@ -18,7 +18,7 @@ object IvyTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    'dropInfoAttributes - {
+    test("dropInfoAttributes") {
       runner.resolutionCheck(
         module = Module(
           org"org.scala-js", name"sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
@@ -29,7 +29,7 @@ object IvyTests extends TestSuite {
       )
     }
 
-    'versionIntervals - {
+    test("versionIntervals") {
       // will likely break if new 0.6.x versions are published :-)
 
       val mod = Module(
@@ -60,7 +60,7 @@ object IvyTests extends TestSuite {
       dropInfoAttributes = true
     )
 
-    'changing - {
+    test("changing") {
       "-SNAPSHOT suffix" - {
 
         val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
@@ -98,7 +98,7 @@ object IvyTests extends TestSuite {
       }
     }
 
-    'testArtifacts - {
+    test("testArtifacts") {
 
       val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
         .withTransitive(false)

@@ -16,7 +16,7 @@ object ResolveRulesTests extends TestSuite {
 
   val tests = Tests {
 
-    'alwaysFail - {
+    test("alwaysFail") {
       'wrongRuleTryResolve - async {
 
         val rule = AlwaysFail(doTryResolve = true)
@@ -101,7 +101,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'sameVersionRule - {
+    test("sameVersionRule") {
       * - async {
 
         val params = ResolutionParams()
@@ -151,7 +151,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'strict - {
+    test("strict") {
       'fail - async {
 
         val rule = Strict()
@@ -451,7 +451,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'dontBumpRootDependencies - {
+    test("dontBumpRootDependencies") {
       * - async {
 
         val params = ResolutionParams()

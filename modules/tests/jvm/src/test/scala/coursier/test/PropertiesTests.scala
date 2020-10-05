@@ -7,11 +7,11 @@ object PropertiesTests extends TestSuite {
 
   val tests = Tests {
 
-    'version - {
+    test("version") {
       assert(Properties.version.nonEmpty)
     }
 
-    'commitHash - {
+    test("commitHash") {
       assert(Properties.commitHash.nonEmpty)
     }
   }

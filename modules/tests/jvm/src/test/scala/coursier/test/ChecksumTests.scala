@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object ChecksumTests extends TestSuite {
   val tests = Tests {
 
-    'parse - {
+    test("parse") {
 
       def sha1ParseTest(clean: String, others: String*): Unit = {
         val expected = Some(new BigInteger(clean, 16))
@@ -23,7 +23,7 @@ object ChecksumTests extends TestSuite {
           assert(CacheChecksum.parseChecksum(other) == expected)
       }
 
-      'junk - {
+      test("junk") {
         // https://repo1.maven.org/maven2/org/apache/spark/spark-core_2.11/1.2.0/spark-core_2.11-1.2.0.pom.sha1
         // as of 2016-03-02
         val junkSha1 =
@@ -35,7 +35,7 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, junkSha1)
       }
 
-      'singleLine - {
+      test("singleLine") {
         // https://repo1.maven.org/maven2/org/json/json/20080701/json-20080701.pom.sha1
         // as of 2016-03-05
         val dirtySha1 =
@@ -83,7 +83,7 @@ object ChecksumTests extends TestSuite {
       }
     }
 
-    'artifact - {
+    test("artifact") {
 
       // not sure we should that directory as cache...
       val cache = HandmadeMetadata.repoBase

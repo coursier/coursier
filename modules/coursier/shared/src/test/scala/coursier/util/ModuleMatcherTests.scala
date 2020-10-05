@@ -66,7 +66,7 @@ object ModuleMatcherTests extends TestSuite {
         assert(!matcher.matches(m))
     }
 
-    'all - {
+    test("all") {
       val matcher = ModuleMatcher(org"*", name"*")
       val shouldMatch = Seq(
         mod"io.foo:foo-core_2.12",

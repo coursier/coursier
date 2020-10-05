@@ -12,7 +12,7 @@ object CompleteTests extends TestSuite {
 
   val tests = Tests {
 
-    'maven - {
+    test("maven") {
 
       val complete = Complete(cache)
         .withRepositories(Seq(
@@ -321,7 +321,7 @@ object CompleteTests extends TestSuite {
       * - simple("io.get-coursier::coursier-cache:1.1.0-M14-2", 32 -> Seq("1.1.0-M14-2"))
     }
 
-    'ivy - {
+    test("ivy") {
 
       val repo = IvyRepository.fromPattern(
         "http://ivy.abc.com/" +: coursier.ivy.Pattern.default,

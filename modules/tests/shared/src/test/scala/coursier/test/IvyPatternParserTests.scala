@@ -10,7 +10,7 @@ object IvyPatternParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'plugin - {
+    test("plugin") {
       val strPattern = "[organization]/[module](/scala_[scalaVersion])(/sbt_[sbtVersion])/[revision]/resolved.xml.[ext]"
       val expectedChunks = Seq[ChunkOrProperty](
         Var("organization"),
@@ -24,7 +24,7 @@ object IvyPatternParserTests extends TestSuite {
       assert(PropertiesPattern.parse(strPattern).map(_.chunks) == Right(expectedChunks))
     }
 
-    'activatorLaunchLocal - {
+    test("activatorLaunchLocal") {
       val strPattern =
         "file://${activator.local.repository-${activator.home-${user.home}/.activator}/repository}" +
           "/[organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)" +

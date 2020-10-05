@@ -13,7 +13,7 @@ object CachePolicyParserTests extends TestSuite {
   )
 
   val tests = Tests {
-    'simple - {
+    test("simple") {
       * - {
         val res = CachePolicyParser.cachePolicy("offline")
         val expectedRes = Right(CachePolicy.LocalOnly)
@@ -26,7 +26,7 @@ object CachePolicyParserTests extends TestSuite {
       }
     }
 
-    'several - {
+    test("several") {
       * - {
         val res = CachePolicyParser.cachePolicies("offline")
         val expectedRes = ValidationNel.success(Seq(CachePolicy.LocalOnly))
@@ -38,13 +38,13 @@ object CachePolicyParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
-      'default - {
+      test("default") {
         val res = CachePolicyParser.cachePolicies("default", defaults)
         val expectedRes = ValidationNel.success(defaults)
         assert(res == expectedRes)
       }
 
-      'noDefault - {
+      test("noDefault") {
         val res = CachePolicyParser.cachePolicies("default")
         assert(!res.isSuccess)
       }

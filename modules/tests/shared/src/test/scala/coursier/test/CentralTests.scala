@@ -24,7 +24,7 @@ abstract class CentralTests extends TestSuite {
 
   val tests = Tests {
 
-    'logback - {
+    test("logback") {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
         val res = await(runner.resolve(Seq(dep))).clearCaches
@@ -43,7 +43,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'asm - {
+    test("asm") {
       async {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
         val res = await(runner.resolve(Seq(dep))).clearCaches
@@ -62,7 +62,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'jodaVersionInterval - {
+    test("jodaVersionInterval") {
       async {
         val dep = dep"joda-time:joda-time:[2.2,2.8]"
         val res0 = await(runner.resolve(Seq(dep)))
@@ -80,7 +80,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'spark - {
+    test("spark") {
       * - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
@@ -94,15 +94,15 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'argonautShapeless - {
+    test("argonautShapeless") {
       runner.resolutionCheck(
         mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
         "0.2.0"
       )
     }
 
-    'snapshotMetadata - {
-      'simple - {
+    test("snapshotMetadata") {
+      test("simple") {
         val mod = mod"com.github.fommil:java-logging"
         val version = "1.2-SNAPSHOT"
         val extraRepo = MavenRepository("https://oss.sonatype.org/content/repositories/public/")
@@ -141,7 +141,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'versionProperty - {
+    test("versionProperty") {
       // nasty one - in its POM, its version contains "${parent.project.version}"
       runner.resolutionCheck(
         mod"org.bytedeco.javacpp-presets:opencv",
@@ -149,42 +149,42 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'parentProjectProperties - {
+    test("parentProjectProperties") {
       runner.resolutionCheck(
         mod"com.github.fommil.netlib:all",
         "1.1.2"
       )
     }
 
-    'projectProperties - {
+    test("projectProperties") {
       runner.resolutionCheck(
         mod"org.glassfish.jersey.core:jersey-client",
         "2.19"
       )
     }
 
-    'parentDependencyManagementProperties - {
+    test("parentDependencyManagementProperties") {
       runner.resolutionCheck(
         mod"com.nativelibs4java:jnaerator-runtime",
         "0.12"
       )
     }
 
-    'propertySubstitution - {
+    test("propertySubstitution") {
       runner.resolutionCheck(
         mod"org.drools:drools-compiler",
         "7.0.0.Final"
       )
     }
 
-    'artifactIdProperties - {
+    test("artifactIdProperties") {
       runner.resolutionCheck(
         mod"cc.factorie:factorie_2.11",
         "1.2"
       )
     }
 
-    'versionInterval - {
+    test("versionInterval") {
       if (isActualCentral)
         // that one involves version intervals, thus changing versions, so only
         // running it against our cached Central stuff
@@ -196,7 +196,7 @@ abstract class CentralTests extends TestSuite {
         Future.successful(())
     }
 
-    'latestRevision - {
+    test("latestRevision") {
       * - runner.resolutionCheck(
         mod"com.chuusai:shapeless_2.11",
         "[2.2.0,2.3-a1)"
@@ -218,7 +218,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'versionFromDependency - {
+    test("versionFromDependency") {
       val mod = mod"org.apache.ws.commons:XmlSchema"
       val version = "1.1"
       val expectedArtifactUrl = s"$centralBase/org/apache/ws/commons/XmlSchema/1.1/XmlSchema-1.1.jar"
@@ -230,14 +230,14 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'fixedVersionDependency - {
+    test("fixedVersionDependency") {
       val mod = mod"io.grpc:grpc-netty"
       val version = "0.14.1"
 
       runner.resolutionCheck(mod, version)
     }
 
-    'mavenScopes - {
+    test("mavenScopes") {
       def check(config: Configuration) = runner.resolutionCheck(
         mod"com.android.tools:sdklib",
         "24.5.0",
@@ -248,7 +248,7 @@ abstract class CentralTests extends TestSuite {
       'runtime - check(Configuration.runtime)
     }
 
-    'optionalScope - {
+    test("optionalScope") {
 
       def intransitiveCompiler(config: Configuration) =
         dep"org.scala-lang:scala-compiler:2.11.8"
@@ -273,8 +273,8 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'packaging - {
-      'aar - {
+    test("packaging") {
+      test("aar") {
         // random aar-based module found on Central
         val module = mod"com.yandex.android:speechkit"
         val version = "2.5.0"
@@ -293,7 +293,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
-      'bundle - {
+      test("bundle") {
         // has packaging bundle - ensuring coursier gives its artifact the .jar extension
         * - runner.ensureHasArtifactWithExtension(
           mod"com.google.guava:guava",
@@ -311,7 +311,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
-      'mavenPlugin - {
+      test("mavenPlugin") {
         // has packaging maven-plugin - ensuring coursier gives its artifact the .jar extension
         runner.ensureHasArtifactWithExtension(
           mod"org.bytedeco:javacpp",
@@ -322,9 +322,9 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'classifier - {
+    test("classifier") {
 
-      'vanilla - {
+      test("vanilla") {
         async {
           val deps = Seq(dep"org.apache.avro:avro:1.8.1")
           val res = await(runner.resolve(deps))
@@ -334,7 +334,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'tests - {
+      test("tests") {
         async {
           val deps = Seq(
             dep"org.apache.avro:avro:1.8.1"
@@ -347,7 +347,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'mixed - {
+      test("mixed") {
         async {
           val deps = Seq(
             dep"org.apache.avro:avro:1.8.1",
@@ -362,8 +362,8 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'artifacts - {
-      'uniqueness - {
+    test("artifacts") {
+      test("uniqueness") {
         async {
           val deps = Seq(
             dep"org.scala-lang:scala-compiler:2.11.8",
@@ -397,7 +397,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'testJarType - {
+      test("testJarType") {
         // dependencies with type "test-jar" should be given the classifier "tests" by default
 
         async {
@@ -439,7 +439,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'ignoreWhitespaces - {
+    test("ignoreWhitespaces") {
       runner.resolutionCheck(
         mod"org.jboss.resteasy:resteasy-jaxrs",
         "3.0.9.Final"
@@ -457,7 +457,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'scalaCompilerJLine - {
+    test("scalaCompilerJLine") {
 
       // optional should bring jline
 
@@ -480,7 +480,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'tarGzZipArtifacts - {
+    test("tarGzZipArtifacts") {
       val mod = mod"org.apache.maven:apache-maven"
       val version = "3.3.9"
 
@@ -489,7 +489,7 @@ abstract class CentralTests extends TestSuite {
       val mainTarGzUrl = s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
       val mainZipUrl = s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip"
 
-      'tarGz - {
+      test("tarGz") {
         * - {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
@@ -506,7 +506,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'zip - {
+      test("zip") {
         * - {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
@@ -524,20 +524,20 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'groupIdVersionProperties - {
+    test("groupIdVersionProperties") {
       runner.resolutionCheck(
         mod"org.apache.directory.shared:shared-ldap",
         "0.9.19"
       )
     }
 
-    'relocation - {
+    test("relocation") {
       * - runner.resolutionCheck(
         mod"bouncycastle:bctsp-jdk14",
         "138"
       )
 
-      'ignoreRelocationJars - {
+      test("ignoreRelocationJars") {
         val mod = mod"org.apache.commons:commons-io"
         val ver = "1.3.2"
 
@@ -551,21 +551,21 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'entities - {
+    test("entities") {
       'odash - runner.resolutionCheck(
         mod"org.codehaus.plexus:plexus",
         "1.0.4"
       )
     }
 
-    'parentVersionInPom - {
+    test("parentVersionInPom") {
       runner.resolutionCheck(
           mod"io.swagger.parser.v3:swagger-parser-v3",
           "2.0.1"
         )
     }
 
-    'parentBeforeImports - {
+    test("parentBeforeImports") {
       runner.resolutionCheck(
         mod"org.kie:kie-api",
         "6.5.0.Final",
@@ -573,7 +573,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'signaturesOfSignatures - {
+    test("signaturesOfSignatures") {
       val mod = mod"org.yaml:snakeyaml"
       val ver = "1.17"
 
@@ -610,7 +610,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'sbtPluginVersionRange - {
+    test("sbtPluginVersionRange") {
       val mod = mod"org.ensime:sbt-ensime;scalaVersion=2.10;sbtVersion=0.13"
       val ver = "1.12.+"
 
@@ -622,7 +622,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'multiVersionRanges - {
+    test("multiVersionRanges") {
       val mod = mod"org.webjars.bower:dgrid"
       val ver = "1.0.0"
 
@@ -634,14 +634,14 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'dependencyManagementScopeOverriding - {
+    test("dependencyManagementScopeOverriding") {
       val mod = mod"org.apache.tika:tika-app"
       val ver = "1.13"
 
       * - runner.resolutionCheck(mod, ver)
     }
 
-    'optionalArtifacts - {
+    test("optionalArtifacts") {
       val mod = mod"io.monix:monix_2.12"
       val ver = "2.3.0"
 
@@ -668,7 +668,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'packagingTpe - {
+    test("packagingTpe") {
       val mod = mod"android.arch.lifecycle:extensions"
       val ver = "1.0.0-alpha3"
 
@@ -695,14 +695,14 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'noArtifactIdExclusion - {
+    test("noArtifactIdExclusion") {
       val mod = mod"org.datavec:datavec-api"
       val ver = "0.9.1"
 
       * - runner.resolutionCheck(mod, ver)
     }
 
-    'snapshotVersioningBundlePackaging - {
+    test("snapshotVersioningBundlePackaging") {
       val mod = mod"org.talend.daikon:daikon"
       val ver = "0.19.0-SNAPSHOT"
 
@@ -739,8 +739,8 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'trees - {
-      'cycle - {
+    test("trees") {
+      test("cycle") {
         async {
           val res = await(runner.resolution(
             mod"edu.illinois.cs.cogcomp:illinois-pos",
@@ -764,7 +764,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'reverse - {
+      test("reverse") {
         async {
           val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
           // not sure the leftmost '├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10' should be there…
@@ -993,7 +993,7 @@ abstract class CentralTests extends TestSuite {
         assert(str == expectedStr)
       }
 
-      'conflicts - {
+      test("conflicts") {
         async {
           val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
           val conflicts = Conflict(res).toSet
@@ -1017,7 +1017,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'forceScalaVersion - {
+    test("forceScalaVersion") {
 
       val sharedDeps = Set(
         "co.fs2:fs2-core_2.12:0.10.7",
@@ -1132,7 +1132,7 @@ abstract class CentralTests extends TestSuite {
           sys.error("sets differ")
         }
 
-      'force - {
+      test("force") {
         "2.12.7" - async {
           val res = await(
             runner.resolve(
@@ -1204,7 +1204,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      'dontForce - {
+      test("dontForce") {
         "2.12.7" - async {
           val res = await(
             runner.resolve(

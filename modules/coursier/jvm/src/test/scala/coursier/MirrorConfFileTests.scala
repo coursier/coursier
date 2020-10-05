@@ -12,7 +12,7 @@ object MirrorConfFileTests extends TestSuite {
   import TestHelpers.{ec, cache, validateDependencies}
 
   val tests = Tests {
-    'read - {
+    test("read") {
       val path = Option(getClass.getResource("/empty-mirror.properties"))
         .map(u => new File(u.toURI).getAbsolutePath)
         .getOrElse {
@@ -25,7 +25,7 @@ object MirrorConfFileTests extends TestSuite {
     }
 
 
-    'resolve - {
+    test("resolve") {
 
       def run(file: MirrorConfFile) = async {
         val res = await {

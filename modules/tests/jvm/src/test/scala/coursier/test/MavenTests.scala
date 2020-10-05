@@ -14,7 +14,7 @@ object MavenTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    'testSnapshotNoVersioning - {
+    test("testSnapshotNoVersioning") {
 
       val dep = Dependency(mod"com.abc:test-snapshot-special", "0.1.0-SNAPSHOT")
         .withTransitive(false)

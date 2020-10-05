@@ -264,7 +264,7 @@ object VersionIntervalTests extends TestSuite {
         assert(!itv4.get.isValid)
       }
 
-      'fixedVersion - {
+      test("fixedVersion") {
         * - {
           val itv = Parse.versionInterval("[1.2]")
           assert(itv == Some(VersionInterval(Some(Version("1.2")), Some(Version("1.2")), true, true)))
@@ -296,7 +296,7 @@ object VersionIntervalTests extends TestSuite {
         }
       }
 
-      'multiRange - {
+      test("multiRange") {
         * - {
           val itv = Parse.multiVersionInterval("[1.0,2.0)")
           assert(itv == Some(VersionInterval(Some(Version("1.0")), Some(Version("2.0")), fromIncluded = true, toIncluded = false)))

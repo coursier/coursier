@@ -75,9 +75,9 @@ object FileCacheTests extends TestSuite {
 
   val tests = Tests {
 
-    'redirections - {
+    test("redirections") {
 
-      'httpToHttp - {
+      test("httpToHttp") {
 
         def routes(resp: Location => IO[Response[IO]]): HttpService[IO] =
           HttpService[IO] {
@@ -96,7 +96,7 @@ object FileCacheTests extends TestSuite {
         "308" - test(PermanentRedirect("redirecting", _))
       }
 
-      'httpsToHttps - {
+      test("httpsToHttps") {
         val routes = HttpService[IO] {
           case GET -> Root / "hello" => Ok("hello")
           case GET -> Root / "redirect" =>
@@ -107,7 +107,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'httpToHttps - {
+      test("httpToHttps") {
 
         def withServers[T](f: (Uri, Uri) => T): T = {
 
@@ -130,7 +130,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabled - {
+        test("enabled") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "redirect",
@@ -139,7 +139,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "redirect",
@@ -150,7 +150,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'httpToAuthHttps - {
+      test("httpToAuthHttps") {
 
         val realm = "secure realm"
         val userPass = ("secure", "sEcUrE")
@@ -180,7 +180,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabled - {
+        test("enabled") {
           withServers { (httpBaseUri, httpsBaseUri) =>
             expect(
               httpBaseUri / "auth-redirect",
@@ -194,7 +194,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth-redirect",
@@ -205,7 +205,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'httpToAuthHttp - {
+      test("httpToAuthHttp") {
 
         val realm = "simple realm"
         val userPass = ("simple", "SiMpLe")
@@ -220,7 +220,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm)
         }
 
-        'enabled - {
+        test("enabled") {
           withHttpServer(routes) { base =>
 
             expect(
@@ -236,7 +236,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledAllRealms - {
+        test("enabledAllRealms") {
           withHttpServer(routes) { base =>
             expect(
               base / "redirect",
@@ -251,7 +251,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           * - {
             withHttpServer(routes) { base =>
               error(
@@ -278,7 +278,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'authHttpToAuthHttp - {
+      test("authHttpToAuthHttp") {
 
         val realm = "simple realm"
         val userPass = ("simple", "SiMpLe")
@@ -296,7 +296,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm)
         }
 
-        'enabled - {
+        test("enabled") {
           withHttpServer(routes) { base =>
             expect(
               base / "redirect",
@@ -311,7 +311,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledAllRealms - {
+        test("enabledAllRealms") {
           withHttpServer(routes) { base =>
             expect(
               base / "redirect",
@@ -326,7 +326,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledSeveralCreds - {
+        test("enabledSeveralCreds") {
           withHttpServer(routes) { base =>
             expect(
               base / "redirect",
@@ -344,7 +344,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withHttpServer(routes) { base =>
             error(
               base / "redirect",
@@ -354,7 +354,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'httpsToAuthHttps - {
+      test("httpsToAuthHttps") {
 
         val realm = "secure realm"
         val userPass = ("secure", "sEcUrE")
@@ -369,7 +369,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm)
         }
 
-        'enabled - {
+        test("enabled") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
               base / "redirect",
@@ -383,7 +383,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledAllRealms - {
+        test("enabledAllRealms") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
               base / "redirect",
@@ -397,7 +397,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withHttpServer(routes, withSsl = true) { base =>
             error(
               base / "redirect",
@@ -407,7 +407,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'authHttpsToAuthHttps - {
+      test("authHttpsToAuthHttps") {
 
         val realm = "secure realm"
         val userPass = ("secure", "sEcUrE")
@@ -425,7 +425,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm)
         }
 
-        'enabled - {
+        test("enabled") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
               base / "redirect",
@@ -439,7 +439,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledAllRealms - {
+        test("enabledAllRealms") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
               base / "redirect",
@@ -453,7 +453,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withHttpServer(routes, withSsl = true) { base =>
             error(
               base / "redirect",
@@ -463,7 +463,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'authHttpToNoAuthHttps - {
+      test("authHttpToNoAuthHttps") {
 
         val httpRealm = "simple realm"
         val httpsRealm = "secure realm"
@@ -500,7 +500,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabled - {
+        test("enabled") {
           * - {
             withServers { (httpBaseUri, httpsBaseUri) =>
               expect(
@@ -542,7 +542,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'enabledAllRealms - {
+        test("enabledAllRealms") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "redirect",
@@ -558,7 +558,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           withServers { (httpBaseUri, httpsBaseUri) =>
             error(
               httpBaseUri / "redirect",
@@ -575,7 +575,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'credentialFile - {
+      test("credentialFile") {
 
         val httpRealm = "simple realm"
         val httpsRealm = "secure realm"
@@ -649,7 +649,7 @@ object FileCacheTests extends TestSuite {
 
       }
 
-      'ransomCase - {
+      test("ransomCase") {
 
         val httpRealm = "simple realm"
         val httpsRealm = "secure realm"
@@ -723,7 +723,7 @@ object FileCacheTests extends TestSuite {
 
       }
 
-      'maxRedirects - {
+      test("maxRedirects") {
 
         val httpRoutes = HttpService[IO] {
           case GET -> Root / "hello" =>
@@ -773,7 +773,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'passCredentialsOnRedirect - {
+      test("passCredentialsOnRedirect") {
         val realm = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
@@ -809,7 +809,7 @@ object FileCacheTests extends TestSuite {
 
         // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact
 
-        'enabled - {
+        test("enabled") {
           * - {
             withServers() { (base, _) =>
               expect(
@@ -834,7 +834,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        'disabled - {
+        test("disabled") {
           * - {
             withServers() { (base, _) =>
               error(
@@ -857,7 +857,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'authThenNotFound - {
+      test("authThenNotFound") {
 
         val realm = "secure realm"
         val userPass = ("secure", "sEcUrE")
@@ -884,9 +884,9 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    'checksums - {
+    test("checksums") {
 
-      'simple - {
+      test("simple") {
         val dummyFileUri = Option(getClass.getResource("/data/foo.xml"))
           .map(_.toURI.toASCIIString)
           .getOrElse {
@@ -963,7 +963,7 @@ object FileCacheTests extends TestSuite {
         }
       }
 
-      'fromHeader - {
+      test("fromHeader") {
 
         val content = "ok\n"
         val b = content.getBytes(StandardCharsets.UTF_8)
@@ -1006,7 +1006,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    'lastModifiedEx - {
+    test("lastModifiedEx") {
       withTmpDir { dir =>
         val url = "https://foo-does-no-exist-zzzzzzz/a.pom"
         val cacheFile = dir.resolve(url.replace("://", "/"))

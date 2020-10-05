@@ -8,7 +8,7 @@ import coursier.maven.MavenRepository
 object HttpAuthenticationTests extends TestSuite {
 
   val tests = Tests {
-    'httpAuthentication - {
+    test("httpAuthentication") {
 
       val testRepo = Option(System.getenv("TEST_REPOSITORY"))
         .getOrElse(sys.error("TEST_REPOSITORY not set"))

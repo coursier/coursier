@@ -23,9 +23,9 @@ object ActivationTests extends TestSuite {
   // - negated OS infos (starting with "!") - not implemented yet
 
   val tests = Tests {
-    'OS - {
-      'fromProperties - {
-        'MacOSX - {
+    test("OS") {
+      test("fromProperties") {
+        test("MacOSX") {
           val props = Map(
             "os.arch" -> "x86_64",
             "os.name" -> "Mac OS X",
@@ -45,7 +45,7 @@ object ActivationTests extends TestSuite {
           assert(os == expectedOs)
         }
 
-        'linuxPi - {
+        test("linuxPi") {
           val props = Map(
             "os.arch" -> "arm",
             "os.name" -> "Linux",
@@ -66,9 +66,9 @@ object ActivationTests extends TestSuite {
         }
       }
 
-      'active - {
+      test("active") {
 
-        'arch - {
+        test("arch") {
           val activation = Os(Some("x86_64"), Set(), None, None)
 
           val isActive = activation.isActive(macOs)
@@ -76,7 +76,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'wrongArch - {
+        test("wrongArch") {
           val activation = Os(Some("arm"), Set(), None, None)
 
           val isActive = activation.isActive(macOs)
@@ -84,7 +84,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        'family - {
+        test("family") {
           val activation = Os(None, Set("mac"), None, None)
 
           val isActive = activation.isActive(macOs)
@@ -92,7 +92,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'wrongFamily - {
+        test("wrongFamily") {
           val activation = Os(None, Set("windows"), None, None)
 
           val isActive = activation.isActive(macOs)
@@ -100,7 +100,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        'name - {
+        test("name") {
           val activation = Os(None, Set(), Some("mac os x"), None)
 
           val isActive = activation.isActive(macOs)
@@ -108,7 +108,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'wrongName - {
+        test("wrongName") {
           val activation = Os(None, Set(), Some("linux"), None)
 
           val isActive = activation.isActive(macOs)
@@ -116,7 +116,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        'version - {
+        test("version") {
           val activation = Os(None, Set(), None, Some("10.12"))
 
           val isActive = activation.isActive(macOs)
@@ -124,7 +124,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'wrongVersion - {
+        test("wrongVersion") {
           val activation = Os(None, Set(), None, Some("10.11"))
 
           val isActive = activation.isActive(macOs)
@@ -134,7 +134,7 @@ object ActivationTests extends TestSuite {
       }
     }
 
-    'properties - {
+    test("properties") {
       val activation = Activation.empty.withProperties(
         Seq(
           "required" -> None,
@@ -143,7 +143,7 @@ object ActivationTests extends TestSuite {
         )
       )
 
-      'match - {
+      test("match") {
         val isActive = activation.isActive(
           Map(
             "required" -> "a",
@@ -157,7 +157,7 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
-      'noMatch - {
+      test("noMatch") {
         * - {
           val isActive = activation.isActive(
             Map(
@@ -201,10 +201,10 @@ object ActivationTests extends TestSuite {
       }
     }
 
-    'jdkVersion - {
+    test("jdkVersion") {
 
-      'match - {
-        'exactVersion - {
+      test("match") {
+        test("exactVersion") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -216,7 +216,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'exactVersionSeveral - {
+        test("exactVersionSeveral") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -229,7 +229,7 @@ object ActivationTests extends TestSuite {
         }
 
 
-        'wrongExactVersion - {
+        test("wrongExactVersion") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -242,7 +242,7 @@ object ActivationTests extends TestSuite {
         }
 
 
-        'wrongExactVersionSeveral - {
+        test("wrongExactVersionSeveral") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -254,7 +254,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        'versionInterval - {
+        test("versionInterval") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -266,7 +266,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-        'wrongVersionInterval - {
+        test("wrongVersionInterval") {
           val activation = Activation(
             Nil,
             Os.empty,
@@ -280,7 +280,7 @@ object ActivationTests extends TestSuite {
       }
     }
 
-    'all - {
+    test("all") {
       val activation = Activation(
         Seq(
           "required" -> None,
@@ -291,7 +291,7 @@ object ActivationTests extends TestSuite {
         Some(Left(parseVersionInterval("[1.8,)")))
       )
 
-      'match - {
+      test("match") {
         val isActive = activation.isActive(
           Map(
             "required" -> "a",
@@ -305,7 +305,7 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
-      'noMatch - {
+      test("noMatch") {
         val isActive = activation.isActive(
           Map(
             "requiredWithValue" -> "foo",

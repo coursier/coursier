@@ -22,7 +22,7 @@ object ResolutionProcessTests extends TestSuite {
 
   val tests = Tests {
 
-    'fetchAll - {
+    test("fetchAll") {
 
       // check that tasks fetching different versions of the same module are spawned sequentially
       // rather than all at once

@@ -98,7 +98,7 @@ object ResolveTests extends TestSuite {
       assert(coursierVersionOpt.contains(expectedCoursierVersion))
     }
 
-    'mirrors - {
+    test("mirrors") {
 
       def run(mirror: Mirror) = async {
         val res = await {
@@ -114,12 +114,12 @@ object ResolveTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
-      'mavenMirror - {
+      test("mavenMirror") {
         'specific - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
         'all - run(MavenMirror("https://jcenter.bintray.com", "*"))
 
-        'trailingSlash - {
-          'specific - {
+        test("trailingSlash") {
+          test("specific") {
             * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
             * - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
             * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
@@ -128,9 +128,9 @@ object ResolveTests extends TestSuite {
         }
       }
 
-      'treeMirror - {
+      test("treeMirror") {
         * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
-        'trailingSlash - {
+        test("trailingSlash") {
           * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
           * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
           * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
@@ -138,8 +138,8 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'latest - {
-      'maven - {
+    test("latest") {
+      test("maven") {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -185,7 +185,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'withInterval - {
+        test("withInterval") {
           'in - async {
 
             val res = await {
@@ -229,7 +229,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
-      'ivy - {
+      test("ivy") {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -274,8 +274,8 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'ivyLatestSubRevision - {
-      'zero - {
+    test("ivyLatestSubRevision") {
+      test("zero") {
         * - async {
 
           val res = await {
@@ -335,7 +335,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'exclusions - {
+    test("exclusions") {
 
       val resolve0 = resolve
         .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
@@ -377,7 +377,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'conflicts - {
+    test("conflicts") {
       * - async {
 
         // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)

@@ -9,18 +9,18 @@ object RuleParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'rule - {
+    test("rule") {
 
-      'alwaysFail - {
+      test("alwaysFail") {
 
-        'ok - {
+        test("ok") {
           val s = "AlwaysFail"
           val expectedRes = Right((AlwaysFail(), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
           assert(res == expectedRes)
         }
 
-        'trailingChars - {
+        test("trailingChars") {
           val s = "AlwaysFailz"
           val res = RuleParser.rule(s)
           assert(res.isLeft)
@@ -28,7 +28,7 @@ object RuleParserTests extends TestSuite {
 
       }
 
-      'sameVersion - {
+      test("sameVersion") {
 
         * - {
           val s = "SameVersion(com.michael:jackson-core)"
@@ -66,9 +66,9 @@ object RuleParserTests extends TestSuite {
 
       }
 
-      'strict - {
+      test("strict") {
 
-        'simple - {
+        test("simple") {
           * - {
             val s = "Strict"
             val expectedRes = Right((Strict(), RuleResolution.TryResolve))
@@ -91,7 +91,7 @@ object RuleParserTests extends TestSuite {
           }
         }
 
-        'excludes - {
+        test("excludes") {
           * - {
             val s = "Strict(org:*, !org:name, !org:foo)"
             val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:*")), Set(ModuleMatcher(mod"org:name"), ModuleMatcher(mod"org:foo"))), RuleResolution.TryResolve))
@@ -104,23 +104,23 @@ object RuleParserTests extends TestSuite {
 
     }
 
-    'explicitRuleResolution - {
+    test("explicitRuleResolution") {
 
-      'resolve - {
+      test("resolve") {
         val s = "resolve:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.TryResolve))
         val res = RuleParser.rule(s)
         assert(res == expectedRes)
       }
 
-      'fail - {
+      test("fail") {
         val s = "fail:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Fail))
         val res = RuleParser.rule(s)
         assert(res == expectedRes)
       }
 
-      'warn - {
+      test("warn") {
         val s = "warn:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Warn))
         val res = RuleParser.rule(s)
@@ -129,7 +129,7 @@ object RuleParserTests extends TestSuite {
 
     }
 
-    'rules - {
+    test("rules") {
 
       * - {
         val s = "AlwaysFail"
@@ -228,7 +228,7 @@ object RuleParserTests extends TestSuite {
          assert(res == expectedRes)
        }
 
-      'trailingCharacters - {
+      test("trailingCharacters") {
         * - {
           val s = "AlwaysFail, AlwaysFailzzz"
           val res = RuleParser.rules(s)

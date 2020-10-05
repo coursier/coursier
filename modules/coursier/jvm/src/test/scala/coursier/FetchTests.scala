@@ -24,7 +24,7 @@ object FetchTests extends TestSuite {
 
   val tests = Tests {
 
-    'artifactTypes - {
+    test("artifactTypes") {
       'default - async {
 
         val res = await {
@@ -105,7 +105,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
       }
 
-      'exotic - {
+      test("exotic") {
         'orbit - async {
           // should be in the default artifact types
           //
@@ -124,7 +124,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    'testScope - {
+    test("testScope") {
 
       val base = new File("modules/tests/handmade-metadata/data").getAbsoluteFile
 
@@ -191,7 +191,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    'properties - {
+    test("properties") {
 
       val fetch0 = fetch
         .withRepositories(Seq(
@@ -234,7 +234,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    'publications - {
+    test("publications") {
       'ivy - async {
         val artifactTypes = Seq(Type("info"))
 

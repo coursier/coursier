@@ -9,10 +9,10 @@ object JsonRuleParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'rule - {
-      'alwaysFail - {
+    test("rule") {
+      test("alwaysFail") {
 
-        'simple - {
+        test("simple") {
           val rule =
             """{
               |  "rule": "always-fail"
@@ -23,7 +23,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        'defaultAction - {
+        test("defaultAction") {
           val rule =
             """{
               |  "rule": "always-fail"
@@ -37,7 +37,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'sameVersion - {
+      test("sameVersion") {
 
         * - {
           val rule =
@@ -71,7 +71,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'dontBumpRootDependencies - {
+      test("dontBumpRootDependencies") {
 
         * - {
           val rule =
@@ -127,9 +127,9 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'strict - {
+      test("strict") {
 
-        'simple - {
+        test("simple") {
           * - {
             val rule =
               """{
@@ -156,7 +156,7 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
-        'exclude - {
+        test("exclude") {
           * - {
             val rule =
               """{
@@ -176,7 +176,7 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
-        'defaultAction - {
+        test("defaultAction") {
           val rule =
             """{
               |  "rule": "strict"
@@ -191,15 +191,15 @@ object JsonRuleParserTests extends TestSuite {
       }
     }
 
-    'rules - {
-      'empty - {
+    test("rules") {
+      test("empty") {
         val rules = "[]"
         val res = JsonRuleParser.parseRules(rules, "2.12.8")
         val expectedRes = Right(Nil)
         assert(res == expectedRes)
       }
 
-      'one - {
+      test("one") {
 
         * - {
           val rules =
@@ -230,7 +230,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'two - {
+      test("two") {
 
         * - {
           val rules =

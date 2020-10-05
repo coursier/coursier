@@ -594,7 +594,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'dependencyOverrides - {
+    test("dependencyOverrides") {
       * - {
         async {
           val deps = Seq(
@@ -709,7 +709,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'forcedProperties - {
+    test("forcedProperties") {
       async {
         val deps = Seq(
           Dependency(Module(org"com.github.dummy", name"libb"), "0.5.4")
@@ -736,7 +736,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'mergingTransitiveDeps - {
+    test("mergingTransitiveDeps") {
       * - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.0")
         val trDeps = Seq(

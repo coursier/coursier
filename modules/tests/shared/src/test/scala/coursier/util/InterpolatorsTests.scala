@@ -9,7 +9,7 @@ import utest._
 object InterpolatorsTests extends TestSuite {
 
   val tests = Tests {
-    'module - {
+    test("module") {
       * - {
         val m = mod"org.scala-lang:scala-library"
         val expected = Module(org"org.scala-lang", name"scala-library", Map())
@@ -23,7 +23,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
-    'dependency - {
+    test("dependency") {
       * - {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
         val expected = Dependency(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")

@@ -25,7 +25,7 @@ object PrintTests extends TestSuite {
 
 
   val tests = Tests {
-    'ignoreAttributes - {
+    test("ignoreAttributes") {
       val dep = Dependency(mod"org:name", "0.1")
         .withConfiguration(Configuration("foo"))
       val deps = Seq(
@@ -39,7 +39,7 @@ object PrintTests extends TestSuite {
       assert(res == expectedRes)
     }
 
-    'reverseTree - {
+    test("reverseTree") {
       * - async {
         val junit = mod"junit:junit"
         val junitVersion = "4.10"
