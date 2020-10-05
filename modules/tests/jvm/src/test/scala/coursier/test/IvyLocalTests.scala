@@ -16,7 +16,7 @@ object IvyLocalTests extends TestSuite {
   def localVersion = "0.1.2-publish-local"
 
   val tests = TestSuite{
-    'coursier {
+    test("coursier") {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
       val mockIvy2Local = IvyRepository.fromPattern(

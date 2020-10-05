@@ -8,7 +8,7 @@ import utest._
 
 object IvyXmlParsingTests extends TestSuite {
   val tests = Tests {
-    'infoWithHomePage {
+    test("infoWithHomePage") {
       // slice of https://dl.bintray.com/sbt/sbt-plugin-releases/com.github.gseitz/sbt-release/scala_2.12/sbt_1.0/1.0.12/ivys/ivy.xml
       val node = """
         <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
@@ -29,7 +29,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(result == expected)
     }
 
-    'infoWithoutHomePage {
+    test("infoWithoutHomePage") {
       val node = """
         <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
           <info organisation="com.github.gseitz" module="sbt-release" revision="1.0.12" status="release" e:sbtVersion="1.0" e:scalaVersion="2.12">
@@ -46,7 +46,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(result == expected)
     }
 
-    'infoWithExtraInfo {
+    test("infoWithExtraInfo") {
       val node = """
         <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
           <info organisation="com.github.gseitz" module="sbt-release" revision="1.0.12" status="release"
