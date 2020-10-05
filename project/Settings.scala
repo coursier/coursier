@@ -229,37 +229,6 @@ object Settings {
     )
   }
 
-  val sbt10Version = "1.0.2"
-
-  val pluginOverrideCrossScalaVersion = Seq(
-    crossScalaVersions := Seq(scala212)
-  )
-
-  lazy val plugin =
-    javaScalaPluginShared ++
-    divertThingsPlugin ++
-    withScriptedTests ++
-    Seq(
-      scriptedLaunchOpts ++= Seq(
-        "-Xmx1024M",
-        "-Dplugin.version=" + version.value,
-        "-Dsbttest.base=" + (sourceDirectory.value / "sbt-test").getAbsolutePath
-      ),
-      scriptedBufferLog := false,
-      sbtPlugin := {
-        scalaBinaryVersion.value match {
-          case "2.12" => true
-          case _ => false
-        }
-      },
-      sbtVersion.in(pluginCrossBuild) := {
-        scalaBinaryVersion.value match {
-          case "2.12" => sbt10Version
-          case _ => sbtVersion.in(pluginCrossBuild).value
-        }
-      }
-    )
-
   // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
   lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {
     SbtProguard.writeConfiguration(proguardConfiguration.in(Proguard).value, proguardOptions.in(Proguard).value)
