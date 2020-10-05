@@ -30,7 +30,7 @@ object CatsTests extends TestSuite {
   val tests = Tests {
 
     test("spark") {
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))

@@ -213,7 +213,7 @@ object FetchTests extends TestSuite {
       // would be nice to have tests with different results, whether the properties
       // are forced or not
 
-      * - async {
+      test - async {
         val res = await {
           fetch0
             .mapResolutionParams(_.addForcedProperties(prop))
@@ -223,7 +223,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
       }
 
-      * - async {
+      test - async {
         val res = await {
           fetch0
             .mapResolutionParams(_.addProperties(prop))

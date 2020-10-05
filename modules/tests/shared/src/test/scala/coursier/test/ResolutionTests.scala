@@ -620,7 +620,7 @@ object ResolutionTests extends TestSuite {
         }
       }
 
-      * - async {
+      test - async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
@@ -645,7 +645,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - async {
+      test - async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
@@ -737,7 +737,7 @@ object ResolutionTests extends TestSuite {
     }
 
     test("mergingTransitiveDeps") {
-      * - async {
+      test - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.0")
         val trDeps = Seq(
           Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"),
@@ -755,7 +755,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - async {
+      test - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.1")
         val trDeps = Seq(
           Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"),

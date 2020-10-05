@@ -102,7 +102,7 @@ object ResolveRulesTests extends TestSuite {
     }
 
     test("sameVersionRule") {
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .withScalaVersion("2.12.7")
@@ -128,7 +128,7 @@ object ResolveRulesTests extends TestSuite {
         await(validateDependencies(res, params))
       }
 
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .withScalaVersion("2.12.7")
@@ -452,7 +452,7 @@ object ResolveRulesTests extends TestSuite {
     }
 
     test("dontBumpRootDependencies") {
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .addRule(DontBumpRootDependencies(), RuleResolution.TryResolve)
@@ -480,7 +480,7 @@ object ResolveRulesTests extends TestSuite {
         assert(shapelessVersions == expectedShapelessVersions)
       }
 
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .addRule(

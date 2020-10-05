@@ -81,7 +81,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("spark") {
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))
@@ -107,14 +107,14 @@ abstract class CentralTests extends TestSuite {
         val version = "1.2-SNAPSHOT"
         val extraRepo = MavenRepository("https://oss.sonatype.org/content/repositories/public/")
 
-        * - runner.resolutionCheck(
+        test - runner.resolutionCheck(
           mod,
           version,
           configuration = Configuration.runtime,
           extraRepos = Seq(extraRepo)
         )
 
-        * - runner.ensureHasArtifactWithExtension(
+        test - runner.ensureHasArtifactWithExtension(
           mod,
           version,
           Extension.jar,
@@ -132,7 +132,7 @@ abstract class CentralTests extends TestSuite {
           MavenRepository("https://jitpack.io")
         )
 
-        * - runner.resolutionCheck(
+        test - runner.resolutionCheck(
           mod,
           version,
           extraRepos = extraRepos,
@@ -197,22 +197,22 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("latestRevision") {
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"com.chuusai:shapeless_2.11",
         "[2.2.0,2.3-a1)"
       )
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"com.chuusai:shapeless_2.11",
         "2.2.+"
       )
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"com.googlecode.libphonenumber:libphonenumber",
         "[7.0,7.1)"
       )
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"com.googlecode.libphonenumber:libphonenumber",
         "7.0.+"
       )
@@ -223,9 +223,9 @@ abstract class CentralTests extends TestSuite {
       val version = "1.1"
       val expectedArtifactUrl = s"$centralBase/org/apache/ws/commons/XmlSchema/1.1/XmlSchema-1.1.jar"
 
-      * - runner.resolutionCheck(mod, version)
+      test - runner.resolutionCheck(mod, version)
 
-      * - runner.withArtifacts(mod, version, Attributes(Type.jar)) { artifacts =>
+      test - runner.withArtifacts(mod, version, Attributes(Type.jar)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
@@ -279,14 +279,14 @@ abstract class CentralTests extends TestSuite {
         val module = mod"com.yandex.android:speechkit"
         val version = "2.5.0"
 
-        * - runner.ensureHasArtifactWithExtension(
+        test - runner.ensureHasArtifactWithExtension(
           module,
           version,
           Extension("aar"),
           attributes = Attributes(Type("aar"))
         )
 
-        * - runner.ensureHasArtifactWithExtension(
+        test - runner.ensureHasArtifactWithExtension(
           module,
           version,
           Extension("aar")
@@ -295,7 +295,7 @@ abstract class CentralTests extends TestSuite {
 
       test("bundle") {
         // has packaging bundle - ensuring coursier gives its artifact the .jar extension
-        * - runner.ensureHasArtifactWithExtension(
+        test - runner.ensureHasArtifactWithExtension(
           mod"com.google.guava:guava",
           "17.0",
           Extension.jar
@@ -303,7 +303,7 @@ abstract class CentralTests extends TestSuite {
 
         // even though packaging is bundle, depending on attribute type "jar" should still find
         // an artifact
-        * - runner.ensureHasArtifactWithExtension(
+        test - runner.ensureHasArtifactWithExtension(
           mod"com.google.guava:guava",
           "17.0",
           Extension.jar,
@@ -461,12 +461,12 @@ abstract class CentralTests extends TestSuite {
 
       // optional should bring jline
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"org.scala-lang:scala-compiler",
         "2.11.8"
       )
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"org.scala-lang:scala-compiler",
         "2.11.8",
         configuration = Configuration.optional
@@ -484,7 +484,7 @@ abstract class CentralTests extends TestSuite {
       val mod = mod"org.apache.maven:apache-maven"
       val version = "3.3.9"
 
-      * - runner.resolutionCheck(mod, version)
+      test - runner.resolutionCheck(mod, version)
 
       val mainTarGzUrl = s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
       val mainZipUrl = s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip"
@@ -532,7 +532,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("relocation") {
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         mod"bouncycastle:bctsp-jdk14",
         "138"
       )
@@ -543,9 +543,9 @@ abstract class CentralTests extends TestSuite {
 
         val expectedUrl = s"$centralBase/commons-io/commons-io/1.3.2/commons-io-1.3.2.jar"
 
-        * - runner.resolutionCheck(mod, ver)
+        test - runner.resolutionCheck(mod, ver)
 
-        * - runner.withArtifacts(mod, ver, transitive = true) { artifacts =>
+        test - runner.withArtifacts(mod, ver, transitive = true) { artifacts =>
           assert(artifacts.exists(_.url == expectedUrl))
         }
       }
@@ -581,9 +581,9 @@ abstract class CentralTests extends TestSuite {
       def hasMd5(a: Artifact) = a.checksumUrls.contains("MD5")
       def hasSig(a: Artifact) = a.extra.contains("sig")
 
-      * - runner.resolutionCheck(mod, ver)
+      test - runner.resolutionCheck(mod, ver)
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.bundle))), Nil, None) { artifacts =>
+      test - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.bundle))), Nil, None) { artifacts =>
 
         val jarOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.bundle || attr.`type` == Type.jar =>
@@ -596,7 +596,7 @@ abstract class CentralTests extends TestSuite {
         assert(jarOpt.forall(hasSig))
       }
 
-      * - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.pom))), Nil, None) { artifacts =>
+      test - runner.withDetailedArtifacts(Seq(Dependency(mod, ver).withAttributes(Attributes(Type.pom))), Nil, None) { artifacts =>
 
         val pomOpt = artifacts.collect {
           case (attr, artifact) if attr.`type` == Type.pom =>
@@ -638,7 +638,7 @@ abstract class CentralTests extends TestSuite {
       val mod = mod"org.apache.tika:tika-app"
       val ver = "1.13"
 
-      * - runner.resolutionCheck(mod, ver)
+      test - runner.resolutionCheck(mod, ver)
     }
 
     test("optionalArtifacts") {
@@ -647,15 +647,15 @@ abstract class CentralTests extends TestSuite {
 
       val mainUrl = s"$centralBase/io/monix/monix_2.12/2.3.0/monix_2.12-2.3.0.jar"
 
-      * - runner.resolutionCheck(mod, ver)
+      test - runner.resolutionCheck(mod, ver)
 
-      * - runner.withArtifacts(mod, ver) { artifacts =>
+      test - runner.withArtifacts(mod, ver) { artifacts =>
         val mainArtifactOpt = artifacts.find(_.url == mainUrl)
         assert(mainArtifactOpt.nonEmpty)
         assert(mainArtifactOpt.forall(_.optional))
       }
 
-      * - runner.withArtifacts(mod"com.lihaoyi:scalatags_2.12", "0.6.2", transitive = true) { artifacts =>
+      test - runner.withArtifacts(mod"com.lihaoyi:scalatags_2.12", "0.6.2", transitive = true) { artifacts =>
 
         val urls = artifacts.map(_.url).toSet
 
@@ -674,9 +674,9 @@ abstract class CentralTests extends TestSuite {
 
       val extraRepo = MavenRepository("https://maven.google.com")
 
-      * - runner.resolutionCheck(mod, ver, extraRepos = Seq(extraRepo))
+      test - runner.resolutionCheck(mod, ver, extraRepos = Seq(extraRepo))
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
+      test - runner.withArtifacts(mod, ver, Attributes(Type("aar")), extraRepos = Seq(extraRepo), transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
@@ -699,7 +699,7 @@ abstract class CentralTests extends TestSuite {
       val mod = mod"org.datavec:datavec-api"
       val ver = "0.9.1"
 
-      * - runner.resolutionCheck(mod, ver)
+      test - runner.resolutionCheck(mod, ver)
     }
 
     test("snapshotVersioningBundlePackaging") {
@@ -711,9 +711,9 @@ abstract class CentralTests extends TestSuite {
         MavenRepository("https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot")
       )
 
-      * - runner.resolutionCheck(mod, ver, extraRepos = extraRepos)
+      test - runner.resolutionCheck(mod, ver, extraRepos = extraRepos)
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) { artifacts =>
+      test - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = extraRepos, transitive = true) { artifacts =>
         val urls = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",

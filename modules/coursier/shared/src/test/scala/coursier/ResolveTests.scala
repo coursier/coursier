@@ -120,20 +120,20 @@ object ResolveTests extends TestSuite {
 
         test("trailingSlash") {
           test("specific") {
-            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
-            * - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
-            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+            test - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
           }
           test("all") - run(MavenMirror("https://jcenter.bintray.com/", "*"))
         }
       }
 
       test("treeMirror") {
-        * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        test - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
         test("trailingSlash") {
-          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
-          * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
-          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+          test - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+          test - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+          test - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
         }
       }
     }
@@ -276,7 +276,7 @@ object ResolveTests extends TestSuite {
 
     test("ivyLatestSubRevision") {
       test("zero") {
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -287,7 +287,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -378,7 +378,7 @@ object ResolveTests extends TestSuite {
     }
 
     test("conflicts") {
-      * - async {
+      test - async {
 
         // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)
 
@@ -412,7 +412,7 @@ object ResolveTests extends TestSuite {
     }
 
     "parent / import scope" - {
-      * - async {
+      test - async {
 
         val res = await {
           resolve
@@ -537,7 +537,7 @@ object ResolveTests extends TestSuite {
       }
 
       "conflict with specific version" - {
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -568,7 +568,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -603,7 +603,7 @@ object ResolveTests extends TestSuite {
 
     "override dependency from profile" - {
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -623,7 +623,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, resolve0.resolutionParams))
       }
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -649,7 +649,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, resolve0.resolutionParams))
       }
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -701,7 +701,7 @@ object ResolveTests extends TestSuite {
     }
 
     "relaxed reconciliation" - {
-      * - async {
+      test - async {
         val params = ResolutionParams()
           .withScalaVersion("2.12.8")
           .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))

@@ -40,7 +40,7 @@ object PrintTests extends TestSuite {
     }
 
     test("reverseTree") {
-      * - async {
+      test - async {
         val junit = mod"junit:junit"
         val junitVersion = "4.10"
 
@@ -68,7 +68,7 @@ object PrintTests extends TestSuite {
         assert(expectedChild.root.reconciledVersion == junitVersion)
       }
 
-      * - async {
+      test - async {
         val mod = mod"org.webjars.npm:micromatch"
         val version = "2.3.11"
 

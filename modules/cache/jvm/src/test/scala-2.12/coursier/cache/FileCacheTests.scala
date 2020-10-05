@@ -737,7 +737,7 @@ object FileCacheTests extends TestSuite {
         }
 
         "should be followed" - {
-          * - withHttpServer(httpRoutes) { base =>
+          test - withHttpServer(httpRoutes) { base =>
             error(
               base / "redirect" / "5",
               _ => true,
@@ -745,7 +745,7 @@ object FileCacheTests extends TestSuite {
             )
           }
 
-          * - withHttpServer(httpRoutes) { base =>
+          test - withHttpServer(httpRoutes) { base =>
             error(
               base / "redirect" / "5",
               _ => true,
@@ -753,7 +753,7 @@ object FileCacheTests extends TestSuite {
             )
           }
 
-          * - withHttpServer(httpRoutes) { base =>
+          test - withHttpServer(httpRoutes) { base =>
             expect(
               base / "redirect" / "5",
               "hello",
@@ -763,7 +763,7 @@ object FileCacheTests extends TestSuite {
         }
 
         "should not stackoverflow" - {
-          * - withHttpServer(httpRoutes) { base =>
+          test - withHttpServer(httpRoutes) { base =>
             expect(
               base / "redirect" / "10000",
               "hello",
@@ -907,7 +907,7 @@ object FileCacheTests extends TestSuite {
           None
         )
 
-        * - async {
+        test - async {
           val res = await {
             FileCache()
               .withChecksums(Seq(Some("SHA-1")))
@@ -919,7 +919,7 @@ object FileCacheTests extends TestSuite {
           assert(res.isRight)
         }
 
-        * - async {
+        test - async {
           val res = await {
             FileCache()
               .withChecksums(Seq(Some("SHA-256")))
@@ -940,7 +940,7 @@ object FileCacheTests extends TestSuite {
           })
         }
 
-        * - async {
+        test - async {
           val res = await {
             FileCache()
               .withChecksums(Seq(Some("SHA-512"), Some("SHA-256")))

@@ -72,9 +72,9 @@ object ResolutionProcessTests extends TestSuite {
         assert(called0 == expectedCalled)
       }
 
-      * - check(0)
-      * - check(1)
-      * - check(3)
+      test - check(0)
+      test - check(1)
+      test - check(3)
     }
 
   }

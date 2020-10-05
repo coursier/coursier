@@ -32,9 +32,9 @@ object CompleteTests extends TestSuite {
           assert(res == expected)
         }
 
-      * - simple("io.get-c", (0, Seq("io.get-coursier")))
-      * - simple("io.get-coursier", (0, Seq("io.get-coursier")))
-      * - simple("io.get-coursierz", (0, Nil))
+      test - simple("io.get-c", (0, Seq("io.get-coursier")))
+      test - simple("io.get-coursier", (0, Seq("io.get-coursier")))
+      test - simple("io.get-coursierz", (0, Nil))
 
       test {
         val expected = 16 -> Seq(
@@ -208,7 +208,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier::cour", expected)
       }
 
-      * - simple("io.get-coursier::coursier-cache", 17 -> Seq("coursier-cache"))
+      test - simple("io.get-coursier::coursier-cache", 17 -> Seq("coursier-cache"))
 
       test {
         val expected = 16 -> Seq(
@@ -318,7 +318,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier::coursier-cache:1.1.0-M14", expected)
       }
 
-      * - simple("io.get-coursier::coursier-cache:1.1.0-M14-2", 32 -> Seq("1.1.0-M14-2"))
+      test - simple("io.get-coursier::coursier-cache:1.1.0-M14-2", 32 -> Seq("1.1.0-M14-2"))
     }
 
     test("ivy") {
@@ -344,16 +344,16 @@ object CompleteTests extends TestSuite {
           assert(res == expected)
         }
 
-      * - simple("", 0 -> Seq("com.example", "com.thoughtworks", "test"))
-      * - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
-      * - simple("com.ex", 0 -> Seq("com.example"))
+      test - simple("", 0 -> Seq("com.example", "com.thoughtworks", "test"))
+      test - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
+      test - simple("com.ex", 0 -> Seq("com.example"))
 
-      * - simple("com.thoughtworks:", 17 -> Seq("bug_2.12", "common_2.12", "ivy-maven-publish-fetch_2.12", "top_2.12"))
-      * - simple("com.thoughtworks:b", 17 -> Seq("bug_2.12"))
+      test - simple("com.thoughtworks:", 17 -> Seq("bug_2.12", "common_2.12", "ivy-maven-publish-fetch_2.12", "top_2.12"))
+      test - simple("com.thoughtworks:b", 17 -> Seq("bug_2.12"))
 
-      * - simple("com.example:a_2.11:", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
-      * - simple("com.example:a_2.11:0", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
-      * - simple("com.example:a_2.11:0.1", 19 -> Seq("0.1.0-SNAPSHOT"))
+      test - simple("com.example:a_2.11:", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
+      test - simple("com.example:a_2.11:0", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
+      test - simple("com.example:a_2.11:0.1", 19 -> Seq("0.1.0-SNAPSHOT"))
     }
   }
 

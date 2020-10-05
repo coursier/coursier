@@ -39,13 +39,13 @@ object IvyTests extends TestSuite {
 
       val expectedArtifactUrl = "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.ddispaltro/sbt-reactjs/scala_2.10/sbt_0.13/0.6.8/jars/sbt-reactjs.jar"
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         module = mod,
         version = ver,
         extraRepos = Seq(sbtRepo)
       )
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
+      test - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
@@ -145,7 +145,7 @@ object IvyTests extends TestSuite {
       "tests classifier" - {
         val testsDep = dep.withAttributes(Attributes(Type.jar, Classifier.tests))
 
-        * - runner.withArtifacts(
+        test - runner.withArtifacts(
           deps = Seq(dep, testsDep),
           extraRepos = Seq(repo),
           classifierOpt = None
@@ -155,7 +155,7 @@ object IvyTests extends TestSuite {
           assert(urls(testJarUrl))
         }
 
-        * - runner.withArtifacts(
+        test - runner.withArtifacts(
           dep = testsDep,
           extraRepos = Seq(repo),
           classifierOpt = None
