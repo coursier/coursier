@@ -243,7 +243,7 @@ object Attributes {
 
   /** All configurations that each configuration extends, including the ones it extends transitively */
   lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
-    Orders.allConfigurations(configurations)
+    Orders.allConfigurations0(configurations)
 
   /**
     * Version used to get this project metadata if available, else the version from metadata.

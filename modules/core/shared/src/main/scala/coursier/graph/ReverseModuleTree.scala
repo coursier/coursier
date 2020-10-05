@@ -2,6 +2,7 @@ package coursier.graph
 
 import coursier.core.{Module, Resolution}
 
+import scala.collection.compat._
 import scala.collection.mutable
 
 /** Tree allowing to walk the dependency graph from dependency to dependees. */
@@ -86,6 +87,7 @@ object ReverseModuleTree {
 
     val dependees0 = dependees
       .toMap
+      .view
       .mapValues(_.toVector.sortBy(t => (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)))
       .iterator
       .toMap
@@ -120,6 +122,7 @@ object ReverseModuleTree {
 
     val dependees0 = dependees
       .toMap
+      .view
       .mapValues(_.toVector.sortBy(t => (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)))
       .iterator
       .toMap
