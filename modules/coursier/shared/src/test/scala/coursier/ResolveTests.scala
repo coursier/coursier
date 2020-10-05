@@ -217,7 +217,7 @@ object ResolveTests extends TestSuite {
             val isLeft = res.isLeft
             assert(isLeft)
 
-            val error = res.left.get
+            val error = res.swap.toOption.get
 
             error match {
               case e: ResolutionError.CantDownloadModule =>
@@ -393,7 +393,7 @@ object ResolveTests extends TestSuite {
         val isLeft = res.isLeft
         assert(isLeft)
 
-        val error = res.left.get
+        val error = res.swap.toOption.get
 
         error match {
           case c: ResolutionError.ConflictingDependencies =>
@@ -553,7 +553,7 @@ object ResolveTests extends TestSuite {
           val isLeft = res.isLeft
           assert(isLeft)
 
-          val error = res.left.get
+          val error = res.swap.toOption.get
 
           error match {
             case c: ResolutionError.ConflictingDependencies =>
@@ -584,7 +584,7 @@ object ResolveTests extends TestSuite {
           val isLeft = res.isLeft
           assert(isLeft)
 
-          val error = res.left.get
+          val error = res.swap.toOption.get
 
           error match {
             case c: ResolutionError.ConflictingDependencies =>

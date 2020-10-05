@@ -84,7 +84,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
           import scala.collection.JavaConverters._
           val s = Files.list(output.getParent)
-          val prefix = output.getFileName + "."
+          val prefix = output.getFileName.toString + "."
           s.iterator().asScala.toVector.foreach { p =>
             val name = p.getFileName.toString
             if (name != exe && name.startsWith(prefix))

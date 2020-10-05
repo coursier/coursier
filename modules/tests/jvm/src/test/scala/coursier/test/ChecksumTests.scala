@@ -127,7 +127,7 @@ object ChecksumTests extends TestSuite {
       test("sha1") - validateAll("SHA-1")
       test("sha256") - validateAll("SHA-256")
       test("sha512") - validateAll("SHA-512")
-      'md5  - validateAll("MD5")
+      test("md5") - validateAll("MD5")
     }
   }
 }
