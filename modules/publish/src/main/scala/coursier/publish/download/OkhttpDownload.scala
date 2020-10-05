@@ -3,7 +3,6 @@ package coursier.publish.download
 import java.time.Instant
 import java.util.concurrent.ExecutorService
 
-import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.download.logger.DownloadLogger
 import coursier.util.Task

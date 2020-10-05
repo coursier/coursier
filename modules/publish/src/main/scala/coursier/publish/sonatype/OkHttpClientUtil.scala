@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets
 
 import argonaut.{DecodeJson, EncodeJson}
 import argonaut.Argonaut._
-import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.util.Task
 import okhttp3.{MediaType, OkHttpClient, Request, RequestBody}

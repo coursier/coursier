@@ -90,7 +90,10 @@ import scala.util.{Failure, Success, Try}
                 if (dummyArtifact(artifact))
                   new ByteArrayInputStream(Array.emptyByteArray)
                 else
-                  CacheUrl.urlConnection(artifact.url, artifact.authentication).getInputStream
+                  ConnectionBuilder(artifact.url)
+                    .withAuthentication(artifact.authentication)
+                    .connection()
+                    .getInputStream
               val b = MockCache.readFullySync(is())
               Files.write(path, b)
               Right(path)
