@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 import coursier.util.Artifact
 
 import scala.annotation.tailrec
+import scala.collection.compat._
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import dataclass.data
@@ -884,6 +885,7 @@ object Resolution {
 
     trDepsSeq
       .groupBy(_._1)
+      .view
       .mapValues(_.map(_._2).toVector)
       .filterKeys(knownDeps)
       .toMap // Eagerly evaluate filterKeys/mapValues

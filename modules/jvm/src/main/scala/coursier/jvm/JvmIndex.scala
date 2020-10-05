@@ -9,6 +9,7 @@ import coursier.core.{Latest, Parse, Version}
 import coursier.util.{Artifact, Task}
 import dataclass.data
 
+import scala.collection.compat._
 import scala.util.{Failure, Success, Try}
 
 object JvmIndex {
@@ -141,7 +142,7 @@ object JvmIndex {
               val updated = archIndex
                 .map {
                   case (name, versionMap) =>
-                    name -> versionMap.filterKeys(v => f(name, v)).toMap
+                    name -> versionMap.view.filterKeys(v => f(name, v)).toMap
                 }
                 .filter(_._2.nonEmpty)
               arch -> updated
@@ -174,7 +175,7 @@ object JvmIndex {
 
           maybeConstraint.flatMap { c =>
             assert(c.preferred.isEmpty)
-            val inInterval = versionIndex.filterKeys(s => c.interval.contains(Version(s)))
+            val inInterval = versionIndex.view.filterKeys(s => c.interval.contains(Version(s)))
             if (inInterval.isEmpty)
               Left(s"No $name version matching '$version' found")
             else {

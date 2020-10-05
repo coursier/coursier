@@ -3,6 +3,8 @@ package coursier.maven
 import coursier.core._
 import coursier.util.Traverse.TraverseOps
 
+import scala.collection.compat._
+
 object Pom {
   import coursier.util.Xml._
 
@@ -508,7 +510,7 @@ object Pom {
       name <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
       version <- attrFrom(attrs, extraAttributeVersion)
     } yield {
-      val remainingAttrs = attrs.filterKeys(!extraAttributeBase(_))
+      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_))
       (Module(org, name, remainingAttrs.toVector.toMap), version)
     }
   }
