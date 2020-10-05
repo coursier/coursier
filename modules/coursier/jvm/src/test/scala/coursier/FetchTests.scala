@@ -137,7 +137,7 @@ object FetchTests extends TestSuite {
       val fetch0 = fetch
         .withRepositories(Seq(Repositories.central))
 
-      'm2Local - async {
+      test("m2Local") - async {
         val res = await {
           fetch0
             .addRepositories(m2Repo)
@@ -163,7 +163,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1), extraKeyPart = "_m2Local"))
       }
 
-      'ivy2Local - async {
+      test("ivy2Local") - async {
         val res = await {
           fetch0
             .addRepositories(ivy2Repo)

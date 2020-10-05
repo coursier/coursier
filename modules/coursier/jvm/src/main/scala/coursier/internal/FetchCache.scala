@@ -24,8 +24,8 @@ import dataclass.data
   def read(key: FetchCache.Key): Option[Seq[File]] = {
     val resultFile0 = resultFile(key)
     if (Files.isRegularFile(resultFile0)) {
-      val artifacts = Predef.augmentString(new String(Files.readAllBytes(resultFile0), StandardCharsets.UTF_8))
-        .lines
+      val artifacts = new String(Files.readAllBytes(resultFile0), StandardCharsets.UTF_8)
+        .linesIterator
         .map(_.trim)
         .filter(_.nonEmpty)
         .map(Paths.get(_))

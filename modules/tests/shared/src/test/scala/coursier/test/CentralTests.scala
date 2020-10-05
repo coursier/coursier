@@ -87,7 +87,7 @@ abstract class CentralTests extends TestSuite {
         profiles = Some(Set("hadoop-2.2"))
       )
 
-      'scala210 - runner.resolutionCheck(
+      test("scala210") - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.10",
         "2.1.1",
         profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
@@ -432,7 +432,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    'ignoreUtf8Bom - {
+    test("ignoreUtf8Bom") - {
       runner.resolutionCheck(
         mod"dk.brics.automaton:automaton",
         "1.11-8"
@@ -446,7 +446,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'nd4jNative - {
+    test("nd4jNative") - {
       // In particular:
       // - uses OS-based activation,
       // - requires converting a "x86-64" to "x86_64" in it, and
@@ -473,7 +473,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    'deepLearning4j - {
+    test("deepLearning4j") - {
       runner.resolutionCheck(
         mod"org.deeplearning4j:deeplearning4j-core",
         "0.8.0"

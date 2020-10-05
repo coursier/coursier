@@ -6,7 +6,7 @@ import utest._
 object PlatformRepositoryParserTests extends TestSuite {
 
   val tests = Tests {
-    'm2Local - {
+    test("m2Local") - {
       * - {
         val res = RepositoryParser.repository("m2Local")
         val expectedRes = Right(LocalRepositories.Dangerous.maven2Local)

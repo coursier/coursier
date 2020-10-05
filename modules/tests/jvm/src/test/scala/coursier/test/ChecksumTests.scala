@@ -47,7 +47,7 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
-      'singleLineEndingWithChunkedSha1 - {
+      test("singleLineEndingWithChunkedSha1") - {
         // http://www-eu.apache.org/dist/kafka/0.10.1.0/kafka_2.11-0.10.1.0.tgz.sha1
         // as of 2017-08-17
         val dirtySha1 =
@@ -58,25 +58,25 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
-      'binarySha1 - {
+      test("binarySha1") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
         val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      'binarySha256 - {
+      test("binarySha256") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha256").openStream())
         val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      'binarySha512 - {
+      test("binarySha512") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha512").openStream())
         val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      'binaryMd5 - {
+      test("binaryMd5") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.md5").openStream())
         val res = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
@@ -124,9 +124,9 @@ object ChecksumTests extends TestSuite {
           }
         ).map(_ => ()).future()(ExecutionContext.global)
 
-      'sha1 - validateAll("SHA-1")
-      'sha256 - validateAll("SHA-256")
-      'sha512 - validateAll("SHA-512")
+      test("sha1") - validateAll("SHA-1")
+      test("sha256") - validateAll("SHA-256")
+      test("sha512") - validateAll("SHA-512")
       'md5  - validateAll("MD5")
     }
   }

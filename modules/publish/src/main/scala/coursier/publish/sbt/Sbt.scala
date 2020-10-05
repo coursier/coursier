@@ -108,9 +108,9 @@ object Sbt {
     Files.isDirectory(dir) && {
       val buildProps = dir.resolve("project/build.properties")
       Files.isRegularFile(buildProps) && {
-        val contentOpt = Try(new String(Files.readAllBytes(buildProps), StandardCharsets.UTF_8)).toOption
-        val sbtVersionLineFound = contentOpt.exists(s => Predef.augmentString(s).lines.exists(_.startsWith("sbt.version=")))
-        sbtVersionLineFound
+        Try(new String(Files.readAllBytes(buildProps), StandardCharsets.UTF_8))
+          .toOption
+          .exists(_.linesIterator.exists(_.startsWith("sbt.version=")))
       }
     }
 
