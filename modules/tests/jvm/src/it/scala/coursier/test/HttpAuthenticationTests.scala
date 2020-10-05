@@ -17,7 +17,7 @@ object HttpAuthenticationTests extends TestSuite {
       val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
         .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
 
-      * - {
+      test {
         // no authentication -> should fail
 
         val failed = try {
@@ -34,7 +34,7 @@ object HttpAuthenticationTests extends TestSuite {
         assert(failed)
       }
 
-      * - {
+      test {
         // with authentication -> should work
 
         CacheFetchTests.check(

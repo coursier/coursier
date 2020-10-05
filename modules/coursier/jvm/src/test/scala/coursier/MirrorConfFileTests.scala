@@ -43,7 +43,7 @@ object MirrorConfFileTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
-      * - {
+      test {
         val mirrorFilePath = Option(getClass.getResource("/test-mirror.properties"))
           .map(u => new File(u.toURI).getAbsolutePath)
           .getOrElse {

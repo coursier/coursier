@@ -36,7 +36,7 @@ object CompleteTests extends TestSuite {
       * - simple("io.get-coursier", (0, Seq("io.get-coursier")))
       * - simple("io.get-coursierz", (0, Nil))
 
-      * - {
+      test {
         val expected = 16 -> Seq(
           "coursier-bootstrap_2.11",
           "coursier-bootstrap_2.12",
@@ -156,7 +156,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier:", expected)
       }
 
-      * - {
+      test {
         val expected = 17 -> Seq(
           "coursier-bootstrap",
           "coursier-cache",
@@ -187,7 +187,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier::", expected)
       }
 
-      * - {
+      test {
         val expected = 17 -> Seq(
           "coursier-bootstrap",
           "coursier-cache",
@@ -210,7 +210,7 @@ object CompleteTests extends TestSuite {
 
       * - simple("io.get-coursier::coursier-cache", 17 -> Seq("coursier-cache"))
 
-      * - {
+      test {
         val expected = 16 -> Seq(
           "coursier-cache-java-6_2.10",
           "coursier-cache-java-6_2.11",
@@ -223,7 +223,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier:coursier-cache", expected)
       }
 
-      * - {
+      test {
         val expected = 32 -> Seq(
           "1.0.0-M14-7",
           "1.0.0-M14-8",
@@ -281,7 +281,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier::coursier-cache:", expected)
       }
 
-      * - {
+      test {
         val expected = 32 -> Seq(
           "1.1.0-M1",
           "1.1.0-M2",
@@ -308,7 +308,7 @@ object CompleteTests extends TestSuite {
         simple("io.get-coursier::coursier-cache:1.1.0-M", expected)
       }
 
-      * - {
+      test {
         val expected = 32 -> Seq(
           "1.1.0-M14",
           "1.1.0-M14-1",

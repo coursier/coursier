@@ -265,54 +265,54 @@ object VersionIntervalTests extends TestSuite {
       }
 
       test("fixedVersion") {
-        * - {
+        test {
           val itv = Parse.versionInterval("[1.2]")
           assert(itv == Some(VersionInterval(Some(Version("1.2")), Some(Version("1.2")), true, true)))
         }
 
-        * - {
+        test {
           val itv = Parse.versionInterval("[1.2)")
           assert(itv.isEmpty)
         }
 
-        * - {
+        test {
           val itv = Parse.versionInterval("(1.2]")
           assert(itv.isEmpty)
         }
 
-        * - {
+        test {
           val itv = Parse.versionInterval("(1.2)")
           assert(itv.isEmpty)
         }
 
-        * - {
+        test {
           val itv = Parse.versionInterval("[]")
           assert(itv.isEmpty)
         }
 
-        * - {
+        test {
           val itv = Parse.versionInterval("[0.0]")
           assert(itv.isEmpty)
         }
       }
 
       test("multiRange") {
-        * - {
+        test {
           val itv = Parse.multiVersionInterval("[1.0,2.0)")
           assert(itv == Some(VersionInterval(Some(Version("1.0")), Some(Version("2.0")), fromIncluded = true, toIncluded = false)))
         }
 
-        * - {
+        test {
           val itv = Parse.multiVersionInterval("[1.0,2.0),[3.0,4.0)")
           assert(itv == Some(VersionInterval(Some(Version("3.0")), Some(Version("4.0")), fromIncluded = true, toIncluded = false)))
         }
 
-        * - {
+        test {
           val itv = Parse.multiVersionInterval("[1.0,2.0),[3.0,4.0),[5.0,6.0)")
           assert(itv == Some(VersionInterval(Some(Version("5.0")), Some(Version("6.0")), fromIncluded = true, toIncluded = false)))
         }
 
-        * - {
+        test {
           val itv = Parse.multiVersionInterval("(1.0,2.0),[3.0,4.0),(5.0,6.0)")
           assert(itv == Some(VersionInterval(Some(Version("5.0")), Some(Version("6.0")), fromIncluded = false, toIncluded = false)))
         }

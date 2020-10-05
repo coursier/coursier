@@ -158,7 +158,7 @@ object ActivationTests extends TestSuite {
       }
 
       test("noMatch") {
-        * - {
+        test {
           val isActive = activation.isActive(
             Map(
               "requiredWithValue" -> "foo",
@@ -171,7 +171,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        * - {
+        test {
           val isActive = activation.isActive(
             Map(
               "required" -> "a",
@@ -185,7 +185,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
-        * - {
+        test {
           val isActive = activation.isActive(
             Map(
               "required" -> "a",

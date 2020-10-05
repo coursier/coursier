@@ -123,7 +123,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
-      * - {
+      test {
         val mod = mod"org.jitsi:jitsi-videobridge"
         val version = "1.0-SNAPSHOT"
         val extraRepos = Seq(
@@ -490,14 +490,14 @@ abstract class CentralTests extends TestSuite {
       val mainZipUrl = s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip"
 
       test("tarGz") {
-        * - {
+        test {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainTarGzUrl))
           }
         }
-        * - {
+        test {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("tar.gz"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
@@ -507,14 +507,14 @@ abstract class CentralTests extends TestSuite {
       }
 
       test("zip") {
-        * - {
+        test {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
             assert(urls.contains(mainZipUrl))
           }
         }
-        * - {
+        test {
           runner.withArtifacts(mod, version, attributes = Attributes(Type("zip"), Classifier("bin")), classifierOpt = Some(Classifier("bin")), transitive = true) { artifacts =>
             assert(artifacts.nonEmpty)
             val urls = artifacts.map(_.url).toSet
@@ -614,7 +614,7 @@ abstract class CentralTests extends TestSuite {
       val mod = mod"org.ensime:sbt-ensime;scalaVersion=2.10;sbtVersion=0.13"
       val ver = "1.12.+"
 
-      * - {
+      test {
         if (isActualCentral) // doesn't work via proxies, which don't list all the upstream available versions
           runner.resolutionCheck(mod, ver)
         else
@@ -626,7 +626,7 @@ abstract class CentralTests extends TestSuite {
       val mod = mod"org.webjars.bower:dgrid"
       val ver = "1.0.0"
 
-      * - {
+      test {
         if (isActualCentral) // if false, the tests rely on things straight from Central, which can be updated sometimes…
           runner.resolutionCheck(mod, ver)
         else

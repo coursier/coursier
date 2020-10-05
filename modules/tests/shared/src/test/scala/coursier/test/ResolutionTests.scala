@@ -595,7 +595,7 @@ object ResolutionTests extends TestSuite {
     }
 
     test("dependencyOverrides") {
-      * - {
+      test {
         async {
           val deps = Seq(
             Dependency(Module(org"an-org", name"a-name"), "1.1"))
@@ -670,7 +670,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - {
+      test {
         async {
           val deps = Seq(
             Dependency(Module(org"an-org", name"an-app"), "1.2"))

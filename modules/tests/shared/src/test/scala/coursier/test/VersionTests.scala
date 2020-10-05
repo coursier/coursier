@@ -44,7 +44,7 @@ object VersionTests extends TestSuite {
     }
 
     test("buildMetadata") {
-      * - {
+      test {
         assert(compare("1.2", "1.2+foo") == 0)
         assert(compare("2.0", "2.0+20130313144700") == 0)
         assert(compare("2.0+20130313144700", "2.0.2") < 0)
@@ -55,21 +55,21 @@ object VersionTests extends TestSuite {
       }
 
       test("shouldNotParseMetadata") {
-        * - {
+        test {
           val items = Version("1.2+bar.2").items
           val expectedItems = Seq(
             Version.Number(1), Version.Number(2), Version.BuildMetadata("bar.2")
           )
           assert(items == expectedItems)
         }
-        * - {
+        test {
           val items = Version("1.2+bar-2").items
           val expectedItems = Seq(
             Version.Number(1), Version.Number(2), Version.BuildMetadata("bar-2")
           )
           assert(items == expectedItems)
         }
-        * - {
+        test {
           val items = Version("1.2+bar+foo").items
           val expectedItems = Seq(
             Version.Number(1), Version.Number(2), Version.BuildMetadata("bar+foo")

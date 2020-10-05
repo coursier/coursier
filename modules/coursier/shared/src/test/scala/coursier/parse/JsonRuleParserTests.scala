@@ -39,7 +39,7 @@ object JsonRuleParserTests extends TestSuite {
 
       test("sameVersion") {
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "same-version",
@@ -51,7 +51,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "same-version",
@@ -73,7 +73,7 @@ object JsonRuleParserTests extends TestSuite {
 
       test("dontBumpRootDependencies") {
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies"
@@ -84,7 +84,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies",
@@ -103,7 +103,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies",
@@ -130,7 +130,7 @@ object JsonRuleParserTests extends TestSuite {
       test("strict") {
 
         test("simple") {
-          * - {
+          test {
             val rule =
               """{
                 |  "rule": "strict"
@@ -141,7 +141,7 @@ object JsonRuleParserTests extends TestSuite {
             assert(res == expectedRes)
           }
 
-          * - {
+          test {
             val rule =
               """{
                 |  "rule": "strict",
@@ -157,7 +157,7 @@ object JsonRuleParserTests extends TestSuite {
         }
 
         test("exclude") {
-          * - {
+          test {
             val rule =
               """{
                 |  "rule": "strict",
@@ -201,7 +201,7 @@ object JsonRuleParserTests extends TestSuite {
 
       test("one") {
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -214,7 +214,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -232,7 +232,7 @@ object JsonRuleParserTests extends TestSuite {
 
       test("two") {
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -251,7 +251,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -274,7 +274,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {

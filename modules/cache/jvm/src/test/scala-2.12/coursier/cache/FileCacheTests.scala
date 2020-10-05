@@ -252,7 +252,7 @@ object FileCacheTests extends TestSuite {
         }
 
         test("disabled") {
-          * - {
+          test {
             withHttpServer(routes) { base =>
               error(
                 base / "redirect",
@@ -261,7 +261,7 @@ object FileCacheTests extends TestSuite {
             }
           }
 
-          * - {
+          test {
             withHttpServer(routes) { base =>
               error(
                 base / "redirect",
@@ -501,7 +501,7 @@ object FileCacheTests extends TestSuite {
         }
 
         test("enabled") {
-          * - {
+          test {
             withServers { (httpBaseUri, httpsBaseUri) =>
               expect(
                 httpBaseUri / "redirect",
@@ -521,7 +521,7 @@ object FileCacheTests extends TestSuite {
             }
           }
 
-          * - {
+          test {
             withServers { (httpBaseUri, httpsBaseUri) =>
               val cred = credentials(httpBaseUri, httpUserPass)
                 .withHttpsOnly(false)
@@ -626,7 +626,7 @@ object FileCacheTests extends TestSuite {
         val credFile = new File(credFileUri)
         assert(credFile.exists())
 
-        * - {
+        test {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth-redirect",
@@ -637,7 +637,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        * - {
+        test {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth" / "redirect",
@@ -700,7 +700,7 @@ object FileCacheTests extends TestSuite {
         val credFile = new File(credFileUri)
         assert(credFile.exists())
 
-        * - {
+        test {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth-redirect",
@@ -711,7 +711,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        * - {
+        test {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth" / "redirect",
@@ -810,7 +810,7 @@ object FileCacheTests extends TestSuite {
         // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact
 
         test("enabled") {
-          * - {
+          test {
             withServers() { (base, _) =>
               expect(
                 artifact(base)(
@@ -821,7 +821,7 @@ object FileCacheTests extends TestSuite {
             }
           }
 
-          * - {
+          test {
             withServers(secondServerUseSsl = false) { (base, _) =>
               expect(
                 artifact(base)(
@@ -835,7 +835,7 @@ object FileCacheTests extends TestSuite {
         }
 
         test("disabled") {
-          * - {
+          test {
             withServers() { (base, _) =>
               error(
                 artifact(base)(identity),
@@ -844,7 +844,7 @@ object FileCacheTests extends TestSuite {
             }
           }
 
-          * - {
+          test {
             withServers(secondServerUseSsl = false) { (base, _) =>
               expect(
                 artifact(base)(
