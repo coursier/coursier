@@ -11,6 +11,7 @@ import coursier.util.{Artifact, EitherT, Sync, Task}
 import utest._
 
 import scala.concurrent.ExecutionContext
+import scala.util.Properties
 
 object JavaHomeTests extends TestSuite {
 
@@ -32,6 +33,8 @@ object JavaHomeTests extends TestSuite {
     if (poolInitialized.getAndSet(false))
       pool.shutdown()
 
+  def platformPath(path: String) = if (Properties.isWin) "C:" + path.replace('/', '\\') else path
+
   val tests = Tests {
 
     "environment update should be empty for system JVM" - {
@@ -41,15 +44,15 @@ object JavaHomeTests extends TestSuite {
 
     "environment update should update both JAVA_HOME and PATH on Linux or Windows" - {
       val expectedEdit = EnvironmentUpdate()
-        .withSet(Seq("JAVA_HOME" -> "/home/foo/jvm/openjdk-27"))
-        .withPathLikeAppends(Seq("PATH" -> "/home/foo/jvm/openjdk-27/bin"))
+        .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
+        .withPathLikeAppends(Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin")))
       val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
       assert(edit == expectedEdit)
     }
 
     "environment update should update only JAVA_HOME on macOS" - {
       val expectedEdit = EnvironmentUpdate()
-        .withSet(Seq("JAVA_HOME" -> "/home/foo/jvm/openjdk-27"))
+        .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
       val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
       assert(edit == expectedEdit)
     }
@@ -57,13 +60,13 @@ object JavaHomeTests extends TestSuite {
 
     "system JVM should respect JAVA_HOME" - {
 
-      val env = Map("JAVA_HOME" -> "/home/foo/jvm/adopt-31")
+      val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
       val home = JavaHome()
         .withGetEnv(Some(env.get))
         .withCommandOutput(forbidCommands)
         .withOs("linux")
 
-      val expectedSystem = Some("/home/foo/jvm/adopt-31")
+      val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
       val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
@@ -84,7 +87,7 @@ object JavaHomeTests extends TestSuite {
         .withCommandOutput(commandOutput)
         .withOs("darwin")
 
-      val expectedSystem = Some("/Library/JVMs/oracle-41")
+      val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
       val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
@@ -119,7 +122,7 @@ object JavaHomeTests extends TestSuite {
         .withCommandOutput(commandOutput)
         .withOs("linux")
 
-      val expectedSystem = Some("/usr/lib/jvm/oracle-39b07")
+      val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
       val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
