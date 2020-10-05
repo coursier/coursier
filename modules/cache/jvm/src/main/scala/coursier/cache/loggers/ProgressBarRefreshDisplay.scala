@@ -115,12 +115,12 @@ object ProgressBarRefreshDisplay {
   def byteCount(bytes: Long, si: Boolean = false) = {
     val unit = if (si) 1000 else 1024
     if (bytes < unit)
-      bytes + " B"
+      bytes.toString + "B"
     else {
       val prefixes = if (si) "kMGTPE" else "KMGTPE"
-      val exp = (math.log(bytes) / math.log(unit)).toInt min prefixes.length
-      val pre = prefixes.charAt(exp - 1) + (if (si) "" else "i")
-      f"${bytes / math.pow(unit, exp)}%.1f ${pre}B"
+      val exp = (math.log(bytes.toDouble) / math.log(unit.toDouble)).toInt min prefixes.length
+      val pre = prefixes.charAt(exp - 1).toString + (if (si) "" else "i")
+      f"${bytes / math.pow(unit.toDouble, exp.toDouble)}%.1f ${pre}B"
     }
   }
 

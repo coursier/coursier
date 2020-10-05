@@ -18,7 +18,7 @@ object TreeTests extends TestSuite {
     override def hashCode(): Int = label.##
   }
 
-  private val roots = Array(
+  private val roots = Vector(
     MutableTree("p1", ArrayBuffer(
       MutableTree("c1", ArrayBuffer.empty),
       MutableTree("c2", ArrayBuffer.empty))),
@@ -27,7 +27,7 @@ object TreeTests extends TestSuite {
       MutableTree("c4", ArrayBuffer.empty)))
   )
 
-  private val moreNestedRoots = Array(
+  private val moreNestedRoots = Vector(
     MutableTree("p1", ArrayBuffer(
       MutableTree("c1", ArrayBuffer(
         MutableTree("p2", ArrayBuffer.empty))))),
@@ -78,7 +78,7 @@ object TreeTests extends TestSuite {
     }
 
     test("cyclic1") {
-      val str: String = Tree[MutableTree](Array(a, e))(_.children.toSeq)
+      val str: String = Tree[MutableTree](Vector(a, e))(_.children.toSeq)
         .render(_.label)
       assert(str ==
         """├─ a
@@ -91,7 +91,7 @@ object TreeTests extends TestSuite {
     }
 
     test("cyclic2") {
-      val str: String = Tree[MutableTree](Array(a, c))(_.children.toSeq)
+      val str: String = Tree[MutableTree](Vector(a, c))(_.children.toSeq)
         .render(_.label)
       assert(str ==
         """├─ a

@@ -59,7 +59,7 @@ object IvyXml {
       .attribute("conf")
       .toOption
       .filter(_.nonEmpty)
-      .fold(Seq(Configuration.all))(_.split(',').map(Configuration(_)))
+      .fold(Seq(Configuration.all))(_.split(',').toSeq.map(Configuration(_)))
     confs.map(_ -> (org, name))
   }
 

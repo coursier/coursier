@@ -78,7 +78,7 @@ object Resolution {
           if (!b.contains(key0))
             b += ((key0, elem))
         }
-        b.result
+        b.result()
           .toMap // meh
       }
   }
