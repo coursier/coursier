@@ -69,7 +69,10 @@ object Settings {
       if (isAtLeastScala213.value) Seq("-Ymacro-annotations")
       else Nil
     },
-    evictionRules += "org.scala-js" %% "scalajs-library" % "semver",
+    evictionRules ++= Seq(
+      "org.scala-js" %% "scalajs-library" % "semver",
+      "org.scala-lang.modules" % "scala-collection-compat_*" % "semver"
+    ),
     compatibilityReconciliations += "org.scala-lang.modules" %% "*" % "semver"
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
