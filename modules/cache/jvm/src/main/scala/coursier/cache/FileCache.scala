@@ -707,6 +707,8 @@ import scala.util.control.NonFatal
             }
 
           case None =>
+            System.err.println(s"headerSumFile=$headerSumFile")
+            System.err.println(s"downloadedSumFile=$downloadedSumFile")
             Left(new ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)): Either[ArtifactError, Unit]
         }
       }
