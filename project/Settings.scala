@@ -542,6 +542,13 @@ object Settings {
   }
 
 
+  lazy val rtJarOpt = sys.props.get("sun.boot.class.path")
+    .toSeq
+    .flatMap(_.split(java.io.File.pathSeparator).toSeq)
+    .map(java.nio.file.Paths.get(_))
+    .find(_.endsWith("rt.jar"))
+    .map(_.toFile)
+
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
     val extra =
@@ -557,6 +564,7 @@ object Settings {
         "bootstrap.jar"
 
     Seq(
+      proguardBinaryDeps.in(Proguard) ++= rtJarOpt.toSeq, // seems needed with sbt 1.4.0
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
       proguardOptions.in(Proguard) ++= Seq(
