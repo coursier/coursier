@@ -2,6 +2,7 @@ package coursier.core
 
 import coursier.core.DependencySet.Sets
 
+import scala.collection.compat._
 import scala.collection.immutable.IntMap
 import scala.collection.mutable
 
@@ -124,7 +125,7 @@ object DependencySet {
     def covers(t: T, size: T => Int, subsetOf: (T, T) => Boolean): Boolean =
       contains(t) || {
         val n = size(t)
-        required.filterKeys(_ <= n).iterator.flatMap(_._2.iterator).exists {
+        required.view.filterKeys(_ <= n).iterator.flatMap(_._2.iterator).exists {
           s0 => subsetOf(s0, t)
         }
       }
@@ -133,7 +134,7 @@ object DependencySet {
 
       val n = size(s)
 
-      val subsetOpt = required.filterKeys(_ <= n).iterator.flatMap(_._2.iterator).find {
+      val subsetOpt = required.view.filterKeys(_ <= n).iterator.flatMap(_._2.iterator).find {
         s0 => subsetOf(s0, s)
       }
 

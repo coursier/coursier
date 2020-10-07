@@ -10,7 +10,7 @@ object DependencyTests extends TestSuite {
 
   val tests = Tests {
 
-    'hadoopClient - async {
+    test("hadoopClient") - async {
       val res = await {
         Resolve()
           .noMirrors

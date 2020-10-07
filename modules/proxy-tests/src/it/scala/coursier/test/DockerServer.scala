@@ -5,7 +5,7 @@ import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBind
 import coursier.cache.internal.FileUtil
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.Try
 

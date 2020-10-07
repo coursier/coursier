@@ -9,10 +9,10 @@ object JsonRuleParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'rule - {
-      'alwaysFail - {
+    test("rule") {
+      test("alwaysFail") {
 
-        'simple - {
+        test("simple") {
           val rule =
             """{
               |  "rule": "always-fail"
@@ -23,7 +23,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        'defaultAction - {
+        test("defaultAction") {
           val rule =
             """{
               |  "rule": "always-fail"
@@ -37,9 +37,9 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'sameVersion - {
+      test("sameVersion") {
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "same-version",
@@ -51,7 +51,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "same-version",
@@ -71,9 +71,9 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'dontBumpRootDependencies - {
+      test("dontBumpRootDependencies") {
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies"
@@ -84,7 +84,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies",
@@ -103,7 +103,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rule =
             """{
               |  "rule": "dont-bump-root-dependencies",
@@ -127,10 +127,10 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'strict - {
+      test("strict") {
 
-        'simple - {
-          * - {
+        test("simple") {
+          test {
             val rule =
               """{
                 |  "rule": "strict"
@@ -141,7 +141,7 @@ object JsonRuleParserTests extends TestSuite {
             assert(res == expectedRes)
           }
 
-          * - {
+          test {
             val rule =
               """{
                 |  "rule": "strict",
@@ -156,8 +156,8 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
-        'exclude - {
-          * - {
+        test("exclude") {
+          test {
             val rule =
               """{
                 |  "rule": "strict",
@@ -176,7 +176,7 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
-        'defaultAction - {
+        test("defaultAction") {
           val rule =
             """{
               |  "rule": "strict"
@@ -191,17 +191,17 @@ object JsonRuleParserTests extends TestSuite {
       }
     }
 
-    'rules - {
-      'empty - {
+    test("rules") {
+      test("empty") {
         val rules = "[]"
         val res = JsonRuleParser.parseRules(rules, "2.12.8")
         val expectedRes = Right(Nil)
         assert(res == expectedRes)
       }
 
-      'one - {
+      test("one") {
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -214,7 +214,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -230,9 +230,9 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
-      'two - {
+      test("two") {
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -251,7 +251,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {
@@ -274,7 +274,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val rules =
             """[
               |  {

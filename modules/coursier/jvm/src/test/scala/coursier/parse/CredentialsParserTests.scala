@@ -7,14 +7,14 @@ object CredentialsParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'simple - {
+    test("simple") {
       val s = "artifacts.foo.com(tha realm) alex:my-pass"
       val res = CredentialsParser.parse(s)
       val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex", "my-pass").withRealm("tha realm"))
       assert(res == expectedRes)
     }
 
-    'noRealm - {
+    test("noRealm") {
       val s = "artifacts.foo.com alex:my-pass"
       val res = CredentialsParser.parse(s)
       val expectedRes = Right(DirectCredentials("artifacts.foo.com", "alex", "my-pass"))
@@ -36,7 +36,7 @@ object CredentialsParserTests extends TestSuite {
     }
 
     "seq" - {
-      'empty - {
+      test("empty") {
         val res = CredentialsParser.parseSeq("").either
         val expectedRes = Right(Seq())
         assert(res == expectedRes)

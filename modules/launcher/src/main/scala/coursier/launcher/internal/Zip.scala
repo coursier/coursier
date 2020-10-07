@@ -2,7 +2,7 @@ package coursier.launcher.internal
 
 import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 private[coursier] object Zip {
 

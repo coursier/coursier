@@ -10,7 +10,7 @@ import utest._
 object PomParsingTests extends TestSuite {
 
   val tests = Tests {
-    'readClassifier{
+    test("readClassifier") {
       val depNode ="""
         <dependency>
           <groupId>comp</groupId>
@@ -30,7 +30,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'readProfileWithNoActivation{
+    test("readProfileWithNoActivation") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -43,7 +43,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'beFineWithProfilesWithNoId{
+    test("beFineWithProfilesWithNoId") {
       val profileNode = """
         <profile>
           <activation>
@@ -58,7 +58,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'readProfileActivatedByDefault{
+    test("readProfileActivatedByDefault") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -74,7 +74,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'readProfileActiveByPropertyWithoutValue{
+    test("readProfileActiveByPropertyWithoutValue") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -91,7 +91,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
 
-    'readProfileActiveByPropertyWithValue{
+    test("readProfileActiveByPropertyWithValue") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -109,7 +109,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
 
-    'readProfileDependencies{
+    test("readProfileDependencies") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -137,7 +137,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'readProfileDependenciesMgmt{
+    test("readProfileDependenciesMgmt") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -168,7 +168,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'readProfileProperties{
+    test("readProfileProperties") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -191,7 +191,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'propertyWithSpaces{
+    test("propertyWithSpaces") {
       val profileNode ="""
         <profile>
           <id>profile1</id>
@@ -214,7 +214,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
-    'beFineWithCommentsInProperties{
+    test("beFineWithCommentsInProperties") {
 
       val properties =
         """
@@ -270,7 +270,7 @@ object PomParsingTests extends TestSuite {
       assert(props("commons.osgi.export").contains("org.apache.commons.io.input;"))
     }
 
-    'projectWithScm{
+    test("projectWithScm") {
       val profileNode ="""
        |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
        |    <modelVersion>4.0.0</modelVersion>

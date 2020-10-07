@@ -11,7 +11,10 @@ object Orders {
 
   /** All configurations that each configuration extends, including the ones it extends transitively */
   @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
-  def allConfigurations(configurations: Map[Configuration, Seq[Configuration]]): Map[Configuration, Set[Configuration]] = {
+  def allConfigurations(configurations: Map[Configuration, Seq[Configuration]]): Map[Configuration, Set[Configuration]] =
+    allConfigurations0(configurations)
+
+  private[core] def allConfigurations0(configurations: Map[Configuration, Seq[Configuration]]): Map[Configuration, Set[Configuration]] = {
     def allParents(config: Configuration): Set[Configuration] = {
       def helper(configs: Set[Configuration], acc: Set[Configuration]): Set[Configuration] =
         if (configs.isEmpty)
@@ -43,8 +46,11 @@ object Orders {
     */
   @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
   def configurationPartialOrder(configurations: Map[Configuration, Seq[Configuration]]): PartialOrdering[Configuration] =
+    configurationPartialOrder0(configurations)
+
+  private def configurationPartialOrder0(configurations: Map[Configuration, Seq[Configuration]]): PartialOrdering[Configuration] =
     new PartialOrdering[Configuration] {
-      val allParentsMap = allConfigurations(configurations)
+      val allParentsMap = allConfigurations0(configurations)
 
       def tryCompare(x: Configuration, y: Configuration) =
         if (x == y)
@@ -162,7 +168,7 @@ object Orders {
       for {
         List(((xOpt, xScope), xDep), ((yOpt, yScope), yDep)) <- groupedDependencies.combinations(2)
         optCmp <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
-        scopeCmp <- configurationPartialOrder(configs).tryCompare(xScope, yScope).iterator
+        scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
         if optCmp*scopeCmp >= 0
         exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions).iterator
         if optCmp*exclCmp >= 0

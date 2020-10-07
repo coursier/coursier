@@ -35,7 +35,7 @@ import scala.collection.mutable
       .map {
         case (k, v) =>
           // FIXME Escape more?
-          s"export $k=$q${v.replaceAllLiterally(q, "\\" + q)}$q"
+          s"export $k=$q${v.replace(q, "\\" + q)}$q"
       }
       .mkString("\n") // Use System.lineSeparator() instead? (this is mostly meant for bash…)
   }

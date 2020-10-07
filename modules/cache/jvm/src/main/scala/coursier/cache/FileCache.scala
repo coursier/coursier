@@ -336,19 +336,17 @@ import scala.util.control.NonFatal
                 }
 
               try {
-                val (conn0, partialDownload) = CacheUrl.urlConnectionMaybePartial(
-                  url,
-                  authenticationOpt,
-                  alreadyDownloaded,
-                  followHttpToHttpsRedirections,
-                  followHttpsToHttpRedirections,
-                  allCredentials0
-                    .filter(_.matchHost), // just in case
-                  sslSocketFactoryOpt,
-                  hostnameVerifierOpt,
-                  "GET",
-                  maxRedirectionsOpt = maxRedirections
-                )
+                val (conn0, partialDownload) = ConnectionBuilder(url)
+                  .withAuthentication(authenticationOpt)
+                  .withAlreadyDownloaded(alreadyDownloaded)
+                  .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
+                  .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
+                  .withAutoCredentials(allCredentials0.filter(_.matchHost)) // just in case
+                  .withSslSocketFactoryOpt(sslSocketFactoryOpt)
+                  .withHostnameVerifierOpt(hostnameVerifierOpt)
+                  .withMethod("GET")
+                  .withMaxRedirectionsOpt(maxRedirections)
+                  .connectionMaybePartial()
                 conn = conn0
 
                 val respCodeOpt = CacheUrl.responseCode(conn)
@@ -1048,17 +1046,16 @@ object FileCache {
     var conn: URLConnection = null
 
     try {
-      conn = CacheUrl.urlConnection(
-        url,
-        authentication,
-        followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-        followHttpsToHttpRedirections = followHttpsToHttpRedirections,
-        credentials = credentials,
-        sslSocketFactoryOpt = sslSocketFactoryOpt,
-        hostnameVerifierOpt = hostnameVerifierOpt,
-        method = "HEAD",
-        maxRedirectionsOpt = maxRedirectionsOpt
-      )
+      conn = ConnectionBuilder(url)
+        .withAuthentication(authentication)
+        .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
+        .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
+        .withAutoCredentials(credentials)
+        .withSslSocketFactoryOpt(sslSocketFactoryOpt)
+        .withHostnameVerifierOpt(hostnameVerifierOpt)
+        .withMethod("HEAD")
+        .withMaxRedirectionsOpt(maxRedirectionsOpt)
+        .connection()
 
       conn match {
         case c: HttpURLConnection =>

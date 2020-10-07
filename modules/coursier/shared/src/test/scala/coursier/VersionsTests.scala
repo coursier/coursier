@@ -13,7 +13,7 @@ object VersionsTests extends TestSuite {
 
   val tests = Tests {
     "simple" - async {
-      val shapelessVersions = await(versions.withModule(mod"com.chuusai:shapeless_2.12").versions().future).available
+      val shapelessVersions = await(versions.withModule(mod"com.chuusai:shapeless_2.12").versions().future()).available
       val expectedShapelessVersions = Seq("2.3.2", "2.3.3")
       assert(shapelessVersions == expectedShapelessVersions)
     }

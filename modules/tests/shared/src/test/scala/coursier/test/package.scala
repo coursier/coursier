@@ -2,6 +2,8 @@ package coursier
 
 import coursier.core.Configuration
 
+import scala.collection.compat._
+
 package object test {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
@@ -46,6 +48,7 @@ package object test {
       underlying.withProjectCache(
         underlying
           .projectCache
+          .view
           .mapValues {
             case (s, p) =>
               (s, p.withProperties(p.properties.filter { case (k, _) => !projectProperties(k) }))

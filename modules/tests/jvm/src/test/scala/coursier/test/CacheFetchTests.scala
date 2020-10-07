@@ -82,7 +82,7 @@ object CacheFetchTests extends TestSuite {
       check(MavenRepository(f.toURI.toString))
     }
 
-    'customProtocol - {
+    test("customProtocol") {
       "Cache.url method" - {
         val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)

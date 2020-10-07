@@ -2,15 +2,15 @@ package coursier.core
 
 import java.io.CharArrayReader
 import java.util.Locale
-
-import coursier.util.{SaxHandler, Xml}
-
 import javax.xml.parsers.SAXParserFactory
 
-import scala.xml.{Attribute, Elem, MetaData, Null}
+import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
 import org.xml.sax.InputSource
 import org.xml.sax.helpers.DefaultHandler
+
+import scala.collection.compat.immutable.LazyList
+import scala.xml.{Attribute, Elem, MetaData, Null}
 
 package object compatibility {
 
@@ -133,9 +133,9 @@ package object compatibility {
     def fromNode(node: scala.xml.Node): Xml.Node =
       new Xml.Node {
         lazy val attributes = {
-          def helper(m: MetaData): Stream[(String, String, String)] =
+          def helper(m: MetaData): LazyList[(String, String, String)] =
             m match {
-              case Null => Stream.empty
+              case Null => LazyList.empty
               case attr =>
                 val pre = attr match {
                   case a: Attribute => Option(node.getNamespace(a.pre)).getOrElse("")

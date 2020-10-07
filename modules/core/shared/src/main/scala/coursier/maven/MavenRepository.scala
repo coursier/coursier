@@ -6,6 +6,8 @@ import coursier.util.{Artifact, EitherT, Monad, WebPage}
 import coursier.util.Monad.ops._
 import dataclass._
 
+import scala.collection.compat._
+
 object MavenRepository {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
 
@@ -493,6 +495,7 @@ object MavenRepository {
       val allPubs = packagingPublicationOpt.map(_ -> true).toSeq ++ extraPubs
       val optional = allPubs
         .groupBy(_._1)
+        .view
         .mapValues(_.map(_._2).forall(identity))
         .iterator
         .toMap

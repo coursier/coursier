@@ -4,6 +4,7 @@ import coursier.core.compatibility._
 import dataclass.data
 
 import scala.annotation.tailrec
+import scala.collection.compat.immutable.LazyList
 
 /**
  *  Used internally by Resolver.
@@ -107,11 +108,11 @@ object Version {
     case object Plus extends Separator
     case object None extends Separator
 
-    def apply(str: String): (Item, Stream[(Separator, Item)]) = {
-      def parseItem(s: Stream[Char], prev: Option[Separator]): (Item, Stream[Char]) = {
+    def apply(str: String): (Item, LazyList[(Separator, Item)]) = {
+      def parseItem(s: LazyList[Char], prev: Option[Separator]): (Item, LazyList[Char]) = {
         if (s.isEmpty) (empty, s)
         else if (s.head.isDigit) {
-          def digits(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
+          def digits(b: StringBuilder, s: LazyList[Char]): (String, LazyList[Char]) =
             if (s.isEmpty || !s.head.isDigit) (b.result(), s)
             else digits(b += s.head, s.tail)
 
@@ -122,7 +123,7 @@ object Version {
 
           (item, rem)
         } else if (s.head.letter) {
-          def letters(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
+          def letters(b: StringBuilder, s: LazyList[Char]): (String, LazyList[Char]) =
             if (s.isEmpty || !s.head.letter)
               (b.result().toLowerCase, s) // not specifying a Locale (error with scala js)
             else
@@ -140,7 +141,7 @@ object Version {
           val (sep, _) = parseSeparator(s)
           (prev, sep) match {
             case (_, None) =>
-              def other(b: StringBuilder, s: Stream[Char]): (String, Stream[Char]) =
+              def other(b: StringBuilder, s: LazyList[Char]): (String, LazyList[Char]) =
                 if (s.isEmpty || s.head.isLetterOrDigit || parseSeparator(s)._1 != None)
                   (b.result().toLowerCase, s)  // not specifying a Locale (error with scala js)
                 else
@@ -157,7 +158,7 @@ object Version {
         }
       }
 
-      def parseSeparator(s: Stream[Char]): (Separator, Stream[Char]) = {
+      def parseSeparator(s: LazyList[Char]): (Separator, LazyList[Char]) = {
         assert(s.nonEmpty)
 
         s.head match {
@@ -169,13 +170,13 @@ object Version {
         }
       }
 
-      def helper(s: Stream[Char]): Stream[(Separator, Item)] = {
-        if (s.isEmpty) Stream()
+      def helper(s: LazyList[Char]): LazyList[(Separator, Item)] = {
+        if (s.isEmpty) LazyList.empty
         else {
           val (sep, rem0) = parseSeparator(s)
           sep match {
             case Plus =>
-              Stream((sep, BuildMetadata(rem0.mkString)))
+              LazyList((sep, BuildMetadata(rem0.mkString)))
             case _ =>
               val (item, rem) = parseItem(rem0, Some(sep))
               (sep, item) #:: helper(rem)
@@ -183,7 +184,7 @@ object Version {
         }
       }
 
-      val (first, rem) = parseItem(str.toStream, scala.None)
+      val (first, rem) = parseItem(str.to(LazyList), scala.None)
       (first, helper(rem))
     }
   }

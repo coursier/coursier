@@ -210,11 +210,14 @@ object JavaHome {
   ): Option[Path] =
     pathExtensionsOpt match {
       case Some(pathExtensions) =>
-        pathExtensions
-          .toStream
+        val it = pathExtensions
+          .iterator
           .map(ext => dir.resolve(name + ext))
           .filter(Files.exists(_))
-          .headOption
+        if (it.hasNext)
+          Some(it.next())
+        else
+          None
       case None =>
         Some(dir.resolve(name))
     }

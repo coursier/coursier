@@ -16,8 +16,8 @@ object ResolveRulesTests extends TestSuite {
 
   val tests = Tests {
 
-    'alwaysFail - {
-      'wrongRuleTryResolve - async {
+    test("alwaysFail") {
+      test("wrongRuleTryResolve") - async {
 
         val rule = AlwaysFail(doTryResolve = true)
         // should fail anyway (tryResolve of AlwaysFail does nothing)
@@ -45,7 +45,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'failRuleTryResolve - async {
+      test("failRuleTryResolve") - async {
 
         val rule = AlwaysFail(doTryResolve = false)
         // should fail anyway (tryResolve of AlwaysFail fails anyway)
@@ -73,7 +73,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'failRuleResolution - async {
+      test("failRuleResolution") - async {
 
         val rule = AlwaysFail()
         val ruleRes = RuleResolution.Fail
@@ -101,8 +101,8 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'sameVersionRule - {
-      * - async {
+    test("sameVersionRule") {
+      test - async {
 
         val params = ResolutionParams()
           .withScalaVersion("2.12.7")
@@ -128,7 +128,7 @@ object ResolveRulesTests extends TestSuite {
         await(validateDependencies(res, params))
       }
 
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .withScalaVersion("2.12.7")
@@ -151,8 +151,8 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'strict - {
-      'fail - async {
+    test("strict") {
+      test("fail") - async {
 
         val rule = Strict()
         val ruleRes = RuleResolution.Fail
@@ -333,7 +333,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
-      'viaReconciliation - async {
+      test("viaReconciliation") - async {
 
         val params = ResolutionParams()
           .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
@@ -451,8 +451,8 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    'dontBumpRootDependencies - {
-      * - async {
+    test("dontBumpRootDependencies") {
+      test - async {
 
         val params = ResolutionParams()
           .addRule(DontBumpRootDependencies(), RuleResolution.TryResolve)
@@ -480,7 +480,7 @@ object ResolveRulesTests extends TestSuite {
         assert(shapelessVersions == expectedShapelessVersions)
       }
 
-      * - async {
+      test - async {
 
         val params = ResolutionParams()
           .addRule(

@@ -33,21 +33,21 @@ object ScalazTests extends TestSuite {
 
   val tests = Tests {
 
-    'spark - {
-      * - runner.resolutionCheck(
+    test("spark") {
+      test - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
         profiles = Some(Set("hadoop-2.2"))
       )
 
-      'scala210 - runner.resolutionCheck(
+      test("scala210") - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.10",
         "2.1.1",
         profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
       )
     }
 
-    'argonautShapeless - {
+    test("argonautShapeless") {
       runner.resolutionCheck(
         mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
         "0.2.0"

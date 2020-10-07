@@ -49,7 +49,7 @@ object Task extends PlatformTaskCompanion {
     Task(ec => Future(wrap(a))(ec))
 
   def never[A]: Task[A] =
-    Task(_ => Promise[A].future)
+    Task(_ => Promise[A]().future)
 
   def fromEither[T](e: Either[Throwable, T]): Task[T] =
     Task(_ => Future.fromTry(e.fold(Failure(_), Success(_))))

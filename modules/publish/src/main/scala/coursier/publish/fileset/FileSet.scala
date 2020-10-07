@@ -7,6 +7,8 @@ import coursier.core.{ModuleName, Organization}
 import coursier.publish.Pom.{Developer, License}
 import coursier.util.Task
 
+import scala.collection.compat._
+
 final case class FileSet(elements: Seq[(Path, Content)]) {
   def ++(other: FileSet): FileSet = {
     // complexity possibly not too optimal… (removeAll iterates on all elements)
@@ -160,8 +162,9 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
       val modules = sortedModules.map(_.module).toSet
 
       val unknownMavenMetadata = mavenMetadataMap
+        .view
         .filterKeys(!modules(_))
-        .values
+        .map(_._2)
         .toVector
         .sortBy(_.module.toString) // sort to make output deterministic
 

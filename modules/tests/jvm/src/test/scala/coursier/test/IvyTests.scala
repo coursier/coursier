@@ -18,7 +18,7 @@ object IvyTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    'dropInfoAttributes - {
+    test("dropInfoAttributes") {
       runner.resolutionCheck(
         module = Module(
           org"org.scala-js", name"sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
@@ -29,7 +29,7 @@ object IvyTests extends TestSuite {
       )
     }
 
-    'versionIntervals - {
+    test("versionIntervals") {
       // will likely break if new 0.6.x versions are published :-)
 
       val mod = Module(
@@ -39,13 +39,13 @@ object IvyTests extends TestSuite {
 
       val expectedArtifactUrl = "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.ddispaltro/sbt-reactjs/scala_2.10/sbt_0.13/0.6.8/jars/sbt-reactjs.jar"
 
-      * - runner.resolutionCheck(
+      test - runner.resolutionCheck(
         module = mod,
         version = ver,
         extraRepos = Seq(sbtRepo)
       )
 
-      * - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
+      test - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
         assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
@@ -60,7 +60,7 @@ object IvyTests extends TestSuite {
       dropInfoAttributes = true
     )
 
-    'changing - {
+    test("changing") {
       "-SNAPSHOT suffix" - {
 
         val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
@@ -98,7 +98,7 @@ object IvyTests extends TestSuite {
       }
     }
 
-    'testArtifacts - {
+    test("testArtifacts") {
 
       val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
         .withTransitive(false)
@@ -145,7 +145,7 @@ object IvyTests extends TestSuite {
       "tests classifier" - {
         val testsDep = dep.withAttributes(Attributes(Type.jar, Classifier.tests))
 
-        * - runner.withArtifacts(
+        test - runner.withArtifacts(
           deps = Seq(dep, testsDep),
           extraRepos = Seq(repo),
           classifierOpt = None
@@ -155,7 +155,7 @@ object IvyTests extends TestSuite {
           assert(urls(testJarUrl))
         }
 
-        * - runner.withArtifacts(
+        test - runner.withArtifacts(
           dep = testsDep,
           extraRepos = Seq(repo),
           classifierOpt = None

@@ -10,7 +10,7 @@ object IvyPatternParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'plugin - {
+    test("plugin") {
       val strPattern = "[organization]/[module](/scala_[scalaVersion])(/sbt_[sbtVersion])/[revision]/resolved.xml.[ext]"
       val expectedChunks = Seq[ChunkOrProperty](
         Var("organization"),
@@ -24,7 +24,7 @@ object IvyPatternParserTests extends TestSuite {
       assert(PropertiesPattern.parse(strPattern).map(_.chunks) == Right(expectedChunks))
     }
 
-    'activatorLaunchLocal - {
+    test("activatorLaunchLocal") {
       val strPattern =
         "file://${activator.local.repository-${activator.home-${user.home}/.activator}/repository}" +
           "/[organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)" +
@@ -52,7 +52,7 @@ object IvyPatternParserTests extends TestSuite {
 
       val pattern = pattern0.toOption.get
 
-      * - {
+      test {
         val varPattern = pattern.substituteProperties(Map(
           "activator.local.repository" -> "xyz"
         )).map(_.string)
@@ -65,7 +65,7 @@ object IvyPatternParserTests extends TestSuite {
         assert(varPattern == Right(expectedVarPattern))
       }
 
-      * - {
+      test {
         val varPattern = pattern.substituteProperties(Map(
           "activator.local.repository" -> "xyz",
           "activator.home" -> "aaaa"
@@ -79,7 +79,7 @@ object IvyPatternParserTests extends TestSuite {
         assert(varPattern == Right(expectedVarPattern))
       }
 
-      * - {
+      test {
         val varPattern = pattern.substituteProperties(Map(
           "activator.home" -> "aaaa"
         )).map(_.string)
@@ -92,7 +92,7 @@ object IvyPatternParserTests extends TestSuite {
         assert(varPattern == Right(expectedVarPattern))
       }
 
-      * - {
+      test {
         val varPattern0 = pattern.substituteProperties(Map(
           "user.home" -> "homez"
         ))
@@ -106,7 +106,7 @@ object IvyPatternParserTests extends TestSuite {
 
         val varPattern = varPattern0.toOption.get
 
-        * - {
+        test {
           val res = varPattern.substituteVariables(Map(
             "organization" -> "org",
             "module" -> "mod",
@@ -122,7 +122,7 @@ object IvyPatternParserTests extends TestSuite {
         }
       }
 
-      * - {
+      test {
         val varPattern = pattern.substituteProperties(Map())
         assert(varPattern.isLeft)
       }

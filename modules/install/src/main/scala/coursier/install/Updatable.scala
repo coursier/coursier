@@ -7,7 +7,7 @@ import coursier.cache.CacheLocks
 import coursier.launcher.internal.FileUtil
 import coursier.paths.CachePath
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 object Updatable {

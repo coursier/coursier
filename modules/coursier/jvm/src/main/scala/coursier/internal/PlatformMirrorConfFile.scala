@@ -4,7 +4,7 @@ import java.io.File
 
 import coursier.params.{MavenMirror, Mirror, TreeMirror}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 abstract class PlatformMirrorConfFile {
 

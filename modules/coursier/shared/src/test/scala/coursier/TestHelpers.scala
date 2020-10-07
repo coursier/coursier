@@ -59,13 +59,13 @@ object TestHelpers extends PlatformTestHelpers {
             params
         // This avoids some sha1 changes
         def normalize(s: String): String = {
-          val noComma = s.replaceAllLiterally(", ", "||")
+          val noComma = s.replace(", ", "||")
           noComma
-            .replaceAllLiterally("|None|", "")
-            .replaceAllLiterally("|List()|", "")
-            .replaceAllLiterally("|Map()|", "")
-            .replaceAllLiterally("HashSet", "Set")
-            .replaceAllLiterally("|Set()|", "")
+            .replace("|None|", "")
+            .replace("|List()|", "")
+            .replace("|Map()|", "")
+            .replace("HashSet", "Set")
+            .replace("|Set()|", "")
         }
         val n = normalize(params0.toString)
         "_params" + sha1(n)

@@ -16,8 +16,8 @@ object ExclusionsTests extends TestSuite {
     val eob = Set((org"*", name"name1"))
     val eb = Set((org"*", name"*"))
 
-    'add{
-      'basicZero{
+    test("add") {
+      test("basicZero") {
         val result1l = exclusionsAdd(e1, Set.empty)
         val result1r = exclusionsAdd(Set.empty, e1)
         val result2l = exclusionsAdd(e2, Set.empty)
@@ -27,7 +27,7 @@ object ExclusionsTests extends TestSuite {
         assert(result2l == e2)
         assert(result2r == e2)
       }
-      'basic{
+      test("basic") {
         val expected = e1 ++ e2
         val result12 = exclusionsAdd(e1, e2)
         val result21 = exclusionsAdd(e2, e1)
@@ -35,7 +35,7 @@ object ExclusionsTests extends TestSuite {
         assert(result21 == expected)
       }
 
-      'nameBlob{
+      test("nameBlob") {
         val result1b = exclusionsAdd(e1, enb)
         val resultb1 = exclusionsAdd(enb, e1)
         val result2b = exclusionsAdd(e2, enb)
@@ -46,7 +46,7 @@ object ExclusionsTests extends TestSuite {
         assert(resultb2 == (e2 ++ enb))
       }
 
-      'orgBlob{
+      test("orgBlob") {
         val result1b = exclusionsAdd(e1, eob)
         val resultb1 = exclusionsAdd(eob, e1)
         val result2b = exclusionsAdd(e2, eob)
@@ -57,7 +57,7 @@ object ExclusionsTests extends TestSuite {
         assert(resultb2 == (e2 ++ eob))
       }
 
-      'blob{
+      test("blob") {
         val result1b = exclusionsAdd(e1, eb)
         val resultb1 = exclusionsAdd(eb, e1)
         val result2b = exclusionsAdd(e2, eb)
