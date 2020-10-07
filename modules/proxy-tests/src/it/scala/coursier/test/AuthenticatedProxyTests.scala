@@ -52,7 +52,7 @@ object AuthenticatedProxyTests extends TestSuite {
         ).map(Right(_)).recover { case t: Throwable => Left(t) }
       }
       assert(res.isLeft)
-      val message = res.left.get.getCause.getMessage
+      val message = res.swap.toOption.get.getCause.getMessage
       assert(message.contains("407 Proxy Authentication Required"))
 
       await {

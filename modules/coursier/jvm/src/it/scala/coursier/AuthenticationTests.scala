@@ -55,7 +55,7 @@ object AuthenticationTests extends TestSuite {
 
   val tests = Tests {
 
-    * - {
+    test {
       testCredentials {
         DirectCredentials()
           .withHost(testHost)
@@ -66,7 +66,7 @@ object AuthenticationTests extends TestSuite {
       }
     }
 
-    * - {
+    test {
       val credentialsStr = s"$testHost $user:$password"
       val credentials = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
@@ -75,7 +75,7 @@ object AuthenticationTests extends TestSuite {
       testCredentials(credentials)
     }
 
-    * - {
+    test {
       val content =
        s"""foo.username=$user
           |foo.password=$password

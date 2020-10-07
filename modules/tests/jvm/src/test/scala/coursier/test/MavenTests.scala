@@ -14,7 +14,7 @@ object MavenTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    'testSnapshotNoVersioning - {
+    test("testSnapshotNoVersioning") {
 
       val dep = Dependency(mod"com.abc:test-snapshot-special", "0.1.0-SNAPSHOT")
         .withTransitive(false)
@@ -29,7 +29,7 @@ object MavenTests extends TestSuite {
       val mainJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82.jar"
       val sourcesJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82-sources.jar"
 
-      * - runner.withArtifacts(
+      test - runner.withArtifacts(
         dep = dep.withAttributes(Attributes(Type.jar)),
         extraRepos = Seq(repo),
         classifierOpt = None
@@ -40,7 +40,7 @@ object MavenTests extends TestSuite {
           throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
       }
 
-      * - runner.withArtifacts(
+      test - runner.withArtifacts(
         dep = dep.withAttributes(Attributes(Type.source)),
         extraRepos = Seq(repo),
         classifierOpt = Some(Classifier.sources)

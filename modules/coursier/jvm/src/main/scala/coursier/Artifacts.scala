@@ -9,6 +9,7 @@ import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
 
+import scala.collection.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -74,6 +75,7 @@ import dataclass._
         case (d, p, a) => (a, (d, p))
       }
       .groupBy(_._1)
+      .view
       .mapValues(_.map(_._2).distinct)
       .toMap
 
@@ -272,6 +274,7 @@ object Artifacts {
       .flatMap(_._2.zipWithIndex.iterator)
       .toVector
       .groupBy(_._2)
+      .view
       .mapValues(_.map(_._1))
       .toVector
       .sortBy(_._1)

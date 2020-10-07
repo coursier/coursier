@@ -16,11 +16,14 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       case None =>
         Some(new File(dir, name))
       case Some(pathExts) =>
-        pathExts
-          .toStream
+        val it = pathExts
+          .iterator
           .map(ext => new File(dir, s"$name$ext"))
           .filter(_.exists())
-          .headOption
+        if (it.hasNext)
+          Some(it.next())
+        else
+          None
     }
 
 
@@ -82,9 +85,9 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         if (parameters.isWindows) {
           val exe = output.getFileName.toString + ".exe"
 
-          import scala.collection.JavaConverters._
+          import scala.jdk.CollectionConverters._
           val s = Files.list(output.getParent)
-          val prefix = output.getFileName + "."
+          val prefix = output.getFileName.toString + "."
           s.iterator().asScala.toVector.foreach { p =>
             val name = p.getFileName.toString
             if (name != exe && name.startsWith(prefix))

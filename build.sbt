@@ -39,6 +39,7 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
     Mima.utilFilters,
     dontPublishScalaJsIn("2.11"),
     libs ++= Seq(
+      Deps.cross.collectionCompat.value,
       Deps.dataClass % Provided,
       Deps.simulacrum % Provided
     )
@@ -248,7 +249,10 @@ lazy val launcher = project("launcher")
     exportJars := true,
     generatePropertyFile("coursier/launcher"),
     crossScalaVersions += "2.11.12",
-    libs += Deps.dataClass % Provided
+    libs ++= Seq(
+      Deps.collectionCompat,
+      Deps.dataClass % Provided
+    )
   )
 
 lazy val benchmark = project("benchmark")
@@ -270,6 +274,7 @@ lazy val publish = project("publish")
     libs ++= Seq(
       Deps.argonautShapeless,
       Deps.catsCore,
+      Deps.collectionCompat,
       Deps.okhttp
     ),
     onlyIn("2.11", "2.12"), // not all dependencies there yet for 2.13
@@ -281,6 +286,7 @@ lazy val env = project("env")
     shared,
     coursierPrefix,
     libs ++= Seq(
+      Deps.collectionCompat,
       Deps.dataClass % Provided,
       Deps.jimfs % Test
     ),

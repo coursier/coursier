@@ -99,13 +99,12 @@ $ pkg install coursier
 
 ### zsh completions
 
-If you use ZSH, simple tab-completions are available by copying the
-[`scripts/_coursier`](https://raw.githubusercontent.com/coursier/coursier/master/scripts/_coursier)
-file into your completions directory, if you have one. If
-you do not, then you can install the completions with,
+If you use ZSH, simple tab-completions are available by writing the
+coursier completion data into your completions directory.
+You can install the completions with,
 ```bash
 mkdir -p ~/.zsh/completion
-cp scripts/_coursier ~/.zsh/completion/
+cs --completions zsh > ~/.zsh/completion/
 echo 'fpath=(~/.zsh/completion $fpath)' >> ~/.zshrc
 echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 ```

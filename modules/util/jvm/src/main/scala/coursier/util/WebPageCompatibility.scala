@@ -2,7 +2,7 @@ package coursier.util
 
 import org.jsoup.Jsoup
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 private[coursier] abstract class WebPageCompatibility {
 

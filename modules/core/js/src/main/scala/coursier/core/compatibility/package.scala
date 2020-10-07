@@ -8,10 +8,10 @@ import coursier.util.{SaxHandler, Xml}
 
 package object compatibility {
   def option[A](a: js.Dynamic): Option[A] =
-    if (js.isUndefined(a)) None
+    if (js.typeOf(a) == "undefined") None
     else Some(a.asInstanceOf[A])
   def dynOption(a: js.Dynamic): Option[js.Dynamic] =
-    if (js.isUndefined(a)) None
+    if (js.typeOf(a) == "undefined") None
     else Some(a)
 
   private def between(c: Char, lower: Char, upper: Char) = lower <= c && c <= upper

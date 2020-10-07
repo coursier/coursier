@@ -19,7 +19,7 @@ package object compatibility {
 
     fs.readFile(path, "utf-8", {
       (err: js.Dynamic, data: js.Dynamic) =>
-        if (js.isUndefined(err) || err == null) p.success(data.asInstanceOf[String])
+        if (js.typeOf(err) == "undefined" || err == null) p.success(data.asInstanceOf[String])
         else p.failure(new Exception(err.toString))
         ()
     }: js.Function2[js.Dynamic, js.Dynamic, Unit])

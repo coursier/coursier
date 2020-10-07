@@ -13,55 +13,55 @@ object CachePolicyParserTests extends TestSuite {
   )
 
   val tests = Tests {
-    'simple - {
-      * - {
+    test("simple") {
+      test {
         val res = CachePolicyParser.cachePolicy("offline")
         val expectedRes = Right(CachePolicy.LocalOnly)
         assert(res == expectedRes)
       }
-      * - {
+      test {
         val res = CachePolicyParser.cachePolicy("update")
         val expectedRes = Right(CachePolicy.Update)
         assert(res == expectedRes)
       }
     }
 
-    'several - {
-      * - {
+    test("several") {
+      test {
         val res = CachePolicyParser.cachePolicies("offline")
         val expectedRes = ValidationNel.success(Seq(CachePolicy.LocalOnly))
         assert(res == expectedRes)
       }
-      * - {
+      test {
         val res = CachePolicyParser.cachePolicies("update")
         val expectedRes = ValidationNel.success(Seq(CachePolicy.Update))
         assert(res == expectedRes)
       }
 
-      'default - {
+      test("default") {
         val res = CachePolicyParser.cachePolicies("default", defaults)
         val expectedRes = ValidationNel.success(defaults)
         assert(res == expectedRes)
       }
 
-      'noDefault - {
+      test("noDefault") {
         val res = CachePolicyParser.cachePolicies("default")
         assert(!res.isSuccess)
       }
 
-      * - {
+      test {
         val res = CachePolicyParser.cachePolicies("offline,update", defaults)
         val expectedRes = ValidationNel.success(Seq(CachePolicy.LocalOnly, CachePolicy.Update))
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val res = CachePolicyParser.cachePolicies("offline,update,default", defaults)
         val expectedRes = ValidationNel.success(Seq(CachePolicy.LocalOnly, CachePolicy.Update) ++ defaults)
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val res = CachePolicyParser.cachePolicies("offline,update,default")
         assert(!res.isSuccess)
       }

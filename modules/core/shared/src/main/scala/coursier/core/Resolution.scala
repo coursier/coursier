@@ -5,8 +5,10 @@ import java.util.concurrent.ConcurrentHashMap
 import coursier.util.Artifact
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.collection.compat._
+import scala.collection.compat.immutable.LazyList
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 import dataclass.data
 
 object Resolution {
@@ -78,7 +80,7 @@ object Resolution {
           if (!b.contains(key0))
             b += ((key0, elem))
         }
-        b.result
+        b.result()
           .toMap // meh
       }
   }
@@ -484,9 +486,9 @@ object Resolution {
   private def parents(
     project: Project,
     projectCache: ((Module, String)) => Option[Project]
-  ): Stream[Project] =
+  ): LazyList[Project] =
     project.parent.flatMap(projectCache) match {
-      case None => Stream.empty
+      case None => LazyList.empty
       case Some(parent) => parent #:: parents(parent, projectCache)
     }
 
@@ -884,6 +886,7 @@ object Resolution {
 
     trDepsSeq
       .groupBy(_._1)
+      .view
       .mapValues(_.map(_._2).toVector)
       .filterKeys(knownDeps)
       .toMap // Eagerly evaluate filterKeys/mapValues
@@ -914,6 +917,7 @@ object Resolution {
       else
         helper(
           remaining
+            .view
             .mapValues(broughtBy =>
               broughtBy
                 .filter(x => remaining.contains(x) || rootDependencies0(x))
@@ -1220,9 +1224,9 @@ object Resolution {
 
   def orderedDependencies: Seq[Dependency] = {
 
-    def helper(deps: List[Dependency], done: DependencySet): Stream[Dependency] =
+    def helper(deps: List[Dependency], done: DependencySet): LazyList[Dependency] =
       deps match {
-        case Nil => Stream()
+        case Nil => LazyList.empty
         case h :: t =>
           if (done.covers(h))
             helper(t, done)

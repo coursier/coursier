@@ -7,7 +7,7 @@ object ModuleMatchersTests extends TestSuite {
 
   val tests = Tests {
 
-    * - {
+    test {
       val matcher = ModuleMatchers(
         exclude = Set(ModuleMatcher(mod"io.circe:*")),
         include = Set(ModuleMatcher(mod"io.circe:circe-*")))
@@ -27,7 +27,7 @@ object ModuleMatchersTests extends TestSuite {
         assert(!matcher.matches(m))
     }
 
-    * - {
+    test {
       val matcher = ModuleMatchers(
         exclude = Set(ModuleMatcher(mod"org.scala-lang:*")),
         include = Set())

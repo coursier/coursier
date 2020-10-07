@@ -21,7 +21,7 @@ import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
 import dataclass._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 @data class InstallDir(
@@ -516,8 +516,8 @@ object InstallDir {
         .take(if (preferPrebuilt) 5 else 1)
         .flatMap { version =>
           val baseUrl = pattern
-            .replaceAllLiterally("${version}", version)
-            .replaceAllLiterally("${platform}", platform.getOrElse(""))
+            .replace("${version}", version)
+            .replace("${platform}", platform.getOrElse(""))
           platformExtensions.iterator.map(ext => (version, baseUrl + ext)) ++ Iterator.single((version, baseUrl))
         }
         .map {

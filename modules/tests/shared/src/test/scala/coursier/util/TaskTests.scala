@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
 object TaskTests extends TestSuite {
 
   val tests = Tests {
-    'tailRecM {
+    test("tailRecM") {
       import ExecutionContext.Implicits.global
 
       def countTo(i: Int): Task[Int] =

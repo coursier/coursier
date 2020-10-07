@@ -255,7 +255,7 @@ object ResolutionTests extends TestSuite {
   )
 
   val tests = Tests {
-    'empty{
+    test("empty") {
       async{
         val res = await(resolve0(
           Nil
@@ -264,7 +264,7 @@ object ResolutionTests extends TestSuite {
         assert(res == Resolution.empty)
       }
     }
-    'notFound{
+    test("notFound") {
       async {
         val dep = Dependency(Module(org"acme", name"playy"), "2.4.0")
         val res = await(resolve0(
@@ -279,7 +279,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'missingPom{
+    test("missingPom") {
       async {
         val dep = Dependency(Module(org"acme", name"module-with-missing-pom"), "1.0.0")
         val res = await(resolve0(
@@ -301,7 +301,7 @@ object ResolutionTests extends TestSuite {
         assert(res.errors == Seq((Module(org"acme", name"missing-pom"), "1.0.0") -> List("Not found")))
       }
     }
-    'single{
+    test("single") {
       async {
         val dep = Dependency(Module(org"acme", name"config"), "1.3.0")
         val res = await(resolve0(
@@ -316,7 +316,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'oneTransitiveDependency{
+    test("oneTransitiveDependency") {
       async {
         val dep = Dependency(Module(org"acme", name"play"), "2.4.0")
         val trDep = Dependency(Module(org"acme", name"play-json"), "2.4.0")
@@ -337,7 +337,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'twoTransitiveDependencyWithProps{
+    test("twoTransitiveDependencyWithProps") {
       async {
         val dep = Dependency(Module(org"acme", name"play"), "2.4.1")
         val trDeps = Seq(
@@ -355,7 +355,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'exclude{
+    test("exclude") {
       async {
         val dep = Dependency(Module(org"acme", name"play-extra-no-config"), "2.4.1")
         val trDeps = Seq(
@@ -375,7 +375,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'excludeOrgWildcard{
+    test("excludeOrgWildcard") {
       async {
         val dep = Dependency(Module(org"acme", name"play-extra-no-config-no"), "2.4.1")
         val trDeps = Seq(
@@ -395,7 +395,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'filter{
+    test("filter") {
       async {
         val dep = Dependency(Module(org"hudsucker", name"mail"), "10.0")
         val res = await(resolve0(
@@ -409,7 +409,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'parentDepMgmt{
+    test("parentDepMgmt") {
       async {
         val dep = Dependency(Module(org"se.ikea", name"billy"), "18.0")
         val trDeps = Seq(
@@ -427,7 +427,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'parentDependencies{
+    test("parentDependencies") {
       async {
         val dep = Dependency(Module(org"org.gnome", name"panel-legacy"), "7.0")
         val trDeps = Seq(
@@ -444,7 +444,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'propertiesInExclusions{
+    test("propertiesInExclusions") {
       async {
         val dep = Dependency(Module(org"com.mailapp", name"mail-client"), "2.1")
         val trDeps = Seq(
@@ -460,7 +460,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'depMgmtInParentDeps{
+    test("depMgmtInParentDeps") {
       async {
         val dep = Dependency(Module(org"com.thoughtworks.paranamer", name"paranamer"), "2.6")
         val res = await(resolve0(
@@ -474,7 +474,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'depsFromDefaultProfile{
+    test("depsFromDefaultProfile") {
       async {
         val dep = Dependency(Module(org"com.github.dummy", name"libb"), "0.3.3")
         val trDeps = Seq(
@@ -490,7 +490,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'depsFromPropertyActivatedProfile{
+    test("depsFromPropertyActivatedProfile") {
       val f =
         for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield {
           async {
@@ -511,7 +511,7 @@ object ResolutionTests extends TestSuite {
 
       scala.concurrent.Future.sequence(f).map(_ => ())
     }
-    'depsFromProfileDisactivatedByPropertyAbsence{
+    test("depsFromProfileDisactivatedByPropertyAbsence") {
       // A build profile only activates in the absence of some property should
       // not be activated when that property is present.
       // ---
@@ -534,7 +534,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
-    'depsScopeOverrideFromProfile{
+    test("depsScopeOverrideFromProfile") {
       async {
         // Like com.google.inject:guice:3.0 with org.sonatype.sisu.inject:cglib
         val dep = Dependency(Module(org"com.github.dummy", name"libb"), "0.4.2")
@@ -552,7 +552,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'exclusionsAndOptionalShouldGoAlong{
+    test("exclusionsAndOptionalShouldGoAlong") {
       async {
         val dep = Dependency(Module(org"an-org", name"an-app"), "1.0")
         val trDeps = Seq(
@@ -572,7 +572,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'exclusionsOfDependenciesFromDifferentPathsShouldNotCollide{
+    test("exclusionsOfDependenciesFromDifferentPathsShouldNotCollide") {
       async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.0"),
@@ -594,8 +594,8 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'dependencyOverrides - {
-      * - {
+    test("dependencyOverrides") {
+      test {
         async {
           val deps = Seq(
             Dependency(Module(org"an-org", name"a-name"), "1.1"))
@@ -620,7 +620,7 @@ object ResolutionTests extends TestSuite {
         }
       }
 
-      * - async {
+      test - async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
@@ -645,7 +645,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - async {
+      test - async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.1"))
         val depOverrides = Map(
@@ -670,7 +670,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - {
+      test {
         async {
           val deps = Seq(
             Dependency(Module(org"an-org", name"an-app"), "1.2"))
@@ -697,8 +697,8 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'parts{
-      'propertySubstitution{
+    test("parts") {
+      test("propertySubstitution") {
         val res =
           core.Resolution.withProperties(
             Seq(Configuration.empty -> Dependency(Module(org"a-company", name"a-name"), "${a.property}")),
@@ -709,7 +709,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'forcedProperties - {
+    test("forcedProperties") {
       async {
         val deps = Seq(
           Dependency(Module(org"com.github.dummy", name"libb"), "0.5.4")
@@ -736,8 +736,8 @@ object ResolutionTests extends TestSuite {
       }
     }
 
-    'mergingTransitiveDeps - {
-      * - async {
+    test("mergingTransitiveDeps") {
+      test - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.0")
         val trDeps = Seq(
           Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"),
@@ -755,7 +755,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
 
-      * - async {
+      test - async {
         val dep = Dependency(Module(org"an-org", name"my-app"), "1.1")
         val trDeps = Seq(
           Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"),

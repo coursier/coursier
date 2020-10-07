@@ -1,6 +1,6 @@
 package coursier.test
 
-import coursier._
+import coursier.{Attributes, MavenRepository, moduleString}
 import coursier.core.{Authentication, Type}
 import coursier.test.compatibility.executionContext
 import utest._
@@ -23,7 +23,7 @@ object DirectoryListingTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    'jar - runner.withArtifacts(
+    test("jar") - runner.withArtifacts(
       module,
       version,
       attributes = Attributes(Type.jar),
@@ -34,7 +34,7 @@ object DirectoryListingTests extends TestSuite {
         assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
     }
 
-    'jarFoo - runner.withArtifacts(
+    test("jarFoo") - runner.withArtifacts(
       module,
       version,
       attributes = Attributes(Type("jar-foo")),

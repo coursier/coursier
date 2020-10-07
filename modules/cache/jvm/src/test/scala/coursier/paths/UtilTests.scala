@@ -6,7 +6,7 @@ import java.util.Properties
 
 import utest._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object UtilTests extends TestSuite {
 

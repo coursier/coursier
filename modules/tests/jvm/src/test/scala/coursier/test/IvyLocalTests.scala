@@ -16,7 +16,7 @@ object IvyLocalTests extends TestSuite {
   def localVersion = "0.1.2-publish-local"
 
   val tests = TestSuite{
-    'coursier {
+    test("coursier") {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
       val mockIvy2Local = IvyRepository.fromPattern(
@@ -26,12 +26,12 @@ object IvyLocalTests extends TestSuite {
       val extraRepos = Seq(mockIvy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
-      'resolution - runner.resolutionCheck(
+      test("resolution") - runner.resolutionCheck(
         module, localVersion,
         extraRepos
       )
 
-      'uniqueArtifacts - async {
+      test("uniqueArtifacts") - async {
 
         val res = await(runner.resolve(
           Seq(Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)),
@@ -49,7 +49,7 @@ object IvyLocalTests extends TestSuite {
       }
 
 
-      'javadocSources - async {
+      test("javadocSources") - async {
         val res = await(runner.resolve(
           Seq(Dependency(module, localVersion)),
           extraRepos = extraRepos

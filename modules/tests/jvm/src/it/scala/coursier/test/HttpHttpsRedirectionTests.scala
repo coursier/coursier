@@ -20,7 +20,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
       enabled0
     }
 
-    * - {
+    test {
       // no redirections -> should fail
 
       if (enabled) {
@@ -41,7 +41,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
       }
     }
 
-    * - {
+    test {
       // with redirection -> should work
 
       if (enabled)

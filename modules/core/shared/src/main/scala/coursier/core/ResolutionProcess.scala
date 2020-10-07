@@ -3,9 +3,10 @@ package core
 
 import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
+import dataclass.data
 
 import scala.annotation.tailrec
-import dataclass.data
+import scala.collection.compat.immutable.LazyList
 
 
 sealed abstract class ResolutionProcess extends Product with Serializable {
@@ -398,7 +399,7 @@ object ResolutionProcess {
     fetch: ResolutionProcess.Fetch[F]
   )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]] = {
 
-    def uniqueModules(modVers: Seq[(Module, String)]): Stream[Seq[(Module, String)]] = {
+    def uniqueModules(modVers: Seq[(Module, String)]): LazyList[Seq[(Module, String)]] = {
 
       val res = modVers.groupBy(_._1).toSeq.map(_._2).map {
         case Seq(v) => (v, Nil)
@@ -412,7 +413,7 @@ object ResolutionProcess {
       val other = res.flatMap(_._2)
 
       if (other.isEmpty)
-        Stream(modVers)
+        LazyList(modVers)
       else {
         val missing0 = res.map(_._1)
         missing0 #:: uniqueModules(other)

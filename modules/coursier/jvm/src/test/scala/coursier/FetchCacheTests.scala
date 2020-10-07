@@ -6,7 +6,7 @@ import coursier.cache.FileCache
 import utest._
 
 import scala.async.Async.{async, await}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object FetchCacheTests extends TestSuite {
 
@@ -47,7 +47,7 @@ object FetchCacheTests extends TestSuite {
 
     import TestHelpers.ec
 
-    'simple - async {
+    test("simple") - async {
 
       val tmpCache = Files.createTempDirectory("coursier-cache-tests")
       val tmpFetchCache = Files.createTempDirectory("coursier-fetch-cache-tests")

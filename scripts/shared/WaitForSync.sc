@@ -9,14 +9,12 @@ import java.nio.file.Path
  * @param coursierLauncher Path to a coursier launcher
  * @param module A module, like `"org:name:version"`
  * @param extraArgs Extra arguments to pass to coursier to fetch `module`, like `Seq("-r", "jitpack")`
- * @param testRepo A repository that has module already.
  * @param attempts Maximum number of attempts to check for the sync (one attempt per minute)
  */
 def apply(
   coursierLauncher: String,
   module: String,
   extraArgs: Seq[String],
-  testRepo: String,
   attempts: Int
 ): Unit = {
 
@@ -26,10 +24,6 @@ def apply(
     module
   ) ++
   extraArgs
-
-  val testCommand = probeCommand ++ Seq("-r", testRepo, "--ttl", "0s")
-
-  Util.run(testCommand)
 
   val probeSuccess = Iterator.range(0, attempts)
     .map { i =>

@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, LinkOption, Path}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 private[coursier] object FileUtil {
 

@@ -91,8 +91,8 @@ object BootstrapTests extends TestSuite {
 
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8)).lines.toVector
-        val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
+        val fooLines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8).linesIterator.toVector
+        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8).linesIterator.toVector
 
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
         assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
@@ -151,8 +151,8 @@ object BootstrapTests extends TestSuite {
 
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8)).lines.toVector
-        val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)).lines.toVector
+        val fooLines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"), UTF_8).linesIterator.toVector
+        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8).linesIterator.toVector
 
         assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
         assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
@@ -210,8 +210,8 @@ object BootstrapTests extends TestSuite {
 
         val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8))
-          .lines
+        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)
+          .linesIterator
           .toVector
 
         assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
@@ -257,12 +257,12 @@ object BootstrapTests extends TestSuite {
           def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
           val suffix = if (standalone.exists(identity)) "resources" else "urls"
-          val fooLines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix-1"), UTF_8))
-            .lines
+          val fooLines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix-1"), UTF_8)
+            .linesIterator
             .toVector
             .map(_.replaceAll(".*/", ""))
-          val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8))
-            .lines
+          val lines = new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix"), UTF_8)
+            .linesIterator
             .toVector
             .map(_.replaceAll(".*/", ""))
 
@@ -375,8 +375,8 @@ object BootstrapTests extends TestSuite {
 
         val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        val lines = Predef.augmentString(new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8))
-          .lines
+        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8)
+          .linesIterator
           .toVector
 
         val fastparseLines = lines.filter(_.startsWith("fastparse_2.12-1.0.0"))

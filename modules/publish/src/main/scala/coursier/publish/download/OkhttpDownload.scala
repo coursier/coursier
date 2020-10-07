@@ -3,14 +3,13 @@ package coursier.publish.download
 import java.time.Instant
 import java.util.concurrent.ExecutorService
 
-import coursier.cache.CacheUrl
 import coursier.core.Authentication
 import coursier.publish.download.logger.DownloadLogger
 import coursier.util.Task
 import okhttp3.internal.http.HttpDate
 import okhttp3.{OkHttpClient, Request, Response}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) extends Download {

@@ -8,6 +8,7 @@ import coursier.util.ModuleMatchers
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.collection.compat._
 
 object ResolveTests extends TestSuite {
 
@@ -24,7 +25,7 @@ object ResolveTests extends TestSuite {
 
   val tests = Tests {
 
-    'simple - async {
+    test("simple") - async {
 
       val res = await {
         resolve
@@ -35,7 +36,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
     }
 
-    'forceScalaVersion - async {
+    test("forceScalaVersion") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
@@ -53,7 +54,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams))
     }
 
-    'typelevel - async {
+    test("typelevel") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"com.lihaoyi:ammonite_2.11.8:1.6.3")
@@ -71,7 +72,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams))
     }
 
-    'addForceVersion - async {
+    test("addForceVersion") - async {
 
       val resolve0 = resolve
         .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
@@ -98,7 +99,7 @@ object ResolveTests extends TestSuite {
       assert(coursierVersionOpt.contains(expectedCoursierVersion))
     }
 
-    'mirrors - {
+    test("mirrors") {
 
       def run(mirror: Mirror) = async {
         val res = await {
@@ -114,32 +115,32 @@ object ResolveTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
-      'mavenMirror - {
-        'specific - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
-        'all - run(MavenMirror("https://jcenter.bintray.com", "*"))
+      test("mavenMirror") {
+        test("specific") - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        test("all") - run(MavenMirror("https://jcenter.bintray.com", "*"))
 
-        'trailingSlash - {
-          'specific - {
-            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
-            * - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
-            * - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+        test("trailingSlash") {
+          test("specific") {
+            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+            test - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
           }
-          'all - run(MavenMirror("https://jcenter.bintray.com/", "*"))
+          test("all") - run(MavenMirror("https://jcenter.bintray.com/", "*"))
         }
       }
 
-      'treeMirror - {
-        * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
-        'trailingSlash - {
-          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
-          * - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
-          * - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+      test("treeMirror") {
+        test - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        test("trailingSlash") {
+          test - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
+          test - run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
+          test - run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
         }
       }
     }
 
-    'latest - {
-      'maven - {
+    test("latest") {
+      test("maven") {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -147,7 +148,7 @@ object ResolveTests extends TestSuite {
             Repositories.central
           ))
 
-        'integration - async {
+        test("integration") - async {
 
           val res = await {
             resolve0
@@ -158,7 +159,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'release - async {
+        test("release") - async {
 
           val res = await {
             resolve0
@@ -169,7 +170,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'stable - async {
+        test("stable") - async {
 
           val res = await {
             resolve0
@@ -185,8 +186,8 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        'withInterval - {
-          'in - async {
+        test("withInterval") {
+          test("in") - async {
 
             val res = await {
               resolve0
@@ -200,7 +201,7 @@ object ResolveTests extends TestSuite {
             await(validateDependencies(res))
           }
 
-          'out - async {
+          test("out") - async {
 
             val res = await {
               resolve0
@@ -217,7 +218,7 @@ object ResolveTests extends TestSuite {
             val isLeft = res.isLeft
             assert(isLeft)
 
-            val error = res.left.get
+            val error = res.swap.toOption.get
 
             error match {
               case e: ResolutionError.CantDownloadModule =>
@@ -229,7 +230,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
-      'ivy - {
+      test("ivy") {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -238,7 +239,7 @@ object ResolveTests extends TestSuite {
               .fold(sys.error, identity)
           ))
 
-        'integration - async {
+        test("integration") - async {
 
           val res = await {
             resolve0
@@ -255,7 +256,7 @@ object ResolveTests extends TestSuite {
           assert(found == expected)
         }
 
-        'release - async {
+        test("release") - async {
 
           val res = await {
             resolve0
@@ -274,9 +275,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'ivyLatestSubRevision - {
-      'zero - {
-        * - async {
+    test("ivyLatestSubRevision") {
+      test("zero") {
+        test - async {
 
           val res = await {
             resolve
@@ -287,7 +288,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -299,7 +300,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
-      'nonZero - async {
+      test("nonZero") - async {
 
         val res = await {
           resolve
@@ -310,7 +311,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      'plusInVersion - async {
+      test("plusInVersion") - async {
 
         val resolve0 = resolve
           .withRepositories(Seq(
@@ -335,12 +336,12 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'exclusions - {
+    test("exclusions") {
 
       val resolve0 = resolve
         .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
 
-      'check - async {
+      test("check") - async {
         val res = await {
           resolve0
             .future()
@@ -352,7 +353,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      'test - async {
+      test("test") - async {
         val res = await {
           resolve0
             .mapResolutionParams(_.addExclusions((org"io.argonaut", name"*")))
@@ -377,8 +378,8 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    'conflicts - {
-      * - async {
+    test("conflicts") {
+      test - async {
 
         // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)
 
@@ -393,7 +394,7 @@ object ResolveTests extends TestSuite {
         val isLeft = res.isLeft
         assert(isLeft)
 
-        val error = res.left.get
+        val error = res.swap.toOption.get
 
         error match {
           case c: ResolutionError.ConflictingDependencies =>
@@ -403,7 +404,7 @@ object ResolveTests extends TestSuite {
             val expectedVersions = Map(
               mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
             )
-            val versions = c.dependencies.groupBy(_.module).mapValues(_.map(_.version)).iterator.toMap
+            val versions = c.dependencies.groupBy(_.module).view.mapValues(_.map(_.version)).iterator.toMap
             assert(versions == expectedVersions)
           case _ =>
             sys.error(s"Unexpected error: $error")
@@ -412,7 +413,7 @@ object ResolveTests extends TestSuite {
     }
 
     "parent / import scope" - {
-      * - async {
+      test - async {
 
         val res = await {
           resolve
@@ -537,7 +538,7 @@ object ResolveTests extends TestSuite {
       }
 
       "conflict with specific version" - {
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -553,7 +554,7 @@ object ResolveTests extends TestSuite {
           val isLeft = res.isLeft
           assert(isLeft)
 
-          val error = res.left.get
+          val error = res.swap.toOption.get
 
           error match {
             case c: ResolutionError.ConflictingDependencies =>
@@ -568,7 +569,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
-        * - async {
+        test - async {
 
           val res = await {
             resolve
@@ -584,7 +585,7 @@ object ResolveTests extends TestSuite {
           val isLeft = res.isLeft
           assert(isLeft)
 
-          val error = res.left.get
+          val error = res.swap.toOption.get
 
           error match {
             case c: ResolutionError.ConflictingDependencies =>
@@ -603,7 +604,7 @@ object ResolveTests extends TestSuite {
 
     "override dependency from profile" - {
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -623,7 +624,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, resolve0.resolutionParams))
       }
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -649,7 +650,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, resolve0.resolutionParams))
       }
 
-      * - async {
+      test - async {
 
         val resolve0 = resolve
           .mapResolutionParams(_
@@ -701,7 +702,7 @@ object ResolveTests extends TestSuite {
     }
 
     "relaxed reconciliation" - {
-      * - async {
+      test - async {
         val params = ResolutionParams()
           .withScalaVersion("2.12.8")
           .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))

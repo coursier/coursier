@@ -14,6 +14,7 @@ import sbt.Keys._
 import sbt.ScriptedPlugin.autoImport.{scriptedBufferLog, scriptedLaunchOpts}
 import sbt.util.FileInfo
 import sbtcompatibility.SbtCompatibilityPlugin.autoImport._
+import sbtevictionrules.EvictionRulesPlugin.autoImport._
 import scalajsbundler.Npm
 import ScalaVersion._
 
@@ -68,6 +69,10 @@ object Settings {
       if (isAtLeastScala213.value) Seq("-Ymacro-annotations")
       else Nil
     },
+    evictionRules ++= Seq(
+      "org.scala-js" %% "scalajs-library" % "semver",
+      "org.scala-lang.modules" % "scala-collection-compat_*" % "semver"
+    ),
     compatibilityReconciliations += "org.scala-lang.modules" %% "*" % "semver"
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
@@ -226,37 +231,6 @@ object Settings {
       }
     )
   }
-
-  val sbt10Version = "1.0.2"
-
-  val pluginOverrideCrossScalaVersion = Seq(
-    crossScalaVersions := Seq(scala212)
-  )
-
-  lazy val plugin =
-    javaScalaPluginShared ++
-    divertThingsPlugin ++
-    withScriptedTests ++
-    Seq(
-      scriptedLaunchOpts ++= Seq(
-        "-Xmx1024M",
-        "-Dplugin.version=" + version.value,
-        "-Dsbttest.base=" + (sourceDirectory.value / "sbt-test").getAbsolutePath
-      ),
-      scriptedBufferLog := false,
-      sbtPlugin := {
-        scalaBinaryVersion.value match {
-          case "2.12" => true
-          case _ => false
-        }
-      },
-      sbtVersion.in(pluginCrossBuild) := {
-        scalaBinaryVersion.value match {
-          case "2.12" => sbt10Version
-          case _ => sbtVersion.in(pluginCrossBuild).value
-        }
-      }
-    )
 
   // adapted from https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala/com/typesafe/sbt/SbtProguard.scala#L83-L100
   lazy val proguardTask: Def.Initialize[Task[Seq[File]]] = Def.task {
@@ -540,6 +514,13 @@ object Settings {
   }
 
 
+  lazy val rtJarOpt = sys.props.get("sun.boot.class.path")
+    .toSeq
+    .flatMap(_.split(java.io.File.pathSeparator).toSeq)
+    .map(java.nio.file.Paths.get(_))
+    .find(_.endsWith("rt.jar"))
+    .map(_.toFile)
+
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
     val extra =
@@ -555,6 +536,7 @@ object Settings {
         "bootstrap.jar"
 
     Seq(
+      proguardBinaryDeps.in(Proguard) ++= rtJarOpt.toSeq, // seems needed with sbt 1.4.0
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
       proguardOptions.in(Proguard) ++= Seq(

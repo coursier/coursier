@@ -108,7 +108,7 @@ import java.nio.file.FileAlreadyExistsException
         case None =>
           additionOpt.flatMap { addition =>
             if (content.contains(addition))
-              Some(content.replaceAllLiterally(addition, ""))
+              Some(content.replace(addition, ""))
             else
               None
           }
@@ -143,7 +143,7 @@ import java.nio.file.FileAlreadyExistsException
       .map {
         case (k, v) =>
           // FIXME Needs more escaping?
-          s"""export $k="${v.replaceAllLiterally("\"", "\\\"")}"""" + "\n"
+          s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
       }
       .mkString
 
@@ -152,7 +152,7 @@ import java.nio.file.FileAlreadyExistsException
       .map {
         case (k, v) =>
           // FIXME Needs more escaping?
-          s"""export $k="$$$k$pathSeparator${v.replaceAllLiterally("\"", "\\\"")}"""" + "\n"
+          s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
       }
       .mkString
 

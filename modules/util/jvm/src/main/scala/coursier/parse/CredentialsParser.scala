@@ -19,8 +19,8 @@ object CredentialsParser {
   }
 
   def parseSeq(input: String): ValidationNel[String, Seq[DirectCredentials]] =
-    Predef.augmentString(input)
-      .lines
+    input
+      .linesIterator
       .map(_.dropWhile(_.isSpaceChar)) // not trimming chars on the right (password)
       .filter(_.nonEmpty)
       .toVector

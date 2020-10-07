@@ -70,7 +70,6 @@ def uploadJavaLauncher(): Unit = {
     initialLauncher0,
     module,
     Seq("--no-default", "-r", "central"),
-    "sonatype:public",
     attempts = 25
   )
 

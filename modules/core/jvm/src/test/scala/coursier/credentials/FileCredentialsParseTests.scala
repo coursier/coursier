@@ -8,7 +8,7 @@ object FileCredentialsParseTests extends TestSuite {
 
   val tests = Tests {
 
-    * - {
+    test {
 
       val credFilePath = Option(getClass.getResource("/simple-credentials.properties"))
         .map(u => new File(u.toURI).getAbsolutePath)

@@ -6,6 +6,8 @@ import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatcher
 import dataclass.data
 
+import scala.collection.compat._
+
 /**
   * Forces some modules to all have the same version.
   *
@@ -45,6 +47,7 @@ import dataclass.data
 
     val cantForce = res
       .forceVersions
+      .view
       .filterKeys(conflict.modules)
       .filter(_._2 != selectedVersion)
       .iterator

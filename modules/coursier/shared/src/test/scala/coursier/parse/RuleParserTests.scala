@@ -9,18 +9,18 @@ object RuleParserTests extends TestSuite {
 
   val tests = Tests {
 
-    'rule - {
+    test("rule") {
 
-      'alwaysFail - {
+      test("alwaysFail") {
 
-        'ok - {
+        test("ok") {
           val s = "AlwaysFail"
           val expectedRes = Right((AlwaysFail(), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
           assert(res == expectedRes)
         }
 
-        'trailingChars - {
+        test("trailingChars") {
           val s = "AlwaysFailz"
           val res = RuleParser.rule(s)
           assert(res.isLeft)
@@ -28,36 +28,36 @@ object RuleParserTests extends TestSuite {
 
       }
 
-      'sameVersion - {
+      test("sameVersion") {
 
-        * - {
+        test {
           val s = "SameVersion(com.michael:jackson-core)"
           val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val s = "SameVersion()"
           val res = RuleParser.rule(s)
           assert(res.isLeft)
         }
 
-        * - {
+        test {
           val s = "SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
           val expectedRes = Right((SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val s = "SameVersion(com.michael:jackson-core,com.michael:jackson-databind)"
           val expectedRes = Right((SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
           assert(res == expectedRes)
         }
 
-        * - {
+        test {
           val s = "SameVersion(com.michael:jackson-*)"
           val expectedRes = Right((SameVersion(mod"com.michael:jackson-*"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
@@ -66,24 +66,24 @@ object RuleParserTests extends TestSuite {
 
       }
 
-      'strict - {
+      test("strict") {
 
-        'simple - {
-          * - {
+        test("simple") {
+          test {
             val s = "Strict"
             val expectedRes = Right((Strict(), RuleResolution.TryResolve))
             val res = RuleParser.rule(s)
             assert(res == expectedRes)
           }
 
-          * - {
+          test {
             val s = "Strict()"
             val expectedRes = Right((Strict(), RuleResolution.TryResolve))
             val res = RuleParser.rule(s)
             assert(res == expectedRes)
           }
 
-          * - {
+          test {
             val s = "Strict(org:name)"
             val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:name"))), RuleResolution.TryResolve))
             val res = RuleParser.rule(s)
@@ -91,8 +91,8 @@ object RuleParserTests extends TestSuite {
           }
         }
 
-        'excludes - {
-          * - {
+        test("excludes") {
+          test {
             val s = "Strict(org:*, !org:name, !org:foo)"
             val expectedRes = Right((Strict(Set(ModuleMatcher(mod"org:*")), Set(ModuleMatcher(mod"org:name"), ModuleMatcher(mod"org:foo"))), RuleResolution.TryResolve))
             val res = RuleParser.rule(s)
@@ -104,23 +104,23 @@ object RuleParserTests extends TestSuite {
 
     }
 
-    'explicitRuleResolution - {
+    test("explicitRuleResolution") {
 
-      'resolve - {
+      test("resolve") {
         val s = "resolve:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.TryResolve))
         val res = RuleParser.rule(s)
         assert(res == expectedRes)
       }
 
-      'fail - {
+      test("fail") {
         val s = "fail:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Fail))
         val res = RuleParser.rule(s)
         assert(res == expectedRes)
       }
 
-      'warn - {
+      test("warn") {
         val s = "warn:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Warn))
         val res = RuleParser.rule(s)
@@ -129,16 +129,16 @@ object RuleParserTests extends TestSuite {
 
     }
 
-    'rules - {
+    test("rules") {
 
-      * - {
+      test {
         val s = "AlwaysFail"
         val expectedRes = Right(Seq((AlwaysFail(), RuleResolution.TryResolve)))
         val res = RuleParser.rules(s)
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val s = "AlwaysFail, AlwaysFail"
         val expectedRes = Right(Seq(
           AlwaysFail(),
@@ -148,35 +148,35 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
-       * - {
+       test {
          val s = "DontBumpRootDependencies"
          val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
          val res = RuleParser.rules(s)
          assert(res == expectedRes)
        }
 
-      * - {
+      test {
         val s = "DontBumpRootDependencies()"
         val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
         val res = RuleParser.rules(s)
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val s = "DontBumpRootDependencies(exclude=[])"
         val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
         val res = RuleParser.rules(s)
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val s = "DontBumpRootDependencies(exclude=[], include=[])"
         val expectedRes = Right(Seq((DontBumpRootDependencies(), RuleResolution.TryResolve)))
         val res = RuleParser.rules(s)
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val s = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[])"
         val matchers = ModuleMatchers(
           Set(ModuleMatcher(mod"org.scala-lang:*"))
@@ -186,7 +186,7 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
-      * - {
+      test {
         val s = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[org.scala-lang:scala-library])"
         val matchers = ModuleMatchers(
           Set(ModuleMatcher(mod"org.scala-lang:*")),
@@ -197,7 +197,7 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
-       * - {
+       test {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)"
          val expectedRes = Right(Seq(
            DontBumpRootDependencies(),
@@ -207,7 +207,7 @@ object RuleParserTests extends TestSuite {
          assert(res == expectedRes)
        }
 
-       * - {
+       test {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
          val expectedRes = Right(Seq(
            DontBumpRootDependencies(),
@@ -217,7 +217,7 @@ object RuleParserTests extends TestSuite {
          assert(res == expectedRes)
        }
 
-       * - {
+       test {
          val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core), SameVersion(com.a:b,com.a:c,com.a:d)"
          val expectedRes = Right(Seq(
            DontBumpRootDependencies(),
@@ -228,20 +228,20 @@ object RuleParserTests extends TestSuite {
          assert(res == expectedRes)
        }
 
-      'trailingCharacters - {
-        * - {
+      test("trailingCharacters") {
+        test {
           val s = "AlwaysFail, AlwaysFailzzz"
           val res = RuleParser.rules(s)
           assert(res.isLeft)
         }
 
-        * - {
+        test {
           val s = "AlwaysFail, AlwaysFail zzz"
           val res = RuleParser.rules(s)
           assert(res.isLeft)
         }
 
-        * - {
+        test {
           val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)zzz"
           val res = RuleParser.rules(s)
           assert(res.isLeft)
