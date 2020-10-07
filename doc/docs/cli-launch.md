@@ -60,11 +60,11 @@ one of them is the right one, just pass it via `-M` to `launch`.
 ## Java options
 
 With the native coursier launcher, you can pass options to the JVM that
-`launch` starts with `-J` or `--java-opt`, like
+`launch` starts with `--java-opt`, like
 ```bash
-$ cs launch -J -Dfoo=bar -J -Xmx2g ammonite
+$ cs launch --java-opt -Dfoo=bar --java-opt -Xmx2g ammonite
 Loading...
-Welcome to the Ammonite Repl 2.0.4 (Scala 2.13.1 Java 1.8.0_121)
+Welcome to the Ammonite Repl 2.2.0-4-4bd225e (Scala 2.13.3 Java 11.0.2)
 @ sys.props("foo")
 res0: String = "bar"
 ```
