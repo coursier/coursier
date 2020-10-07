@@ -20,7 +20,7 @@ private[coursier] abstract class WebPageCompatibility {
     if (jqueryAvailable)
         g.$("<div></div>").html(page).find("a").each({ self: js.Dynamic =>
         val href = g.$(self).attr("href")
-        if (!js.isUndefined(href))
+        if (js.typeOf(href) != "undefined")
           links += href.asInstanceOf[String]
         ()
       }: js.ThisFunction0[js.Dynamic, Unit])
@@ -28,7 +28,7 @@ private[coursier] abstract class WebPageCompatibility {
       val jquery = cheerio.load(page)
       jquery("a").each({ self: js.Dynamic =>
         val href = jquery(self).attr("href")
-        if (!js.isUndefined(href))
+        if (js.typeOf(href) != "undefined")
           links += href.asInstanceOf[String]
         ()
       }: js.ThisFunction0[js.Dynamic, Unit])

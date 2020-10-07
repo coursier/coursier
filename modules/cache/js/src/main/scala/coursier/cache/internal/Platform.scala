@@ -14,7 +14,7 @@ object Platform {
 
   /** Available if we're running on node, and package xhr2 is installed */
   private lazy val (xhr, fromBrowser) =
-    if (js.isUndefined(g.XMLHttpRequest))
+    if (js.typeOf(g.XMLHttpRequest) == "undefined")
       (g.require("xhr2"), false)
     else
       (g.XMLHttpRequest, true)
@@ -58,7 +58,7 @@ object Platform {
 
     fs.readFile(path, "utf-8", {
       (err: js.Dynamic, data: js.Dynamic) =>
-        if (js.isUndefined(err) || err == null) {
+        if (js.typeOf(err) == "undefined" || err == null) {
           val s = data.asInstanceOf[String]
           val res = linkUrlOpt match {
             case None => s
