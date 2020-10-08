@@ -295,7 +295,7 @@ lazy val env = project("env")
 
 lazy val install = project("install")
   .disablePlugins(MimaPlugin)
-  .dependsOn(coursierJvm, env, launcher)
+  .dependsOn(coursierJvm, env, jvm, launcher)
   .settings(
     shared,
     coursierPrefix,

@@ -100,6 +100,8 @@ import scala.util.{Failure, Success, Try}
             }
 
             S.handle(f) {
+              case _: FileNotFoundException =>
+                Left(new ArtifactError.NotFound(artifact.url))
               case e: Exception =>
                 Left(new ArtifactError.DownloadError(e.toString, Some(e)))
             }
