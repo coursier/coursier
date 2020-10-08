@@ -77,12 +77,18 @@ object InstallTests extends TestSuite {
     new String(FileUtil.readFully(zf.getInputStream(ent)), StandardCharsets.UTF_8)
   }
 
-  private def commandOutput(command: String*): String = {
+  private def commandOutput(command: String*): String =
+    commandOutput(new File("."), mergeError = false, expectedReturnCode = 0, command: _*)
+  private def commandOutput(dir: File, mergeError: Boolean, expectedReturnCode: Int, command: String*): String = {
 
     val b = new ProcessBuilder(command: _*)
     b.redirectInput(Redirect.INHERIT)
     b.redirectOutput(Redirect.PIPE)
-    b.redirectError(Redirect.INHERIT)
+    if (mergeError)
+      b.redirectErrorStream(true)
+    else
+      b.redirectError(Redirect.INHERIT)
+    b.directory(dir)
     val p = b.start()
     val is = p.getInputStream
     val baos = new ByteArrayOutputStream
@@ -92,10 +98,10 @@ object InstallTests extends TestSuite {
       baos.write(buf, 0, read)
     is.close()
     val retCode = p.waitFor()
-    if (retCode == 0)
+    if (retCode == expectedReturnCode)
       new String(baos.toByteArray, StandardCharsets.UTF_8)
     else
-      throw new Exception(s"Error while running ${command.mkString(" ")} (return code: $retCode)")
+      throw new Exception(s"Error while running ${command.mkString(" ")} (return code: $retCode, expected: $expectedReturnCode)")
   }
 
   private def assertNativeExecutable(file: File) = {
@@ -392,6 +398,88 @@ object InstallTests extends TestSuite {
       test("mac") - run("mac")
       test("windows") - run("windows")
     }
+
+    test("install a prebuilt launcher") {
+      def run(os: String) = withTempDir { tmpDir =>
+
+        val id = "coursier"
+        val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuiltBinaries(Map(
+              "x86_64-apple-darwin" -> csUrl,
+              "x86_64-pc-linux" -> csUrl,
+              "x86_64-pc-win32" -> csUrl
+            )),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os)
+          .withVerbosity(1)
+          .withOnlyPrebuilt(true)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(launcher.toAbsolutePath.toString, "--help")
+          val expectedStartOutput = "Coursier 2.0.0"
+          assert(output.startsWith(expectedStartOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux")
+      test("mac") - run("mac")
+      test("windows") - run("windows")
+    }
+
+    test("install a compressed prebuilt launcher") {
+      def run(os: String) = withTempDir { tmpDir =>
+
+        val id = "sbtn"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-sbt:sbt:1.4.0"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuiltBinaries(Map(
+              "x86_64-apple-darwin" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
+              "x86_64-pc-linux"     -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
+              "x86_64-pc-win32"     -> "zip+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.zip"
+            )),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os)
+          .withVerbosity(1)
+          .withOnlyPrebuilt(true)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = 1, launcher.toAbsolutePath.toString, "--help")
+          val expectedInOutput = "Don't know what Scala version should be used for sbt version"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux")
+      test("mac") - run("mac")
+      test("windows") - run("windows")
+    }
+
 
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
     //   val id = "echo"

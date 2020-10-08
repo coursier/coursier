@@ -28,7 +28,9 @@ import dataclass._
   @since
   prebuiltLauncher: Option[String] = None,
   @since
-  jvmOptionFile: Option[String] = None
+  jvmOptionFile: Option[String] = None,
+  @since("2.0.1")
+  prebuiltBinaries: Map[String, String] = Map.empty
 ) {
   def overrideVersion(ver: String): AppDescriptor =
     withDependencies {
