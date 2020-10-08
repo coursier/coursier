@@ -1,5 +1,6 @@
 target/
 out/
+.bsp/
 
 .idea/
 node_modules/
