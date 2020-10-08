@@ -10,6 +10,7 @@ object DefaultAppList {
       "scala",
       "scalac",
       "sbt",
+      "sbtn",
       "scalafmt"
     )
 
