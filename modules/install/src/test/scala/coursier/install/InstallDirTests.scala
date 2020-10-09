@@ -1,7 +1,11 @@
 package coursier.install
 
 import java.nio.file.Paths
+
+import coursier.cache.ArtifactError
 import coursier.launcher.Parameters
+import coursier.util.Artifact
+
 import utest._
 
 object InstallDirTests extends TestSuite {
@@ -28,6 +32,14 @@ object InstallDirTests extends TestSuite {
       }
 
       assert(nativeParams.graalvmVersion == Some(version))
+    }
+
+    test("assume SSL handshake exceptions are not found errors") {
+      InstallDir.handleArtifactErrors(
+        Left(new ArtifactError.DownloadError("foo", Some(new javax.net.ssl.SSLHandshakeException("foo")))),
+        Artifact("https://repo1.maven.org/maven2/org/scala-lang/scala-library/7.12.14/scala-library-7.12.14.jar"),
+        verbosity = 0
+      )
     }
   }
 
