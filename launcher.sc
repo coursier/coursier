@@ -64,7 +64,7 @@ def uploadJavaLauncher(): Unit = {
 
   println(version)
 
-  val module = s"io.get-coursier::coursier-cli:$version"
+  val module = s"io.get-coursier:coursier-cli_2.12:$version"
 
   WaitForSync(
     initialLauncher0,

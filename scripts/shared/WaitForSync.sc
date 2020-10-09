@@ -21,6 +21,7 @@ def apply(
   val probeCommand = Seq(
     coursierLauncher,
     "resolve",
+    "--ttl", "0s",
     module
   ) ++
   extraArgs
