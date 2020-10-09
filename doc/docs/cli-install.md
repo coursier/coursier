@@ -519,3 +519,14 @@ Example
 ```
 For version `2.0.0-RC6-6` on macOS, this gets transformed as
 [this URL](https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-6/cs-x86_64-apple-darwin).
+
+## Java Options
+
+With the coursier install, one can pass Java arguments to installed launchers like following:
+
+For example
+```bash
+$ cs install my-app
+$ my-app -J-Dfoo=bar
+…
+```
