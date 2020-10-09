@@ -37,6 +37,39 @@ applications
 $ cs list
 ```
 
+## Java Options
+
+One can pass Java arguments to the installed launchers:
+- by prefixing Java options with `-J`, and / or
+- by setting the `JAVA_OPTS` environment variable.
+
+For example
+```text
+$ cs install scala
+$ scala -J-Xmx2g -J-Dfoo=bar -J-Dvalue=123
+…
+scala> sys.props("foo")
+val res0: String = bar
+…
+$ JAVA_OPTS="-Xmx2g -Dfoo=bar -Dvalue=123" scala
+…
+scala> sys.props("value")
+val res0: String = 123
+…
+```
+
+Both kinds of options can be mixed, like
+```text
+$ JAVA_OPTS="-Xmx2g -Dfoo=bar" scala -J-Dvalue=123
+…
+scala> sys.props("foo")
+val res0: String = bar
+
+scala> sys.props("value")
+val res1: String = 123
+…
+```
+
 ## Application descriptors
 
 The `install` command goes from an application name (`scala`, `ammonite`, `scalafmt`, etc.)
