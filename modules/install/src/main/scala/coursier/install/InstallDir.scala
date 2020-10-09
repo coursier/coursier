@@ -578,6 +578,33 @@ object InstallDir {
       None
   }
 
+  private[coursier] def handleArtifactErrors(
+    maybeFile: Either[ArtifactError, File],
+    artifact: Artifact,
+    verbosity: Int
+  ): Option[File] =
+    maybeFile match {
+      case Left(e: ArtifactError.NotFound) =>
+        if (verbosity >= 2)
+          System.err.println(s"No prebuilt launcher found at ${artifact.url}")
+        None
+      case Left(e: ArtifactError.DownloadError) if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
+        // These seem to happen on Windows for non existing artifacts, only from the native launcher apparently???
+        // Interpreting these errors as not-found-errors too.
+        if (verbosity >= 2)
+          System.err.println(s"No prebuilt launcher found at ${artifact.url} (SSL handshake exception)")
+        None
+      case Left(e) =>
+        // FIXME Ignore some other kind of errors too? Just warn about them?
+        throw new DownloadError(artifact.url, e)
+      case Right(f) =>
+        if (verbosity >= 1) {
+          val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
+          System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
+        }
+        Some(f)
+    }
+
   private def prebuiltOrNotFoundUrls(
     desc: AppDescriptor,
     cache: Cache[Task],
@@ -596,19 +623,9 @@ object InstallDir {
           val maybeFile =
             try cache.file(artifact).run.unsafeRun()(cache.ec)
             finally cache.loggerOpt.foreach(_.stop())
-          maybeFile match {
-            case Left(e: ArtifactError.NotFound) =>
-              if (verbosity >= 2)
-                System.err.println(s"No prebuilt launcher found at ${artifact.url}")
-              Iterator.empty
-            case Left(e) => throw e // FIXME Ignore some other kind of errors too? Just warn about them?
-            case Right(f) =>
-              if (verbosity >= 1) {
-                val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-                System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
-              }
-              Iterator.single((artifact, f, archiveTypeOpt))
-          }
+          handleArtifactErrors(maybeFile, artifact, verbosity)
+            .iterator
+            .map((artifact, _, archiveTypeOpt))
       }
 
     candidatePrebuiltArtifacts(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt).toRight(Nil).flatMap { artifacts =>
@@ -746,5 +763,8 @@ object InstallDir {
 
   final class NotAnApplication(val path: Path)
     extends InstallDirException(s"File $path wasn't installed by cs install")
+
+  final class DownloadError(val url: String, cause: Throwable = null)
+    extends InstallDirException(s"Error downloading $url", cause)
 
 }
