@@ -25,6 +25,7 @@ import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
 import scala.util.control.NonFatal
+import coursier.cli.channel.ChannelCommand
 
 object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
 
@@ -164,7 +165,34 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Uninstall.run(uninstallOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
+      case Inr(
+            Inr(
+              Inr(
+                Inr(
+                  Inr(
+                    Inr(
+                      Inr(
+                        Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(channelOptions))))))))
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ) =>
+        ChannelCommand.run(channelOptions, args)
+
+      case Inr(
+            Inr(
+              Inr(
+                Inr(
+                  Inr(
+                    Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))
+                  )
+                )
+              )
+            )
+          ) =>
         cnil.impossible
     }
 
