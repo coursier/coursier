@@ -194,7 +194,7 @@ def generateNativeImage(
       (if (allowIvy2Local) Nil else Seq("--no-default")) ++
       Seq(
         "-r", "central",
-        "org.scalameta::svm-subs:20.1.0"
+        "org.scalameta:svm-subs_2.12:20.1.0"
       ),
     output = output,
     mainClass = "coursier.cli.Coursier",
