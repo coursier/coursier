@@ -133,7 +133,7 @@ def uploadAssembly(): Unit = {
   val version = Version.latestFromEnv
   GenerateLauncher(
     initialLauncher0,
-    module = s"io.get-coursier::coursier-cli:$version",
+    module = s"io.get-coursier:coursier-cli_2.12:$version",
     extraArgs = Seq(
       "--no-default",
       "-r", "central",
@@ -189,7 +189,7 @@ def generateNativeImage(
   val initialLauncher0 = sys.env.getOrElse("CS", initialLauncher(None, None))
   GenerateLauncher.nativeImage(
     initialLauncher0,
-    module = s"io.get-coursier::coursier-cli:$version",
+    module = s"io.get-coursier:coursier-cli_2.12:$version",
     extraArgs =
       (if (allowIvy2Local) Nil else Seq("--no-default")) ++
       Seq(
