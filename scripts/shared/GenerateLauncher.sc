@@ -294,15 +294,7 @@ def nativeImage(
   }
 
   val extraCsOpts = Seq("--java-opt", s"-Xmx$mem")
-  if (Util.os == "win") {
-    // getting weird TLS-related linking errors without this
-    val javaSecurityOverrides =
-      """security.provider.3=what.we.put.here.doesnt.matter.ButThisHasToBeOverridden
-        |""".stripMargin.getBytes
-    Util.withTmpFile("java.security.overrides-", ".properties", javaSecurityOverrides) { path =>
-      run(s"-J-Djava.security.properties=$path" +: extraNativeImageOpts, extraCsOpts)
-    }
-  } else if (Util.os == "linux" && coursierLauncher.endsWith("cs"))
+  if (Util.os == "win" || (Util.os == "linux" && coursierLauncher.endsWith("cs")))
     run(extraNativeImageOpts, extraCsOpts)
   else
     run(extraNativeImageOpts)

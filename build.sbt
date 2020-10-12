@@ -372,7 +372,8 @@ lazy val `cli-tests` = project("cli-tests")
           Def.task {
             val isWindows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
             val accepts_J = !isWindows
-            (pack.in(cli, Compile).value.getAbsoluteFile./("bin/coursier").toString, Option("false"), Option(accepts_J.toString))
+            val packFile = if (isWindows) "bin/coursier.bat" else "bin/coursier"
+            (pack.in(cli, Compile).value.getAbsoluteFile./(packFile).toString, Option("false"), Option(accepts_J.toString))
           }
         case Some(launcher) =>
           Def.task((launcher, sys.props.get("coursier-test-launcher-accepts-D"), sys.props.get("coursier-test-launcher-accepts-J")))
