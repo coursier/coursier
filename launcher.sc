@@ -263,6 +263,7 @@ def uploadNativeImage(): Unit = {
 
 @main
 def uploadAllJars(): Unit = {
+  uploadJavaLauncher()
   uploadAssembly()
 }
 
