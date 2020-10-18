@@ -29,9 +29,8 @@ object ChannelCommand extends CaseApp[ChannelOptions] {
     val channelDir = new File(configDir, "channels")
 
     Option(channelDir.listFiles())
-      .map(_.foreach { f =>
-        val channel = Files.readString(f.toPath())
-        System.out.println(channel)
+      .foreach(_.foreach { f =>
+        Option(Files.lines(f.toPath())).foreach(_.forEach(System.out.println))
       })
   }
 
