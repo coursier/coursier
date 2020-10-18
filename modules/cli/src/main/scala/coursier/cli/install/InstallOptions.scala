@@ -24,8 +24,6 @@ final case class InstallOptions(
   @Recurse
     envOptions: EnvOptions = EnvOptions(),
 
-  addChannel: List[String] = Nil,
-
   @Short("f")
     force: Boolean = false
 

@@ -44,26 +44,7 @@ object Install extends CaseApp[InstallOptions] {
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
 
-    if (params.installChannels.nonEmpty) {
-
-      // TODO Move to install module
-
-      val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
-      val channelDir = new File(configDir, "channels")
-
-      // FIXME May not be fine with concurrency (two process doing this in parallel)
-      val f = Stream.from(1)
-        .map { n =>
-          new File(channelDir, s"channels-$n")
-        }
-        .filter(!_.exists())
-        .head
-
-      if (params.output.verbosity >= 1)
-        System.err.println(s"Writing $f")
-      Util.createDirectories(f.toPath.getParent)
-      Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
-    } else if (params.env.env)
+    if (params.env.env)
       println(installDir.envUpdate.script)
     else if (params.env.disableEnv) {
       // TODO Move that to InstallDir?
@@ -90,11 +71,7 @@ object Install extends CaseApp[InstallOptions] {
       task.unsafeRun()(cache.ec)
     } else {
 
-      if (args.all.isEmpty) {
-        if (params.output.verbosity >= 0 && params.installChannels.isEmpty)
-          System.err.println("Nothing to install")
-        sys.exit(0)
-      }
+      if (args.all.isEmpty) sys.exit(0) 
 
       val channels = Channels(params.channels, params.shared.repositories, cache)
         .withVerbosity(params.output.verbosity)

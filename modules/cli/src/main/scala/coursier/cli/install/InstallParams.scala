@@ -17,12 +17,9 @@ final case class InstallParams(
   sharedChannel: SharedChannelParams,
   sharedJava: SharedJavaParams,
   env: EnvParams,
-  addChannels: Seq[Channel],
-  installChannels: Seq[String],
   force: Boolean
 ) {
-  lazy val channels: Seq[Channel] =
-    (sharedChannel.channels ++ addChannels).distinct
+  lazy val channels: Seq[Channel] = (sharedChannel.channels).distinct
 }
 
 object InstallParams {
@@ -39,39 +36,29 @@ object InstallParams {
 
     val envV = EnvParams(options.envOptions)
 
-    val addChannelsV = options.addChannel.traverse { s =>
-      val e = Channel.parse(s)
-        .left.map(NonEmptyList.one)
-        .map(c => (s, c))
-      Validated.fromEither(e)
-    }
-
     val force = options.force
 
     val checkNeedsChannelsV =
-      if (anyArg && sharedChannelV.toOption.exists(_.channels.isEmpty) && addChannelsV.toOption.exists(_.isEmpty))
+      if (anyArg && sharedChannelV.toOption.exists(_.channels.isEmpty))
         Validated.invalidNel(s"Error: no channels specified")
       else
         Validated.validNel(())
 
-    val flags = Seq(
-      options.addChannel.nonEmpty,
-      envV.toOption.fold(false)(_.anyFlag)
-    )
+    val flags = Seq(envV.toOption.fold(false)(_.anyFlag))
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --add-channel, --env, --setup.")
+        Validated.invalidNel("Error: can only specify one of --env, --setup.")
       else
         Validated.validNel(())
 
     val checkArgsV =
       if (anyArg && flags.exists(identity))
-        Validated.invalidNel(s"Error: unexpected arguments passed along --add-channel, --env, or --setup.")
+        Validated.invalidNel(s"Error: unexpected arguments passed along --env, or --setup.")
       else
         Validated.validNel(())
 
-    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, addChannelsV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
-      (cacheParams, output, shared, sharedChannel, sharedJava, env, addChannels, _, _, _) =>
+    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
+      (cacheParams, output, shared, sharedChannel, sharedJava, env, _, _, _) =>
         InstallParams(
           cacheParams,
           output,
@@ -79,8 +66,6 @@ object InstallParams {
           sharedChannel,
           sharedJava,
           env,
-          addChannels.map(_._2),
-          addChannels.map(_._1),
           force
         )
     }
