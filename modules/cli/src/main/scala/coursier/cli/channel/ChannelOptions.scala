@@ -6,7 +6,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 
 final case class ChannelOptions(
     @Short("a")
-    @Help("add channel")
+    @Help("adds given URL based channels")
     add: List[String] = Nil,
     @Short("l")
     @Help("lists down all added channels")
