@@ -32,11 +32,16 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-@data class Module(
-  organization: Organization,
-  name: ModuleName,
-  attributes: Map[String, String]
+class Module private(
+  val organization: Organization,
+  val name: ModuleName,
+  val attributes: Map[String, String],
+  private val _key: (Organization, ModuleName, Map[String, String])
 ) {
+
+  def withOrganization(organization: Organization): Module = Module(organization, name, attributes)
+  def withName(name: ModuleName): Module = Module(organization, name, attributes)
+  def withAttributes(attributes: Map[String, String]): Module = Module(organization, name, attributes)
 
   def trim: Module =
     withOrganization(organization.map(_.trim))
@@ -59,9 +64,46 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
+  private def tuple = (this.organization, this.name, this.attributes)
   override final lazy val hashCode = tuple.hashCode()
 }
 
+object Module {
+
+  val memoised_cache: java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
+    new java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]]()
+
+  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
+    val key = (organization, name, attributes)
+    val first = {
+      val weak = memoised_cache.get(key)
+      if (weak == null) null else weak.get
+    }
+    if (first != null) {
+      first
+    } else {
+      memoised_cache.synchronized {
+        val got = {
+          val weak = memoised_cache.get(key)
+          if (weak == null) {
+            null
+          } else {
+            val ref = weak.get
+            ref
+          }
+        }
+        if (got != null) {
+          got
+        } else {
+          val created = new Module(organization, name, attributes, key)
+          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          created
+        }
+      }
+    }
+  }
+
+}
 
 final case class Type(value: String) extends AnyVal {
   def isEmpty: Boolean =
@@ -364,20 +406,71 @@ object Info {
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-@data class Publication(
-  name: String,
-  `type`: Type,
-  ext: Extension,
-  classifier: Classifier
+class Publication private (
+  val name: String,
+  val `type`: Type,
+  val ext: Extension,
+  val classifier: Classifier,
+  private val _key: (String, Type, Extension, Classifier)
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
+
+  def withType(`type`: Type): Publication = Publication(name, `type`, ext, classifier)
+  def withExt(ext: Extension): Publication = Publication(name, `type`, ext, classifier)
+  def withClassifier(classifier: Classifier): Publication = Publication(name, `type`, ext, classifier)
+
+  override def toString: String = {
+    val b = new StringBuilder("Publication(")
+    b.append(String.valueOf(name))
+    b.append(", ")
+    b.append(String.valueOf(`type`))
+    b.append(", ")
+    b.append(String.valueOf(ext))
+    b.append(", ")
+    b.append(String.valueOf(classifier))
+    b.append(")")
+    b.toString
+  }
 }
 
 object Publication {
-  def empty: Publication =
+  val memoised_cache: java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
+    new java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]]()
+
+  val empty: Publication =
     Publication("", Type.empty, Extension.empty, Classifier.empty)
+
+  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
+    val key = (name, `type`, ext, classifier)
+    val first = {
+      val weak = memoised_cache.get(key)
+      if (weak == null) null else weak.get
+    }
+    if (first != null) {
+      first
+    } else {
+      memoised_cache.synchronized {
+        val got = {
+          val weak = memoised_cache.get(key)
+          if (weak == null) {
+            null
+          } else {
+            val ref = weak.get
+            ref
+          }
+        }
+        if (got != null) {
+          got
+        } else {
+          val created = new Publication(name, `type`, ext, classifier, key)
+          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          created
+        }
+      }
+    }
+  }
 }
 
 trait ArtifactSource {

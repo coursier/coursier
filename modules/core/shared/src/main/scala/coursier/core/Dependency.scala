@@ -1,25 +1,25 @@
 package coursier.core
 
-import dataclass.data
-
 /**
  * Dependencies with the same @module will typically see their @version-s merged.
  *
  * The remaining fields are left untouched, some being transitively
  * propagated (exclusions, optional, in particular).
  */
-@data class Dependency(
-  module: Module,
-  version: String,
-  configuration: Configuration,
-  exclusions: Set[(Organization, ModuleName)],
+class Dependency private (
+  val module: Module,
+  val version: String,
+  val configuration: Configuration,
+  val exclusions: Set[(Organization, ModuleName)],
 
-  publication: Publication,
+  val publication: Publication,
 
   // Maven-specific
-  optional: Boolean,
+  val optional: Boolean,
 
-  transitive: Boolean
+  val transitive: Boolean,
+
+  private val _key: (Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean)
 ) {
   lazy val moduleVersion = (module, version)
 
@@ -32,8 +32,14 @@ import dataclass.data
   def attributes: Attributes =
     publication.attributes
 
+  def withModule(module: Module) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+  def withVersion(version: String) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+  def withConfiguration(configuration: Configuration) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+  def withExclusions(exclusions: Set[(Organization, ModuleName)]) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+
   def withAttributes(attributes: Attributes): Dependency =
     withPublication(publication.withType(attributes.`type`).withClassifier(attributes.classifier))
+  def withPublication(publication: Publication) = Dependency(module, version, configuration, exclusions, publication, optional, transitive)
   def withPublication(name: String): Dependency =
     withPublication(Publication(name, Type.empty, Extension.empty, Classifier.empty))
   def withPublication(name: String, `type`: Type): Dependency =
@@ -43,14 +49,71 @@ import dataclass.data
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
+  def withOptional(optional: Boolean) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+  def withTransitive(transitive: Boolean) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
+  private def tuple = (this.module, this.version, this.configuration, this.exclusions, this.publication, this.optional, this.transitive)
   override lazy val hashCode: Int =
     tuple.hashCode()
+
+  override def toString: String = {
+    val b = new StringBuilder("Dependency(")
+    b.append(String.valueOf(module))
+    b.append(", ")
+    b.append(String.valueOf(version))
+    b.append(", ")
+    b.append(String.valueOf(configuration))
+    b.append(", ")
+    b.append(String.valueOf(exclusions))
+    b.append(", ")
+    b.append(String.valueOf(publication))
+    b.append(", ")
+    b.append(String.valueOf(optional))
+    b.append(", ")
+    b.append(String.valueOf(transitive))
+    b.append(")")
+    b.toString
+  }
 }
 
 object Dependency {
+
+  val memoised_cache: java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]] =
+    new java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]]()
+
+  def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency = {
+    val key = (module, version, configuration, exclusions, publication, optional, transitive)
+    val first = {
+      val weak = memoised_cache.get(key)
+      if (weak == null) null else weak.get
+    }
+    if (first != null) {
+      first
+    } else {
+      memoised_cache.synchronized {
+        val got = {
+          val weak = memoised_cache.get(key)
+          if (weak == null) {
+            null
+          } else {
+            val ref = weak.get
+            ref
+          }
+        }
+        if (got != null) {
+          got
+        } else {
+          val created = new Dependency(module, version, configuration, exclusions, publication, optional, transitive, key)
+          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          created
+        }
+      }
+    }
+  }
+
 
   def apply(
     module: Module,
