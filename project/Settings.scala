@@ -521,6 +521,17 @@ object Settings {
     .find(_.endsWith("rt.jar"))
     .map(_.toFile)
 
+  // https://github.com/sbt/sbt-proguard/blob/2c502f961245a18677ef2af4220a39e7edf2f996/src/main/scala-sbt-1.0/com/typesafe/sbt/proguard/Sbt10Compat.scala#L8-L13
+  // but sbt 1.4-compatible
+  private val getAllBinaryDeps: Def.Initialize[Task[Seq[java.io.File]]] = Def.task {
+    import sbt.internal.inc.Analysis
+    val converter = fileConverter.value
+    compile.in(Compile).value match {
+      case analysis: Analysis =>
+        analysis.relations.allLibraryDeps.toSeq.map(converter.toPath(_).toFile)
+    }
+  }
+
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
     val extra =
@@ -536,6 +547,7 @@ object Settings {
         "bootstrap.jar"
 
     Seq(
+      proguardBinaryDeps.in(Proguard) := getAllBinaryDeps.value, // seems needed with sbt 1.4.0
       proguardBinaryDeps.in(Proguard) ++= rtJarOpt.toSeq, // seems needed with sbt 1.4.0
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
