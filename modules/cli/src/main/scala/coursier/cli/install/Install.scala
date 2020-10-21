@@ -44,7 +44,12 @@ object Install extends CaseApp[InstallOptions] {
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
 
-    if (params.env.env)
+    if (params.installChannels.nonEmpty) {
+      val progName = coursier.cli.Coursier.progName
+      val options = params.installChannels.flatMap(c => Seq("--add", c)).mkString(" ")
+      System.err.println(s"Warning: the --add-channel option is deprecated. Use '$progName channel $options' instead.")
+
+    } else if (params.env.env)
       println(installDir.envUpdate.script)
     else if (params.env.disableEnv) {
       // TODO Move that to InstallDir?
@@ -71,7 +76,11 @@ object Install extends CaseApp[InstallOptions] {
       task.unsafeRun()(cache.ec)
     } else {
 
-      if (args.all.isEmpty) sys.exit(0) 
+      if (args.all.isEmpty) {
+        if (params.output.verbosity >= 0 && params.installChannels.isEmpty)
+          System.err.println("Nothing to install")
+        sys.exit(0)
+      }
 
       val channels = Channels(params.channels, params.shared.repositories, cache)
         .withVerbosity(params.output.verbosity)
