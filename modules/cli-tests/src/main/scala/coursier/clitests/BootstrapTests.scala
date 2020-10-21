@@ -68,7 +68,7 @@ abstract class BootstrapTests extends TestSuite {
             "-o", "cs-props",
             "--property", "other=thing",
             "--java-opt", "-Dfoo=baz",
-            "io.get-coursier:props:1.0.2",
+            TestUtil.propsDepStr,
             "--jvm-option-file=.propsjvmopts"
           ) ++ extraOptions,
           directory = tmpDir
@@ -147,7 +147,7 @@ abstract class BootstrapTests extends TestSuite {
             "-o", "cs-props-assembly",
             "--property", "other=thing",
             "--java-opt", "-Dfoo=baz",
-            "io.get-coursier:props:1.0.2"
+            TestUtil.propsDepStr
           ) ++ extraOptions,
           directory = tmpDir
         )
