@@ -281,7 +281,7 @@ object Launch extends CaseApp[LaunchOptions] {
         (Nil, None)
 
     val (pythonProps, pythonEnv) =
-      if (params.python || params.jep)
+      if (params.shared.python || params.jep)
         try {
           val home = Jep.pythonHome()
           val props = Jep.pythonProperties()

@@ -25,8 +25,7 @@ final case class LaunchOptions(
 
   json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
 
-  jep: Boolean = false,
-  python: Boolean = false
+  jep: Boolean = false
 ) {
   def addApp(app: RawAppDescriptor): LaunchOptions =
     copy(

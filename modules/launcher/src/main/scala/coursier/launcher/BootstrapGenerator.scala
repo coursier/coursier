@@ -57,7 +57,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         bootstrapResourcePath0,
         parameters.deterministic,
         parameters.extraZipEntries,
-        parameters.javaProperties
+        parameters.javaProperties,
+        parameters.python
       )
 
       zos.close()
@@ -73,7 +74,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     bootstrapResourcePath: String,
     deterministic: Boolean,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])],
-    properties: Seq[(String, String)]
+    properties: Seq[(String, String)],
+    python: Boolean
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)

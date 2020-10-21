@@ -15,7 +15,8 @@ final case class SharedLaunchParams(
   mainClassOpt: Option[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
-  fork: Option[Boolean]
+  fork: Option[Boolean],
+  python: Boolean
 ) {
   def fetch: FetchParams =
     FetchParams(
@@ -68,7 +69,8 @@ object SharedLaunchParams {
           mainClassOpt,
           properties,
           extraJars,
-          options.fork
+          options.fork,
+          options.python
         )
     }
   }

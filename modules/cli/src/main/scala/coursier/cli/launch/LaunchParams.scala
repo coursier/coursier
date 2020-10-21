@@ -13,7 +13,6 @@ final case class LaunchParams(
   sharedJava: SharedJavaParams,
   javaOptions: Seq[String],
   jep: Boolean,
-  python: Boolean,
   fetchCacheIKnowWhatImDoing: Option[String],
   execve: Option[Boolean]
 ) {
@@ -49,7 +48,6 @@ object LaunchParams {
         sharedJava,
         options.javaOpt,
         options.jep,
-        options.python,
         options.fetchCacheIKnowWhatImDoing,
         options.execve
       )
