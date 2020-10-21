@@ -33,7 +33,6 @@ final case class SharedLaunchOptions(
 ) {
   def addApp(app: RawAppDescriptor): SharedLaunchOptions =
     copy(
-      // TODO Take app.properties into account
       sharedLoaderOptions = sharedLoaderOptions.addApp(app),
       resolveOptions = resolveOptions.addApp(app),
       artifactOptions = artifactOptions.addApp(app),
