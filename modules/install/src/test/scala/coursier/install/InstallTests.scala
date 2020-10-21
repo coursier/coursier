@@ -475,7 +475,24 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
+      test("linux") - {
+        try run("linux")
+        catch {
+          case t: Throwable =>
+
+            @annotation.tailrec
+            def print(e: Throwable): Unit =
+              if (e != null) {
+                System.err.println(e)
+                for (elem <- e.getStackTrace)
+                  System.err.println(s"  $elem")
+                print(e.getCause)
+              }
+
+            print(t)
+            throw t
+        }
+      }
       test("mac") - run("mac")
       test("windows") - run("windows")
     }
