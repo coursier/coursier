@@ -467,7 +467,7 @@ object InstallTests extends TestSuite {
 
         def testRun(): Unit = {
           val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = 1, launcher.toAbsolutePath.toString, "--help")
-          val expectedInOutput = "Don't know what Scala version should be used for sbt version"
+          val expectedInOutput = "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
 
