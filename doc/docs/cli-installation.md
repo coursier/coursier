@@ -97,14 +97,14 @@ Install it via `pkg` from the [Ports Collection](https://www.freshports.org/deve
 $ pkg install coursier
 ```
 
-### zsh completions
+## zsh completions
 
 If you use ZSH, simple tab-completions are available by writing the
 coursier completion data into your completions directory.
-You can install the completions with,
+You can install the completions with:
 ```bash
 mkdir -p ~/.zsh/completion
-cs --completions zsh > ~/.zsh/completion/
+cs --completions zsh > ~/.zsh/completion/cs
 echo 'fpath=(~/.zsh/completion $fpath)' >> ~/.zshrc
 echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 ```

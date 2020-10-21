@@ -1,21 +1,27 @@
-#compdef coursier
+#compdef cs
 
-_coursier() {
+function _cs() {
   local -a cmds
   
   cmds=(
     'bootstrap:generates tiny bootstrap launchers'
     'fetch:fetches a set of dependencies'
+    'install:installs launchers for JVM-based applications'
+    'java:calls java (fetching it before if needed)'
+    'java-home:prints java home'
     'launch:fetches a set of dependencies and launches the `main` class'
+    'list:lists all the installed applications'
+    'publish:publishes'
     'resolve:resolves dependencies'
-    'spark-submit:'
+    'setup:installs JVM and creates launchers for the most common Scala CLI tools'
+    'uninstall:uninstalls launchers for JVM-based applications'
+    'update:updates launchers if new version is available'
   )
 
   _arguments "1: :{_describe 'command' cmds}" '*:: :->args'
 
   local artifactType=( {--artifact-type,-A}'[artifact types that should be retained, e.g. jar, src, doc, etc.; defaults to jar,bundle]:values:' )
   local assemblyDependencies=( '--assembly-dependencies[assembly dependencies]:value:' )
-  local autoAssembly=( '--auto-assembly[generate Spark Yarn assembly (Spark 1.x) or fetch Spark Yarn jars, and supply those to Spark via conf]' )
   local benchmark=( {--benchmark,-B}'[print the duration of each iteration of the resolution]:value:' )
   local cache=( {--cache,-C}'[cache directory; defaults to environment variable COURSIER_CACHE or ~/.coursier/cache/v1]:value:' )
   local checksum=( '--checksum[Checksums]:checksums:' )
@@ -36,7 +42,6 @@ _coursier() {
   local keepOptional=( '--keep-optional[keep optional dependencies]' )
   local keepTarget=( '--keep-target[do not wipe native compilation target directory]' )
   local mainClass=( {--main-class,-M}'[main class to be launched; optional if in manifest]:value:' )
-  local maxIdleTime=( '--max-idle-time[maximum idle time of spark-submit; time with no output]:seconds:' )
   local maxIterations=( {--max-iterations,-N}'[maximum number of resolution iterations; specify a negative value for unlimited, default: 100]:value:' )
   local mode=( {--mode,-m}'[download mode; default: missing, that is fetch things missing from cache]:mode:_modeOpts' )
   local native=( {--native,-S}'[generate native launcher]' )
@@ -54,8 +59,6 @@ _coursier() {
   local scalaVersion=( {--scala-version,-e}'[default Scala version]:version:' )
   local sourcesR=( {--sources,-R}'[source repository; for multiple repositories, separate with comma and/or add this option multiple times]:value:' )
   local sourcesS=( {--sources,-S}'[fetch source artifacts]' )
-  local sparkAssemblyDependencies=( '--spark-assembly-dependencies[Spark assembly dependencies]:value:' )
-  local sparkVersion=( '--spark-version[Spark version]:version:' )
   local standalone=( {--standalone,-s}'[generate a standalone launcher, with all JARs included, instead of one downloading its dependencies on startup]' )
   local submitDependencies=( '--submit-dependencies[submit dependencies]:value:' )
   local target=( {--target,-d}'[native compilation target directory]:value:' )
@@ -63,28 +66,26 @@ _coursier() {
   local ttl=( {--ttl,-l}'[TTL duration, e.g. "24 hours"]:duration:' )
   local typelevel=( '--typelevel[swap the mainline Scala JARs by Typelevel ones]' )
   local verbose=( {--verbose,-v}'[increase verbosity; specify several times to increase more]' )
-  local yarnIdFile=( '--yarn-id-file[if master is yarn-cluster, write YARN app ID to a file]' )
-  local yarnVersion=( '--yarn-version[YARN version; only used with Spark 2]' )
 
   case $words[1] in
     bootstrap)
       _arguments -C $artifactType $force $mainClass $utput $force $standalone $property $javaOpt $native $target $keepTarget $isolated $isolateTarget $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sourcesR $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
       ;;
 
+    fetch)
+      _arguments -C $sourcesS $javadoc $classpath $artifactType $force $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sources $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
+      ;;
+
+    install)
+      _arguments -C $force $mode $ttl $quiet $verbose $progress $repository $parallel $checksum $cache
+      ;;
+
     launch)
       _arguments -C $mainClass $extraJars $isolated $isolateTarget $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sourcesR $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
       ;;
     
-    fetch)
-      _arguments -C $sourcesS $javadoc $classpath $artifactType $force $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sources $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
-      ;;
-    
     resolve)
       _arguments -C $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sourcesR $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
-      ;;
-    
-    spark-submit)
-      _arguments -C $mainClass $extraJars $yarnIdFile $autoAssembly $defaultAssemblyDependencies  $assemblyDependencies $sparkAssemblyDependencies $noDefaultSubmitDependencies $submitDependencies $sparkVersion $yarnVersion $maxIdleTime $artifactType $force $keepOptional $mode $ttl $quiet $verbose $progress $maxIterations $repository $sourcesR $noDefault $sbtPluginHack $dropInfoAttr $forceVersion $exclude $scalaVersion $intransitive $classifier $defaultConfiguration $parallel $checksum $benchmark $tree $reverseTree $profile $typelevel $cache
       ;;
     
     *)
@@ -99,4 +100,4 @@ _modeOpts() {
   _describe 'values' options
 }
 
-_coursier
+_cs "$@"
