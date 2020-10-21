@@ -17,7 +17,7 @@ final case class LaunchParams(
   execve: Option[Boolean]
 ) {
   lazy val fork: Boolean =
-    shared.fork.getOrElse(jep || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
+    shared.fork.getOrElse(jep || shared.python || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
 
   def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] =
     sharedJava.jvm match {
