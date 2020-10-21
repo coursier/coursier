@@ -45,7 +45,9 @@ object Parameters {
     proguarded: Boolean = true,
     disableJarChecking: Option[Boolean] = None,
     hybridAssembly: Boolean = false,
-    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil
+    extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
+    @since("2.0.4")
+    python: Boolean = false
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =

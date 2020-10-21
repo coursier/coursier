@@ -24,6 +24,7 @@ import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
@@ -280,10 +281,15 @@ object Launch extends CaseApp[LaunchOptions] {
         (Nil, None)
 
     val (pythonProps, pythonEnv) =
-      if (params.python || params.jep)
+      if (params.shared.python || params.jep)
         try {
           val home = Jep.pythonHome()
-          (Seq("jna.library.path" -> new File(home + "/lib").getAbsolutePath), EnvironmentUpdate(Seq("PYTHONHOME" -> home), Nil))
+          val props = Jep.pythonProperties()
+            .iterator()
+            .asScala
+            .map(e => (e.getKey, e.getValue))
+            .toVector
+          (props, EnvironmentUpdate(Seq("PYTHONHOME" -> home), Nil))
         } catch {
           case NonFatal(e) =>
             if (params.shared.resolve.output.verbosity >= 1)

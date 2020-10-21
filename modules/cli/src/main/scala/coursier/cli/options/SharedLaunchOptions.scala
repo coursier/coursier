@@ -20,6 +20,8 @@ final case class SharedLaunchOptions(
 
   fork: Option[Boolean] = None,
 
+  python: Boolean = false,
+
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
 

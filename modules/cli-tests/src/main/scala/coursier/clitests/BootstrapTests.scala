@@ -68,7 +68,7 @@ abstract class BootstrapTests extends TestSuite {
             "-o", "cs-props",
             "--property", "other=thing",
             "--java-opt", "-Dfoo=baz",
-            "io.get-coursier:props:1.0.2",
+            TestUtil.propsDepStr,
             "--jvm-option-file=.propsjvmopts"
           ) ++ extraOptions,
           directory = tmpDir
@@ -147,7 +147,7 @@ abstract class BootstrapTests extends TestSuite {
             "-o", "cs-props-assembly",
             "--property", "other=thing",
             "--java-opt", "-Dfoo=baz",
-            "io.get-coursier:props:1.0.2"
+            TestUtil.propsDepStr
           ) ++ extraOptions,
           directory = tmpDir
         )
@@ -413,6 +413,35 @@ abstract class BootstrapTests extends TestSuite {
           val expectedOutput = "foo" + System.lineSeparator()
           assert(output == expectedOutput)
         }
+    }
+
+    test("python") {
+      TestUtil.withTempDir { tmpDir =>
+        LauncherTestUtil.run(
+          args = Seq(
+            launcher,
+            "bootstrap",
+            "-o", "props-python",
+            "--python",
+            TestUtil.propsDepStr
+          ) ++ extraOptions,
+          directory = tmpDir
+        )
+
+        val jnaLibraryPath = LauncherTestUtil.output(
+          Seq("./props-python", "jna.library.path"),
+          keepErrorOutput = false,
+          directory = tmpDir
+        )
+        assert(jnaLibraryPath.trim.nonEmpty)
+
+        val jnaNoSys = LauncherTestUtil.output(
+          Seq("./props-python", "jna.nosys"),
+          keepErrorOutput = false,
+          directory = tmpDir
+        )
+        assert(jnaNoSys.trim == "false")
+      }
     }
   }
 }
