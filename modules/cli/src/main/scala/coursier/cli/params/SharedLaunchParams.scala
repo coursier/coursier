@@ -16,7 +16,7 @@ final case class SharedLaunchParams(
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
   fork: Option[Boolean],
-  python: Boolean
+  pythonOpt: Option[Boolean]
 ) {
   def fetch: FetchParams =
     FetchParams(
@@ -25,6 +25,8 @@ final case class SharedLaunchParams(
       resolve = resolve,
       artifact = artifact
     )
+
+  def python = pythonOpt.getOrElse(false)
 }
 
 object SharedLaunchParams {

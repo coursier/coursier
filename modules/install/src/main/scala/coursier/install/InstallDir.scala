@@ -159,6 +159,7 @@ import scala.util.control.NonFatal
           .withDeterministic(true)
           .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
           .withExtraZipEntries(infoEntries)
+          .withPython(desc.jna.contains("python"))
 
         overrideProguardedBootstraps
           .fold(params0)(params0.withProguarded)
