@@ -1045,6 +1045,9 @@ object FetchTests extends TestSuite {
         val junitPomFile = runFetchJunit()
         val originalPomContent = Files.readAllBytes(junitPomFile)
 
+        // Corrupt the pom content
+        Files.write(junitPomFile, "bad pom".getBytes(UTF_8))
+
         // Corrupt the content of the calculated pom checksum
         val storedDigestFile = FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1.computed").toPath
         Files.write(storedDigestFile, Array[Byte](1, 2, 3))
@@ -1112,6 +1115,9 @@ object FetchTests extends TestSuite {
 
         val originalJunitJar = runFetchJunit()
         val originalJunitJarContent = Files.readAllBytes(originalJunitJar)
+
+        // Corrupt the jar content
+        Files.write(originalJunitJar, "bad jar".getBytes(UTF_8))
 
         // Corrupt the content of the calculated jar checksum
         val storedDigestFile = FileCache.auxiliaryFile(originalJunitJar.toFile, "SHA-1.computed").toPath
