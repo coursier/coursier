@@ -39,6 +39,8 @@ public class Bootstrap {
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
 
+        Python.maybeSetPythonProperties(contextLoader);
+
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 
         boolean isSimpleLoader = classLoader.getParent().equals(contextLoader) && (classLoader instanceof URLClassLoader);

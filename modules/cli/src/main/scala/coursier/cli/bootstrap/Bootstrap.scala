@@ -353,6 +353,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             .withProguarded(params.specific.proguarded)
             .withHybridAssembly(params.specific.hybrid)
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
+            .withPython(params.sharedLaunch.python)
         }
       }
 

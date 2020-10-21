@@ -182,6 +182,9 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         .mkString("\n")
     putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
+    if (python)
+      putBinaryEntry(resourceDir + "set-python-properties", time, Array.emptyByteArray)
+
     outputZip.closeEntry()
   }
 
