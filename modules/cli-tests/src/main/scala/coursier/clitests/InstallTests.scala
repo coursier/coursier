@@ -76,5 +76,38 @@ abstract class InstallTests extends TestSuite {
       if (LauncherTestUtil.isWindows) "disabled"
       else { envVars(); "" }
     }
+
+    def jnaPython(): Unit =
+      TestUtil.withTempDir { tmpDir =>
+        LauncherTestUtil.run(
+          args = Seq(
+            launcher,
+            "install",
+            "--install-dir", tmpDir.getAbsolutePath,
+            s"""props:{"dependencies": ["${TestUtil.propsDepStr}"], "repositories": ["central"], "jna": ["python"]}"""
+          ) ++ extraOptions,
+          directory = tmpDir
+        )
+        val propsLauncher = new File(tmpDir, "props").getAbsolutePath
+
+        val jnaNosysOutput = LauncherTestUtil.output(
+          Seq(propsLauncher, "jna.nosys"),
+          keepErrorOutput = false,
+          directory = tmpDir
+        )
+        val expectedJnaNosysOutput = "false" + System.lineSeparator()
+        assert(jnaNosysOutput == expectedJnaNosysOutput)
+
+        val jnaLibraryPathOutput = LauncherTestUtil.output(
+          Seq(propsLauncher, "jna.library.path"),
+          keepErrorOutput = false,
+          directory = tmpDir
+        )
+        assert(jnaLibraryPathOutput.trim.nonEmpty)
+      }
+    test("JNA Python") {
+      if (LauncherTestUtil.isWindows) "disabled"
+      else { jnaPython(); "" }
+    }
   }
 }

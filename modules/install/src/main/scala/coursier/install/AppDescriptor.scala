@@ -30,7 +30,9 @@ import dataclass._
   @since
   jvmOptionFile: Option[String] = None,
   @since("2.0.1")
-  prebuiltBinaries: Map[String, String] = Map.empty
+  prebuiltBinaries: Map[String, String] = Map.empty,
+  @since("2.0.4")
+  jna: List[String] = Nil
 ) {
   def overrideVersion(ver: String): AppDescriptor =
     withDependencies {

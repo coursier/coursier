@@ -42,7 +42,8 @@ final case class SharedLaunchOptions(
         else
           mainClass
       },
-      property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property
+      property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
+      python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
     )
 
   def app: RawAppDescriptor =
@@ -82,6 +83,10 @@ final case class SharedLaunchOptions(
           }
         }
       )
+      .withJna {
+        if (python.getOrElse(false)) List("python")
+        else Nil
+      }
 }
 
 object SharedLaunchOptions {
