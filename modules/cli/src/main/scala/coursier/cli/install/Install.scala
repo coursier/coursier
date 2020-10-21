@@ -7,6 +7,7 @@ import java.time.Instant
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.channel.ChannelCommand
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
@@ -45,10 +46,11 @@ object Install extends CaseApp[InstallOptions] {
       .withNativeImageJavaHome(Some(graalvmHome))
 
     if (params.installChannels.nonEmpty) {
+      ChannelCommand.addChannel(params.installChannels.toList,params.output)
+
       val progName = coursier.cli.Coursier.progName
       val options = params.installChannels.flatMap(c => Seq("--add", c)).mkString(" ")
       System.err.println(s"Warning: the --add-channel option is deprecated. Use '$progName channel $options' instead.")
-
     } else if (params.env.env)
       println(installDir.envUpdate.script)
     else if (params.env.disableEnv) {
