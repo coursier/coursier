@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -148,6 +148,16 @@ public class Jep {
     }
 
     return output.trim();
+  }
+
+  public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
+    String jnaLibraryPath = new File(new File(pythonHome()), "lib").getAbsolutePath();
+
+    ArrayList<Map.Entry<String, String>> list = new ArrayList<>();
+
+    list.add(new AbstractMap.SimpleEntry<>("jna.library.path", jnaLibraryPath));
+
+    return list;
   }
 
 }
