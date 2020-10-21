@@ -36,7 +36,6 @@ class Module private(
   val organization: Organization,
   val name: ModuleName,
   val attributes: Map[String, String],
-  private val _key: (Organization, ModuleName, Map[String, String])
 ) {
 
   def withOrganization(organization: Organization): Module = Module(organization, name, attributes)
@@ -64,7 +63,7 @@ class Module private(
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  private def tuple = (this.organization, this.name, this.attributes)
+  private val tuple = (this.organization, this.name, this.attributes)
   override final lazy val hashCode = tuple.hashCode()
 }
 
@@ -95,8 +94,9 @@ object Module {
         if (got != null) {
           got
         } else {
-          val created = new Module(organization, name, attributes, key)
-          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          val created = new Module(organization, name, attributes)
+          //it is important to use created.tupled as the key in WeakHashMap
+          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }
@@ -411,7 +411,6 @@ class Publication private (
   val `type`: Type,
   val ext: Extension,
   val classifier: Classifier,
-  private val _key: (String, Type, Extension, Classifier)
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
@@ -433,6 +432,8 @@ class Publication private (
     b.append(")")
     b.toString
   }
+
+  private val tuple = (this.name, this.`type`, this.ext, this.classifier)
 }
 
 object Publication {
@@ -464,8 +465,9 @@ object Publication {
         if (got != null) {
           got
         } else {
-          val created = new Publication(name, `type`, ext, classifier, key)
-          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          val created = new Publication(name, `type`, ext, classifier)
+          //it is important to use created.tupled as the key in WeakHashMap
+          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }

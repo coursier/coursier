@@ -18,8 +18,6 @@ class Dependency private (
   val optional: Boolean,
 
   val transitive: Boolean,
-
-  private val _key: (Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean)
 ) {
   lazy val moduleVersion = (module, version)
 
@@ -55,7 +53,7 @@ class Dependency private (
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
-  private def tuple = (this.module, this.version, this.configuration, this.exclusions, this.publication, this.optional, this.transitive)
+  private val tuple = (this.module, this.version, this.configuration, this.exclusions, this.publication, this.optional, this.transitive)
   override lazy val hashCode: Int =
     tuple.hashCode()
 
@@ -106,8 +104,9 @@ object Dependency {
         if (got != null) {
           got
         } else {
-          val created = new Dependency(module, version, configuration, exclusions, publication, optional, transitive, key)
-          memoised_cache.put(key, new _root_.java.lang.ref.WeakReference(created))
+          val created = new Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+          //it is important to use created.tupled as the key in WeakHashMap
+          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }
