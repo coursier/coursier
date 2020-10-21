@@ -156,6 +156,7 @@ public class Jep {
     ArrayList<Map.Entry<String, String>> list = new ArrayList<>();
 
     list.add(new AbstractMap.SimpleEntry<>("jna.library.path", jnaLibraryPath));
+    list.add(new AbstractMap.SimpleEntry<>("jna.nosys", "false"));
 
     return list;
   }
