@@ -328,17 +328,31 @@ import scala.util.control.NonFatal
                 Generator.generate(params0, genDest)
               }
 
-            case Right((_, prebuilt, archiveTypeOpt)) =>
+            case Right((_, prebuilt, archiveTypeAndPathOpt)) =>
               // decompress if needed
 
-              archiveTypeOpt match {
-                case Some(ArchiveType.Tgz) =>
-                  withFirstFileInTgz(prebuilt) { is =>
-                    writeTo(is, genDest)
+              archiveTypeAndPathOpt match {
+                case Some((ArchiveType.Tgz, subPathOpt)) =>
+                  subPathOpt match {
+                    case None =>
+                      withFirstFileInTgz(prebuilt) { is =>
+                        writeTo(is, genDest)
+                      }
+                    case Some(subPath) =>
+                      withFileInTgz(prebuilt, subPath) { is =>
+                        writeTo(is, genDest)
+                      }
                   }
-                case Some(ArchiveType.Zip) =>
-                  withFirstFileInZip(prebuilt) { is =>
-                    writeTo(is, genDest)
+                case Some((ArchiveType.Zip, subPathOpt)) =>
+                  subPathOpt match {
+                    case None =>
+                      withFirstFileInZip(prebuilt) { is =>
+                        writeTo(is, genDest)
+                      }
+                    case Some(subPath) =>
+                      withFileInZip(prebuilt, subPath) { is =>
+                        writeTo(is, genDest)
+                      }
                   }
                 case None =>
                   Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
@@ -533,7 +547,7 @@ object InstallDir {
     platform: Option[String],
     platformExtensions: Seq[String],
     preferPrebuilt: Boolean
-  ): Option[Seq[(Artifact, Option[ArchiveType])]] = {
+  ): Option[Seq[(Artifact, Option[(ArchiveType, Option[String])])]] = {
 
     def mainVersionsIterator(): Iterator[String] = {
       val it0 = desc.candidateMainVersions(cache, verbosity)
@@ -545,17 +559,26 @@ object InstallDir {
       it.take(if (preferPrebuilt) 5 else 1)
     }
 
-    def urlArchiveType(url: String): (String, Option[ArchiveType]) = {
+    def urlArchiveType(url: String): (String, Option[(ArchiveType, Option[String])]) = {
       val idx = url.indexOf('+')
       if (idx < 0) (url, None)
       else
         ArchiveType.parse(url.take(idx)) match {
-          case Some(tpe) => (url.drop(idx + 1), Some(tpe))
-          case None => (url, None)
+          case Some(tpe) =>
+            val url0 = url.drop(idx + 1)
+            val subPathIndex = url0.indexOf('!')
+            if (subPathIndex < 0)
+              (url0, Some((tpe, None)))
+            else {
+              val subPath = url0.drop(subPathIndex + 1)
+              (url0.take(subPathIndex), Some((tpe, Some(subPath))))
+            }
+          case None =>
+            (url, None)
         }
     }
 
-    def patternArtifacts(pattern: String): Seq[(Artifact, Option[ArchiveType])] = {
+    def patternArtifacts(pattern: String): Seq[(Artifact, Option[(ArchiveType, Option[String])])] = {
 
       val artifactsIt = for {
         version <- mainVersionsIterator()
@@ -563,10 +586,13 @@ object InstallDir {
         baseUrl0 = pattern
           .replace("${version}", version)
           .replace("${platform}", platform.getOrElse(""))
-        (baseUrl, archiveTypeOpt) = urlArchiveType(baseUrl0)
-        ext <- if (archiveTypeOpt.isEmpty) platformExtensions.iterator ++ Iterator("") else Iterator("")
-        url = baseUrl + ext
-      } yield (Artifact(url).withChanging(isSnapshot), archiveTypeOpt)
+        (baseUrl, archiveTypeAndPathOpt) = urlArchiveType(baseUrl0)
+        ext <- if (archiveTypeAndPathOpt.forall(_._2.nonEmpty)) platformExtensions.iterator ++ Iterator("") else Iterator("")
+        (url, archiveTypeAndPathOpt0) = archiveTypeAndPathOpt match {
+          case None => (baseUrl + ext, archiveTypeAndPathOpt)
+          case Some((tpe, subPath0)) => (baseUrl, Some((tpe, subPath0.map(_ + ext))))
+        }
+      } yield (Artifact(url).withChanging(isSnapshot), archiveTypeAndPathOpt0)
 
       artifactsIt.toVector
     }
@@ -613,9 +639,9 @@ object InstallDir {
     platform: Option[String],
     platformExtensions: Seq[String],
     preferPrebuilt: Boolean
-  ): Either[Seq[String], (Artifact, File, Option[ArchiveType])] = {
+  ): Either[Seq[String], (Artifact, File, Option[(ArchiveType, Option[String])])] = {
 
-    def downloadArtifacts(artifacts: Seq[(Artifact, Option[ArchiveType])]): Iterator[(Artifact, File, Option[ArchiveType])] =
+    def downloadArtifacts(artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
       artifacts.iterator.flatMap {
         case (artifact, archiveTypeOpt) =>
           if (verbosity >= 2)
@@ -681,7 +707,7 @@ object InstallDir {
     Option(System.getProperty("os.name"))
       .flatMap(platform(_))
 
-  private def withFirstFileInTgz[T](tgz: File)(f: InputStream => T): T = {
+  private def withTgzEntriesIterator[T](tgz: File)(f: Iterator[(ArchiveEntry, InputStream)] => T): T = {
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
     var fis: FileInputStream = null
     try {
@@ -694,18 +720,51 @@ object InstallDir {
         if (uncompressedInputStream.markSupported()) uncompressedInputStream
         else new BufferedInputStream(uncompressedInputStream)
       )
-      var e: ArchiveEntry = null
-      while ({
-        e = archiveInputStream.getNextEntry
-        e != null && e.isDirectory
-      }) {}
-      if (e == null) throw new NoSuchElementException(s"No file found in $tgz")
-      else f(archiveInputStream)
+
+      var nextEntryOrNull: ArchiveEntry = null
+
+      val it: Iterator[(ArchiveEntry, InputStream)] =
+        new Iterator[(ArchiveEntry, InputStream)] {
+          def hasNext: Boolean = {
+            if (nextEntryOrNull == null)
+              nextEntryOrNull = archiveInputStream.getNextEntry
+            nextEntryOrNull != null
+          }
+          def next(): (ArchiveEntry, InputStream) = {
+            assert(hasNext)
+            val value = (nextEntryOrNull, archiveInputStream)
+            nextEntryOrNull = null
+            value
+          }
+        }
+
+      f(it)
     } finally {
       if (fis != null)
         fis.close()
     }
   }
+
+  private def withFirstFileInTgz[T](tgz: File)(f: InputStream => T): T =
+    withTgzEntriesIterator(tgz) { it =>
+      val it0 = it.filter(!_._1.isDirectory).map(_._2)
+      if (it0.hasNext)
+        f(it0.next())
+      else
+        throw new NoSuchElementException(s"No file found in $tgz")
+    }
+
+  private def withFileInTgz[T](tgz: File, pathInArchive: String)(f: InputStream => T): T =
+    withTgzEntriesIterator(tgz) { it =>
+      val it0 = it.collect {
+        case (ent, is) if !ent.isDirectory && ent.getName == pathInArchive =>
+          is
+      }
+      if (it0.hasNext)
+        f(it0.next())
+      else
+        throw new NoSuchElementException(s"$pathInArchive not found in $tgz")
+    }
 
   private def withFirstFileInZip[T](zip: File)(f: InputStream => T): T = {
     var zf: ZipFile = null
@@ -714,6 +773,24 @@ object InstallDir {
       zf = new ZipFile(zip)
       val ent = zf.entries().asScala.find(e => !e.isDirectory).getOrElse {
         throw new NoSuchElementException(s"No file found in $zip")
+      }
+      is = zf.getInputStream(ent)
+      f(is)
+    } finally {
+      if (zf != null)
+        zf.close()
+      if (is != null)
+        is.close()
+    }
+  }
+
+  private def withFileInZip[T](zip: File, pathInArchive: String)(f: InputStream => T): T = {
+    var zf: ZipFile = null
+    var is: InputStream = null
+    try {
+      zf = new ZipFile(zip)
+      val ent = Option(zf.getEntry(pathInArchive)).getOrElse {
+        throw new NoSuchElementException(s"$pathInArchive not found in $zip")
       }
       is = zf.getInputStream(ent)
       f(is)

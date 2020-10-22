@@ -475,28 +475,57 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - {
-        try run("linux")
-        catch {
-          case t: Throwable =>
-
-            @annotation.tailrec
-            def print(e: Throwable): Unit =
-              if (e != null) {
-                System.err.println(e)
-                for (elem <- e.getStackTrace)
-                  System.err.println(s"  $elem")
-                print(e.getCause)
-              }
-
-            print(t)
-            throw t
-        }
-      }
+      test("linux") - run("linux")
       test("mac") - run("mac")
       test("windows") - run("windows")
     }
 
+    test("install a prebuilt launcher in an archive") {
+      val zipPattern = "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-${platform}"
+      val tgzPattern = "tgz+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz!sbt/bin/sbtn-${platform}"
+
+      def run(os: String, pattern: String) = withTempDir { tmpDir =>
+
+        val id = "sbtn"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuilt(Some(pattern)),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os)
+          .withVerbosity(1)
+          .withOnlyPrebuilt(true)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = 1, launcher.toAbsolutePath.toString, "--help")
+          val expectedInOutput = "entering *experimental* thin client - BEEP WHIRR"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("zip") {
+        test("linux") - run("linux", zipPattern)
+        test("mac") - run("mac", zipPattern)
+        test("windows") - run("windows", zipPattern)
+      }
+
+      test("tgz") {
+        test("linux") - run("linux", tgzPattern)
+        test("mac") - run("mac", tgzPattern)
+        test("windows") - run("windows", tgzPattern)
+      }
+    }
 
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
     //   val id = "echo"
