@@ -68,39 +68,15 @@ object ModuleName {
 object Module {
 
   private[core] val memoised_cache: java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
-    new java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]]()
+    coursier.util.Cache.createCache()
 
   def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
-    val key = (organization, name, attributes)
-    val first = {
-      val weak = memoised_cache.get(key)
-      if (weak == null) null else weak.get
-    }
-    if (first != null) {
-      first
-    } else {
-      memoised_cache.synchronized {
-        val got = {
-          val weak = memoised_cache.get(key)
-          if (weak == null) {
-            null
-          } else {
-            val ref = weak.get
-            ref
-          }
-        }
-        if (got != null) {
-          got
-        } else {
-          val created = new Module(organization, name, attributes)
-          //it is important to use created.key as the key in WeakHashMap
-          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
-          created
-        }
-      }
-    }
+    coursier.util.Cache.xpto(memoised_cache)(
+      (organization, name, attributes),
+      _ => new Module(organization, name, attributes),
+      _.key
+    )
   }
-
 }
 
 final case class Type(value: String) extends AnyVal {
@@ -422,41 +398,18 @@ object Info {
 
 object Publication {
   private[core] val memoised_cache: java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
-    new java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]]()
+    coursier.util.Cache.createCache()
+
+  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
+    coursier.util.Cache.xpto(memoised_cache)(
+      (name, `type`, ext, classifier),
+      _ => new Publication(name, `type`, ext, classifier),
+      _.key
+    )
+  }
 
   val empty: Publication =
     Publication("", Type.empty, Extension.empty, Classifier.empty)
-
-  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
-    val key = (name, `type`, ext, classifier)
-    val first = {
-      val weak = memoised_cache.get(key)
-      if (weak == null) null else weak.get
-    }
-    if (first != null) {
-      first
-    } else {
-      memoised_cache.synchronized {
-        val got = {
-          val weak = memoised_cache.get(key)
-          if (weak == null) {
-            null
-          } else {
-            val ref = weak.get
-            ref
-          }
-        }
-        if (got != null) {
-          got
-        } else {
-          val created = new Publication(name, `type`, ext, classifier)
-          //it is important to use created.key as the key in WeakHashMap
-          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
-          created
-        }
-      }
-    }
-  }
 }
 
 trait ArtifactSource {

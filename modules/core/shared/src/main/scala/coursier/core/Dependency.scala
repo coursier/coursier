@@ -1,5 +1,7 @@
 package coursier.core
 
+import java.util
+
 import dataclass.data
 
 /**
@@ -56,37 +58,14 @@ import dataclass.data
 object Dependency {
 
   private[core] val memoised_cache: java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]] =
-    new java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]]()
+    coursier.util.Cache.createCache()
 
   def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency = {
-    val key = (module, version, configuration, exclusions, publication, optional, transitive)
-    val first = {
-      val weak = memoised_cache.get(key)
-      if (weak == null) null else weak.get
-    }
-    if (first != null) {
-      first
-    } else {
-      memoised_cache.synchronized {
-        val got = {
-          val weak = memoised_cache.get(key)
-          if (weak == null) {
-            null
-          } else {
-            val ref = weak.get
-            ref
-          }
-        }
-        if (got != null) {
-          got
-        } else {
-          val created = new Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-          //it is important to use created.key as the key in WeakHashMap
-          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
-          created
-        }
-      }
-    }
+    coursier.util.Cache.xpto(memoised_cache)(
+      (module, version, configuration, exclusions, publication, optional, transitive),
+      _ => new Dependency(module, version, configuration, exclusions, publication, optional, transitive),
+      _.key
+    )
   }
 
 
