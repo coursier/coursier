@@ -195,7 +195,12 @@ object JvmIndex {
       arch <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
       osIndex <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
-      versionIndex <- archIndex.get(jdkNamePrefix.getOrElse("") + name).toRight(s"JVM $name not found")
+      versionIndex <- 
+        archIndex.get(jdkNamePrefix.getOrElse("") + name)
+          // While almost all entries in https://github.com/shyiko/jabba/blob/master/index.json follows `jdk@*` pattern
+          // there's also one `jdk` entry. Fixes https://github.com/coursier/coursier/issues/1884
+          .orElse(archIndex.get(name))
+          .toRight(s"JVM $name not found")
       needs1Prefix = versionIndex.keysIterator.forall(_.startsWith("1."))
       version0 =
         if (needs1Prefix) {
