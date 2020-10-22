@@ -32,15 +32,11 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-class Module private(
-  val organization: Organization,
-  val name: ModuleName,
-  val attributes: Map[String, String],
+@data(apply = false) class Module(
+  organization: Organization,
+  name: ModuleName,
+  attributes: Map[String, String]
 ) {
-
-  def withOrganization(organization: Organization): Module = Module(organization, name, attributes)
-  def withName(name: ModuleName): Module = Module(organization, name, attributes)
-  def withAttributes(attributes: Map[String, String]): Module = Module(organization, name, attributes)
 
   def trim: Module =
     withOrganization(organization.map(_.trim))
@@ -63,7 +59,6 @@ class Module private(
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  private val tuple = (this.organization, this.name, this.attributes)
   override final lazy val hashCode = tuple.hashCode()
 }
 
@@ -406,34 +401,15 @@ object Info {
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-class Publication private (
-  val name: String,
-  val `type`: Type,
-  val ext: Extension,
-  val classifier: Classifier,
+@data(apply = false) class Publication(
+  name: String,
+  `type`: Type,
+  ext: Extension,
+  classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
-
-  def withType(`type`: Type): Publication = Publication(name, `type`, ext, classifier)
-  def withExt(ext: Extension): Publication = Publication(name, `type`, ext, classifier)
-  def withClassifier(classifier: Classifier): Publication = Publication(name, `type`, ext, classifier)
-
-  override def toString: String = {
-    val b = new StringBuilder("Publication(")
-    b.append(String.valueOf(name))
-    b.append(", ")
-    b.append(String.valueOf(`type`))
-    b.append(", ")
-    b.append(String.valueOf(ext))
-    b.append(", ")
-    b.append(String.valueOf(classifier))
-    b.append(")")
-    b.toString
-  }
-
-  private val tuple = (this.name, this.`type`, this.ext, this.classifier)
 }
 
 object Publication {

@@ -20,7 +20,7 @@ object Deps {
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0"
   def catsCore = "org.typelevel" %% "cats-core" % "2.2.0"
   def collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versions.collectionCompat
-  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3"
+  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3+23-7555d8c1+20201022-1356-SNAPSHOT"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s

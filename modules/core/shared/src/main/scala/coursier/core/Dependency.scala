@@ -1,23 +1,25 @@
 package coursier.core
 
+import dataclass.data
+
 /**
  * Dependencies with the same @module will typically see their @version-s merged.
  *
  * The remaining fields are left untouched, some being transitively
  * propagated (exclusions, optional, in particular).
  */
-class Dependency private (
-  val module: Module,
-  val version: String,
-  val configuration: Configuration,
-  val exclusions: Set[(Organization, ModuleName)],
+@data(apply = false) class Dependency(
+  module: Module,
+  version: String,
+  configuration: Configuration,
+  exclusions: Set[(Organization, ModuleName)],
 
-  val publication: Publication,
+  publication: Publication,
 
   // Maven-specific
-  val optional: Boolean,
+  optional: Boolean,
 
-  val transitive: Boolean,
+  transitive: Boolean
 ) {
   lazy val moduleVersion = (module, version)
 
@@ -30,14 +32,8 @@ class Dependency private (
   def attributes: Attributes =
     publication.attributes
 
-  def withModule(module: Module) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-  def withVersion(version: String) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-  def withConfiguration(configuration: Configuration) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-  def withExclusions(exclusions: Set[(Organization, ModuleName)]) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-
   def withAttributes(attributes: Attributes): Dependency =
     withPublication(publication.withType(attributes.`type`).withClassifier(attributes.classifier))
-  def withPublication(publication: Publication) = Dependency(module, version, configuration, exclusions, publication, optional, transitive)
   def withPublication(name: String): Dependency =
     withPublication(Publication(name, Type.empty, Extension.empty, Classifier.empty))
   def withPublication(name: String, `type`: Type): Dependency =
@@ -47,34 +43,11 @@ class Dependency private (
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
-  def withOptional(optional: Boolean) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-  def withTransitive(transitive: Boolean) =  Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
-  private val tuple = (this.module, this.version, this.configuration, this.exclusions, this.publication, this.optional, this.transitive)
   override lazy val hashCode: Int =
     tuple.hashCode()
-
-  override def toString: String = {
-    val b = new StringBuilder("Dependency(")
-    b.append(String.valueOf(module))
-    b.append(", ")
-    b.append(String.valueOf(version))
-    b.append(", ")
-    b.append(String.valueOf(configuration))
-    b.append(", ")
-    b.append(String.valueOf(exclusions))
-    b.append(", ")
-    b.append(String.valueOf(publication))
-    b.append(", ")
-    b.append(String.valueOf(optional))
-    b.append(", ")
-    b.append(String.valueOf(transitive))
-    b.append(")")
-    b.toString
-  }
 }
 
 object Dependency {
