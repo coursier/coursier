@@ -54,6 +54,30 @@ object ObjectSizeTests extends TestSuite {
       }
     }
 
+    test("Dependency memoised_cache should hold objects until they can be GCd") {
+      test("should be the different for different dependency") {
+        Dependency.memoised_cache.clear();
+        def d1 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.6.0")
+        def d2 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.7.0")
+        var ad1 = d1
+        //d1 is in cache
+        assert(Dependency.memoised_cache.size() == 1)
+        System.gc()
+        //d1 is still in cache
+        assert(Dependency.memoised_cache.size() == 1)
+        var ad2 = d2
+        //d1 and d2 are in cache
+        assert(Dependency.memoised_cache.size() == 2)
+
+        //remove strong references
+        ad1 = null
+        ad2 = null
+        System.gc()
+        //nothing in cache
+        assert(Dependency.memoised_cache.size() == 0)
+      }
+    }
+
   }
 
   def size(a: Object) = {

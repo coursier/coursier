@@ -59,12 +59,15 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  override final lazy val hashCode = tuple.hashCode()
+  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
+  private[core] val key = tuple
+
+  override final lazy val hashCode = key.hashCode()
 }
 
 object Module {
 
-  val memoised_cache: java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
+  private[core] val memoised_cache: java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
     new java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]]()
 
   def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
@@ -90,8 +93,8 @@ object Module {
           got
         } else {
           val created = new Module(organization, name, attributes)
-          //it is important to use created.tupled as the key in WeakHashMap
-          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
+          //it is important to use created.key as the key in WeakHashMap
+          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }
@@ -410,10 +413,15 @@ object Info {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
+
+  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
+  private[core] val key = tuple
+
+  override def hashCode(): Int = key.hashCode
 }
 
 object Publication {
-  val memoised_cache: java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
+  private[core] val memoised_cache: java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
     new java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]]()
 
   val empty: Publication =
@@ -442,8 +450,8 @@ object Publication {
           got
         } else {
           val created = new Publication(name, `type`, ext, classifier)
-          //it is important to use created.tupled as the key in WeakHashMap
-          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
+          //it is important to use created.key as the key in WeakHashMap
+          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }

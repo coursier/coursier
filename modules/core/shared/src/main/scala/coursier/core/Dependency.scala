@@ -43,16 +43,19 @@ import dataclass.data
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
+  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
+  private[core] val key = tuple
+
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
   override lazy val hashCode: Int =
-    tuple.hashCode()
+    key.hashCode()
 }
 
 object Dependency {
 
-  val memoised_cache: java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]] =
+  private[core] val memoised_cache: java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]] =
     new java.util.WeakHashMap[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]]()
 
   def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency = {
@@ -78,8 +81,8 @@ object Dependency {
           got
         } else {
           val created = new Dependency(module, version, configuration, exclusions, publication, optional, transitive)
-          //it is important to use created.tupled as the key in WeakHashMap
-          memoised_cache.put(created.tuple, new _root_.java.lang.ref.WeakReference(created))
+          //it is important to use created.key as the key in WeakHashMap
+          memoised_cache.put(created.key, new _root_.java.lang.ref.WeakReference(created))
           created
         }
       }

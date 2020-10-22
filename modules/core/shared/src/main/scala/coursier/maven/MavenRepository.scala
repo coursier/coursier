@@ -87,8 +87,12 @@ object MavenRepository {
 
   def apply(root: String): MavenRepository =
     new MavenRepository(actualRoot(root))
-  def apply(root: String, authentication: Option[Authentication]): MavenRepository =
+  def apply(root: String, authentication: Option[Authentication]): MavenRepository = {
     new MavenRepository(actualRoot(root), authentication)
+  }
+
+  private def apply(root: String, authentication: Option[Authentication], changing: Option[Boolean], sbtAttrStub: Boolean, versionsCheckHasModule: Boolean): MavenRepository =
+    new MavenRepository(root, authentication, changing, sbtAttrStub, versionsCheckHasModule)
 }
 
 @data(apply = false) class MavenRepository(
