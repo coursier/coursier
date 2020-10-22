@@ -7,6 +7,7 @@ import java.time.Instant
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.channel.Channel
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
@@ -45,24 +46,11 @@ object Install extends CaseApp[InstallOptions] {
       .withNativeImageJavaHome(Some(graalvmHome))
 
     if (params.installChannels.nonEmpty) {
+      val progName = coursier.cli.Coursier.progName
+      val options = params.installChannels.flatMap(c => Seq("--add", c)).mkString(" ")
+      System.err.println(s"Warning: the --add-channel option is deprecated. Use '$progName channel $options' instead.")
 
-      // TODO Move to install module
-
-      val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
-      val channelDir = new File(configDir, "channels")
-
-      // FIXME May not be fine with concurrency (two process doing this in parallel)
-      val f = Stream.from(1)
-        .map { n =>
-          new File(channelDir, s"channels-$n")
-        }
-        .filter(!_.exists())
-        .head
-
-      if (params.output.verbosity >= 1)
-        System.err.println(s"Writing $f")
-      Util.createDirectories(f.toPath.getParent)
-      Files.write(f.toPath, params.installChannels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8))
+      Channel.addChannel(params.installChannels.toList, params.output)
     } else if (params.env.env)
       println(installDir.envUpdate.script)
     else if (params.env.disableEnv) {

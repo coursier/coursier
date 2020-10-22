@@ -9,6 +9,7 @@ import caseapp.core.help.Help
 import caseapp.core.parser.Parser
 import coursier.cache.CacheUrl
 import coursier.cli.bootstrap.Bootstrap
+import coursier.cli.channel.Channel
 import coursier.cli.complete.Complete
 import coursier.cli.fetch.Fetch
 import coursier.cli.get.Get
@@ -138,33 +139,35 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     args => {
       case Inl(bootstrapOptions) =>
         Bootstrap.run(bootstrapOptions, args)
-      case Inr(Inl(completeOptions)) =>
+      case Inr(Inl(channelOptions)) =>
+        Channel.run(channelOptions, args)
+      case Inr(Inr(Inl(completeOptions))) =>
         Complete.run(completeOptions, args)
-      case Inr(Inr(Inl(fetchOptions))) =>
+      case Inr(Inr(Inr(Inl(fetchOptions)))) =>
         Fetch.run(fetchOptions, args)
-      case Inr(Inr(Inr(Inl(getOptions)))) =>
+      case Inr(Inr(Inr(Inr(Inl(getOptions))))) =>
         Get.run(getOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(installOptions))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inl(installOptions)))))) =>
         Install.run(installOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(javaOptions)))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaOptions))))))) =>
         Java.run(javaOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions)))))))) =>
         JavaHome.run(javaHomeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions)))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions))))))))) =>
         Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(listOptions))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(listOptions)))))))))) =>
         List.run(listOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions)))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))))))) =>
         Publish.run(publishOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))))))) =>
         Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions)))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions))))))))))))) =>
         Setup.run(setupOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions)))))))))))))) =>
         Uninstall.run(uninstallOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions)))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))))) =>
         cnil.impossible
     }
 

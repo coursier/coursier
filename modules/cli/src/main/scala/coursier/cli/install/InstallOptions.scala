@@ -24,6 +24,7 @@ final case class InstallOptions(
   @Recurse
     envOptions: EnvOptions = EnvOptions(),
 
+  @Help("(deprecated)")
   addChannel: List[String] = Nil,
 
   @Short("f")
