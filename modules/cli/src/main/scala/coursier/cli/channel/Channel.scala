@@ -1,26 +1,23 @@
 package coursier.cli.channel
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
-import coursier.cli.Util.ValidatedExitOnError
-import java.io.File
-import java.nio.file.Files
-import coursier.paths.Util
-import java.nio.charset.StandardCharsets
-import java.io.FileReader
 import coursier.cli.params.OutputParams
+import coursier.cli.Util.ValidatedExitOnError
+import coursier.paths.Util.createDirectories
 
-object ChannelCommand extends CaseApp[ChannelOptions] {
+object Channel extends CaseApp[ChannelOptions] {
 
-  override def run(
-      options: ChannelOptions,
-      args: RemainingArgs
-  ): Unit = {
+  def run(options: ChannelOptions, args: RemainingArgs): Unit = {
     val params = ChannelParam(options, args.all.nonEmpty).exitOnError()
 
-    if (params.listChannels) {
+    if (params.listChannels)
       displayChannels()
-    } else if (params.addChannel.nonEmpty)
+    else if (params.addChannel.nonEmpty)
       addChannel(params.addChannel, params.output)
   }
 
@@ -28,10 +25,15 @@ object ChannelCommand extends CaseApp[ChannelOptions] {
     val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
     val channelDir = new File(configDir, "channels")
 
-    Option(channelDir.listFiles())
-      .foreach(_.foreach { f =>
-        Option(Files.lines(f.toPath())).foreach(_.forEach(System.out.println))
-      })
+    for {
+      files <- Option(channelDir.listFiles())
+      file <- files
+      rawLine <- new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).linesIterator
+      line = rawLine.trim
+      if line.nonEmpty
+    } {
+      System.out.println(line)
+    }
   }
 
   def addChannel(channels: List[String], output: OutputParams) = {
@@ -50,7 +52,7 @@ object ChannelCommand extends CaseApp[ChannelOptions] {
     if (output.verbosity >= 1) // todo : add output verbosity in options
       System.err.println(s"Writing $f")
 
-    Util.createDirectories(f.toPath.getParent)
+    createDirectories(f.toPath.getParent)
     Files.write(
       f.toPath,
       channels.map(_ + "\n").mkString.getBytes(StandardCharsets.UTF_8)
