@@ -67,7 +67,7 @@ object ModuleName {
 
 object Module {
 
-  private[core] val memoised_cache: java.util.WeakHashMap[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
+  private[core] val memoised_cache: java.util.Map[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
     coursier.util.Cache.createCache()
 
   def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
@@ -397,7 +397,7 @@ object Info {
 }
 
 object Publication {
-  private[core] val memoised_cache: java.util.WeakHashMap[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
+  private[core] val memoised_cache: java.util.Map[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
     coursier.util.Cache.createCache()
 
   def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
