@@ -26,7 +26,7 @@ object Get extends CaseApp[GetOptions] {
       else if (rawUrl.endsWith("?changing=true"))
         Artifact(rawUrl.stripSuffix("?changing=true")).withChanging(true)
       else if (rawUrl.endsWith("?changing=false"))
-        Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(true)
+        Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(false)
       else
         Artifact(rawUrl).withChanging(params.changing)
     }
