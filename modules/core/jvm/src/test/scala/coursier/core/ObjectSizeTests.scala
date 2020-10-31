@@ -1,6 +1,9 @@
 package coursier.core
 
 import utest._
+import utest.asserts.{RetryInterval, RetryMax}
+
+import scala.concurrent.duration._
 
 object ObjectSizeTests extends TestSuite {
 
@@ -56,6 +59,8 @@ object ObjectSizeTests extends TestSuite {
 
     test("Dependency memoised_cache should hold objects until they can be GCd") {
       test("should be the different for different dependency") {
+        implicit val retryMax = RetryMax(5.seconds)
+        implicit val retryInterval = RetryInterval(200.millis)
         Dependency.memoised_cache.clear();
         def d1 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.6.0")
         def d2 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.7.0")
