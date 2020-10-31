@@ -61,7 +61,7 @@ object Dependency {
     coursier.util.Cache.createCache()
 
   def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency = {
-    coursier.util.Cache.xpto(memoised_cache)(
+    coursier.util.Cache.cacheMethod(memoised_cache)(
       (module, version, configuration, exclusions, publication, optional, transitive),
       _ => new Dependency(module, version, configuration, exclusions, publication, optional, transitive),
       _.key

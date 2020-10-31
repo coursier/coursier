@@ -4,7 +4,7 @@ import java.lang.ref.WeakReference
 
 object Cache {
   def createCache[K, V >: Null](): java.util.Map[K, WeakReference[V]] = new java.util.WeakHashMap[K, java.lang.ref.WeakReference[V]]()
-  def xpto[K, V >: Null](memoised_cache: java.util.Map[K, java.lang.ref.WeakReference[V]])(key: K, f: K => V, keyFn: V => K): V = {
+  def cacheMethod[K, V >: Null](memoised_cache: java.util.Map[K, java.lang.ref.WeakReference[V]])(key: K, f: K => V, keyFn: V => K): V = {
    val first: V = {
      val weak = memoised_cache.get(key)
      if (weak == null) null else weak.get

@@ -71,7 +71,7 @@ object Module {
     coursier.util.Cache.createCache()
 
   def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
-    coursier.util.Cache.xpto(memoised_cache)(
+    coursier.util.Cache.cacheMethod(memoised_cache)(
       (organization, name, attributes),
       _ => new Module(organization, name, attributes),
       _.key
@@ -401,7 +401,7 @@ object Publication {
     coursier.util.Cache.createCache()
 
   def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
-    coursier.util.Cache.xpto(memoised_cache)(
+    coursier.util.Cache.cacheMethod(memoised_cache)(
       (name, `type`, ext, classifier),
       _ => new Publication(name, `type`, ext, classifier),
       _.key
