@@ -72,10 +72,11 @@ object ObjectSizeTests extends TestSuite {
         //remove strong references and double GC
         ad1 = null
         ad2 = null
-        System.gc()
-        System.gc()
         //nothing in cache
-        assert(Dependency.memoised_cache.size() == 0)
+        eventually{
+          System.gc()
+          Dependency.memoised_cache.size() == 0
+        }
       }
     }
 
