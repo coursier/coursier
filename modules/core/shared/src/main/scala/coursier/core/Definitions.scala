@@ -32,7 +32,7 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-@data(apply = false) class Module(
+@data(apply = false, settersCallApply = true) class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -380,7 +380,7 @@ object Info {
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-@data(apply = false) class Publication(
+@data(apply = false, settersCallApply = true) class Publication(
   name: String,
   `type`: Type,
   ext: Extension,

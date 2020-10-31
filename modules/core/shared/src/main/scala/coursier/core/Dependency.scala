@@ -10,7 +10,7 @@ import dataclass.data
  * The remaining fields are left untouched, some being transitively
  * propagated (exclusions, optional, in particular).
  */
-@data(apply = false) class Dependency(
+@data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
   version: String,
   configuration: Configuration,
