@@ -4,7 +4,7 @@ import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.net.{HttpURLConnection, URLConnection}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{FileAlreadyExistsException, Files, StandardCopyOption}
+import java.nio.file.{FileAlreadyExistsException, Files, NoSuchFileException, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -681,42 +681,7 @@ import scala.util.control.NonFatal
                 Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
 
               case Some(sum) =>
-                /**
-                  * Store computed cache in files so we don't have to recompute them over and over.
-                  */
-                val calculatedSum: BigInteger = {
-                  val cacheFile = auxiliaryFile(localFile0, sumType + ".computed")
-                  val cacheFilePath = cacheFile.toPath
-
-                  val digested: Array[Byte] =
-                    try Files.readAllBytes(cacheFilePath) catch {
-                      case _: java.nio.file.NoSuchFileException =>
-                        val md = MessageDigest.getInstance(sumType)
-
-                        var is: FileInputStream = null
-                        try {
-                          is = new FileInputStream(localFile0)
-                          FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
-                        } finally is.close()
-
-                        val bytes = md.digest()
-
-                        // Atomically write file by using a temp file in the same directory
-                        val tmpFile = File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
-                        try {
-                          Files.write(tmpFile, bytes)
-                          try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
-                          catch {
-                            // In the case of multiple processes/threads which all compute this digest, first thread wins.
-                            case _: FileAlreadyExistsException => ()
-                          }
-                        } finally Files.deleteIfExists(tmpFile)
-
-                        bytes
-                    }
-
-                  new BigInteger(1, digested)
-                }
+                val calculatedSum: BigInteger = FileCache.persistedDigest(sumType, localFile0)
 
                 if (sum == calculatedSum)
                   Right(())
@@ -1117,4 +1082,44 @@ object FileCache {
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
+  /**
+    * Store computed cache in files so we don't have to recompute them over and over.
+    */
+  private def persistedDigest(sumType: String, localFile: File): BigInteger = {
+    val cacheFile = auxiliaryFile(localFile, sumType + ".computed")
+    val cacheFilePath = cacheFile.toPath
+
+    val digested: Array[Byte] =
+      try Files.readAllBytes(cacheFilePath) catch {
+        case _: NoSuchFileException =>
+          val bytes: Array[Byte] = digest(sumType, localFile)
+
+          // Atomically write file by using a temp file in the same directory
+          val tmpFile = File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
+          try {
+            Files.write(tmpFile, bytes)
+            try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
+            catch {
+              // In the case of multiple processes/threads which all compute this digest, first thread wins.
+              case _: FileAlreadyExistsException => ()
+            }
+          } finally Files.deleteIfExists(tmpFile)
+
+          bytes
+      }
+
+    new BigInteger(1, digested)
+  }
+
+  private def digest(sumType: String, localFile: File): Array[Byte] = {
+    val md = MessageDigest.getInstance(sumType)
+
+    var is: FileInputStream = null
+    try {
+      is = new FileInputStream(localFile)
+      FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
+    } finally is.close()
+
+    md.digest()
+  }
 }
