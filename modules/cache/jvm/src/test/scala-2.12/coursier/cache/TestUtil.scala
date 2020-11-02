@@ -148,6 +148,30 @@ object TestUtil {
     }
   }
 
+  def resourceFile(name: String): File =
+    Option(getClass.getResource(name)) match {
+      case Some(url) => new File(url.toURI)
+      case None => throw new Exception(s"resource $name not found")
+    }
+
+  /**
+    * Copies a file and all files in the same folder with the same name plus a suffix
+    * @return `file` in the new location
+    */
+  def copiedWithMetaTo(file: File, toDir: Path): Path = {
+    val dir = file.getParentFile
+
+    val fromTo: Map[File, Path] =
+      dir
+        .list((_: File, name: String) => name.startsWith(file.getName))
+        .map(name => new File(dir, name) -> toDir.resolve(name))
+        .toMap
+
+    fromTo.foreach { case (from, to) => Files.copy(from.toPath, to) }
+
+    fromTo(file)
+  }
+
   private def checksum(b: Array[Byte], alg: String, len: Int): String = {
     val md = MessageDigest.getInstance(alg)
     val digest = md.digest(b)
