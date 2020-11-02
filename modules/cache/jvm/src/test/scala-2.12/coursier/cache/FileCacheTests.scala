@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.File
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths, StandardCopyOption, StandardOpenOption}
+import java.nio.file.{Files, Path}
 import java.util
 
 import cats.effect.IO
@@ -619,12 +619,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        val credFileUri = Option(getClass.getResource("/credentials.properties"))
-          .map(_.toURI)
-          .getOrElse {
-            throw new Exception("credentials.properties resource not found")
-          }
-        val credFile = new File(credFileUri)
+        val credFile = TestUtil.resourceFile("/credentials.properties")
         assert(credFile.exists())
 
         test {
@@ -693,12 +688,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        val credFileUri = Option(getClass.getResource("/credentials.properties"))
-          .map(_.toURI)
-          .getOrElse {
-            throw new Exception("credentials.properties resource not found")
-          }
-        val credFile = new File(credFileUri)
+        val credFile = TestUtil.resourceFile("/credentials.properties")
         assert(credFile.exists())
 
         test {
@@ -888,11 +878,7 @@ object FileCacheTests extends TestSuite {
     test("checksums") {
 
       test("simple") {
-        val dummyFileUri = Option(getClass.getResource("/data/foo.xml"))
-          .map(_.toURI.toASCIIString)
-          .getOrElse {
-            throw new Exception("data/foo.xml resource not found")
-          }
+        val dummyFileUri = TestUtil.resourceFile("/data/foo.xml").toURI.toASCIIString
 
         val artifact = Artifact(
           dummyFileUri,
@@ -1024,109 +1010,133 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    "stored digests work" - {
-      val dummyFileUri = Option(getClass.getResource("/data/foo.xml"))
-        .map(_.toURI.toASCIIString)
-        .getOrElse {
-          throw new Exception("data/foo.xml resource not found")
-        }
+    "stored digests work - SHA1" - {
+      withTmpDir { dir =>
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+        val artifact = Artifact(
+          dummyFileUri,
+          Map(
+            "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
+            "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
+            "SHA-1" -> s"$dummyFileUri.sha1",
+            "MD5" -> s"$dummyFileUri.md5"
+          ),
+          Map(),
+          changing = false,
+          optional = false,
+          None
+        )
 
-      val artifact = Artifact(
-        dummyFileUri,
-        Map(
-          "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
-          "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
-          "SHA-1" -> s"$dummyFileUri.sha1",
-          "MD5" -> s"$dummyFileUri.md5"
-        ),
-        Map(),
-        changing = false,
-        optional = false,
-        None
-      )
-
-      * - async {
-        val res = await {
+        val res =
           FileCache()
+            .withLocation(dir.toString)
             .withChecksums(Seq(Some("SHA-1")))
             .file(artifact)
             .run
-            .future()
-        }
+            .unsafeRun()
+
         res match {
           case Right(file: File) =>
-            val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__sha1.computed")
+            val computedPath = FileCache.auxiliaryFile(file, "SHA-1" + ".computed")
             val expected = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
-            val actual = Files.readAllBytes(computedPath)
-            assert(util.Arrays.equals(actual, expected))
-          case Left(e) => throw e
-        }
-      }
-      * - async {
-        val res = await {
-          FileCache()
-            .withChecksums(Seq(Some("MD5")))
-            .file(artifact)
-            .run
-            .future()
-        }
-        res match {
-          case Right(file: File) =>
-            val computedPath = Paths.get(s"${file.getParent}/.${file.getName}__md5.computed")
-            val expected = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
-            val actual = Files.readAllBytes(computedPath)
+            val actual = Files.readAllBytes(computedPath.toPath)
             assert(util.Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
       }
     }
 
-    "wrong stored digest should fail" - {
-      val fooXml = Option(getClass.getResource("/data/foo.xml")) match {
-        case Some(resourceStr) => resourceStr.toURI.toASCIIString.substring("file:".length)
-        case None => throw new Exception("data/foo.xml resource not found")
-      }
-      val fooSha1 = fooXml + ".sha1"
+    "stored digests work - MD5" - {
+      withTmpDir { dir =>
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+        val artifact = Artifact(
+          dummyFileUri,
+          Map(
+            "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
+            "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
+            "SHA-1" -> s"$dummyFileUri.sha1",
+            "MD5" -> s"$dummyFileUri.md5"
+          ),
+          Map(),
+          changing = false,
+          optional = false,
+          None
+        )
 
-      * - {
-        val Right(_) = FileCache()
-          .withChecksums(Seq(Some("SHA-1")))
-          .file(Artifact(
-            "file:" + fooXml,
-            Map("SHA-1" -> ("file:" + (fooXml + ".sha1"))),
+        val res = FileCache()
+          .withLocation(dir.toString)
+          .withChecksums(Seq(Some("MD5")))
+          .file(artifact)
+          .run
+          .unsafeRun()
+
+        res match {
+          case Right(file: File) =>
+            val computedPath = FileCache.auxiliaryFile(file, "MD5" + ".computed")
+            val expected = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
+            val actual = Files.readAllBytes(computedPath.toPath)
+            assert(util.Arrays.equals(actual, expected))
+          case Left(e) => throw e
+        }
+      }
+    }
+
+    "stored digests should not be stored outside of cache" - {
+      withTmpDir { dir =>
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+        val artifact = Artifact(
+          dummyFileUri,
+          Map(
+            "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
+            "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
+            "SHA-1" -> s"$dummyFileUri.sha1",
+            "MD5" -> s"$dummyFileUri.md5"
+          ),
+          Map(),
+          changing = false,
+          optional = false,
+          None
+        )
+
+        // use default location so our file is considered outside
+        val _ = FileCache()
+          .withChecksums(Seq(Some("MD5")))
+          .file(artifact)
+          .run
+          .unsafeRun()
+
+        val computedPath = FileCache.auxiliaryFile(dummyFile.toFile, "MD5" + ".computed")
+        assert(!computedPath.exists())
+      }
+    }
+
+    "wrong stored digest should delete file in cache" - {
+      withTmpDir { dir =>
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+
+        val resolve = {
+          val artifact = Artifact(
+            dummyFileUri,
+            Map("SHA-1" -> s"$dummyFileUri.sha1"),
             Map(),
             changing = false,
             optional = false,
             None
-          ))
-          .run
-          .unsafeRun()
+          )
 
-        // copy to temp dir to not clobber other tests
-        withTmpDir { dir =>
-          val fooFailXml = dir.resolve("foo_fail.xml")
-          val fooFailSha1 = dir.resolve("foo_fail.xml.sha1")
-          Files.copy(Paths.get(fooXml), fooFailXml)
-          Files.copy(Paths.get(fooSha1), fooFailSha1)
-
-          val computedSha1Path = fooFailXml.getParent.resolve("." + fooFailXml.getFileName + "__sha1.computed")
-          Files.write(computedSha1Path, Array[Byte](1, 2, 3))
-
-          val Left(_: coursier.cache.ArtifactError.WrongChecksum) =
-            FileCache()
-              .withChecksums(Seq(Some("SHA-1")))
-              .withRetry(0)
-              .file(Artifact(
-                "file:" + fooFailXml,
-                Map("SHA-1" -> ("file:" + fooFailSha1)),
-                Map(),
-                changing = false,
-                optional = false,
-                None
-              ))
-              .run
-              .unsafeRun()
+          FileCache().withLocation(dir.toString).withChecksums(Seq(Some("SHA-1"))).file(artifact).run
         }
+
+        val Right(_) = resolve.unsafeRun()
+        val computedSha1Path = FileCache.auxiliaryFile(dummyFile.toFile, "SHA-1" + ".computed")
+
+        Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
+
+        val Left(_: coursier.cache.ArtifactError.NotFound) = resolve.unsafeRun()
       }
     }
   }
