@@ -1,8 +1,7 @@
 package coursier.core
 
-import java.util
+import java.util.concurrent.ConcurrentMap
 
-import coursier.util.internal.ConcurrentReferenceHashMap
 import dataclass.data
 
 /**
@@ -55,7 +54,7 @@ import dataclass.data
 
 object Dependency {
 
-  private[coursier] val instanceCache: ConcurrentReferenceHashMap[Dependency, Dependency] =
+  private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
   def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency =

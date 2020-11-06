@@ -1,5 +1,6 @@
 package coursier.core
 
+import coursier.util.internal.ConcurrentReferenceHashMap
 import utest._
 import utest.asserts.{RetryInterval, RetryMax}
 
@@ -62,7 +63,9 @@ object ObjectSizeTests extends TestSuite {
         implicit val retryMax = RetryMax(5.seconds)
         implicit val retryInterval = RetryInterval(200.millis)
         def cacheSize(): Int = {
-          Dependency.instanceCache.purgeStaleEntries()
+          Dependency.instanceCache
+            .asInstanceOf[ConcurrentReferenceHashMap[Dependency, Dependency]]
+            .purgeStaleEntries()
           Dependency.instanceCache.size()
         }
         Dependency.instanceCache.clear()

@@ -1,7 +1,8 @@
 package coursier.core
 
+import java.util.concurrent.ConcurrentMap
+
 import coursier.util.Artifact
-import coursier.util.internal.ConcurrentReferenceHashMap
 import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
@@ -65,7 +66,7 @@ object ModuleName {
 
 object Module {
 
-  private[core] val instanceCache: ConcurrentReferenceHashMap[Module, Module] =
+  private[core] val instanceCache: ConcurrentMap[Module, Module] =
     coursier.util.Cache.createCache()
 
   def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
@@ -387,7 +388,7 @@ object Info {
 }
 
 object Publication {
-  private[core] val instanceCache: ConcurrentReferenceHashMap[Publication, Publication] =
+  private[core] val instanceCache: ConcurrentMap[Publication, Publication] =
     coursier.util.Cache.createCache()
 
   def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =

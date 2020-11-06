@@ -1,8 +1,8 @@
 package coursier.util
 
-import coursier.util.internal.ConcurrentReferenceHashMap
+import java.util.concurrent.ConcurrentMap
 
 object Cache {
-  def createCache[T >: Null](): ConcurrentReferenceHashMap[T, T] = null
-  def cacheMethod[T >: Null](instanceCache: ConcurrentReferenceHashMap[T, T])(t: T): T = t
+  def createCache[T >: Null](): ConcurrentMap[T, T] = null
+  def cacheMethod[T >: Null](instanceCache: ConcurrentMap[T, T])(t: T): T = t
 }
