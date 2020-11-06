@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.util.Artifact
+import coursier.util.internal.ConcurrentReferenceHashMap
 import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
@@ -59,24 +60,16 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
-  private[core] val key = tuple
-
-  override final lazy val hashCode = key.hashCode()
+  override final lazy val hashCode = tuple.hashCode()
 }
 
 object Module {
 
-  private[core] val memoised_cache: java.util.Map[(Organization, ModuleName, Map[String, String]), java.lang.ref.WeakReference[Module]] =
+  private[core] val instanceCache: ConcurrentReferenceHashMap[Module, Module] =
     coursier.util.Cache.createCache()
 
-  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module = {
-    coursier.util.Cache.cacheMethod(memoised_cache)(
-      (organization, name, attributes),
-      _ => new Module(organization, name, attributes),
-      _.key
-    )
-  }
+  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
+    coursier.util.Cache.cacheMethod(instanceCache)(new Module(organization, name, attributes))
 }
 
 final case class Type(value: String) extends AnyVal {
@@ -390,23 +383,15 @@ object Info {
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 
-  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
-  private[core] val key = tuple
-
-  override def hashCode(): Int = key.hashCode
+  override def hashCode(): Int = tuple.hashCode
 }
 
 object Publication {
-  private[core] val memoised_cache: java.util.Map[(String, Type, Extension, Classifier), java.lang.ref.WeakReference[Publication]] =
+  private[core] val instanceCache: ConcurrentReferenceHashMap[Publication, Publication] =
     coursier.util.Cache.createCache()
 
-  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication = {
-    coursier.util.Cache.cacheMethod(memoised_cache)(
-      (name, `type`, ext, classifier),
-      _ => new Publication(name, `type`, ext, classifier),
-      _.key
-    )
-  }
+  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =
+    coursier.util.Cache.cacheMethod(instanceCache)(new Publication(name, `type`, ext, classifier))
 
   val empty: Publication =
     Publication("", Type.empty, Extension.empty, Classifier.empty)

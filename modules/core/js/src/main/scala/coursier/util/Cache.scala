@@ -1,11 +1,8 @@
 package coursier.util
 
-import java.lang.ref.WeakReference
+import coursier.util.internal.ConcurrentReferenceHashMap
 
 object Cache {
-  def createCache[K, V >: Null](): java.util.Map[K, WeakReference[V]] = null
-
-  def cacheMethod[K, V >: Null](memoised_cache: java.util.Map[K, java.lang.ref.WeakReference[V]])(key: K, f: K => V, keyFn: V => K): V = {
-    f(key)
-  }
+  def createCache[T >: Null](): ConcurrentReferenceHashMap[T, T] = null
+  def cacheMethod[T >: Null](instanceCache: ConcurrentReferenceHashMap[T, T])(t: T): T = t
 }

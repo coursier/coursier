@@ -57,30 +57,34 @@ object ObjectSizeTests extends TestSuite {
       }
     }
 
-    test("Dependency memoised_cache should hold objects until they can be GCd") {
+    test("Dependency instanceCache should hold objects until they can be GCd") {
       test("should be the different for different dependency") {
         implicit val retryMax = RetryMax(5.seconds)
         implicit val retryInterval = RetryInterval(200.millis)
-        Dependency.memoised_cache.clear();
+        def cacheSize(): Int = {
+          Dependency.instanceCache.purgeStaleEntries()
+          Dependency.instanceCache.size()
+        }
+        Dependency.instanceCache.clear()
         def d1 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.6.0")
         def d2 = Dependency(Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty), "0.7.0")
         var ad1 = d1
         //d1 is in cache
-        assert(Dependency.memoised_cache.size() == 1)
+        assert(cacheSize() == 1)
         System.gc()
         //d1 is still in cache
-        assert(Dependency.memoised_cache.size() == 1)
+        assert(cacheSize() == 1)
         var ad2 = d2
         //d1 and d2 are in cache
-        assert(Dependency.memoised_cache.size() == 2)
+        assert(cacheSize() == 2)
 
         //remove strong references and double GC
         ad1 = null
         ad2 = null
         //nothing in cache
-        eventually{
+        eventually {
           System.gc()
-          Dependency.memoised_cache.size() == 0
+          cacheSize() == 0
         }
       }
     }

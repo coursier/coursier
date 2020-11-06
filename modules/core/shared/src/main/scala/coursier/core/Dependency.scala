@@ -2,6 +2,7 @@ package coursier.core
 
 import java.util
 
+import coursier.util.internal.ConcurrentReferenceHashMap
 import dataclass.data
 
 /**
@@ -45,28 +46,22 @@ import dataclass.data
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
-  //is necessary to hold a strong ref `key` field as it will be used as WeakKeys in memoised_cache
-  private[core] val key = tuple
-
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
   override lazy val hashCode: Int =
-    key.hashCode()
+    tuple.hashCode()
 }
 
 object Dependency {
 
-  private[core] val memoised_cache: java.util.Map[(Module, String, Configuration, Set[(Organization, ModuleName)], Publication, Boolean, Boolean), java.lang.ref.WeakReference[Dependency]] =
+  private[coursier] val instanceCache: ConcurrentReferenceHashMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
-  def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency = {
-    coursier.util.Cache.cacheMethod(memoised_cache)(
-      (module, version, configuration, exclusions, publication, optional, transitive),
-      _ => new Dependency(module, version, configuration, exclusions, publication, optional, transitive),
-      _.key
+  def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency =
+    coursier.util.Cache.cacheMethod(instanceCache)(
+      new Dependency(module, version, configuration, exclusions, publication, optional, transitive)
     )
-  }
 
 
   def apply(
