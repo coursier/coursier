@@ -1,6 +1,6 @@
 package coursier.core
 
-import coursier.util.internal.ConcurrentReferenceHashMap
+import concurrentrefhashmap.ConcurrentReferenceHashMap
 import utest._
 import utest.asserts.{RetryInterval, RetryMax}
 

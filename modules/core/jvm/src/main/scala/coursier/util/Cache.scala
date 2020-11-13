@@ -2,7 +2,7 @@ package coursier.util
 
 import java.util.concurrent.ConcurrentMap
 
-import coursier.util.internal.ConcurrentReferenceHashMap
+import concurrentrefhashmap.ConcurrentReferenceHashMap
 
 object Cache {
   def createCache[T >: Null](): ConcurrentMap[T, T] =
