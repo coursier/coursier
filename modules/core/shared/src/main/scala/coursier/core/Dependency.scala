@@ -57,9 +57,25 @@ object Dependency {
   private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
-  def apply(module: Module, version: String, configuration: Configuration, exclusions: Set[(Organization, ModuleName)], publication: Publication, optional: Boolean, transitive: Boolean): Dependency =
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
-      new Dependency(module, version, configuration, exclusions, publication, optional, transitive)
+      new Dependency(
+        module,
+        version,
+        configuration,
+        exclusions,
+        publication,
+        optional,
+        transitive
+      )
     )
 
 
