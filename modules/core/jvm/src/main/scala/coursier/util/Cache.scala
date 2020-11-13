@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentMap
 
 import concurrentrefhashmap.ConcurrentReferenceHashMap
 
-object Cache {
+private[coursier] object Cache {
   def createCache[T >: Null](): ConcurrentMap[T, T] =
     new ConcurrentReferenceHashMap[T, T](8, ConcurrentReferenceHashMap.ReferenceType.WEAK, ConcurrentReferenceHashMap.ReferenceType.WEAK)
   def cacheMethod[T >: Null](instanceCache: ConcurrentMap[T, T])(t: T): T = {
