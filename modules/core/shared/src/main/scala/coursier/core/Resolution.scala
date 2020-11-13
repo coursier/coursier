@@ -1193,10 +1193,10 @@ object Resolution {
           .flatMap(projectCache(_)._2.dependencies)
       )
       .withDependencyManagement(
-        depMgmt.values
+        depMgmt.values.toSeq
           .filterNot{case (config, dep) =>
             config == Configuration.`import`
-          }.toList
+          }
       )
   }
 
