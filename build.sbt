@@ -474,7 +474,6 @@ lazy val coursier = crossProject("coursier")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jvmSettings(
     libs += Deps.fastParse,
-    libs += Deps.jol % Test,
     shadedModules += Deps.fastParse.module,
     shadingRules ++= {
       // shading under the same library as core, under the same namespace
