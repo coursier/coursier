@@ -1,5 +1,7 @@
 package coursier.core
 
+import java.util.concurrent.ConcurrentMap
+
 import dataclass.data
 
 /**
@@ -8,7 +10,7 @@ import dataclass.data
  * The remaining fields are left untouched, some being transitively
  * propagated (exclusions, optional, in particular).
  */
-@data class Dependency(
+@data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
   version: String,
   configuration: Configuration,
@@ -51,6 +53,31 @@ import dataclass.data
 }
 
 object Dependency {
+
+  private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
+    coursier.util.Cache.createCache()
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    coursier.util.Cache.cacheMethod(instanceCache)(
+      new Dependency(
+        module,
+        version,
+        configuration,
+        exclusions,
+        publication,
+        optional,
+        transitive
+      )
+    )
+
 
   def apply(
     module: Module,

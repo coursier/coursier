@@ -1,5 +1,7 @@
 package coursier.core
 
+import java.util.concurrent.ConcurrentMap
+
 import coursier.util.Artifact
 import dataclass.data
 
@@ -32,7 +34,7 @@ object ModuleName {
  *
  * Using the same terminology as Ivy.
  */
-@data class Module(
+@data(apply = false, settersCallApply = true) class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -62,6 +64,14 @@ object ModuleName {
   override final lazy val hashCode = tuple.hashCode()
 }
 
+object Module {
+
+  private[core] val instanceCache: ConcurrentMap[Module, Module] =
+    coursier.util.Cache.createCache()
+
+  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
+    coursier.util.Cache.cacheMethod(instanceCache)(new Module(organization, name, attributes))
+}
 
 final case class Type(value: String) extends AnyVal {
   def isEmpty: Boolean =
@@ -364,7 +374,7 @@ object Info {
   snapshotVersions: Seq[SnapshotVersion]
 )
 
-@data class Publication(
+@data(apply = false, settersCallApply = true) class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -373,10 +383,18 @@ object Info {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
+
+  override def hashCode(): Int = tuple.hashCode
 }
 
 object Publication {
-  def empty: Publication =
+  private[core] val instanceCache: ConcurrentMap[Publication, Publication] =
+    coursier.util.Cache.createCache()
+
+  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =
+    coursier.util.Cache.cacheMethod(instanceCache)(new Publication(name, `type`, ext, classifier))
+
+  val empty: Publication =
     Publication("", Type.empty, Extension.empty, Classifier.empty)
 }
 

@@ -20,12 +20,14 @@ object Deps {
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0"
   def catsCore = "org.typelevel" %% "cats-core" % "2.2.0"
   def collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versions.collectionCompat
-  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.3"
+  def concurrentReferenceHashMap = "io.github.alexarchambault" % "concurrent-reference-hash-map" % "1.0.0"
+  def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.4"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"
   def fastParse = "com.lihaoyi" %% "fastparse" % versions.fastParse
   def http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % versions.http4s
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def jimfs = "com.google.jimfs" % "jimfs" % "1.1"
+  def jol = "org.openjdk.jol" % "jol-core" % "0.14"
   def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
   def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala
   def jsoup = "org.jsoup" % "jsoup" % "1.13.1"

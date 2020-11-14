@@ -54,8 +54,10 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
     libs ++= Seq(
+      Deps.concurrentReferenceHashMap,
       Deps.fastParse,
-      Deps.scalaXml
+      Deps.scalaXml,
+      Deps.jol % Test
     ),
     shadedModules += Deps.fastParse.module,
     shadingRules ++= {
