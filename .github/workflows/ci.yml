@@ -66,7 +66,7 @@ jobs:
       - uses: coursier/cache-action@v5
         with:
           extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
-      - uses: olafurpg/setup-gpg@v2
+      - uses: sideeffffect/setup-gpg@2e9c3fdf1019a278043ff71acb7079aa634a9fe1
       - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - name: Release
@@ -89,7 +89,7 @@ jobs:
       - uses: coursier/cache-action@v5
         with:
           extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
-      - uses: olafurpg/setup-gpg@v2
+      - uses: sideeffffect/setup-gpg@2e9c3fdf1019a278043ff71acb7079aa634a9fe1
       - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - run: amm-runner launcher.sc uploadAllJars
@@ -115,7 +115,7 @@ jobs:
       - uses: coursier/cache-action@v5
         with:
           extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
-      - uses: olafurpg/setup-gpg@v2
+      - uses: sideeffffect/setup-gpg@2e9c3fdf1019a278043ff71acb7079aa634a9fe1
       - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
         shell: bash
       - run: amm launcher.sc uploadNativeImage
