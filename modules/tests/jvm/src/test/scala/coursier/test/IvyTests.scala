@@ -61,7 +61,7 @@ object IvyTests extends TestSuite {
     )
 
     test("changing") {
-      "-SNAPSHOT suffix" - {
+      test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
           .withTransitive(false)
@@ -79,7 +79,7 @@ object IvyTests extends TestSuite {
         }
       }
 
-      "-SNAPSHOT suffix" - {
+      test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", "0.2.0.SNAPSHOT")
           .withTransitive(false)
@@ -118,7 +118,7 @@ object IvyTests extends TestSuite {
           throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
       }
 
-      "test conf" - {
+      test("test conf") {
         "no attributes" - runner.withArtifacts(
           dep = dep.withConfiguration(Configuration.test),
           extraRepos = Seq(repo),
@@ -142,7 +142,7 @@ object IvyTests extends TestSuite {
         }
       }
 
-      "tests classifier" - {
+      test("tests classifier") {
         val testsDep = dep.withAttributes(Attributes(Type.jar, Classifier.tests))
 
         test - runner.withArtifacts(

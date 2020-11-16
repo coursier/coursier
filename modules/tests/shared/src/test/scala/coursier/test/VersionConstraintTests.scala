@@ -68,7 +68,7 @@ object VersionConstraintTests extends TestSuite {
       }
     }
 
-    "merge" - {
+    test("merge") {
       test {
         val s0 = VersionConstraint.merge(
           Parse.versionConstraint("[1.0,3.2]"),
@@ -92,7 +92,7 @@ object VersionConstraintTests extends TestSuite {
       }
     }
 
-    "relaxedMerge" - {
+    test("relaxedMerge") {
       test {
         val s0 = VersionConstraint.relaxedMerge(
           Parse.versionConstraint("[1.0,2.0)"),

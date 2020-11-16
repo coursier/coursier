@@ -56,7 +56,7 @@ object JvmCacheTests extends TestSuite {
   }
 
   val tests = Tests {
-    "simple" - {
+    test("simple") {
       val strIndex =
         """{
           |  "the-os": {
@@ -89,7 +89,7 @@ object JvmCacheTests extends TestSuite {
 
       val cache = MockCache.create[Task](mockDataLocation, pool)
 
-      "specific version" - {
+      test("specific version") {
         withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
@@ -103,13 +103,13 @@ object JvmCacheTests extends TestSuite {
           val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
           val expectedOutput = "the jdk 1.1\n"
           val javaExec = new File(new File(home, "bin"), filename)
-          
+
           val output = (Seq(javaExec.getAbsolutePath, "-version").!!)
           assert(output.replace("\r\n", "\n") == expectedOutput)
         }
       }
 
-      "version range" - {
+      test("version range") {
         withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
@@ -128,7 +128,7 @@ object JvmCacheTests extends TestSuite {
         }
       }
 
-      "Contents/Home directory on macOS" - {
+      test("Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)
@@ -154,7 +154,7 @@ object JvmCacheTests extends TestSuite {
         }
       }
 
-      "no Contents/Home directory on macOS" - {
+      test("no Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
           val jvmCache = JvmCache()
             .withBaseDirectory(tmpDir.toFile)

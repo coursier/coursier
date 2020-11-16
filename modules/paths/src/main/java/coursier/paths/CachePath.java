@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,13 +46,18 @@ public class CachePath {
 
     public static File localFile(String url, File cache, String user, boolean localArtifactsShouldBeCached) throws MalformedURLException {
 
-        // use the File constructor accepting a URI in case of problem with the two cases below?
+        if (url.startsWith("file:/") && !localArtifactsShouldBeCached) {
+            try {
+                return Paths.get(new URI(url)).toFile();
+            } catch (URISyntaxException e) {
+                // Legacy way of converting URL to files in coursier
+                // Maybe we should just throw e instead…
+                if (url.startsWith("file:///"))
+                    return new File(url.substring("file://".length()));
 
-        if (url.startsWith("file:///") && !localArtifactsShouldBeCached)
-            return new File(url.substring("file://".length()));
-
-        if (url.startsWith("file:/") && !localArtifactsShouldBeCached)
-            return new File(url.substring("file:".length()));
+                return new File(url.substring("file:".length()));
+            }
+        }
 
         String[] split = url.split(":", 2);
         if (split.length != 2)

@@ -727,7 +727,7 @@ object FileCacheTests extends TestSuite {
             TemporaryRedirect("redirecting", Location(Uri(path = dest)))
         }
 
-        "should be followed" - {
+        test("should be followed") {
           test - withHttpServer(httpRoutes) { base =>
             error(
               base / "redirect" / "5",
@@ -753,7 +753,7 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        "should not stackoverflow" - {
+        test("should not stackoverflow") {
           test - withHttpServer(httpRoutes) { base =>
             expect(
               base / "redirect" / "10000",
@@ -1010,7 +1010,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    "stored digests work - SHA1" - {
+    test("stored digests work - SHA1") {
       withTmpDir { dir =>
         val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
@@ -1047,7 +1047,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    "stored digests work - MD5" - {
+    test("stored digests work - MD5") {
       withTmpDir { dir =>
         val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
@@ -1083,7 +1083,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    "stored digests should not be stored outside of cache" - {
+    test("stored digests should not be stored outside of cache") {
       withTmpDir { dir =>
         val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
@@ -1113,7 +1113,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
-    "wrong stored digest should delete file in cache" - {
+    test("wrong stored digest should delete file in cache") {
       withTmpDir { dir =>
         val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
@@ -1137,6 +1137,29 @@ object FileCacheTests extends TestSuite {
         Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
 
         val Left(_: coursier.cache.ArtifactError.NotFound) = resolve.unsafeRun()
+      }
+    }
+
+    test("un-escape characters in file URL") {
+      withTmpDir { baseDir =>
+        val dir = baseDir.resolve("le repository")
+        Files.createDirectories(dir)
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+        assert(dummyFileUri.contains("%20"))
+        val artifact = Artifact(dummyFileUri)
+          .withChecksumUrls(Map("SHA-1" -> s"$dummyFileUri.sha1"))
+
+        val res = FileCache()
+          .withLocation(dir.toString)
+          .file(artifact)
+          .run
+          .unsafeRun()
+
+        res match {
+          case Right(file) => assert(file.isFile)
+          case Left(e) => throw e
+        }
       }
     }
   }
