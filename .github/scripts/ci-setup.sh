@@ -8,13 +8,13 @@ mkdir -p bin
 ./cs install --install-dir bin cs coursier
 ./cs install --install-dir bin --contrib amm-runner
 export PATH="$(pwd)/bin:$PATH"
-echo "::add-path::$(pwd)/bin"
+echo "$(pwd)/bin" >> "$GITHUB_PATH"
 
 if [ "$1" == "--jvm" ]; then
   JVM="$2"
   eval "$(./cs java --env --jvm "$JVM")"
-  echo "::set-env name=JAVA_HOME::$JAVA_HOME"
-  echo "::add-path::$JAVA_HOME/bin"
+  echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+  echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
   if [ "$(uname)" == "Darwin" ]; then
     export PATH="$JAVA_HOME/bin:$PATH"
   fi
