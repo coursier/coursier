@@ -1139,6 +1139,29 @@ object FileCacheTests extends TestSuite {
         val Left(_: coursier.cache.ArtifactError.NotFound) = resolve.unsafeRun()
       }
     }
+
+    test("un-escape characters in file URL") {
+      withTmpDir { baseDir =>
+        val dir = baseDir.resolve("le repository")
+        Files.createDirectories(dir)
+        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFileUri = dummyFile.toUri.toASCIIString
+        assert(dummyFileUri.contains("%20"))
+        val artifact = Artifact(dummyFileUri)
+          .withChecksumUrls(Map("SHA-1" -> s"$dummyFileUri.sha1"))
+
+        val res = FileCache()
+          .withLocation(dir.toString)
+          .file(artifact)
+          .run
+          .unsafeRun()
+
+        res match {
+          case Right(file) => assert(file.isFile)
+          case Left(e) => throw e
+        }
+      }
+    }
   }
 
   // https://stackoverflow.com/questions/6650650/hex-encoded-string-to-byte-array/28157958#28157958
