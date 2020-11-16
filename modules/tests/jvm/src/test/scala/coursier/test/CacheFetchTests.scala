@@ -77,20 +77,20 @@ object CacheFetchTests extends TestSuite {
 
   val tests = Tests {
 
-    "ensure everything's fine with basic file protocol" - {
+    test("ensure everything's fine with basic file protocol") {
       val f = new File(HandmadeMetadata.repoBase, "http/abc.com").getAbsoluteFile
       check(MavenRepository(f.toURI.toString))
     }
 
     test("customProtocol") {
-      "Cache.url method" - {
+      test("Cache.url method") {
         val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)
 
         val url = CacheUrl.url("testprotocol://foo/bar")
       }
 
-      "actual custom protocol test" - {
+      test("actual custom protocol test") {
         check(MavenRepository(s"${TestprotocolHandler.protocol}://foo/"))
       }
     }

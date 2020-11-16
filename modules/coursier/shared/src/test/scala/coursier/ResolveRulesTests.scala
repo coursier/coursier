@@ -260,7 +260,7 @@ object ResolveRulesTests extends TestSuite {
         assert(evicted == expectedEvicted)
       }
 
-      "ignore if forced version" - {
+      test("ignore if forced version") {
         "do ignore" - async {
 
           val rule = Strict()
@@ -357,7 +357,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
-    "semVer reconciliation" - {
+    test("semVer reconciliation") {
       "strict check" - async {
 
         val params = ResolutionParams()

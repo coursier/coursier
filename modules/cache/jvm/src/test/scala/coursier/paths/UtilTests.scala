@@ -18,7 +18,7 @@ object UtilTests extends TestSuite {
   }
 
   val tests = Tests {
-    "createDirectories fine with sym links" - {
+    test("createDirectories fine with sym links") {
       var tmpDir: Path = null
       try {
         tmpDir = Files.createTempDirectory("coursier-paths-tests")
@@ -30,8 +30,8 @@ object UtilTests extends TestSuite {
       }
     }
 
-    "property expansion" - {
-      "simple" - {
+    test("property expansion") {
+      test("simple") {
         val map = Map("something" -> "value", "other" -> "a")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")
@@ -43,7 +43,7 @@ object UtilTests extends TestSuite {
         assert(toSet == expected)
       }
 
-      "substitution" - {
+      test("substitution") {
         val map = Map("something" -> "value ${foo}", "other" -> "a")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")
@@ -55,7 +55,7 @@ object UtilTests extends TestSuite {
         assert(toSet == expected)
       }
 
-      "optional value" - {
+      test("optional value") {
         val map = Map("something" -> "value", "foo?" -> "A")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")

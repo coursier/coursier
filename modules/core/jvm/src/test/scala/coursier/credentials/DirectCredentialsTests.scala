@@ -5,7 +5,7 @@ import utest._
 object DirectCredentialsTests extends TestSuite {
 
   val tests = Tests {
-    "no password in toString" - {
+    test("no password in toString") {
       val cred = DirectCredentials("host", "alex", "1234")
       assert(cred.usernameOpt.contains("alex"))
       assert(cred.passwordOpt.map(_.value).contains("1234"))

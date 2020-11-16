@@ -239,7 +239,7 @@ object ArtifactsTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    "Take Ivy dependency artifacts into account" - {
+    test("Take Ivy dependency artifacts into account") {
       "to maven" - async {
 
         val res = await {

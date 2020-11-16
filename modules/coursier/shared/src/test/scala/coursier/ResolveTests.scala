@@ -412,7 +412,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "parent / import scope" - {
+    test("parent / import scope") {
       test - async {
 
         val res = await {
@@ -428,7 +428,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "properties" - {
+    test("properties") {
       "in packaging" - async {
         val res = await {
           resolve
@@ -445,7 +445,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "ivy" - {
+    test("ivy") {
       "publication name" - async {
 
         val resolve0 = resolve
@@ -525,7 +525,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "version intervals" - {
+    test("version intervals") {
       "0 lower bound" - async {
 
         val res = await {
@@ -537,7 +537,7 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
       }
 
-      "conflict with specific version" - {
+      test("conflict with specific version") {
         test - async {
 
           val res = await {
@@ -602,7 +602,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "override dependency from profile" - {
+    test("override dependency from profile") {
 
       test - async {
 
@@ -701,7 +701,7 @@ object ResolveTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    "relaxed reconciliation" - {
+    test("relaxed reconciliation") {
       test - async {
         val params = ResolutionParams()
           .withScalaVersion("2.12.8")
@@ -939,7 +939,7 @@ object ResolveTests extends TestSuite {
       assert(!woopsArtifact.optional)
     }
 
-    "JDK profile activation" - {
+    test("JDK profile activation") {
       val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
       "JDK 1.8" - async {
         val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")

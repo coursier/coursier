@@ -20,65 +20,65 @@ object RepositoryParserTests extends TestSuite {
     }
 
   val tests = Tests {
-    "bintray-ivy:" - {
+    test("bintray-ivy:") {
       val obtained = RepositoryParser.repository("bintray-ivy:scalameta/maven")
       assert(obtained.exists(isIvyRepo))
     }
-    "bintray:" - {
+    test("bintray:") {
       val obtained = RepositoryParser.repository("bintray:scalameta/maven")
       assert(obtained.exists(isMavenRepo))
     }
 
-    "sbt-plugin:" - {
+    test("sbt-plugin:") {
       val res = RepositoryParser.repository("sbt-plugin:releases")
       assert(res.exists(isIvyRepo))
     }
 
-    "typesafe:ivy-" - {
+    test("typesafe:ivy-") {
       val res = RepositoryParser.repository("typesafe:ivy-releases")
       assert(res.exists(isIvyRepo))
     }
-    "typesafe:" - {
+    test("typesafe:") {
       val res = RepositoryParser.repository("typesafe:releases")
       assert(res.exists(isMavenRepo))
     }
 
-    "jitpack" - {
+    test("jitpack") {
       val res = RepositoryParser.repository("jitpack")
       assert(res.exists(isMavenRepo))
     }
 
-    "clojars" - {
+    test("clojars") {
       val res = RepositoryParser.repository("clojars")
       assert(res.exists(isMavenRepo))
     }
 
-    "jcenter" - {
+    test("jcenter") {
       val res = RepositoryParser.repository("jcenter")
       assert(res.exists(isMavenRepo))
     }
 
-    "google" - {
+    test("google") {
       val res = RepositoryParser.repository("google")
       assert(res.exists(isMavenRepo))
     }
 
-    "gcs" - {
+    test("gcs") {
       val res = RepositoryParser.repository("gcs")
       assert(res.exists(isMavenRepo))
     }
 
-    "gcs-eu" - {
+    test("gcs-eu") {
       val res = RepositoryParser.repository("gcs-eu")
       assert(res.exists(isMavenRepo))
     }
 
-    "gcs-asia" - {
+    test("gcs-asia") {
       val res = RepositoryParser.repository("gcs-asia")
       assert(res.exists(isMavenRepo))
     }
 
-    "ivy with metadata" - {
+    test("ivy with metadata") {
       val mainPattern =
         "http://repo/cache/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[organisation]/[module]/[type]s/[artifact]-[revision](-[classifier]).[ext]"
       val metadataPattern =

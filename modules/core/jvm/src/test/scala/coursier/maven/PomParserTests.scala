@@ -12,7 +12,7 @@ import coursier.core.Info.License
 object PomParserTests extends TestSuite {
 
   val tests = Tests {
-    "scm filed is optional" - {
+    test("scm filed is optional") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -27,7 +27,7 @@ object PomParserTests extends TestSuite {
       assert(scm.isEmpty)
     }
 
-    "all fields in scm is optional" - {
+    test("all fields in scm is optional") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -47,7 +47,7 @@ object PomParserTests extends TestSuite {
       assert(scm.exists(_.developerConnection.isEmpty))
     }
 
-    "can parse scm info" - {
+    test("can parse scm info") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -70,7 +70,7 @@ object PomParserTests extends TestSuite {
       assert(scm.exists(_.developerConnection.contains("foo")))
     }
 
-    "properties are parsed" - {
+    test("properties are parsed") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -90,7 +90,7 @@ object PomParserTests extends TestSuite {
       assert(properties == expected)
     }
 
-    "licenses are optional" - {
+    test("licenses are optional") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -106,7 +106,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
-    "licenses with just name and url" - {
+    test("licenses with just name and url") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -135,7 +135,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
-    "licenses with just name and url (binary compat test)" - {
+    test("licenses with just name and url (binary compat test)") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -159,7 +159,7 @@ object PomParserTests extends TestSuite {
       assert(licenses == expected)
     }
 
-    "multiple licenses with just name and url" - {
+    test("multiple licenses with just name and url") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -198,7 +198,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
-    "license with maven distribution and comments" - {
+    test("license with maven distribution and comments") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -229,7 +229,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
-    "license with maven distribution and comments (binary compat test)" - {
+    test("license with maven distribution and comments (binary compat test)") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">

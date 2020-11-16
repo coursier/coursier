@@ -11,7 +11,7 @@ object DependencyParserTests extends TestSuite {
     val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
     // Module parsing tests
-    "org:name:version" - {
+    test("org:name:version") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -23,7 +23,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "org:name:version:config" - {
+    test("org:name:version:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -35,7 +35,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "org:name:interval:config" - {
+    test("org:name:interval:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -47,7 +47,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "single attr" - {
+    test("single attr") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -59,7 +59,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "extension" - {
+    test("extension") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -71,7 +71,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "type" - {
+    test("type") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,type=typetype", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -83,7 +83,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "extension and type" - {
+    test("extension and type") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -95,7 +95,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "single attr with interval" - {
+    test("single attr with interval") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -107,7 +107,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "single attr with url" - {
+    test("single attr with url") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,url=" + url, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
@@ -121,7 +121,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "multiple attrs with url" - {
+    test("multiple attrs with url") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
@@ -135,7 +135,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "multiple attrs with interval and url" - {
+    test("multiple attrs with interval and url") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url, "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
@@ -149,7 +149,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "multiple attrs with interval, url, and exclusions" - {
+    test("multiple attrs with interval, url, and exclusions") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
@@ -164,7 +164,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "single attr with org::name:version" - {
+    test("single attr with org::name:version") {
       DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -175,7 +175,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "single attr with org::name:interval" - {
+    test("single attr with org::name:interval") {
       DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -186,7 +186,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "multiple attr with org::name:interval and exclusion" - {
+    test("multiple attr with org::name:interval and exclusion") {
       DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar", "2.11.11") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -198,7 +198,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "full cross versioned org:::name:version" - {
+    test("full cross versioned org:::name:version") {
       DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7", "2.12.8") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -208,7 +208,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "full cross versioned org:::name:version with exclusion" - {
+    test("full cross versioned org:::name:version with exclusion") {
       DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7,exclude=aa%*", "2.12.8") match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
@@ -219,28 +219,28 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "illegal 1" - {
+    test("illegal 1") {
       DependencyParser.dependencyParams("junit:junit:4.12,attr", "2.11.11") match {
         case Left(err) => assert(err.contains("Failed to parse attribute"))
         case Right(dep) => assert(false)
       }
     }
 
-    "illegal 2" - {
+    test("illegal 2") {
       DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
         case Left(err) => assert(err.contains("The only attributes allowed are:"))
         case Right(dep) => assert(false)
       }
     }
 
-    "illegal 3, malformed exclude" - {
+    test("illegal 3, malformed exclude") {
       DependencyParser.dependencyParams("a:b:c,exclude=aaa", "2.11.11") match {
         case Left(err) => assert(err.contains("Malformed exclusion:"))
         case Right(dep) => assert(false)
       }
     }
 
-    "scala module" - {
+    test("scala module") {
       DependencyParser.javaOrScalaDependencyParams("org::name:ver") match {
         case Left(err) => sys.error(err)
         case Right((dep, params)) =>
@@ -255,7 +255,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "full cross versioned scala module" - {
+    test("full cross versioned scala module") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver") match {
         case Left(err) => sys.error(err)
         case Right((dep, params)) =>
@@ -270,7 +270,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    "full cross versioned scala module with config" - {
+    test("full cross versioned scala module with config") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver:conf") match {
         case Left(err) => sys.error(err)
         case Right((dep, params)) =>

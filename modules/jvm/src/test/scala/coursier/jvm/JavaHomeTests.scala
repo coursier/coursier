@@ -37,12 +37,12 @@ object JavaHomeTests extends TestSuite {
 
   val tests = Tests {
 
-    "environment update should be empty for system JVM" - {
+    test("environment update should be empty for system JVM") {
       val edit = JavaHome.environmentFor(JavaHome.systemId, new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
       assert(edit.isEmpty)
     }
 
-    "environment update should update both JAVA_HOME and PATH on Linux or Windows" - {
+    test("environment update should update both JAVA_HOME and PATH on Linux or Windows") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
         .withPathLikeAppends(Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin")))
@@ -50,7 +50,7 @@ object JavaHomeTests extends TestSuite {
       assert(edit == expectedEdit)
     }
 
-    "environment update should update only JAVA_HOME on macOS" - {
+    test("environment update should update only JAVA_HOME on macOS") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
       val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
@@ -58,7 +58,7 @@ object JavaHomeTests extends TestSuite {
     }
 
 
-    "system JVM should respect JAVA_HOME" - {
+    test("system JVM should respect JAVA_HOME") {
 
       val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
       val home = JavaHome()
@@ -71,7 +71,7 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
-    "system JVM should use /usr/libexec/java_home on macOS" - {
+    test("system JVM should use /usr/libexec/java_home on macOS") {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {
@@ -92,7 +92,7 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
-    "system JVM should use get Java home via -XshowSettings:properties on Linux and Windows" - {
+    test("system JVM should use get Java home via -XshowSettings:properties on Linux and Windows") {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {

@@ -37,7 +37,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
-    "maven repository" - {
+    test("maven repository") {
       test {
         val repo = mvn"https://foo.com/a/b/c"
         val expectedRepo = MavenRepository("https://foo.com/a/b/c")
@@ -45,7 +45,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
-    "ivy repository" - {
+    test("ivy repository") {
       test {
         val repo = ivy"https://foo.com/a/b/c/[defaultPattern]"
         val expectedRepo = IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").toOption.get
