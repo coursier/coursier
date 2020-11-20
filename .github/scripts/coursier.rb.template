@@ -1,14 +1,13 @@
-require 'formula'
-
 # adapted from https://github.com/paulp/homebrew-extras/blob/8184f9a962ce0758f4cf7a07b702bc1c3d16dfaa/coursier.rb
-
 class Coursier < Formula
-  desc "Coursier launcher."
+  desc "Launcher for Coursier"
   homepage "https://get-coursier.io"
-  version "@LAUNCHER_VERSION@"
   url "@LAUNCHER_URL@"
+  version "@LAUNCHER_VERSION@"
   sha256 "@LAUNCHER_SHA256@"
   bottle :unneeded
+
+  option "without-zsh-completions", "Disable zsh completion installation"
 
   # https://stackoverflow.com/questions/10665072/homebrew-formula-download-two-url-packages/26744954#26744954
   resource "jar-launcher" do
@@ -16,17 +15,16 @@ class Coursier < Formula
     sha256 "@JAR_LAUNCHER_SHA256@"
   end
 
-  option "without-zsh-completions", "Disable zsh completion installation"
-
-  depends_on :java => "1.8+"
+  depends_on java: "1.8+" if MacOS.version < :big_sur
+  depends_on "openjdk" if MacOS.version >= :big_sur
 
   def install
-    bin.install 'cs-x86_64-apple-darwin' => "cs"
+    bin.install "cs-x86_64-apple-darwin" => "cs"
     resource("jar-launcher").stage { bin.install "coursier" }
 
     unless build.without? "zsh-completions"
       chmod 0555, bin/"coursier"
-      output = Utils.popen_read("#{bin}/coursier --completions zsh")
+      output = Utils.safe_popen_read("#{bin}/coursier --completions zsh")
       (zsh_completion/"_coursier").write output
     end
   end
