@@ -205,25 +205,20 @@ object Resolution {
     def substituteProps0(s: String) =
       substituteProps(s, properties, trim = false)
 
-    val dep0 = dep
-      .withModule(
-        dep.module
-          .withOrganization(dep.module.organization.map(substituteProps0))
-          .withName(dep.module.name.map(substituteProps0))
-      )
-      .withVersion(substituteTrimmedProps(dep.version))
-      .withAttributes(
-        dep.attributes
-          .withType(dep.attributes.`type`.map(substituteProps0))
-          .withClassifier(dep.attributes.classifier.map(substituteProps0))
-      )
-      .withConfiguration(dep.configuration.map(substituteProps0))
-      .withExclusions(
-        dep.exclusions.map {
-          case (org, name) =>
-            (org.map(substituteProps0), name.map(substituteProps0))
-        }
-      )
+    val dep0 = dep.copy(
+      module = dep.module
+        .withOrganization(dep.module.organization.map(substituteProps0))
+        .withName(dep.module.name.map(substituteProps0)),
+      version = substituteTrimmedProps(dep.version),
+      attributes = dep.attributes
+        .withType(dep.attributes.`type`.map(substituteProps0))
+        .withClassifier(dep.attributes.classifier.map(substituteProps0)),
+      configuration = dep.configuration.map(substituteProps0),
+      exclusions = dep.exclusions.map {
+        case (org, name) =>
+          (org.map(substituteProps0), name.map(substituteProps0))
+      }
+    )
 
     // FIXME The content of the optional tag may also be a property in
     // the original POM. Maybe not parse it that earlier?

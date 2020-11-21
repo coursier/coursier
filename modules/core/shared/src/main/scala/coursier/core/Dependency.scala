@@ -45,6 +45,14 @@ import dataclass.data
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
+  def copy(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    attributes: Attributes
+  ) = Dependency(module, version, configuration, exclusions, attributes, this.optional, this.transitive)
+
   lazy val clearExclusions: Dependency =
     withExclusions(Set.empty)
 
