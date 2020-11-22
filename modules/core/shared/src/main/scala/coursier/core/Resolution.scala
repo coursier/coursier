@@ -206,9 +206,10 @@ object Resolution {
       substituteProps(s, properties, trim = false)
 
     val dep0 = dep.copy(
-      module = dep.module
-        .withOrganization(dep.module.organization.map(substituteProps0))
-        .withName(dep.module.name.map(substituteProps0)),
+      module = dep.module.copy(
+        organization = (dep.module.organization.map(substituteProps0)),
+        name = (dep.module.name.map(substituteProps0))
+      ),
       version = substituteTrimmedProps(dep.version),
       attributes = dep.attributes
         .withType(dep.attributes.`type`.map(substituteProps0))

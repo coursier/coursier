@@ -40,9 +40,10 @@ object ModuleName {
   attributes: Map[String, String]
 ) {
 
-  def trim: Module =
-    withOrganization(organization.map(_.trim))
-      .withName(name.map(_.trim))
+  def trim: Module = copy(
+    organization.map(_.trim),
+    name.map(_.trim)
+  )
 
   private def attributesStr = attributes.toSeq
     .sortBy { case (k, _) => k }
@@ -62,6 +63,12 @@ object ModuleName {
     s"${organization.value}:${name.value}"
 
   override final lazy val hashCode = tuple.hashCode()
+
+  def copy(
+    organization: Organization = this.organization,
+    name: ModuleName = this.name,
+    attributes: Map[String, String] = this.attributes
+  ) = Module(organization, name, attributes)
 }
 
 object Module {
