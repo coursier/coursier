@@ -12,6 +12,7 @@
     "Command-line": [
       "cli-overview",
       "cli-installation",
+      "cli-complete",
       "cli-resolve",
       "cli-fetch",
       "cli-launch",
