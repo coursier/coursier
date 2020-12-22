@@ -15,6 +15,7 @@
 <url> <loc>https://get-coursier.io/docs/next/api</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/api" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cache</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cache" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-bootstrap</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-bootstrap" /> </url>
+<url> <loc>https://get-coursier.io/docs/next/cli-complete</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-complete" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-fetch</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-fetch" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-install</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-install" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-installation</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-installation" /> </url>

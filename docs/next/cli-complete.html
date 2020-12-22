@@ -3,17 +3,17 @@
  <head>
   <meta charSet="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>TTL · Coursier</title>
+  <title>complete · Coursier</title>
   <meta name="viewport" content="width=device-width">
   <meta name="generator" content="Docusaurus">
-  <meta name="description" content="<p>Changing things in cache are given a time-to-live (TTL) of <strong>24 hours</strong> by default. Changing things are artifacts for versions ending with <code>-SNAPSHOT</code>, Maven metadata files listing available versions, etc.</p>
+  <meta name="description" content="<p><code>complete</code> allows one to complete <em>Maven</em> coordinates.</p>
 ">
   <meta name="docsearch:version" content="next">
   <meta name="docsearch:language" content="en">
-  <meta property="og:title" content="TTL · Coursier">
+  <meta property="og:title" content="complete · Coursier">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://get-coursier.io/">
-  <meta property="og:description" content="<p>Changing things in cache are given a time-to-live (TTL) of <strong>24 hours</strong> by default. Changing things are artifacts for versions ending with <code>-SNAPSHOT</code>, Maven metadata files listing available versions, etc.</p>
+  <meta property="og:description" content="<p><code>complete</code> allows one to complete <em>Maven</em> coordinates.</p>
 ">
   <meta name="twitter:card" content="summary">
   <link rel="shortcut icon" href="../../../undefined">
@@ -58,7 +58,7 @@
            <div class="line3"></div>
           </div>
          </div>
-         <h2><i>›</i><span>Other</span></h2>
+         <h2><i>›</i><span>Command-line</span></h2>
          <div class="tocToggler" id="tocToggler">
           <i class="icon-toc"></i>
          </div>
@@ -84,7 +84,7 @@
           <ul class="">
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-overview">Overview</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-installation">Installation</a></li>
-           <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-complete">complete</a></li>
+           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/next/cli-complete">complete</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-resolve">resolve</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-fetch">fetch</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cli-launch">launch</a></li>
@@ -106,7 +106,7 @@
           <h3 class="navGroupCategoryTitle">Other</h3>
           <ul class="">
            <li class="navListItem"><a class="navItem" href="../../../docs/next/cache">Cache</a></li>
-           <li class="navListItem navListItemActive"><a class="navItem" href="../../../docs/next/ttl">TTL</a></li>
+           <li class="navListItem"><a class="navItem" href="../../../docs/next/ttl">TTL</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/other-repositories">Repositories</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/other-credentials">Credentials</a></li>
            <li class="navListItem"><a class="navItem" href="../../../docs/next/other-proxy">Proxy</a></li>
@@ -185,29 +185,173 @@
      <div class="wrapper">
       <div class="post">
        <header class="postHeader">
-        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/ttl.md" target="_blank" rel="noreferrer noopener">Edit</a>
-        <h1 class="postHeaderTitle">TTL</h1>
+        <a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-complete.md" target="_blank" rel="noreferrer noopener">Edit</a>
+        <h1 class="postHeaderTitle">complete</h1>
        </header>
        <article>
         <div>
-         <span><p>Changing things in cache are given a time-to-live (TTL) of <strong>24 hours</strong> by default. Changing things are artifacts for versions ending with <code>-SNAPSHOT</code>, Maven metadata files listing available versions, etc.</p> <p>The most straightforward way of changing that consists in setting <code>COURSIER_TTL</code> in the environment. It's parsed with <code>scala.concurrent.duration.Duration</code>, so that things like <code>24 hours</code>, <code>5 min</code>, <code>10s</code>, or <code>0s</code>, are fine, and it accepts infinity (<code>Inf</code>) as a duration.</p> <pre><code class="hljs css language-tut:invisible">import scala<span class="hljs-selector-class">.concurrent</span><span class="hljs-selector-class">.duration</span><span class="hljs-selector-class">.Duration</span>
+         <span><p><code>complete</code> allows one to complete <em>Maven</em> coordinates.</p> <p>It can answer questions such as:</p> 
+          <ul> 
+           <li>What artifacts are published under a given <em>Maven</em> <em>groupId</em>, for example <code>org.scala-lang</code> or <code>io.circe</code>?</li> 
+           <li>For a given <em>Maven</em> <em>groupId</em> and <em>artifactId</em>, which version(s) of the artifact are available?</li> 
+          </ul> <p>The <code>complete</code> command takes a single argument which is composed of up to 3 colon-separated components.</p> <p><code>cs complete groupId:artifactId:version</code></p> <p>Let's demonstrate this with a few examples.</p> <h2><a class="anchor" aria-hidden="true" id="looking-up-a-_maven_-_groupid_"></a><a href="cli-complete.html#looking-up-a-_maven_-_groupid_" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Looking-up a <em>Maven</em> <em>groupId</em></h2> <pre><code class="hljs css language-bash">$ cs complete org.scala-lang
+org.scala-lang
+org.scala-lang-osgi
 
-<span class="hljs-function"><span class="hljs-title">Duration</span><span class="hljs-params">(<span class="hljs-string">"24 hours"</span>)</span></span>
-<span class="hljs-function"><span class="hljs-title">Duration</span><span class="hljs-params">(<span class="hljs-string">"5 min"</span>)</span></span>
-<span class="hljs-function"><span class="hljs-title">Duration</span><span class="hljs-params">(<span class="hljs-string">"10s"</span>)</span></span>
-<span class="hljs-function"><span class="hljs-title">Duration</span><span class="hljs-params">(<span class="hljs-string">"0s"</span>)</span></span>
-<span class="hljs-function"><span class="hljs-title">Duration</span><span class="hljs-params">(<span class="hljs-string">"Inf"</span>)</span></span>
-</code></pre> </span>
+$ cs complete com.zax
+com.zaxxer
+
+$ cs complete com.typesafe.
+com.typesafe.akka
+com.typesafe.conductr
+com.typesafe.config
+com.typesafe.genjavadoc
+com.typesafe.jse_2.10
+com.typesafe.jse_2.11
+
+&lt;elided&gt;
+
+com.typesafe.ssl-config-core_2.13.0-RC3
+com.typesafe.webdriver_2.10
+com.typesafe.zinc
+</code></pre> <p>As can be seen from these 3 examples, there are two <em>Maven</em> <em>groupIds</em> that share the common <code>org.scala-lang</code> prefix whereas <code>com.zax</code> has exactly one matching <em>groupId</em>. Finally, <code>cs complete com.typesafe.</code> will list more than 80 matching <em>groupIds</em>.</p> <p>We can now focus on searching for some artifacts under these <em>groupIds</em>.</p> <h2><a class="anchor" aria-hidden="true" id="looking-up-artifacts-for-a-given-_groupid_"></a><a href="cli-complete.html#looking-up-artifacts-for-a-given-_groupid_" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Looking-up artifacts for a given <em>groupId</em></h2> <p>Passing a <em>Maven</em> <em>groupId</em> terminated by a colon will trigger a lookup of all artifacts published under that <em>groupId</em>.</p> <p>For example:</p> <pre><code class="hljs css language-bash">$ cs complete com.zaxxer:
+HikariCP
+HikariCP-agent
+HikariCP-java6
+HikariCP-java7
+HikariCP-java9ea
+HikariCP-parent
+SansOrm
+SparseBitSet
+influx4j
+jnb-ping
+kuill
+nuprocess
+sansorm
+
+$ cs complete com.typesafe.akka:
+akka
+akka-actor-testkit-typed_2.11
+akka-actor-testkit-typed_2.12
+akka-actor-testkit-typed_2.13
+akka-actor-testkit-typed_2.13.0-M3
+akka-actor-testkit-typed_2.13.0-M5
+akka-actor-testkit-typed_2.13.0-RC1
+akka-actor-testkit-typed_2.13.0-RC2
+akka-actor-testkit-typed_2.13.0-RC3
+akka-actor-tests_2.10
+akka-actor-tests_2.10.0-M7
+akka-actor-tests_2.10.0-RC1
+akka-actor-tests_2.10.0-RC2
+akka-actor-tests_2.10.0-RC3
+akka-actor-tests_2.10.0-RC5
+akka-actor-tests_2.11
+akka-actor-tests_2.11.0-M3
+akka-actor-tests_2.11.0-RC3
+akka-actor-tests_2.11.0-RC4
+akka-actor-tests_2.12.0-M1
+akka-actor-typed_2.11
+akka-actor-typed_2.12
+akka-actor-typed_2.13
+akka-actor-typed_2.13.0-M3
+akka-actor-typed_2.13.0-M5
+akka-actor-typed_2.13.0-RC1
+akka-actor-typed_2.13.0-RC2
+akka-actor-typed_2.13.0-RC3
+
+&lt;elided&gt;
+
+akka-zeromq_2.11
+akka-zeromq_2.11.0-M3
+hello-kernel_2.10
+hello-kernel_2.11
+</code></pre> <p>An interesting observation that can be made when looking at the output for <code>cs complete com.typesafe.akka:</code> is that each artifact is published against one or more minor versions of <em>Scala</em> (e.g. <code>2.11</code>, <code>2.12</code>, <code>2.13</code>, etc.). This is because these are <em>Scala</em> libraries that are cross-built for each <em>Scala</em> version supported by the library.</p> 
+          <blockquote> 
+           <p>Note: <em>Scala</em> guarantees binary compatibility between patch releases with a minor release.</p> 
+          </blockquote> <p>For example, if we take the <code>akka-actor-typed</code> library:</p> <pre><code class="hljs css language-bash">$ cs complete com.typesafe.akka:akka-actor-typed
+akka-actor-typed_2.11
+akka-actor-typed_2.12
+akka-actor-typed_2.13
+akka-actor-typed_2.13.0-M3
+akka-actor-typed_2.13.0-M5
+akka-actor-typed_2.13.0-RC1
+akka-actor-typed_2.13.0-RC2
+akka-actor-typed_2.13.0-RC3
+</code></pre> <p>We see that it was published against 3 <em>Scala</em> releases (ignoring Milestone releases and Release Candidates).</p> <h2><a class="anchor" aria-hidden="true" id="looking-up-artifact-versions"></a><a href="cli-complete.html#looking-up-artifact-versions" aria-hidden="true" class="hash-link">
+            <svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewbox="0 0 16 16" width="16">
+             <path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+            </svg></a>Looking-up artifact versions</h2> <p>Given a <em>Maven</em> <em>groupId</em> and <em>artifactId</em>, we can use <code>cs complete</code> to look up which version[s] of the artifact have been published.</p> <p>We'll take two examples, one for a <em>Java</em> library and one for a <em>Scala</em> Library.</p> <p>Let's start with the <code>HikariCP</code> library.</p> <pre><code class="hljs css language-bash">$ cs complete com.zaxxer:HikariCP:
+1.1.3
+1.1.4
+
+&lt;elided&gt;
+
+2.7.8
+2.7.9
+3.0.0
+3.1.0
+3.2.0
+3.3.0
+3.3.1
+3.4.0
+3.4.1
+3.4.2
+3.4.3
+3.4.4
+3.4.5
+</code></pre> <p>Pretty straightforward...</p> <p>Let's look at the <code>akka-actor-typed</code> library published for <em>Scala</em> 2.13.</p> <pre><code class="hljs css language-bash">$ cs complete com.typesafe.akka:akka-actor-typed_2.13:
+2.5.23
+2.5.24
+2.5.25
+2.5.26
+2.5.27
+2.5.28
+2.5.29
+2.5.30
+2.5.31
+2.5.32
+2.6.0-M3
+2.6.0-M4
+2.6.0-M5
+2.6.0-M6
+2.6.0-M7
+2.6.0-M8
+2.6.0-RC1
+2.6.0-RC2
+2.6.0
+2.6.1
+2.6.2
+2.6.3
+2.6.4
+2.6.5
+2.6.6
+2.6.7
+2.6.8
+2.6.9
+2.6.10
+</code></pre> <p>In conclusion we can say that <code>cs complete</code> is a very powerful command that allows us to easily look-up library (artifact) version information from the command line.</p> </span>
         </div>
        </article>
       </div>
       <div class="docs-prevnext">
-       <a class="docs-prev button" href="../../../docs/next/cache"><span class="arrow-prev">← </span><span>Cache</span></a>
-       <a class="docs-next button" href="../../../docs/next/other-repositories"><span>Repositories</span><span class="arrow-next"> →</span></a>
+       <a class="docs-prev button" href="../../../docs/next/cli-installation"><span class="arrow-prev">← </span><span>Installation</span></a>
+       <a class="docs-next button" href="../../../docs/next/cli-resolve"><span>resolve</span><span class="arrow-next"> →</span></a>
       </div>
      </div>
     </div>
-    <nav class="onPageNav"></nav>
+    <nav class="onPageNav">
+     <ul class="toc-headings">
+      <li><a href="cli-complete.html#looking-up-a-_maven_-_groupid_">Looking-up a <em>Maven</em> <em>groupId</em></a></li>
+      <li><a href="cli-complete.html#looking-up-artifacts-for-a-given-_groupid_">Looking-up artifacts for a given <em>groupId</em></a></li>
+      <li><a href="cli-complete.html#looking-up-artifact-versions">Looking-up artifact versions</a></li>
+     </ul>
+    </nav>
    </div>
    <footer class="nav-footer" id="footer">
     <section class="sitemap">
