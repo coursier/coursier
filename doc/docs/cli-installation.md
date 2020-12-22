@@ -4,26 +4,16 @@ title: Installation
 
 ## Native launcher
 
-### Linux
+### Linux & macOS
 
-On Linux, download and run the coursier launcher with
+On Linux and macOS, download and run the coursier launcher with
 ```bash
-$ curl -fLo cs https://git.io/coursier-cli-linux &&
-    chmod +x cs &&
-    ./cs
+$ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
+$ chmod +x cs
+$ ./cs
 ```
 
-### macOS
-
-Download and run the coursier launcher with
-```bash
-$ curl -fLo cs https://git.io/coursier-cli-macos &&
-    chmod +x cs &&
-    (xattr -d com.apple.quarantine cs || true) &&
-    ./cs
-```
-
-Note the `xattr` command to circumvent notarization on macOS Catalina.
+### macOS - brew based installation
 
 Alternatively, the native launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
