@@ -3,6 +3,7 @@ title: Overview
 ---
 
 The CLI of coursier has a number of commands to deal with dependencies and artifacts:
+- `complete` [allows one to complete Maven coordinates](#complete),
 - `resolve` [lists the transitive dependencies](#resolve) of one or more dependencies,
 - `fetch` [fetches the artifacts](#fetch) of one or more dependencies,
 - `launch` [runs applications based on Maven / Ivy dependencies](#launch),
@@ -19,6 +20,78 @@ details about each them are then given in the dedicated
 documentation page of each command (see links on the left).
 
 ## Available commands
+
+### `complete`
+
+`complete` allows one to complete Maven coordinates.
+
+For example, let's display all published versions of the `HikariCP` library:
+
+```bash
+$ cs complete com.zaxxer:HikariCP:
+1.1.3
+1.1.4
+
+<elided>
+
+3.3.1
+3.4.0
+3.4.1
+3.4.2
+3.4.3
+3.4.4
+3.4.5
+```
+
+As another example, let's see which versions of the Scala compiler are available:
+
+```bash
+$ cs complete org.scala-lang:scala-compiler:
+2.3.1
+2.3.3
+2.4.0-RC1
+2.4.0-RC2
+2.4.0
+2.5.0-RC1
+2.5.0-RC2
+2.5.0
+2.5.1
+
+<elided>
+
+2.12.0
+2.12.1
+2.12.2
+2.12.3
+2.12.4
+2.12.5
+2.12.6
+2.12.7
+2.12.8
+2.12.9
+2.12.10
+2.12.11
+2.12.12
+2.13.0-M1
+2.13.0-M2
+2.13.0-M3
+2.13.0-M3-f73b161
+2.13.0-M4
+2.13.0-M4-pre-20d3c21
+2.13.0-M5
+2.13.0-M5-5eef812
+2.13.0-M5-6e0cba7
+2.13.0-M5-1775dba
+2.13.0-RC1
+2.13.0-RC2
+2.13.0-RC3
+2.13.0
+2.13.1
+2.13.2
+2.13.3
+2.13.4
+```
+
 
 ### `resolve`
 
