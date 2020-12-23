@@ -4,26 +4,33 @@ title: Installation
 
 ## Native launcher
 
-### Linux
+### Linux & macOS
 
-On Linux, download and run the coursier launcher with
+On Linux and macOS, download and run the coursier launcher with
+
 ```bash
-$ curl -fLo cs https://git.io/coursier-cli-linux &&
-    chmod +x cs &&
-    ./cs
+$ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
+$ chmod +x cs
+$ ./cs
 ```
 
-### macOS
+> Note: The above instructions explain how to install a local copy of `cs`. The next thing you may want to do is to add `cs` to your PATH. The easiest way to accomplish this is to let `cs` do it for you! The following adapted installation instructions show the complete process:
+>
+> 
+> ```
+> $ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
+> $ chmod +x cs
+> $ ./cs install cs
+> $ rm cs
+> ```
+> 
+> Apart from now having `cs` on your PATH, updating `cs` is now as simple as executing the following command:
+> 
+> ```
+> $ cs update cs
+> ```
 
-Download and run the coursier launcher with
-```bash
-$ curl -fLo cs https://git.io/coursier-cli-macos &&
-    chmod +x cs &&
-    (xattr -d com.apple.quarantine cs || true) &&
-    ./cs
-```
-
-Note the `xattr` command to circumvent notarization on macOS Catalina.
+### macOS - brew based installation
 
 Alternatively, the native launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
