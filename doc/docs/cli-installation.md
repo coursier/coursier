@@ -7,11 +7,28 @@ title: Installation
 ### Linux & macOS
 
 On Linux and macOS, download and run the coursier launcher with
+
 ```bash
 $ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
 $ chmod +x cs
 $ ./cs
 ```
+
+> Note: The above instructions explain how to install a local copy of `cs`. The next thing you may want to do is to add `cs` to your PATH. The easiest way to accomplish this is to let `cs` do it for you! The following adapted installation instructions show the complete process:
+>
+> 
+> ```
+> $ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
+> $ chmod +x cs
+> $ ./cs install cs
+> $ rm cs
+> ```
+> 
+> Apart from now having `cs` on your PATH, updating `cs` is now as simple as executing the following command:
+> 
+> ```
+> $ cs update cs
+> ```
 
 ### macOS - brew based installation
 
