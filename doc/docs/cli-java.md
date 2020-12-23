@@ -160,6 +160,20 @@ $ eval "$(cs java --jvm 13 --env)"
 $ eval "$(cs java --disable)" # reverts both commands above
 ```
 
+## Setting a default JVM version
+
+The previous section explains how to generate environment settings for a specific JVM version using the `--env` option in `cs java`.
+
+This is useful when a particular, one-off version of Java is needed, but it doesn't set a default Java version. In order to do the latter, the `--setup` option does the trick.
+
+For example, suppose we want to set the default JVM to AdoptOpenJDK 11. We can achieve this by running the following command:
+
+```bash
+$ cs java --jvm adopt:11 --setup
+```
+
+Note that this command will update shell configuration files. In order to see the effect of these updates, it is recommended to stop terminal sessions that were already running and start new sessions.
+
 ## Managed JVM directory
 
 The default directory for JVMs managed by coursier is OS-specific:
