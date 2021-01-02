@@ -32,3 +32,58 @@ jobs:
         shell: bash
       - run: sbt -J-Dcoursier-test-launcher=./cs-test cli-tests/test
         shell: bash
+
+  test-linux-arm64-native-launcher:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v5
+        with:
+          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/native-tests.yml\"]"
+          extraKey: native-linux-aarch64
+      - run: .github/scripts/ci-setup.sh
+        shell: bash
+      - run: sbt cli/pack
+        shell: bash
+      - uses: uraimo/run-on-arch-action@v2.0.5
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+
+          # Speeds up builds per the run-on-arch-action README
+          githubToken: ${{ github.token }}
+
+          setup: |
+            mkdir -p output
+            tar -zxf "$(cs get https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.1.0/graalvm-ce-java11-linux-aarch64-20.1.0.tar.gz)"
+            mkdir -p utils
+            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.7/coursier)" utils/coursier
+            chmod +x utils/coursier
+
+          dockerRunArgs: |
+            --volume "${PWD}/output:/output"
+            --volume "${PWD}/utils:/utils"
+            --volume "${PWD}/graalvm-ce-java11-20.1.0:/jvm"
+
+          env: |
+            JAVA_HOME: /jvm
+            PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+            PGP_SECRET: ${{ secrets.PGP_SECRET }}
+
+          # The shell to run commands with in the container
+          shell: /bin/bash
+
+          # build-essential and libz-dev are required to build native images.
+          # git is required by some of the launcher.sc logic.
+          # python3-pip is required for some CLI tests.
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y build-essential libz-dev git python3-pip
+
+          run: |
+            export PATH="/utils:$JAVA_HOME/bin:$PATH"
+            coursier launch --fork ammonite:2.1.4-11-307f3d8 --scala 2.12.12 --java-opt -Xmx4g -- launcher.sc generateNativeImage --output /output/cs-test
+            coursier launch sbt-launcher --property coursier-test-launcher=/output/cs-test -- cli-tests/test
