@@ -30,6 +30,8 @@ object PackBootstrapTests extends BootstrapTests {
     else
       None
   override lazy val enableNailgunTest: Boolean =
+    // TODO Re-enable that on Windows using snailgun?
+    !System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows") &&
     // running into weird class loading errors with nailgun and JDK >= 11
     sys.props.get("java.version").exists(_.startsWith("1."))
 }
