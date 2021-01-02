@@ -9,6 +9,7 @@ import $file.scripts.shared.Util
 import $file.scripts.shared.Version
 import $file.scripts.shared.WaitForSync
 
+import java.util.Locale
 
 private def ghToken() = Option(System.getenv("GH_TOKEN")).getOrElse {
   sys.error("GH_TOKEN not set")
@@ -218,13 +219,15 @@ def uploadNativeImage(): Unit = {
   val version = Version.latestFromEnv
   generateNativeImage(version, dest, allowIvy2Local = false)
 
-  // TODO Check that we are on the right CPU too?
-  val platformSuffix = Util.os match {
-    case "linux" => "x86_64-pc-linux"
-    case "mac" => "x86_64-apple-darwin"
-    case "win" => "x86_64-pc-win32"
+  val arch = sys.props("os.arch").toLowerCase(Locale.ROOT)
+  val os = Util.os match {
+    case "linux" => "pc-linux"
+    case "mac" => "apple-darwin"
+    case "win" => "pc-win32"
     case other => ???
   }
+
+  val platformSuffix = s"$arch-$os"
 
   val extension = Util.os match {
     case "win" => ".exe"
@@ -236,6 +239,56 @@ def uploadNativeImage(): Unit = {
   val generatedFiles = Sign(
     Seq(
       actualDest -> s"cs-$platformSuffix$extension"
+    ),
+    pgpPassphrase = pgpPassphrase,
+    pgpSecret = pgpSecret
+  )
+
+  UploadGhRelease(
+    generatedFiles,
+    "coursier",
+    "coursier",
+    ghToken = token,
+    version = version,
+    dryRun = dryRun
+  )
+
+  UploadRepo(
+    generatedFiles,
+    "coursier",
+    "launchers",
+    "master",
+    ghToken = token,
+    s"Add $version native-image launcher for $platformSuffix",
+    dryRun = dryRun
+  )
+}
+
+@main
+def uploadExternalNativeImage(
+  launcher: String,
+  arch: String
+): Unit = {
+  val token = if (dryRun) "" else ghToken()
+  val version = Version.latestFromTag
+
+  val os = Util.os match {
+    case "linux" => "pc-linux"
+    case "mac" => "apple-darwin"
+    case "win" => "pc-win32"
+    case other => ???
+  }
+
+  val platformSuffix = s"$arch-$os"
+
+  val extension = Util.os match {
+    case "win" => ".exe"
+    case _ => ""
+  }
+
+  val generatedFiles = Sign(
+    Seq(
+      launcher -> s"cs-$platformSuffix$extension"
     ),
     pgpPassphrase = pgpPassphrase,
     pgpSecret = pgpSecret
