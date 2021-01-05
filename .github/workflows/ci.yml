@@ -104,6 +104,8 @@ jobs:
 
       - run: amm launcher.sc uploadExternalNativeImage --launcher output/cs-test --arch aarch64
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   update-brew-formula:
     needs: [upload-native-launchers, upload-linux-arm64-native-launcher]
