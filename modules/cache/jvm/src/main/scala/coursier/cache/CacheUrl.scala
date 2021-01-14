@@ -4,6 +4,7 @@ import java.net._
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
+import java.util.Locale
 import java.util.regex.Pattern
 
 import coursier.core.Authentication
@@ -387,14 +388,47 @@ object CacheUrl {
         None
     }
 
-  private[coursier] val BasicRealm = (
-    "(?i)" + // case-insensitive, the response might be BASIC realm=
-    "^" +
-      Pattern.quote("Basic realm=\"") +
-      "([^" + Pattern.quote("\"") + "]*)" +
-      Pattern.quote("\"") +
-    "$"
-  ).r
+  private[coursier] object BasicRealm {
+    private val BasicAuthBase = (
+      "(?i)" + // case-insensitive, the response might be BASIC realm=
+      "^" +
+        Pattern.quote("Basic") +
+      " +(.*)" + // skip spaces and then take everything
+      "$"
+    ).r
+
+    private val Param = (
+      "\\s*(\\S+?)" + Pattern.quote("=\"") +
+        "([^" + Pattern.quote("\"") + "]*)" +
+        Pattern.quote("\"") + ",?"
+    ).r
+
+    /* Extracting the realm from lines such as:
+
+    Basic realm="Sonatype Nexus Repository Manager"
+    Basic realm="SomeRealm", charset="UTF-8"
+    BASIC charset="UTF-8", realm="SomeRealm"
+
+    see https://tools.ietf.org/html/rfc7617#section-2.1
+
+    Currently only "realm" and "charset" are defined, but additional challenge parameters are
+    "reserved for future use".
+
+     */
+
+    def unapply(wwwAuthenticate: String): Option[String] = {
+      wwwAuthenticate match {
+        case BasicAuthBase(basicAuthLine) =>
+          Param.findAllMatchIn(basicAuthLine)
+            .iterator
+            .map(mobj => mobj.group(1).toLowerCase(Locale.ROOT) -> mobj.group(2))
+            .collectFirst { case ("realm", realm) => realm }
+
+        case _ =>
+          None
+      }
+    }
+  }
 
   def realm(conn: URLConnection): Option[String] =
     conn match {
