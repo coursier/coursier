@@ -400,7 +400,9 @@ object CacheUrl {
     private val Param = (
       "\\s*(\\S+?)" + Pattern.quote("=\"") +
         "([^" + Pattern.quote("\"") + "]*)" +
-        Pattern.quote("\"") + ",?"
+        Pattern.quote("\"") +
+        "\\s*"  + // skip any trailing spaces
+        "(?:,|$)" // either we're at the end or we have a trailing comma
     ).r
 
     /* Extracting the realm from lines such as:
@@ -420,7 +422,6 @@ object CacheUrl {
       wwwAuthenticate match {
         case BasicAuthBase(basicAuthLine) =>
           Param.findAllMatchIn(basicAuthLine)
-            .iterator
             .map(mobj => mobj.group(1).toLowerCase(Locale.ROOT) -> mobj.group(2))
             .collectFirst { case ("realm", realm) => realm }
 
