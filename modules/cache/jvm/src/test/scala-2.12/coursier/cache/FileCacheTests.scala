@@ -280,11 +280,10 @@ object FileCacheTests extends TestSuite {
       }
 
       test("authHttpToAuthHttp") {
-
         val realm = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
-        val routes = HttpService[IO] {
+        def routes(challengeParams: Map[String, String] = Map.empty) = HttpService[IO] {
           case req @ GET -> Root / "redirect" =>
             if (authorized(req, userPass))
               TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
@@ -294,11 +293,11 @@ object FileCacheTests extends TestSuite {
             if (authorized(req, userPass))
               Ok("hello auth")
             else
-              unauth(realm)
+              unauth(realm, params = challengeParams)
         }
 
-        test("enabled") {
-          withHttpServer(routes) { base =>
+        def testEnabled(challengeParams: Map[String, String] = Map.empty) = {
+          withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
               "hello auth",
@@ -312,8 +311,8 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        test("enabledAllRealms") {
-          withHttpServer(routes) { base =>
+        def testEnabledAllRealms(challengeParams: Map[String, String] = Map.empty) = {
+          withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
               "hello auth",
@@ -327,8 +326,8 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        test("enabledSeveralCreds") {
-          withHttpServer(routes) { base =>
+        def testEnabledSeveralCreds(challengeParams: Map[String, String] = Map.empty) = {
+          withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
               "hello auth",
@@ -345,12 +344,64 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        test("disabled") {
-          withHttpServer(routes) { base =>
+        def testDisabled(challengeParams: Map[String, String] = Map.empty) = {
+          withHttpServer(routes(challengeParams)) { base =>
             error(
               base / "redirect",
               _.startsWith("unauthorized: ")
             )
+          }
+        }
+
+        test("oldRfc2617") {
+          test("enabled") {
+            testEnabled()
+          }
+          test("enabledAllRealms") {
+            testEnabledAllRealms()
+          }
+          test("enabledSeveralCreds") {
+            testEnabledSeveralCreds()
+          }
+          test("disabled") {
+            testDisabled()
+          }
+        }
+
+        test("rfc7617WithCharset") { // current (2020/2021) Sonatype Nexus Repository Manager implements this
+          val challengeParams = Map("charset" -> "UTF-8") // RFC 7617 only allows UTF-8
+
+          test("enabled") {
+            testEnabled(challengeParams)
+          }
+          test("enabledAllRealms") {
+            testEnabledAllRealms(challengeParams)
+          }
+          test("enabledSeveralCreds") {
+            testEnabledSeveralCreds(challengeParams)
+          }
+          test("disabled") {
+            testDisabled(challengeParams)
+          }
+        }
+
+        test("beyondRfc7617") { // this tests that the underlying challenge-parsing code is robust enough
+          val challengeParams = Map(
+            "schtroumpf" -> "salsepareille",
+            "charset" -> "iso-8859-15", // out of RFC 7617
+            "abc" -> "def"
+          )
+          test("enabled") {
+            testEnabled(challengeParams)
+          }
+          test("enabledAllRealms") {
+            testEnabledAllRealms(challengeParams)
+          }
+          test("enabledSeveralCreds") {
+            testEnabledSeveralCreds(challengeParams)
+          }
+          test("disabled") {
+            testDisabled(challengeParams)
           }
         }
       }
