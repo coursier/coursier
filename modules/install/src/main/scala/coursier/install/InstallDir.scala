@@ -370,7 +370,7 @@ import scala.util.control.NonFatal
               else
                 baseNativePreamble
                   .withKind(Preamble.Kind.Sh)
-                  .withCommand(""""$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "") + "\"") // FIXME needs directory
+                  .withCommand(""""$(cd "$(dirname $(readlink "$0"))"; pwd)/""" + auxName(dest0.getFileName.toString, "") + "\"") // FIXME needs directory
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
