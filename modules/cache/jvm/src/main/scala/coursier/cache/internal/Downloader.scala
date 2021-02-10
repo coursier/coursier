@@ -522,7 +522,7 @@ import scala.util.control.NonFatal
         Left(new ArtifactError.NotFound(file.toString))
     }
 
-  private val actualCachePolicy = cachePolicy match {
+  private val actualCachePolicy: CachePolicy.Mixed = cachePolicy.acceptChanging match {
     case CachePolicy.UpdateChanging if !artifact.changing =>
       CachePolicy.FetchMissing
     case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid if !artifact.changing =>
@@ -535,7 +535,7 @@ import scala.util.control.NonFatal
 
     val file = localFile(url, artifact.authentication.map(_.user))
 
-    val run =
+    def run =
       if (url.startsWith("file:/") && !localArtifactsShouldBeCached)
         // for debug purposes, flaky with URL-encoded chars anyway
         // def filtered(s: String) =
@@ -587,7 +587,13 @@ import scala.util.control.NonFatal
         }
       }
 
-    run.map(e => DownloadResult(url, file, e.left.toOption))
+    val run0 =
+      if (artifact.changing && !cachePolicy.acceptsChangingArtifacts)
+        S.point(Left(new ArtifactError.ForbiddenChangingArtifact(url)))
+      else
+        run
+
+    run0.map(e => DownloadResult(url, file, e.left.toOption))
   }
 
   def download: F[Seq[DownloadResult]] = {

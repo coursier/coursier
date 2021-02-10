@@ -93,6 +93,11 @@ object ArtifactError {
     file
   )
 
+  final class ForbiddenChangingArtifact(val url: String) extends ArtifactError(
+    "changing artifact found",
+    url
+  )
+
   sealed abstract class Recoverable(
     `type`: String,
     message: String,

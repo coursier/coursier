@@ -71,7 +71,7 @@ final case class CacheOptions(
       if (mode.isEmpty)
         Validated.validNel(CacheDefaults.cachePolicies)
       else
-        CachePolicyParser.cachePolicies(mode).either match {
+        CachePolicyParser.cachePolicies(mode, CacheDefaults.cachePolicies).either match {
           case Right(cp) =>
             Validated.validNel(cp)
           case Left(errors) =>
