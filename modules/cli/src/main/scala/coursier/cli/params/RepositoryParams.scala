@@ -24,8 +24,10 @@ object RepositoryParams {
 
   def apply(options: RepositoryOptions, hasSbtPlugins: Boolean = false): ValidatedNel[String, RepositoryParams] = {
 
+    val noDefaultShortcut = options.repository.exists(_.startsWith("!"))
+    val repositoryInput = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
     val repositoriesV = Validated.fromEither(
-      RepositoryParser.repositories(options.repository)
+      RepositoryParser.repositories(repositoryInput)
         .either
         .left
         .map {
@@ -40,7 +42,7 @@ object RepositoryParams {
 
         // preprend defaults
         val defaults =
-          if (options.noDefault) Nil
+          if (options.noDefault || noDefaultShortcut) Nil
           else {
             val extra =
               if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
