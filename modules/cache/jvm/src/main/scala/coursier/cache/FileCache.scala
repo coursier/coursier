@@ -80,7 +80,6 @@ import scala.util.control.NonFatal
 
   private def download(
     artifact: Artifact,
-    checksums: Set[String],
     cachePolicy: CachePolicy
   ): F[Seq[((File, String), Either[ArtifactError, Unit])]] = {
 
@@ -633,25 +632,19 @@ import scala.util.control.NonFatal
     mainTask.flatMap { r =>
       val l0 = r match {
         case ((f, _), Right(())) =>
-          val l = checksums
-            .toSeq
-            .map { c =>
-              val candidate = auxiliaryFile(f, c)
-              S.delay(candidate.exists()).map {
-                case false =>
-                  checksumRes(c).toSeq
-                case true =>
-                  val url = artifact.checksumUrls.getOrElse(c, s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}")
-                  Seq(S.point[((File, String), Either[ArtifactError, Unit])](((candidate, url), Right(()))))
-              }
+          val l = actualChecksums.map { c =>
+            val candidate = auxiliaryFile(f, c)
+            S.delay(candidate.exists()).map {
+              case false =>
+                checksumRes(c).toSeq
+              case true =>
+                val url = artifact.checksumUrls.getOrElse(c, s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}")
+                Seq(S.point[((File, String), Either[ArtifactError, Unit])](((candidate, url), Right(()))))
             }
+          }
           S.gather(l).flatMap(l => S.gather(l.flatten))
         case _ =>
-          val l = checksums
-            .toSeq
-            .flatMap { c =>
-              checksumRes(c)
-            }
+          val l = actualChecksums.flatMap(checksumRes)
           S.gather(l)
       }
 
@@ -703,6 +696,7 @@ import scala.util.control.NonFatal
   }
 
   private val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
+  private val actualChecksums = checksums0.flatMap(_.toSeq).distinct
 
   private def filePerPolicy(
     artifact: Artifact,
@@ -735,7 +729,6 @@ import scala.util.control.NonFatal
     EitherT {
       download(
         artifact,
-        checksums = checksums0.collect { case Some(c) => c }.toSet,
         cachePolicy = policy
       ).map { results =>
         val resultsMap = results
