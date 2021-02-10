@@ -9,7 +9,7 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, FileUtil}
+import coursier.cache.internal.{Downloader, DownloadResult, FileUtil}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -81,7 +81,7 @@ import scala.util.control.NonFatal
   private def download(
     artifact: Artifact,
     cachePolicy: CachePolicy
-  ): F[Seq[((File, String), Either[ArtifactError, Unit])]] =
+  ): F[Seq[DownloadResult]] =
     Downloader(
       artifact,
       cachePolicy,
@@ -179,7 +179,7 @@ import scala.util.control.NonFatal
       ).map { results =>
         val resultsMap = results
           .map {
-            case ((_, u), b) => u -> b
+            case res => res.url -> res.errorOpt
           }
           .toMap
 
@@ -191,25 +191,25 @@ import scala.util.control.NonFatal
         }
         val checksum = checksumResults.collectFirst {
           case None => None
-          case Some((c, _, Some(Right(())))) =>
+          case Some((c, _, Some(errorOpt))) if errorOpt.isEmpty =>
             Some(c)
         }
         def checksumErrors: Seq[(String, String)] = checksumResults.collect {
           case Some((c, url, None)) =>
             // shouldn't happen, the download method must have returned results for this…
             c -> s"$url not downloaded"
-          case Some((c, _, Some(Left(e)))) =>
+          case Some((c, _, Some(Some(e)))) =>
             c -> e.describe
         }
 
-        val ((f, _), res) = results.head
-        res.flatMap { _ =>
+        val res = results.head
+        res.errorOpt.toLeft(()).flatMap { _ =>
           checksum match {
             case None =>
               // FIXME All the checksums should be in the error, possibly with their URLs
               //       from artifact0.checksumUrls
               Left(new ArtifactError.ChecksumErrors(checksumErrors))
-            case Some(c) => Right((f, c))
+            case Some(c) => Right((res.file, c))
           }
         }
       }
