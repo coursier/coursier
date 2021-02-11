@@ -101,7 +101,7 @@ import dataclass._
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
         files <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, "latest.release")))
+          .withDependencies(Seq(Dependency(channel.module, channel.version)))
           .withRepositories(repositories)
           .io
 

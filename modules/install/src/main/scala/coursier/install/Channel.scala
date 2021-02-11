@@ -4,7 +4,7 @@ import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
 
 import coursier.core.Module
-import coursier.parse.{JavaOrScalaModule, ModuleParser}
+import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
@@ -13,7 +13,10 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  @data class FromModule(module: Module) extends Channel {
+  @data class FromModule(
+    module: Module,
+    version: String = "latest.release"
+  ) extends Channel {
     def repr: String =
       module.repr
   }
@@ -35,6 +38,8 @@ object Channel {
 
   def module(module: Module): FromModule =
     FromModule(module)
+  def module(module: Module, version: String): FromModule =
+    FromModule(module, version)
 
   private lazy val ghUrlMatcher =
     (quote("https://github.com/") + "([^/]*)/([^/]*)" + quote("/blob/") + "([^/]*)" + quote("/") + "(.*)").r.pattern
@@ -103,12 +108,19 @@ object Channel {
           val url = ghUrl(org, name, branch, path0)
           FromUrl(url)
       }
-    } else if (s.contains(":"))
-      ModuleParser.javaOrScalaModule(s).flatMap {
-        case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
-        case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
-      }
-    else
+    } else if (s.contains(":")) {
+      val hasVersion = s.split(':').count(_.nonEmpty) >= 3
+      if (hasVersion)
+        DependencyParser.javaOrScalaDependencyParams(s).flatMap {
+          case (j: JavaOrScalaDependency.JavaDependency, _) => Right(Channel.module(j.module.module, j.version))
+          case (s: JavaOrScalaDependency.ScalaDependency, _) => Left(s"Scala dependencies ($s) not accepted as channels")
+        }
+      else
+        ModuleParser.javaOrScalaModule(s).flatMap {
+          case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
+          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
+        }
+    } else
       Right(FromDirectory(fs.getPath(s).toAbsolutePath))
 
 }
