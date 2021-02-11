@@ -45,7 +45,7 @@ import dataclass.data
   def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
-  def copy(
+  private[core] def copy(
     module: Module = this.module,
     version: String = this.version,
     configuration: Configuration = this.configuration,

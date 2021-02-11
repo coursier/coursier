@@ -64,7 +64,7 @@ object ModuleName {
 
   override final lazy val hashCode = tuple.hashCode()
 
-  def copy(
+  private[core] def copy(
     organization: Organization = this.organization,
     name: ModuleName = this.name,
     attributes: Map[String, String] = this.attributes
