@@ -2,7 +2,7 @@ package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, OutputOptions}
+import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 final case class UpdateOptions(
 
@@ -17,6 +17,9 @@ final case class UpdateOptions(
 
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
+
+  @Recurse
+    repositoryOptions: RepositoryOptions = RepositoryOptions(),
 
   overrideRepositories: Boolean = false,
 

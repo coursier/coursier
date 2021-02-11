@@ -37,8 +37,12 @@ object Install extends CaseApp[InstallOptions] {
     val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val graalvmHome = { version: String =>
-      params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
-        .get(s"graalvm:$version")
+      params.sharedJava.javaHome(
+        cache,
+        noUpdateCoursierCache,
+        params.repository.repositories,
+        params.output.verbosity
+      ).get(s"graalvm:$version")
     }
 
     val installDir = params.shared.installDir(cache)

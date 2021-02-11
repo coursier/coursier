@@ -26,7 +26,12 @@ final case class LaunchParams(
         val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
         for {
           _ <- Task.delay(logger.init())
-          (cache0, _) = sharedJava.cacheAndHome(cache, cache, shared.resolve.output.verbosity)
+          (cache0, _) = sharedJava.cacheAndHome(
+            cache,
+            cache,
+            shared.resolve.repositories.repositories,
+            shared.resolve.output.verbosity
+          )
           handle = coursier.jvm.JavaHome()
             .withCache(cache0)
           javaExe <- handle.javaBin(id)

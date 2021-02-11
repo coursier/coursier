@@ -24,18 +24,22 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     val coursierCache = params.cache.cache(pool, logger)
     val noUpdateCoursierCache = params.cache.cache(pool, logger, overrideTtl = Some(Duration.Inf))
 
-    val (jvmCache, javaHome) = params.shared.cacheAndHome(coursierCache, noUpdateCoursierCache, params.output.verbosity)
+    val (jvmCache, javaHome) = params.shared.cacheAndHome(
+      coursierCache,
+      noUpdateCoursierCache,
+      params.repository.repositories,
+      params.output.verbosity
+    )
     val task = javaHome.getWithRetainedId(params.shared.id)
 
-    logger.init()
-    val (retainedId, home) =
+    val (retainedId, home) = logger.use {
       try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
       catch {
         case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
           System.err.println(e.getMessage)
           sys.exit(1)
       }
-      finally logger.stop()
+    }
 
     lazy val envUpdate = javaHome.environmentFor(retainedId, home)
     if (params.env.env) {

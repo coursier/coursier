@@ -108,12 +108,11 @@ import dataclass._
           .ioResult
 
         _ = {
-          for (logger <- cache.loggerOpt) {
-            val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
-            logger.init()
-            try logger.pickedModuleVersion(channel.module.repr, retainedVersion)
-            finally logger.stop()
-          }
+          for (logger <- cache.loggerOpt)
+            logger.use {
+              val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              logger.pickedModuleVersion(channel.module.repr, retainedVersion)
+            }
         }
 
         dataOpt <- res

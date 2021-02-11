@@ -7,7 +7,7 @@ import java.nio.file.Files
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
 import coursier.install.Channel
 
 final case class InstallParams(
@@ -16,6 +16,7 @@ final case class InstallParams(
   shared: SharedInstallParams,
   sharedChannel: SharedChannelParams,
   sharedJava: SharedJavaParams,
+  repository: RepositoryParams,
   env: EnvParams,
   addChannels: Seq[Channel],
   installChannels: Seq[String],
@@ -38,6 +39,8 @@ object InstallParams {
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
     val envV = EnvParams(options.envOptions)
+
+    val repoV = RepositoryParams(options.repositoryOptions)
 
     val addChannelsV = options.addChannel.traverse { s =>
       val e = Channel.parse(s)
@@ -70,14 +73,15 @@ object InstallParams {
       else
         Validated.validNel(())
 
-    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, addChannelsV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
-      (cacheParams, output, shared, sharedChannel, sharedJava, env, addChannels, _, _, _) =>
+    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, repoV, addChannelsV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
+      (cacheParams, output, shared, sharedChannel, sharedJava, env, repo, addChannels, _, _, _) =>
         InstallParams(
           cacheParams,
           output,
           shared,
           sharedChannel,
           sharedJava,
+          repo,
           env,
           addChannels.map(_._2),
           addChannels.map(_._1),

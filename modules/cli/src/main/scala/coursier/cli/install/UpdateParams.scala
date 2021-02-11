@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.{CacheParams, OutputParams}
+import coursier.cli.params.{CacheParams, OutputParams, RepositoryParams}
 import coursier.core.Repository
 
 import scala.concurrent.duration.Duration
@@ -16,6 +16,7 @@ final case class UpdateParams(
   output: OutputParams,
   shared: SharedInstallParams,
   sharedJava: SharedJavaParams,
+  repository: RepositoryParams,
   overrideRepositories: Boolean,
   force: Boolean
 ) {
@@ -33,14 +34,17 @@ object UpdateParams {
     val sharedV = SharedInstallParams(options.sharedInstallOptions)
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
+    val repoV = RepositoryParams(options.repositoryOptions)
+
     val force = options.force
 
-    (cacheParamsV, outputV, sharedV, sharedJavaV).mapN { (cacheParams, output, shared, sharedJava) =>
+    (cacheParamsV, outputV, sharedV, sharedJavaV, repoV).mapN { (cacheParams, output, shared, sharedJava, repo) =>
       UpdateParams(
         cacheParams,
         output,
         shared,
         sharedJava,
+        repo,
         options.overrideRepositories,
         force
       )

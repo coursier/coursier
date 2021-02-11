@@ -6,6 +6,7 @@ import java.time.Instant
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
 import java.util.Locale
 
+import coursier.Repository
 import coursier.cache.{Cache, CacheLocks, CacheLogger, FileCache}
 import coursier.cache.internal.ThreadUtil
 import coursier.core.Version
@@ -317,6 +318,13 @@ import scala.util.control.NonFatal
   def withIndex(indexUrl: String): JvmCache = {
     val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
       JvmIndex.load(cache, indexUrl)
+    }
+    withIndex(indexTask)
+  }
+
+  def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache = {
+    val indexTask = cache.loggerOpt.filter(_ => handleLoggerLifecycle).getOrElse(CacheLogger.nop).using {
+      JvmIndex.load(cache, repositories, indexChannel)
     }
     withIndex(indexTask)
   }

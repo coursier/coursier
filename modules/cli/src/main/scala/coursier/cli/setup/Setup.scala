@@ -25,7 +25,12 @@ object Setup extends CaseApp[SetupOptions] {
     val cache = params.cache.cache(pool, logger)
     val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val javaHome = params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
+    val javaHome = params.sharedJava.javaHome(
+      cache,
+      noUpdateCoursierCache,
+      params.repository.repositories,
+      params.output.verbosity
+    )
 
     val envVarUpdaterOpt =
       if (params.env.env) None
