@@ -11,7 +11,8 @@ import coursier.cache.loggers.FileTypeRefreshDisplay
 final case class OutputParams(
   verbosity: Int,
   progressBars: Boolean,
-  logChanging: Boolean
+  logChanging: Boolean,
+  logPickedVersions: Boolean
 ) {
   def logger(): CacheLogger =
     logger(byFileType = false)
@@ -30,7 +31,8 @@ final case class OutputParams(
             loggerFallbackMode,
             quiet = verbosity == -1 || Option(System.getenv("CI")).nonEmpty
           ),
-        logChanging = logChanging
+        logChanging = logChanging,
+        logPickedVersions = logPickedVersions
       )
     else
       CacheLogger.nop
@@ -54,13 +56,15 @@ object OutputParams {
 
     val progressBars = options.progress
     val logChanging = options.logChanging
+    val logPickedVersions = options.logChannelVersion
 
     (verbosityV, verbosityLogChangingCheckV).mapN {
       (verbosity, _) =>
         OutputParams(
           verbosity,
           progressBars,
-          logChanging
+          logChanging,
+          logPickedVersions
         )
     }
   }

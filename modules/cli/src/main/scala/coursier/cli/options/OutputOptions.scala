@@ -17,7 +17,10 @@ final case class OutputOptions(
     progress: Boolean = false,
 
   @Help("Log changing artifacts")
-    logChanging: Boolean = false
+    logChanging: Boolean = false,
+
+  @Help("Log channel version")
+    logChannelVersion: Boolean = false
 
 )
 

@@ -21,7 +21,9 @@ import dataclass._
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = FileCache(),
   @since
-  verbosity: Int = 0
+  verbosity: Int = 0,
+  @since("2.0.10")
+  logChannelVersion: Boolean = false
 ) {
 
   def appDescriptor(id: String): Task[AppInfo] = {
@@ -100,12 +102,22 @@ import dataclass._
 
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
-        files <- Fetch(cache)
+        res <- Fetch(cache)
           .withDependencies(Seq(Dependency(channel.module, channel.version)))
           .withRepositories(repositories)
-          .io
+          .ioResult
 
-        res <- files
+        _ = {
+          for (logger <- cache.loggerOpt) {
+            val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+            logger.init()
+            try logger.pickedModuleVersion(channel.module.repr, retainedVersion)
+            finally logger.stop()
+          }
+        }
+
+        dataOpt <- res
+          .files
           .iterator
           .map { f =>
             Task.delay {
@@ -127,7 +139,7 @@ import dataclass._
               case s @ Some(_) => Task.point(s)
             }
           }
-      } yield res
+      } yield dataOpt
 
     def fromUrl(channel: Channel.FromUrl): Task[Option[ChannelData]] = {
 

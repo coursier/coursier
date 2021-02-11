@@ -39,11 +39,39 @@ object RefreshLogger {
   def create(os: OutputStream, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
     new RefreshLogger(new OutputStreamWriter(os), display, fallbackMode = false, logChanging = logChanging)
 
+  def create(
+    os: OutputStream,
+    display: RefreshDisplay,
+    logChanging: Boolean,
+    logPickedVersions: Boolean
+  ): RefreshLogger =
+    new RefreshLogger(
+      new OutputStreamWriter(os),
+      display,
+      fallbackMode = false,
+      logChanging = logChanging,
+      logPickedVersions = logPickedVersions
+    )
+
   def create(writer: OutputStreamWriter, display: RefreshDisplay): RefreshLogger =
     new RefreshLogger(writer, display)
 
   def create(writer: OutputStreamWriter, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
     new RefreshLogger(writer, display, fallbackMode = false, logChanging = logChanging)
+
+  def create(
+    writer: OutputStreamWriter,
+    display: RefreshDisplay,
+    logChanging: Boolean,
+    logPickedVersions: Boolean
+  ): RefreshLogger =
+    new RefreshLogger(
+      writer,
+      display,
+      fallbackMode = false,
+      logChanging = logChanging,
+      logPickedVersions = logPickedVersions
+    )
 
 
   lazy val defaultFallbackMode: Boolean =
@@ -172,7 +200,8 @@ class RefreshLogger(
   out: Writer,
   display: RefreshDisplay,
   val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode,
-  logChanging: Boolean = false
+  logChanging: Boolean = false,
+  logPickedVersions: Boolean = false
 ) extends CacheLogger {
 
   def this(
@@ -252,6 +281,10 @@ class RefreshLogger(
     if (logChanging && artifact.changing) {
       updateRunnable.log(s"Checking changing artifact $url")
     }
+
+  override def pickedModuleVersion(module: String, version: String): Unit =
+    if (logPickedVersions)
+      updateRunnable.log(s"Using $module:$version")
 
   override def downloadingArtifact(url: String, artifact: Artifact): Unit =
     updateRunnable.newEntry(

@@ -28,6 +28,9 @@ trait CacheLogger {
 
   def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
 
+  // FIXME Create another logger class for that?
+  def pickedModuleVersion(module: String, version: String): Unit = {}
+
   // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
   def init(sizeHint: Option[Int] = None): Unit = {}
   def stop(): Unit = {}
