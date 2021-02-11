@@ -4,10 +4,11 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
 
 final case class JavaHomeParams(
   shared: SharedJavaParams,
+  repository: RepositoryParams,
   cache: CacheParams,
   output: OutputParams,
   env: EnvParams
@@ -19,9 +20,11 @@ object JavaHomeParams {
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val envV = EnvParams(options.envOptions)
-    (sharedV, cacheV, outputV, envV).mapN { (shared, cache, output, env) =>
+    val repoV = RepositoryParams(options.repositoryOptions)
+    (sharedV, cacheV, outputV, envV, repoV).mapN { (shared, cache, output, env, repo) =>
       JavaHomeParams(
         shared,
+        repo,
         cache,
         output,
         env

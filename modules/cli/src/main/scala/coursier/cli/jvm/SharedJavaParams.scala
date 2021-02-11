@@ -5,8 +5,9 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.Repository
 import coursier.cache.Cache
-import coursier.jvm.{JvmCache, JvmCacheLogger, JvmIndex}
+import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
 
 final case class SharedJavaParams(
@@ -16,30 +17,28 @@ final case class SharedJavaParams(
   requireSystemJvm: Boolean,
   localOnly: Boolean,
   update: Boolean,
-  jvmIndexUrlOpt: Option[String]
+  jvmChannelOpt: Option[JvmChannel]
 ) {
   def id: String =
     jvm.getOrElse(coursier.jvm.JavaHome.defaultId)
 
-  def cacheAndHome(cache: Cache[Task], noUpdateCache: Cache[Task], verbosity: Int): (JvmCache, coursier.jvm.JavaHome) = {
-    val noUpdateJvmCache = {
-      val c = JvmCache()
-        .withBaseDirectory(jvmDir.toFile)
-        .withCache(noUpdateCache)
-      jvmIndexUrlOpt match {
-        case None => c.withDefaultIndex
-        case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
-      }
-    }
-    val jvmCache = {
+  def cacheAndHome(
+    cache: Cache[Task],
+    noUpdateCache: Cache[Task],
+    repositories: Seq[Repository],
+    verbosity: Int
+  ): (JvmCache, coursier.jvm.JavaHome) = {
+    def jvmCacheOf(cache: Cache[Task]) = {
       val c = JvmCache()
         .withBaseDirectory(jvmDir.toFile)
         .withCache(cache)
-      jvmIndexUrlOpt match {
+      jvmChannelOpt match {
         case None => c.withDefaultIndex
-        case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
+        case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
       }
     }
+    val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
+    val jvmCache = jvmCacheOf(cache)
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
@@ -49,8 +48,18 @@ final case class SharedJavaParams(
       .withUpdate(update)
     (jvmCache, javaHome)
   }
-  def javaHome(cache: Cache[Task], noUpdateCache: Cache[Task], verbosity: Int): coursier.jvm.JavaHome = {
-    val (_, home) = cacheAndHome(cache, noUpdateCache, verbosity)
+  def javaHome(
+    cache: Cache[Task],
+    noUpdateCache: Cache[Task],
+    repositories: Seq[Repository],
+    verbosity: Int
+  ): coursier.jvm.JavaHome = {
+    val (_, home) = cacheAndHome(
+      cache,
+      noUpdateCache,
+      repositories,
+      verbosity
+    )
     home
   }
 
@@ -91,22 +100,31 @@ object SharedJavaParams {
       else
         Validated.validNel(())
 
-    val index = options
-      .jvmIndex
-      .map(_.trim)
-      .filter(_ != "default")
-      .map(JvmIndex.handleAliases)
+    val indexChannelOptV = {
+      val parsed = options
+        .jvmIndex
+        .map(_.trim)
+        .filter(_ != "default")
+        .map(JvmIndex.handleAliases)
+        .map { s => JvmChannel.parse(s) }
+      parsed match {
+        case None => Validated.validNel(None)
+        case Some(Left(err)) => Validated.invalidNel(s"Invalid --jvm-index value: $err")
+        case Some(Right(channel)) => Validated.validNel(Some(channel))
+      }
+    }
 
-    checkSystemV.map { _ =>
-      SharedJavaParams(
-        jvm,
-        jvmDir,
-        allowSystem,
-        requireSystem,
-        options.localOnly,
-        options.update,
-        index
-      )
+    (checkSystemV, indexChannelOptV).mapN {
+      (_, indexChannelOpt) =>
+        SharedJavaParams(
+          jvm,
+          jvmDir,
+          allowSystem,
+          requireSystem,
+          options.localOnly,
+          options.update,
+          indexChannelOpt
+        )
     }
   }
 }

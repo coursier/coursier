@@ -14,7 +14,13 @@ final case class OutputOptions(
 
   @Help("Force display of progress bars")
   @Short("P")
-    progress: Boolean = false
+    progress: Boolean = false,
+
+  @Help("Log changing artifacts")
+    logChanging: Boolean = false,
+
+  @Help("Log channel version")
+    logChannelVersion: Boolean = false
 
 )
 

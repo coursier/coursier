@@ -1,4 +1,4 @@
-package coursier.install
+package coursier.jvm
 
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
@@ -7,33 +7,30 @@ import coursier.core.Module
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import dataclass.data
 
-sealed abstract class Channel extends Product with Serializable {
+// FIXME Initially copied from coursier.install.Channel, there's some duplication with it…
+
+sealed abstract class JvmChannel extends Product with Serializable {
   def repr: String
 }
 
-object Channel {
+object JvmChannel {
 
   @data class FromModule(
     module: Module,
     version: String = "latest.release"
-  ) extends Channel {
+  ) extends JvmChannel {
     def repr: String =
       module.repr
   }
 
-  @data class FromUrl(url: String) extends Channel {
+  @data class FromUrl(url: String) extends JvmChannel {
     def repr: String =
       url
   }
 
-  @data class FromDirectory(path: Path) extends Channel {
+  @data class FromFile(path: Path) extends JvmChannel {
     def repr: String =
       path.toString
-  }
-
-  @data class Inline() extends Channel {
-    def repr: String =
-      "inline"
   }
 
   def module(module: Module): FromModule =
@@ -71,14 +68,12 @@ object Channel {
     FromUrl(url0)
   }
 
-  def parse(s: String): Either[String, Channel] =
+  def parse(s: String): Either[String, JvmChannel] =
     parse(s, FileSystems.getDefault)
 
-  def parse(s: String, fs: FileSystem): Either[String, Channel] =
-    if (s == "inline")
-      Right(Inline())
-    else if (s.contains("://"))
-      Right(Channel.url(s))
+  def parse(s: String, fs: FileSystem): Either[String, JvmChannel] =
+    if (s.contains("://"))
+      Right(JvmChannel.url(s))
     else if ((s.startsWith("gh:") || s.startsWith("github:")) && s.contains("/")) {
 
       val s0 =
@@ -112,15 +107,15 @@ object Channel {
       val hasVersion = s.split(':').count(_.nonEmpty) >= 3
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
-          case (j: JavaOrScalaDependency.JavaDependency, _) => Right(Channel.module(j.module.module, j.version))
-          case (s: JavaOrScalaDependency.ScalaDependency, _) => Left(s"Scala dependencies ($s) not accepted as channels")
+          case (j: JavaOrScalaDependency.JavaDependency, _) => Right(JvmChannel.module(j.module.module, j.version))
+          case (s: JavaOrScalaDependency.ScalaDependency, _) => Left(s"Scala dependencies ($s) not accepted as JVM channels")
         }
       else
         ModuleParser.javaOrScalaModule(s).flatMap {
-          case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
-          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
+          case j: JavaOrScalaModule.JavaModule => Right(JvmChannel.module(j.module))
+          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as JVM channels")
         }
     } else
-      Right(FromDirectory(fs.getPath(s).toAbsolutePath))
+      Right(FromFile(fs.getPath(s).toAbsolutePath))
 
 }

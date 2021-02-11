@@ -1,10 +1,16 @@
 package coursier.jvm
 
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.util.Locale
+import java.util.zip.ZipFile
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import coursier.{Dependency, Repository}
 import coursier.cache.{Cache, FileCache}
+import coursier.cache.internal.FileUtil
 import coursier.core.{Latest, Parse, Version}
 import coursier.util.{Artifact, Task}
 import dataclass.data
@@ -37,6 +43,90 @@ object JvmIndex {
     Try(readFromString(index)(codec)) match {
       case Success(map) => Right(JvmIndex(map))
       case Failure(t) => Left(t)
+    }
+
+  private def withZipFile[T](file: File)(f: ZipFile => T): T = {
+    var zf: ZipFile = null
+    try {
+      zf = new ZipFile(file)
+      f(zf)
+    } finally {
+      if (zf != null)
+        zf.close()
+    }
+  }
+
+  private def fromModule(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    channel: JvmChannel.FromModule
+  ): Task[Option[JvmIndex]] =
+    for {
+      res <- coursier.Fetch(cache)
+        .withDependencies(Seq(Dependency(channel.module, channel.version)))
+        .withRepositories(repositories)
+        .ioResult
+
+      _ = {
+        for (logger <- cache.loggerOpt)
+          logger.use {
+            val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+            logger.pickedModuleVersion(channel.module.repr, retainedVersion)
+          }
+      }
+
+      dataOpt <- res
+        .files
+        .iterator
+        .map { f =>
+          Task.delay {
+            withZipFile(f) { zf =>
+              val path = "index.json"
+              Option(zf.getEntry(path)).map { e =>
+                val binaryContent = FileUtil.readFully(zf.getInputStream(e))
+                val strContent = new String(binaryContent, StandardCharsets.UTF_8)
+                fromString(strContent)
+                  .left.map(ex => new Exception(s"Error parsing $f!$path", ex))
+              }
+            }
+          }.flatMap {
+            case None => Task.point(None)
+            case Some(Right(idx)) => Task.point(Some(idx))
+            case Some(Left(ex)) => Task.fail(ex)
+          }
+        }
+        .foldLeft[Task[Option[JvmIndex]]](Task.point(None)) { (acc, elem) =>
+          acc.flatMap {
+            case None => elem
+            case s @ Some(_) => Task.point(s)
+          }
+        }
+    } yield dataOpt
+
+  def load(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    indexChannel: JvmChannel
+  ): Task[JvmIndex] =
+    indexChannel match {
+      case f: JvmChannel.FromFile =>
+        Task.delay(new String(Files.readAllBytes(f.path), StandardCharsets.UTF_8)).attempt.flatMap {
+          case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
+          case Right(content) =>
+            Task.fromEither(fromString(content))
+        }
+      case u: JvmChannel.FromUrl =>
+        cache.fetch(artifact(u.url)).run.flatMap {
+          case Left(err) =>
+            Task.fail(new Exception(s"Error while getting ${u.url}: $err"))
+          case Right(content) =>
+            Task.fromEither(fromString(content))
+        }
+      case m: JvmChannel.FromModule =>
+        fromModule(cache, repositories, m).flatMap {
+          case None => Task.fail(new Exception(s"No index found in ${m.repr}"))
+          case Some(c) => Task.point(c)
+        }
     }
 
   def load(

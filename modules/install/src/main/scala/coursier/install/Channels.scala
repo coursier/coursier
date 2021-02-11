@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.util.zip.ZipFile
@@ -21,7 +21,9 @@ import dataclass._
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = FileCache(),
   @since
-  verbosity: Int = 0
+  verbosity: Int = 0,
+  @since("2.0.10")
+  logChannelVersion: Boolean = false
 ) {
 
   def appDescriptor(id: String): Task[AppInfo] = {
@@ -38,38 +40,40 @@ import dataclass._
 
     for {
 
-      t0 <- {
+      channelData <- {
         inlineOpt match {
           case None =>
             find(actualId).flatMap {
               case None => Task.fail(new Channels.AppNotFound(actualId, channels))
-              case Some((channel, _, descRepr)) => Task.point((channel, descRepr))
+              case Some(data) => Task.point(data)
             }
           case Some(inline) =>
-            Task.point((Channel.Inline(), inline.getBytes(StandardCharsets.UTF_8)))
+            val data = ChannelData(
+              Channel.Inline(),
+              "",
+              inline.getBytes(StandardCharsets.UTF_8)
+            )
+            Task.point(data)
         }
       }
-      (channel, descRepr) = t0
 
       _ = if (verbosity >= 1)
-        System.err.println(s"Found app $actualId in channel ${channel.repr}")
+        System.err.println(s"Found app $actualId in channel ${channelData.channel.repr}")
 
-      strRepr = new String(descRepr, StandardCharsets.UTF_8)
-
-      t1 <- RawAppDescriptor.parse(strRepr) match {
+      t1 <- RawAppDescriptor.parse(channelData.strData) match {
         case Left(error) =>
           if (verbosity >= 2)
-            System.err.println(s"Malformed app descriptor:\n$strRepr")
-          Task.fail(new Channels.ErrorParsingAppDescriptor(actualId, channel, error))
+            System.err.println(s"Malformed app descriptor:\n${channelData.strData}")
+          Task.fail(new Channels.ErrorParsingAppDescriptor(actualId, channelData.channel, error))
         case Right(desc) =>
-          val source = Source(repositories, channel, actualId)
+          val source = Source(repositories, channelData.channel, actualId)
           // FIXME Get raw repositories from or along with params.repositories
           Task.point((source, desc))
       }
       (source, rawDesc) = t1
 
       desc <- rawDesc.appDescriptor.toEither match {
-        case Left(errors) => Task.fail(new Channels.ErrorProcessingAppDescriptor(actualId, channel, errors.toList))
+        case Left(errors) => Task.fail(new Channels.ErrorProcessingAppDescriptor(actualId, channelData.channel, errors.toList))
         case Right(desc0) => Task.point(desc0)
       }
 
@@ -78,47 +82,65 @@ import dataclass._
         .repr.getBytes(StandardCharsets.UTF_8)
 
     } yield {
-      AppInfo(desc, descRepr, source, sourceBytes)
+      AppInfo(desc, channelData.data, source, sourceBytes)
         .overrideVersion(overrideVersionOpt)
     }
   }
 
-  def find(id: String): Task[Option[(Channel, String, Array[Byte])]] = {
+  private def withZipFile[T](file: File)(f: ZipFile => T): T = {
+    var zf: ZipFile = null
+    try {
+      zf = new ZipFile(file)
+      f(zf)
+    } finally {
+      if (zf != null)
+        zf.close()
+    }
+  }
 
-    def fromModule(channel: Channel.FromModule): Task[Option[(Channel, String, Array[Byte])]] =
+  def find(id: String): Task[Option[ChannelData]] = {
+
+    def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
-        files <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, "latest.release")))
+        res <- Fetch(cache)
+          .withDependencies(Seq(Dependency(channel.module, channel.version)))
           .withRepositories(repositories)
-          .io
+          .ioResult
 
-        res <- files
+        _ = {
+          for (logger <- cache.loggerOpt)
+            logger.use {
+              val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              logger.pickedModuleVersion(channel.module.repr, retainedVersion)
+            }
+        }
+
+        dataOpt <- res
+          .files
           .iterator
           .map { f =>
             Task.delay {
-              var zf: ZipFile = null
-              try {
-                zf = new ZipFile(f)
+              withZipFile(f) { zf =>
                 val path = s"$id.json"
-                Option(zf.getEntry(path))
-                  .map { e =>
-                    (channel, s"$f!$path", FileUtil.readFully(zf.getInputStream(e)))
-                  }
-              } finally {
-                if (zf == null)
-                  zf.close()
+                Option(zf.getEntry(path)).map { e =>
+                  ChannelData(
+                    channel,
+                    s"$f!$path",
+                    FileUtil.readFully(zf.getInputStream(e))
+                  )
+                }
               }
             }
           }
-          .foldLeft(Task.point(Option.empty[(Channel, String, Array[Byte])])) { (acc, elem) =>
+          .foldLeft[Task[Option[ChannelData]]](Task.point(None)) { (acc, elem) =>
             acc.flatMap {
               case None => elem
               case s @ Some(_) => Task.point(s)
             }
           }
-      } yield res
+      } yield dataOpt
 
-    def fromUrl(channel: Channel.FromUrl): Task[Option[(Channel, String, Array[Byte])]] = {
+    def fromUrl(channel: Channel.FromUrl): Task[Option[ChannelData]] = {
 
       val loggerOpt = cache.loggerOpt
 
@@ -149,14 +171,17 @@ import dataclass._
           Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
-      } yield {
+      } yield
         m.get(id).map { obj =>
-          (channel, s"$f#$id", encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8))
+          ChannelData(
+            channel,
+            s"$f#$id",
+            encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+          )
         }
-      }
     }
 
-    def fromDirectory(channel: Channel.FromDirectory): Task[Option[(Channel, String, Array[Byte])]] = {
+    def fromDirectory(channel: Channel.FromDirectory): Task[Option[ChannelData]] = {
 
       val f = channel.path.resolve(s"$id.json")
 
@@ -177,11 +202,14 @@ import dataclass._
                 .map(Some(_))
           }
         }
-      } yield {
+      } yield
         objOpt.map { obj =>
-          (channel, f.toString, encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8))
+          ChannelData(
+            channel,
+            f.toString,
+            encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+          )
         }
-      }
     }
 
     channels
@@ -196,7 +224,7 @@ import dataclass._
         case _: Channel.Inline =>
           Task.point(None)
       }
-      .foldLeft(Task.point(Option.empty[(Channel, String, Array[Byte])])) { (acc, elem) =>
+      .foldLeft(Task.point(Option.empty[ChannelData])) { (acc, elem) =>
         acc.flatMap {
           case None => elem
           case s @ Some(_) => Task.point(s)

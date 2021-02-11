@@ -27,7 +27,12 @@ object Update extends CaseApp[UpdateOptions] {
     val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val graalvmHome = { version: String =>
-      params.sharedJava.javaHome(cache, noUpdateCoursierCache, params.output.verbosity)
+      params.sharedJava.javaHome(
+        cache,
+        noUpdateCoursierCache,
+        params.repository.repositories,
+        params.output.verbosity
+      )
         .get(s"graalvm:$version")
     }
 
@@ -46,7 +51,7 @@ object Update extends CaseApp[UpdateOptions] {
         name,
         source => Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
           .find(source.id)
-          .map(_.map { case (_, path, descBytes) => (path, descBytes) }),
+          .map(_.map { data => (data.origin, data.data) }),
         now,
         params.force
       ).map {

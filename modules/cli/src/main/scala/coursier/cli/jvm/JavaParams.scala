@@ -2,12 +2,13 @@ package coursier.cli.jvm
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
 
 final case class JavaParams(
   installed: Boolean,
   available: Boolean,
   shared: SharedJavaParams,
+  repository: RepositoryParams,
   cache: CacheParams,
   output: OutputParams,
   env: EnvParams
@@ -19,6 +20,7 @@ object JavaParams {
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val envV = EnvParams(options.envOptions)
+    val repoV = RepositoryParams(options.repositoryOptions)
 
     val flags = Seq(
       options.installed,
@@ -37,11 +39,12 @@ object JavaParams {
       else
         Validated.validNel(())
 
-    (sharedV, cacheV, outputV, envV, flagsV, checkArgsV).mapN { (shared, cache, output, env, _, _) =>
+    (sharedV, cacheV, outputV, envV, repoV, flagsV, checkArgsV).mapN { (shared, cache, output, env, repo, _, _) =>
       JavaParams(
         options.installed,
         options.available,
         shared,
+        repo,
         cache,
         output,
         env

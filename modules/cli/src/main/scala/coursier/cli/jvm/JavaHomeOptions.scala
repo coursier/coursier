@@ -1,12 +1,14 @@
 package coursier.cli.jvm
 
-import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions}
+import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 import caseapp.core.parser.Parser
 import caseapp.Recurse
 
 final case class JavaHomeOptions(
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
+  @Recurse
+    repositoryOptions: RepositoryOptions = RepositoryOptions(),
   @Recurse
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse

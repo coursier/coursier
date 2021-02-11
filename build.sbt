@@ -3,12 +3,6 @@ import Aliases._
 import Settings.{crossProject, project, _}
 import Publish._
 
-lazy val getSbtCoursierVersion = settingKey[String]("")
-
-getSbtCoursierVersion := {
-  sbtCoursierVersion
-}
-
 inThisBuild(List(
   organization := "io.get-coursier",
   homepage := Some(url("https://github.com/coursier/coursier")),
@@ -27,6 +21,8 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
+    Mima.previousArtifacts,
+    Mima.utilFilters,
     libs += Deps.jsoup,
     shadedModules += Deps.jsoup.module,
     shadingRules += ShadingRule.moveUnder("org.jsoup", "coursier.util.shaded"),
@@ -35,8 +31,6 @@ lazy val util = crossProject("util")(JSPlatform, JVMPlatform)
   .settings(
     shared,
     coursierPrefix,
-    Mima.previousArtifacts,
-    Mima.utilFilters,
     dontPublishScalaJsIn("2.11"),
     libs ++= Seq(
       Deps.cross.collectionCompat.value,
@@ -53,6 +47,8 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
   .jvmConfigure(_.enablePlugins(ShadingPlugin))
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
+    Mima.previousArtifacts,
+    Mima.coreFilters,
     libs ++= Seq(
       Deps.concurrentReferenceHashMap,
       Deps.fastParse,
@@ -79,8 +75,6 @@ lazy val core = crossProject("core")(JSPlatform, JVMPlatform)
     shared,
     utest,
     coursierPrefix,
-    Mima.previousArtifacts,
-    Mima.coreFilters,
     dontPublishScalaJsIn("2.11"),
     libs += Deps.dataClass % Provided
   )
@@ -146,6 +140,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     shadingRules += ShadingRule.moveUnder("dev.dirs", "coursier.cache.shaded.dirs"),
     validNamespaces += "coursier",
     addPathsSources,
+    Mima.previousArtifacts,
     libraryDependencies ++= Seq(
       Deps.svm % Provided,
       Deps.windowsAnsi
@@ -173,7 +168,6 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
           Nil
       }
     },
-    Mima.previousArtifacts,
     Mima.cacheFilters,
     dontPublishScalaJsIn("2.11")
   )
@@ -185,6 +179,7 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
   .jsConfigure(_.disablePlugins(MimaPlugin))
   .jvmSettings(
+    Mima.previousArtifacts,
     libs += Deps.scalazConcurrent
   )
   .jsSettings(
@@ -195,7 +190,6 @@ lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
     shared,
     coursierPrefix,
     utest,
-    Mima.previousArtifacts,
     dontPublishScalaJsIn("2.11")
   )
 
@@ -205,13 +199,15 @@ lazy val scalazJs = scalaz.js
 lazy val cats = crossProject("interop", "cats")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
   .jsConfigure(_.disablePlugins(MimaPlugin))
+  .jvmSettings(
+    Mima.previousArtifacts
+  )
   .settings(
     name := "cats-interop",
     shared,
     utest,
     coursierPrefix,
     libs += Deps.cross.catsEffect.value,
-    Mima.previousArtifacts,
     Mima.catsInteropFilters,
     dontPublishScalaJsIn("2.11")
   )

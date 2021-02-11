@@ -19,6 +19,7 @@ final case class RepositoryOptions(
   @Help("Drop module attributes starting with 'info.' - these are sometimes used by projects built with sbt")
     dropInfoAttr: Boolean = false,
 
+  // TODO Move out of this
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions()
 

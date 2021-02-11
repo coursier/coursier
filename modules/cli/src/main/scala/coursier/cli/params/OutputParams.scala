@@ -2,6 +2,7 @@ package coursier.cli.params
 
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
 import coursier.cache.CacheLogger
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.options.OutputOptions
@@ -9,7 +10,9 @@ import coursier.cache.loggers.FileTypeRefreshDisplay
 
 final case class OutputParams(
   verbosity: Int,
-  progressBars: Boolean
+  progressBars: Boolean,
+  logChanging: Boolean,
+  logPickedVersions: Boolean
 ) {
   def logger(): CacheLogger =
     logger(byFileType = false)
@@ -27,7 +30,9 @@ final case class OutputParams(
           RefreshLogger.defaultDisplay(
             loggerFallbackMode,
             quiet = verbosity == -1 || Option(System.getenv("CI")).nonEmpty
-          )
+          ),
+        logChanging = logChanging,
+        logPickedVersions = logPickedVersions
       )
     else
       CacheLogger.nop
@@ -43,13 +48,24 @@ object OutputParams {
       else
         Validated.validNel(Tag.unwrap(options.verbose) - Tag.unwrap(options.quiet))
 
-    val progressBars = options.progress
+    val verbosityLogChangingCheckV =
+      if (options.logChanging && verbosityV.toOption.exists(_ < 0))
+        Validated.invalidNel("Cannot be both quiet and log changing artifacts")
+      else
+        Validated.validNel(())
 
-    verbosityV.map { verbosity =>
-      OutputParams(
-        verbosity,
-        progressBars
-      )
+    val progressBars = options.progress
+    val logChanging = options.logChanging
+    val logPickedVersions = options.logChannelVersion
+
+    (verbosityV, verbosityLogChangingCheckV).mapN {
+      (verbosity, _) =>
+        OutputParams(
+          verbosity,
+          progressBars,
+          logChanging,
+          logPickedVersions
+        )
     }
   }
 }

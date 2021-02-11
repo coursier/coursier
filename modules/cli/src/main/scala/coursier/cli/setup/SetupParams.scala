@@ -6,10 +6,11 @@ import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.install.{SharedChannelParams, SharedInstallParams}
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams}
+import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
 
 final case class SetupParams(
   sharedJava: SharedJavaParams,
+  repository: RepositoryParams,
   sharedInstall: SharedInstallParams,
   sharedChannel: SharedChannelParams,
   cache: CacheParams,
@@ -29,15 +30,17 @@ object SetupParams {
     val cacheV = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
     val envV = EnvParams(options.envOptions)
+    val repoV = RepositoryParams(options.repositoryOptions)
     val banner = options.banner.getOrElse(false)
     val yes = options.yes.getOrElse(envV.toOption.exists(_.env))
     val tryRevert = options.tryRevert
     val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
       .filter(_.nonEmpty)
       .getOrElse(DefaultAppList.defaultAppList)
-    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output, env) =>
+    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV, repoV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output, env, repo) =>
       SetupParams(
         sharedJava,
+        repo,
         sharedInstall,
         sharedChannel,
         cache,
