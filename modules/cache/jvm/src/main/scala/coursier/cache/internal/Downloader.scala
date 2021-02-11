@@ -368,7 +368,7 @@ import scala.util.control.NonFatal
 
       val tmp = CachePath.temporaryFile(file)
 
-      logger.downloadingArtifact(url)
+      logger.downloadingArtifact(url, artifact)
 
       var success = false
 

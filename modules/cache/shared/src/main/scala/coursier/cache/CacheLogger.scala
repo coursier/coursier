@@ -1,12 +1,17 @@
 package coursier.cache
 
-import coursier.util.{Sync, Task}
+import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
 
 trait CacheLogger {
   def foundLocally(url: String): Unit = {}
 
+  // now deprecated, override / call the downloadingArtifact method with 2 arguments instead
   def downloadingArtifact(url: String): Unit = {}
+
+  // We may have artifact.url != url. In that case, url should be the URL of a checksum of artifact.
+  def downloadingArtifact(url: String, artifact: Artifact): Unit =
+    downloadingArtifact(url)
 
   def downloadProgress(url: String, downloaded: Long): Unit = {}
 

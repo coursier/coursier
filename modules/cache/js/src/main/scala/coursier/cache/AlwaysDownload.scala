@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
   def fetch: Cache.Fetch[Task] = { artifact =>
     EitherT(
       Task { implicit ec =>
-        Future(logger.downloadingArtifact(artifact.url))
+        Future(logger.downloadingArtifact(artifact.url, artifact))
           .flatMap(_ => Platform.get(artifact.url))
           .map { s => logger.downloadedArtifact(artifact.url, success = true); Right(s) }
           .recover { case e: Exception =>

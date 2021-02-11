@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import coursier.cache.CacheLogger
 import coursier.cache.internal.Terminal
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
+import coursier.util.Artifact
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -206,7 +207,7 @@ class RefreshLogger(
         }
       }
 
-  override def downloadingArtifact(url: String): Unit =
+  override def downloadingArtifact(url: String, artifact: Artifact): Unit =
     updateRunnable.newEntry(
       url,
       DownloadInfo(0L, 0L, None, System.currentTimeMillis(), updateCheck = false, watching = false),

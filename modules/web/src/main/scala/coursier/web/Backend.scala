@@ -3,7 +3,7 @@ package coursier.web
 import coursier.cache.{AlwaysDownload, CacheLogger}
 import coursier.core.ResolutionProcess
 import coursier.{Dependency, MavenRepository, Module, Repository, Resolution, moduleNameString, organizationString}
-import coursier.util.{EitherT, Gather, Task}
+import coursier.util.{Artifact, EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.jquery.jQuery
@@ -137,7 +137,7 @@ final class Backend($: BackendScope[_, State]) {
     $.modState(_.copy(resolving = true, log = Nil)).runNow()
 
     val logger: CacheLogger = new CacheLogger {
-      override def downloadingArtifact(url: String) = {
+      override def downloadingArtifact(url: String, artifact: Artifact) = {
         println(s"<- $url")
         $.modState(s => s.copy(log = s"<- $url" +: s.log)).runNow()
       }
