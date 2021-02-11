@@ -1,5 +1,4 @@
 
-import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import sbtcrossproject.CrossPlugin
 import sbt._
 import sbt.Keys._
@@ -27,14 +26,6 @@ object Publish {
         case (maj, min) => s"$maj.$min"
       }
       sbv == sbv0 && publishArtifact.value
-    },
-    mimaPreviousArtifacts := {
-      val previous = mimaPreviousArtifacts.value
-      val publish = publishArtifact.value
-      if (publish)
-        previous
-      else
-        Set.empty
     }
   )
 
@@ -43,14 +34,6 @@ object Publish {
       val isScalaJs = CrossPlugin.autoImport.crossProjectPlatform.value != scalajscrossproject.JSPlatform
       (!isScalaJs || !sbv.contains(scalaBinaryVersion.value)) &&
         publishArtifact.value
-    },
-    mimaPreviousArtifacts := {
-      val previous = mimaPreviousArtifacts.value
-      val publish = publishArtifact.value
-      if (publish)
-        previous
-      else
-        Set.empty
     }
   )
 
