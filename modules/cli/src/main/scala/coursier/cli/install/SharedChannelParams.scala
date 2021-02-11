@@ -16,8 +16,12 @@ final case class SharedChannelParams(
 object SharedChannelParams {
   def apply(options: SharedChannelOptions): ValidatedNel[String, SharedChannelParams] = {
 
-    val channelsV = options
+    val noDefaultChannels = options.channel.exists(_.startsWith("!"))
+    val channelsInput = options
       .channel
+      .map(_.stripPrefix("!"))
+      .filter(_.nonEmpty)
+    val channelsV = channelsInput
       .traverse { s =>
         val e = Channel.parse(s)
           .left.map(NonEmptyList.one)
@@ -25,7 +29,7 @@ object SharedChannelParams {
       }
 
     val defaultChannels =
-      if (options.defaultChannels) Channels.defaultChannels
+      if (!noDefaultChannels && options.defaultChannels) Channels.defaultChannels
       else Nil
 
     val contribChannels =
