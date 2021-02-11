@@ -6,6 +6,8 @@ import coursier.util.Monad.ops._
 trait CacheLogger {
   def foundLocally(url: String): Unit = {}
 
+  def checkingArtifact(url: String, artifact: Artifact): Unit = {}
+
   // now deprecated, override / call the downloadingArtifact method with 2 arguments instead
   def downloadingArtifact(url: String): Unit = {}
 

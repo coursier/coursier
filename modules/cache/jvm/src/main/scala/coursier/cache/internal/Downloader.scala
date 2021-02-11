@@ -533,6 +533,8 @@ import scala.util.control.NonFatal
 
   private def downloadUrl(url: String, keepHeaderChecksums: Boolean): F[DownloadResult] = {
 
+    logger.checkingArtifact(url, artifact)
+
     val file = localFile(url, artifact.authentication.map(_.user))
 
     def run =
