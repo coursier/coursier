@@ -46,7 +46,7 @@ object Update extends CaseApp[UpdateOptions] {
         name,
         source => Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
           .find(source.id)
-          .map(_.map { case (_, path, descBytes) => (path, descBytes) }),
+          .map(_.map { data => (data.origin, data.data) }),
         now,
         params.force
       ).map {
