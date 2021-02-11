@@ -206,9 +206,10 @@ object PomParser {
           if (relocationGroupIdOpt.nonEmpty || relocationArtifactIdOpt.nonEmpty || relocationVersionOpt.nonEmpty)
             Some {
               Configuration.empty -> Dependency(
-                projModule.copy(
+                Module(
                   organization = relocationGroupIdOpt.getOrElse(projModule.organization),
-                  name = relocationArtifactIdOpt.getOrElse(projModule.name)
+                  name = relocationArtifactIdOpt.getOrElse(projModule.name),
+                  attributes = projModule.attributes
                 ),
                 relocationVersionOpt.getOrElse(finalVersion),
                 Configuration.empty,
