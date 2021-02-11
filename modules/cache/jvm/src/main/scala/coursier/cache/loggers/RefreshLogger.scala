@@ -36,8 +36,14 @@ object RefreshLogger {
   def create(os: OutputStream, display: RefreshDisplay): RefreshLogger =
     new RefreshLogger(new OutputStreamWriter(os), display)
 
+  def create(os: OutputStream, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
+    new RefreshLogger(new OutputStreamWriter(os), display, fallbackMode = false, logChanging = logChanging)
+
   def create(writer: OutputStreamWriter, display: RefreshDisplay): RefreshLogger =
     new RefreshLogger(writer, display)
+
+  def create(writer: OutputStreamWriter, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
+    new RefreshLogger(writer, display, fallbackMode = false, logChanging = logChanging)
 
 
   lazy val defaultFallbackMode: Boolean =
@@ -45,6 +51,25 @@ object RefreshLogger {
 
 
   private class UpdateDisplayRunnable(out: Writer, val display: RefreshDisplay) extends Runnable {
+
+    private var messages = new ConcurrentLinkedQueue[String]
+
+    def log(message: String): Unit =
+      messages.add(message)
+    private def flushMessages(): Unit = {
+      var printedAnything = false
+      var msg: String = null
+      while ({
+        msg = messages.poll()
+        msg != null
+      }) {
+        out.write(msg)
+        out.write(System.lineSeparator())
+        printedAnything = true
+      }
+      if (printedAnything)
+        out.flush()
+    }
 
     private var printedAnything0 = false
 
@@ -104,6 +129,7 @@ object RefreshLogger {
     }
 
     def stop(): Unit = {
+      flushMessages()
       display.stop(out)
       printedAnything0 = false
       stopped = true
@@ -133,17 +159,32 @@ object RefreshLogger {
           else
             (Seq.empty, Seq.empty)
 
+        flushMessages()
         display.update(out, done0, downloads0, needsUpdate0)
       }
   }
 
 }
 
+// FIXME Default values should be removed in later versions
+// (extra constructors are fine, and make it easier to maintain binary compatibility)
 class RefreshLogger(
   out: Writer,
   display: RefreshDisplay,
-  val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode
+  val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode,
+  logChanging: Boolean = false
 ) extends CacheLogger {
+
+  def this(
+    out: Writer,
+    display: RefreshDisplay
+  ) = this(out, display, RefreshLogger.defaultFallbackMode, false)
+
+  def this(
+    out: Writer,
+    display: RefreshDisplay,
+    fallbackMode: Boolean
+  ) = this(out, display, fallbackMode, false)
 
   import RefreshLogger._
 
@@ -165,7 +206,7 @@ class RefreshLogger(
               def newThread(r: Runnable) = {
                 val t = defaultThreadFactory.newThread(r)
                 t.setDaemon(true)
-                t.setName("progress-bar")
+                t.setName("coursier-progress-bar")
                 t
               }
             }
@@ -206,6 +247,11 @@ class RefreshLogger(
           updateRunnableOpt = None
         }
       }
+
+  override def checkingArtifact(url: String, artifact: Artifact): Unit =
+    if (logChanging && artifact.changing) {
+      updateRunnable.log(s"Checking changing artifact $url")
+    }
 
   override def downloadingArtifact(url: String, artifact: Artifact): Unit =
     updateRunnable.newEntry(
