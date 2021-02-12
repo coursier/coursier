@@ -19,26 +19,24 @@ final case class LaunchParams(
   lazy val fork: Boolean =
     shared.fork.getOrElse(jep || shared.python || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
 
-  def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] =
-    sharedJava.jvm match {
-      case None => Task.point(("java", EnvironmentUpdate.empty))
-      case Some(id) =>
-        val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
-        for {
-          _ <- Task.delay(logger.init())
-          (cache0, _) = sharedJava.cacheAndHome(
-            cache,
-            cache,
-            shared.resolve.repositories.repositories,
-            shared.resolve.output.verbosity
-          )
-          handle = coursier.jvm.JavaHome()
-            .withCache(cache0)
-          javaExe <- handle.javaBin(id)
-          envUpdate <- handle.environmentFor(id)
-          _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
-        } yield (javaExe.toAbsolutePath.toString, envUpdate)
-    }
+  def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] = {
+    val id = sharedJava.id
+    val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
+    for {
+      _ <- Task.delay(logger.init())
+      (cache0, _) = sharedJava.cacheAndHome(
+        cache,
+        cache,
+        shared.resolve.repositories.repositories,
+        shared.resolve.output.verbosity
+      )
+      handle = coursier.jvm.JavaHome()
+        .withCache(cache0)
+      javaExe <- handle.javaBin(id)
+      envUpdate <- handle.environmentFor(id)
+      _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
+    } yield (javaExe.toAbsolutePath.toString, envUpdate)
+  }
 }
 
 object LaunchParams {
