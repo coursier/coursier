@@ -19,7 +19,9 @@ final case class OutputOptions(
   @Help("Log changing artifacts")
     logChanging: Boolean = false,
 
-  @Help("Log channel version")
+  @Help("Log app channel or JVM index version")
+  @Short("log-index-version")
+  @Short("log-jvm-index-version")
     logChannelVersion: Boolean = false
 
 )
