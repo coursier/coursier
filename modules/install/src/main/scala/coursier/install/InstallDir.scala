@@ -689,23 +689,33 @@ object InstallDir {
       .toSeq
       .flatMap(platformExtensions(_))
 
+
+  @deprecated("Use the override accepting two arguments instead", "2.0.10")
   def platform(os: String): Option[String] = {
+    platform(os, Option(System.getProperty("os.arch")).getOrElse("x86_64"))
+  }
+
+  def platform(os: String, arch: String): Option[String] = {
 
     val os0 = os.toLowerCase(Locale.ROOT)
+    val arch0 = if (arch == "amd64") "x86_64" else arch
 
     if (os0.contains("linux"))
-      Some("x86_64-pc-linux")
+      Some(s"$arch0-pc-linux")
     else if (os0.contains("mac"))
-      Some("x86_64-apple-darwin")
+      Some(s"$arch0-apple-darwin")
     else if (os0.contains("windows"))
-      Some("x86_64-pc-win32")
+      Some(s"$arch0-pc-win32")
     else
       None
   }
 
   def platform(): Option[String] =
-    Option(System.getProperty("os.name"))
-      .flatMap(platform(_))
+    for {
+      os <- Option(System.getProperty("os.name"))
+      arch <- Option(System.getProperty("os.arch"))
+      p <- platform(os, arch)
+    } yield p
 
   private def withTgzEntriesIterator[T](tgz: File)(f: Iterator[(ArchiveEntry, InputStream)] => T): T = {
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/

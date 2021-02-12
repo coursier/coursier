@@ -219,7 +219,10 @@ def uploadNativeImage(): Unit = {
   val version = Version.latestFromEnv
   generateNativeImage(version, dest, allowIvy2Local = false)
 
-  val arch = sys.props("os.arch").toLowerCase(Locale.ROOT)
+  val arch = sys.props("os.arch").toLowerCase(Locale.ROOT) match {
+    case "amd64" => "x86_64"
+    case other => other
+  }
   val os = Util.os match {
     case "linux" => "pc-linux"
     case "mac" => "apple-darwin"
