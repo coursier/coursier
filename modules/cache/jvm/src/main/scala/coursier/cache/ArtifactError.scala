@@ -17,6 +17,11 @@ sealed abstract class ArtifactError(
     case _: ArtifactError.NotFound => true
     case _ => false
   }
+
+  final def forbidden: Boolean = this match {
+    case _: ArtifactError.Forbidden => true
+    case _ => false
+  }
 }
 
 object ArtifactError {
@@ -32,6 +37,13 @@ object ArtifactError {
     val permanent: Option[Boolean] = None
   ) extends ArtifactError(
     "not found",
+    file
+  )
+
+  final class Forbidden(
+    val file: String
+  ) extends ArtifactError(
+    "forbidden",
     file
   )
 

@@ -325,7 +325,7 @@ object Artifacts {
       val artifactToFile = new mutable.ListBuffer[(Artifact, File)]
 
       results.foreach {
-        case (artifact, Left(err)) if artifact.optional && err.notFound =>
+        case (artifact, Left(err)) if artifact.optional && (err.notFound || err.forbidden) =>
           ignoredErrors += artifact -> err
         case (artifact, Left(err)) =>
           errors += artifact -> err
