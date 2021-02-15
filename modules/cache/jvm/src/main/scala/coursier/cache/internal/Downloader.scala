@@ -215,6 +215,8 @@ import scala.util.control.NonFatal
 
         if (respCodeOpt.contains(404))
           Left(new ArtifactError.NotFound(url, permanent = Some(true)))
+        else if (respCodeOpt.contains(403))
+          Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
         else {
