@@ -58,6 +58,12 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
+      test("nonHexValue") - {
+        val content = "0000000000000000000000000000000z"
+        val res = CacheChecksum.parseChecksum(content)
+        assert(res.isEmpty)
+      }
+
       test("binarySha1") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
         val res = CacheChecksum.parseRawChecksum(content)
