@@ -43,6 +43,16 @@ object RepositoryParserTests extends TestSuite {
       assert(res.exists(isMavenRepo))
     }
 
+    test("scala-nightlies") {
+      val res = RepositoryParser.repository("scala-nightlies")
+      assert(res.exists(isMavenRepo))
+    }
+
+    test("scala-integration") {
+      val res = RepositoryParser.repository("scala-integration")
+      assert(res.exists(isMavenRepo))
+    }
+
     test("jitpack") {
       val res = RepositoryParser.repository("jitpack")
       assert(res.exists(isMavenRepo))
