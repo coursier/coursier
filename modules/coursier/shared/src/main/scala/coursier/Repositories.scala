@@ -30,6 +30,8 @@ object Repositories {
     )
   def sbtMaven(id: String): MavenRepository =
     MavenRepository(s"https://repo.scala-sbt.org/scalasbt/maven-$id")
+  def scalaIntegration: MavenRepository =
+    MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration")
   def jitpack: MavenRepository =
     MavenRepository("https://jitpack.io")
   def clojars: MavenRepository =

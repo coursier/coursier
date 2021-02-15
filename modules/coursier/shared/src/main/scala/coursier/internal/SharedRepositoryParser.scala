@@ -29,6 +29,8 @@ object SharedRepositoryParser {
       Right(Repositories.sbtMaven(s.stripPrefix("sbt-maven:")))
     else if (s.startsWith("sbt-plugin:"))
       Right(Repositories.sbtPlugin(s.stripPrefix("sbt-plugin:")))
+    else if (s == "scala-integration" || s == "scala-nightlies")
+      Right(Repositories.scalaIntegration)
     else if (s.startsWith("ivy:")) {
       val s0 = s.stripPrefix("ivy:")
       val sepIdx = s0.indexOf('|')
