@@ -14,7 +14,7 @@ object CacheChecksum {
   )
 
   private def ifHexString(s: String) =
-    s.forall(c => c.isDigit || c >= 'a' && c <= 'z')
+    s.forall(c => c.isDigit || c >= 'a' && c <= 'f')
 
   private def findChecksum(elems: Seq[String]): Option[BigInteger] =
     elems.collectFirst {
