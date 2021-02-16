@@ -37,8 +37,14 @@ elif [ "$TARGET" = "Website" ]; then
   which amm-runner || true
   amm-runner website.sc generate
 else
+
   if [[ ${SCALA_VERSION} == 2.12* ]]; then
-    sudo apt-get install -y nailgun
+    case "$(uname -s)" in
+      Linux*)
+        sudo apt-get install -y nailgun
+        ;;
+      *)
+    esac
   fi
 
   sbt scalaFromEnv \
