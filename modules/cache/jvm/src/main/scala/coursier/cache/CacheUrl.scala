@@ -117,10 +117,6 @@ object CacheUrl {
         // handling those ourselves, so that we can update credentials upon redirection
         conn0.setInstanceFollowRedirects(false)
 
-        // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
-        // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", "")
-
         conn0 match {
           case conn1: HttpsURLConnection =>
 
