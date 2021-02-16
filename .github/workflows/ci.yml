@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.OS }}
-    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }} on ${{ matrix.OS }}
     strategy:
       fail-fast: false
       matrix:
