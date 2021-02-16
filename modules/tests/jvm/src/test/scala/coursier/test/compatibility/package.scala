@@ -39,8 +39,7 @@ package object compatibility {
     dir
   }
 
-  private val fillChunks = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s == "true")
+  private val fillChunks = true
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
