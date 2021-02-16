@@ -27,6 +27,10 @@ jobs:
             SCALA_VERSION: "2.12"
             TARGET: "JVM"
             OS: "ubuntu-latest"
+          - JDK: "8"
+            SCALA_VERSION: "2.12"
+            TARGET: "JVM"
+            OS: "windows-latest"
           # Disabled for now, getting weird linking errors
           # - JDK: "8"
           #   SCALA_VERSION: "2.12"
