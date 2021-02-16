@@ -18,7 +18,7 @@ abstract class PlatformTestHelpers {
 
   private val mockDataLocation = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir))
+    // assert(Files.isDirectory(dir))
     dir
   }
 
