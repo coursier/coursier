@@ -101,6 +101,18 @@ object RepositoryParserTests extends TestSuite {
       val res = RepositoryParser.repository(repo)
       assert(res == Right(expected))
     }
+
+    test("apache") {
+      test("snapshots") {
+        val res = RepositoryParser.repository("apache:snapshots")
+        assert(res.exists(isMavenRepo))
+      }
+
+      test("releases") {
+        val res = RepositoryParser.repository("apache:releases")
+        assert(res.exists(isMavenRepo))
+      }
+    }
   }
 
 }
