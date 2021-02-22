@@ -55,6 +55,8 @@ object SharedRepositoryParser {
       Right(Repositories.centralGcsEu)
     else if (s == "gcs-asia")
       Right(Repositories.centralGcsAsia)
+    else if (s.startsWith("apache:"))
+      Right(Repositories.apache(s.stripPrefix("apache:")))
     else
       Right(MavenRepository(s))
 

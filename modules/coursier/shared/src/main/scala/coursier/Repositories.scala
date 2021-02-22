@@ -48,4 +48,7 @@ object Repositories {
     MavenRepository("https://maven-central-eu.storage-download.googleapis.com/maven2")
   def centralGcsAsia: MavenRepository =
     MavenRepository("https://maven-central-asia.storage-download.googleapis.com/maven2")
+
+  def apache(id: String): MavenRepository =
+    MavenRepository(s"https://repository.apache.org/content/repositories/$id")
 }
