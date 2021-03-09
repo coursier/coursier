@@ -65,4 +65,4 @@ From sbt, add the setting `coursierUseSbtCredentials := true` for sbt-coursier t
 ## Extra protocols
 
 By default, coursier and sbt-coursier handle the `http://`, `https://`, and `file://` protocols. It should also be fine
-by protocols supported by `java.net.URL` (not thoroughly tested). Support for other protocols can be added via plugins. [coursier-s3](https://github.com/rtfpessoa/coursier-s3), a plugin for S3, is under development, and illustrates how to write such plugins.
+by protocols supported by `java.net.URL` (not thoroughly tested). Support for other protocols can be added via plugins. [coursier-s3](https://github.com/paulblei/coursier-s3), a plugin for S3, is under development, and illustrates how to write such plugins.
