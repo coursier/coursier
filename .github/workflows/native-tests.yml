@@ -17,9 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/native-tests.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
         shell: bash
       - run: sbt 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
@@ -40,10 +38,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/native-tests.yml\"]"
-          extraKey: native-linux-aarch64
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/ci-setup.sh
         shell: bash
       - run: sbt cli/pack
