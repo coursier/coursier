@@ -1,0 +1,5 @@
+.github/scripts/*.sh
+scripts/*.sh
+*.sc
+scripts/**.sc
+.github/workflows/*.yml

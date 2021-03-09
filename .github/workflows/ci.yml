@@ -42,10 +42,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v5
-      with:
-        extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
-        extraKey: ${{ matrix.JDK }}-${{ matrix.SCALA_VERSION }}-${{ matrix.TARGET }}
+    - uses: coursier/cache-action@v6
     - run: .github/scripts/ci-setup.sh --jvm ${{ matrix.JDK }}
       shell: bash
     - run: .github/scripts/ci.sh
@@ -63,9 +60,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -88,9 +83,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -116,9 +109,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -148,10 +139,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/native-tests.yml\"]"
-          extraKey: native-linux-aarch64
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -227,9 +215,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
@@ -246,9 +232,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v5
-        with:
-          extraFiles: "[\".github/scripts/*.sh\", \"scripts/*.sh\", \"*.sc\", \"scripts/**.sc\", \".github/workflows/ci.yml\"]"
+      - uses: coursier/cache-action@v6
       - run: .github/scripts/ci-setup.sh --jvm 8
         shell: bash
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
