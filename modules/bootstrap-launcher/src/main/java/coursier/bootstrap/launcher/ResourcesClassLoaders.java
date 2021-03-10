@@ -14,8 +14,8 @@ class ResourcesClassLoaders extends ClassLoaders {
 
     private JarFile sourceJarFile;
 
-    ResourcesClassLoaders(JarFile sourceJarFile) throws MirrorPropertiesException, IOException  {
-        super();
+    ResourcesClassLoaders(JarFile sourceJarFile, Download download) throws MirrorPropertiesException, IOException  {
+        super(download);
         this.sourceJarFile = sourceJarFile;
     }
 
@@ -66,7 +66,7 @@ class ResourcesClassLoaders extends ClassLoaders {
             List<URL> urls = getURLs(strUrls);
             List<URL> resourceURLs = getResourceURLs(resources);
             urls.addAll(resourceURLs);
-            List<URL> localURLs = Download.getLocalURLs(urls);
+            List<URL> localURLs = download.getLocalURLs(urls);
 
             parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
 
@@ -83,7 +83,7 @@ class ResourcesClassLoaders extends ClassLoaders {
         List<URL> urls = getURLs(strUrls);
         List<URL> resourceURLs = getResourceURLs(resources);
         urls.addAll(resourceURLs);
-        List<URL> localURLs = Download.getLocalURLs(urls);
+        List<URL> localURLs = download.getLocalURLs(urls);
 
         ClassLoader parentClassLoader = readBaseLoaders(contextLoader);
 
