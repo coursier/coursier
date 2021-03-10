@@ -20,10 +20,17 @@ import coursier.paths.CachePath;
 
 class Download {
 
-    private final static int concurrentDownloadCount;
-    private final static File cacheDir;
+    private final int concurrentDownloadCount;
+    private final File cacheDir;
 
-    static {
+    Download(int concurrentDownloadCount, File cacheDir) {
+        this.concurrentDownloadCount = concurrentDownloadCount;
+        this.cacheDir = cacheDir;
+    }
+
+    static Download getDefault() {
+        int concurrentDownloadCount;
+        File cacheDir;
         String prop = System.getProperty("coursier.parallel-download-count");
         if (prop == null)
             concurrentDownloadCount = 6;
@@ -34,9 +41,10 @@ class Download {
         } catch (IOException ex) {
             throw new RuntimeException("Error creating cache directory", ex);
         }
+        return new Download(concurrentDownloadCount, cacheDir);
     }
 
-    static List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
+    List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
             AtomicInteger counter = new AtomicInteger(1);
@@ -59,7 +67,7 @@ class Download {
         }
     }
 
-    private static void doDownload(URL url, File tmpDest, File dest) throws IOException {
+    private void doDownload(URL url, File tmpDest, File dest) throws IOException {
         URLConnection conn = url.openConnection();
         long lastModified = conn.getLastModified();
         int size = conn.getContentLength();
@@ -79,7 +87,7 @@ class Download {
         Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
     }
 
-    private static List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
+    private List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
 
         CompletionService<URL> completionService =
                 new ExecutorCompletionService<>(pool);

@@ -15,8 +15,10 @@ class ClassLoaders {
     final static String resourceDir = "coursier/bootstrap/launcher/";
     final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
     private final List<Mirror> mirrors = Mirror.load();
+    protected final Download download;
 
-    ClassLoaders() throws MirrorPropertiesException, IOException {
+    ClassLoaders(Download download) throws MirrorPropertiesException, IOException {
+        this.download = download;
     }
 
     List<URL> getURLs(String[] rawURLs) {
@@ -60,7 +62,7 @@ class ClassLoaders {
                 break;
 
             List<URL> urls = getURLs(strUrls);
-            List<URL> localURLs = Download.getLocalURLs(urls);
+            List<URL> localURLs = download.getLocalURLs(urls);
 
             if (nameOrNull == null)
                 parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
@@ -77,7 +79,7 @@ class ClassLoaders {
 
         String[] strUrls = Util.readStringSequence(defaultURLResource, contextLoader);
         List<URL> urls = getURLs(strUrls);
-        List<URL> localURLs = Download.getLocalURLs(urls);
+        List<URL> localURLs = download.getLocalURLs(urls);
 
         ClassLoader parentClassLoader = readBaseLoaders(contextLoader);
 
