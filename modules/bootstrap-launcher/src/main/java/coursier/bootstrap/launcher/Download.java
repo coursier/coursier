@@ -4,33 +4,45 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import coursier.bootstrap.launcher.credentials.Credentials;
+import coursier.bootstrap.launcher.credentials.DirectCredentials;
 import coursier.paths.CachePath;
 
 class Download {
 
     private final int concurrentDownloadCount;
     private final File cacheDir;
+    private final List<DirectCredentials> directCredentials;
 
-    Download(int concurrentDownloadCount, File cacheDir) {
+    Download(int concurrentDownloadCount, File cacheDir, List<DirectCredentials> directCredentials) {
         this.concurrentDownloadCount = concurrentDownloadCount;
         this.cacheDir = cacheDir;
+        this.directCredentials = Collections.unmodifiableList(directCredentials);
     }
 
     static Download getDefault() {
         int concurrentDownloadCount;
         File cacheDir;
+        List<DirectCredentials> directCredentials;
         String prop = System.getProperty("coursier.parallel-download-count");
         if (prop == null)
             concurrentDownloadCount = 6;
@@ -41,7 +53,21 @@ class Download {
         } catch (IOException ex) {
             throw new RuntimeException("Error creating cache directory", ex);
         }
-        return new Download(concurrentDownloadCount, cacheDir);
+        try {
+            directCredentials = Credentials.credentials().stream()
+                .flatMap(credentials -> {
+                    try {
+                        return credentials.get().stream();
+                    } catch (IOException e) {
+                        e.printStackTrace(System.err);
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toList());
+        } catch (IOException ex) {
+            throw new RuntimeException("Error reading credentials", ex);
+        }
+        return new Download(concurrentDownloadCount, cacheDir, directCredentials);
     }
 
     List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
@@ -69,6 +95,26 @@ class Download {
 
     private void doDownload(URL url, File tmpDest, File dest) throws IOException {
         URLConnection conn = url.openConnection();
+        if (conn instanceof HttpURLConnection) {
+            final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
+            final Optional<String> userInfoUserOpt = userInfoOpt.map(userInfo -> userInfo.split(":", 2)[0]);
+            final Optional<DirectCredentials> directCredentialsOpt = directCredentials.stream()
+                .filter(credentials -> credentials.isMatchHost())
+                .filter(credentials -> credentials.getUsernameOpt().isPresent() && (!userInfoUserOpt.isPresent() || credentials.getUsernameOpt().get().equals(userInfoUserOpt.get())))
+                .filter(credentials -> credentials.getPasswordOpt().isPresent())
+                .filter(credentials -> ("http".equals(url.getProtocol()) && !credentials.isHttpsOnly()) || "https".equals(url.getProtocol()))
+                .filter(credentials -> credentials.getHost().equals(url.getHost()))
+                .findFirst();
+            final Optional<String> userOpt = userInfoUserOpt.map(Optional::of).orElse(directCredentialsOpt.flatMap(credentials -> credentials.getUsernameOpt())); // Java 9: .or(() -> directCredentialsOpt.flatMap(credentials -> credentials.getUsername()));
+            final Optional<String> basicAuthOpt = userOpt.flatMap(user ->
+                userInfoOpt
+                    .map(userInfo -> userInfo.split(":", 2))
+                    .flatMap(userInfo -> (userInfo.length == 2) ? Optional.of(userInfo[1]) : Optional.empty())
+                    .map(Optional::of).orElse(directCredentialsOpt.flatMap(credentials -> credentials.getPasswordOpt().map(password -> password.getValue()))) // Java 9: .or(() -> directCredentialsOpt.flatMap(credentials -> credentials.getPasswordOpt().map(password -> password.getValue())))
+                    .map(password -> Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8)))
+            );
+            basicAuthOpt.ifPresent(basicAuth -> ((HttpURLConnection)conn).setRequestProperty("Authorization", "Basic " + basicAuth));
+        }
         long lastModified = conn.getLastModified();
         int size = conn.getContentLength();
         InputStream s = conn.getInputStream();
