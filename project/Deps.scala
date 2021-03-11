@@ -20,6 +20,7 @@ object Deps {
   def caseApp = "com.github.alexarchambault" %% "case-app" % "2.0.0"
   def catsCore = "org.typelevel" %% "cats-core" % "2.2.0"
   def collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % versions.collectionCompat
+  def java8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
   def concurrentReferenceHashMap = "io.github.alexarchambault" % "concurrent-reference-hash-map" % "1.0.0"
   def dataClass = "io.github.alexarchambault" %% "data-class" % "0.2.4"
   def dockerClient = "com.spotify" % "docker-client" % "8.16.0"

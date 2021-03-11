@@ -218,9 +218,16 @@ lazy val catsJs = cats.js
 lazy val `bootstrap-launcher` = project("bootstrap-launcher")
   .enablePlugins(SbtProguard)
   .disablePlugins(MimaPlugin)
+  .configs(Integration)
   .settings(
     pureJava,
     dontPublish,
+    hasITs,
+    utest,
+    libraryDependencies ++= Seq(
+      Deps.collectionCompat % Test,
+      Deps.java8Compat % Test
+    ),
     addPathsSources,
     addWindowsAnsiPsSources,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.Launcher"),
