@@ -36,6 +36,21 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
     }
 
+    test("simple sttp with forced Scala 3") - async {
+
+      val res = await {
+        resolve
+          .addDependencies(dep"com.softwaremill.sttp.client3:core_3.0.0-RC1:3.1.7")
+          .mapResolutionParams { params =>
+            params
+              .withScalaVersion("3.0.0-RC1")
+          }
+          .future()
+      }
+
+      await(validateDependencies(res))
+    }
+
     test("forceScalaVersion") - async {
 
       val resolve0 = resolve
