@@ -592,11 +592,12 @@ object Resolution {
   def forceScalaVersion(sv: String): Dependency => Dependency = {
 
     val sbv = sv.split('.').take(2).mkString(".")
+    val scala = if (sbv.startsWith("3")) "scala3" else "scala"
 
     val scalaModules = Set(
-      ModuleName("scala-library"),
+      ModuleName(s"${scala}-library"),
+      ModuleName(s"${scala}-compiler"),
       ModuleName("scala-reflect"),
-      ModuleName("scala-compiler"),
       ModuleName("scalap")
     )
 
@@ -607,7 +608,7 @@ object Resolution {
           None
         else {
           val lastPart = module.name.value.substring(idx + 1 + sbv.length + 1)
-          if (lastPart.isEmpty || lastPart.exists(c => !c.isDigit)) // FIXME Not fine with -M5 or -RC1
+          if (lastPart.isEmpty || lastPart.forall(c => Character.isDigit(c) || "MRC-".contains(c)))
             None
           else
             Some(module.name.value.substring(0, idx))
