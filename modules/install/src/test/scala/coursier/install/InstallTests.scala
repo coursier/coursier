@@ -23,12 +23,11 @@ object InstallTests extends TestSuite {
 
   private val mockDataLocation = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir))
+    // assert(Files.isDirectory(dir))
     dir
   }
 
-  private val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
+  private val writeMockData = true
 
   private val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, writeMissing = writeMockData, pool = pool)

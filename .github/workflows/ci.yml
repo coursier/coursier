@@ -17,7 +17,7 @@ jobs:
         OS: ["ubuntu-latest"]
         JDK: ["8"]
         SCALA_VERSION: ["2.12"]
-        TARGET: ["JVM", "Scala.JS", "Website"]
+        TARGET: ["JVM", "Website"]
         include:
           - JDK: "8"
             SCALA_VERSION: "2.13"

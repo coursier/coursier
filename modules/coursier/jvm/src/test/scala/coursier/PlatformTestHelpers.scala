@@ -18,7 +18,7 @@ abstract class PlatformTestHelpers {
 
   private val mockDataLocation = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir))
+    // assert(Files.isDirectory(dir))
     dir
   }
 
@@ -35,8 +35,7 @@ abstract class PlatformTestHelpers {
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
+  val writeMockData = true
 
   val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = writeMockData)

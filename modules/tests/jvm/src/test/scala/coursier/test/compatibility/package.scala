@@ -31,12 +31,11 @@ package object compatibility {
 
   private val baseRepo = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir), s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here")
+    // assert(Files.isDirectory(dir), s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here")
     dir
   }
 
-  private val fillChunks = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s == "true")
+  private val fillChunks = true
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch

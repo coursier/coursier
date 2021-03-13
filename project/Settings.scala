@@ -436,14 +436,6 @@ object Settings {
   lazy val sharedTestResources = {
     unmanagedResourceDirectories.in(Test) ++= {
       val baseDir = baseDirectory.in(LocalRootProject).value
-      val testsMetadataDir = baseDir / "modules" / "tests" / "metadata" / "https"
-      if (!testsMetadataDir.exists())
-        gitLock.synchronized {
-          if (!testsMetadataDir.exists()) {
-            val cmd = Seq("git", "submodule", "update", "--init", "--recursive", "--", "modules/tests/metadata")
-            runCommand(cmd, baseDir)
-          }
-        }
       val testsHandmadeMetadataDir = baseDir / "modules" / "tests" / "handmade-metadata" / "data"
       if (!testsHandmadeMetadataDir.exists())
         gitLock.synchronized {
