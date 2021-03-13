@@ -18,7 +18,9 @@ import dataclass.data
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   method: String = "GET",
   maxRedirectionsOpt: Option[Int] = Some(20),
-  proxy: Option[Proxy] = None
+  proxy: Option[Proxy] = None,
+  @since("2.0.13")
+  classLoaders: Seq[ClassLoader] = Nil,
 ) {
 
   def connection(): URLConnection = {
@@ -42,7 +44,8 @@ import dataclass.data
       method,
       None,
       redirectionCount = 0,
-      maxRedirectionsOpt
+      maxRedirectionsOpt,
+      classLoaders
     ))
 }
 

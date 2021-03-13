@@ -36,7 +36,9 @@ import scala.util.control.NonFatal
   sslRetry: Int = CacheDefaults.sslRetryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
-  bufferSize: Int = CacheDefaults.bufferSize
+  bufferSize: Int = CacheDefaults.bufferSize,
+  @since("2.0.13")
+  classLoaders: Seq[ClassLoader] = Nil,
 )(implicit
   S: Sync[F]
 ) {
@@ -83,6 +85,7 @@ import scala.util.control.NonFatal
           .withHostnameVerifierOpt(hostnameVerifierOpt)
           .withMethod("HEAD")
           .withMaxRedirectionsOpt(maxRedirections)
+          .withClassLoaders(classLoaders)
           .connection()
 
         conn match {
