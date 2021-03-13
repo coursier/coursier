@@ -31,10 +31,26 @@ final case class SharedLaunchParams(
 
 object SharedLaunchParams {
 
-  def defaultFork: Boolean =
+  // Default ClassLoader setup with Java 9 doesn't allow for
+  // proper isolation between the coursier class path and the
+  // class path of the launched application, so we fork by
+  // default to avoid clashes.
+  private def isAtLeastJava9: Boolean =
+    sys.props
+      .get("java.version")
+      .map(_.takeWhile(_ != '.'))
+      .filter(s => s.nonEmpty && s.forall(_.isDigit))
+      .map(_.toInt)
+      .exists(_ >= 9)
+
+  // Can't dynamically load random stuff from the native launcher
+  private def isNativeImage: Boolean =
     sys.props
       .get("org.graalvm.nativeimage.imagecode")
       .contains("runtime")
+
+  def defaultFork: Boolean =
+    isNativeImage || isAtLeastJava9
 
   def apply(options: SharedLaunchOptions): ValidatedNel[String, SharedLaunchParams] = {
 
