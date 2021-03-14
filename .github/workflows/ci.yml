@@ -43,8 +43,11 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6
-    - run: .github/scripts/ci-setup.sh --jvm ${{ matrix.JDK }}
-      shell: bash
+    - uses: laughedelic/coursier-setup@v1
+      with:
+        jvm: ${{ matrix.JDK }}
+        apps: sbt-launcher
+    - run: cs install --contrib amm-runner
     - run: .github/scripts/ci.sh
       shell: bash
       env:
@@ -64,8 +67,10 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - run: .github/scripts/ci-setup.sh --jvm 8
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: 8
+          apps: sbt-launcher
       - name: Release
         run: sbt +publishLocal ci-release
         env:
@@ -87,8 +92,11 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - run: .github/scripts/ci-setup.sh --jvm 8
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: 8
+          apps: sbt-launcher
+      - run: cs install --contrib amm-runner
       - run: amm-runner launcher.sc uploadAllJars
         shell: bash
         env:
@@ -113,8 +121,10 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - run: .github/scripts/ci-setup.sh --jvm graalvm-ce-java11:20.1.0
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: graalvm-ce-java11:20.1.0
+          apps: sbt-launcher ammonite
       - run: amm launcher.sc uploadNativeImage
         if: runner.os != 'Windows'
         shell: bash
@@ -143,8 +153,10 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - run: .github/scripts/ci-setup.sh
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: 8
+          apps: sbt-launcher ammonite
       - run: sbt cli/pack
         shell: bash
       - uses: uraimo/run-on-arch-action@v2.0.5
@@ -216,8 +228,11 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - run: .github/scripts/ci-setup.sh --jvm 8
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: 8
+          apps: sbt-launcher
+      - run: cs install --contrib amm-runner
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash
         env:
@@ -233,8 +248,11 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - run: .github/scripts/ci-setup.sh --jvm 8
-        shell: bash
+      - uses: laughedelic/coursier-setup@v1
+        with:
+          jvm: 8
+          apps: sbt-launcher
+      - run: cs install --contrib amm-runner
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash
         env:
