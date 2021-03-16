@@ -608,7 +608,7 @@ object Resolution {
           None
         else {
           val lastPart = module.name.value.substring(idx + 1 + sbv.length + 1)
-          if (lastPart.isEmpty || lastPart.forall(c => Character.isDigit(c) || "MRC-".contains(c)))
+          if (lastPart.isEmpty || lastPart.exists(c => !"01234566789MRC-.".contains(c)))
             None
           else
             Some(module.name.value.substring(0, idx))
