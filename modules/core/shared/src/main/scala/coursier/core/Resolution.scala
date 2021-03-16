@@ -592,11 +592,12 @@ object Resolution {
   def forceScalaVersion(sv: String): Dependency => Dependency = {
 
     val sbv = sv.split('.').take(2).mkString(".")
-    val scala = if (sbv.startsWith("3")) "scala3" else "scala"
-
-    val scalaModules = Set(
-      ModuleName(s"${scala}-library"),
-      ModuleName(s"${scala}-compiler"),
+    val scalaModules = if (sbv.startsWith("3")) Set(
+      ModuleName("scala3-library"),
+      ModuleName("scala3-compiler")
+    ) else Set(
+      ModuleName("scala-library"),
+      ModuleName("scala-compiler"),
       ModuleName("scala-reflect"),
       ModuleName("scalap")
     )
