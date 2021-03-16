@@ -1,0 +1,6 @@
+com.softwaremill.sttp.client3:core_3.0.0-RC1:3.1.7:default
+org.scala-lang:scala3-library_3.0.0-RC1:3.0.0-RC1:default
+com.softwaremill.sttp.model:core_3.0.0-RC1:1.3.3:default
+com.softwaremill.sttp.shared:core_3.0.0-RC1:1.1.1:default
+com.softwaremill.sttp.shared:ws_3.0.0-RC1:1.1.1:default
+org.scala-lang:scala-library:2.13.4:default

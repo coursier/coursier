@@ -215,12 +215,18 @@ object Resolve extends PlatformResolve {
         val scalaOrg =
           if (params.typelevel) Organization("org.typelevel")
           else Organization("org.scala-lang")
-        Seq(
-          Module(scalaOrg, ModuleName("scala-library")) -> params.selectedScalaVersion,
-          Module(scalaOrg, ModuleName("org.scala-lang:scala-reflect")) -> params.selectedScalaVersion,
-          Module(scalaOrg, ModuleName("org.scala-lang:scala-compiler")) -> params.selectedScalaVersion,
-          Module(scalaOrg, ModuleName("org.scala-lang:scalap")) -> params.selectedScalaVersion
-        )
+        if (params.selectedScalaVersion.startsWith("3"))
+          Seq(
+            Module(scalaOrg, ModuleName("scala3-library")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala3-compiler")) -> params.selectedScalaVersion
+          )
+        else
+          Seq(
+            Module(scalaOrg, ModuleName("scala-library")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala-compiler")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala-reflect")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scalap")) -> params.selectedScalaVersion
+          )
       } else
         Nil
 
