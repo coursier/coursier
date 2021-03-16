@@ -218,14 +218,14 @@ object Resolve extends PlatformResolve {
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
             Module(scalaOrg, ModuleName("scala3-library")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("org.scala-lang:scala3-compiler")) -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala3-compiler")) -> params.selectedScalaVersion
           )
         else
           Seq(
             Module(scalaOrg, ModuleName("scala-library")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("org.scala-lang:scala-compiler")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("org.scala-lang:scala-reflect")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("org.scala-lang:scalap")) -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala-compiler")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala-reflect")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scalap")) -> params.selectedScalaVersion
           )
       } else
         Nil
