@@ -46,7 +46,7 @@ jobs:
     - uses: laughedelic/coursier-setup@v1
       with:
         jvm: ${{ matrix.JDK }}
-        apps: sbt-launcher:1.2.24
+        apps: sbt-launcher:1.2.22
     - run: cs install --contrib amm-runner:0.3.1
     - run: .github/scripts/ci.sh
       shell: bash
@@ -70,7 +70,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.24
+          apps: sbt-launcher:1.2.22
       - name: Release
         run: sbt +publishLocal ci-release
         env:
@@ -95,7 +95,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.24
+          apps: sbt-launcher:1.2.22
       - run: cs install --contrib amm-runner:0.3.1
       - run: amm-runner launcher.sc uploadAllJars
         shell: bash
@@ -124,7 +124,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: graalvm-ce-java11:20.1.0
-          apps: sbt-launcher:1.2.24 ammonite:2.3.8
+          apps: sbt-launcher:1.2.22 ammonite:2.3.8
       - run: amm launcher.sc uploadNativeImage
         if: runner.os != 'Windows'
         shell: bash
@@ -156,7 +156,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.24 ammonite:2.3.8
+          apps: sbt-launcher:1.2.22 ammonite:2.3.8
       - run: sbt cli/pack
         shell: bash
       - uses: uraimo/run-on-arch-action@v2.0.5
@@ -231,7 +231,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.24
+          apps: sbt-launcher:1.2.22
       - run: cs install --contrib amm-runner:0.3.1
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash
@@ -251,7 +251,7 @@ jobs:
       - uses: laughedelic/coursier-setup@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.24
+          apps: sbt-launcher:1.2.22
       - run: cs install --contrib amm-runner:0.3.1
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
         shell: bash
