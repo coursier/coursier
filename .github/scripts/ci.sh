@@ -30,11 +30,6 @@ elif [ "$TARGET" = "ScalaNative" ]; then
     exit 1
   fi
 elif [ "$TARGET" = "Website" ]; then
-  echo "$PATH"
-  ls bin
-  which cs || true
-  which amm || true
-  which amm-runner || true
   amm-runner website.sc generate
 else
   if [[ ${SCALA_VERSION} == 2.12* ]]; then
