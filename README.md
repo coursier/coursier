@@ -1,3 +1,7 @@
+**Coursier is participating to Google Summer of Code 2021! More details [here](https://github.com/coursier/coursier/issues/2008).**
+
+***
+
 # Coursier
 
 [![Build status](https://github.com/coursier/coursier/workflows/CI/badge.svg)](https://github.com/coursier/coursier/actions?query=workflow%3ACI)
