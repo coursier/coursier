@@ -47,7 +47,7 @@ jobs:
           apps: sbt-launcher:1.2.22 coursier:2.0.13
       - run: sbt cli/pack
         shell: bash
-      - uses: uraimo/run-on-arch-action@v2.0.5
+      - uses: uraimo/run-on-arch-action@v2.0.9
         with:
           arch: aarch64
           distro: ubuntu20.04
