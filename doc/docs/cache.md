@@ -4,7 +4,7 @@ title: Cache
 
 ## Path format
 
-The cache is supposed to cache static resources, that don't change often (snapshot artifacts being the exception - these then follow TTL).
+The cache is used to cache artifacts that don't change often (snapshot artifacts being the exception - these then follow TTL).
 
 The content of a URL like
 ```bash
@@ -16,6 +16,12 @@ CACHE_PATH/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.7/scal
 ```
 
 ## Location
+
+### SBT
+
+When using Coursier with SBT, you can check the location with `show csrCacheDirectory`.
+
+To override it, use the `-Dsbt.coursier.home` system property or the `COURSIER_CACHE` environment variable.
 
 ### Default location
 
