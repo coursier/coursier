@@ -19,6 +19,7 @@ import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.{Setup, SetupOptions}
+import coursier.cli.search.Search
 import coursier.core.Version
 import coursier.install.InstallDir
 import coursier.launcher.internal.{FileUtil, Windows}
@@ -167,7 +168,9 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         Uninstall.run(uninstallOptions, args)
       case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))))) =>
         Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil))))))))))))))) =>
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(searchOptions)))))))))))))))) =>
+        Search.run(searchOptions, args)
+      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))))) =>
         cnil.impossible
     }
 

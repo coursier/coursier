@@ -13,6 +13,7 @@ import coursier.cli.launch.Launch
 import coursier.cli.publish.Publish
 import coursier.cli.resolve.Resolve
 import coursier.cli.setup.Setup
+import coursier.cli.search.Search
 
 object CoursierCommand {
 
@@ -33,6 +34,7 @@ object CoursierCommand {
       .add(Setup)
       .add(Uninstall)
       .add(Update)
+      .add(Search)
       .reverse
 
   val help =
@@ -52,6 +54,7 @@ object CoursierCommand {
       .add(Setup)
       .add(Uninstall)
       .add(Update)
+      .add(Search)
       .reverse
 
 }

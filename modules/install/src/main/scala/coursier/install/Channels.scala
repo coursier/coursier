@@ -2,7 +2,7 @@ package coursier.install
 
 import java.io.{File, FileInputStream}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Paths, Path}
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
@@ -15,6 +15,7 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, Task}
 import dataclass._
+import scala.collection.JavaConverters._
 
 @data class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
@@ -230,6 +231,109 @@ import dataclass._
           case s @ Some(_) => Task.point(s)
         }
       }
+  }
+
+  def searchAppName(query: Seq[String]): Task[List[String]] = {
+
+    def matchQuery(id: String): Boolean = {
+      query.isEmpty || query.exists(id.contains)
+    }
+
+    def fromModule(channel: Channel.FromModule): Task[List[String]] =
+      for {
+        res <- Fetch(cache)
+          .withDependencies(Seq(Dependency(channel.module, channel.version)))
+          .withRepositories(repositories)
+          .ioResult
+
+        _ = {
+          for (logger <- cache.loggerOpt)
+            logger.use {
+              val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              logger.pickedModuleVersion(channel.module.repr, retainedVersion)
+            }
+        }
+
+        dataOpt <- res
+          .files
+          .iterator
+          .map { f =>
+            Task.delay {
+              withZipFile(f) { zf =>
+                zf.entries().asScala.map(_.getName()).filter(_.endsWith(".json")).map(_.stripSuffix(".json")).filter(matchQuery).toList
+              }
+            }
+          }
+          .foldLeft[Task[List[String]]](Task.point(List.empty[String])) { (acc, e) =>
+            for {
+              a <- acc
+              extra <- e
+            } yield a ++ extra
+          }
+      } yield dataOpt
+
+    def fromUrl(channel: Channel.FromUrl): Task[List[String]] = {
+
+      val loggerOpt = cache.loggerOpt
+
+      val a = Artifact(channel.url, Map.empty, Map.empty, changing = true, optional = false, authentication = None)
+
+      val fetch = cache.file(a).run
+
+      val task = loggerOpt match {
+        case None => fetch
+        case Some(logger) =>
+          Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
+            fetch.attempt.flatMap { a =>
+              Task.delay(logger.stop()).flatMap { _ =>
+                Task.fromEither(a)
+              }
+            }
+          }
+      }
+
+      for {
+        e <- task
+        f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
+        content <- Task.delay {
+          val b = FileUtil.readFully(new FileInputStream(f))
+          new String(b, StandardCharsets.UTF_8)
+        }
+        m <- Task.fromEither {
+          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
+            .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
+        }
+      } yield 
+        m.keys.filter(matchQuery).toList
+      
+    }
+
+    def fromDirectory(channel: Channel.FromDirectory): Task[List[String]] = Task.delay {
+      if (Files.isDirectory(channel.path)) {
+        Files.find(channel.path, 1, {
+          (p: Path, _) => Files.isRegularFile(p) && Files.isReadable(p) && p.getFileName().toString().endsWith(".json")
+        }).iterator().asScala.map(_.getFileName().toString().stripSuffix(".json")).filter(matchQuery).toList
+      } else List.empty[String]
+    }
+
+    channels
+      .iterator
+      .map {
+        case m: Channel.FromModule =>
+          fromModule(m)
+        case u: Channel.FromUrl =>
+          fromUrl(u)
+        case d: Channel.FromDirectory =>
+          fromDirectory(d)
+        case _: Channel.Inline =>
+          Task.point(List.empty[String])
+      }
+      .foldLeft(Task.point(List.empty[String])) { (acc, e) =>
+        for {
+          a     <- acc
+          extra <- e
+        } yield a ++ extra
+      }.map(_.sorted)
   }
 
 }
