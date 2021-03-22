@@ -557,4 +557,21 @@ object Settings {
 
   lazy val javaMajorVer = sys.props("java.version").takeWhile(_.isDigit).toInt
 
+  def classloadersForCustomProtocolTest(fromProject: Project): Setting[Seq[Task[Seq[java.io.File]]]] = 
+    Test / sourceGenerators += Def.task {
+      val customLoaderClasspath = (fromProject / Compile / fullClasspath).value
+      val dq = '"'
+      val files = customLoaderClasspath.files.map(f => 
+        dq + f.toURI().toURL().toString + dq
+      ).mkString("Seq(", ", ", ")")
+      
+      val file = (Test / sourceManaged).value / "CustomLoaderClasspath.scala"
+      IO.write(file, 
+        s"""|package coursier.cache
+            |object CustomLoaderClasspath {
+            |  val files = $files
+            |}""".stripMargin
+      )
+      Seq(file)
+    }.taskValue
 }

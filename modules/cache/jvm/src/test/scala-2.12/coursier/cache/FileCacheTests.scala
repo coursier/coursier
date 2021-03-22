@@ -1,9 +1,9 @@
 package coursier.cache
 
 import java.io.File
-import java.net.URI
+import java.net.{URI, URL, URLClassLoader}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util
 
 import cats.effect.IO
@@ -922,6 +922,69 @@ object FileCacheTests extends TestSuite {
                 .withMatchHost(true)
             )
           )
+        }
+      }
+    }
+
+    test("custom protocols") {
+      test("unknown") - async {
+        val artifact = Artifact("unknown.protocol://hostname/file.txt")
+
+        val res = await {
+          FileCache()
+            .file(artifact)
+            .run
+            .future
+        }
+
+        val expectedReason =
+          List(
+            "Caught java.net.MalformedURLException (unknown protocol: unknown.protocol) while downloading unknown.protocol://hostname/file.txt.",
+            "Visit https://get-coursier.io/docs/extra.html#extra-protocols to learn how to handle custom protocols."
+          ).mkString(" ")
+
+        res match {
+          case Left(error: ArtifactError.DownloadError) =>
+            println("---")
+            println(error.reason)
+            println()
+            println(expectedReason)
+            println("---")
+            assert(error.reason == expectedReason)
+
+          case _ =>
+            assert(false)
+        }
+      }
+
+      test("with classloader") {
+        withTmpDir { dir =>
+          async {
+            val classloader = 
+              new URLClassLoader(
+                CustomLoaderClasspath.files.map(new URL(_)).toArray
+              )
+
+            val artifact = Artifact("customprotocol://hostname/README.md")
+
+            val res = await {
+              FileCache()
+                .withClassLoaders(Seq(classloader))
+                .withLocation(dir.toFile)
+                .file(artifact)
+                .run
+                .future
+            }
+
+            res match {
+              case Right(file: File) =>
+                val actual = new String(Files.readAllBytes(file.toPath))
+                val expected = new String(Files.readAllBytes(Paths.get("README.md")))
+                assert(actual == expected)
+
+              case Left(e) => throw e
+            }
+          }
         }
       }
     }

@@ -1,7 +1,7 @@
 package coursier.cache.internal
 
 import java.io.{Serializable => _, _}
-import java.net.{HttpURLConnection, URLConnection}
+import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Locale
@@ -211,6 +211,7 @@ import scala.util.control.NonFatal
           .withHostnameVerifierOpt(hostnameVerifierOpt)
           .withMethod("GET")
           .withMaxRedirectionsOpt(maxRedirections)
+          .withClassLoaders(classLoaders)
           .connectionMaybePartial()
         conn = conn0
 
@@ -695,9 +696,22 @@ object Downloader {
           case _: javax.net.ssl.SSLException if retry >= 1 =>
             // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
             None
+
+          case UnknownProtocol(e, msg0) =>
+            val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
+
+            val msg = List(
+              s"Caught ${e.getClass().getName()} (${msg0}) while downloading $url.",
+              s"Visit $docUrl to learn how to handle custom protocols.",
+            ).mkString(" ")
+
+            val ex = new ArtifactError.DownloadError(msg, Some(e))
+
+            Some(Left(ex))
+
           case NonFatal(e) =>
             val ex = new ArtifactError.DownloadError(
-              s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
               Some(e)
             )
             if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
@@ -712,6 +726,17 @@ object Downloader {
     }
 
     helper(sslRetry)
+  }
+
+  private object UnknownProtocol {
+    def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
+      case ex: MalformedURLException => 
+        Option(ex.getMessage()) match {
+          case Some(msg) if msg.startsWith("unknown protocol: ") => Some((ex, msg))
+          case _ => None
+        }
+      case _ => None
+    }
   }
 
   private def contentLength(
