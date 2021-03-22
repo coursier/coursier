@@ -39,15 +39,11 @@ object CacheUrl {
               None
           }
 
-        val clsOpt0: Option[Class[_]] = {
-          def fromProvided = classLoaders.toStream.map(clsOpt)
-          def fromThread = clsOpt(Thread.currentThread().getContextClassLoader)
-          def fromClass = clsOpt(getClass.getClassLoader)
-
-          fromProvided.append(List(fromThread, fromClass)).collectFirst {
-            case Some(cls) => cls
-          }
-        }
+        val clsOpt0: Option[Class[_]] =
+          (classLoaders.iterator ++ Iterator(Thread.currentThread().getContextClassLoader, getClass.getClassLoader))
+            .flatMap(clsOpt(_).iterator)
+            .toStream
+            .headOption
 
         def printError(e: Exception): Unit =
           scala.Console.err.println(

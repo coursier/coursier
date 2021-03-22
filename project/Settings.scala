@@ -562,7 +562,7 @@ object Settings {
       val customLoaderClasspath = (fromProject / Compile / fullClasspath).value
       val dq = '"'
       val files = customLoaderClasspath.files.map(f => 
-        dq + f.toURI().toURL().toString + dq
+        dq + f.toURI.toString + dq
       ).mkString("Seq(", ", ", ")")
       
       val file = (Test / sourceManaged).value / "CustomLoaderClasspath.scala"

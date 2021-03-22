@@ -37,7 +37,7 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.13")
+  @since("2.0.16")
   classLoaders: Seq[ClassLoader] = Nil,
 )(implicit
   S: Sync[F]
@@ -730,11 +730,8 @@ object Downloader {
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
-      case ex: MalformedURLException => 
-        Option(ex.getMessage()) match {
-          case Some(msg) if msg.startsWith("unknown protocol: ") => Some((ex, msg))
-          case _ => None
-        }
+      case ex: MalformedURLException if ex.getMessage.startsWith("unknown protocol: ") => 
+        Some((ex, ex.getMessage))
       case _ => None
     }
   }

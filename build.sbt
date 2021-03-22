@@ -145,12 +145,11 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
       Deps.svm % Provided,
       Deps.windowsAnsi
     ),
-    classloadersForCustomProtocolTest(customProtocol.jvm),
+    classloadersForCustomProtocolTest(customProtocolForTest),
   )
   .jsSettings(
     name := "fetch-js",
-    libs += Deps.cross.scalaJsDom.value,
-    classloadersForCustomProtocolTest(customProtocol.js),
+    libs += Deps.cross.scalaJsDom.value
   )
   .settings(
     shared,
@@ -177,8 +176,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
 lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
-lazy val customProtocol = crossProject("customProtocol")(JSPlatform, JVMPlatform)
-  .settings(dontPublish)
+lazy val customProtocolForTest = project("custom-protocol-for-test").settings(dontPublish)
   
 lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")

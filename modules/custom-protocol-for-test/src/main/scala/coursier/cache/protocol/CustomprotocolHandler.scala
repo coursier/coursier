@@ -11,7 +11,7 @@ class CustomprotocolHandler extends URLStreamHandlerFactory {
       new URLConnection(url) {
         def connect(): Unit = ()
         override def getInputStream(): InputStream = {
-          new FileInputStream(new File(new File(".").getAbsolutePath() + url.getPath()))
+          new FileInputStream(new File(new File("."), url.getPath.stripPrefix("/")))
         }
       }
     }

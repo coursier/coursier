@@ -19,7 +19,7 @@ import dataclass.data
   method: String = "GET",
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
-  @since("2.0.13")
+  @since("2.0.16")
   classLoaders: Seq[ClassLoader] = Nil,
 ) {
 
@@ -48,4 +48,3 @@ import dataclass.data
       classLoaders
     ))
 }
-

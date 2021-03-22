@@ -37,7 +37,7 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.13")
+  @since("2.0.16")
   classLoaders: Seq[ClassLoader] = Nil,
 )(implicit
   sync: Sync[F]

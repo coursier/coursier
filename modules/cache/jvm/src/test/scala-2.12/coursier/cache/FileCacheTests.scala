@@ -945,11 +945,6 @@ object FileCacheTests extends TestSuite {
 
         res match {
           case Left(error: ArtifactError.DownloadError) =>
-            println("---")
-            println(error.reason)
-            println()
-            println(expectedReason)
-            println("---")
             assert(error.reason == expectedReason)
 
           case _ =>
