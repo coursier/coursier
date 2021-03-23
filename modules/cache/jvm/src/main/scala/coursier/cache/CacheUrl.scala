@@ -20,12 +20,18 @@ object CacheUrl {
 
   private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
 
-  private def handlerFor(url: String): Option[URLStreamHandler] = {
+  private def handlerFor(url: String, classLoaders: Seq[ClassLoader]): Option[URLStreamHandler] = {
     val protocol = url.takeWhile(_ != ':')
 
     Option(handlerClsCache.get(protocol)) match {
       case None =>
-        val clsName = s"coursier.cache.protocol.${protocol.capitalize}Handler"
+        val clsName = List(
+          "coursier",
+          "cache",
+          "protocol",
+          s"${protocol.capitalize}Handler",
+        ).mkString(".")
+
         def clsOpt(loader: ClassLoader): Option[Class[_]] =
           try Some(Class.forName(clsName, false, loader))
           catch {
@@ -33,8 +39,11 @@ object CacheUrl {
               None
           }
 
-        val clsOpt0: Option[Class[_]] = clsOpt(Thread.currentThread().getContextClassLoader)
-          .orElse(clsOpt(getClass.getClassLoader))
+        val clsOpt0: Option[Class[_]] =
+          (classLoaders.iterator ++ Iterator(Thread.currentThread().getContextClassLoader, getClass.getClassLoader))
+            .flatMap(clsOpt(_).iterator)
+            .toStream
+            .headOption
 
         def printError(e: Exception): Unit =
           scala.Console.err.println(
@@ -86,10 +95,15 @@ object CacheUrl {
     * capitalized, and suffixed with `Handler` to get the class name).
     *
     * @param s
+    * @param classloader: provide a classloader to load custome protocol handlers from
     * @return
     */
+
+  def url(s: String, classLoaders: Seq[ClassLoader]): URL =
+    new URL(null, s, handlerFor(s, classLoaders).orNull)
+
   def url(s: String): URL =
-    new URL(null, s, handlerFor(s).orNull)
+    new URL(null, s, handlerFor(s, Nil).orNull)
 
   @deprecated("Use coursier.core.Authentication.basicAuthenticationEncode", "2.0.0-RC3")
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
@@ -231,7 +245,8 @@ object CacheUrl {
       hostnameVerifierOpt,
       method,
       maxRedirectionsOpt = maxRedirectionsOpt,
-      None
+      None,
+      Nil,
     ).connection()
 
   private[cache] final case class Args(
@@ -248,7 +263,8 @@ object CacheUrl {
     method: String,
     authRealm: Option[String],
     redirectionCount: Int,
-    maxRedirectionsOpt: Option[Int]
+    maxRedirectionsOpt: Option[Int],
+    classLoaders: Seq[ClassLoader],
   )
 
   @deprecated("Create a ConnectionBuilder() and call connectionMaybePartial() on it instead", "2.0.0")
@@ -275,7 +291,8 @@ object CacheUrl {
       hostnameVerifierOpt,
       method,
       maxRedirectionsOpt,
-      None
+      None,
+      Nil,
     ).connectionMaybePartial()
 
   @tailrec
@@ -288,7 +305,7 @@ object CacheUrl {
     val res: Either[Args, (URLConnection, Boolean)] =
       try {
         conn = {
-          val jnUrl = url(url0)
+          val jnUrl = url(url0, args.classLoaders)
           proxyOpt match {
             case None => jnUrl.openConnection()
             case Some(proxy) => jnUrl.openConnection(proxy)

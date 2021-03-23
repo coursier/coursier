@@ -64,5 +64,42 @@ From sbt, add the setting `coursierUseSbtCredentials := true` for sbt-coursier t
 
 ## Extra protocols
 
-By default, coursier and sbt-coursier handle the `http://`, `https://`, and `file://` protocols. It should also be fine
-by protocols supported by `java.net.URL` (not thoroughly tested). Support for other protocols can be added via plugins. [coursier-s3](https://github.com/paulblei/coursier-s3), a plugin for S3, is under development, and illustrates how to write such plugins.
+By default, coursier and sbt-coursier handle the following protocols:
+
+* `http://`
+* `https://`
+* `file://`
+* protocols supported by `java.net.URL` (not thoroughly tested). See [javadoc](https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/net/URL.html#%3Cinit%3E(java.lang.String,java.lang.String,int,java.lang.String)) for more details.
+
+Other protocols can be added by implementing `java.net.URLStreamHandlerFactory` under the `coursier.cache.protocol` package name:
+
+```scala
+package coursier.cache.protocol
+
+import java.io.File
+import java.io.InputStream
+import java.net.{URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
+import java.io.FileInputStream
+
+class CustomprotocolHandler extends URLStreamHandlerFactory {
+  def createURLStreamHandler(protocol: String): URLStreamHandler = new URLStreamHandler {
+    def openConnection(url: URL): URLConnection =
+      new URLConnection(url) {
+        def connect(): Unit = ()
+        override def getInputStream(): InputStream =
+          new FileInputStream(new File(new File(".").getAbsolutePath() + url.getPath()))
+      }
+  }
+}
+```
+
+Coursier will search for your plugin with the following order on various classloaders:
+
+1. Custom classloaders provided via the API (see `FileCache.withClassLoaders`)
+2. `Thread.currentThread().getContextClassLoader`
+3. The classloader that loaded coursier itself (more precisely, `coursier.cache.CacheUrl.getClass.getClassLoader`)
+
+
+Real Word Examples:
+
+* [coursier-s3](https://github.com/rtfpessoa/coursier-s3), a plugin for S3, is under development

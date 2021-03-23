@@ -36,7 +36,9 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.defaultRetryCount,
-  bufferSize: Int = CacheDefaults.bufferSize
+  bufferSize: Int = CacheDefaults.bufferSize,
+  @since("2.0.16")
+  classLoaders: Seq[ClassLoader] = Nil,
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] {
@@ -98,7 +100,8 @@ import scala.util.control.NonFatal
       sslRetry,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
-      bufferSize
+      bufferSize,
+      classLoaders
     ).download
 
   def validateChecksum(

@@ -144,7 +144,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       Deps.svm % Provided,
       Deps.windowsAnsi
-    )
+    ),
+    classloadersForCustomProtocolTest(customProtocolForTest),
   )
   .jsSettings(
     name := "fetch-js",
@@ -175,6 +176,8 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
 lazy val cacheJvm = cache.jvm
 lazy val cacheJs = cache.js
 
+lazy val customProtocolForTest = project("custom-protocol-for-test").settings(dontPublish)
+  
 lazy val scalaz = crossProject("interop", "scalaz")(JSPlatform, JVMPlatform)
   .dependsOn(cache, tests % "test->test")
   .jsConfigure(_.disablePlugins(MimaPlugin))
