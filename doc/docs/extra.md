@@ -95,7 +95,7 @@ class CustomprotocolHandler extends URLStreamHandlerFactory {
 
 Coursier will search for your plugin with the following order on various classloaders:
 
-1. The first classloader of those provided via the API (see `FileCache.withClassLoaders`)
+1. Custom classloaders provided via the API (see `FileCache.withClassLoaders`)
 2. `Thread.currentThread().getContextClassLoader`
 3. The classloader that loaded coursier itself (more precisely, `coursier.cache.CacheUrl.getClass.getClassLoader`)
 

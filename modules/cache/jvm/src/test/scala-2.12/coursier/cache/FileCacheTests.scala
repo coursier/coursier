@@ -972,7 +972,7 @@ object FileCacheTests extends TestSuite {
             }
 
             res match {
-              case Right(file: File) =>
+              case Right(file) =>
                 val actual = new String(Files.readAllBytes(file.toPath))
                 val expected = new String(Files.readAllBytes(Paths.get("README.md")))
                 assert(actual == expected)
