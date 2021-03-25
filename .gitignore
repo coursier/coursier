@@ -3,6 +3,8 @@ out/
 .bsp/
 
 .vscode/
+.history
+metals.sbt
 
 .idea/
 node_modules/
