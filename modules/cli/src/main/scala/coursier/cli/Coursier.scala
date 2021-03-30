@@ -136,42 +136,26 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     }
   }
 
-  def runA =
-    args => {
-      case Inl(bootstrapOptions) =>
-        Bootstrap.run(bootstrapOptions, args)
-      case Inr(Inl(channelOptions)) =>
-        Channel.run(channelOptions, args)
-      case Inr(Inr(Inl(completeOptions))) =>
-        Complete.run(completeOptions, args)
-      case Inr(Inr(Inr(Inl(fetchOptions)))) =>
-        Fetch.run(fetchOptions, args)
-      case Inr(Inr(Inr(Inr(Inl(getOptions))))) =>
-        Get.run(getOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inl(installOptions)))))) =>
-        Install.run(installOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaOptions))))))) =>
-        Java.run(javaOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(javaHomeOptions)))))))) =>
-        JavaHome.run(javaHomeOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(launchOptions))))))))) =>
-        Launch.run(launchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(listOptions)))))))))) =>
-        List.run(listOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(publishOptions))))))))))) =>
-        Publish.run(publishOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(resolveOptions)))))))))))) =>
-        Resolve.run(resolveOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(setupOptions))))))))))))) =>
-        Setup.run(setupOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(uninstallOptions)))))))))))))) =>
-        Uninstall.run(uninstallOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(updateOptions))))))))))))))) =>
-        Update.run(updateOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inl(searchOptions)))))))))))))))) =>
-        Search.run(searchOptions, args)
-      case Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(Inr(cnil)))))))))))))))) =>
-        cnil.impossible
-    }
+  object runWithOptions extends Poly1 {
+    private def opt[T](run: (T, RemainingArgs) => Unit) = at[T](run.curried)
+    implicit val atBootstrap = opt[bootstrap.BootstrapOptions]    (Bootstrap.run)
+    implicit val atChannel   = opt[channel.ChannelOptions]        (Channel.run)
+    implicit val atComplete  = opt[complete.CompleteOptions]      (Complete.run)
+    implicit val atFetch     = opt[fetch.FetchOptions]            (Fetch.run)
+    implicit val atGet       = opt[get.GetOptions]                (Get.run)
+    implicit val atInstall   = opt[install.InstallOptions]        (Install.run)
+    implicit val atJava      = opt[jvm.JavaOptions]               (Java.run)
+    implicit val atJavaHome  = opt[jvm.JavaHomeOptions]           (JavaHome.run)
+    implicit val atLaunch    = opt[launch.LaunchOptions]          (Launch.run)
+    implicit val atList      = opt[install.ListOptions]           (List.run)
+    implicit val atPublish   = opt[publish.options.PublishOptions](Publish.run)
+    implicit val atResolve   = opt[resolve.ResolveOptions]        (Resolve.run)
+    implicit val atSearch    = opt[search.SearchOptions]          (Search.run)
+    implicit val atSetup     = opt[setup.SetupOptions]            (Setup.run)
+    implicit val atUninstall = opt[install.UninstallOptions]      (Uninstall.run)
+    implicit val atUpdate    = opt[install.UpdateOptions]         (Update.run)
+  }
+
+  def runA = _.fold(runWithOptions)
 
 }

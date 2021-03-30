@@ -31,10 +31,10 @@ object CoursierCommand {
       .add(List)
       .add(Publish)
       .add(Resolve)
+      .add(Search)
       .add(Setup)
       .add(Uninstall)
       .add(Update)
-      .add(Search)
       .reverse
 
   val help =
@@ -51,10 +51,10 @@ object CoursierCommand {
       .add(List)
       .add(Publish)
       .add(Resolve)
+      .add(Search)
       .add(Setup)
       .add(Uninstall)
       .add(Update)
-      .add(Search)
       .reverse
 
 }
