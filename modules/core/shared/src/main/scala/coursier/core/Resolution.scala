@@ -1286,7 +1286,7 @@ object Resolution {
           Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
       (pub, artifact) <- source.artifacts(dep, proj, classifiers0)
-    } yield (dep, pub, artifact)
+    } yield (dep.withVersion(proj.actualVersion), pub, artifact)
 
 
   @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")
