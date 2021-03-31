@@ -67,6 +67,6 @@ object Deps {
     def utest = setting("com.lihaoyi" %%% "utest" % "0.7.5")
   }
 
-  def proguardVersion = "7.0.0"
+  def proguardVersion = "7.1.0-beta2"
 
 }
