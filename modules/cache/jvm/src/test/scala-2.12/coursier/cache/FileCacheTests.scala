@@ -5,6 +5,7 @@ import java.net.{URI, URL, URLClassLoader}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.util
+import java.util.zip.GZIPOutputStream
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
@@ -900,16 +901,15 @@ object FileCacheTests extends TestSuite {
       }
 
       test("decodeGzip") {
-        val data = new ByteArrayOutputStream();
-        val gzipStream = new util.zip.GZIPOutputStream(data);
-
-        gzipStream.write("hello".getBytes())
+        val data = new ByteArrayOutputStream
+        val gzipStream = new GZIPOutputStream(data)
+        gzipStream.write("hello".getBytes(StandardCharsets.UTF_8))
         gzipStream.close()
 
         val routes = HttpService[IO] {
           case GET -> Root / "hello.txt" =>
-            Ok(data.toByteArray()).map(_.putHeaders(
-              Header("Content-Encoding", "gzip"),
+            Ok(data.toByteArray).map(_.putHeaders(
+              Header("Content-Encoding", "gzip")
             ))
         }
 

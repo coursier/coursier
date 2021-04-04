@@ -243,10 +243,11 @@ import scala.util.control.NonFatal
 
           val lastModifiedOpt = Option(conn.getLastModified).filter(_ > 0L)
 
-          val in = if (conn.getContentEncoding == "gzip") {
-              new BufferedInputStream(new GZIPInputStream(conn.getInputStream), bufferSize)
-          } else {
-              new BufferedInputStream(conn.getInputStream, bufferSize)
+          val in = {
+            val baseStream =
+              if (conn.getContentEncoding == "gzip") new GZIPInputStream(conn.getInputStream)
+              else conn.getInputStream
+            new BufferedInputStream(baseStream, bufferSize)
           }
 
           val result =
