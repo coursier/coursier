@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -evx
 
+SBT="sbt"
+if [[ "$(uname -s)" == MINGW* ]]; then
+  SBT="$COURSIER_BIN_DIR/sbt.bat"
+fi
+
+
 if [ "$TARGET" = "Scala.JS" ]; then
-  sbt scala212 \
+  "$SBT" scala212 \
     js/compile \
     js/test:compile \
     coreJS/fastOptJS \
@@ -15,7 +21,7 @@ elif [ "$TARGET" = "ScalaNative" ]; then
   find /usr -name "*libunwind*" -print0 | sudo xargs -0 rm -rf
   curl -f https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
-  sbt scala212 \
+  "$SBT" scala212 \
     launcher-native_03/publishLocal \
     launcher-native_040M2/publishLocal \
     cli/pack
@@ -36,7 +42,7 @@ else
     sudo apt-get install -y nailgun
   fi
 
-  sbt scalaFromEnv \
+  "$SBT" scalaFromEnv \
     jvmProjects/compile \
     jvmProjects/test:compile
 
@@ -48,8 +54,8 @@ else
 
   ./.github/scripts/with-redirect-server.sh \
     ./modules/tests/handmade-metadata/scripts/with-test-repo.sh \
-    sbt scalaFromEnv jvmProjects/test "$IT"
+    "$SBT" scalaFromEnv jvmProjects/test "$IT"
 
-  sbt scalaFromEnv evictionCheck compatibilityCheck
+  "$SBT" scalaFromEnv evictionCheck compatibilityCheck
 fi
 
