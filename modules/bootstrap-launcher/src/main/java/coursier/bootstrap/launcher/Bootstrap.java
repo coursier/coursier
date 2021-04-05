@@ -16,17 +16,29 @@ public class Bootstrap {
     }
 
     private static void maybeInitWindowsAnsi() throws InterruptedException, IOException {
-        if (!System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false")) {
-            try {
-                // noop on Linux / macOS
+
+        boolean isWindows = System.getProperty("os.name")
+                .toLowerCase(java.util.Locale.ROOT)
+                .contains("windows");
+
+        if (!isWindows)
+            return;
+
+        if (System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false"))
+            return;
+
+        boolean useJni = coursier.paths.Util.useJni();
+        try {
+            if (useJni)
+                coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput();
+            else
                 io.github.alexarchambault.windowsansi.WindowsAnsiPs.setup();
-            } catch (InterruptedException | IOException e) {
-                boolean doThrow = Boolean.getBoolean("coursier.bootstrap.windows-ansi.throw-exception");
-                if (doThrow || Boolean.getBoolean("coursier.bootstrap.windows-ansi.verbose"))
-                    System.err.println("Error setting up Windows terminal for ANSI escape codes: " + e);
-                if (doThrow)
-                    throw e;
-            }
+        } catch (InterruptedException | IOException e) {
+            boolean doThrow = Boolean.getBoolean("coursier.bootstrap.windows-ansi.throw-exception");
+            if (doThrow || Boolean.getBoolean("coursier.bootstrap.windows-ansi.verbose"))
+                System.err.println("Error setting up Windows terminal for ANSI escape codes: " + e);
+            if (doThrow)
+                throw e;
         }
     }
 

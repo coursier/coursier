@@ -23,7 +23,6 @@ import coursier.cli.search.Search
 import coursier.core.Version
 import coursier.install.InstallDir
 import coursier.launcher.internal.{FileUtil, Windows}
-import io.github.alexarchambault.windowsansi.WindowsAnsi
 import shapeless._
 
 import scala.util.control.NonFatal
@@ -32,9 +31,14 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   val isGraalvmNativeImage = sys.props.contains("org.graalvm.nativeimage.imagecode")
 
-  if (System.console() != null && Windows.isWindows)
-    try WindowsAnsi.setup()
-    catch {
+  if (System.console() != null && Windows.isWindows) {
+    val useJni = coursier.paths.Util.useJni()
+    try {
+      if (useJni)
+        coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()
+      else
+        io.github.alexarchambault.windowsansi.WindowsAnsi.setup()
+    } catch {
       case NonFatal(e) =>
         val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
         if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
@@ -42,6 +46,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         if (doThrow)
            throw e
     }
+  }
 
   CacheUrl.setupProxyAuth()
 

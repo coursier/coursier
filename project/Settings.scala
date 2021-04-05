@@ -1,5 +1,5 @@
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, File}
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.{Arrays, Locale}
@@ -547,6 +547,12 @@ object Settings {
       proguardBinaryDeps.in(Proguard) ++= rtJarOpt.toSeq, // seems needed with sbt 1.4.0
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
+      proguardOptions.in(Proguard) := {
+        val current = proguardOptions.in(Proguard).value
+        val idx = current.indexWhere(_.contains(File.separator + "windows-jni-utils"))
+        assert(idx >= 0, s"options: $current")
+        current.take(idx) ++ Seq(current(idx).replace("-libraryjars", "-injars")) ++ current.drop(idx + 1)
+      },
       proguardOptions.in(Proguard) ++= Seq(
         "-dontnote",
         "-dontwarn",

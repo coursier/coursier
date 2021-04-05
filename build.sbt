@@ -130,7 +130,10 @@ lazy val paths = project("paths")
   .settings(
     pureJava,
     dontPublish,
-    addDirectoriesSources
+    addDirectoriesSources,
+    libraryDependencies ++= Seq(
+      Deps.jniUtils
+    )
   )
 
 lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
@@ -143,6 +146,7 @@ lazy val cache = crossProject("cache")(JSPlatform, JVMPlatform)
     addPathsSources,
     Mima.previousArtifacts,
     libraryDependencies ++= Seq(
+      Deps.jniUtils,
       Deps.svm % Provided,
       Deps.windowsAnsi
     ),
@@ -230,7 +234,8 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     utest,
     libraryDependencies ++= Seq(
       Deps.collectionCompat % Test,
-      Deps.java8Compat % Test
+      Deps.java8Compat % Test,
+      Deps.jniUtils
     ),
     addPathsSources,
     addWindowsAnsiPsSources,
@@ -244,6 +249,9 @@ lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher"
   .settings(
     pureJava,
     dontPublish,
+    libraryDependencies ++= Seq(
+      Deps.jniUtils
+    ),
     unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(`bootstrap-launcher`, Compile).value,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.ResourcesLauncher"),
     proguardedBootstrap("coursier.bootstrap.launcher.ResourcesLauncher", resourceBased = true)
@@ -324,7 +332,8 @@ lazy val env = project("env")
     libs ++= Seq(
       Deps.collectionCompat,
       Deps.dataClass % Provided,
-      Deps.jimfs % Test
+      Deps.jimfs % Test,
+      Deps.jniUtils
     ),
     utest
   )

@@ -4,26 +4,41 @@ import dataclass.data
 
 @data class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
-  target: String = "User"
+  target: String = "User",
+  useJni: Option[Boolean] = None
 ) extends EnvVarUpdater {
+
+  private lazy val useJni0 = useJni.getOrElse {
+    // FIXME Should be coursier.paths.Util.useJni(), but it's not available from here.
+    !System.getProperty("coursier.jni", "").equalsIgnoreCase("false")
+  }
 
   // https://stackoverflow.com/questions/9546324/adding-directory-to-path-environment-variable-in-windows/29109007#29109007
   // https://docs.microsoft.com/fr-fr/dotnet/api/system.environment.getenvironmentvariable?view=netframework-4.8#System_Environment_GetEnvironmentVariable_System_String_System_EnvironmentVariableTarget_
   // https://docs.microsoft.com/fr-fr/dotnet/api/system.environment.setenvironmentvariable?view=netframework-4.8#System_Environment_SetEnvironmentVariable_System_String_System_String_System_EnvironmentVariableTarget_
 
-  private def getEnvironmentVariable(name: String): Option[String] = {
-    val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name)).stripSuffix(System.lineSeparator())
-    if (output == "null") // if ever the actual value is "null", we'll miss it
-      None
-    else
-      Some(output)
-  }
+  private def getEnvironmentVariable(name: String): Option[String] =
+    if (useJni0)
+      Option(coursier.jniutils.WindowsEnvironmentVariables.get(name))
+    else {
+      val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name)).stripSuffix(System.lineSeparator())
+      if (output == "null") // if ever the actual value is "null", we'll miss it
+        None
+      else
+        Some(output)
+    }
 
   private def setEnvironmentVariable(name: String, value: String): Unit =
-    powershellRunner.runScript(WindowsEnvVarUpdater.setEnvVarScript(name, value))
+    if (useJni0)
+      coursier.jniutils.WindowsEnvironmentVariables.set(name, value)
+    else
+      powershellRunner.runScript(WindowsEnvVarUpdater.setEnvVarScript(name, value))
 
   private def clearEnvironmentVariable(name: String): Unit =
-    powershellRunner.runScript(WindowsEnvVarUpdater.clearEnvVarScript(name))
+    if (useJni0)
+      coursier.jniutils.WindowsEnvironmentVariables.delete(name)
+    else
+      powershellRunner.runScript(WindowsEnvVarUpdater.clearEnvVarScript(name))
 
   def applyUpdate(update: EnvironmentUpdate): Boolean = {
 

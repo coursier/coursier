@@ -28,6 +28,7 @@ object Deps {
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def java8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
   def jimfs = "com.google.jimfs" % "jimfs" % "1.1"
+  def jniUtils = "io.get-coursier.jniutils" % "windows-jni-utils" % "0.2.0"
   def jol = "org.openjdk.jol" % "jol-core" % "0.14"
   def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
   def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala
