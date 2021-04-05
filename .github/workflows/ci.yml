@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.OS }}
-    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }} ${{ matrix.OS }}
     strategy:
       fail-fast: false
       matrix:
@@ -19,6 +19,10 @@ jobs:
         SCALA_VERSION: ["2.12"]
         TARGET: ["JVM", "Scala.JS", "Website"]
         include:
+          - JDK: "8"
+            SCALA_VERSION: "2.12"
+            TARGET: "JVM"
+            OS: "windows-latest"
           - JDK: "8"
             SCALA_VERSION: "2.13"
             TARGET: "JVM"
