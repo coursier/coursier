@@ -16,7 +16,7 @@ public class Bootstrap {
     }
 
     private static void maybeInitWindowsAnsi() throws InterruptedException, IOException {
-        if (!System.getProperty("coursier.bootstrap.windows-ansi.disable", "").equalsIgnoreCase("false")) {
+        if (!System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false")) {
             try {
                 // noop on Linux / macOS
                 io.github.alexarchambault.windowsansi.WindowsAnsiPs.setup();
