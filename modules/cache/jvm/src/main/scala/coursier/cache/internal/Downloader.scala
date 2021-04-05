@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Locale
 import java.util.concurrent.ExecutorService
+import java.util.zip.GZIPInputStream
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.cache._
@@ -242,7 +243,12 @@ import scala.util.control.NonFatal
 
           val lastModifiedOpt = Option(conn.getLastModified).filter(_ > 0L)
 
-          val in = new BufferedInputStream(conn.getInputStream, bufferSize)
+          val in = {
+            val baseStream =
+              if (conn.getContentEncoding == "gzip") new GZIPInputStream(conn.getInputStream)
+              else conn.getInputStream
+            new BufferedInputStream(baseStream, bufferSize)
+          }
 
           val result =
             try {
