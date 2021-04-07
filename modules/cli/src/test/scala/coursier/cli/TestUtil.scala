@@ -4,6 +4,7 @@ import java.io.{File, FileWriter}
 import java.nio.file.Files
 
 import coursier.dependencyString
+import scala.util.control.NonFatal
 
 object TestUtil {
 
@@ -46,4 +47,11 @@ object TestUtil {
       Console.err.println(
         s"Warning: unable to remove temporary directory $tmpDir")
   }
+
+  def mayThrow[T](f: => T): T =
+    try f
+    catch {
+      case NonFatal(e) =>
+        throw new Exception(e)
+    }
 }

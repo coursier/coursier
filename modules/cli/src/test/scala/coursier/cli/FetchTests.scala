@@ -20,7 +20,7 @@ import coursier.cache.FileCache
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
-import coursier.cli.TestUtil.{withFile, withTempDir}
+import coursier.cli.TestUtil.{mayThrow, withFile, withTempDir}
 import coursier.install.MainClass
 import coursier.util.Sync
 import utest._
@@ -572,8 +572,8 @@ object FetchTests extends TestSuite {
       (jsonFile, _) => {
         withFile("tada", "coursier-fetch-test", ".jar") {
           (testFile, _) => {
-            val path = testFile.getAbsolutePath
-            val encodedUrl = encode("file://" + path, "UTF-8")
+            val testFileUri = testFile.toURI.toASCIIString
+            val encodedUrl = encode(testFileUri, "UTF-8")
 
 
             val cacheOpt = CacheOptions(cacheFileArtifacts = true)
@@ -599,7 +599,8 @@ object FetchTests extends TestSuite {
             assert(depNodes1.length == 1)
 
             val urlInJsonFile1 = depNodes1.head.file.get
-            assert(urlInJsonFile1.contains(path))
+            val testFileName = testFile.getName
+            assert(urlInJsonFile1.contains(testFileName))
 
             // open jar and inspect contents
             val fileContents1 = Source.fromFile(urlInJsonFile1).getLines.mkString
@@ -621,7 +622,7 @@ object FetchTests extends TestSuite {
               urlInJsonFile2.contains("/coursier/") || // Linux
                 urlInJsonFile2.contains("/Coursier/") || // macOS
                 urlInJsonFile2.contains("\\Coursier\\") // Windows?
-            assert(inCoursierCache && urlInJsonFile2.contains(testFile.toString))
+            assert(inCoursierCache && urlInJsonFile2.contains(testFileName))
           }
         }
       }
@@ -1028,8 +1029,10 @@ object FetchTests extends TestSuite {
           val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
           val options = FetchOptions(resolveOptions = resolveOpt)
           val params = paramsOrThrow(options)
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-            .unsafeRun()(ec)
+          val (_, _, _, files) = mayThrow {
+            Fetch.task(params, pool, Seq("junit:junit:4.12"))
+              .unsafeRun()(ec)
+          }
           assert(files.map(_._2.getName).toSet
             .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
           val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
