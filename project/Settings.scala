@@ -70,9 +70,13 @@ object Settings {
     },
     evictionRules ++= Seq(
       "org.scala-js" %% "scalajs-library" % "semver",
-      "org.scala-lang.modules" % "scala-collection-compat_*" % "semver"
+      "org.scala-lang.modules" % "scala-collection-compat_*" % "semver",
+      "io.github.alexarchambault" % "concurrent-reference-hash-map" % "semver"
     ),
-    compatibilityReconciliations += "org.scala-lang.modules" %% "*" % "semver"
+    compatibilityReconciliations ++= Seq(
+      "org.scala-lang.modules" %% "*" % "semver",
+      "io.github.alexarchambault" % "concurrent-reference-hash-map" % "semver"
+    )
   ) ++ {
     val prop = sys.props.getOrElse("publish.javadoc", "").toLowerCase(Locale.ROOT)
     if (prop == "0" || prop == "false")
