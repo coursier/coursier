@@ -3,7 +3,7 @@ package coursier.cli.util
 import argonaut.Parse
 import utest._
 
-object JsonReportTest extends TestSuite {
+object JsonReportTests extends TestSuite {
   val tests = Tests {
     test("empty JsonReport should be empty") {
       val report: String = JsonReport[String](IndexedSeq(), Map())(
