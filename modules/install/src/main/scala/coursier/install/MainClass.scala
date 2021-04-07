@@ -10,34 +10,41 @@ object MainClass {
 
   def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
 
-    val metaInfs = jars.flatMap { f =>
-      val zf = new ZipFile(f)
-      val entryOpt = Option(zf.getEntry(manifestPath))
-      entryOpt.map(e => () => zf.getInputStream(e)).toSeq
+    var zipFiles = List.empty[ZipFile]
+
+    try {
+      val metaInfs = jars.flatMap { f =>
+        val zf = new ZipFile(f)
+        zipFiles = zf :: zipFiles
+        val entryOpt = Option(zf.getEntry(manifestPath))
+        entryOpt.map(e => () => zf.getInputStream(e)).toSeq
+      }
+
+      val mainClasses = metaInfs.flatMap { f =>
+        var is: InputStream = null
+        val attributes =
+          try {
+            is = f()
+            new JManifest(is).getMainAttributes
+          } finally {
+            if (is != null)
+              is.close()
+          }
+
+        def attributeOpt(name: String) =
+          Option(attributes.getValue(name))
+
+        val vendor = attributeOpt("Implementation-Vendor-Id").getOrElse("")
+        val title = attributeOpt("Specification-Title").getOrElse("")
+        val mainClass = attributeOpt("Main-Class")
+
+        mainClass.map((vendor, title) -> _)
+      }
+
+      mainClasses.toMap
+    } finally {
+      zipFiles.foreach(_.close())
     }
-
-    val mainClasses = metaInfs.flatMap { f =>
-      var is: InputStream = null
-      val attributes =
-        try {
-          is = f()
-          new JManifest(is).getMainAttributes
-        } finally {
-          if (is != null)
-            is.close()
-        }
-
-      def attributeOpt(name: String) =
-        Option(attributes.getValue(name))
-
-      val vendor = attributeOpt("Implementation-Vendor-Id").getOrElse("")
-      val title = attributeOpt("Specification-Title").getOrElse("")
-      val mainClass = attributeOpt("Main-Class")
-
-      mainClass.map((vendor, title) -> _)
-    }
-
-    mainClasses.toMap
   }
 
   def retainedMainClassOpt(
