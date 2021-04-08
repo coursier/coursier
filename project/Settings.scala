@@ -530,9 +530,10 @@ object Settings {
 
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
+    val nl = System.lineSeparator()
     val extra =
       if (resourceBased)
-        Seq("-keep class coursier.bootstrap.launcher.jar.Handler {\n}")
+        Seq(s"-keep class coursier.bootstrap.launcher.jar.Handler {$nl}")
       else
         Nil
 
@@ -557,8 +558,8 @@ object Settings {
         "-dontnote",
         "-dontwarn",
         "-repackageclasses coursier.bootstrap.launcher",
-        s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",
-        "-keep class coursier.bootstrap.launcher.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+        s"-keep class $mainClass {$nl  public static void main(java.lang.String[]);$nl}",
+        s"-keep class coursier.bootstrap.launcher.SharedClassLoader {$nl  public java.lang.String[] getIsolationTargets();$nl}"
       ) ++ extra,
       javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
       artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName
