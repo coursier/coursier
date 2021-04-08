@@ -493,7 +493,7 @@ object InstallTests extends TestSuite {
           assert(output.contains(expectedInOutput))
         }
 
-        if (currentOs == os)
+        if (currentOs == os && currentOs != "windows")
           testRun()
       }
 
@@ -535,7 +535,7 @@ object InstallTests extends TestSuite {
           assert(output.contains(expectedInOutput))
         }
 
-        if (currentOs == os)
+        if (currentOs == os && currentOs != "windows")
           testRun()
       }
 
