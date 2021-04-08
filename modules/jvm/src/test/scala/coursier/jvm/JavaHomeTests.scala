@@ -33,7 +33,11 @@ object JavaHomeTests extends TestSuite {
     if (poolInitialized.getAndSet(false))
       pool.shutdown()
 
-  def platformPath(path: String) = if (Properties.isWin) "C:" + path.replace('/', '\\') else path
+  private lazy val windowsDriveOpt =
+    if (Properties.isWin) Some(new File(".").getAbsolutePath.takeWhile(_ != ':'))
+    else None
+  def platformPath(path: String) =
+    windowsDriveOpt.fold(path)(dr => dr + ":" + path.replace('/', '\\'))
 
   val tests = Tests {
 

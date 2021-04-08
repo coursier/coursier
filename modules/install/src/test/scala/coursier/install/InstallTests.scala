@@ -3,7 +3,7 @@ package coursier.install
 import java.io.{ByteArrayOutputStream, File, FileInputStream}
 import java.lang.ProcessBuilder.Redirect
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, FileSystemException, Path, Paths}
 import java.time.Instant
 import java.util.Locale
 import java.util.zip.ZipFile
@@ -11,10 +11,12 @@ import java.util.zip.ZipFile
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
 import coursier.launcher.Preamble
+import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 import utest._
 
 import scala.jdk.CollectionConverters._
+import scala.util.control.NonFatal
 
 object InstallTests extends TestSuite {
 
@@ -46,7 +48,11 @@ object InstallTests extends TestSuite {
           s.close()
       }
     } else
-      Files.deleteIfExists(d)
+      try Files.deleteIfExists(d)
+      catch {
+        case e: FileSystemException if Windows.isWindows =>
+          System.err.println(s"Ignored error while deleting temporary file $d: $e")
+      }
 
   private def withTempDir[T](f: Path => T): T = {
     val tmpDir = Files.createTempDirectory("coursier-install-test")
@@ -56,26 +62,36 @@ object InstallTests extends TestSuite {
     }
   }
 
-  private def assertHasNotEntry(f: File, path: String) = {
-    val zf = new ZipFile(f)
-    val ent = zf.getEntry(path)
-    Predef.assert(ent == null, s"Unexpected entry $path found in $f")
+  private def withZipFile[T](f: File)(t: ZipFile => T): T = {
+    var zf: ZipFile = null
+    try {
+      zf = new ZipFile(f)
+      t(zf)
+    } finally {
+      if (zf != null)
+        zf.close()
+    }
   }
 
-  private def assertHasEntry(f: File, path: String) = {
-    val zf = new ZipFile(f)
-    val ent = zf.getEntry(path)
-    Predef.assert(ent != null, s"Entry $path not found in $f")
-  }
+  private def assertHasNotEntry(f: File, path: String) =
+    withZipFile(f) { zf =>
+      val ent = zf.getEntry(path)
+      Predef.assert(ent == null, s"Unexpected entry $path found in $f")
+    }
 
-  private def stringEntry(f: File, path: String) = {
+  private def assertHasEntry(f: File, path: String) =
+    withZipFile(f) { zf =>
+      val ent = zf.getEntry(path)
+      Predef.assert(ent != null, s"Entry $path not found in $f")
+    }
 
-    val zf = new ZipFile(f)
-    val ent = zf.getEntry(path)
-    Predef.assert(ent != null, s"Entry $path not found in $f")
+  private def stringEntry(f: File, path: String) =
+    withZipFile(f) { zf =>
+      val ent = zf.getEntry(path)
+      Predef.assert(ent != null, s"Entry $path not found in $f")
 
-    new String(FileUtil.readFully(zf.getInputStream(ent)), StandardCharsets.UTF_8)
-  }
+      new String(FileUtil.readFully(zf.getInputStream(ent)), StandardCharsets.UTF_8)
+    }
 
   private def commandOutput(command: String*): String =
     commandOutput(new File("."), mergeError = false, expectedReturnCode = 0, command: _*)
@@ -373,15 +389,17 @@ object InstallTests extends TestSuite {
           "echo"
         )
 
-        val updated = installDir0.maybeUpdate(
-          id,
-          src =>
-            if (src == newAppInfo.source)
-              Task.point(Some(("inline", newAppInfo.appDescriptorBytes)))
-            else
-              Task.fail(new Exception(s"Invalid source: $src")),
-          currentTime = now
-        ).unsafeRun()(cache.ec)
+        val updated = mayThrow {
+          installDir0.maybeUpdate(
+            id,
+            src =>
+              if (src == newAppInfo.source)
+                Task.point(Some(("inline", newAppInfo.appDescriptorBytes)))
+              else
+                Task.fail(new Exception(s"Invalid source: $src")),
+            currentTime = now
+          ).unsafeRun()(cache.ec)
+        }
 
         // randomly seeing the old file on OS X if we don't check that :|
         assert(Files.getLastModifiedTime(launcher).toInstant == now)
@@ -431,7 +449,8 @@ object InstallTests extends TestSuite {
           assert(output.startsWith(expectedStartOutput))
         }
 
-        if (currentOs == os)
+        // No lightweight native Windows executable in the test fixtures
+        if (currentOs == os && currentOs != "windows")
           testRun()
       }
 
@@ -466,12 +485,15 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = 1, launcher.toAbsolutePath.toString, "--help")
-          val expectedInOutput = "entering *experimental* thin client - BEEP WHIRR"
+          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = expectedRetCode, launcher.toAbsolutePath.toString, "--help")
+          val expectedInOutput =
+            if (Windows.isWindows) "Failed to get console mode:"
+            else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
 
-        if (currentOs == os)
+        if (currentOs == os && currentOs != "windows")
           testRun()
       }
 
@@ -505,12 +527,15 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = 1, launcher.toAbsolutePath.toString, "--help")
-          val expectedInOutput = "entering *experimental* thin client - BEEP WHIRR"
+          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = expectedRetCode, launcher.toAbsolutePath.toString, "--help")
+          val expectedInOutput =
+            if (Windows.isWindows) "Failed to get console mode:"
+            else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
 
-        if (currentOs == os)
+        if (currentOs == os && currentOs != "windows")
           testRun()
       }
 
@@ -592,6 +617,13 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows")
     }
   }
+
+  private def mayThrow[T](f: => T): T =
+    try f
+    catch {
+      case NonFatal(e) =>
+        throw new Exception(e)
+    }
 
   // TODO
   //   should update launcher if the app description changes (change default main class?)

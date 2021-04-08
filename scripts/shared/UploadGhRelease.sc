@@ -13,14 +13,19 @@ import scala.util.control.NonFatal
 
 private def contentType(path: Path): String = {
 
-  val isZipFile =
+  val isZipFile = {
+    var zf: ZipFile = null
     try {
-      new ZipFile(path.toFile)
+      zf = new ZipFile(path.toFile)
       true
     } catch {
       case _: ZipException =>
         false
+    } finally {
+      if (zf != null)
+        zf.close()
     }
+  }
 
   lazy val isTextFile =
     try {

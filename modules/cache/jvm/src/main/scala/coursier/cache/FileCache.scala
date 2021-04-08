@@ -225,7 +225,7 @@ import scala.util.control.NonFatal
         val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
         val badChecksumFile = new File(err.sumFile)
         val foundBadFileInCache = {
-          val location0 = location.getCanonicalPath.stripSuffix("/") + "/"
+          val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
           badFile.getCanonicalPath.startsWith(location0) &&
             badChecksumFile.getCanonicalPath.startsWith(location0)
         }
@@ -399,7 +399,7 @@ object FileCache {
   private def persistedDigest(location: File, sumType: String, localFile: File): BigInteger = {
     // only store computed files within coursier cache folder
     val isInCache: Boolean = {
-      val location0 = location.getCanonicalPath.stripSuffix("/") + "/"
+      val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
       localFile.getCanonicalPath.startsWith(location0)
     }
 

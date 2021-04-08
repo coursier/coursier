@@ -19,14 +19,17 @@ object UtilTests extends TestSuite {
 
   val tests = Tests {
     test("createDirectories fine with sym links") {
-      var tmpDir: Path = null
-      try {
-        tmpDir = Files.createTempDirectory("coursier-paths-tests")
-        val dir = Files.createDirectories(tmpDir.resolve("dir"))
-        val link = Files.createSymbolicLink(tmpDir.resolve("link"), dir)
-        Util.createDirectories(link) // should not throw
-      } finally {
-        deleteRecursive(tmpDir.toFile)
+      if (scala.util.Properties.isWin) "disabled"
+      else {
+        var tmpDir: Path = null
+        try {
+          tmpDir = Files.createTempDirectory("coursier-paths-tests")
+          val dir = Files.createDirectories(tmpDir.resolve("dir"))
+          val link = Files.createSymbolicLink(tmpDir.resolve("link"), dir)
+          Util.createDirectories(link) // should not throw
+        } finally {
+          deleteRecursive(tmpDir.toFile)
+        }
       }
     }
 

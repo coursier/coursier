@@ -57,6 +57,8 @@ object ZipUtil {
       outputZip.closeEntry()
     }
 
+    bootstrapZip.close()
+
     for ((dest, data) <- extra) {
       outputZip.putNextEntry(new ZipEntry(dest))
       outputZip.write(data)

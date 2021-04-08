@@ -8,29 +8,37 @@ import coursier.util.Task
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.util.Properties.isWin
 
 object AuthenticatedProxyTests extends TestSuite {
 
-  private val okRepo = DockerServer(
+  private lazy val okRepo = DockerServer(
     "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75",
     "",
     80 -> 9083,
     healthCheck = false
   )
-  private val nopeRepo = DockerServer(
+  private lazy val nopeRepo = DockerServer(
     "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75",
     "",
     80 -> 9084,
     healthCheck = false
   )
 
-  override def utestAfterAll(): Unit = {
-    okRepo.shutdown()
-    nopeRepo.shutdown()
+  if (!isWin) {
+    // eagerly create repos
+    okRepo
+    nopeRepo
   }
 
-  private val okProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9083))
-  private val nopeProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9084))
+  override def utestAfterAll(): Unit =
+    if (!isWin) {
+      okRepo.shutdown()
+      nopeRepo.shutdown()
+    }
+
+  private lazy val okProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9083))
+  private lazy val nopeProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9084))
 
   private lazy val okRunner = new coursier.test.TestRunner(
     artifact = artifactWithProxy[Task](okProxy),
@@ -41,7 +49,7 @@ object AuthenticatedProxyTests extends TestSuite {
     repositories = Seq(Repositories.central)
   )
 
-  val tests = Tests {
+  def actualTests = Tests {
 
     test("simple") - async {
 
@@ -65,4 +73,13 @@ object AuthenticatedProxyTests extends TestSuite {
 
   }
 
+  val tests: Tests =
+    if (isWin)
+      Tests {
+        test("disabled") {
+          "disabled"
+        }
+      }
+    else
+      actualTests
 }

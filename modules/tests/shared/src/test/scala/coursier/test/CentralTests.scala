@@ -22,7 +22,7 @@ abstract class CentralTests extends TestSuite {
 
   private lazy val runner = new TestRunner(repositories = Seq(central))
 
-  val tests = Tests {
+  def tests = Tests {
 
     test("logback") {
       async {

@@ -1,3 +1,4 @@
+import java.nio.file.Files
 
 import Aliases._
 import Settings.{crossProject, project, _}
@@ -253,7 +254,34 @@ lazy val launcher = project("launcher")
   .settings(
     shared,
     coursierPrefix,
-    mappings.in(Compile, packageBin) ++= bootstrapLaunchersMappings.value,
+
+    // For unclear reasons, it seems the packageBin value is kept open somewhere.
+    // When we find that's the case, we just generate it at another location.
+    // mappings.in(Compile, packageBin) ++= bootstrapLaunchersMappings.value,
+    packageBin.in(Compile) := {
+      val orig = packageBin.in(Compile).value
+      val dest = {
+        def candidate(n: Int): File = {
+          val prefix = if (n == 0) "" else s"-$n"
+          val f = orig.getParentFile / s"${orig.getName.stripSuffix(".jar")}-with-bootstraps$prefix.jar"
+          if (f.exists())
+            f.delete()
+          if (f.exists())
+            candidate(n + 1)
+          else
+            f
+        }
+        candidate(0)
+      }
+      val extra = bootstrapLaunchersMappings.value.map {
+        case (f, path) =>
+          val content = Files.readAllBytes(f.toPath)
+          (path, content)
+      }
+      ZipUtil.addToZip(orig, dest, extra)
+      dest
+    },
+
     exportJars := true,
     generatePropertyFile("coursier/launcher"),
     crossScalaVersions += "2.11.12",

@@ -1,6 +1,6 @@
 package coursier.cli
 
-import java.io.{ByteArrayOutputStream, PrintStream}
+import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.nio.charset.StandardCharsets
 
 import caseapp.core.RemainingArgs
@@ -30,6 +30,11 @@ object ResolveTests extends TestSuite {
       case Validated.Valid(params0) =>
         params0
     }
+
+  private implicit class CrLfStringOps(private val s: String) extends AnyVal {
+    def noCrLf: String =
+      s.replace("\r\n", "\n")
+  }
 
 
   val tests = Tests {
@@ -63,7 +68,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("print what depends on with regex") {
@@ -96,7 +101,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("print results anyway") {
@@ -119,8 +124,8 @@ object ResolveTests extends TestSuite {
       val output = new String(stdout.toByteArray, "UTF-8")
         .replace(sys.props("user.home"), "HOME")
       val expectedOutput =
-        """Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
-          |  not found: HOME/.ivy2/local/ioi.get-coursier/coursier-core_2.12/1.1.0-M9/ivys/ivy.xml
+       s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
+          |  not found: ${Seq("HOME", ".ivy2", "local", "ioi.get-coursier", "coursier-core_2.12", "1.1.0-M9", "ivys", "ivy.xml").mkString(File.separator)}
           |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
           |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
           |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
@@ -129,7 +134,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
           |""".stripMargin
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("resolve sbt plugins") {
@@ -276,7 +281,7 @@ object ResolveTests extends TestSuite {
           |org.vafer:jdeb:1.3:default
           |""".stripMargin
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("resolve sbt 0.13 plugins") {
@@ -298,7 +303,7 @@ object ResolveTests extends TestSuite {
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("resolve the main artifact first in classpath order") {
@@ -345,7 +350,7 @@ object ResolveTests extends TestSuite {
           |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
           |""".stripMargin
 
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     test("exclude root dependencies") {
@@ -380,7 +385,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:scala-library:2.13.2:default
           |org.scala-lang:scala-reflect:2.13.2:default
           |""".stripMargin
-      assert(output == expectedOutput)
+      assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
     def output(options: SharedResolveOptions, args: String*): String = {
@@ -408,7 +413,7 @@ object ResolveTests extends TestSuite {
       val expectedOutput =
         """org.scala-lang:scala-library:2.12.11:default
           |""".stripMargin
-      assert(output0 == expectedOutput)
+      assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
     test("ignore full scala version") {
@@ -424,7 +429,7 @@ object ResolveTests extends TestSuite {
       val expectedOutput =
         """org.scala-lang:scala-library:2.12.11:default
           |""".stripMargin
-      assert(output0 == expectedOutput)
+      assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
     test("use binary scala version") {
@@ -442,7 +447,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:scala-library:2.11.12:default
           |org.typelevel:macro-compat_2.11:1.1.1:default
           |""".stripMargin
-      assert(output0 == expectedOutput)
+      assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
     test("use full scala version") {
@@ -459,7 +464,7 @@ object ResolveTests extends TestSuite {
         """com.chuusai:shapeless_2.13:2.3.3:default
           |org.scala-lang:scala-library:2.13.2:default
           |""".stripMargin
-      assert(output0 == expectedOutput)
+      assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
     test("use lower full scala version") {
@@ -476,7 +481,7 @@ object ResolveTests extends TestSuite {
         """com.chuusai:shapeless_2.13:2.3.3:default
           |org.scala-lang:scala-library:2.13.1:default
           |""".stripMargin
-      assert(output0 == expectedOutput)
+      assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
     test("use full scala version and not list those available") {
@@ -497,11 +502,11 @@ object ResolveTests extends TestSuite {
         } catch {
           case e: ResolveException =>
             val expectedMessage =
-              """Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
-                |  not found: HOME/.ivy2/local/com.chuusaiz/shapeless_2.13/2.3.3/ivys/ivy.xml
+             s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
+                |  not found: ${Seq("HOME", ".ivy2", "local", "com.chuusaiz", "shapeless_2.13", "2.3.3", "ivys", "ivy.xml").mkString(File.separator)}
                 |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
             val message = e.message.replace(System.getProperty("user.home"), "HOME")
-            assert(message == expectedMessage)
+            assert(message.noCrLf == expectedMessage.noCrLf)
             false
         }
       Predef.assert(!success, "Expected a resolution exception")
