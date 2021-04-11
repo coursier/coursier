@@ -19,7 +19,7 @@ handle dependencies.
 ## Pants
 
 Twitter's internal builds, based on [Pants](https://www.pantsbuild.org),
-[rely on coursier to handle dependencies](https://www.pantsbuild.org/coursier_migration.html).
+[rely on coursier to handle dependencies](https://v1.pantsbuild.org/coursier_migration.html).
 
 ## scalafmt and scalafix
 
