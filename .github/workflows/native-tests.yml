@@ -79,8 +79,6 @@ jobs:
 
           env: |
             JAVA_HOME: /jvm
-            PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-            PGP_SECRET: ${{ secrets.PGP_SECRET }}
 
           # The shell to run commands with in the container
           shell: /bin/bash
