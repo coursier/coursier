@@ -26,8 +26,15 @@ private def initialLauncher(
   def packLauncher: String = {
     val path = "modules/cli/target/pack/bin/coursier"
     val sbtPath =
-      if (Util.os == "win") "bin/sbt"
-      else "./sbt"
+      if (Util.os == "win")
+        // That directory is supposed to be in PATH, not sure why
+        // we're having issues without this ad hoc logic
+        Option(System.getenv("COURSIER_BIN_DIR")) match {
+          case None => "sbt.bat"
+          case Some(binDir) => Paths.get(binDir).resolve("sbt.bat").toAbsolutePath.toString
+        }
+      else
+        "./sbt"
     if (!Files.exists(Paths.get(path)))
       Util.run(Seq(sbtPath, "cli/pack"))
     path
