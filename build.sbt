@@ -132,7 +132,7 @@ lazy val paths = project("paths")
     dontPublish,
     addDirectoriesSources,
     libraryDependencies ++= Seq(
-      Deps.jniUtils
+      Deps.jniUtilsBootstrap
     )
   )
 
@@ -235,7 +235,7 @@ lazy val `bootstrap-launcher` = project("bootstrap-launcher")
     libraryDependencies ++= Seq(
       Deps.collectionCompat % Test,
       Deps.java8Compat % Test,
-      Deps.jniUtils
+      Deps.jniUtilsBootstrap
     ),
     addPathsSources,
     addWindowsAnsiPsSources,
@@ -250,7 +250,7 @@ lazy val `resources-bootstrap-launcher` = project("resources-bootstrap-launcher"
     pureJava,
     dontPublish,
     libraryDependencies ++= Seq(
-      Deps.jniUtils
+      Deps.jniUtilsBootstrap
     ),
     unmanagedSourceDirectories.in(Compile) ++= unmanagedSourceDirectories.in(`bootstrap-launcher`, Compile).value,
     mainClass.in(Compile) := Some("coursier.bootstrap.launcher.ResourcesLauncher"),

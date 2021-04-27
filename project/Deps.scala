@@ -11,6 +11,7 @@ object Deps {
     def collectionCompat = "2.2.0"
     def fastParse = "2.3.0"
     def http4s = "0.18.26"
+    def jniUtils = "0.2.2"
     def jsoniterScala = "2.2.4"
     def monadless = "0.0.13"
     def scalaz = "7.2.30"
@@ -28,7 +29,8 @@ object Deps {
   def http4sDsl = "org.http4s" %% "http4s-dsl" % versions.http4s
   def java8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
   def jimfs = "com.google.jimfs" % "jimfs" % "1.1"
-  def jniUtils = "io.get-coursier.jniutils" % "windows-jni-utils" % "0.2.0"
+  def jniUtils = "io.get-coursier.jniutils" % "windows-jni-utils" % versions.jniUtils
+  def jniUtilsBootstrap = "io.get-coursier.jniutils" % "windows-jni-utils-bootstrap" % versions.jniUtils
   def jol = "org.openjdk.jol" % "jol-core" % "0.14"
   def jsoniterCore = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % versions.jsoniterScala
   def jsoniterMacros = "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % versions.jsoniterScala

@@ -154,6 +154,9 @@ public class Util {
 
     private static Boolean useJni0 = null;
     public static boolean useJni() {
+        return useJni(() -> {});
+    }
+    public static boolean useJni(Runnable beforeJni) {
         if (useJni0 != null)
           return useJni0;
 
@@ -171,6 +174,7 @@ public class Util {
 
         boolean force = prop.equalsIgnoreCase("force");
         if (force) {
+            beforeJni.run();
             useJni0 = true;
             return useJni0;
         }
@@ -184,6 +188,7 @@ public class Util {
         // Try to get a dummy user env var from registry. If it fails, assume the JNI stuff is broken,
         // and fallback on PowerShell scripts.
         try {
+            beforeJni.run();
             coursier.jniutils.WindowsEnvironmentVariables.get("PATH");
             useJni0 = true;
         } catch (Throwable t) {

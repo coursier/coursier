@@ -63,6 +63,15 @@ public class ResourcesLauncher {
         File sourceFile = new File(source.toURI());
         JarFile sourceJarFile = new JarFile(sourceFile);
 
+        boolean isWindows = System.getProperty("os.name")
+                .toLowerCase(java.util.Locale.ROOT)
+                .contains("windows");
+
+        if (isWindows)
+            coursier.paths.Util.useJni(() -> {
+                coursier.bootstrap.launcher.jniutils.NativeCalls.setup();
+            });
+
         Download download = Download.getDefault();
 
         ClassLoaders classLoaders = new ResourcesClassLoaders(sourceJarFile, download);

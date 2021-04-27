@@ -15,7 +15,7 @@ public class Bootstrap {
         System.exit(255);
     }
 
-    private static void maybeInitWindowsAnsi() throws InterruptedException, IOException {
+    private static void maybeInitWindows() throws InterruptedException, IOException {
 
         boolean isWindows = System.getProperty("os.name")
                 .toLowerCase(java.util.Locale.ROOT)
@@ -27,7 +27,7 @@ public class Bootstrap {
         if (System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false"))
             return;
 
-        boolean useJni = coursier.paths.Util.useJni();
+        boolean useJni = coursier.paths.Util.useJni(() -> { coursier.bootstrap.launcher.jniutils.NativeCalls.setup(); });
         try {
             if (useJni)
                 coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput();
@@ -46,7 +46,7 @@ public class Bootstrap {
             String[] args,
             ClassLoaders classLoaders) throws Throwable {
 
-        maybeInitWindowsAnsi();
+        maybeInitWindows();
 
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();

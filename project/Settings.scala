@@ -558,6 +558,7 @@ object Settings {
         "-dontnote",
         "-dontwarn",
         "-repackageclasses coursier.bootstrap.launcher",
+        s"-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {$nl  *;$nl}",
         s"-keep class $mainClass {$nl  public static void main(java.lang.String[]);$nl}",
         s"-keep class coursier.bootstrap.launcher.SharedClassLoader {$nl  public java.lang.String[] getIsolationTargets();$nl}"
       ) ++ extra,
