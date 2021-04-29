@@ -18,7 +18,7 @@ final case class EnvParams(
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
   def envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater] =
     if (Windows.isWindows)
-      Left(WindowsEnvVarUpdater())
+      Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
     else
       Right(
         ProfileUpdater()

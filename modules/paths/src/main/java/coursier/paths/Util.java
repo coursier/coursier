@@ -5,6 +5,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -149,5 +150,53 @@ public class Util {
             useAnsiOutput0 = computeUseAnsiOutput();
         }
         return useAnsiOutput0;
+    }
+
+    private static Boolean useJni0 = null;
+    public static boolean useJni() {
+        return useJni(() -> {});
+    }
+    public static boolean useJni(Runnable beforeJni) {
+        if (useJni0 != null)
+          return useJni0;
+
+        boolean isWindows = System.getProperty("os.name")
+                .toLowerCase(Locale.ROOT)
+                .contains("windows");
+        if (!isWindows) {
+            useJni0 = false;
+            return useJni0;
+        }
+
+        String prop = System.getenv("COURSIER_JNI");
+        if (prop == null || prop.isEmpty())
+          prop = System.getProperty("coursier.jni", "");
+
+        boolean force = prop.equalsIgnoreCase("force");
+        if (force) {
+            beforeJni.run();
+            useJni0 = true;
+            return useJni0;
+        }
+
+        boolean disabled = prop.equalsIgnoreCase("false");
+        if (disabled) {
+            useJni0 = false;
+            return useJni0;
+        }
+
+        // Try to get a dummy user env var from registry. If it fails, assume the JNI stuff is broken,
+        // and fallback on PowerShell scripts.
+        try {
+            beforeJni.run();
+            coursier.jniutils.WindowsEnvironmentVariables.get("PATH");
+            useJni0 = true;
+        } catch (Throwable t) {
+            if (System.getProperty("coursier.jni.check.throw", "").equalsIgnoreCase("true"))
+                throw new RuntimeException(t);
+            useJni0 = false;
+        }
+
+        return useJni0;
     }
 }

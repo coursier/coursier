@@ -23,15 +23,25 @@ jobs:
           jvm: graalvm-ce-java11:20.1.0
           apps: sbt-launcher:1.2.22 ammonite:2.3.8
       - run: sbt 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
+        if: runner.os != 'Windows'
         shell: bash
       - run: amm launcher.sc generateNativeImage --version "2.0-SNAPSHOT" --output cs-test
         if: runner.os != 'Windows'
         shell: bash
+      - run: sbt -J-Dcoursier-test-launcher=./cs-test cli-tests/test
+        shell: bash
+        if: runner.os != 'Windows'
+      - run: sbt.bat 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
+        if: runner.os == 'Windows'
+        shell: bash
       - run: .github/scripts/windows-build-native-image.bat
         if: runner.os == 'Windows'
         shell: bash
-      - run: sbt -J-Dcoursier-test-launcher=./cs-test cli-tests/test
+      - run: sbt.bat cli-tests/test
         shell: bash
+        if: runner.os == 'Windows'
+        env:
+          JAVA_OPTS: "-Dcoursier-test-launcher=./cs-test"
 
   test-linux-arm64-native-launcher:
     runs-on: ubuntu-18.04
@@ -69,8 +79,6 @@ jobs:
 
           env: |
             JAVA_HOME: /jvm
-            PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-            PGP_SECRET: ${{ secrets.PGP_SECRET }}
 
           # The shell to run commands with in the container
           shell: /bin/bash

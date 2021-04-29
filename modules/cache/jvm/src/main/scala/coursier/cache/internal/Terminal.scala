@@ -65,10 +65,17 @@ object Terminal {
   private lazy val isWindows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
 
   private def fromJLine(): Option[(Int, Int)] =
-    if (isWindows) {
-      val size = io.github.alexarchambault.windowsansi.WindowsAnsi.terminalSize()
-      Some((size.getWidth, size.getHeight))
-    } else
+    if (isWindows)
+      Some {
+        if (coursier.paths.Util.useJni()) {
+          val size = coursier.jniutils.WindowsAnsiTerminal.terminalSize()
+          (size.getWidth, size.getHeight)
+        } else {
+          val size = io.github.alexarchambault.windowsansi.WindowsAnsi.terminalSize()
+          (size.getWidth, size.getHeight)
+        }
+      }
+    else
       None
 
   def consoleDims(): (Int, Int) =

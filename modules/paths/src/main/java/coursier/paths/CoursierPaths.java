@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import dev.dirs.GetWinDirs;
 import dev.dirs.ProjectDirectories;
 
 /**
@@ -87,7 +88,18 @@ public final class CoursierPaths {
         if (coursierDirectories0 == null)
             synchronized (coursierDirectoriesLock) {
                 if (coursierDirectories0 == null) {
-                    coursierDirectories0 = ProjectDirectories.from(null, null, "Coursier");
+                    GetWinDirs getWinDirs;
+                    if (coursier.paths.Util.useJni())
+                        getWinDirs = guids -> {
+                            String[] dirs = new String[guids.length];
+                            for (int i = 0; i < guids.length; i++) {
+                                dirs[i] = coursier.jniutils.WindowsKnownFolders.knownFolderPath("{" + guids[i] + "}");
+                            }
+                            return dirs;
+                        };
+                    else
+                        getWinDirs = GetWinDirs.powerShellBased;
+                    coursierDirectories0 = ProjectDirectories.from(null, null, "Coursier", getWinDirs);
                 }
             }
 

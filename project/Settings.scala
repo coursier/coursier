@@ -1,5 +1,5 @@
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, File}
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.{Arrays, Locale}
@@ -530,9 +530,10 @@ object Settings {
 
   def proguardedBootstrap(mainClass: String, resourceBased: Boolean): Seq[Setting[_]] = {
 
+    val nl = System.lineSeparator()
     val extra =
       if (resourceBased)
-        Seq("-keep class coursier.bootstrap.launcher.jar.Handler {\n}")
+        Seq(s"-keep class coursier.bootstrap.launcher.jar.Handler {$nl}")
       else
         Nil
 
@@ -547,12 +548,19 @@ object Settings {
       proguardBinaryDeps.in(Proguard) ++= rtJarOpt.toSeq, // seems needed with sbt 1.4.0
       proguardedJar := proguardedJarTask.value,
       proguardVersion.in(Proguard) := Deps.proguardVersion,
+      proguardOptions.in(Proguard) := {
+        val current = proguardOptions.in(Proguard).value
+        val idx = current.indexWhere(_.contains(File.separator + "windows-jni-utils"))
+        assert(idx >= 0, s"options: $current")
+        current.take(idx) ++ Seq(current(idx).replace("-libraryjars", "-injars")) ++ current.drop(idx + 1)
+      },
       proguardOptions.in(Proguard) ++= Seq(
         "-dontnote",
         "-dontwarn",
         "-repackageclasses coursier.bootstrap.launcher",
-        s"-keep class $mainClass {\n  public static void main(java.lang.String[]);\n}",
-        "-keep class coursier.bootstrap.launcher.SharedClassLoader {\n  public java.lang.String[] getIsolationTargets();\n}"
+        s"-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {$nl  *;$nl}",
+        s"-keep class $mainClass {$nl  public static void main(java.lang.String[]);$nl}",
+        s"-keep class coursier.bootstrap.launcher.SharedClassLoader {$nl  public java.lang.String[] getIsolationTargets();$nl}"
       ) ++ extra,
       javaOptions.in(Proguard, proguard) := Seq("-Xmx3172M"),
       artifactPath.in(Proguard) := proguardDirectory.in(Proguard).value / fileName

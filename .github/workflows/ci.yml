@@ -57,6 +57,7 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         TARGET: ${{ matrix.TARGET }}
+        COURSIER_JNI: force
 
   publish:
     needs: test
