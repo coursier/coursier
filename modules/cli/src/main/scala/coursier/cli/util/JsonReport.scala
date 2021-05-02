@@ -59,29 +59,27 @@ object JsonReport {
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String], exclusions: T => Set[String]): String = {
 
-    val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
+    var depToTransitiveDeps = mutable.Map[T, Set[String]]()
+    val rootDeps: Seq[DepNode] = roots.map(r => {
 
-      /**
-        * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
-        */
-      def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
-        val unseenElems = elems.filterNot(ancestors.contains)
-        for (elem <- unseenElems) {
-          val depElems = children(elem)
-          acc ++= depElems.map(reconciledVersionStr(_))
+      def flattenDeps(elem: T): Set[String] = {
+        if (depToTransitiveDeps.contains(elem))
+          return depToTransitiveDeps(elem)
 
-          if (depElems.nonEmpty)
-            flattenDeps(children(elem), ancestors + elem, acc)
-        }
+        val children0 = children(elem)
+        var deps = children0.map(reconciledVersionStr(_)).to[mutable.Set]
+        for (child <- children0)
+          deps ++= flattenDeps(child)
+
+        depToTransitiveDeps.update(elem, deps.toSet)
+        deps.toSet
       }
 
-      val acc = scala.collection.mutable.Set[String]()
-      flattenDeps(Seq(r), Set(), acc)
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
         children(r).map(reconciledVersionStr(_)).toSet,
-        acc.toSet,
+        flattenDeps(r),
         exclusions(r)
       )
 
