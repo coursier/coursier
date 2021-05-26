@@ -44,11 +44,15 @@ public class Jep {
 
   private final static String locationLinePrefix = "Location: ";
 
-  private static String callProcess(String... command) throws Exception {
+  private static String callProcess(Map<String, String> env, String... command) throws Exception {
     ProcessBuilder b = new ProcessBuilder(command)
       .redirectInput(ProcessBuilder.Redirect.PIPE)
       .redirectOutput(ProcessBuilder.Redirect.PIPE)
       .redirectError(ProcessBuilder.Redirect.INHERIT);
+
+    Map<String, String> processEnv = b.environment();
+    env.forEach((k, v) -> processEnv.put(k, v));
+
     Process p = b.start();
     p.getOutputStream().close(); // close sub-process stdin
 
@@ -61,6 +65,10 @@ public class Jep {
     }
 
     return output.trim();
+  }
+
+  private static String callProcess(String... command) throws Exception {
+    return callProcess(Collections.emptyMap(), command);
   }
 
   public static File location() throws Exception {
@@ -145,17 +153,19 @@ public class Jep {
 
   public static String pythonHome() throws Exception {
 
-    String fromEnv = System.getenv("PYTHONHOME");
-    if (fromEnv != null && !fromEnv.isEmpty())
-      return fromEnv;
-
     String fromProps = System.getProperty("python.home");
     if (fromProps != null && !fromProps.isEmpty())
       return fromProps;
 
+    Map<String, String> env = Collections.emptyMap();
+
+    String fromEnv = System.getenv("PYTHONHOME");
+    if (fromEnv != null && !fromEnv.isEmpty())
+      env.put("PYTHONHOME", fromEnv);
+
     String python = pythonExecutable();
 
-    return callProcess(python, "-c", "import sys;print(sys.exec_prefix)");
+    return callProcess(env, python, "-c", "import sys;print(sys.exec_prefix)");
   }
 
   public static String pythonLDLibrary() throws Exception {
