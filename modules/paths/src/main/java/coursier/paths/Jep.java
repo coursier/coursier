@@ -143,10 +143,9 @@ public class Jep {
     );
   }
 
-  public static String pythonNativeLibs() throws Exception {
+  private static String pythonNativeLibs() throws Exception {
     String python = pythonExecutable();
-    String cmd = "from sysconfig import get_config_var;print(get_config_var('LIBPL'))";
-
+    String cmd = "import sysconfig;print(sysconfig.get_config_var('LIBPL'))";
     return callProcess(python, "-c", cmd);
   }
 
@@ -166,7 +165,9 @@ public class Jep {
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
-    String jnaLibraryPath = pythonNativeLibs();
+    String pythonExecPrefix = new File(new File(pythonHome()), "lib").getAbsolutePath();
+    String pythonLIBPL = pythonNativeLibs();
+    String jnaLibraryPath = pythonLIBPL + ":" + pythonExecPrefix;
 
     ArrayList<Map.Entry<String, String>> list = new ArrayList<>();
 
