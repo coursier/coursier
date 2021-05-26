@@ -44,6 +44,25 @@ public class Jep {
 
   private final static String locationLinePrefix = "Location: ";
 
+  private static String callProcess(String... command) throws Exception {
+    ProcessBuilder b = new ProcessBuilder(command)
+      .redirectInput(ProcessBuilder.Redirect.PIPE)
+      .redirectOutput(ProcessBuilder.Redirect.PIPE)
+      .redirectError(ProcessBuilder.Redirect.INHERIT);
+    Process p = b.start();
+    p.getOutputStream().close(); // close sub-process stdin
+
+    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
+    int retValue = p.waitFor();
+    if (retValue != 0) {
+      if (!output.isEmpty())
+        output = System.lineSeparator() + output;
+      throw new JepException("Error running " + String.join(" ", command) + " (return code: " + retValue + ")" + output);
+    }
+
+    return output.trim();
+  }
+
   public static File location() throws Exception {
 
     String fromEnv = System.getenv("JEP_LOCATION");
@@ -58,20 +77,7 @@ public class Jep {
     if (existsInPath("pip3"))
       pip = "pip3";
 
-    ProcessBuilder b = new ProcessBuilder(pip, "show", "jep")
-      .redirectInput(ProcessBuilder.Redirect.PIPE)
-      .redirectOutput(ProcessBuilder.Redirect.PIPE)
-      .redirectError(ProcessBuilder.Redirect.INHERIT);
-    Process p = b.start();
-    p.getOutputStream().close(); // close sub-process stdin
-
-    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
-    int retValue = p.waitFor();
-    if (retValue != 0) {
-      if (!output.isEmpty())
-        output = System.lineSeparator() + output;
-      throw new JepException("Error running " + pip + " show jep (return code: " + retValue + ")" + output);
-    }
+    String output = callProcess(pip, "show", "jep");
 
     Optional<String> locationOpt = Stream.of(output.split(System.getProperty("line.separator")))
       .filter(line -> line.startsWith(locationLinePrefix))
@@ -141,23 +147,7 @@ public class Jep {
     String python = pythonExecutable();
     String cmd = "from sysconfig import get_config_var;print(get_config_var('LIBPL'))";
 
-    ProcessBuilder b = new ProcessBuilder(python, "-c", cmd)
-      .redirectInput(ProcessBuilder.Redirect.PIPE)
-      .redirectOutput(ProcessBuilder.Redirect.PIPE)
-      .redirectError(ProcessBuilder.Redirect.INHERIT);
-    Process p = b.start();
-    p.getOutputStream().close(); // close sub-process stdin
-
-    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
-
-    int retValue = p.waitFor();
-    if (retValue != 0) {
-      if (!output.isEmpty())
-        output = System.lineSeparator() + output;
-      throw new JepException("Error running " + python + " -c '" + cmd + "' (return code: " + retValue + ")" + output);
-    }
-
-    return output.trim();
+    return callProcess(python, "-c", cmd);
   }
 
   public static String pythonHome() throws Exception {
@@ -172,22 +162,7 @@ public class Jep {
 
     String python = pythonExecutable();
 
-    ProcessBuilder b = new ProcessBuilder(python, "-c", "import sys;print(sys.prefix)")
-      .redirectInput(ProcessBuilder.Redirect.PIPE)
-      .redirectOutput(ProcessBuilder.Redirect.PIPE)
-      .redirectError(ProcessBuilder.Redirect.INHERIT);
-    Process p = b.start();
-    p.getOutputStream().close(); // close sub-process stdin
-
-    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
-    int retValue = p.waitFor();
-    if (retValue != 0) {
-      if (!output.isEmpty())
-        output = System.lineSeparator() + output;
-      throw new JepException("Error running " + python + " -c 'import sys; print(sys.prefix)' (return code: " + retValue + ")" + output);
-    }
-
-    return output.trim();
+    return callProcess(python, "-c", "import sys;print(sys.prefix)");
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
