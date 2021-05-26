@@ -162,7 +162,7 @@ public class Jep {
 
     String python = pythonExecutable();
 
-    return callProcess(python, "-c", "import sys;print(sys.prefix)");
+    return callProcess(python, "-c", "import sys;print(sys.exec_prefix)");
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
