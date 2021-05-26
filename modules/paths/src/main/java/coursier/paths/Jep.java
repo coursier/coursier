@@ -118,6 +118,48 @@ public class Jep {
     return version;
   }
 
+  public static String pythonExecutable() throws Exception {
+    String fromEnv = System.getenv("PYTHONEXECUTABLE");
+    if (fromEnv != null && !fromEnv.isEmpty() && existsInPath(fromEnv))
+      return fromEnv;
+
+    String fromProps = System.getProperty("python.executable");
+    if (fromProps != null && !fromProps.isEmpty() && existsInPath(fromProps))
+      return fromProps;
+
+    if (existsInPath("python3"))
+      return "python3";
+    else if (existsInPath("python"))
+      return "python";
+
+    throw new JepException(
+      "No existing Python executable found, either in PATH, in PYTHONEXECUTABLE environment variable or in python.executable system property."
+    );
+  }
+
+  public static String pythonNativeLibs() throws Exception {
+    String python = pythonExecutable();
+    String cmd = "from sysconfig import get_config_var;print(get_config_var('LIBPL'))";
+
+    ProcessBuilder b = new ProcessBuilder(python, "-c", cmd)
+      .redirectInput(ProcessBuilder.Redirect.PIPE)
+      .redirectOutput(ProcessBuilder.Redirect.PIPE)
+      .redirectError(ProcessBuilder.Redirect.INHERIT);
+    Process p = b.start();
+    p.getOutputStream().close(); // close sub-process stdin
+
+    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
+
+    int retValue = p.waitFor();
+    if (retValue != 0) {
+      if (!output.isEmpty())
+        output = System.lineSeparator() + output;
+      throw new JepException("Error running " + python + " -c '" + cmd + "' (return code: " + retValue + ")" + output);
+    }
+
+    return output.trim();
+  }
+
   public static String pythonHome() throws Exception {
 
     String fromEnv = System.getenv("PYTHONHOME");
@@ -128,9 +170,7 @@ public class Jep {
     if (fromProps != null && !fromProps.isEmpty())
       return fromProps;
 
-    String python = "python";
-    if (existsInPath("python3"))
-      python = "python3";
+    String python = pythonExecutable();
 
     ProcessBuilder b = new ProcessBuilder(python, "-c", "import sys;print(sys.prefix)")
       .redirectInput(ProcessBuilder.Redirect.PIPE)
@@ -151,7 +191,7 @@ public class Jep {
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
-    String jnaLibraryPath = new File(new File(pythonHome()), "lib").getAbsolutePath();
+    String jnaLibraryPath = pythonNativeLibs();
 
     ArrayList<Map.Entry<String, String>> list = new ArrayList<>();
 
