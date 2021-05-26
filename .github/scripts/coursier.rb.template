@@ -15,8 +15,7 @@ class Coursier < Formula
     sha256 "@JAR_LAUNCHER_SHA256@"
   end
 
-  depends_on java: "1.8+" if MacOS.version < :catalina
-  depends_on "openjdk" if MacOS.version >= :catalina
+  depends_on "openjdk"
 
   def install
     bin.install "cs-x86_64-apple-darwin" => "cs"
@@ -24,7 +23,7 @@ class Coursier < Formula
 
     unless build.without? "zsh-completions"
       chmod 0555, bin/"coursier"
-      output = Utils.safe_popen_read("#{bin}/coursier --completions zsh")
+      output = Utils.safe_popen_read("#{bin}/coursier", "--completions", "zsh")
       (zsh_completion/"_coursier").write output
     end
   end
