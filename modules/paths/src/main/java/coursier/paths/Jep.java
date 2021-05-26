@@ -124,7 +124,7 @@ public class Jep {
     return version;
   }
 
-  public static String pythonExecutable() throws Exception {
+  private static String pythonExecutable() throws Exception {
     String fromEnv = System.getenv("PYTHONEXECUTABLE");
     if (fromEnv != null && !fromEnv.isEmpty() && existsInPath(fromEnv))
       return fromEnv;
@@ -141,12 +141,6 @@ public class Jep {
     throw new JepException(
       "No existing Python executable found, either in PATH, in PYTHONEXECUTABLE environment variable or in python.executable system property."
     );
-  }
-
-  private static String pythonNativeLibs() throws Exception {
-    String python = pythonExecutable();
-    String cmd = "import sysconfig;print(sysconfig.get_config_var('LIBPL'))";
-    return callProcess(python, "-c", cmd);
   }
 
   public static String pythonHome() throws Exception {
@@ -173,9 +167,7 @@ public class Jep {
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
-    String pythonExecPrefix = new File(new File(pythonHome()), "lib").getAbsolutePath();
-    String pythonLIBPL = pythonNativeLibs();
-    String jnaLibraryPath = pythonLIBPL + ":" + pythonExecPrefix;
+    String jnaLibraryPath = new File(new File(pythonHome()), "lib").getAbsolutePath();
 
     ArrayList<Map.Entry<String, String>> list = new ArrayList<>();
 
