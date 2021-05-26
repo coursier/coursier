@@ -289,7 +289,11 @@ object Launch extends CaseApp[LaunchOptions] {
             .asScala
             .map(e => (e.getKey, e.getValue))
             .toVector
-          (props, EnvironmentUpdate(Seq("PYTHONHOME" -> home), Nil))
+          val envVars =
+            if (params.shared.python)
+              Seq("PYTHONHOME" -> home, "SCALAPY_PYTHON_LIBRARY" -> Jep.pythonLDLibrary())
+            else Seq("PYTHONHOME" -> home)
+          (props, EnvironmentUpdate(envVars, Nil))
         } catch {
           case NonFatal(e) =>
             if (params.shared.resolve.output.verbosity >= 1)

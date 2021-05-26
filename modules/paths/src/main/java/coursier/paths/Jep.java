@@ -164,6 +164,14 @@ public class Jep {
     return callProcess(python, "-c", "import sys;print(sys.exec_prefix)");
   }
 
+  public static String pythonLDLibrary() throws Exception {
+    String python = pythonExecutable();
+    String cmd = "import sysconfig;print(sysconfig.get_config_var('LDVERSION'))";
+    String pythonLDVersion = callProcess(python, "-c", cmd);
+
+    return "python" + pythonLDVersion;
+  }
+
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
     String pythonExecPrefix = new File(new File(pythonHome()), "lib").getAbsolutePath();
     String pythonLIBPL = pythonNativeLibs();
