@@ -348,6 +348,7 @@ object BootstrapTests extends TestSuite {
       }
     }
 
+/* Bintray is gone
     test("rename JAR with the same file name") - withFile() {
 
       (bootstrapFile, _) =>
@@ -387,6 +388,7 @@ object BootstrapTests extends TestSuite {
         assert(fastparseUtilsLines.length == 2)
         assert(fastparseUtilsLines.distinct.length == 2)
     }
+*/
 
     def namespaceTest(): Unit = withFile() {
       (bootstrapFile, _) =>

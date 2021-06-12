@@ -22,7 +22,8 @@ import dataclass.data
   jdkVersionOpt: Option[Version] = None,
   useSystemOsInfo: Boolean = true,
   useSystemJdkVersion: Boolean = true,
-  defaultConfiguration: Configuration = Configuration.defaultCompile
+  defaultConfiguration: Configuration = Configuration.defaultCompile,
+  @since overrideFullSuffixOpt: Option[Boolean] = None
 ) {
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =
@@ -32,6 +33,8 @@ import dataclass.data
     forceScalaVersionOpt.getOrElse {
       scalaVersionOpt.nonEmpty
     }
+  def doOverrideFullSuffix: Boolean =
+    overrideFullSuffixOpt.getOrElse(false)
   def selectedScalaVersion: String =
     scalaVersionOpt.getOrElse {
       coursier.internal.Defaults.scalaVersion

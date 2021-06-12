@@ -1,0 +1,8 @@
+com.helger:ph-jaxb-pom:1.0.3:default
+org.glassfish.jaxb:jaxb-core:2.2.11:default
+org.glassfish.jaxb:jaxb-runtime:2.2.11:default
+com.sun.istack:istack-commons-runtime:2.21:default
+javax.xml.bind:jaxb-api:2.2.12-b140109.1041:default
+org.glassfish.jaxb:txw2:2.2.11:default
+org.jvnet.staxex:stax-ex:1.7.7:default
+com.sun.xml.fastinfoset:FastInfoset:1.2.13:default

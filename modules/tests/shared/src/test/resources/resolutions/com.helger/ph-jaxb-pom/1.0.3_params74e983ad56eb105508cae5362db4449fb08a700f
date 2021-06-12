@@ -1,0 +1,8 @@
+com.helger:ph-jaxb-pom:1.0.3:default
+org.glassfish.jaxb:jaxb-runtime:2.3.2:default
+jakarta.xml.bind:jakarta.xml.bind-api:2.3.2:default
+org.glassfish.jaxb:txw2:2.3.2:default
+com.sun.istack:istack-commons-runtime:3.0.8:default
+org.jvnet.staxex:stax-ex:1.8.1:default
+com.sun.xml.fastinfoset:FastInfoset:1.2.16:default
+jakarta.activation:jakarta.activation-api:1.2.1:default
