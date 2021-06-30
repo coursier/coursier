@@ -10,32 +10,23 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.OS }}
-    name: ${{ matrix.TARGET }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }} ${{ matrix.OS }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
     strategy:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
         JDK: ["8"]
-        SCALA_VERSION: ["2.12"]
-        TARGET: ["JVM", "Scala.JS", "Website"]
+        SCALA_VERSION: ["2.12.12"]
         include:
           - JDK: "8"
-            SCALA_VERSION: "2.12"
-            TARGET: "JVM"
+            SCALA_VERSION: "2.12.12"
             OS: "windows-latest"
           - JDK: "8"
-            SCALA_VERSION: "2.13"
-            TARGET: "JVM"
+            SCALA_VERSION: "2.13.3"
             OS: "ubuntu-latest"
           - JDK: "11"
-            SCALA_VERSION: "2.12"
-            TARGET: "JVM"
+            SCALA_VERSION: "2.12.12"
             OS: "ubuntu-latest"
-          # Disabled for now, getting weird linking errors
-          # - JDK: "8"
-          #   SCALA_VERSION: "2.12"
-          #   TARGET: "ScalaNative"
-          #   OS: "ubuntu-16.04"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -47,20 +38,84 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6
-    - uses: laughedelic/coursier-setup@v1
+    - uses: coursier/setup-action@v1
       with:
         jvm: ${{ matrix.JDK }}
-        apps: sbt-launcher:1.2.22
-    - run: cs install --contrib amm-runner:0.3.1
-    - run: .github/scripts/ci.sh
+    - run: sudo apt-get install -y nailgun
+      if: runner.os == 'Linux'
+    - run: brew install nailgun
+      if: runner.os == 'macOS'
+    # - run: .github/scripts/scala-native-setup.sh
+    #   if: runner.os != 'Windows'
+    - run: ./mill -i jvmTests "$SCALA_VERSION"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        TARGET: ${{ matrix.TARGET }}
+        COURSIER_JNI: force
+
+  js-test:
+    runs-on: ubuntu-latest
+    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION: ["2.12.12", "2.13.3"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+    - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+
+  bin-compat:
+    runs-on: ubuntu-latest
+    name: Binary compatibility
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+    - run: ./mill -i __.mimaReportBinaryIssues
+
+  website-check:
+    runs-on: ubuntu-latest
+    name: Website check
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      env:
         COURSIER_JNI: force
 
   publish:
-    needs: test
+    needs: ["test", "js-test", "bin-compat", "website-check"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -72,81 +127,47 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.22
       - name: Release
-        run: sbt +publishLocal ci-release
+        run: ./mill publishSonatype __.publishArtifacts
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
-  upload-jars:
-    needs: publish
+  generate-native-launchers:
+    name: Upload native launcher ${{ matrix.OS }}
+    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
-      - uses: coursier/cache-action@v6
-      - run: .github/scripts/gpg-setup.sh
-        env:
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: laughedelic/coursier-setup@v1
-        with:
-          jvm: 8
-          apps: sbt-launcher:1.2.22
-      - run: cs install --contrib amm-runner:0.3.1
-      - run: amm-runner launcher.sc uploadAllJars
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-
-  upload-native-launchers:
-    needs: upload-jars
-    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
       matrix:
-        OS: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.OS }}
+        OS: ["ubuntu-latest", "windows-2016", "macos-latest"]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - run: .github/scripts/gpg-setup.sh
-        env:
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
-          jvm: graalvm-ce-java11:20.1.0
-          apps: sbt-launcher:1.2.22 ammonite:2.3.8
-      - run: amm launcher.sc uploadNativeImage
-        if: runner.os != 'Windows'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - run: gpg --version && amm.bat launcher.sc signDummyFiles && .github/scripts/windows-native-image.bat && gpgconf --kill gpg-agent
-        if: runner.os == 'Windows'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          jvm: 8
+      - name: Copy artifacts
+        run: ./mill -i copyLauncher artifacts/
+      - uses: actions/upload-artifact@v2.2.3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
 
-  upload-linux-arm64-native-launcher:
-    needs: upload-jars
+  generate-linux-arm64-native-launcher:
+    name: Upload native launcher Linux ARM64
+    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-18.04
     steps:
@@ -158,12 +179,9 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.22 ammonite:2.3.8
-      - run: sbt cli/pack
-        shell: bash
       - uses: uraimo/run-on-arch-action@v2.0.9
         with:
           arch: aarch64
@@ -173,21 +191,20 @@ jobs:
           githubToken: ${{ github.token }}
 
           setup: |
-            mkdir -p output
-            tar -zxf "$(cs get https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.1.0/graalvm-ce-java11-linux-aarch64-20.1.0.tar.gz)"
+            mkdir -p artifacts
             mkdir -p utils
-            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.7/coursier)" utils/coursier
-            chmod +x utils/coursier
+            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.16/cs-aarch64-pc-linux)" utils/cs
+            chmod +x utils/cs
 
           dockerRunArgs: |
-            --volume "${PWD}/output:/output"
+            --volume "${PWD}/artifacts:/artifacts"
             --volume "${PWD}/utils:/utils"
-            --volume "${PWD}/graalvm-ce-java11-20.1.0:/jvm"
 
           env: |
             JAVA_HOME: /jvm
-            PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-            PGP_SECRET: ${{ secrets.PGP_SECRET }}
+
+          # PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          # PGP_SECRET: ${{ secrets.PGP_SECRET }}
 
           # The shell to run commands with in the container
           shell: /bin/bash
@@ -198,19 +215,70 @@ jobs:
           # gnupg2 is for signing the resulting binary.
           install: |
             apt-get update -q -y
-            apt-get install -q -y build-essential libz-dev git python3-pip gnupg2
+            apt-get install -q -y build-essential libz-dev git python3-pip gnupg2 curl
 
           run: |
-            export PATH="/utils:$JAVA_HOME/bin:$PATH"
-            coursier launch --fork ammonite:2.1.4-11-307f3d8 --scala 2.12.12 --java-opt -Xmx4g -- launcher.sc generateNativeImage --output /output/cs-test
+            set -e
+            export PATH="/utils:$PATH"
+            eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
+            ./mill -i copyLauncher /artifacts/
+      - uses: actions/upload-artifact@v2.2.3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
 
-      - run: amm launcher.sc uploadExternalNativeImage --launcher output/cs-test --arch aarch64
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  generate-jar-launchers:
+    name: Upload JAR launchers
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+    - name: Copy artifacts
+      run: ./mill -i copyJarLaunchers
+    - uses: actions/upload-artifact@v2.2.3
+      with:
+        name: launchers
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
+  upload-launchers:
+    name: Upload launchers to GitHub release assets
+    needs: [generate-native-launchers, generate-linux-arm64-native-launcher, generate-jar-launchers]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+    - uses: actions/download-artifact@v2
+      with:
+        name: launchers
+        path: artifacts/
+    - run: ./mill -i uploadLaunchers artifacts/
+      env:
+        UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   update-brew-formula:
-    needs: [upload-native-launchers, upload-linux-arm64-native-launcher]
+    name: Update brew formula
+    needs: [upload-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -219,11 +287,11 @@ jobs:
           fetch-depth: 0
           submodules: true
       - run: .github/scripts/update-brew-formula.sh
-        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   update-website-latest:
+    name: Update website (snapshot)
     needs: publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
@@ -233,17 +301,15 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.22
-      - run: cs install --contrib amm-runner:0.3.1
-      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
-        shell: bash
+      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   update-website:
+    name: Update website
     needs: update-brew-formula
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -253,12 +319,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.22
-      - run: cs install --contrib amm-runner:0.3.1
-      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && amm-runner website.sc updateWebsite
-        shell: bash
+      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

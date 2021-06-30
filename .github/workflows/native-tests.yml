@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: [ubuntu-latest, windows-latest, macos-latest]
+        OS: [ubuntu-latest, windows-2016, macos-latest]
     runs-on: ${{ matrix.OS }}
     steps:
       - uses: actions/checkout@v2
@@ -18,30 +18,14 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
-          jvm: graalvm-ce-java11:20.1.0
-          apps: sbt-launcher:1.2.22 ammonite:2.3.8
-      - run: sbt 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
-        if: runner.os != 'Windows'
-        shell: bash
-      - run: amm launcher.sc generateNativeImage --version "2.0-SNAPSHOT" --output cs-test
-        if: runner.os != 'Windows'
-        shell: bash
-      - run: sbt -J-Dcoursier-test-launcher=./cs-test cli-tests/test
-        shell: bash
-        if: runner.os != 'Windows'
-      - run: sbt.bat 'set version in ThisBuild := "2.0-SNAPSHOT"' jvmProjects/publishLocal
-        if: runner.os == 'Windows'
-        shell: bash
-      - run: .github/scripts/windows-build-native-image.bat
-        if: runner.os == 'Windows'
-        shell: bash
-      - run: sbt.bat cli-tests/test
-        shell: bash
-        if: runner.os == 'Windows'
-        env:
-          JAVA_OPTS: "-Dcoursier-test-launcher=./cs-test"
+          jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: brew install nailgun
+        if: runner.os == 'macOS'
+      - run: ./mill -i nativeTests
 
   test-linux-arm64-native-launcher:
     runs-on: ubuntu-18.04
@@ -51,12 +35,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6
-      - uses: laughedelic/coursier-setup@v1
+      - uses: coursier/setup-action@v1
         with:
           jvm: 8
-          apps: sbt-launcher:1.2.22 coursier:2.0.13
-      - run: sbt cli/pack
-        shell: bash
       - uses: uraimo/run-on-arch-action@v2.0.9
         with:
           arch: aarch64
@@ -67,15 +48,13 @@ jobs:
 
           setup: |
             mkdir -p output
-            tar -zxf "$(cs get https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.1.0/graalvm-ce-java11-linux-aarch64-20.1.0.tar.gz)"
             mkdir -p utils
-            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.7/coursier)" utils/coursier
-            chmod +x utils/coursier
+            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.16/cs-aarch64-pc-linux)" utils/cs
+            chmod +x utils/cs
 
           dockerRunArgs: |
             --volume "${PWD}/output:/output"
             --volume "${PWD}/utils:/utils"
-            --volume "${PWD}/graalvm-ce-java11-20.1.0:/jvm"
 
           env: |
             JAVA_HOME: /jvm
@@ -88,9 +67,10 @@ jobs:
           # python3-pip is required for some CLI tests.
           install: |
             apt-get update -q -y
-            apt-get install -q -y build-essential libz-dev git python3-pip
+            apt-get install -q -y build-essential libz-dev git python3-pip curl
 
           run: |
-            export PATH="/utils:$JAVA_HOME/bin:$PATH"
-            coursier launch --fork ammonite:2.1.4-11-307f3d8 --scala 2.12.12 --java-opt -Xmx4g -- launcher.sc generateNativeImage --output /output/cs-test
-            coursier launch sbt-launcher:1.2.22 --property coursier-test-launcher=/output/cs-test -- cli-tests/test
+            set -e
+            export PATH="/utils:$PATH"
+            eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
+            ./mill -i nativeTests

@@ -1,7 +1,7 @@
 
-// from https://github.com/olafurpg/sbt-docusaurus/blob/16e548280117d3fcd8db4c244f91f089470b8ee7/plugin/src/main/scala/sbtdocusaurus/internal/Relativize.scala
-
 import $ivy.`org.jsoup:jsoup:1.10.3`
+
+// Originally adapted from https://github.com/olafurpg/sbt-docusaurus/blob/16e548280117d3fcd8db4c244f91f089470b8ee7/plugin/src/main/scala/sbtdocusaurus/internal/Relativize.scala
 
 import java.net.URI
 import java.nio.charset.Charset

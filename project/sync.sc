@@ -1,6 +1,4 @@
 
-import $file.Util
-
 import java.nio.file.Path
 
 /**
@@ -11,7 +9,7 @@ import java.nio.file.Path
  * @param extraArgs Extra arguments to pass to coursier to fetch `module`, like `Seq("-r", "jitpack")`
  * @param attempts Maximum number of attempts to check for the sync (one attempt per minute)
  */
-def apply(
+def waitForSync(
   coursierLauncher: String,
   module: String,
   extraArgs: Seq[String],
@@ -32,7 +30,13 @@ def apply(
         System.err.println(s"Not synced after $i attempts, waiting 1 minute")
         Thread.sleep(60000L)
       }
-      Util.tryRun(probeCommand)
+      val res = os.proc(probeCommand).call(
+        stdin = os.Inherit,
+        stdout = os.Inherit,
+        stderr = os.Inherit,
+        check = false
+      )
+      res.exitCode == 0
     }
     .exists(identity)
 
