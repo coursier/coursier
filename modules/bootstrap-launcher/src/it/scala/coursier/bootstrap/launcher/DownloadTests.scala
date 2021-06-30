@@ -16,10 +16,16 @@ import java.net.URI
 import java.util.Collections
 
 object DownloadTests extends TestSuite {
-  
-  private val testRepository = Option(System.getenv("TEST_REPOSITORY")).getOrElse(sys.error("TEST_REPOSITORY not set"))
-  private val testRepositoryUser = Option(System.getenv("TEST_REPOSITORY_USER")).getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
-  private val testRepositoryPassword = Option(System.getenv("TEST_REPOSITORY_PASSWORD")).getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
+
+  private val testRepository = Option(System.getenv("TEST_REPOSITORY"))
+    .orElse(sys.props.get("test.repository"))
+    .getOrElse(sys.error("TEST_REPOSITORY not set"))
+  private val testRepositoryUser = Option(System.getenv("TEST_REPOSITORY_USER"))
+    .orElse(sys.props.get("test.repository.user"))
+    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
+  private val testRepositoryPassword = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
+    .orElse(sys.props.get("test.repository.password"))
+    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
   private val testRepositoryHost = new URI(testRepository).getHost
 
   private def deleteRecursive(f: File): Unit = {
