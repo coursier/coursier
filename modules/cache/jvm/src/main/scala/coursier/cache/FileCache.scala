@@ -64,7 +64,9 @@ import scala.util.control.NonFatal
   @unroll
     userAgent: Option[String] = None,
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
-    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait
+    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
+  @unroll
+    authRealmOpt: Option[String] = None
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
@@ -109,6 +111,8 @@ import scala.util.control.NonFatal
     copy(sslSocketFactoryOpt = Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
     copy(hostnameVerifierOpt = Some(hostnameVerifier))
+  def withAuthRealm(realm: String): FileCache[F] =
+    copy(authRealmOpt = Some(realm))
   def withMaxRedirections(max: Int): FileCache[F] =
     copy(maxRedirections = Some(max))
 
@@ -174,7 +178,8 @@ import scala.util.control.NonFatal
       readTimeout = readTimeout,
       userAgentOpt = userAgent,
       hostThrottle = hostThrottle,
-      maxThrottleWait = maxThrottleWait
+      maxThrottleWait = maxThrottleWait,
+      authRealmOpt = authRealmOpt
     ).download
 
   // Should have been private[coursier]
