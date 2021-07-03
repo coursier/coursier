@@ -37,6 +37,7 @@ import scala.util.control.NonFatal
   sslRetry: Int = CacheDefaults.sslRetryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
+  authRealmOpt: Option[String] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
   classLoaders: Seq[ClassLoader] = Nil,
@@ -84,6 +85,7 @@ import scala.util.control.NonFatal
           .withAutoCredentials(allCredentials0)
           .withSslSocketFactoryOpt(sslSocketFactoryOpt)
           .withHostnameVerifierOpt(hostnameVerifierOpt)
+          .withAuthRealmOpt(authRealmOpt)
           .withMethod("HEAD")
           .withMaxRedirectionsOpt(maxRedirections)
           .withClassLoaders(classLoaders)
@@ -224,6 +226,8 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (respCodeOpt.contains(203))
+          Left(new ArtifactError.NonAuthoritative(url))
         else {
           for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -311,6 +315,7 @@ import scala.util.control.NonFatal
               allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
+              authRealmOpt,
               logger,
               maxRedirections
             ).toOption.flatten
@@ -331,6 +336,7 @@ import scala.util.control.NonFatal
               allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
+              authRealmOpt,
               logger,
               maxRedirections
             ).toOption.flatten
@@ -750,6 +756,7 @@ object Downloader {
     credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    authRealmOpt: Option[String],
     logger: CacheLogger,
     maxRedirectionsOpt: Option[Int]
   ): Either[ArtifactError, Option[Long]] = {
@@ -764,6 +771,7 @@ object Downloader {
         .withAutoCredentials(credentials)
         .withSslSocketFactoryOpt(sslSocketFactoryOpt)
         .withHostnameVerifierOpt(hostnameVerifierOpt)
+        .withAuthRealmOpt(authRealmOpt)
         .withMethod("HEAD")
         .withMaxRedirectionsOpt(maxRedirectionsOpt)
         .connection()
