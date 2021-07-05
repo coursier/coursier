@@ -1,10 +1,11 @@
 package coursier.env
 
-import dataclass.data
+import dataclass._
 
 @data class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
   target: String = "User",
+  @since
   useJni: Option[Boolean] = None
 ) extends EnvVarUpdater {
 

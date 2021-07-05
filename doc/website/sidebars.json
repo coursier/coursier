@@ -41,7 +41,6 @@
     ],
     "Development": [
       "dev-contributing",
-      "dev-cli",
       "dev-website"
     ]
   }

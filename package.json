@@ -3,14 +3,25 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "cheerio": "0.22.0",
-    "sax": "1.2.4",
+    "scalajs-friendly-source-map-loader": "0.1.5",
     "sha1": "1.1.1",
+    "source-map-loader": "0.2.3",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2",
     "xhr2": "0.1.4",
     "xmldom": "0.1.27"
   },
   "dependencies": {
+    "bootstrap": "3.3.4",
+    "bootstrap-treeview": "1.2.0",
     "bower": "^1.8.4",
-    "browserify": "^16.2.3"
+    "browserify": "^16.2.3",
+    "graphdracula": "1.2.1",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "requirejs": "2.3.6",
+    "sax": "1.2.4",
+    "webpack-raphael": "2.1.4"
   },
   "scripts": {
     "browserify": "browserify"
