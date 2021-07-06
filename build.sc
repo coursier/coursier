@@ -22,6 +22,7 @@ import $file.project.workers
 import mill._
 import mill.scalalib._
 import mill.scalajslib._
+import mill.contrib.bloop.Bloop
 
 import scala.concurrent.duration._
 import scala.util.Properties
@@ -538,7 +539,8 @@ trait CliTests extends CsModule { self =>
       }
     }
   }
-  object `native-tests` extends Tests with CsTests {
+  object `native-tests` extends Tests with CsTests with Bloop.Module {
+    def skipBloop = true
     def sources = T.sources {
       super.sources() ++ self.test.sources()
     }
