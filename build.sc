@@ -504,6 +504,15 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     ivy"com.chuusai::shapeless:2.3.7"
   )
   def mainClass = Some("coursier.cli.Coursier")
+  def docJar = T{
+    val jar = T.dest / "empty.jar"
+    val baos = new java.io.ByteArrayOutputStream
+    val zos = new java.util.zip.ZipOutputStream(baos)
+    zos.finish()
+    zos.close()
+    os.write.over(jar, baos.toByteArray)
+    PathRef(jar)
+  }
   object test extends Tests with CsTests
 }
 
