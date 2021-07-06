@@ -2,7 +2,7 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.0"
-  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M2"
+  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M3"
   def catsCore         = ivy"org.typelevel::cats-core:2.2.0"
   def catsEffect       = ivy"org.typelevel::cats-effect::2.1.4"
   def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.2.0"
@@ -32,7 +32,7 @@ object Deps {
   def scalaAsync       = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom       = ivy"org.scala-js::scalajs-dom::1.1.0"
   def scalaJsJquery    = ivy"be.doeraene::scalajs-jquery::1.0.0"
-  def scalaJsReact     = ivy"com.github.japgolly.scalajs-react::core::1.7.0"
+  def scalaJsReact     = ivy"com.github.japgolly.scalajs-react::core::1.7.7"
   def scalaNativeTools03 = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2 = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040 = ivy"org.scala-native::tools:0.4.0"
@@ -52,7 +52,7 @@ object Versions {
   def fastParse = "2.3.0"
   def http4s = "0.18.26"
   def jniUtils = "0.2.2"
-  def jsoniterScala = "2.2.4"
+  def jsoniterScala = "2.2.6"
   def monadless = "0.0.13"
   def scalaz = "7.2.30"
 }
