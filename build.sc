@@ -585,9 +585,9 @@ trait Web extends CsScalaJsModule {
 object `redirecting-server` extends SbtModule {
   def scalaVersion = ScalaVersions.scala212
   def ivyDeps = Agg(
-    ivy"org.http4s::http4s-blaze-server:0.17.5",
-    ivy"org.http4s::http4s-dsl:0.17.5",
-    ivy"org.http4s::http4s-server:0.17.5"
+    ivy"org.http4s::http4s-blaze-server:0.17.6",
+    ivy"org.http4s::http4s-dsl:0.17.6",
+    ivy"org.http4s::http4s-server:0.17.6"
   )
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
