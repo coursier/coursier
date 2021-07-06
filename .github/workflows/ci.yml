@@ -37,7 +37,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: ${{ matrix.JDK }}
@@ -70,7 +70,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -87,7 +87,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -106,7 +106,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -123,17 +123,22 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6
+      - uses: coursier/cache-action@v6.2
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
+      - run: |
+          mv .mill-jvm-opts .mill-jvm-opts.bak
+          cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
+          echo '-Xmx2g' >> .mill-jvm-opts
+
       - name: Release
-        run: ./mill publishSonatype __.publishArtifacts
+        run: ./mill -i publishSonatype __.publishArtifacts
         env:
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
@@ -152,7 +157,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6
+      - uses: coursier/cache-action@v6.2
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
@@ -175,7 +180,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6
+      - uses: coursier/cache-action@v6.2
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -239,7 +244,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -264,7 +269,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6
+    - uses: coursier/cache-action@v6.2
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -300,7 +305,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6
+      - uses: coursier/cache-action@v6.2
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
@@ -318,7 +323,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6
+      - uses: coursier/cache-action@v6.2
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
