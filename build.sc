@@ -1,3 +1,4 @@
+import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import $file.project.deps, deps.{Deps, ScalaVersions}
 import $file.project.docs
 import $file.project.ghreleaseassets
