@@ -16,7 +16,7 @@ object Deps {
   def jimfs            = ivy"com.google.jimfs:jimfs:1.2"
   def jniUtils         = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap = ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-  def jol              = ivy"org.openjdk.jol:jol-core:0.14"
+  def jol              = ivy"org.openjdk.jol:jol-core:0.16"
   def jsoniterCore     = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:${Versions.jsoniterScala}"
   def jsoniterMacros   = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def jsoup            = ivy"org.jsoup:jsoup:1.13.1"
