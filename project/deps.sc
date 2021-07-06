@@ -7,7 +7,7 @@ object Deps {
   def catsEffect       = ivy"org.typelevel::cats-effect::2.1.4"
   def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.2.0"
   def concurrentReferenceHashMap = ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass        = ivy"io.github.alexarchambault::data-class:0.2.4"
+  def dataClass        = ivy"io.github.alexarchambault::data-class:0.2.5"
   def dockerClient     = ivy"com.spotify:docker-client:8.16.0"
   def fastParse        = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
