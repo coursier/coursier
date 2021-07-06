@@ -66,7 +66,8 @@ import scala.util.control.NonFatal
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
   @unroll
-    authRealmOpt: Option[String] = None
+    authRealmOpt: Option[String] = None,
+    rejectNonAuthoritativeResponses: Boolean = false
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
@@ -179,7 +180,8 @@ import scala.util.control.NonFatal
       userAgentOpt = userAgent,
       hostThrottle = hostThrottle,
       maxThrottleWait = maxThrottleWait,
-      authRealmOpt = authRealmOpt
+      authRealmOpt = authRealmOpt,
+      rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses
     ).download
 
   // Should have been private[coursier]

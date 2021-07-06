@@ -66,7 +66,8 @@ import scala.util.control.NonFatal
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
   @unroll
-    authRealmOpt: Option[String] = None
+    authRealmOpt: Option[String] = None,
+    rejectNonAuthoritativeResponses: Boolean = false
 )(implicit
   S: Sync[F]
 ) {
@@ -365,7 +366,7 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
-        else if (respCodeOpt.contains(203))
+        else if (rejectNonAuthoritativeResponses && respCodeOpt.contains(203))
           Left(new ArtifactError.NonAuthoritative(url))
         else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
           Left(new ArtifactError.RetryableHttpError(url, respCodeOpt.get, retryAfterOpt))
