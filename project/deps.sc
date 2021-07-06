@@ -5,7 +5,7 @@ object Deps {
   def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M2"
   def catsCore         = ivy"org.typelevel::cats-core:2.2.0"
   def catsEffect       = ivy"org.typelevel::cats-effect::2.1.4"
-  def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.2.0"
+  def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.4.4"
   def concurrentReferenceHashMap = ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass        = ivy"io.github.alexarchambault::data-class:0.2.4"
   def dockerClient     = ivy"com.spotify:docker-client:8.16.0"
