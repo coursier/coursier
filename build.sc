@@ -587,7 +587,7 @@ object `redirecting-server` extends SbtModule {
   def ivyDeps = Agg(
     ivy"org.http4s::http4s-blaze-server:0.17.6",
     ivy"org.http4s::http4s-dsl:0.17.6",
-    ivy"org.http4s::http4s-server:0.17.6"
+    ivy"org.http4s::http4s-server:0.21.24"
   )
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
