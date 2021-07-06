@@ -1,7 +1,7 @@
 import mill._, scalalib._
 
 object Deps {
-  def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.2::1.2.0"
+  def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.0"
   def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M2"
   def catsCore         = ivy"org.typelevel::cats-core:2.2.0"
   def catsEffect       = ivy"org.typelevel::cats-effect::2.1.4"
