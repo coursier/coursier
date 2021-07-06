@@ -28,7 +28,7 @@ object Deps {
   def okhttp           = ivy"com.squareup.okhttp3:okhttp:3.14.9"
   def plexusArchiver   = ivy"org.codehaus.plexus:plexus-archiver:4.2.5"
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.0" // plexus-archiver needs its loggers
-  def proguard         = ivy"com.guardsquare:proguard-base:7.0.1"
+  def proguard         = ivy"com.guardsquare:proguard-base:7.1.0"
   def scalaAsync       = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom       = ivy"org.scala-js::scalajs-dom::1.1.0"
   def scalaJsJquery    = ivy"be.doeraene::scalajs-jquery::1.0.0"
