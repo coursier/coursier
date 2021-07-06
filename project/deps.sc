@@ -52,7 +52,7 @@ object Versions {
   def fastParse = "2.3.0"
   def http4s = "0.18.26"
   def jniUtils = "0.2.2"
-  def jsoniterScala = "2.2.4"
+  def jsoniterScala = "2.2.6"
   def monadless = "0.0.13"
   def scalaz = "7.2.30"
 }
