@@ -11,9 +11,15 @@ import utest._
 
 object AuthenticationTests extends TestSuite {
 
-  private val testRepo = Option(System.getenv("TEST_REPOSITORY")).getOrElse(sys.error("TEST_REPOSITORY not set"))
-  private val user = Option(System.getenv("TEST_REPOSITORY_USER")).getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
-  private val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD")).getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
+  private val testRepo = Option(System.getenv("TEST_REPOSITORY"))
+    .orElse(sys.props.get("test.repository"))
+    .getOrElse(sys.error("TEST_REPOSITORY not set"))
+  private val user = Option(System.getenv("TEST_REPOSITORY_USER"))
+    .orElse(sys.props.get("test.repository.user"))
+    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
+  private val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
+    .orElse(sys.props.get("test.repository.password"))
+    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
 
   private val testHost = new URI(testRepo).getHost
 
