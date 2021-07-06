@@ -23,7 +23,8 @@ import dataclass.data
   useSystemOsInfo: Boolean = true,
   useSystemJdkVersion: Boolean = true,
   defaultConfiguration: Configuration = Configuration.defaultCompile,
-  @since overrideFullSuffixOpt: Option[Boolean] = None
+  @since("2.0.17")
+  overrideFullSuffixOpt: Option[Boolean] = None
 ) {
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =
