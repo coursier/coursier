@@ -32,7 +32,7 @@ object Deps {
   def scalaAsync       = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom       = ivy"org.scala-js::scalajs-dom::1.1.0"
   def scalaJsJquery    = ivy"be.doeraene::scalajs-jquery::1.0.0"
-  def scalaJsReact     = ivy"com.github.japgolly.scalajs-react::core::1.7.0"
+  def scalaJsReact     = ivy"com.github.japgolly.scalajs-react::core::1.7.7"
   def scalaNativeTools03 = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2 = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040 = ivy"org.scala-native::tools:0.4.0"
