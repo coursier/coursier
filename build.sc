@@ -100,7 +100,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     def moduleDeps = Seq(
       self.test
     )
-    def forkArgs = T{
+    def forkArgs = T.input {
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -322,7 +322,7 @@ class CoursierJvm(val crossScalaVersion: String) extends CoursierJvmBase { self 
     def moduleDeps = super.moduleDeps ++ Seq(
       self.test
     )
-    def forkArgs = T{
+    def forkArgs = T.input {
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -357,7 +357,7 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
-    def forkArgs = T{
+    def forkArgs = T.input {
       val redirectingServer0 = redirectingServer()
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
