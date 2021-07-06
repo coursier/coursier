@@ -130,8 +130,13 @@ jobs:
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
+      - run: |
+          mv .mill-jvm-opts .mill-jvm-opts.bak
+          cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
+          echo '-Xmx2g' >> .mill-jvm-opts
+
       - name: Release
-        run: ./mill publishSonatype __.publishArtifacts
+        run: ./mill -i publishSonatype __.publishArtifacts
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
