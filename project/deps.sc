@@ -54,7 +54,7 @@ object Versions {
   def jniUtils = "0.2.2"
   def jsoniterScala = "2.2.4"
   def monadless = "0.0.13"
-  def scalaz = "7.2.30"
+  def scalaz = "7.2.32"
 }
 
 def sbtCoursierVersion = "2.0.8"
