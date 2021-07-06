@@ -10,11 +10,11 @@ One can spot plenty of Scala-related projects using coursier in the wild. Here a
 [scalafiddle](https://scalafiddle.io) both use coursier to handle dependencies
 added by users.
 
-## Ammonite and mill
+## Ammonite, mill and sbt
 
 The [Ammonite](https://github.com/lihaoyi/Ammonite) shell and the
-[mill](https://github.com/lihaoyi/mill) build tool both rely on coursier to
-handle dependencies.
+[mill](https://github.com/lihaoyi/mill) and [sbt](https://www.scala-sbt.org) build tools
+all rely on coursier to handle dependencies.
 
 ## Pants
 
