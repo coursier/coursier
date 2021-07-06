@@ -22,6 +22,7 @@ import $file.project.workers
 import mill._
 import mill.scalalib._
 import mill.scalajslib._
+import mill.contrib.bloop.Bloop
 
 import scala.concurrent.duration._
 import scala.util.Properties
@@ -100,7 +101,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     def moduleDeps = Seq(
       self.test
     )
-    def forkArgs = T{
+    def forkArgs = T.input {
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -322,7 +323,7 @@ class CoursierJvm(val crossScalaVersion: String) extends CoursierJvmBase { self 
     def moduleDeps = super.moduleDeps ++ Seq(
       self.test
     )
-    def forkArgs = T{
+    def forkArgs = T.input {
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -357,7 +358,7 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
-    def forkArgs = T{
+    def forkArgs = T.input {
       val redirectingServer0 = redirectingServer()
       val testRepoServer0 = workers.testRepoServer()
       super.forkArgs() ++ Seq(
@@ -538,7 +539,8 @@ trait CliTests extends CsModule { self =>
       }
     }
   }
-  object `native-tests` extends Tests with CsTests {
+  object `native-tests` extends Tests with CsTests with Bloop.Module {
+    def skipBloop = true
     def sources = T.sources {
       super.sources() ++ self.test.sources()
     }

@@ -126,9 +126,10 @@ def testRepoServer = T.worker {
       Thread.sleep(500L)
     countDown -= 1
   }
-  if (serverRunning && server.proc.isAlive)
+  if (serverRunning && server.proc.isAlive) {
+    T.log.outputStream.println(s"Test repository listening on ${server.url}")
     server
-  else
+  } else
     sys.error("Cannot run test repo server")
 }
 
