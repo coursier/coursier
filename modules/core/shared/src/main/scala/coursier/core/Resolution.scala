@@ -589,8 +589,10 @@ object Resolution {
     Type.Exotic.scalaJar
   )
 
-  def forceScalaVersion(sv: String): Dependency => Dependency = {
+  def overrideScalaModule(sv: String): Dependency => Dependency =
+    overrideScalaModule(sv, Organization("org.scala-lang"))
 
+  def overrideScalaModule(sv: String, scalaOrg: Organization): Dependency => Dependency = {
     val sbv = sv.split('.').take(2).mkString(".")
     val scalaModules = if (sbv.startsWith("3")) Set(
       ModuleName("scala3-library"),
@@ -602,6 +604,18 @@ object Resolution {
       ModuleName("scalap")
     )
 
+    dep =>
+      if (dep.module.organization == scalaOrg && scalaModules.contains(dep.module.name))
+        dep.withVersion(sv)
+      else
+        dep
+  }
+
+  /**
+   * Replaces the full suffix _2.12.8 with the given Scala version.
+   */
+  def overrideFullSuffix(sv: String): Dependency => Dependency = {
+    val sbv = sv.split('.').take(2).mkString(".")
     def fullCrossVersionBase(module: Module): Option[String] =
       if (module.attributes.isEmpty && !module.name.value.endsWith("_" + sv)) {
         val idx = module.name.value.lastIndexOf("_" + sbv + ".")
@@ -618,16 +632,17 @@ object Resolution {
         None
 
     dep =>
-      if (dep.module.organization == Organization("org.scala-lang") && scalaModules.contains(dep.module.name))
-        dep.withVersion(sv)
-      else
-        fullCrossVersionBase(dep.module) match {
-          case Some(base) =>
-            dep.withModule(dep.module.withName(ModuleName(base + "_" + sv)))
-          case None =>
-            dep
-        }
+      fullCrossVersionBase(dep.module) match {
+        case Some(base) =>
+          dep.withModule(dep.module.withName(ModuleName(base + "_" + sv)))
+        case None =>
+          dep
+      }
   }
+
+  @deprecated("Use overrideScalaModule and overrideFullSuffix instead", "2.0.17")
+  def forceScalaVersion(sv: String): Dependency => Dependency =
+    overrideScalaModule(sv) andThen overrideFullSuffix(sv)
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     Parse.withFallbackConfig(dep.configuration) match {

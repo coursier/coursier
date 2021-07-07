@@ -1017,7 +1017,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    test("forceScalaVersion") {
+    test("overrideScalaModule") {
 
       val sharedDeps = Set(
         "co.fs2:fs2-core_2.12:0.10.7",
@@ -1141,7 +1141,7 @@ abstract class CentralTests extends TestSuite {
                 dep"org.scalameta:interactive_2.12.7:4.1.4"
               ),
               extraRepos = Seq(Repositories.jitpack),
-              mapDependencies = Some(coursier.core.Resolution.forceScalaVersion("2.12.7"))
+              mapDependencies = Some(coursier.core.Resolution.overrideScalaModule("2.12.7"))
             )
           )
 
@@ -1168,7 +1168,7 @@ abstract class CentralTests extends TestSuite {
           assertSameElements(expectedDeps, deps)
         }
 
-        "2.12.8" - async {
+        "overrideFullSuffix" - async {
           val res = await(
             runner.resolve(
               Seq(
@@ -1176,7 +1176,7 @@ abstract class CentralTests extends TestSuite {
                 dep"org.scalameta:interactive_2.12.8:4.1.4"
               ),
               extraRepos = Seq(Repositories.jitpack),
-              mapDependencies = Some(coursier.core.Resolution.forceScalaVersion("2.12.8"))
+              mapDependencies = Some(coursier.core.Resolution.overrideFullSuffix("2.12.8"))
             )
           )
 

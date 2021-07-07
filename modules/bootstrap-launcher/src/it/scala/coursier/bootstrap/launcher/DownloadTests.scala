@@ -69,8 +69,7 @@ object DownloadTests extends TestSuite {
     test ("private URL with credentials in the URL") {
       withTmpDir { dir =>
         val remoteUrls = Seq(
-          new URL(s"$testRepository/com/abc/test/0.1/test-0.1.pom"
-            .replaceFirst(testRepositoryHost, s"$testRepositoryUser:$testRepositoryPassword@$testRepositoryHost"))
+          new URL(s"http://$testRepositoryUser:$testRepositoryPassword@" + s"$testRepository/com/abc/test/0.1/test-0.1.pom".stripPrefix("http://"))
         )
         val download = new Download(1, dir.toFile, Collections.emptyList())
         val localUrls = download.getLocalURLs(remoteUrls.asJava).asScala

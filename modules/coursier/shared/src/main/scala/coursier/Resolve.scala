@@ -209,12 +209,14 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     initialResolutionOpt: Option[Resolution] = None
   ): Resolution = {
+    import coursier.core.{Resolution => CoreResolution}
+
+    val scalaOrg =
+      if (params.typelevel) Organization("org.typelevel")
+      else Organization("org.scala-lang")
 
     val forceScalaVersions =
       if (params.doForceScalaVersion) {
-        val scalaOrg =
-          if (params.typelevel) Organization("org.typelevel")
-          else Organization("org.scala-lang")
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
             Module(scalaOrg, ModuleName("scala3-library")) -> params.selectedScalaVersion,
@@ -232,7 +234,8 @@ object Resolve extends PlatformResolve {
 
     val mapDependencies = {
       val l = (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
-        (if (params.doForceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.selectedScalaVersion)) else Nil)
+        (if (params.doForceScalaVersion) Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersion, scalaOrg)) else Nil) ++
+        (if (params.doOverrideFullSuffix) Seq(CoreResolution.overrideFullSuffix(params.selectedScalaVersion)) else Nil)
 
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
