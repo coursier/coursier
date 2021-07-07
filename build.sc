@@ -506,6 +506,9 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     ivy"com.chuusai::shapeless:2.3.7"
   )
   def mainClass = Some("coursier.cli.Coursier")
+  def finalMainClassOpt = T{
+    Right("coursier.cli.Coursier"): Either[String, String]
+  }
   def manifest = T{
     import java.util.jar.Attributes.Name
     val ver = publishVersion()
