@@ -59,7 +59,7 @@ object JsonReport {
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String], exclusions: T => Set[String]): String = {
 
-    var depToTransitiveDeps = new mutable.HashMap[T, Set[String]]
+    val depToTransitiveDeps = new mutable.HashMap[T, Set[String]]
     def flattenDeps(elem: T): Set[String] =
       if (depToTransitiveDeps.contains(elem))
         depToTransitiveDeps(elem)
