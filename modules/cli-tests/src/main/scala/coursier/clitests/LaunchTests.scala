@@ -54,5 +54,11 @@ abstract class LaunchTests extends TestSuite {
       if (LauncherTestUtil.isWindows) "disabled"
       else { inlineAppWithId(); "" }
     }
+
+    test("no vendor and title in manifest") {
+      val output = LauncherTestUtil.output(launcher, "launch", "io.get-coursier:coursier-cli_2.12:2.0.16+69-g69cab05e6", "--", "launch", "io.get-coursier:echo:1.0.1", "--", "foo")
+      val expectedOutput = "foo" + System.lineSeparator()
+      assert(output == expectedOutput)
+    }
   }
 }
