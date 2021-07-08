@@ -66,7 +66,7 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
 object ScalaVersions {
   def scala213 = "2.13.3"
-  def scala212 = "2.12.12"
+  def scala212 = "2.12.14"
   val all = Seq(scala213, scala212)
 
   // only used by the launcher module
