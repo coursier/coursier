@@ -65,7 +65,7 @@ def graalVmVersion = "20.1.0"
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
 object ScalaVersions {
-  def scala213 = "2.13.3"
+  def scala213 = "2.13.6"
   def scala212 = "2.12.12"
   val all = Seq(scala213, scala212)
 
