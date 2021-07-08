@@ -9,18 +9,23 @@ object MainClass {
   private def manifestPath = "META-INF/MANIFEST.MF"
 
   def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
+    val (_, map) = mainClassesWithMainOne(jars)
+    map
+  }
+
+  def mainClassesWithMainOne(jars: Seq[File]): (Option[String], Map[(String, String), String]) = {
 
     var zipFiles = List.empty[ZipFile]
 
     try {
-      val metaInfs = jars.flatMap { f =>
+      val byFile = jars.map { f =>
         val zf = new ZipFile(f)
         zipFiles = zf :: zipFiles
         val entryOpt = Option(zf.getEntry(manifestPath))
-        entryOpt.map(e => () => zf.getInputStream(e)).toSeq
+        entryOpt.map(e => () => zf.getInputStream(e))
       }
 
-      val mainClasses = metaInfs.flatMap { f =>
+      val mainClasses = byFile.map(_.map { f =>
         var is: InputStream = null
         val attributes =
           try {
@@ -39,9 +44,11 @@ object MainClass {
         val mainClass = attributeOpt("Main-Class")
 
         mainClass.map((vendor, title) -> _)
-      }
+      })
 
-      mainClasses.toMap
+      val fromFirstJar = mainClasses.headOption.flatten.flatten.map(_._2)
+
+      (fromFirstJar, mainClasses.flatten.flatten.toMap)
     } finally {
       zipFiles.foreach(_.close())
     }

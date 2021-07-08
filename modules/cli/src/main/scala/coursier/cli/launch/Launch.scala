@@ -232,24 +232,27 @@ object Launch extends CaseApp[LaunchOptions] {
         new SharedClassLoader(urls, parent, Array(name))
     }
 
-  def mainClass(params: SharedLaunchParams, files: Seq[File], mainDependencyOpt: Option[Dependency]) =
+  def mainClass(params: SharedLaunchParams, files: Seq[File], mainDependencyOpt: Option[Dependency]): Task[String] =
     params.mainClassOpt match {
       case Some(c) =>
         Task.point(c)
       case None =>
-        Task.delay(MainClass.mainClasses(files)).flatMap { m =>
-          if (params.resolve.output.verbosity >= 2)
-            System.err.println(
-              "Found main classes:" + System.lineSeparator() +
-                m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
-                System.lineSeparator()
-            )
-          MainClass.retainedMainClassOpt(m, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))) match {
-            case Some(c) =>
-              Task.point(c)
-            case None =>
-              Task.fail(new LaunchException.NoMainClassFound)
-          }
+        Task.delay(MainClass.mainClassesWithMainOne(files)).flatMap {
+          case (fromFirstJarOpt, map) =>
+            if (params.resolve.output.verbosity >= 2) {
+              System.err.println(s"Main class in first JAR: $fromFirstJarOpt")
+              System.err.println(
+                "Found main classes:" + System.lineSeparator() +
+                  map.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
+                  System.lineSeparator()
+              )
+            }
+            MainClass.retainedMainClassOpt(map, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))).orElse(fromFirstJarOpt) match {
+              case Some(c) =>
+                Task.point(c)
+              case None =>
+                Task.fail(new LaunchException.NoMainClassFound)
+            }
         }
     }
 

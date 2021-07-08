@@ -506,6 +506,22 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     ivy"com.chuusai::shapeless:2.3.7"
   )
   def mainClass = Some("coursier.cli.Coursier")
+  def finalMainClassOpt = T{
+    Right("coursier.cli.Coursier"): Either[String, String]
+  }
+  def manifest = T{
+    import java.util.jar.Attributes.Name
+    val ver = publishVersion()
+    super.manifest().add(
+      Name.IMPLEMENTATION_TITLE.toString -> "coursier-cli",
+      Name.IMPLEMENTATION_VERSION.toString -> ver,
+      Name.SPECIFICATION_VENDOR.toString -> "io.get-coursier",
+      Name.SPECIFICATION_TITLE.toString -> "coursier-cli",
+      Name.IMPLEMENTATION_VENDOR_ID.toString -> "io.get-coursier",
+      Name.SPECIFICATION_VERSION.toString -> ver,
+      Name.IMPLEMENTATION_VENDOR.toString -> "io.get-coursier"
+    )
+  }
   def docJar = T{
     val jar = T.dest / "empty.jar"
     val baos = new java.io.ByteArrayOutputStream
