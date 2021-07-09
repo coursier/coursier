@@ -1,4 +1,5 @@
 import $file.^.deps, deps.Deps
+import $file.^.shading, shading.Shading
 import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
 
 trait Cache extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
@@ -7,8 +8,18 @@ trait Cache extends CsModule with CsCrossJvmJsModule with CoursierPublishModule 
     Deps.dataClass
   )
 }
-trait CacheJvmBase extends Cache with CsMima {
+trait CacheJvmBase extends Cache with CsMima with Shading {
   def customLoaderCp: T[Seq[PathRef]]
+
+  def shadedDependencies = Agg.empty[mill.scalalib.Dep]
+  def validNamespaces = Seq(
+    "coursier.cache",
+    "coursier.paths",
+    "coursier.util"
+  )
+  def shadeRenames = Seq(
+    "dev.dirs.**" -> "coursier.cache.shaded.dirs.@1"
+  )
 
   def mimaBinaryIssueFilters = {
     import com.typesafe.tools.mima.core._
