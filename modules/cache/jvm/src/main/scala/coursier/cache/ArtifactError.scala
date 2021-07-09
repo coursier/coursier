@@ -32,6 +32,11 @@ object ArtifactError {
     e
   )
 
+  final class NonAuthoritative(url: String) extends ArtifactError(
+    `type` = "non-authoritative information",
+    message = url
+  )
+
   final class NotFound(
     val file: String,
     val permanent: Option[Boolean] = None

@@ -16,6 +16,7 @@ import dataclass.data
   autoCredentials: Seq[DirectCredentials] = Nil,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
+  authRealmOpt: Option[String] = None,
   method: String = "GET",
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
@@ -42,7 +43,7 @@ import dataclass.data
       hostnameVerifierOpt,
       proxy,
       method,
-      None,
+      authRealmOpt,
       redirectionCount = 0,
       maxRedirectionsOpt,
       classLoaders

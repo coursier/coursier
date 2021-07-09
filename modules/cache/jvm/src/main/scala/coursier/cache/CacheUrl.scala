@@ -213,13 +213,7 @@ object CacheUrl {
       None
 
   private def is4xx(conn: URLConnection): Boolean =
-    conn match {
-      case conn0: HttpURLConnection =>
-        val c = conn0.getResponseCode
-        c / 100 == 4
-      case _ =>
-        false
-    }
+    responseCode(conn).exists(_ / 100 == 4)
 
 
   @deprecated("Create a ConnectionBuilder() and call connection() on it instead", "2.0.0")
@@ -231,6 +225,7 @@ object CacheUrl {
     credentials: Seq[DirectCredentials] = Nil,
     sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
     hostnameVerifierOpt: Option[HostnameVerifier] = None,
+    authRealmOpt: Option[String] = None,
     method: String = "GET",
     maxRedirectionsOpt: Option[Int] = Some(20)
   ): URLConnection =
@@ -243,6 +238,7 @@ object CacheUrl {
       credentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
+      authRealmOpt,
       method,
       maxRedirectionsOpt = maxRedirectionsOpt,
       None,
@@ -277,6 +273,7 @@ object CacheUrl {
     autoCredentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    authRealmOpt: Option[String],
     method: String,
     maxRedirectionsOpt: Option[Int]
   ): (URLConnection, Boolean) =
@@ -289,6 +286,7 @@ object CacheUrl {
       autoCredentials,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
+      authRealmOpt,
       method,
       maxRedirectionsOpt,
       None,
