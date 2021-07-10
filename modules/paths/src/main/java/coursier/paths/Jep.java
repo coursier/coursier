@@ -44,6 +44,33 @@ public class Jep {
 
   private final static String locationLinePrefix = "Location: ";
 
+  private static String callProcess(Map<String, String> env, String... command) throws Exception {
+    ProcessBuilder b = new ProcessBuilder(command)
+      .redirectInput(ProcessBuilder.Redirect.PIPE)
+      .redirectOutput(ProcessBuilder.Redirect.PIPE)
+      .redirectError(ProcessBuilder.Redirect.INHERIT);
+
+    Map<String, String> processEnv = b.environment();
+    env.forEach((k, v) -> processEnv.put(k, v));
+
+    Process p = b.start();
+    p.getOutputStream().close(); // close sub-process stdin
+
+    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
+    int retValue = p.waitFor();
+    if (retValue != 0) {
+      if (!output.isEmpty())
+        output = System.lineSeparator() + output;
+      throw new JepException("Error running " + String.join(" ", command) + " (return code: " + retValue + ")" + output);
+    }
+
+    return output.trim();
+  }
+
+  private static String callProcess(String... command) throws Exception {
+    return callProcess(Collections.emptyMap(), command);
+  }
+
   public static File location() throws Exception {
 
     String fromEnv = System.getenv("JEP_LOCATION");
@@ -58,20 +85,7 @@ public class Jep {
     if (existsInPath("pip3"))
       pip = "pip3";
 
-    ProcessBuilder b = new ProcessBuilder(pip, "show", "jep")
-      .redirectInput(ProcessBuilder.Redirect.PIPE)
-      .redirectOutput(ProcessBuilder.Redirect.PIPE)
-      .redirectError(ProcessBuilder.Redirect.INHERIT);
-    Process p = b.start();
-    p.getOutputStream().close(); // close sub-process stdin
-
-    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
-    int retValue = p.waitFor();
-    if (retValue != 0) {
-      if (!output.isEmpty())
-        output = System.lineSeparator() + output;
-      throw new JepException("Error running " + pip + " show jep (return code: " + retValue + ")" + output);
-    }
+    String output = callProcess(pip, "show", "jep");
 
     Optional<String> locationOpt = Stream.of(output.split(System.getProperty("line.separator")))
       .filter(line -> line.startsWith(locationLinePrefix))
@@ -118,36 +132,48 @@ public class Jep {
     return version;
   }
 
-  public static String pythonHome() throws Exception {
-
-    String fromEnv = System.getenv("PYTHONHOME");
-    if (fromEnv != null && !fromEnv.isEmpty())
+  private static String pythonExecutable() throws Exception {
+    String fromEnv = System.getenv("PYTHONEXECUTABLE");
+    if (fromEnv != null && !fromEnv.isEmpty() && existsInPath(fromEnv))
       return fromEnv;
+
+    String fromProps = System.getProperty("python.executable");
+    if (fromProps != null && !fromProps.isEmpty() && existsInPath(fromProps))
+      return fromProps;
+
+    if (existsInPath("python3"))
+      return "python3";
+    else if (existsInPath("python"))
+      return "python";
+
+    throw new JepException(
+      "No existing Python executable found, either in PATH, in PYTHONEXECUTABLE environment variable or in python.executable system property."
+    );
+  }
+
+  public static String pythonHome() throws Exception {
 
     String fromProps = System.getProperty("python.home");
     if (fromProps != null && !fromProps.isEmpty())
       return fromProps;
 
-    String python = "python";
-    if (existsInPath("python3"))
-      python = "python3";
+    Map<String, String> env = Collections.emptyMap();
 
-    ProcessBuilder b = new ProcessBuilder(python, "-c", "import sys;print(sys.prefix)")
-      .redirectInput(ProcessBuilder.Redirect.PIPE)
-      .redirectOutput(ProcessBuilder.Redirect.PIPE)
-      .redirectError(ProcessBuilder.Redirect.INHERIT);
-    Process p = b.start();
-    p.getOutputStream().close(); // close sub-process stdin
+    String fromEnv = System.getenv("PYTHONHOME");
+    if (fromEnv != null && !fromEnv.isEmpty())
+      env.put("PYTHONHOME", fromEnv);
 
-    String output = readFully(p.getInputStream(), Charset.defaultCharset(), 1024);
-    int retValue = p.waitFor();
-    if (retValue != 0) {
-      if (!output.isEmpty())
-        output = System.lineSeparator() + output;
-      throw new JepException("Error running " + python + " -c 'import sys; print(sys.prefix)' (return code: " + retValue + ")" + output);
-    }
+    String python = pythonExecutable();
 
-    return output.trim();
+    return callProcess(env, python, "-c", "import sys;print(sys.exec_prefix)");
+  }
+
+  public static String pythonLDLibrary() throws Exception {
+    String python = pythonExecutable();
+    String cmd = "import sysconfig;print(sysconfig.get_config_var('LDVERSION'))";
+    String pythonLDVersion = callProcess(python, "-c", cmd);
+
+    return "python" + pythonLDVersion;
   }
 
   public static List<Map.Entry<String, String>> pythonProperties() throws Exception {
