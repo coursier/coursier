@@ -59,12 +59,16 @@ object JvmIndexTests extends TestSuite {
             "1.19-2" -> "zip+https://openfoo.com/jdk-19.2.zip",
             "1.20-1" -> "zip+https://openfoo.com/jdk-20.1.zip",
             "1.20-2" -> "zip+https://openfoo.com/jdk-20.2.zip"
+          ),
+          "jdk" -> Map(
+            "1.6.65" -> "zip+https://jdk.com/jdk-1.6.65.zip"
           )
         )))
       )
 
       val open192 = JvmIndexEntry(os, arch, "openfoo", "1.19-2", ArchiveType.Zip, "https://openfoo.com/jdk-19.2.zip")
       val open202 = JvmIndexEntry(os, arch, "openfoo", "1.20-2", ArchiveType.Zip, "https://openfoo.com/jdk-20.2.zip")
+      val jdk = JvmIndexEntry(os, arch, "jdk", "1.6.65", ArchiveType.Zip, "https://jdk.com/jdk-1.6.65.zip")
 
       test("add prefix") {
         val res = index.lookup("openfoo", "19-2", os = Some(os), arch = Some(arch))
@@ -99,6 +103,12 @@ object JvmIndexTests extends TestSuite {
       test("accept 1 plus") {
         val res = index.lookup("openfoo", "1+", os = Some(os), arch = Some(arch))
         val expected = Right(open202)
+        assert(res == expected)
+      }
+
+      test("work for") {
+        val res = index.lookup("jdk", "1.6.65", os = Some(os), arch = Some(arch))
+        val expected = Right(jdk)
         assert(res == expected)
       }
     }
