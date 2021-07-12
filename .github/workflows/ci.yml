@@ -163,7 +163,7 @@ jobs:
           jvm: 8
       - name: Copy artifacts
         run: ./mill -i copyLauncher artifacts/
-      - uses: actions/upload-artifact@v2.2.3
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: launchers
           path: artifacts/
@@ -227,7 +227,7 @@ jobs:
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
             ./mill -i copyLauncher /artifacts/
-      - uses: actions/upload-artifact@v2.2.3
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: launchers
           path: artifacts/
@@ -252,7 +252,7 @@ jobs:
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v2.2.3
+    - uses: actions/upload-artifact@v2.2.4
       with:
         name: launchers
         path: artifacts/
