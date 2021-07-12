@@ -25,6 +25,16 @@ $ modules/cli/target/pack/bin/coursier --help
 
 `sbt "~cli/pack"` watches the sources, and re-generates `modules/cli/target/pack` accordingly.
 
+## Unit structure
+
+To get a list of units for which there may be unit tests, you can run this:
+```sh
+perl -ne 'next unless s/(J[sv][a-z]*),$/$1/; $a=$1; $b=uc $a; s/$a/$b/;print' build.sbt |sort -u
+```
+
+The following sections talk about unit tests for `testJ*`, but you can/should/may choose/want
+to perform the same action w/ one of these other units instead.
+
 ## Run unit tests (JVM)
 
 ```
