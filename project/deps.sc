@@ -59,7 +59,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.0.8"
 
-def graalVmVersion = "21.1.0"
+def graalVmVersion = "21.2.0"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
