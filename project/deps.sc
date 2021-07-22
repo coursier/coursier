@@ -22,7 +22,7 @@ object Deps {
   def jsoup            = ivy"org.jsoup:jsoup:1.13.1"
   def logbackClassic   = ivy"ch.qos.logback:logback-classic:1.2.3"
   def macroParadise    = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc             = ivy"org.scalameta::mdoc:2.2.21"
+  def mdoc             = ivy"org.scalameta::mdoc:2.2.22"
   def monadlessCats    = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def okhttp           = ivy"com.squareup.okhttp3:okhttp:3.14.9"
