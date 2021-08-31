@@ -2,7 +2,7 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.2::1.2.0"
-  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M3"
+  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M6"
   def catsCore         = ivy"org.typelevel::cats-core:2.6.1"
   def catsEffect       = ivy"org.typelevel::cats-effect::2.5.1"
   def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.2.0"
@@ -19,10 +19,10 @@ object Deps {
   def jol              = ivy"org.openjdk.jol:jol-core:0.16"
   def jsoniterCore     = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:${Versions.jsoniterScala}"
   def jsoniterMacros   = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup            = ivy"org.jsoup:jsoup:1.13.1"
+  def jsoup            = ivy"org.jsoup:jsoup:1.14.2"
   def logbackClassic   = ivy"ch.qos.logback:logback-classic:1.2.5"
   def macroParadise    = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc             = ivy"org.scalameta::mdoc:2.2.21"
+  def mdoc             = ivy"org.scalameta::mdoc:2.2.23"
   def monadlessCats    = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def okhttp           = ivy"com.squareup.okhttp3:okhttp:3.14.9"
@@ -30,7 +30,7 @@ object Deps {
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.0" // plexus-archiver needs its loggers
   def proguard         = ivy"com.guardsquare:proguard-base:7.1.0"
   def scalaAsync       = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaJsDom       = ivy"org.scala-js::scalajs-dom::1.1.0"
+  def scalaJsDom       = ivy"org.scala-js::scalajs-dom::1.2.0"
   def scalaJsJquery    = ivy"be.doeraene::scalajs-jquery::1.0.0"
   def scalaJsReact     = ivy"com.github.japgolly.scalajs-react::core::1.7.7"
   def scalaNativeTools03 = ivy"org.scala-native::tools:0.3.9"
@@ -52,7 +52,7 @@ object Versions {
   def fastParse = "2.3.0"
   def http4s = "0.18.26"
   def jniUtils = "0.2.2"
-  def jsoniterScala = "2.9.1"
+  def jsoniterScala = "2.10.1"
   def monadless = "0.0.13"
   def scalaz = "7.2.33"
 }
