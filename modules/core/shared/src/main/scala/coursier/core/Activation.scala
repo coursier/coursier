@@ -16,20 +16,22 @@ import dataclass.data
     osInfo: Activation.Os,
     jdkVersion: Option[Version]
   ): Boolean = {
-
     def fromProperties = properties.forall {
-      case (name, valueOpt) =>
-        if (name.startsWith("!"))
-          currentProperties.get(name.drop(1)).isEmpty
-        else
-          currentProperties.get(name).exists { v =>
-            valueOpt.forall { reqValue =>
-              if (reqValue.startsWith("!"))
-                v != reqValue.drop(1)
-              else
-                v == reqValue
-            }
-          }
+      case (name, _) if name.startsWith("!") =>
+        currentProperties.get(name.drop(1)).isEmpty
+      
+      case (name, None) => 
+        currentProperties.contains(name)
+
+      // https://maven.apache.org/guides/introduction/introduction-to-profiles.html
+      // if the value starts with !, this property activates if either
+      // a) the property is missing completely
+      // b) it's value is NOT equal to expected
+      case (name, Some(expected)) if expected.startsWith("!") => 
+        currentProperties.get(name).fold(true)(found => found != expected.drop(1))
+      
+      case (name, Some(expected)) => 
+        currentProperties.get(name).contains(expected)
     }
 
     def fromOs = os.isActive(osInfo)
@@ -125,7 +127,6 @@ object Activation {
     }
 
     def fromProperties(properties: Map[String, String]): Os = {
-
       val name = properties.get("os.name").map(_.toLowerCase)
 
       Os(
