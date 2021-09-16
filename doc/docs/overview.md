@@ -14,13 +14,12 @@ artifacts from both Maven and Ivy repositories. It handles parallel downloads
 out-of-the-box without resorting to global locks.
 
 It can be used
-- [as an **sbt plugin**](sbt-coursier.md), making it handle most dependency resolutions in sbt,
 - via its [**command-line** tool](cli-overview.md), that allows to
   - [easily list the transitive dependencies of applications or libraries](cli-resolve.md),
   - [download and list their artifacts](cli-fetch.md),
   - [run applications published via Maven / Ivy repositories](cli-launch.md),
   - [and many other things](cli-overview.md).
-- [as a **library** via its API](api.md), on the JVM or [from Scala.js](api-scala-js.md).
+- [as a **library** via its API](api.md), on the JVM or [from Scala.js](api-scala-js.md) - see [Users](overview-in-the-wild.md) for an overview of projects that do this.
 
 *This is the documentation for version @VERSION@*.
 

@@ -7,7 +7,7 @@ import java.util.zip.ZipInputStream
 
 import caseapp.core.RemainingArgs
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
-import coursier.cli.options.{ArtifactOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
+import coursier.cli.options.{ArtifactOptions, DependencyOptions, RepositoryOptions, SharedLaunchOptions, SharedLoaderOptions}
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.cli.TestUtil.withFile
 import coursier.launcher.BootstrapGenerator.resourceDir
@@ -61,11 +61,7 @@ object BootstrapTests extends TestSuite {
     test("not add POMs to the classpath") - withFile() {
 
       (bootstrapFile, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
         val artifactOptions = ArtifactOptions()
-        val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
-        )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
           isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
@@ -75,7 +71,6 @@ object BootstrapTests extends TestSuite {
           force = true
         )
         val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions,
           sharedLoaderOptions = sharedLoaderOptions
         )
@@ -122,11 +117,7 @@ object BootstrapTests extends TestSuite {
     test("accept simple modules via --shared") - withFile() {
 
       (bootstrapFile, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
         val artifactOptions = ArtifactOptions()
-        val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
-        )
         val sharedLoaderOptions = SharedLoaderOptions(
           shared = List("org.scalameta:trees_2.12")
         )
@@ -135,7 +126,6 @@ object BootstrapTests extends TestSuite {
           force = true
         )
         val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions,
           sharedLoaderOptions = sharedLoaderOptions
         )
@@ -182,20 +172,15 @@ object BootstrapTests extends TestSuite {
     test("add standard and source JARs to the classpath") - withFile() {
 
       (bootstrapFile, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
         val artifactOptions = ArtifactOptions(
           sources = true,
           default = Some(true)
-        )
-        val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = Some(bootstrapFile.getPath),
           force = true
         )
         val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions
         )
         val bootstrapOptions = BootstrapOptions(
@@ -222,13 +207,9 @@ object BootstrapTests extends TestSuite {
       withFile() {
 
         (bootstrapFile, _) =>
-          val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
           val artifactOptions = ArtifactOptions(
             sources = true,
             default = Some(true)
-          )
-          val resolveOptions = SharedResolveOptions(
-            repositoryOptions = repositoryOpt
           )
           val sharedLoaderOptions = SharedLoaderOptions(
             sharedTarget = List("foo"),
@@ -240,7 +221,6 @@ object BootstrapTests extends TestSuite {
             standalone = standalone
           )
           val sharedLaunchOptions = SharedLaunchOptions(
-            resolveOptions = resolveOptions,
             artifactOptions = artifactOptions,
             sharedLoaderOptions = sharedLoaderOptions
           )
@@ -287,13 +267,9 @@ object BootstrapTests extends TestSuite {
 
     test("be deterministic when deterministic option is specified") - withFile() {(bootstrapFile, _) =>
       withFile() {(bootstrapFile2, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalameta/maven"))
         val artifactOptions = ArtifactOptions(
           sources = true,
           default = Some(true)
-        )
-        val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
         )
         val sharedLoaderOptions = SharedLoaderOptions(
           sharedTarget = List("foo"),
@@ -305,7 +281,6 @@ object BootstrapTests extends TestSuite {
           deterministic = true
         )
         val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions,
           artifactOptions = artifactOptions,
           sharedLoaderOptions = sharedLoaderOptions
         )
@@ -351,9 +326,11 @@ object BootstrapTests extends TestSuite {
     test("rename JAR with the same file name") - withFile() {
 
       (bootstrapFile, _) =>
-        val repositoryOpt = RepositoryOptions(repository = List("bintray:scalacenter/releases"))
+        val dependencyOptions = DependencyOptions(
+          exclude = List("ch.epfl.scala:bsp4j")
+        )
         val resolveOptions = SharedResolveOptions(
-          repositoryOptions = repositoryOpt
+          dependencyOptions = dependencyOptions
         )
         val bootstrapSpecificOptions = BootstrapSpecificOptions(
           output = Some(bootstrapFile.getPath),

@@ -157,6 +157,19 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
+      test("match with missing property") {
+        val isActive = activation.isActive(
+          Map(
+            "required" -> "a",
+            "requiredWithValue" -> "foo",
+          ),
+          Os.empty,
+          None
+        )
+
+        assert(isActive)
+      }
+
       test("noMatch") {
         test {
           val isActive = activation.isActive(
