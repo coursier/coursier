@@ -988,5 +988,24 @@ object ResolveTests extends TestSuite {
       }
       await(validateDependencies(res))
     }
+
+    test("profile activation with missing property") {
+      async {
+        val res = await {
+          resolve
+            .addDependencies(dep"org.openjfx:javafx-base:18-ea+2")
+            .future()
+        }
+        await(validateDependencies(res))
+
+        val artifacts = res.artifacts()
+        val urls = artifacts.map(_.url)
+        val expectedUrls = Seq(
+          "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2.jar",
+          "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2-mac.jar"
+        )
+        assert(urls == expectedUrls)
+      }
+    }
   }
 }

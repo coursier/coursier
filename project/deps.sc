@@ -2,9 +2,9 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.2::1.2.0"
-  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M6"
+  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M7"
   def catsCore         = ivy"org.typelevel::cats-core:2.6.1"
-  def catsEffect       = ivy"org.typelevel::cats-effect::2.5.1"
+  def catsEffect       = ivy"org.typelevel::cats-effect::2.5.3"
   def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.5.0"
   def concurrentReferenceHashMap = ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass        = ivy"io.github.alexarchambault::data-class:0.2.5"
@@ -20,7 +20,7 @@ object Deps {
   def jsoniterCore     = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:${Versions.jsoniterScala}"
   def jsoniterMacros   = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def jsoup            = ivy"org.jsoup:jsoup:1.14.2"
-  def logbackClassic   = ivy"ch.qos.logback:logback-classic:1.2.3"
+  def logbackClassic   = ivy"ch.qos.logback:logback-classic:1.2.6"
   def macroParadise    = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc             = ivy"org.scalameta::mdoc:2.2.23"
   def monadlessCats    = ivy"io.monadless::monadless-cats:${Versions.monadless}"
@@ -49,17 +49,17 @@ object Deps {
 }
 
 object Versions {
-  def fastParse = "2.3.0"
+  def fastParse = "2.3.3"
   def http4s = "0.18.26"
-  def jniUtils = "0.2.5"
-  def jsoniterScala = "2.10.1"
+  def jniUtils = "0.2.2"
+  def jsoniterScala = "2.10.2"
   def monadless = "0.0.13"
   def scalaz = "7.2.33"
 }
 
 def sbtCoursierVersion = "2.0.8"
 
-def graalVmVersion = "21.1.0"
+def graalVmVersion = "21.2.0"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"

@@ -59,33 +59,26 @@ object JsonReport {
   def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
               (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String], exclusions: T => Set[String]): String = {
 
-    val rootDeps: ParSeq[DepNode] = roots.par.map(r => {
-
-      /**
-        * Same printing mechanism as [[coursier.util.Tree#recursivePrint]]
-        */
-      def flattenDeps(elems: Seq[T], ancestors: Set[T], acc: mutable.Set[String]): Unit = {
-        val unseenElems = elems.filterNot(ancestors.contains)
-        for (elem <- unseenElems) {
-          val depElems = children(elem)
-          acc ++= depElems.map(reconciledVersionStr(_))
-
-          if (depElems.nonEmpty)
-            flattenDeps(children(elem), ancestors + elem, acc)
-        }
+    val depToTransitiveDeps = new mutable.HashMap[T, Set[String]]
+    def flattenDeps(elem: T): Set[String] =
+      if (depToTransitiveDeps.contains(elem))
+        depToTransitiveDeps(elem)
+      else {
+        val children0 = children(elem)
+        val deps = children0.map(reconciledVersionStr(_)).toSet ++ children0.iterator.flatMap(flattenDeps(_))
+        depToTransitiveDeps(elem) = deps
+        deps
       }
 
-      val acc = scala.collection.mutable.Set[String]()
-      flattenDeps(Seq(r), Set(), acc)
+    val rootDeps: Seq[DepNode] = roots.map { r =>
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
         children(r).map(reconciledVersionStr(_)).toSet,
-        acc.toSet,
+        flattenDeps(r),
         exclusions(r)
       )
-
-    })
+    }
     val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
     printer.pretty(report.asJson)
   }
