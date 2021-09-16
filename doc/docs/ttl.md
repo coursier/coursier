@@ -2,7 +2,7 @@
 title: TTL
 ---
 
-Changing things in cache are given a time-to-live (TTL) of **24 hours** by default. \
+Changing things in cache are given a time-to-live (TTL) of **24 hours** by default.
 Changing things are artifacts for versions ending with `-SNAPSHOT`, Maven metadata files listing available versions, etc.
 
 There are two ways to change the default value:
