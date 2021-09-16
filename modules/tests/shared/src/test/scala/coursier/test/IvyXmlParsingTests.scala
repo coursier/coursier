@@ -22,9 +22,14 @@ object IvyXmlParsingTests extends TestSuite {
       """
 
       val result = IvyXml.project(xmlParseDom(node).toOption.get).map(_.info)
-      val expected = Right(Info("sbt-release", "https://github.com/sbt/sbt-release",
-        List(("Apache-2.0", Some("http://www.apache.org/licenses/LICENSE-2.0"))), Nil,
-        Some(Versions.DateTime(2019, 10, 16, 12, 26, 29)), None))
+      val expected = Right(Info(
+        "sbt-release",
+        "https://github.com/sbt/sbt-release",
+        List(("Apache-2.0", Some("http://www.apache.org/licenses/LICENSE-2.0"))),
+        Nil,
+        Some(Versions.DateTime(2019, 10, 16, 12, 26, 29)),
+        None
+      ))
 
       assert(result == expected)
     }
@@ -40,7 +45,7 @@ object IvyXmlParsingTests extends TestSuite {
         </ivy-module>
       """
 
-      val result = IvyXml.project(xmlParseDom(node).toOption.get).map(_.info)
+      val result   = IvyXml.project(xmlParseDom(node).toOption.get).map(_.info)
       val expected = Right(Info("sbt-release", "", Nil, Nil, None, None))
 
       assert(result == expected)
@@ -55,7 +60,7 @@ object IvyXmlParsingTests extends TestSuite {
         </ivy-module>
       """
 
-      val result = IvyXml.project(xmlParseDom(node).toOption.get).map(_.properties)
+      val result   = IvyXml.project(xmlParseDom(node).toOption.get).map(_.properties)
       val expected = Right(Seq("info.versionScheme" -> "semver-spec"))
 
       assert(result == expected)

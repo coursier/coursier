@@ -8,8 +8,8 @@ object LauncherType {
 
   sealed abstract class BootstrapLike extends LauncherType
 
-  case object Bootstrap extends BootstrapLike
-  case object Hybrid extends BootstrapLike
+  case object Bootstrap  extends BootstrapLike
+  case object Hybrid     extends BootstrapLike
   case object Standalone extends BootstrapLike
 
   case object Assembly extends LauncherType
@@ -22,6 +22,7 @@ object LauncherType {
 
   /** Dummy generator, simply creating an empty JAR */
   case object DummyJar extends LauncherType
+
   /** Dummy generator, simply creating an empty file */
   case object DummyNative extends LauncherType {
     override def isNative: Boolean = true
@@ -29,13 +30,13 @@ object LauncherType {
 
   def parse(input: String): Either[String, LauncherType] =
     input match {
-      case "bootstrap" => Right(Bootstrap)
-      case "assembly" => Right(Assembly)
-      case "hybrid" => Right(Hybrid)
-      case "standalone" => Right(Standalone)
-      case "scala-native" => Right(ScalaNative)
+      case "bootstrap"            => Right(Bootstrap)
+      case "assembly"             => Right(Assembly)
+      case "hybrid"               => Right(Hybrid)
+      case "standalone"           => Right(Standalone)
+      case "scala-native"         => Right(ScalaNative)
       case "graalvm-native-image" => Right(GraalvmNativeImage)
-      case _ => Left(s"Unrecognized launcher type: $input")
+      case _                      => Left(s"Unrecognized launcher type: $input")
     }
 
 }

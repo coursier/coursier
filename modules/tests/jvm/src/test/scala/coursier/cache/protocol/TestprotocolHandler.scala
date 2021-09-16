@@ -9,7 +9,7 @@ class TestprotocolHandler extends URLStreamHandlerFactory {
 
   def createURLStreamHandler(protocol: String): URLStreamHandler = new URLStreamHandler {
     protected def openConnection(url: URL): URLConnection = {
-      val f = new File(HandmadeMetadata.repoBase, "http/abc.com" + url.getPath)
+      val f         = new File(HandmadeMetadata.repoBase, "http/abc.com" + url.getPath)
       val resURLOpt = Option(f.toURI.toURL)
 
       resURLOpt match {

@@ -6,8 +6,7 @@ import cats.implicits._
 import coursier.parse.RepositoryParser
 import dataclass.data
 
-/**
-  * Unprocessed source, meaning it's mostly made of strings rather than typed data.
+/** Unprocessed source, meaning it's mostly made of strings rather than typed data.
   *
   * @param repositories
   * @param channel

@@ -27,15 +27,25 @@ object JavaOrScalaDependency {
       case j: JavaOrScalaModule.JavaModule =>
         JavaDependency(dep.withModule(j.module), Set.empty)
       case s: JavaOrScalaModule.ScalaModule =>
-        ScalaDependency(dep.withModule(s.baseModule), s.fullCrossVersion, withPlatformSuffix = false, Set.empty)
+        ScalaDependency(
+          dep.withModule(s.baseModule),
+          s.fullCrossVersion,
+          withPlatformSuffix = false,
+          Set.empty
+        )
     }
 
-  @data class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule]) extends JavaOrScalaDependency {
+  @data class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
+      extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
     def version: String =
       dependency.version
-    def dependency(scalaBinaryVersion: String, scalaVersion: String, platformName: String): Dependency =
+    def dependency(
+      scalaBinaryVersion: String,
+      scalaVersion: String,
+      platformName: String
+    ): Dependency =
       dependency
 
     def withPlatform(platformSuffix: String): JavaDependency =
@@ -59,7 +69,11 @@ object JavaOrScalaDependency {
       s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.version}"
     def version: String =
       baseDependency.version
-    def dependency(scalaBinaryVersion: String, scalaVersion: String, platformName: String): Dependency = {
+    def dependency(
+      scalaBinaryVersion: String,
+      scalaVersion: String,
+      platformName: String
+    ): Dependency = {
 
       val platformSuffix =
         if (withPlatformSuffix && platformName.nonEmpty) "_" + platformName

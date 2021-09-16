@@ -16,8 +16,10 @@ import scala.concurrent.{ExecutionContext, Future}
       assert(artifact.authentication.isEmpty)
 
       val (artifact0, links) =
-        if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
-        else (artifact, false)
+        if (artifact.url.endsWith("/.links"))
+          (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+        else
+          (artifact, false)
 
       val path =
         if (artifact0.url.startsWith("file:")) {
@@ -29,7 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
             path + ".directory"
           else
             path
-        } else
+        }
+        else
           base + "/" + MockCacheEscape.urlAsPath(artifact0.url)
 
       Task { implicit ec =>

@@ -24,15 +24,17 @@ object TestUtil {
         val removedDir = f.delete()
 
         removedContent && removedDir
-      } else
+      }
+      else
         f.delete()
 
     if (!delete(tmpDir))
       Console.err.println(
-        s"Warning: unable to remove temporary directory $tmpDir")
+        s"Warning: unable to remove temporary directory $tmpDir"
+      )
   }
 
-  val propsDep = dep"io.get-coursier:props:1.0.2"
+  val propsDep    = dep"io.get-coursier:props:1.0.2"
   val propsDepStr = s"${propsDep.module}:${propsDep.version}"
   lazy val propsCp = coursier.Fetch()
     .addDependencies(propsDep)

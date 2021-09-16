@@ -35,16 +35,20 @@ import dataclass.data
         Some(artifacts.map(_.toFile))
       else
         None
-    } else
+    }
+    else
       None
   }
 
   def write(key: FetchCache.Key, artifacts: Seq[File]): Boolean = {
     val resultFile0 = resultFile(key)
-    val tmpFile = CachePath.temporaryFile(resultFile0.toFile).toPath
+    val tmpFile     = CachePath.temporaryFile(resultFile0.toFile).toPath
 
     def doWrite(): Unit = {
-      Files.write(tmpFile, artifacts.map(_.getAbsolutePath).mkString("\n").getBytes(StandardCharsets.UTF_8))
+      Files.write(
+        tmpFile,
+        artifacts.map(_.getAbsolutePath).mkString("\n").getBytes(StandardCharsets.UTF_8)
+      )
       Files.move(tmpFile, resultFile0, StandardCopyOption.ATOMIC_MOVE)
     }
 
@@ -71,7 +75,6 @@ object FetchCache {
     properties: Seq[(String, String)],
     forcedProperties: Seq[(String, String)],
     profiles: Seq[String],
-
     cacheLocation: String,
     classifiers: Seq[Classifier],
     mainArtifacts: Option[Boolean],
@@ -81,8 +84,8 @@ object FetchCache {
       productIterator.mkString("(", ", ", ")")
     lazy val sha1: String = {
       val md = MessageDigest.getInstance("SHA-1")
-      val b = md.digest(repr.getBytes(StandardCharsets.UTF_8))
-      val s = new BigInteger(1, b).toString(16)
+      val b  = md.digest(repr.getBytes(StandardCharsets.UTF_8))
+      val s  = new BigInteger(1, b).toString(16)
       ("0" * (40 - s.length)) + s
     }
   }

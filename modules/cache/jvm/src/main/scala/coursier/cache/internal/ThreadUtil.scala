@@ -1,6 +1,14 @@
 package coursier.cache.internal
 
-import java.util.concurrent.{ExecutorService, LinkedBlockingQueue, ScheduledExecutorService, ScheduledThreadPoolExecutor, ThreadFactory, ThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{
+  ExecutorService,
+  LinkedBlockingQueue,
+  ScheduledExecutorService,
+  ScheduledThreadPoolExecutor,
+  ThreadFactory,
+  ThreadPoolExecutor,
+  TimeUnit
+}
 import java.util.concurrent.atomic.AtomicInteger
 
 object ThreadUtil {
@@ -16,7 +24,7 @@ object ThreadUtil {
     new ThreadFactory {
       def newThread(r: Runnable) = {
         val threadNumber0 = threadNumber.getAndIncrement()
-        val t = new Thread(r, s"coursier-pool-$poolNumber0-thread-$threadNumber0")
+        val t             = new Thread(r, s"coursier-pool-$poolNumber0-thread-$threadNumber0")
         t.setDaemon(true)
         t.setPriority(Thread.NORM_PRIORITY)
         t
@@ -30,8 +38,10 @@ object ThreadUtil {
 
     // 1 min keep alive, so that threads get stopped a bit after resolution / downloading is done
     val executor = new ThreadPoolExecutor(
-      size, size,
-      1L, TimeUnit.MINUTES,
+      size,
+      size,
+      1L,
+      TimeUnit.MINUTES,
       new LinkedBlockingQueue[Runnable],
       factory
     )
@@ -55,7 +65,8 @@ object ThreadUtil {
     try {
       pool = fixedThreadPool(size)
       f(pool)
-    } finally {
+    }
+    finally {
       if (pool != null)
         pool.shutdown()
     }
