@@ -31,10 +31,12 @@ import scala.util.control.NonFatal
   localArtifactsShouldBeCached: Boolean = false,
   followHttpToHttpsRedirections: Boolean = true,
   followHttpsToHttpRedirections: Boolean = false,
+  rejectNonAuthoritativeResponses: Boolean = false,
   maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
   sslRetry: Int = CacheDefaults.sslRetryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
+  authRealmOpt: Option[String] = None,
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
@@ -65,6 +67,8 @@ import scala.util.control.NonFatal
     withSslSocketFactoryOpt(Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
     withHostnameVerifierOpt(Some(hostnameVerifier))
+  def withAuthRealm(realm: String): FileCache[F] =
+    withAuthRealmOpt(Some(realm))
   def withMaxRedirections(max: Int): FileCache[F] =
     withMaxRedirections(Some(max))
 
@@ -96,10 +100,12 @@ import scala.util.control.NonFatal
       localArtifactsShouldBeCached,
       followHttpToHttpsRedirections,
       followHttpsToHttpRedirections,
+      rejectNonAuthoritativeResponses,
       maxRedirections,
       sslRetry,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
+      authRealmOpt,
       bufferSize,
       classLoaders
     ).download

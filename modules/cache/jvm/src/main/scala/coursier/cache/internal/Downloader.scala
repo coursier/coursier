@@ -33,10 +33,12 @@ import scala.util.control.NonFatal
   localArtifactsShouldBeCached: Boolean = false,
   followHttpToHttpsRedirections: Boolean = true,
   followHttpsToHttpRedirections: Boolean = false,
+  rejectNonAuthoritativeResponses: Boolean = false,
   maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
   sslRetry: Int = CacheDefaults.sslRetryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
+  authRealmOpt: Option[String] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
   classLoaders: Seq[ClassLoader] = Nil,
@@ -84,6 +86,7 @@ import scala.util.control.NonFatal
           .withAutoCredentials(allCredentials0)
           .withSslSocketFactoryOpt(sslSocketFactoryOpt)
           .withHostnameVerifierOpt(hostnameVerifierOpt)
+          .withAuthRealmOpt(authRealmOpt)
           .withMethod("HEAD")
           .withMaxRedirectionsOpt(maxRedirections)
           .withClassLoaders(classLoaders)
@@ -183,7 +186,8 @@ import scala.util.control.NonFatal
       url: String,
       keepHeaderChecksums: Boolean,
       allCredentials0: Seq[DirectCredentials],
-      tmp: File
+      tmp: File,
+      rejectNonAuthoritative: Boolean
     ): Either[ArtifactError, Unit] = {
 
       val alreadyDownloaded = tmp.length()
@@ -224,6 +228,8 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (respCodeOpt.contains(203) && rejectNonAuthoritativeResponses)
+          Left(new ArtifactError.NonAuthoritative(url))
         else {
           for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -311,6 +317,7 @@ import scala.util.control.NonFatal
               allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
+              authRealmOpt,
               logger,
               maxRedirections
             ).toOption.flatten
@@ -331,6 +338,7 @@ import scala.util.control.NonFatal
               allCredentials0,
               sslSocketFactoryOpt,
               hostnameVerifierOpt,
+              authRealmOpt,
               logger,
               maxRedirections
             ).toOption.flatten
@@ -375,7 +383,8 @@ import scala.util.control.NonFatal
       file: File,
       url: String,
       keepHeaderChecksums: Boolean,
-      allCredentials0: Seq[DirectCredentials]
+      allCredentials0: Seq[DirectCredentials],
+      rejectNonAuthoritativeResponses: Boolean
     ): Either[ArtifactError, Unit] = {
 
       val tmp = CachePath.temporaryFile(file)
@@ -387,7 +396,7 @@ import scala.util.control.NonFatal
       try {
         val res = CacheLocks.withLockOr(location, file)(
           Downloader.downloading(url, file, sslRetry) {
-            doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
+            doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp, rejectNonAuthoritativeResponses)
           },
           checkDownload(file, url, allCredentials0, tmp)
         )
@@ -484,16 +493,21 @@ import scala.util.control.NonFatal
   private def remote(
     file: File,
     url: String,
-    keepHeaderChecksums: Boolean
+    keepHeaderChecksums: Boolean,
+    rejectNonAuthoritativeResponses: Boolean
   ): F[Either[ArtifactError, Unit]] =
     allCredentials.flatMap { allCredentials0 =>
-      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0))
+      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0, rejectNonAuthoritativeResponses))
     }
 
   private def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
-  private def remoteKeepErrors(file: File, url: String, keepHeaderChecksums: Boolean): F[Either[ArtifactError, Unit]] = {
-
+  private def remoteKeepErrors(
+    file: File,
+    url: String,
+    keepHeaderChecksums: Boolean,
+    rejectNonAuthoritativeResponses: Boolean
+): F[Either[ArtifactError, Unit]] = {
     val errFile0 = errFile(file)
 
     def createErrFileBlocking() =
@@ -507,7 +521,7 @@ import scala.util.control.NonFatal
       if (errFile0.exists())
         errFile0.delete()
 
-    remote(file, url, keepHeaderChecksums).flatMap { e =>
+    remote(file, url, keepHeaderChecksums, rejectNonAuthoritativeResponses).flatMap { e =>
       blockingIO {
         e match {
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
@@ -543,7 +557,7 @@ import scala.util.control.NonFatal
       other
   }
 
-  private def downloadUrl(url: String, keepHeaderChecksums: Boolean): F[DownloadResult] = {
+  private def downloadUrl(url: String, keepHeaderChecksums: Boolean, rejectNonAuthoritativeResponses: Boolean): F[DownloadResult] = {
 
     logger.checkingArtifact(url, artifact)
 
@@ -564,7 +578,7 @@ import scala.util.control.NonFatal
           needsUpdate <- shouldDownload(file, url, checkRemote = true)
           _ <- {
             val f: F[Either[ArtifactError, Unit]] =
-              if (needsUpdate) remoteKeepErrors(file, url, keepHeaderChecksums)
+              if (needsUpdate) remoteKeepErrors(file, url, keepHeaderChecksums, rejectNonAuthoritativeResponses)
               else S.point(Right(()))
             EitherT(f)
           }
@@ -595,9 +609,9 @@ import scala.util.control.NonFatal
             maybeUpdate.run
           case CachePolicy.FetchMissing =>
             EitherT(checkFileExists(file, url))
-              .orElse(EitherT(remoteKeepErrors(file, url, keepHeaderChecksums))).run
+              .orElse(EitherT(remoteKeepErrors(file, url, keepHeaderChecksums, rejectNonAuthoritativeResponses))).run
           case CachePolicy.ForceDownload =>
-            remoteKeepErrors(file, url, keepHeaderChecksums)
+            remoteKeepErrors(file, url, keepHeaderChecksums, rejectNonAuthoritativeResponses)
         }
       }
 
@@ -612,11 +626,11 @@ import scala.util.control.NonFatal
 
   def download: F[Seq[DownloadResult]] = {
 
-    val mainTask = downloadUrl(artifact.url, keepHeaderChecksums = true)
+    val mainTask = downloadUrl(artifact.url, keepHeaderChecksums = true, rejectNonAuthoritativeResponses)
 
     def checksumRes(c: String): Seq[F[DownloadResult]] =
       artifact.checksumUrls.get(c).toSeq.map { url =>
-        downloadUrl(url, keepHeaderChecksums = false)
+        downloadUrl(url, keepHeaderChecksums = false, rejectNonAuthoritativeResponses)
       }
 
     mainTask.flatMap { r =>
@@ -750,6 +764,7 @@ object Downloader {
     credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    authRealmOpt: Option[String],
     logger: CacheLogger,
     maxRedirectionsOpt: Option[Int]
   ): Either[ArtifactError, Option[Long]] = {
@@ -764,6 +779,7 @@ object Downloader {
         .withAutoCredentials(credentials)
         .withSslSocketFactoryOpt(sslSocketFactoryOpt)
         .withHostnameVerifierOpt(hostnameVerifierOpt)
+        .withAuthRealmOpt(authRealmOpt)
         .withMethod("HEAD")
         .withMaxRedirectionsOpt(maxRedirectionsOpt)
         .connection()

@@ -48,6 +48,7 @@ object InMemoryRepository {
             .withFollowHttpsToHttpRedirections(cacheOpt.fold(false)(_.followHttpsToHttpRedirections))
             .withSslSocketFactoryOpt(cacheOpt.flatMap(_.sslSocketFactoryOpt))
             .withHostnameVerifierOpt(cacheOpt.flatMap(_.hostnameVerifierOpt))
+            .withAuthRealmOpt(cacheOpt.flatMap(_.authRealmOpt))
             .withMethod("HEAD")
             .withMaxRedirectionsOpt(cacheOpt.flatMap(_.maxRedirections))
             .connection()
