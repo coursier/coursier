@@ -17,13 +17,17 @@ object RefreshInfo {
     updateCheck: Boolean,
     watching: Boolean
   ) extends RefreshInfo {
+
     /** 0.0 to 1.0 */
     def fraction: Option[Double] = length.map(downloaded.toDouble / _)
+
     /** Byte / s */
     def rate(): Option[Double] = {
       val currentTime = System.currentTimeMillis()
       if (currentTime > startTime)
-        Some((downloaded - previouslyDownloaded).toDouble / (System.currentTimeMillis() - startTime) * 1000.0)
+        Some(
+          (downloaded - previouslyDownloaded).toDouble / (System.currentTimeMillis() - startTime) * 1000.0
+        )
       else
         None
     }

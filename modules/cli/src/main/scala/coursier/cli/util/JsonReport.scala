@@ -11,17 +11,21 @@ import scala.collection.parallel.ParSeq
 import argonaut._
 import Argonaut._
 
-/**
- * Lookup table for files and artifacts to print in the JsonReport.
- */
-final case class JsonPrintRequirement(fileByArtifact: Map[String, File], depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]])
+/** Lookup table for files and artifacts to print in the JsonReport.
+  */
+final case class JsonPrintRequirement(
+  fileByArtifact: Map[String, File],
+  depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]]
+)
 
-/**
- * Represents a resolved dependency's artifact in the JsonReport.
- * @param coord String representation of the artifact's maven coordinate.
- * @param file The path to the file for the artifact.
- * @param dependencies The dependencies of the artifact.
- */
+/** Represents a resolved dependency's artifact in the JsonReport.
+  * @param coord
+  *   String representation of the artifact's maven coordinate.
+  * @param file
+  *   The path to the file for the artifact.
+  * @param dependencies
+  *   The dependencies of the artifact.
+  */
 final case class DepNode(
   coord: String,
   file: Option[String],
@@ -30,17 +34,19 @@ final case class DepNode(
   exclusions: Set[String] = Set.empty
 )
 
-final case class ReportNode(conflict_resolution: Map[String, String], dependencies: Vector[DepNode], version: String)
+final case class ReportNode(
+  conflict_resolution: Map[String, String],
+  dependencies: Vector[DepNode],
+  version: String
+)
 
-/**
-  * FORMAT_VERSION_NUMBER: Version number for identifying the export file format output. This
+/** FORMAT_VERSION_NUMBER: Version number for identifying the export file format output. This
   * version number should change when there is a change to the output format.
   *
-  * Major Version 1.x.x : Increment this field when there is a major format change
-  * Minor Version x.1.x : Increment this field when there is a minor change that breaks backward
-  *   compatibility for an existing field or a field is removed.
-  * Patch version x.x.1 : Increment this field when a minor format change that just adds information
-  *   that an application can safely ignore.
+  * Major Version 1.x.x : Increment this field when there is a major format change Minor Version
+  * x.1.x : Increment this field when there is a minor change that breaks backward compatibility for
+  * an existing field or a field is removed. Patch version x.x.1 : Increment this field when a minor
+  * format change that just adds information that an application can safely ignore.
   *
   * Note format changes in cli/README.md and update the Changelog section.
   */
@@ -48,16 +54,20 @@ object ReportNode {
   import argonaut.ArgonautShapeless._
   implicit val encodeJson = EncodeJson.of[ReportNode]
   implicit val decodeJson = DecodeJson.of[ReportNode]
-  val version = "0.1.0"
+  val version             = "0.1.0"
 }
-
 
 object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])
-              (children: T => Seq[T], reconciledVersionStr: T => String, requestedVersionStr: T => String, getFile: T => Option[String], exclusions: T => Set[String]): String = {
+  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])(
+    children: T => Seq[T],
+    reconciledVersionStr: T => String,
+    requestedVersionStr: T => String,
+    getFile: T => Option[String],
+    exclusions: T => Set[String]
+  ): String = {
 
     val depToTransitiveDeps = new mutable.HashMap[T, Set[String]]
     def flattenDeps(elem: T): Set[String] =
@@ -65,7 +75,8 @@ object JsonReport {
         depToTransitiveDeps(elem)
       else {
         val children0 = children(elem)
-        val deps = children0.map(reconciledVersionStr(_)).toSet ++ children0.iterator.flatMap(flattenDeps(_))
+        val deps =
+          children0.map(reconciledVersionStr(_)).toSet ++ children0.iterator.flatMap(flattenDeps(_))
         depToTransitiveDeps(elem) = deps
         deps
       }
@@ -79,34 +90,35 @@ object JsonReport {
         exclusions(r)
       )
     }
-    val report = ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
+    val report =
+      ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
     printer.pretty(report.asJson)
   }
 
 }
 
-
-final case class JsonElem(dep: Dependency,
-                          artifacts: Seq[(Dependency, Artifact)] = Seq(),
-                          jsonPrintRequirement: Option[JsonPrintRequirement],
-                          resolution: Resolution,
-                          colors: Boolean,
-                          printExclusions: Boolean,
-                          excluded: Boolean,
-                          overrideClassifiers: Set[Classifier]
-  ) {
+final case class JsonElem(
+  dep: Dependency,
+  artifacts: Seq[(Dependency, Artifact)] = Seq(),
+  jsonPrintRequirement: Option[JsonPrintRequirement],
+  resolution: Resolution,
+  colors: Boolean,
+  printExclusions: Boolean,
+  excluded: Boolean,
+  overrideClassifiers: Set[Classifier]
+) {
 
   // This is used to printing json output
   // Option of the file path
   lazy val downloadedFile: Option[String] = {
     jsonPrintRequirement.flatMap(req =>
-        req.depToArtifacts.getOrElse(dep, Seq())
-          .filter(_._1.classifier == dep.attributes.classifier)
-          .map(x => req.fileByArtifact.get(x._2.url))
-          .filter(_.isDefined)
-          .filter(_.nonEmpty)
-          .map(_.get.getPath)
-          .headOption
+      req.depToArtifacts.getOrElse(dep, Seq())
+        .filter(_._1.classifier == dep.attributes.classifier)
+        .map(x => req.fileByArtifact.get(x._2.url))
+        .filter(_.isDefined)
+        .filter(_.nonEmpty)
+        .map(_.get.getPath)
+        .headOption
     )
   }
 
@@ -115,7 +127,7 @@ final case class JsonElem(dep: Dependency,
 
   // These are used to printing json output
   val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion"
-  val requestedVersionStr = s"${dep.module}:${dep.version}"
+  val requestedVersionStr  = s"${dep.module}:${dep.version}"
 
   lazy val exclusions: Set[String] = dep.exclusions.map {
     case (org, name) =>
@@ -148,32 +160,42 @@ final case class JsonElem(dep: Dependency,
         }
         .map(_.moduleVersion)
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
-        case (mod, ver) =>
-          JsonElem(
-            Dependency(mod, ver)
-              .withConfiguration(Configuration.empty)
-              .withExclusions(Set.empty[(Organization, ModuleName)])
-              .withAttributes(Attributes.empty)
-              .withOptional(false)
-              .withTransitive(false),
-            artifacts,
-            jsonPrintRequirement,
-            resolution,
-            colors,
-            printExclusions,
-            excluded = true,
-            overrideClassifiers = overrideClassifiers
-          )
-      }
+          case (mod, ver) =>
+            JsonElem(
+              Dependency(mod, ver)
+                .withConfiguration(Configuration.empty)
+                .withExclusions(Set.empty[(Organization, ModuleName)])
+                .withAttributes(Attributes.empty)
+                .withOptional(false)
+                .withTransitive(false),
+              artifacts,
+              jsonPrintRequirement,
+              resolution,
+              colors,
+              printExclusions,
+              excluded = true,
+              overrideClassifiers = overrideClassifiers
+            )
+        }
 
-      dependencies.map(JsonElem(_, artifacts, jsonPrintRequirement, resolution, colors, printExclusions, excluded = false, overrideClassifiers = overrideClassifiers)) ++
-        (if (printExclusions) excluded else Nil)
+      val dependencyElems = dependencies.map(JsonElem(
+        _,
+        artifacts,
+        jsonPrintRequirement,
+        resolution,
+        colors,
+        printExclusions,
+        excluded = false,
+        overrideClassifiers = overrideClassifiers
+      ))
+      dependencyElems ++ (if (printExclusions) excluded else Nil)
     }
 
-    /**
-      * Override the hashcode to explicitly exclude `children`, because children will result in recursive hash on
-      * children's children, causing performance issue. Hash collision should be rare, but when that happens, the
-      * default equality check should take of the recursive aspect of `children`.
-      */
-    override def hashCode(): Int = Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
+  /** Override the hashcode to explicitly exclude `children`, because children will result in
+    * recursive hash on children's children, causing performance issue. Hash collision should be
+    * rare, but when that happens, the default equality check should take of the recursive aspect of
+    * `children`.
+    */
+  override def hashCode(): Int =
+    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
 }

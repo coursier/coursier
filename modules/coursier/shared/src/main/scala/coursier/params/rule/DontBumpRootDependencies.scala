@@ -45,9 +45,18 @@ import dataclass.data
       Some(new BumpedRootDependencies(bumped, this))
   }
 
-  def tryResolve(res: Resolution, conflict: BumpedRootDependencies): Either[UnsatisfiableRule, Resolution] = {
+  def tryResolve(
+    res: Resolution,
+    conflict: BumpedRootDependencies
+  ): Either[UnsatisfiableRule, Resolution] = {
 
-    val modules = conflict.bumpedRootDependencies.map { case (dep, _) => dep.module -> dep.version }.toMap
+    val modules = conflict
+      .bumpedRootDependencies
+      .map {
+        case (dep, _) =>
+          dep.module -> dep.version
+      }
+      .toMap
     val cantForce = res
       .forceVersions
       .filter {
@@ -58,7 +67,8 @@ import dataclass.data
     if (cantForce.isEmpty) {
       val res0 = res.withForceVersions(res.forceVersions ++ modules)
       Right(res0)
-    } else {
+    }
+    else {
       val c = new CantForceRootDependencyVersions(res, cantForce, conflict, this)
       Left(c)
     }
@@ -75,10 +85,13 @@ object DontBumpRootDependencies {
     val bumpedRootDependencies: Seq[(Dependency, String)],
     override val rule: DontBumpRootDependencies
   ) extends UnsatisfiedRule(
-    rule,
-    s"Some root dependency versions were bumped: " +
-      bumpedRootDependencies.map(d => s"${d._1.module}:${d._1.version}").toVector.sorted.mkString(", ")
-  ) {
+        rule,
+        s"Some root dependency versions were bumped: " +
+          bumpedRootDependencies.map(d => s"${d._1.module}:${d._1.version}")
+            .toVector
+            .sorted
+            .mkString(", ")
+      ) {
     require(bumpedRootDependencies.nonEmpty)
   }
 
@@ -88,12 +101,12 @@ object DontBumpRootDependencies {
     conflict: BumpedRootDependencies,
     override val rule: DontBumpRootDependencies
   ) extends UnsatisfiableRule(
-    resolution,
-    rule,
-    conflict,
-    // FIXME More detailed message? (say why it can't be forced)
-    s"Can't force version of modules ${cantBump.toVector.map { case (k, v) => s"$k ($v)" }.sorted.mkString(", ")}"
-  ) {
+        resolution,
+        rule,
+        conflict,
+        // FIXME More detailed message? (say why it can't be forced)
+        s"Can't force version of modules ${cantBump.toVector.map { case (k, v) => s"$k ($v)" }.sorted.mkString(", ")}"
+      ) {
     assert(cantBump.nonEmpty)
   }
 

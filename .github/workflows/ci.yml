@@ -114,8 +114,22 @@ jobs:
       env:
         COURSIER_JNI: force
 
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+        apps: scalafmt:3.0.0
+    - run: scalafmt --check
+
   publish:
-    needs: ["test", "js-test", "bin-compat", "website-check"]
+    needs: ["test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:

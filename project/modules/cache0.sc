@@ -25,9 +25,15 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
     import com.typesafe.tools.mima.core._
     super.mimaBinaryIssueFilters ++ Seq(
       // new methods added to sealed trait
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.cache.CachePolicy.acceptChanging"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.cache.CachePolicy.rejectChanging"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("coursier.cache.CachePolicy.acceptsChangingArtifacts"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "coursier.cache.CachePolicy.acceptChanging"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "coursier.cache.CachePolicy.rejectChanging"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "coursier.cache.CachePolicy.acceptsChangingArtifacts"
+      ),
       // private class
       (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl#Args")),
       (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl$Args")),

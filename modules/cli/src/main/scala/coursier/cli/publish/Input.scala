@@ -47,7 +47,7 @@ object Input {
       // the logger will have to be shared if this is to be parallelized
       .foldLeft(Task.point(FileSet.empty)) { (acc, t) =>
         for {
-          a <- acc
+          a     <- acc
           extra <- t
         } yield a ++ extra
       }
@@ -62,9 +62,9 @@ object Input {
         .run()
 
       files match {
-        case Seq() => ???
+        case Seq()    => ???
         case Seq(jar) => jar
-        case other => ???
+        case other    => ???
       }
     }
 
@@ -77,8 +77,11 @@ object Input {
     pool: ExecutorService
   ): Task[FileSet] = {
 
-    val actualSbtDirectoriesTask =
-      if (maybeReadCurrentDir && params.directory.directories.isEmpty && params.directory.sbtDirectories.isEmpty) {
+    val actualSbtDirectoriesTask = {
+      val checkSbtDirs = maybeReadCurrentDir &&
+        params.directory.directories.isEmpty &&
+        params.directory.sbtDirectories.isEmpty
+      if (checkSbtDirs) {
         val cwd = Paths.get(".")
         Task.delay(Sbt.isSbtProject(cwd)).map {
           case true =>
@@ -86,8 +89,10 @@ object Input {
           case false =>
             Nil
         }
-      } else
+      }
+      else
         Task.point(params.directory.sbtDirectories)
+    }
 
     actualSbtDirectoriesTask.flatMap { actualSbtDirectories =>
       actualSbtDirectories
@@ -110,9 +115,17 @@ object Input {
               Await.result(f, Duration.Inf)
               val dirLogger =
                 if (params.batch)
-                  new BatchDirLogger(out, params.dirName(tmpDir, Some("temporary directory")), params.verbosity)
+                  new BatchDirLogger(
+                    out,
+                    params.dirName(tmpDir, Some("temporary directory")),
+                    params.verbosity
+                  )
                 else
-                  InteractiveDirLogger.create(out, params.dirName(tmpDir, Some("temporary directory")), params.verbosity)
+                  InteractiveDirLogger.create(
+                    out,
+                    params.dirName(tmpDir, Some("temporary directory")),
+                    params.verbosity
+                  )
               Dir.read(tmpDir, dirLogger)
             }
             fs <- t
@@ -120,11 +133,11 @@ object Input {
         }
         // DirLogger will have to be shared to parallelize this
         .foldLeft(Task.point(FileSet.empty)) { (acc, t) =>
-        for {
-          a <- acc
-          extra <- t
-        } yield a ++ extra
-      }
+          for {
+            a     <- acc
+            extra <- t
+          } yield a ++ extra
+        }
     }
   }
 

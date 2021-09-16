@@ -3,6 +3,7 @@ package coursier.cli.search
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
+// format: off
 final case class SearchOptions(
 
   @Recurse
@@ -14,8 +15,9 @@ final case class SearchOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
 )
+// format: on
 
 object SearchOptions {
   implicit val parser = caseapp.core.parser.Parser[SearchOptions]
-  implicit val help = caseapp.core.help.Help[SearchOptions]
+  implicit val help   = caseapp.core.help.Help[SearchOptions]
 }

@@ -5,7 +5,10 @@ import coursier.util.{ModuleMatcher, ModuleMatchers, ValidationNel}
 import coursier.util.Traverse._
 
 object ReconciliationParser {
-  def reconciliation(input: Seq[String], scalaVersionOrDefault: String): ValidationNel[String, Seq[(ModuleMatchers, Reconciliation)]] =
+  def reconciliation(
+    input: Seq[String],
+    scalaVersionOrDefault: String
+  ): ValidationNel[String, Seq[(ModuleMatchers, Reconciliation)]] =
     DependencyParser.moduleVersions(input, scalaVersionOrDefault).flatMap { elems =>
       elems.validationNelTraverse {
         case (m, v) =>
@@ -13,9 +16,13 @@ object ReconciliationParser {
       }
     }
 
-  private def reconciliation(module: Module, v: String): Either[String, (ModuleMatchers, Reconciliation)] = {
+  private def reconciliation(
+    module: Module,
+    v: String
+  ): Either[String, (ModuleMatchers, Reconciliation)] = {
     val m =
-      if (module.organization == Organization("*") && module.name == ModuleName("*")) ModuleMatchers.all
+      if (module.organization == Organization("*") && module.name == ModuleName("*"))
+        ModuleMatchers.all
       else ModuleMatchers(exclude = Set(ModuleMatcher.all), include = Set(ModuleMatcher(module)))
     Reconciliation(v)
       .map(m -> _)

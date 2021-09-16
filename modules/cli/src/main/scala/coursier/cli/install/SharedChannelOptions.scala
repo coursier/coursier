@@ -2,6 +2,7 @@ package coursier.cli.install
 
 import caseapp.{HelpMessage => Help, ValueDescription => Value, _}
 
+// format: off
 final case class SharedChannelOptions(
 
   @Help("Channel for apps")
@@ -18,3 +19,4 @@ final case class SharedChannelOptions(
     fileChannels: Boolean = true
 
 )
+// format: on

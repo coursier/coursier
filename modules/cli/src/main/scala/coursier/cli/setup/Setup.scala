@@ -20,10 +20,11 @@ object Setup extends CaseApp[SetupOptions] {
 
     val params = SetupParams(options).exitOnError()
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val pool   = Sync.fixedThreadPool(params.cache.parallel)
     val logger = params.output.logger()
-    val cache = params.cache.cache(pool, logger)
-    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
+    val cache  = params.cache.cache(pool, logger)
+    val noUpdateCoursierCache =
+      params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val javaHome = params.sharedJava.javaHome(
       cache,
@@ -44,8 +45,9 @@ object Setup extends CaseApp[SetupOptions] {
     val installDir = params.sharedInstall.installDir(installCache)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
-    val channels = Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
-      .withVerbosity(params.output.verbosity)
+    val channels =
+      Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
+        .withVerbosity(params.output.verbosity)
 
     val confirm =
       if (params.yes)
@@ -73,9 +75,11 @@ object Setup extends CaseApp[SetupOptions] {
 
     val init =
       if (params.tryRevert) {
-        val message = "Warning: the --try-revert option is experimental. Keep going only if you know what you are doing."
+        val message =
+          "Warning: the --try-revert option is experimental. Keep going only if you know what you are doing."
         confirm.confirm(message, default = false)
-      } else
+      }
+      else
         Task.point(())
     val task = tasks.foldLeft(init) { (acc, step) =>
       val t = if (params.tryRevert) step.tryRevert else step.fullTask(System.err)

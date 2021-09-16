@@ -25,18 +25,20 @@ object HttpHttpsRedirectionTests extends TestSuite {
       // no redirections -> should fail
 
       if (enabled) {
-        val failed = try {
-          CacheFetchTests.check(
-            MavenRepository(testRepo),
-            addCentral = false,
-            deps = deps
-          )
+        val failed =
+          try {
+            CacheFetchTests.check(
+              MavenRepository(testRepo),
+              addCentral = false,
+              deps = deps
+            )
 
-          false
-        } catch {
-          case _: Throwable =>
-            true
-        }
+            false
+          }
+          catch {
+            case _: Throwable =>
+              true
+          }
 
         assert(failed)
       }

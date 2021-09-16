@@ -23,16 +23,18 @@ object HttpAuthenticationTests extends TestSuite {
       test {
         // no authentication -> should fail
 
-        val failed = try {
-          CacheFetchTests.check(
-            MavenRepository(testRepo)
-          )
+        val failed =
+          try {
+            CacheFetchTests.check(
+              MavenRepository(testRepo)
+            )
 
-          false
-        } catch {
-          case _: Throwable =>
-            true
-        }
+            false
+          }
+          catch {
+            case _: Throwable =>
+              true
+          }
 
         assert(failed)
       }

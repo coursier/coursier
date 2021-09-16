@@ -19,9 +19,9 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
 
     val params = JavaHomeParams(options).exitOnError()
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
-    val logger = params.output.logger()
-    val coursierCache = params.cache.cache(pool, logger)
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val logger                = params.output.logger()
+    val coursierCache         = params.cache.cache(pool, logger)
     val noUpdateCoursierCache = params.cache.cache(pool, logger, overrideTtl = Some(Duration.Inf))
 
     val (jvmCache, javaHome) = params.shared.cacheAndHome(
@@ -45,10 +45,12 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
     if (params.env.env) {
       val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
       print(script)
-    } else if (params.env.disableEnv) {
+    }
+    else if (params.env.disableEnv) {
       val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
       print(script)
-    } else if (params.env.setup) {
+    }
+    else if (params.env.setup) {
       val setupTask = params.env.setupTask(
         envUpdate,
         params.env.envVarUpdater,
@@ -56,7 +58,8 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
         MaybeInstallJvm.headerComment
       )
       setupTask.unsafeRun()(coursierCache.ec)
-    } else
+    }
+    else
       println(home.getAbsolutePath)
   }
 }

@@ -29,14 +29,18 @@ class ParseTests {
 
   @Benchmark
   def parseSparkParentXmlDom(state: TestState): Unit = {
-    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val content = state.inMemoryCache.fromCache(
+      "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
+    )
     val res = MavenRepository.parseRawPomDom(content)
     assert(res.isRight)
   }
 
   @Benchmark
   def parseSparkParentXmlSax(state: TestState): Unit = {
-    val content = state.inMemoryCache.fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+    val content = state.inMemoryCache.fromCache(
+      "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
+    )
     val res = MavenRepository.parseRawPomSax(content)
     assert(res.isRight)
   }
@@ -56,10 +60,12 @@ class ParseTests {
   def parseSparkParentMavenModel(state: TestState): Unit = {
     val b = state
       .inMemoryCache
-      .fromCache("https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom")
+      .fromCache(
+        "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
+      )
       .getBytes(StandardCharsets.UTF_8)
     val reader = new MavenXpp3Reader
-    val model = reader.read(new ByteArrayInputStream(b))
+    val model  = reader.read(new ByteArrayInputStream(b))
   }
 
 }

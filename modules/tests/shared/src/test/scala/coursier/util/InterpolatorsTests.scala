@@ -3,7 +3,16 @@ package coursier.util
 import coursier.core.Configuration
 import coursier.ivy.{IvyRepository, Pattern}
 import coursier.maven.MavenRepository
-import coursier.{Dependency, Module, dependencyString, ivyRepositoryString, mavenRepositoryString, moduleNameString, moduleString, organizationString}
+import coursier.{
+  Dependency,
+  Module,
+  dependencyString,
+  ivyRepositoryString,
+  mavenRepositoryString,
+  moduleNameString,
+  moduleString,
+  organizationString
+}
 import utest._
 
 object InterpolatorsTests extends TestSuite {
@@ -11,21 +20,22 @@ object InterpolatorsTests extends TestSuite {
   val tests = Tests {
     test("module") {
       test {
-        val m = mod"org.scala-lang:scala-library"
+        val m        = mod"org.scala-lang:scala-library"
         val expected = Module(org"org.scala-lang", name"scala-library", Map())
         assert(m == expected)
       }
 
       test {
         val m = mod"org.scala-lang:scala-library;foo=a;b=c"
-        val expected = Module(org"org.scala-lang", name"scala-library", Map("foo" -> "a", "b" -> "c"))
+        val expected =
+          Module(org"org.scala-lang", name"scala-library", Map("foo" -> "a", "b" -> "c"))
         assert(m == expected)
       }
     }
 
     test("dependency") {
       test {
-        val dep = dep"ch.qos.logback:logback-classic:1.1.3"
+        val dep      = dep"ch.qos.logback:logback-classic:1.1.3"
         val expected = Dependency(Module(org"ch.qos.logback", name"logback-classic"), "1.1.3")
         assert(dep == expected)
       }
@@ -39,7 +49,7 @@ object InterpolatorsTests extends TestSuite {
 
     test("maven repository") {
       test {
-        val repo = mvn"https://foo.com/a/b/c"
+        val repo         = mvn"https://foo.com/a/b/c"
         val expectedRepo = MavenRepository("https://foo.com/a/b/c")
         assert(repo == expectedRepo)
       }
@@ -48,7 +58,8 @@ object InterpolatorsTests extends TestSuite {
     test("ivy repository") {
       test {
         val repo = ivy"https://foo.com/a/b/c/[defaultPattern]"
-        val expectedRepo = IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").toOption.get
+        val expectedRepo =
+          IvyRepository.parse("https://foo.com/a/b/c/[defaultPattern]").toOption.get
         assert(repo == expectedRepo)
         assert(repo.pattern.chunks.endsWith(Pattern.default.chunks))
       }

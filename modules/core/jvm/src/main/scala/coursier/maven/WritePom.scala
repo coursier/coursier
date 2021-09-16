@@ -4,6 +4,7 @@ import coursier.core.{Configuration, Dependency, Project}
 
 object WritePom {
 
+  // format: off
   def project(proj: Project, packaging: Option[String]) = {
 
     def dependencyNode(config: Configuration, dep: Dependency) = {
@@ -11,16 +12,16 @@ object WritePom {
         <groupId>{dep.module.organization}</groupId>
         <artifactId>{dep.module.name}</artifactId>
         {
-        if (dep.version.isEmpty)
-          Nil
-        else
-          Seq(<version>{dep.version}</version>)
+          if (dep.version.isEmpty)
+            Nil
+          else
+            Seq(<version>{dep.version}</version>)
         }
         {
-        if (config.isEmpty)
-          Nil
-        else
-          Seq(<scope>{config.value}</scope>)
+          if (config.isEmpty)
+            Nil
+          else
+            Seq(<scope>{config.value}</scope>)
         }
       </dependency>
     }
@@ -29,11 +30,11 @@ object WritePom {
       // parent
       <groupId>{proj.module.organization}</groupId>
       <artifactId>{proj.module.name}</artifactId>
-      {
-      packaging
-        .map(p => <packaging>{p}</packaging>)
-        .toSeq
-      }
+        {
+          packaging
+            .map(p => <packaging>{p}</packaging>)
+            .toSeq
+        }
       <description>{proj.info.description}</description>
       <url>{proj.info.homePage}</url>
       <version>{proj.version}</version>
@@ -45,33 +46,38 @@ object WritePom {
       </organization>
       // SCM
       // developers
-      {
-      if (proj.dependencies.isEmpty)
-        Nil
-      else
-        <dependencies>{
-          proj.dependencies.map {
-            case (config, dep) =>
-              dependencyNode(config, dep)
-          }
-          }</dependencies>
-      }
-      {
-      if (proj.dependencyManagement.isEmpty)
-        Nil
-      else
-        <dependencyManagement>
-          <dependencies>{
-            proj.dependencyManagement.map {
-              case (config, dep) =>
-                dependencyNode(config, dep)
-            }
-            }</dependencies>
-        </dependencyManagement>
-      }
+        {
+          if (proj.dependencies.isEmpty)
+            Nil
+          else
+            <dependencies>
+              {
+                proj.dependencies.map {
+                  case (config, dep) =>
+                    dependencyNode(config, dep)
+                }
+              }
+            </dependencies>
+        }
+        {
+          if (proj.dependencyManagement.isEmpty)
+            Nil
+          else
+            <dependencyManagement>
+              <dependencies>
+                {
+                  proj.dependencyManagement.map {
+                    case (config, dep) =>
+                      dependencyNode(config, dep)
+                  }
+                }
+              </dependencies>
+            </dependencyManagement>
+        }
       // properties
       // repositories
     </project>
   }
+  // format: on
 
 }

@@ -22,12 +22,12 @@ object Channel extends CaseApp[ChannelOptions] {
   }
 
   def displayChannels() = {
-    val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
+    val configDir  = coursier.paths.CoursierPaths.defaultConfigDirectory()
     val channelDir = new File(configDir, "channels")
 
     for {
-      files <- Option(channelDir.listFiles())
-      file <- files
+      files   <- Option(channelDir.listFiles())
+      file    <- files
       rawLine <- new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).linesIterator
       line = rawLine.trim
       if line.nonEmpty
@@ -37,7 +37,7 @@ object Channel extends CaseApp[ChannelOptions] {
   }
 
   def addChannel(channels: List[String], output: OutputParams) = {
-    val configDir = coursier.paths.CoursierPaths.defaultConfigDirectory()
+    val configDir  = coursier.paths.CoursierPaths.defaultConfigDirectory()
     val channelDir = new File(configDir, "channels")
 
     // FIXME May not be fine with concurrency (two process doing this in parallel)

@@ -14,10 +14,11 @@ object MavenRepository {
   def isSnapshot(version: String): Boolean =
     version.endsWith("SNAPSHOT") || SnapshotTimestamp.pattern.matcher(version).matches()
 
-  def toBaseVersion(version: String): String = version match {
+  def toBaseVersion(version: String): String =
+    version match {
       case SnapshotTimestamp(null) => "SNAPSHOT"
       case SnapshotTimestamp(base) => base + "SNAPSHOT"
-      case _ => version
+      case _                       => version
     }
 
   def ivyLikePath(
@@ -44,19 +45,18 @@ object MavenRepository {
   ): Option[String] =
     snapshotVersioning
       .snapshotVersions
-      .find(v =>
+      .find { v =>
         (v.classifier == classifier || v.classifier == Classifier("*")) &&
         (v.extension == extension || v.extension == Extension("*"))
-       )
+      }
       .map(_.value)
       .filter(_.nonEmpty)
-
 
   val defaultConfigurations = Map(
     Configuration.compile -> Seq.empty,
     Configuration.runtime -> Seq(Configuration.compile),
     Configuration.default -> Seq(Configuration.runtime),
-    Configuration.test -> Seq(Configuration.runtime)
+    Configuration.test    -> Seq(Configuration.runtime)
   )
 
   private[coursier] def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
@@ -67,7 +67,8 @@ object MavenRepository {
       for (sbtVersion <- module.attributes.get("sbtVersion"))
         name = name + "_" + sbtVersion
       name
-    } else
+    }
+    else
       module.name.value
 
   private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
@@ -76,11 +77,10 @@ object MavenRepository {
 
   private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
     for {
-      xml <- compatibility.xmlParseDom(str)
-      _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+      xml  <- compatibility.xmlParseDom(str)
+      _    <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
       proj <- Pom.project(xml)
     } yield proj
-
 
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
@@ -105,7 +105,6 @@ object MavenRepository {
   def withChanging(changing: Boolean): MavenRepository =
     withChanging(Some(changing))
 
-
   import Repository._
   import MavenRepository._
 
@@ -125,7 +124,7 @@ object MavenRepository {
     val b = new StringBuilder(root)
     b += '/'
 
-    val it = path.iterator
+    val it      = path.iterator
     var isFirst = true
     while (it.hasNext) {
       if (!isDir) {
@@ -159,8 +158,8 @@ object MavenRepository {
       optional = false,
       authentication = authentication
     )
-    .withDefaultChecksums
-    .withDefaultSignature
+      .withDefaultChecksums
+      .withDefaultSignature
   }
 
   private def versionsArtifact(module: Module): Artifact = {
@@ -174,13 +173,20 @@ object MavenRepository {
       Artifact(
         urlFor(path),
         Map.empty,
-        Map("cache-errors" -> Artifact("", Map.empty, Map.empty, changing = false, optional = false, None)),
+        Map("cache-errors" -> Artifact(
+          "",
+          Map.empty,
+          Map.empty,
+          changing = false,
+          optional = false,
+          None
+        )),
         changing = true,
         optional = false,
         authentication = authentication
       )
-      .withDefaultChecksums
-      .withDefaultSignature
+        .withDefaultChecksums
+        .withDefaultSignature
 
     artifact
   }
@@ -201,8 +207,8 @@ object MavenRepository {
         optional = false,
         authentication = authentication
       )
-      .withDefaultChecksums
-      .withDefaultSignature
+        .withDefaultChecksums
+        .withDefaultSignature
 
     Some(artifact)
   }
@@ -221,7 +227,7 @@ object MavenRepository {
 
     fetch(listingArtifact).flatMap { listing =>
 
-      val files = WebPage.listFiles(listingUrl, listing).toVector
+      val files       = WebPage.listFiles(listingUrl, listing).toVector
       val rawVersions = WebPage.listDirectories(listingUrl, listing).toVector
 
       val res =
@@ -233,7 +239,7 @@ object MavenRepository {
           val parsedVersions = rawVersions.map(Version(_))
           val nonPreVersions = parsedVersions.filter(_.items.forall {
             case t: Version.Tag => !t.isPreRelease
-            case _ => true
+            case _              => true
           })
 
           if (nonPreVersions.isEmpty)
@@ -264,15 +270,19 @@ object MavenRepository {
       val artifact = versionsArtifact(module)
       fetch(artifact).run.map { eitherStr =>
         for {
-          str <- eitherStr
-          xml <- compatibility.xmlParseDom(str)
-          _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+          str      <- eitherStr
+          xml      <- compatibility.xmlParseDom(str)
+          _        <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
           versions <- Pom.versions(xml)
         } yield (versions, artifact.url)
       }
     }
 
-    if (changing.forall(!_) && module.attributes.contains("scalaVersion") && module.attributes.contains("sbtVersion"))
+    val tryListing = changing.forall(!_) &&
+      module.attributes.contains("scalaVersion") &&
+      module.attributes.contains("sbtVersion")
+
+    if (tryListing)
       versionsFromListing(module, fetch).orElse(viaMetadata)
     else
       viaMetadata
@@ -293,7 +303,7 @@ object MavenRepository {
             for {
               str <- eitherStr
               xml <- compatibility.xmlParseDom(str)
-              _ <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+              _   <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
               snapshotVersioning <- Pom.snapshotVersioning(xml)
             } yield snapshotVersioning
           }
@@ -361,13 +371,15 @@ object MavenRepository {
     F: Monad[F]
   ): EitherT[F, String, Project] = {
 
-
     val projectArtifact0 = projectArtifact(module, version, versioningValue)
 
     for {
       str <- fetch(projectArtifact0)
-      proj0 <- EitherT(F.point[Either[String, Project]](if (useSaxParser) parseRawPomSax(str) else parseRawPomDom(str)))
-    } yield
+      proj0 <- EitherT(F.point[Either[String, Project]](
+        if (useSaxParser) parseRawPomSax(str)
+        else parseRawPomDom(str)
+      ))
+    } yield {
       Pom.addOptionalDependenciesInConfig(
         proj0
           .withActualVersionOpt(Some(version))
@@ -375,6 +387,7 @@ object MavenRepository {
         Set(Configuration.empty, Configuration.default),
         Configuration.optional
       )
+    }
   }
 
   private def artifacts0(
@@ -386,7 +399,9 @@ object MavenRepository {
     val packagingTpeMap = project
       .packagingOpt
       .map { packaging =>
-        (MavenAttributes.typeDefaultClassifier(packaging), MavenAttributes.typeExtension(packaging)) -> packaging
+        val tpe = MavenAttributes.typeDefaultClassifier(packaging)
+        val ext = MavenAttributes.typeExtension(packaging)
+        (tpe, ext) -> packaging
       }
       .toMap
 
@@ -405,7 +420,12 @@ object MavenRepository {
       val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
         MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
         toBaseVersion(project.actualVersion),
-        s"${dependency.module.name.value}-${versioning getOrElse project.actualVersion}${Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString}.${publication.ext.value}"
+        dependency.module.name.value +
+          "-" +
+          versioning.getOrElse(project.actualVersion) +
+          Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString +
+          "." +
+          publication.ext.value
       )
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
@@ -422,7 +442,14 @@ object MavenRepository {
         .withDefaultSignature
     }
 
-    val metadataArtifact = artifactOf(Publication(dependency.module.name.value, Type.pom, Extension.pom, Classifier.empty))
+    val metadataArtifact = artifactOf(
+      Publication(
+        dependency.module.name.value,
+        Type.pom,
+        Extension.pom,
+        Classifier.empty
+      )
+    )
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
@@ -459,12 +486,12 @@ object MavenRepository {
             Seq((Type.jar, Extension.empty), (Type.testJar, Extension.empty))
           else
             Seq((Type.jar, Extension.empty))
-        } else
+        }
+        else
           Seq((dependency.publication.`type`, dependency.publication.ext))
 
       val extraPubs = types.map {
         case (type0, ext0) =>
-
           val ext = if (ext0.isEmpty) MavenAttributes.typeExtension(type0) else ext0
 
           val classifier =
@@ -477,7 +504,8 @@ object MavenRepository {
             if (dependency.publication.`type`.isEmpty)
               packagingTpeMap.getOrElse(
                 (classifier, ext),
-                MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+                MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext)
+                  .getOrElse(ext.asType)
               )
             else
               type0
@@ -513,7 +541,8 @@ object MavenRepository {
             val ext = Extension.jar
             val tpe = packagingTpeMap.getOrElse(
               (classifier, ext),
-              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext).getOrElse(ext.asType)
+              MavenAttributes.classifierExtensionDefaultTypeOpt(classifier, ext)
+                .getOrElse(ext.asType)
             )
 
             Seq(
