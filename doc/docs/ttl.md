@@ -12,7 +12,7 @@ There are two ways to change the default value:
 
 Both settings are parsed with `scala.concurrent.duration.Duration`, so that things like `24 hours`, `5 min`, `10s`, or `0s`, are fine, and it accepts infinity (`Inf`) as a duration.
 
-```tut:invisible
+```scala mdoc:invisible
 import scala.concurrent.duration.Duration
 
 Duration("24 hours")
