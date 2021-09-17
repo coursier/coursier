@@ -13,7 +13,7 @@ private[coursier] object FileUtil {
   // via https://stackoverflow.com/questions/1264709/convert-inputstream-to-byte-array-in-java/37681322#37681322)
   def readFullyUnsafe(is: InputStream): Array[Byte] = {
     val buffer = new ByteArrayOutputStream
-    val data = Array.ofDim[Byte](16384)
+    val data   = Array.ofDim[Byte](16384)
 
     var nRead = 0
     while ({
@@ -31,7 +31,8 @@ private[coursier] object FileUtil {
     try {
       is0 = is
       readFullyUnsafe(is0)
-    } finally {
+    }
+    finally {
       if (is0 != null)
         is0.close()
     }
@@ -42,7 +43,8 @@ private[coursier] object FileUtil {
     try {
       os = Files.newOutputStream(path)
       f(os)
-    } finally {
+    }
+    finally {
       if (os != null)
         os.close()
     }
@@ -68,7 +70,8 @@ private[coursier] object FileUtil {
         )
 
       true
-    } catch {
+    }
+    catch {
       case _: UnsupportedOperationException =>
         false
     }
@@ -79,7 +82,8 @@ private[coursier] object FileUtil {
       try {
         Files.setAttribute(path, "dos:hidden", java.lang.Boolean.TRUE, LinkOption.NOFOLLOW_LINKS)
         true
-      } catch {
+      }
+      catch {
         case _: UnsupportedOperationException =>
           false
       }

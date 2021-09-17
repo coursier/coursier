@@ -50,14 +50,17 @@ final case class BootstrapSpecificParams(
       .withBaseDirectory(jvmDir.toFile)
       .withCache(cache)
     jvmIndexUrlOpt match {
-      case None => c.withDefaultIndex
+      case None              => c.withDefaultIndex
       case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
     }
   }
 }
 
 object BootstrapSpecificParams {
-  def apply(options: BootstrapSpecificOptions, native: Boolean): ValidatedNel[String, BootstrapSpecificParams] = {
+  def apply(
+    options: BootstrapSpecificOptions,
+    native: Boolean
+  ): ValidatedNel[String, BootstrapSpecificParams] = {
 
     val graalvmVersion = options.graalvmVersion
       .map(_.trim)
@@ -70,10 +73,10 @@ object BootstrapSpecificParams {
       else
         (options.graalvmJvmOption.filter(_.nonEmpty), options.graalvmOption.filter(_.nonEmpty))
 
-    val assembly = options.assembly.getOrElse(false)
+    val assembly    = options.assembly.getOrElse(false)
     val manifestJar = options.manifestJar.getOrElse(false)
-    val standalone = options.standalone.getOrElse(false)
-    val hybrid = options.hybrid.getOrElse(false)
+    val standalone  = options.standalone.getOrElse(false)
+    val hybrid      = options.hybrid.getOrElse(false)
     val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
 
     val validateOutputType = {
@@ -86,7 +89,10 @@ object BootstrapSpecificParams {
         native
       ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly (or -a), --manifest-jar, --standalone (or -s), --hybrid, --native-image, or --native (or -S), can be specified")
+        Validated.invalidNel(
+          "Only one of --assembly (or -a), --manifest-jar, --standalone (or -s), --hybrid, " +
+            "--native-image, or --native (or -S), can be specified"
+        )
       else
         Validated.validNel(())
     }
@@ -106,12 +112,12 @@ object BootstrapSpecificParams {
       if (idx < 0)
         Validated.invalidNel(s"Malformed assembly rule: $s")
       else {
-        val ruleName = s.substring(0, idx)
+        val ruleName  = s.substring(0, idx)
         val ruleValue = s.substring(idx + 1)
         ruleName match {
-          case "append" => Validated.validNel(MergeRule.Append(ruleValue))
-          case "append-pattern" => Validated.validNel(MergeRule.AppendPattern(ruleValue))
-          case "exclude" => Validated.validNel(MergeRule.Exclude(ruleValue))
+          case "append"          => Validated.validNel(MergeRule.Append(ruleValue))
+          case "append-pattern"  => Validated.validNel(MergeRule.AppendPattern(ruleValue))
+          case "exclude"         => Validated.validNel(MergeRule.Exclude(ruleValue))
           case "exclude-pattern" => Validated.validNel(MergeRule.ExcludePattern(ruleValue))
           case _ => Validated.invalidNel(s"Unrecognized rule name '$ruleName' in rule '$s'")
         }
@@ -144,7 +150,7 @@ object BootstrapSpecificParams {
 
     (validateOutputType, rulesV, baseManifestOptV).mapN {
       (_, rules, baseManifestOpt) =>
-        val javaOptions = options.javaOpt
+        val javaOptions   = options.javaOpt
         val jvmOptionFile = options.jvmOptionFile.map(_.trim).filter(_.nonEmpty)
         BootstrapSpecificParams(
           output,

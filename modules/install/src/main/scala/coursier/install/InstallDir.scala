@@ -15,7 +15,17 @@ import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.ArchiveType
-import coursier.launcher.{AssemblyGenerator, BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Generator, NativeImageGenerator, Parameters, Preamble, ScalaNativeGenerator}
+import coursier.launcher.{
+  AssemblyGenerator,
+  BootstrapGenerator,
+  ClassLoaderContent,
+  ClassPathEntry,
+  Generator,
+  NativeImageGenerator,
+  Parameters,
+  Preamble,
+  ScalaNativeGenerator
+}
 import coursier.launcher.internal.FileUtil
 import coursier.launcher.native.NativeBuilder
 import coursier.launcher.Parameters.ScalaNative
@@ -43,7 +53,7 @@ import scala.util.control.NonFatal
   basePreamble: Preamble = Preamble()
     .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
   @since
-    overrideProguardedBootstraps: Option[Boolean] = None
+  overrideProguardedBootstraps: Option[Boolean] = None
 ) {
 
   private lazy val isWindows =
@@ -165,7 +175,6 @@ import scala.util.control.NonFatal
           .fold(params0)(params0.withProguarded)
 
       case LauncherType.Assembly =>
-
         assert(appArtifacts.shared.isEmpty) // just in case
 
         // FIXME Allow to adjust merge rules?
@@ -179,7 +188,6 @@ import scala.util.control.NonFatal
         Parameters.DummyNative()
 
       case LauncherType.GraalvmNativeImage =>
-
         assert(appArtifacts.shared.isEmpty) // just in case
 
         val fetch = simpleFetch(cache, coursierRepositories)
@@ -191,7 +199,10 @@ import scala.util.control.NonFatal
         } yield home
 
         Parameters.NativeImage(mainClass, fetch)
-          .withGraalvmOptions(desc.graalvmOptions.toSeq.flatMap(_.options) ++ graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil))
+          .withGraalvmOptions(
+            desc.graalvmOptions.toSeq.flatMap(_.options) ++
+              graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil)
+          )
           .withGraalvmVersion(graalvmParamsOpt.flatMap(_.defaultVersion))
           .withJars(appArtifacts.fetchResult.files)
           .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
@@ -199,12 +210,11 @@ import scala.util.control.NonFatal
           .withVerbosity(verbosity)
 
       case LauncherType.ScalaNative =>
-
         assert(appArtifacts.shared.isEmpty) // just in case
 
         val fetch = simpleFetch(cache, coursierRepositories)
         val nativeVersion = appArtifacts.platformSuffixOpt
-          .fold("" /* FIXME throw instead? */)(_.stripPrefix("_native"))
+          .fold("" /* FIXME throw instead? */ )(_.stripPrefix("_native"))
         // FIXME Allow options to be tweaked
         val options = ScalaNative.ScalaNativeOptions()
 
@@ -232,7 +242,7 @@ import scala.util.control.NonFatal
       val (desc, descRepr) = descOpt.getOrElse {
         if (Files.exists(dest0))
           InfoFile.readAppDescriptor(dest0) match {
-            case None => throw new CannotReadAppDescriptionInLauncher(dest0)
+            case None    => throw new CannotReadAppDescriptionInLauncher(dest0)
             case Some(d) => d
           }
         else
@@ -256,7 +266,7 @@ import scala.util.control.NonFatal
       )
 
       val appArtifacts = prebuiltOrNotFoundUrls0 match {
-        case Left(_) => desc.artifacts(cache, verbosity)
+        case Left(_)  => desc.artifacts(cache, verbosity)
         case Right(_) => AppArtifacts.empty
       }
 
@@ -298,7 +308,8 @@ import scala.util.control.NonFatal
 
       (tmpDest, tmpAux) =>
 
-        lazy val infoEntries = InfoFile.extraEntries(lock0, sharedLockOpt, descRepr, sourceReprOpt0, currentTime)
+        lazy val infoEntries =
+          InfoFile.extraEntries(lock0, sharedLockOpt, descRepr, sourceReprOpt0, currentTime)
 
         lazy val upToDate = InfoFile.upToDate(
           dest0,
@@ -318,7 +329,6 @@ import scala.util.control.NonFatal
 
           prebuiltOrNotFoundUrls0 match {
             case Left(notFoundUrls) =>
-
               if (onlyPrebuilt && desc.launcherType.isNative)
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
@@ -370,7 +380,11 @@ import scala.util.control.NonFatal
               else
                 baseNativePreamble
                   .withKind(Preamble.Kind.Sh)
-                  .withCommand(""""$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "") + "\"") // FIXME needs directory
+                  .withCommand(
+                    """"$(cd "$(dirname "$0")"; pwd)/""" +
+                      auxName(dest0.getFileName.toString, "") +
+                      "\""
+                  ) // FIXME needs directory
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
@@ -400,10 +414,12 @@ import scala.util.control.NonFatal
 
       launcher = actualDest(name)
 
-      sourceAndBytes <- Task.fromEither(InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher")))
+      sourceAndBytes <- Task.fromEither(
+        InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher"))
+      )
       (source, sourceBytes) = sourceAndBytes
 
-       pathDescriptorBytes <- update(source).flatMap {
+      pathDescriptorBytes <- update(source).flatMap {
         case Some(res) => Task.point(res)
         case None => Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
       }
@@ -446,19 +462,21 @@ import scala.util.control.NonFatal
           .map(actualName)
           .toVector
           .sorted
-      } finally {
+      }
+      finally {
         if (s != null)
           s.close()
       }
-    } else
+    }
+    else
       Nil
 }
 
 object InstallDir {
 
   val isInstalledLauncherEnvVar: String = "IS_CS_INSTALLED_LAUNCHER"
-  val isJvmLauncherEnvVar: String = "CS_JVM_LAUNCHER"
-  val isNativeLauncherEnvVar: String = "CS_NATIVE_LAUNCHER"
+  val isJvmLauncherEnvVar: String       = "CS_JVM_LAUNCHER"
+  val isNativeLauncherEnvVar: String    = "CS_NATIVE_LAUNCHER"
 
   private lazy val defaultDir0: Path = {
 
@@ -498,12 +516,18 @@ object InstallDir {
       for (a <- m)
         System.err.println(s"  $a")
     }
-    MainClass.retainedMainClassOpt(m, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
+    MainClass.retainedMainClassOpt(
+      m,
+      mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))
+    ) // appArtifacts.fetchResult.resolution.rootDependencies.headOption)
   }
 
-  private def simpleFetch(cache: Cache[Task], repositories: Seq[Repository]): Seq[String] => Seq[File] = {
+  private def simpleFetch(
+    cache: Cache[Task],
+    repositories: Seq[Repository]
+  ): Seq[String] => Seq[File] = {
 
-    val fetch  = coursier.Fetch(cache)
+    val fetch = coursier.Fetch(cache)
       .withRepositories(repositories)
 
     deps =>
@@ -539,7 +563,6 @@ object InstallDir {
     t
   }
 
-
   private def candidatePrebuiltArtifacts(
     desc: AppDescriptor,
     cache: Cache[Task],
@@ -565,7 +588,7 @@ object InstallDir {
       else
         ArchiveType.parse(url.take(idx)) match {
           case Some(tpe) =>
-            val url0 = url.drop(idx + 1)
+            val url0         = url.drop(idx + 1)
             val subPathIndex = url0.indexOf('!')
             if (subPathIndex < 0)
               (url0, Some((tpe, None)))
@@ -578,7 +601,9 @@ object InstallDir {
         }
     }
 
-    def patternArtifacts(pattern: String): Seq[(Artifact, Option[(ArchiveType, Option[String])])] = {
+    def patternArtifacts(
+      pattern: String
+    ): Seq[(Artifact, Option[(ArchiveType, Option[String])])] = {
 
       val artifactsIt = for {
         version <- mainVersionsIterator()
@@ -587,9 +612,12 @@ object InstallDir {
           .replace("${version}", version)
           .replace("${platform}", platform.getOrElse(""))
         (baseUrl, archiveTypeAndPathOpt) = urlArchiveType(baseUrl0)
-        ext <- if (archiveTypeAndPathOpt.forall(_._2.nonEmpty)) platformExtensions.iterator ++ Iterator("") else Iterator("")
+        ext <-
+          if (archiveTypeAndPathOpt.forall(_._2.nonEmpty))
+            platformExtensions.iterator ++ Iterator("")
+          else Iterator("")
         (url, archiveTypeAndPathOpt0) = archiveTypeAndPathOpt match {
-          case None => (baseUrl + ext, archiveTypeAndPathOpt)
+          case None                  => (baseUrl + ext, archiveTypeAndPathOpt)
           case Some((tpe, subPath0)) => (baseUrl, Some((tpe, subPath0.map(_ + ext))))
         }
       } yield (Artifact(url).withChanging(isSnapshot), archiveTypeAndPathOpt0)
@@ -615,11 +643,14 @@ object InstallDir {
         if (verbosity >= 2)
           System.err.println(s"No prebuilt launcher found at ${artifact.url}")
         None
-      case Left(e: ArtifactError.DownloadError) if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
+      case Left(e: ArtifactError.DownloadError)
+          if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
         // These seem to happen on Windows for non existing artifacts, only from the native launcher apparently???
         // Interpreting these errors as not-found-errors too.
         if (verbosity >= 2)
-          System.err.println(s"No prebuilt launcher found at ${artifact.url} (SSL handshake exception)")
+          System.err.println(
+            s"No prebuilt launcher found at ${artifact.url} (SSL handshake exception)"
+          )
         None
       case Left(e) =>
         // FIXME Ignore some other kind of errors too? Just warn about them?
@@ -641,7 +672,9 @@ object InstallDir {
     preferPrebuilt: Boolean
   ): Either[Seq[String], (Artifact, File, Option[(ArchiveType, Option[String])])] = {
 
-    def downloadArtifacts(artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
+    def downloadArtifacts(
+      artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]
+    ): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
       artifacts.iterator.flatMap {
         case (artifact, archiveTypeOpt) =>
           if (verbosity >= 2)
@@ -655,7 +688,14 @@ object InstallDir {
             .map((artifact, _, archiveTypeOpt))
       }
 
-    candidatePrebuiltArtifacts(desc, cache, verbosity, platform, platformExtensions, preferPrebuilt).toRight(Nil).flatMap { artifacts =>
+    candidatePrebuiltArtifacts(
+      desc,
+      cache,
+      verbosity,
+      platform,
+      platformExtensions,
+      preferPrebuilt
+    ).toRight(Nil).flatMap { artifacts =>
       val iterator = downloadArtifacts(artifacts)
       if (iterator.hasNext) Right(iterator.next())
       else Left(artifacts.map(_._1.url))
@@ -689,7 +729,6 @@ object InstallDir {
       .toSeq
       .flatMap(platformExtensions(_))
 
-
   @deprecated("Use the override accepting two arguments instead", "2.0.10")
   def platform(os: String): Option[String] = {
     platform(os, Option(System.getProperty("os.arch")).getOrElse("x86_64"))
@@ -697,7 +736,7 @@ object InstallDir {
 
   def platform(os: String, arch: String): Option[String] = {
 
-    val os0 = os.toLowerCase(Locale.ROOT)
+    val os0   = os.toLowerCase(Locale.ROOT)
     val arch0 = if (arch == "amd64") "x86_64" else arch
 
     if (os0.contains("linux"))
@@ -712,12 +751,16 @@ object InstallDir {
 
   def platform(): Option[String] =
     for {
-      os <- Option(System.getProperty("os.name"))
+      os   <- Option(System.getProperty("os.name"))
       arch <- Option(System.getProperty("os.arch"))
-      p <- platform(os, arch)
+      p    <- platform(os, arch)
     } yield p
 
-  private def withTgzEntriesIterator[T](tgz: File)(f: Iterator[(ArchiveEntry, InputStream)] => T): T = {
+  private def withTgzEntriesIterator[T](
+    tgz: File
+  )(
+    f: Iterator[(ArchiveEntry, InputStream)] => T
+  ): T = {
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
     var fis: FileInputStream = null
     try {
@@ -749,7 +792,8 @@ object InstallDir {
         }
 
       f(it)
-    } finally {
+    }
+    finally {
       if (fis != null)
         fis.close()
     }
@@ -777,7 +821,7 @@ object InstallDir {
     }
 
   private def withFirstFileInZip[T](zip: File)(f: InputStream => T): T = {
-    var zf: ZipFile = null
+    var zf: ZipFile     = null
     var is: InputStream = null
     try {
       zf = new ZipFile(zip)
@@ -786,7 +830,8 @@ object InstallDir {
       }
       is = zf.getInputStream(ent)
       f(is)
-    } finally {
+    }
+    finally {
       if (zf != null)
         zf.close()
       if (is != null)
@@ -795,7 +840,7 @@ object InstallDir {
   }
 
   private def withFileInZip[T](zip: File, pathInArchive: String)(f: InputStream => T): T = {
-    var zf: ZipFile = null
+    var zf: ZipFile     = null
     var is: InputStream = null
     try {
       zf = new ZipFile(zip)
@@ -804,7 +849,8 @@ object InstallDir {
       }
       is = zf.getInputStream(ent)
       f(is)
-    } finally {
+    }
+    finally {
       if (zf != null)
         zf.close()
       if (is != null)
@@ -815,21 +861,23 @@ object InstallDir {
   private def writeTo(is: InputStream, dest: Path): Unit = {
     var os: OutputStream = null
     try {
-      os = Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
-      val buf = Array.ofDim[Byte](16384)
+      os =
+        Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+      val buf  = Array.ofDim[Byte](16384)
       var read = -1
       while ({ read = is.read(buf); read >= 0 }) {
         if (read > 0)
           os.write(buf, 0, read)
       }
-    } finally {
+    }
+    finally {
       if (os != null)
         os.close()
     }
   }
 
   sealed abstract class InstallDirException(message: String, cause: Throwable = null)
-    extends Exception(message, cause)
+      extends Exception(message, cause)
 
   final class NoMainClassFound extends InstallDirException("No main class found")
 
@@ -839,20 +887,20 @@ object InstallDir {
   final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
 
   final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
-    extends InstallDirException(
-      if (candidateUrls.isEmpty)
-        "No prebuilt binary available"
-      else
-        s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
-    )
+      extends InstallDirException(
+        if (candidateUrls.isEmpty)
+          "No prebuilt binary available"
+        else
+          s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
+      )
 
   final class CannotReadAppDescriptionInLauncher(val path: Path)
-    extends InstallDirException(s"Cannot read app description in $path")
+      extends InstallDirException(s"Cannot read app description in $path")
 
   final class NotAnApplication(val path: Path)
-    extends InstallDirException(s"File $path wasn't installed by cs install")
+      extends InstallDirException(s"File $path wasn't installed by cs install")
 
   final class DownloadError(val url: String, cause: Throwable = null)
-    extends InstallDirException(s"Error downloading $url", cause)
+      extends InstallDirException(s"Error downloading $url", cause)
 
 }

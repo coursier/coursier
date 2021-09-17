@@ -28,7 +28,10 @@ final case class OkHttpClientUtil(
       b.addHeader(k, v)
 
     // ???
-    b.addHeader("Accept", "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json")
+    b.addHeader(
+      "Accept",
+      "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json"
+    )
 
     val r = b.build()
 
@@ -60,13 +63,19 @@ final case class OkHttpClientUtil(
       if (resp.code() == 201)
         Task.point(())
       else
-        Task.fail(new Exception(s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"))
+        Task.fail(new Exception(
+          s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
+        ))
     }
 
     t.flatMap(identity)
   }
 
-  def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] = {
+  def get[T: DecodeJson](
+    url: String,
+    post: Option[RequestBody] = None,
+    nested: Boolean = true
+  ): Task[T] = {
 
     val t = Task.delay {
       if (verbosity >= 1)
@@ -97,8 +106,10 @@ final case class OkHttpClientUtil(
             case Right(t) =>
               Task.point(t)
           }
-      } else {
-        val msg = s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
+      }
+      else {
+        val msg =
+          s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
         val notFound = resp.code() / 100 == 4
         if (notFound)
           Task.fail(new FileNotFoundException(msg))

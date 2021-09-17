@@ -16,7 +16,11 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
 
   import OkhttpDownload.TryOps
 
-  def downloadIfExists(url: String, authentication: Option[Authentication], logger: DownloadLogger): Task[Option[(Option[Instant], Array[Byte])]] = {
+  def downloadIfExists(
+    url: String,
+    authentication: Option[Authentication],
+    logger: DownloadLogger
+  ): Task[Option[(Option[Instant], Array[Byte])]] = {
 
     // FIXME Some duplication with upload below…
 
@@ -46,16 +50,23 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
               HttpDate.parse(s).toInstant
             }
             Right(Some((lastModifiedOpt, response.body().bytes())))
-          } else {
+          }
+          else {
             val code = response.code()
             if (code / 100 == 4)
               Right(None)
             else {
               val content = Try(response.body().string()).getOrElse("")
-              Left(new Download.Error.HttpError(url, code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+              Left(new Download.Error.HttpError(
+                url,
+                code,
+                response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap,
+                content
+              ))
             }
           }
-        } finally {
+        }
+        finally {
           if (response != null)
             response.body().close()
         }

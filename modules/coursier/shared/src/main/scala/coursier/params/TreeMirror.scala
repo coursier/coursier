@@ -5,13 +5,12 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import dataclass.data
 
-/**
-  * Assumes any tree with a prefix in `from` is mirrored under `to`.
+/** Assumes any tree with a prefix in `from` is mirrored under `to`.
   *
-  * For example, if `from == Seq("https://a.com/artifacts", "https://artifacts.b.com")`,
-  * and `to == "https://mirror.c.com/maven"`
-  * it is assumed `"https://a.com/artifacts/a/b/c"` also exists at `"https://mirror.c.com/maven/a/b/c"`,
-  * and `"https://artifacts.b.com/foo/e/f/g"` also exists at `"https://mirror.c.com/maven/foo/e/f/g"`.
+  * For example, if `from == Seq("https://a.com/artifacts", "https://artifacts.b.com")`, and `to ==
+  * "https://mirror.c.com/maven"` it is assumed `"https://a.com/artifacts/a/b/c"` also exists at
+  * `"https://mirror.c.com/maven/a/b/c"`, and `"https://artifacts.b.com/foo/e/f/g"` also exists at
+  * `"https://mirror.c.com/maven/foo/e/f/g"`.
   */
 @data class TreeMirror(
   from: Seq[String],

@@ -19,7 +19,8 @@ object SharedRepositoryParser {
         else s0 + "/maven"
 
       Right(Repositories.bintray(id))
-    } else if (s.startsWith("bintray-ivy:"))
+    }
+    else if (s.startsWith("bintray-ivy:"))
       Right(Repositories.bintrayIvy(s.stripPrefix("bintray-ivy:")))
     else if (s.startsWith("typesafe:ivy-"))
       Right(Repositories.typesafeIvy(s.stripPrefix("typesafe:ivy-")))
@@ -32,16 +33,17 @@ object SharedRepositoryParser {
     else if (s == "scala-integration" || s == "scala-nightlies")
       Right(Repositories.scalaIntegration)
     else if (s.startsWith("ivy:")) {
-      val s0 = s.stripPrefix("ivy:")
+      val s0     = s.stripPrefix("ivy:")
       val sepIdx = s0.indexOf('|')
       if (sepIdx < 0)
         IvyRepository.parse(s0)
       else {
-        val mainPart = s0.substring(0, sepIdx)
+        val mainPart     = s0.substring(0, sepIdx)
         val metadataPart = s0.substring(sepIdx + 1)
         IvyRepository.parse(mainPart, Some(metadataPart))
       }
-    } else if (s == "jitpack")
+    }
+    else if (s == "jitpack")
       Right(Repositories.jitpack)
     else if (s == "clojars")
       Right(Repositories.clojars)

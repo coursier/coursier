@@ -4,6 +4,7 @@ import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, Repository
 import caseapp.core.parser.Parser
 import caseapp.Recurse
 
+// format: off
 final case class JavaHomeOptions(
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
@@ -16,8 +17,9 @@ final case class JavaHomeOptions(
   @Recurse
     envOptions: EnvOptions = EnvOptions()
 )
+// format: on
 
 object JavaHomeOptions {
   implicit val parser = Parser[JavaHomeOptions]
-  implicit val help = caseapp.core.help.Help[JavaHomeOptions]
+  implicit val help   = caseapp.core.help.Help[JavaHomeOptions]
 }

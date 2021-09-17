@@ -9,7 +9,7 @@ object PackBootstrapTests extends BootstrapTests {
       case Some("true")  => true
       case Some("false") => false
       case None          => true
-      case Some(other)   =>
+      case Some(other) =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-D value '$other'")
         true
     }
@@ -18,7 +18,7 @@ object PackBootstrapTests extends BootstrapTests {
       case Some("true")  => true
       case Some("false") => false
       case None          => !LauncherTestUtil.isWindows
-      case Some(other)   =>
+      case Some(other) =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-J value '$other'")
         true
     }

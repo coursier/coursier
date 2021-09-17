@@ -17,7 +17,11 @@ object JavaHomeTests extends TestSuite {
 
   private val forbidCommands: JavaHome.CommandOutput =
     new JavaHome.CommandOutput {
-      def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
+      def run(
+        command: Seq[String],
+        keepErrorStream: Boolean,
+        extraEnv: Seq[(String, String)]
+      ): Either[Int, String] =
         throw new Exception("should not run commands")
     }
 
@@ -42,7 +46,11 @@ object JavaHomeTests extends TestSuite {
   val tests = Tests {
 
     test("environment update should be empty for system JVM") {
-      val edit = JavaHome.environmentFor(JavaHome.systemId, new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
+      val edit = JavaHome.environmentFor(
+        JavaHome.systemId,
+        new File("/home/foo/jvm/openjdk-27"),
+        isMacOs = false
+      )
       assert(edit.isEmpty)
     }
 
@@ -50,17 +58,18 @@ object JavaHomeTests extends TestSuite {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
         .withPathLikeAppends(Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin")))
-      val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
+      val edit =
+        JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
       assert(edit == expectedEdit)
     }
 
     test("environment update should update only JAVA_HOME on macOS") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
-      val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
+      val edit =
+        JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
       assert(edit == expectedEdit)
     }
-
 
     test("system JVM should respect JAVA_HOME") {
 
@@ -71,7 +80,7 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -79,7 +88,11 @@ object JavaHomeTests extends TestSuite {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
+          def run(
+            command: Seq[String],
+            keepErrorStream: Boolean,
+            extraEnv: Seq[(String, String)]
+          ): Either[Int, String] =
             if (command == Seq("/usr/libexec/java_home"))
               Right("/Library/JVMs/oracle-41")
             else
@@ -92,7 +105,7 @@ object JavaHomeTests extends TestSuite {
         .withOs("darwin")
 
       val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -100,7 +113,11 @@ object JavaHomeTests extends TestSuite {
 
       val commandOutput: JavaHome.CommandOutput =
         new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
+          def run(
+            command: Seq[String],
+            keepErrorStream: Boolean,
+            extraEnv: Seq[(String, String)]
+          ): Either[Int, String] =
             if (command == Seq("java", "-XshowSettings:properties", "-version")) {
               if (keepErrorStream)
                 Right(
@@ -117,7 +134,8 @@ object JavaHomeTests extends TestSuite {
                   """Oracle JDK 39b07
                     |""".stripMargin
                 )
-            } else
+            }
+            else
               throw new Exception(s"Unexpected command: $command")
         }
 
@@ -127,7 +145,7 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -150,9 +168,12 @@ object JavaHomeTests extends TestSuite {
         val failCache: Cache[Task] =
           new Cache[Task] {
             val ec = ExecutionContext.fromExecutorService(pool)
-            val fetch = _ => EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
+            val fetch = _ =>
+              EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
             def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
-              EitherT[Task, ArtifactError, File](Task.fail(new Exception("This cache must not be used")))
+              EitherT[Task, ArtifactError, File](
+                Task.fail(new Exception("This cache must not be used"))
+              )
           }
         val csCache = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
         val cache = JvmCache()

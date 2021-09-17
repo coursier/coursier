@@ -11,7 +11,7 @@ object MergeRule {
     def path: String
   }
 
-  @data class Exclude(path: String) extends PathRule
+  @data class Exclude(path: String)         extends PathRule
   @data class ExcludePattern(path: Pattern) extends MergeRule
 
   object ExcludePattern {
@@ -21,7 +21,7 @@ object MergeRule {
 
   // TODO Accept a separator: Array[Byte] argument in these
   // (to separate content with a line return in particular)
-  @data class Append(path: String) extends PathRule
+  @data class Append(path: String)         extends PathRule
   @data class AppendPattern(path: Pattern) extends MergeRule
 
   object AppendPattern {

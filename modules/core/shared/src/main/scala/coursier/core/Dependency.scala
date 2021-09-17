@@ -4,23 +4,19 @@ import java.util.concurrent.ConcurrentMap
 
 import dataclass.data
 
-/**
- * Dependencies with the same @module will typically see their @version-s merged.
- *
- * The remaining fields are left untouched, some being transitively
- * propagated (exclusions, optional, in particular).
- */
+/** Dependencies with the same @module will typically see their @version-s merged.
+  *
+  * The remaining fields are left untouched, some being transitively propagated (exclusions,
+  * optional, in particular).
+  */
 @data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
   version: String,
   configuration: Configuration,
   exclusions: Set[(Organization, ModuleName)],
-
   publication: Publication,
-
   // Maven-specific
   optional: Boolean,
-
   transitive: Boolean
 ) {
   lazy val moduleVersion = (module, version)
@@ -42,7 +38,12 @@ import dataclass.data
     withPublication(Publication(name, `type`, Extension.empty, Classifier.empty))
   def withPublication(name: String, `type`: Type, ext: Extension): Dependency =
     withPublication(Publication(name, `type`, ext, Classifier.empty))
-  def withPublication(name: String, `type`: Type, ext: Extension, classifier: Classifier): Dependency =
+  def withPublication(
+    name: String,
+    `type`: Type,
+    ext: Extension,
+    classifier: Classifier
+  ): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
   private[core] def copy(
@@ -87,7 +88,6 @@ object Dependency {
         transitive
       )
     )
-
 
   def apply(
     module: Module,

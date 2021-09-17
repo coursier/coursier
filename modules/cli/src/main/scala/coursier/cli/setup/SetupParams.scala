@@ -24,33 +24,34 @@ final case class SetupParams(
 
 object SetupParams {
   def apply(options: SetupOptions): ValidatedNel[String, SetupParams] = {
-    val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
+    val sharedJavaV    = SharedJavaParams(options.sharedJavaOptions)
     val sharedInstallV = SharedInstallParams(options.sharedInstallOptions)
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
-    val cacheV = options.cacheOptions.params
-    val outputV = OutputParams(options.outputOptions)
-    val envV = EnvParams(options.envOptions)
-    val repoV = RepositoryParams(options.repositoryOptions)
-    val banner = options.banner.getOrElse(false)
-    val yes = options.yes.getOrElse(envV.toOption.exists(_.env))
-    val tryRevert = options.tryRevert
+    val cacheV         = options.cacheOptions.params
+    val outputV        = OutputParams(options.outputOptions)
+    val envV           = EnvParams(options.envOptions)
+    val repoV          = RepositoryParams(options.repositoryOptions)
+    val banner         = options.banner.getOrElse(false)
+    val yes            = options.yes.getOrElse(envV.toOption.exists(_.env))
+    val tryRevert      = options.tryRevert
     val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
       .filter(_.nonEmpty)
       .getOrElse(DefaultAppList.defaultAppList)
-    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV, repoV).mapN { (sharedJava, sharedInstall, sharedChannel, cache, output, env, repo) =>
-      SetupParams(
-        sharedJava,
-        repo,
-        sharedInstall,
-        sharedChannel,
-        cache,
-        output,
-        env,
-        banner,
-        yes,
-        tryRevert,
-        apps
-      )
+    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV, repoV).mapN {
+      (sharedJava, sharedInstall, sharedChannel, cache, output, env, repo) =>
+        SetupParams(
+          sharedJava,
+          repo,
+          sharedInstall,
+          sharedChannel,
+          cache,
+          output,
+          env,
+          banner,
+          yes,
+          tryRevert,
+          apps
+        )
     }
   }
 }

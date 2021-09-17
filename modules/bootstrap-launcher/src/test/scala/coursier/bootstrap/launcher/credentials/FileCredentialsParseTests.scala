@@ -7,7 +7,7 @@ import scala.compat.java8.OptionConverters._
 import java.io.File
 
 object FileCredentialsParseTests extends TestSuite {
-  
+
   val tests = Tests {
 
     test {
@@ -20,7 +20,10 @@ object FileCredentialsParseTests extends TestSuite {
       val credFile = new File(credFilePath)
       assert(credFile.exists())
 
-      val parsed = new FileCredentials(credFilePath).get().asScala.sortBy(_.getUsernameOpt.asScala.getOrElse(""))
+      val parsed = new FileCredentials(credFilePath)
+        .get()
+        .asScala
+        .sortBy(_.getUsernameOpt.asScala.getOrElse(""))
       val expected = Seq(
         new DirectCredentials("127.0.0.1", "secure", "sEcUrE", "secure realm")
           .withOptional(true)
