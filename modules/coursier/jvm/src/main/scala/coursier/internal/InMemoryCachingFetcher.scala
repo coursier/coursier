@@ -9,8 +9,8 @@ import coursier.util.{Artifact, EitherT, Sync}
 final class InMemoryCachingFetcher[F[_]](underlying: Repository.Fetch[F])(implicit S: Sync[F]) {
 
   @volatile private var onlyCache0 = false
-  private val cache = new ConcurrentHashMap[Artifact, Either[String, String]]
-  private val byUrl = new ConcurrentHashMap[String, Either[String, String]]
+  private val cache                = new ConcurrentHashMap[Artifact, Either[String, String]]
+  private val byUrl                = new ConcurrentHashMap[String, Either[String, String]]
 
   def onlyCache(): Unit = {
     onlyCache0 = true

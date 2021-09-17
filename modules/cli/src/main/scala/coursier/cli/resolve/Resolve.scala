@@ -20,16 +20,15 @@ import scala.concurrent.ExecutionContext
 
 object Resolve extends CaseApp[ResolveOptions] {
 
-  /**
-    * Tries to parse get dependencies via Scala Index lookups.
+  /** Tries to parse get dependencies via Scala Index lookups.
     */
   private def benchmark[T](iterations: Int): Task[T] => Task[T] = { run =>
 
     val res = lift {
 
       val start = unlift(Task.delay(System.currentTimeMillis()))
-      val res0 = unlift(run)
-      val end = unlift(Task.delay(System.currentTimeMillis()))
+      val res0  = unlift(run)
+      val end   = unlift(Task.delay(System.currentTimeMillis()))
       Console.err.println(s"${end - start} ms")
 
       res0
@@ -50,7 +49,6 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     result(0)
   }
-
 
   private[cli] def depsAndReposOrError(
     params: SharedResolveParams,
@@ -109,7 +107,11 @@ object Resolve extends CaseApp[ResolveOptions] {
       }
 
       val deps0 = Dependencies.addExclusions(
-        deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersion), scalaVersion, platformOpt.getOrElse(""))),
+        deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(
+          JavaOrScalaModule.scalaBinaryVersion(scalaVersion),
+          scalaVersion,
+          platformOpt.getOrElse("")
+        )),
         params.dependency.perModuleExclude.map {
           case (k, s) =>
             k.module(scalaVersion) -> s.map(_.module(scalaVersion))
@@ -125,7 +127,8 @@ object Resolve extends CaseApp[ResolveOptions] {
           .map(_.fallbacks.toSeq)
           .getOrElse(Nil)
           .collect {
-            case ((mod, version), _) if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+            case ((mod, version), _)
+                if params.resolution.forceVersion.get(mod).exists(_ != version) =>
               (mod, version)
           }
         if (invalidForced.isEmpty)
@@ -166,7 +169,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     val finalTask =
       params.retry match {
-        case None => task0
+        case None                        => task0
         case Some((period, maxAttempts)) =>
           // meh
           val scheduler = Executors.newSingleThreadScheduledExecutor(
@@ -181,23 +184,30 @@ object Resolve extends CaseApp[ResolveOptions] {
             }
           )
           val delay = Task.completeAfter(scheduler, period)
-          def helper(count: Int): Task[(Resolution, Option[String], Option[String], Option[ResolutionError])] =
+          def helper(
+            count: Int
+          ): Task[(Resolution, Option[String], Option[String], Option[ResolutionError])] =
             task0.attempt.flatMap {
               case Left(e) =>
                 if (count >= maxAttempts) {
                   val ex = e match {
-                    case _: ResolveException => new ResolveException(s"Resolution still failing after $maxAttempts attempts: ${e.getMessage}", e)
-                    case _ => new Exception(s"Resolution still failing after $maxAttempts attempts", e)
+                    case _: ResolveException => new ResolveException(
+                        s"Resolution still failing after $maxAttempts attempts: ${e.getMessage}",
+                        e
+                      )
+                    case _ =>
+                      new Exception(s"Resolution still failing after $maxAttempts attempts", e)
                   }
                   Task.fail(ex)
-                } else {
+                }
+                else {
                   val print = Task.delay {
                     // TODO Better printing of error (getMessage for relevent types, …)
                     stderr.println(s"Attempt $count failed: $e")
                   }
                   for {
-                    _ <- print
-                    _ <- delay
+                    _   <- print
+                    _   <- delay
                     res <- helper(count + 1)
                   } yield res
                 }
@@ -250,7 +260,8 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     lift {
 
-      val (deps, repositories, scalaVersionOpt, platformOpt) = unlift(Task.fromEither(depsAndReposOrError0))
+      val (deps, repositories, scalaVersionOpt, platformOpt) =
+        unlift(Task.fromEither(depsAndReposOrError0))
       val params0 = params.copy(
         resolution = params.updatedResolution(scalaVersionOpt)
       )
@@ -275,7 +286,8 @@ object Resolve extends CaseApp[ResolveOptions] {
                 }
 
                 print.flatMap(_ => f(modVers))
-            } else
+            }
+            else
               f
           }
           .ioWithConflicts
@@ -309,7 +321,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     withApp: (T, RawAppDescriptor) => T
   ): (T, Seq[String]) = {
 
-    val (inlineAppIds, args0) = args.partition(s => s.startsWith("{") || s.dropWhile(_ != ':').startsWith(":{"))
+    val (inlineAppIds, args0) =
+      args.partition(s => s.startsWith("{") || s.dropWhile(_ != ':').startsWith(":{"))
     val (appIds, deps) = args0.partition(s => s.count(_ == ':') <= 1)
 
     if (inlineAppIds.length + appIds.length > 1) {
@@ -321,7 +334,7 @@ object Resolve extends CaseApp[ResolveOptions] {
 
       val (nameOpt, json) = {
         val input0 = input.trim
-        val idx = input0.indexOf(":{")
+        val idx    = input0.indexOf(":{")
         if (idx >= 0)
           (Some(input.take(idx)).filter(_.nonEmpty), input.drop(idx + 1))
         else
@@ -352,11 +365,13 @@ object Resolve extends CaseApp[ResolveOptions] {
           .attempt
           .flatMap {
             case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
-            case Left(e) => Task.fail(new Exception(e))
-            case Right(res) => Task.point(Right(res))
+            case Left(e)                             => Task.fail(new Exception(e))
+            case Right(res)                          => Task.point(Right(res))
           }
           .unsafeRun()(channels.cache.ec)
-        rawDesc <- RawAppDescriptor.parse(new String(info.appDescriptorBytes, StandardCharsets.UTF_8))
+        rawDesc <- RawAppDescriptor.parse(
+          new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
+        )
       } yield {
         rawDesc
           // kind of meh - so that the id can be picked as default output name by bootstrap
@@ -384,15 +399,16 @@ object Resolve extends CaseApp[ResolveOptions] {
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
-      val initialRepositories = initialParams.repositories.repositories
-      val channels = initialParams.repositories.channels
-      pool = Sync.fixedThreadPool(initialParams.cache.parallel)
-      val cache = initialParams.cache.cache(pool, initialParams.output.logger())
-      val channels0 = Channels(channels.channels, initialRepositories, cache)
-      val res = handleApps(options, args.all, channels0)(_.addApp(_))
-      res
-    }
+    val (options0, deps) =
+      ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+        val initialRepositories = initialParams.repositories.repositories
+        val channels            = initialParams.repositories.channels
+        pool = Sync.fixedThreadPool(initialParams.cache.parallel)
+        val cache     = initialParams.cache.cache(pool, initialParams.output.logger())
+        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val res       = handleApps(options, args.all, channels0)(_.addApp(_))
+        res
+      }
 
     val params = ResolveParams(options0).toEither match {
       case Left(errors) =>
@@ -424,7 +440,7 @@ object Resolve extends CaseApp[ResolveOptions] {
       case Left(e: AppArtifacts.AppArtifactsException) if params.output.verbosity <= 1 =>
         Output.errPrintln(e.getMessage)
         sys.exit(1)
-      case Left(e) => throw new Exception(e)
+      case Left(e)   => throw new Exception(e)
       case Right(()) =>
     }
   }

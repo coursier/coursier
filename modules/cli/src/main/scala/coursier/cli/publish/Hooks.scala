@@ -65,7 +65,11 @@ object Hooks {
 
         } yield Some((p, id))
 
-    override def repository(t: T, repo0: PublishRepository, isSnapshot: Boolean): Option[MavenRepository] =
+    override def repository(
+      t: T,
+      repo0: PublishRepository,
+      isSnapshot: Boolean
+    ): Option[MavenRepository] =
       t.map {
         case (_, repoId) =>
           repo.releaseRepoOf(repoId)
@@ -73,7 +77,7 @@ object Hooks {
 
     override def afterUpload(profileRepoIdOpt: T): Task[Unit] =
       profileRepoIdOpt match {
-        case None => Task.point(())
+        case None                    => Task.point(())
         case Some((profile, repoId)) =>
           // TODO Print sensible error messages if anything goes wrong here (commands to finish promoting, etc.)
           for {

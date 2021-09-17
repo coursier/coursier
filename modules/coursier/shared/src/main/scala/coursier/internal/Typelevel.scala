@@ -5,7 +5,7 @@ import coursier.{Dependency, Module}
 
 object Typelevel {
 
-  val mainLineOrg = Organization("org.scala-lang")
+  val mainLineOrg  = Organization("org.scala-lang")
   val typelevelOrg = Organization("org.typelevel")
 
   val modules = Set(

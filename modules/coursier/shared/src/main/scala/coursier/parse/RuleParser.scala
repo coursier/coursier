@@ -12,8 +12,8 @@ object RuleParser {
     def resolution: P[RuleResolution] = {
 
       def tryResolve = P("resolve").map(_ => RuleResolution.TryResolve)
-      def warn = P("warn").map(_ => RuleResolution.Warn)
-      def fail = P("fail").map(_ => RuleResolution.Fail)
+      def warn       = P("warn").map(_ => RuleResolution.Warn)
+      def fail       = P("fail").map(_ => RuleResolution.Fail)
 
       def res = P(tryResolve | warn | fail)
 
@@ -23,7 +23,16 @@ object RuleParser {
     def alwaysFail = P("AlwaysFail").map(_ => AlwaysFail())
 
     def identifier =
-      P(CharsWhile(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '.' || c == '-' || c == '_' || c == '*').!)
+      P {
+        CharsWhile { c =>
+          (c >= 'a' && c <= 'z') ||
+          (c >= 'A' && c <= 'Z') ||
+          c == '.' ||
+          c == '-' ||
+          c == '_' ||
+          c == '*'
+        }.!
+      }
     def module =
       P(identifier ~ ":" ~ identifier).map {
         case (org, name) =>
@@ -38,23 +47,34 @@ object RuleParser {
 
     def excludes =
       // FIXME There should be better ways to handle whitespaces here…
-      P("exclude" ~ " ".rep ~ "=" ~ " ".rep ~ "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]").map { l =>
+      P {
+        "exclude" ~ " ".rep ~ "=" ~ " ".rep ~
+          "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]"
+      }.map { l =>
         ModuleMatchers(l.toSet)
       }
 
     def includes =
-    // FIXME There should be better ways to handle whitespaces here…
-      P("include" ~ " ".rep ~ "=" ~ " ".rep ~ "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]").map { l =>
+      // FIXME There should be better ways to handle whitespaces here…
+      P {
+        "include" ~ " ".rep ~ "=" ~ " ".rep ~
+          "[" ~ moduleMatcher.rep(sep = P(" ".rep ~ "," ~ " ".rep)) ~ " ".rep ~ "]"
+      }.map { l =>
         ModuleMatchers(Set(), l.toSet)
       }
 
     def sameVersion =
-      P("SameVersion(" ~ module.rep(min = 1, sep = P("," ~ " ".rep)) ~ ")").map { modules =>
-          SameVersion(modules.map(ModuleMatcher(_)).toSet)
+      P {
+        "SameVersion(" ~ module.rep(min = 1, sep = P("," ~ " ".rep)) ~ ")"
+      }.map { modules =>
+        SameVersion(modules.map(ModuleMatcher(_)).toSet)
       }
 
     def dontBumpRootDependencies =
-      P("DontBumpRootDependencies" ~ ("(" ~ (excludes | includes).rep(sep = P("," ~ " ".rep)) ~ ")").?).map { l =>
+      P {
+        "DontBumpRootDependencies" ~
+          ("(" ~ (excludes | includes).rep(sep = P("," ~ " ".rep)) ~ ")").?
+      }.map { l =>
         val matchers = l.getOrElse(Nil).foldLeft(ModuleMatchers.all) {
           (m, m0) =>
             ModuleMatchers(m.exclude ++ m0.exclude, m.include ++ m0.include)
@@ -63,14 +83,19 @@ object RuleParser {
       }
 
     def strict =
-      P("Strict" ~ ("(" ~ moduleOrExcludedModule.rep(sep = P("," ~ " ".rep)) ~ ")").?).map { modulesOpt =>
-        val (exclude, include) = modulesOpt.getOrElse(Nil).partition(_.organization.value.startsWith("!"))
-        val include0 = if (include.isEmpty) Set(ModuleMatcher.all) else include.map(ModuleMatcher(_)).toSet
-        val exclude0 = exclude.map(m => m.withOrganization(Organization(m.organization.value.stripPrefix("!"))))
-        Strict(
-          include0,
-          exclude0.map(ModuleMatcher(_)).toSet
-        )
+      P("Strict" ~ ("(" ~ moduleOrExcludedModule.rep(sep = P("," ~ " ".rep)) ~ ")").?).map {
+        modulesOpt =>
+          val (exclude, include) =
+            modulesOpt.getOrElse(Nil).partition(_.organization.value.startsWith("!"))
+          val include0 =
+            if (include.isEmpty) Set(ModuleMatcher.all) else include.map(ModuleMatcher(_)).toSet
+          val exclude0 = exclude.map(m =>
+            m.withOrganization(Organization(m.organization.value.stripPrefix("!")))
+          )
+          Strict(
+            include0,
+            exclude0.map(ModuleMatcher(_)).toSet
+          )
       }
 
     def rule =
@@ -82,7 +107,9 @@ object RuleParser {
     rule
   }
 
-  private def rulesParser[_: P](defaultResolution: RuleResolution): P[Seq[(Rule, RuleResolution)]] = {
+  private def rulesParser[_: P](
+    defaultResolution: RuleResolution
+  ): P[Seq[(Rule, RuleResolution)]] = {
 
     def rules = P(ruleParser(defaultResolution).rep(min = 1, sep = P("," ~ " ".rep)))
 
@@ -92,7 +119,10 @@ object RuleParser {
   def rule(input: String): Either[String, (Rule, RuleResolution)] =
     rule(input, RuleResolution.TryResolve)
 
-  def rule(input: String, defaultResolution: RuleResolution): Either[String, (Rule, RuleResolution)] =
+  def rule(
+    input: String,
+    defaultResolution: RuleResolution
+  ): Either[String, (Rule, RuleResolution)] =
     fastparse.parse(input, ruleParser(defaultResolution)(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
@@ -105,7 +135,10 @@ object RuleParser {
   def rules(input: String): Either[String, Seq[(Rule, RuleResolution)]] =
     rules(input, RuleResolution.TryResolve)
 
-  def rules(input: String, defaultResolution: RuleResolution): Either[String, Seq[(Rule, RuleResolution)]] =
+  def rules(
+    input: String,
+    defaultResolution: RuleResolution
+  ): Either[String, Seq[(Rule, RuleResolution)]] =
     fastparse.parse(input, rulesParser(defaultResolution)(_)) match {
       case f: Parsed.Failure =>
         Left(f.msg)

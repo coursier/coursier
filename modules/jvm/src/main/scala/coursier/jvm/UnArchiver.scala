@@ -15,15 +15,20 @@ object UnArchiver {
 
     private def nopLogger(): Logger =
       new AbstractLogger(Logger.LEVEL_DISABLED, "foo") {
-        override def debug(message: String, throwable: Throwable) = ()
-        override def info(message: String, throwable: Throwable) = ()
-        override def warn(message: String, throwable: Throwable) = ()
-        override def error(message: String, throwable: Throwable) = ()
+        override def debug(message: String, throwable: Throwable)      = ()
+        override def info(message: String, throwable: Throwable)       = ()
+        override def warn(message: String, throwable: Throwable)       = ()
+        override def error(message: String, throwable: Throwable)      = ()
         override def fatalError(message: String, throwable: Throwable) = ()
-        override def getChildLogger(name: String) = this
+        override def getChildLogger(name: String)                      = this
       }
 
-    def extract(archiveType: ArchiveType, archive: File, destDir: File, overwrite: Boolean): Unit = {
+    def extract(
+      archiveType: ArchiveType,
+      archive: File,
+      destDir: File,
+      overwrite: Boolean
+    ): Unit = {
       val unArchiver: org.codehaus.plexus.archiver.UnArchiver =
         archiveType match {
           case ArchiveType.Zip =>

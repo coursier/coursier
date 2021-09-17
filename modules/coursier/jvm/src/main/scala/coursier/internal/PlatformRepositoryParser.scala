@@ -31,7 +31,7 @@ abstract class PlatformRepositoryParser {
           // FIXME We're not handling metadataPattern here
           i.pattern.chunks.takeWhile {
             case _: coursier.ivy.Pattern.Chunk.Const => true
-            case _ => false
+            case _                                   => false
           }.map(_.string).mkString
         case r =>
           sys.error(s"Unrecognized repository: $r")
@@ -41,8 +41,8 @@ abstract class PlatformRepositoryParser {
         try Right(CacheUrl.url(url0))
         catch {
           case e: MalformedURLException =>
-
-            val urlErrorMsg = "Error parsing URL " + url0 + Option(e.getMessage).fold("")(" (" + _ + ")")
+            val urlErrorMsg =
+              "Error parsing URL " + url0 + Option(e.getMessage).fold("")(" (" + _ + ")")
 
             if (url0.contains(File.separatorChar)) {
               val f = new File(url0)
@@ -50,7 +50,8 @@ abstract class PlatformRepositoryParser {
                 Left(s"$urlErrorMsg, and $url0 not a directory")
               else
                 Right(f.toURI.toURL)
-            } else
+            }
+            else
               Left(urlErrorMsg)
         }
       }
@@ -80,7 +81,7 @@ abstract class PlatformRepositoryParser {
                       coursier.ivy.Pattern(
                         coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
                           case _: coursier.ivy.Pattern.Chunk.Const => true
-                          case _ => false
+                          case _                                   => false
                         }
                       )
                     )

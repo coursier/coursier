@@ -8,8 +8,7 @@ import dataclass.data
 
 import scala.collection.compat._
 
-/**
-  * Forces some modules to all have the same version.
+/** Forces some modules to all have the same version.
   *
   * If ever different versions are found, the highest one is currently selected.
   */
@@ -21,8 +20,9 @@ import scala.collection.compat._
 
   def check(res: Resolution): Option[SameVersionConflict] = {
 
-    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
-    val modules = deps.map(_.module)
+    val deps =
+      res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
+    val modules  = deps.map(_.module)
     val versions = deps.map(_.version)
 
     if (versions.size <= 1)
@@ -36,7 +36,8 @@ import scala.collection.compat._
     conflict: SameVersionConflict
   ): Either[UnsatisfiableRule, Resolution] = {
 
-    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
+    val deps =
+      res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
     val versions = deps.map(_.version)
     assert(deps.nonEmpty)
     assert(versions.size > 1)
@@ -54,9 +55,13 @@ import scala.collection.compat._
       .toMap
 
     if (cantForce.isEmpty) {
-      val res0 = res.withForceVersions(res.forceVersions ++ conflict.modules.toSeq.map(m => m -> selectedVersion))
+      val res0 = res.withForceVersions {
+        res.forceVersions ++
+          conflict.modules.toSeq.map(m => m -> selectedVersion)
+      }
       Right(res0)
-    } else {
+    }
+    else {
       val c = new CantForceSameVersion(
         res,
         this,
@@ -79,10 +84,10 @@ object SameVersion {
     val modules: Set[Module],
     val foundVersions: Set[String]
   ) extends UnsatisfiedRule(
-    rule,
-    s"Found versions ${foundVersions.toVector.sorted.mkString(", ")} " +
-      s"for ${modules.toVector.map(_.toString).sorted.mkString(", ")}"
-  ) {
+        rule,
+        s"Found versions ${foundVersions.toVector.sorted.mkString(", ")} " +
+          s"for ${modules.toVector.map(_.toString).sorted.mkString(", ")}"
+      ) {
     require(foundVersions.size > 1)
   }
 
@@ -93,12 +98,12 @@ object SameVersion {
     version: String,
     conflict: SameVersionConflict
   ) extends UnsatisfiableRule(
-    resolution,
-    rule,
-    conflict,
-    // FIXME More detailed message? (say why it can't be forced)
-    s"Can't force version $version for modules ${modules.toVector.map(_.toString).mkString(", ")}"
-  ) {
+        resolution,
+        rule,
+        conflict,
+        // FIXME More detailed message? (say why it can't be forced)
+        s"Can't force version $version for modules ${modules.toVector.map(_.toString).mkString(", ")}"
+      ) {
     assert(modules.nonEmpty)
     assert(modules.forall(conflict.modules))
   }

@@ -25,13 +25,17 @@ object SinglePackageParams {
     def fileExtensionV(path: String): ValidatedNel[String, (Path, String)] =
       fileV(path).withEither(_.flatMap { p =>
         val name = p.getFileName.toString
-        val idx = name.lastIndexOf('.')
+        val idx  = name.lastIndexOf('.')
         if (idx < 0)
-          Left(NonEmptyList.one(s"$path has no extension, specify one by passing it with classifier:extension:$path"))
+          Left(NonEmptyList.one(
+            s"$path has no extension, specify one by passing it with classifier:extension:$path"
+          ))
         else {
           val ext = name.drop(idx + 1)
           if (ext.isEmpty)
-            Left(NonEmptyList.one(s"$path extension is empty, specify one by passing it with classifier:extension:$path"))
+            Left(NonEmptyList.one(
+              s"$path extension is empty, specify one by passing it with classifier:extension:$path"
+            ))
           else
             Right((p, ext))
         }
@@ -68,7 +72,9 @@ object SinglePackageParams {
               (Classifier(strClassifier), Extension(ext), p)
           }
         case _ =>
-          Validated.invalidNel(s"Malformed artifact argument: $s (expected: ${q}classifier:/path/to/artifact$q)")
+          Validated.invalidNel(
+            s"Malformed artifact argument: $s (expected: ${q}classifier:/path/to/artifact$q)"
+          )
       }
     }
 
@@ -77,7 +83,9 @@ object SinglePackageParams {
         Validated.validNel(true)
       case Some(false) =>
         if (options.jar.nonEmpty || options.pom.nonEmpty || options.artifact.nonEmpty)
-          Validated.invalidNel("Cannot specify --package=false along with --pom or --jar or --artifact")
+          Validated.invalidNel(
+            "Cannot specify --package=false along with --pom or --jar or --artifact"
+          )
         else
           Validated.validNel(false)
       case None =>

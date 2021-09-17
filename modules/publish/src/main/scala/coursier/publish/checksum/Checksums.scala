@@ -22,13 +22,16 @@ object Checksums {
     )
   }
 
-  /**
-    * Compute the missing checksums in a [[FileSet]].
+  /** Compute the missing checksums in a [[FileSet]].
     *
-    * @param types: checksum types to check / compute
-    * @param fileSet: initial [[FileSet]], can optionally contain some already calculated checksum
-    * @param now: last modified time for the added checksum files
-    * @return a [[FileSet]] of the missing checksum files
+    * @param types:
+    *   checksum types to check / compute
+    * @param fileSet:
+    *   initial [[FileSet]], can optionally contain some already calculated checksum
+    * @param now:
+    *   last modified time for the added checksum files
+    * @return
+    *   a [[FileSet]] of the missing checksum files
     */
   def apply(
     types: Seq[ChecksumType],
@@ -63,7 +66,7 @@ object Checksums {
 
     val missing =
       for {
-        type0 <- types
+        type0           <- types
         (path, content) <- files
         if !checksums((path, type0))
       } yield (type0, path, content)
@@ -78,9 +81,9 @@ object Checksums {
             (checksumPath, Content.InMemory(now, checksum.repr.getBytes(StandardCharsets.UTF_8)))
           }
           for {
-            _ <- Task.delay(logger0.computing(id, type0, checksumPath.repr))
-            a <- doSign.attempt
-            _ <- Task.delay(logger0.computed(id, type0, checksumPath.repr, a.left.toOption))
+            _   <- Task.delay(logger0.computing(id, type0, checksumPath.repr))
+            a   <- doSign.attempt
+            _   <- Task.delay(logger0.computed(id, type0, checksumPath.repr, a.left.toOption))
             res <- Task.fromEither(a)
           } yield res
         }
@@ -97,7 +100,7 @@ object Checksums {
     )
 
     val before = Task.delay {
-      val id = new Object
+      val id      = new Object
       val logger0 = logger
       logger0.start()
       logger0.computingSet(id, missingFs)
@@ -112,8 +115,8 @@ object Checksums {
     for {
       idLogger <- before
       (id, logger0) = idLogger
-      a <- checksumFilesTask(id, logger0).attempt
-      _ <- after(id, logger0)
+      a   <- checksumFilesTask(id, logger0).attempt
+      _   <- after(id, logger0)
       res <- Task.fromEither(a)
     } yield res
   }

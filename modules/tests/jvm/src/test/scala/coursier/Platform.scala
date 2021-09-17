@@ -12,7 +12,7 @@ object Platform {
 
   def readFullySync(is: InputStream) = {
     val buffer = new ByteArrayOutputStream()
-    val data = Array.ofDim[Byte](16384)
+    val data   = Array.ofDim[Byte](16384)
 
     var nRead = is.read(data, 0, data.length)
     while (nRead != -1) {

@@ -14,15 +14,16 @@ final case class GetParams(
 
 object GetParams {
   def apply(options: GetOptions): ValidatedNel[String, GetParams] = {
-    val cacheV = options.cache.params
+    val cacheV  = options.cache.params
     val outputV = OutputParams(options.output)
 
     val separatorV = (options.zero, options.separator) match {
-      case (false, None) => Validated.validNel(System.lineSeparator)
-      case (false, Some(sep)) => Validated.validNel(sep)
-      case (true, None) => Validated.validNel("\u0000")
+      case (false, None)          => Validated.validNel(System.lineSeparator)
+      case (false, Some(sep))     => Validated.validNel(sep)
+      case (true, None)           => Validated.validNel("\u0000")
       case (true, Some("\u0000")) => Validated.validNel("\u0000")
-      case (true, Some(_)) => Validated.invalidNel("--zero and --separator cannot be specific at the same time")
+      case (true, Some(_)) =>
+        Validated.invalidNel("--zero and --separator cannot be specific at the same time")
     }
 
     (cacheV, outputV, separatorV).mapN {

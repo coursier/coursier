@@ -36,7 +36,8 @@ object LauncherTestUtil {
       }
       p = b.start()
       f(p)
-    } finally {
+    }
+    finally {
       if (p != null) {
         val exited = p.waitFor(1L, TimeUnit.SECONDS)
         if (!exited)
@@ -63,7 +64,7 @@ object LauncherTestUtil {
   private def adaptArgs(args: Seq[String], directory: File): Seq[String] =
     args match {
       case Seq(h, t @ _*) => adaptCommandName(h, directory) +: t
-      case _ => args
+      case _              => args
     }
 
   def output(
@@ -108,8 +109,7 @@ object LauncherTestUtil {
   ): Int =
     doRun(
       adaptArgs(args, directory),
-      builder => builder
-        .directory(directory),
+      builder => builder.directory(directory),
       _.waitFor()
     )
 
@@ -119,6 +119,8 @@ object LauncherTestUtil {
   ): Unit = {
     val retCode = tryRun(args, directory)
     if (retCode != 0)
-      sys.error(s"Error: command '${launcher}${args.map(" " + _).mkString}' exited with code $retCode")
+      sys.error(
+        s"Error: command '${launcher}${args.map(" " + _).mkString}' exited with code $retCode"
+      )
   }
 }

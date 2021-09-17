@@ -13,7 +13,7 @@ object Traverse {
           case (l @ Left(_), _) => l
           case (Right(b), elem) =>
             f(elem) match {
-              case Left(l) => Left(l)
+              case Left(l)  => Left(l)
               case Right(r) => Right(b += r)
             }
         }
@@ -30,14 +30,14 @@ object Traverse {
             }
           case (Right(b), elem) =>
             f(elem).either match {
-              case Left(l) => Left(new ListBuffer[L] ++= l)
+              case Left(l)  => Left(new ListBuffer[L] ++= l)
               case Right(r) => Right(b += r)
             }
         }
         .left
         .map { b =>
           b.result() match {
-            case Nil => sys.error("Can't happen")
+            case Nil    => sys.error("Can't happen")
             case h :: t => ::(h, t)
           }
         }

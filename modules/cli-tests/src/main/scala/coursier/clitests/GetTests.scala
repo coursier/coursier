@@ -18,7 +18,8 @@ abstract class GetTests extends TestSuite {
           launcher,
           "get",
           "https://repo1.maven.org/maven2/io/get-coursier/coursier_2.13/2.0.2/coursier_2.13-2.0.2.pom.asc",
-          "--cache", cache
+          "--cache",
+          cache
         )
         val content = new String(Files.readAllBytes(Paths.get(output.trim)), StandardCharsets.UTF_8)
         val expectedContent =
@@ -36,7 +37,7 @@ abstract class GetTests extends TestSuite {
         assert(content == expectedContent)
       }
     }
-    
+
     test("GitHub") {
       TestUtil.withTempDir { tmpDir =>
         val cache = new File(tmpDir, "cache").getAbsolutePath
@@ -44,7 +45,8 @@ abstract class GetTests extends TestSuite {
           launcher,
           "get",
           "https://github.com/coursier/coursier/releases/download/v2.0.2/coursier.asc",
-          "--cache", cache
+          "--cache",
+          cache
         )
         val content = new String(Files.readAllBytes(Paths.get(output.trim)), StandardCharsets.UTF_8)
         val expectedContent =

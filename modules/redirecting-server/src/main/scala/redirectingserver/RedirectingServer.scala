@@ -16,7 +16,8 @@ object RedirectingServer {
     val host = if (args.length >= 1) args(0) else "localhost"
     val port = if (args.length >= 2) args(1).toInt else 10002
 
-    val redirectTo = Uri.unsafeFromString(if (args.length >= 3) args(2) else "https://repo1.maven.org/maven2")
+    val redirectTo =
+      Uri.unsafeFromString(if (args.length >= 3) args(2) else "https://repo1.maven.org/maven2")
 
     def service(host: String, port: Int, redirectTo: Uri) = HttpService {
       case GET -> Path("health-check") =>

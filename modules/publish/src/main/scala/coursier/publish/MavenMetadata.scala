@@ -19,7 +19,7 @@ object MavenMetadata {
   )
 
   private val lastUpdatedPattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-  val timestampPattern = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss")
+  val timestampPattern           = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss")
 
   def create(
     org: Organization,
@@ -101,7 +101,9 @@ object MavenMetadata {
                   }
                 )
               case n if n.label == "lastUpdated" =>
-                setLastUpdated.fold(n)(t => <lastUpdated>{t.format(lastUpdatedPattern)}</lastUpdated>)
+                setLastUpdated.fold(n)(t =>
+                  <lastUpdated>{t.format(lastUpdatedPattern)}</lastUpdated>
+                )
               case n => n
             }
           )
@@ -129,16 +131,16 @@ object MavenMetadata {
         <lastUpdated>{now.atOffset(ZoneOffset.UTC).toLocalDateTime.format(lastUpdatedPattern)}</lastUpdated>
         <snapshotVersions>
           {
-            artifacts.map {
-              case (classifierOpt, ext, value, updated) =>
-                <snapshotVersion>
-                  { classifierOpt.fold[Seq[Node]](Nil)(c => Seq(<classifier>{c}</classifier>)) }
+      artifacts.map {
+        case (classifierOpt, ext, value, updated) =>
+          <snapshotVersion>
+                  {classifierOpt.fold[Seq[Node]](Nil)(c => Seq(<classifier>{c}</classifier>))}
                   <extension>{ext}</extension>
                   <value>{value}</value>
                   <updated>{updated.format(lastUpdatedPattern)}</updated>
                 </snapshotVersion>
-            }
-          }
+      }
+    }
         </snapshotVersions>
       </versioning>
     </metadata>
@@ -171,8 +173,8 @@ object MavenMetadata {
 
             (buildNumOpt, timestampOpt) match {
               case (Some(n), Some(ts)) => Some((n, ts))
-              case (None, None) => None
-              case _ => ??? // Report via return type
+              case (None, None)        => None
+              case _                   => ??? // Report via return type
             }
         }.flatten
     }.flatten
@@ -207,7 +209,6 @@ object MavenMetadata {
                     </snapshot>
                 }
               case n: Elem if n.label == "snapshotVersions" =>
-
                 val m = addArtifacts.map {
                   case (c, ext, ver, lm) =>
                     (c, ext) -> (ver, lm)
@@ -230,20 +231,22 @@ object MavenMetadata {
 
                 <snapshotVersions>
                   {
-                    addArtifacts.map {
-                      case (c, ext, ver, lm) =>
-                        <snapshotVersion>
+                  addArtifacts.map {
+                    case (c, ext, ver, lm) =>
+                      <snapshotVersion>
                           {c.fold(Seq.empty[Elem])(c0 => Seq(<classifier>{c0}</classifier>))}
                           <extension>{ext}</extension>
                           <value>{ver}</value>
                           <updated>{lm.format(lastUpdatedPattern)}</updated>
                         </snapshotVersion>
-                    } ++ keep
-                  }
+                  } ++ keep
+                }
                 </snapshotVersions>
 
               case n if n.label == "lastUpdated" =>
-                setLastUpdated.fold(n)(t => <lastUpdated>{t.format(lastUpdatedPattern)}</lastUpdated>)
+                setLastUpdated.fold(n)(t =>
+                  <lastUpdated>{t.format(lastUpdatedPattern)}</lastUpdated>
+                )
               case n => n
             }
           )

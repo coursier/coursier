@@ -34,7 +34,12 @@ object Output {
 
       if (resolutionParams.forceVersion.nonEmpty) {
         stderr.println("  Force versions:")
-        for ((mod, ver) <- resolutionParams.forceVersion.toVector.sortBy { case (mod, _) => mod.toString })
+        val ordered = resolutionParams.forceVersion
+          .toVector
+          .sortBy { case (mod, _) =>
+            mod.toString
+          }
+        for ((mod, ver) <- ordered)
           stderr.println(s"$mod:$ver")
       }
     }
@@ -50,7 +55,10 @@ object Output {
     colors: Boolean
   ): Unit =
     if (printResultStdout || params.output.verbosity >= 1 || params.anyTree || params.conflicts) {
-      if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2 || params.anyTree)
+      val printHeader = (printResultStdout && params.output.verbosity >= 1) ||
+        params.output.verbosity >= 2 ||
+        params.anyTree
+      if (printHeader)
         stderr.println(s"  Result:")
 
       val withExclusions = params.output.verbosity >= 1
@@ -58,16 +66,22 @@ object Output {
       val depsStr =
         if (params.whatDependsOn.nonEmpty) {
           val matchers = params.whatDependsOn
-            .map(_.module(JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")), scalaVersionOpt.getOrElse("")))
+            .map(_.module(
+              JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
+              scalaVersionOpt.getOrElse("")
+            ))
             .map(ModuleMatcher(_))
           Print.dependencyTree(
             res,
-            roots = res.minDependencies.filter(f => matchers.exists(m => m.matches(f.module))).toSeq,
+            roots = res.minDependencies
+              .filter(f => matchers.exists(m => m.matches(f.module)))
+              .toSeq,
             printExclusions = withExclusions,
             reverse = true,
             colors = colors
           )
-        } else if (params.reverseTree || params.tree)
+        }
+        else if (params.reverseTree || params.tree)
           Print.dependencyTree(
             res,
             printExclusions = withExclusions,
@@ -76,25 +90,28 @@ object Output {
           )
         else if (params.conflicts) {
           val conflicts = Conflict(res)
-          val messages = Print.conflicts(conflicts)
+          val messages  = Print.conflicts(conflicts)
           if (messages.isEmpty) {
             if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2)
               stderr.println("No conflict found.")
             ""
-          } else
+          }
+          else
             messages.mkString(nl)
-        } else if (params.candidateUrls) {
+        }
+        else if (params.candidateUrls) {
           val classpathOrder = params.classpathOrder.getOrElse(true)
           // TODO Allow to filter on classifiers / artifact types
           val urls = res.dependencyArtifacts(None, classpathOrder).map(_._3.url)
           urls.mkString(nl)
-        } else {
+        }
+        else {
           val classpathOrder = params.classpathOrder.getOrElse(false)
           Print.dependenciesUnknownConfigs(
             if (classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
             res.projectCache.mapValues { case (_, p) => p },
             printExclusions = withExclusions,
-            reorder = !classpathOrder,
+            reorder = !classpathOrder
           )
         }
 

@@ -29,7 +29,8 @@ import java.nio.file.FileAlreadyExistsException
             .orElse(home)
         }
         zDotDirOpt.toSeq.map(_.resolve(".zprofile"))
-      } else
+      }
+      else
         Nil
     }
 
@@ -49,7 +50,8 @@ import java.nio.file.FileAlreadyExistsException
         Some(startIdx, endIdx + end.length)
       else
         None
-    } else
+    }
+    else
       None
   }
 
@@ -67,7 +69,7 @@ import java.nio.file.FileAlreadyExistsException
             }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           val withTags = "\n" +
             start +
             addition.stripSuffix("\n") + "\n" +
@@ -101,7 +103,10 @@ import java.nio.file.FileAlreadyExistsException
     updatedSomething
   }
 
-  private def removeFromProfileFiles(additionOpt: Option[String], titleOpt: Option[String]): Boolean = {
+  private def removeFromProfileFiles(
+    additionOpt: Option[String],
+    titleOpt: Option[String]
+  ): Boolean = {
 
     def updated(content: String): Option[String] =
       titleOpt match {
@@ -114,7 +119,7 @@ import java.nio.file.FileAlreadyExistsException
           }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           startEndIndices(start, end, content).map {
             case (startIdx, endIdx) =>
               content.take(startIdx).stripSuffix("\n") +
@@ -186,7 +191,7 @@ object ProfileUpdater {
     try Files.createDirectories(path)
     catch {
       case _: FileAlreadyExistsException if Files.isDirectory(path) =>
-        // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
+      // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
     }
 
 }

@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
+// format: off
 final case class UpdateOptions(
 
   @Recurse
@@ -27,8 +28,9 @@ final case class UpdateOptions(
     force: Boolean = false
 
 )
+// format: on
 
 object UpdateOptions {
   implicit val parser = Parser[UpdateOptions]
-  implicit val help = caseapp.core.help.Help[UpdateOptions]
+  implicit val help   = caseapp.core.help.Help[UpdateOptions]
 }

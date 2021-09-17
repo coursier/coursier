@@ -36,10 +36,10 @@ class TestState {
   }
 
   val pool = Sync.fixedThreadPool(6)
-  val ec = ExecutionContext.fromExecutorService(pool)
+  val ec   = ExecutionContext.fromExecutorService(pool)
 
   val inMemoryCache = {
-    val c = new InMemoryCachingFetcher(Cache.default.fetch)
+    val c     = new InMemoryCachingFetcher(Cache.default.fetch)
     val fetch = ResolutionProcess.fetch(repositories, c.fetcher)
 
     for (initialRes <- Seq(initialSparkSqlRes, initialCoursierCliRes)) {
@@ -53,24 +53,24 @@ class TestState {
 
   val fetcher = inMemoryCache.fetcher
 
-  val fetch = ResolutionProcess.fetch(repositories, fetcher)
+  val fetch    = ResolutionProcess.fetch(repositories, fetcher)
   val fetchDom = ResolutionProcess.fetch(repositoriesDom, fetcher)
 
   val forProjectCache = {
 
     val modules = Seq(
-      mod"org.apache:apache" -> "18",
+      mod"org.apache:apache"                  -> "18",
       mod"org.apache.spark:spark-parent_2.12" -> "2.4.0",
-      mod"org.apache.spark:spark-sql_2.12" -> "2.4.0"
+      mod"org.apache.spark:spark-sql_2.12"    -> "2.4.0"
     )
 
     modules.map {
       case (m, v) =>
-        val org = m.organization.value
+        val org  = m.organization.value
         val name = m.name.value
-        val url = s"https://repo1.maven.org/maven2/${org.replace('.', '/')}/$name/$v/$name-$v.pom"
-        val str = inMemoryCache.fromCache(url)
-        val p = MavenRepository.parseRawPomDom(str).toOption.get
+        val url  = s"https://repo1.maven.org/maven2/${org.replace('.', '/')}/$name/$v/$name-$v.pom"
+        val str  = inMemoryCache.fromCache(url)
+        val p    = MavenRepository.parseRawPomDom(str).toOption.get
         val p0 = Pom.addOptionalDependenciesInConfig(
           p.withActualVersionOpt(Some(v))
             .withConfigurations(MavenRepository.defaultConfigurations),

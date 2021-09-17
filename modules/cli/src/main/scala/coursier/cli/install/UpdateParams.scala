@@ -29,25 +29,26 @@ object UpdateParams {
   def apply(options: UpdateOptions): ValidatedNel[String, UpdateParams] = {
 
     val cacheParamsV = options.cacheOptions.params(Some(Duration(0L, TimeUnit.MILLISECONDS)))
-    val outputV = OutputParams(options.outputOptions)
+    val outputV      = OutputParams(options.outputOptions)
 
-    val sharedV = SharedInstallParams(options.sharedInstallOptions)
+    val sharedV     = SharedInstallParams(options.sharedInstallOptions)
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
     val repoV = RepositoryParams(options.repositoryOptions)
 
     val force = options.force
 
-    (cacheParamsV, outputV, sharedV, sharedJavaV, repoV).mapN { (cacheParams, output, shared, sharedJava, repo) =>
-      UpdateParams(
-        cacheParams,
-        output,
-        shared,
-        sharedJava,
-        repo,
-        options.overrideRepositories,
-        force
-      )
+    (cacheParamsV, outputV, sharedV, sharedJavaV, repoV).mapN {
+      (cacheParams, output, shared, sharedJava, repo) =>
+        UpdateParams(
+          cacheParams,
+          output,
+          shared,
+          sharedJava,
+          repo,
+          options.overrideRepositories,
+          force
+        )
     }
   }
 }

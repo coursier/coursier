@@ -55,7 +55,8 @@ object SharedChannelParams {
             .left.map(NonEmptyList.one)
           Validated.fromEither(e)
         }
-      } else
+      }
+      else
         Validated.validNel(Nil)
 
     (channelsV, fileChannelsV).mapN {

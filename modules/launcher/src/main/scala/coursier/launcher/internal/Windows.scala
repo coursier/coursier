@@ -11,7 +11,6 @@ object Windows {
   def pathExtensions: Seq[String] =
     pathExtensions0
 
-
   private lazy val isWindows0: Boolean =
     Option(System.getProperty("os.name"))
       .map(_.toLowerCase(Locale.ROOT))

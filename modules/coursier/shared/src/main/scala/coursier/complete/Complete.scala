@@ -25,12 +25,18 @@ import coursier.util.Task
 
   def withScalaVersion(version: String, adjustBinaryVersion: Boolean): Complete[F] =
     withScalaVersionOpt(Some(version))
-      .withScalaBinaryVersionOpt(if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version)) else scalaBinaryVersionOpt)
+      .withScalaBinaryVersionOpt(
+        if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version))
+        else scalaBinaryVersionOpt
+      )
   def withScalaVersion(version: String): Complete[F] =
     withScalaVersion(version, adjustBinaryVersion = true)
   def withScalaVersionOpt(versionOpt: Option[String], adjustBinaryVersion: Boolean): Complete[F] =
     withScalaVersionOpt(versionOpt)
-      .withScalaBinaryVersionOpt(if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion) else scalaBinaryVersionOpt)
+      .withScalaBinaryVersionOpt(
+        if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion)
+        else scalaBinaryVersionOpt
+      )
   // FIXME Manage to recover that back (automatically adjusting scalaBinaryVersionOpt when scalaVersionOpt is set)
   // def withScalaVersionOpt(versionOpt: Option[String]): Complete[F] =
   //   withScalaVersionOpt(versionOpt, adjustBinaryVersion = versionOpt.nonEmpty)
@@ -46,7 +52,11 @@ import coursier.util.Task
       repositories.distinct.flatMap(r => r.completeOpt(cache.fetch).map((r, _)).toSeq)
 
     val inputF = F.fromAttempt(
-      Repository.Complete.parse(input, scalaVersionOpt.getOrElse(""), scalaBinaryVersionOpt.getOrElse(""))
+      Repository.Complete.parse(
+        input,
+        scalaVersionOpt.getOrElse(""),
+        scalaBinaryVersionOpt.getOrElse("")
+      )
     )
 
     val t = inputF.flatMap { input0 =>

@@ -2,6 +2,7 @@ package coursier.cli.publish.options
 
 import caseapp._
 
+// format: off
 final case class SinglePackageOptions(
 
   jar: Option[String] = None,
@@ -17,8 +18,9 @@ final case class SinglePackageOptions(
     `package`: Option[Boolean] = None
 
 )
+// format: on
 
 object SinglePackageOptions {
   implicit val parser = Parser[SinglePackageOptions]
-  implicit val help = caseapp.core.help.Help[SinglePackageOptions]
+  implicit val help   = caseapp.core.help.Help[SinglePackageOptions]
 }

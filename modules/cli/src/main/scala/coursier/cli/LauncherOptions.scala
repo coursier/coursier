@@ -3,6 +3,7 @@ package coursier.cli
 import caseapp.core.help.Help
 import caseapp.{Hidden, Parser}
 
+// format: off
 final case class LauncherOptions(
   @Hidden
   version: Boolean = false,
@@ -12,8 +13,9 @@ final case class LauncherOptions(
   @Hidden
     require: Option[String] = None
 )
+// format: on
 
 object LauncherOptions {
   implicit val parser = Parser[LauncherOptions]
-  implicit val help = Help[LauncherOptions]
+  implicit val help   = Help[LauncherOptions]
 }

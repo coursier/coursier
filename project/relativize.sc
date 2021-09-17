@@ -1,4 +1,3 @@
-
 import $ivy.`org.jsoup:jsoup:1.10.3`
 
 // Originally adapted from https://github.com/olafurpg/sbt-docusaurus/blob/16e548280117d3fcd8db4c244f91f089470b8ee7/plugin/src/main/scala/sbtdocusaurus/internal/Relativize.scala
@@ -32,19 +31,20 @@ private val baseUri = URI.create("http://example.com/")
 
 def processHtmlFile(site: Path, file: Path): Unit = {
   val originRelativeUri = relativeUri(site.relativize(file))
-  val originUri = baseUri.resolve(originRelativeUri)
-  val originPath = Paths.get(originUri.getPath).getParent
+  val originUri         = baseUri.resolve(originRelativeUri)
+  val originPath        = Paths.get(originUri.getPath).getParent
   def relativizeAttribute(element: Element, attribute: String): Unit = {
     val absoluteHref = URI.create(element.attr(s"abs:$attribute"))
     if (absoluteHref.getHost == baseUri.getHost) {
-      val hrefPath = Paths.get(absoluteHref.getPath)
+      val hrefPath     = Paths.get(absoluteHref.getPath)
       val relativeHref = originPath.relativize(hrefPath)
       val fragment =
         if (absoluteHref.getFragment == null) ""
         else "#" + absoluteHref.getFragment
       val newHref = relativeUri(relativeHref).toString + fragment
       element.attr(attribute, newHref)
-    } else if (element.attr(attribute).startsWith("//")) {
+    }
+    else if (element.attr(attribute).startsWith("//")) {
       // We force "//hostname" links to become "https://hostname" in order to make
       // the site browsable without file server. If we keep "//hostname"  unchanged
       // then users will try to load "file://hostname" which results in 404.

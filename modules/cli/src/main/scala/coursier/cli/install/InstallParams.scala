@@ -31,12 +31,12 @@ object InstallParams {
   def apply(options: InstallOptions, anyArg: Boolean): ValidatedNel[String, InstallParams] = {
 
     val cacheParamsV = options.cacheOptions.params(None)
-    val outputV = OutputParams(options.outputOptions)
+    val outputV      = OutputParams(options.outputOptions)
 
     val sharedV = SharedInstallParams(options.sharedInstallOptions)
 
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
-    val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
+    val sharedJavaV    = SharedJavaParams(options.sharedJavaOptions)
 
     val envV = EnvParams(options.envOptions)
 
@@ -51,11 +51,15 @@ object InstallParams {
 
     val force = options.force
 
-    val checkNeedsChannelsV =
-      if (anyArg && sharedChannelV.toOption.exists(_.channels.isEmpty) && addChannelsV.toOption.exists(_.isEmpty))
+    val checkNeedsChannelsV = {
+      val missingChannels = anyArg &&
+        sharedChannelV.toOption.exists(_.channels.isEmpty) &&
+        addChannelsV.toOption.exists(_.isEmpty)
+      if (missingChannels)
         Validated.invalidNel(s"Error: no channels specified")
       else
         Validated.validNel(())
+    }
 
     val flags = Seq(
       options.addChannel.nonEmpty,
@@ -69,11 +73,25 @@ object InstallParams {
 
     val checkArgsV =
       if (anyArg && flags.exists(identity))
-        Validated.invalidNel(s"Error: unexpected arguments passed along --add-channel, --env, or --setup.")
+        Validated.invalidNel(
+          s"Error: unexpected arguments passed along --add-channel, --env, or --setup."
+        )
       else
         Validated.validNel(())
 
-    (cacheParamsV, outputV, sharedV, sharedChannelV, sharedJavaV, envV, repoV, addChannelsV, checkNeedsChannelsV, flagsV, checkArgsV).mapN {
+    (
+      cacheParamsV,
+      outputV,
+      sharedV,
+      sharedChannelV,
+      sharedJavaV,
+      envV,
+      repoV,
+      addChannelsV,
+      checkNeedsChannelsV,
+      flagsV,
+      checkArgsV
+    ).mapN {
       (cacheParams, output, shared, sharedChannel, sharedJava, env, repo, addChannels, _, _, _) =>
         InstallParams(
           cacheParams,

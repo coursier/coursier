@@ -46,7 +46,12 @@ abstract class PlatformTestHelpers {
     MockCache.create[Task](handmadeMetadataLocation, pool = pool)
 
   val cacheWithHandmadeMetadata: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, pool = pool, Seq(handmadeMetadataLocation), writeMissing = writeMockData)
+    MockCache.create[Task](
+      mockDataLocation,
+      pool = pool,
+      Seq(handmadeMetadataLocation),
+      writeMissing = writeMockData
+    )
       .withDummyArtifact(_.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
@@ -64,7 +69,7 @@ abstract class PlatformTestHelpers {
 
   def sha1(s: String): String = {
     val md = MessageDigest.getInstance("SHA-1")
-    val b = md.digest(s.getBytes(StandardCharsets.UTF_8))
+    val b  = md.digest(s.getBytes(StandardCharsets.UTF_8))
     new BigInteger(1, b).toString(16)
   }
 

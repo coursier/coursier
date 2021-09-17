@@ -31,7 +31,8 @@ object OrganizationDetails {
           n <- nameOpt
           u <- urlOpt
         } yield OrganizationDetails(n, u)
-      } else
+      }
+      else
         DecodeResult.fail("Organization: not an object", c.history)
     }
 

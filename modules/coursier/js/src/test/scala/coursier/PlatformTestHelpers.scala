@@ -5,7 +5,7 @@ import coursier.cache.{Cache, MockCache}
 import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.scalajs.js.Dynamic.{ global => g }
+import scala.scalajs.js.Dynamic.{global => g}
 
 abstract class PlatformTestHelpers {
   val cache: Cache[Task] =

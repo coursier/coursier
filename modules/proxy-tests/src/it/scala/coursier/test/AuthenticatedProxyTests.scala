@@ -37,8 +37,10 @@ object AuthenticatedProxyTests extends TestSuite {
       nopeRepo.shutdown()
     }
 
-  private lazy val okProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9083))
-  private lazy val nopeProxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9084))
+  private lazy val okProxy =
+    new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9083))
+  private lazy val nopeProxy =
+    new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress("localhost", 9084))
 
   private lazy val okRunner = new coursier.test.TestRunner(
     artifact = artifactWithProxy[Task](okProxy),

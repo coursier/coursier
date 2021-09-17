@@ -17,10 +17,16 @@ final case class LaunchParams(
   execve: Option[Boolean]
 ) {
   lazy val fork: Boolean =
-    shared.fork.getOrElse(jep || shared.python || javaOptions.nonEmpty || sharedJava.jvm.nonEmpty || SharedLaunchParams.defaultFork)
+    shared.fork.getOrElse(
+      jep ||
+      shared.python ||
+      javaOptions.nonEmpty ||
+      sharedJava.jvm.nonEmpty ||
+      SharedLaunchParams.defaultFork
+    )
 
   def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] = {
-    val id = sharedJava.id
+    val id     = sharedJava.id
     val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
     for {
       _ <- Task.delay(logger.init())
@@ -32,9 +38,9 @@ final case class LaunchParams(
       )
       handle = coursier.jvm.JavaHome()
         .withCache(cache0)
-      javaExe <- handle.javaBin(id)
+      javaExe   <- handle.javaBin(id)
       envUpdate <- handle.environmentFor(id)
-      _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
+      _         <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
     } yield (javaExe.toAbsolutePath.toString, envUpdate)
   }
 }
@@ -42,7 +48,7 @@ final case class LaunchParams(
 object LaunchParams {
   def apply(options: LaunchOptions): ValidatedNel[String, LaunchParams] = {
 
-    val sharedV = SharedLaunchParams(options.sharedOptions)
+    val sharedV     = SharedLaunchParams(options.sharedOptions)
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
     (sharedV, sharedJavaV).mapN { (shared, sharedJava) =>

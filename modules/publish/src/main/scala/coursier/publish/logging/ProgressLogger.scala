@@ -10,8 +10,7 @@ import coursier.cache.internal.ThreadUtil
 
 import scala.jdk.CollectionConverters._
 
-/**
-  * Displays the progress of some task on a single line.
+/** Displays the progress of some task on a single line.
   *
   * With a ticker, an emoji once it's done, a summary of how many sub-tasks are done, and the total
   * number of sub-tasks if it is known.
@@ -26,7 +25,7 @@ final class ProgressLogger[T](
 
   import ProgressLogger._
 
-  private val states = new ConcurrentHashMap[T, State]
+  private val states  = new ConcurrentHashMap[T, State]
   private var printed = 0
 
   private def clear(): Unit = {
@@ -52,27 +51,34 @@ final class ProgressLogger[T](
         clear()
 
         for ((_, s) <- states.asScala.toVector.sortBy(_._2.totalOpt.sum)) {
-          val m = s.processed.asScala.iterator.toMap
+          val m       = s.processed.asScala.iterator.toMap
           val ongoing = m.count(_._2.isLeft)
           val extra =
             if (ongoing > 0) {
               val total = m.iterator.flatMap(_._2.left.toOption.iterator.map(_._2)).sum
               if (total > 0L) {
-                val done = m.iterator.flatMap(_._2.left.toOption.iterator.filter(_._2 > 0L).map(_._1)).sum
+                val done =
+                  m.iterator.flatMap(_._2.left.toOption.iterator.filter(_._2 > 0L).map(_._1)).sum
                 val pct = f"${100L * done.toDouble / total}%.2f %%"
                 s" ($pct of $ongoing on-going)"
-              } else
+              }
+              else
                 s" ($ongoing on-going)"
-            } else
+            }
+            else
               ""
           val doneCount = m.count(_._2.isRight)
-          val done = s.done.get()
+          val done      = s.done.get()
           val em =
             if (done)
               doneEmoji.fold("")(_ + " ")
             else
               tickers(doneCount % tickers.length) + " "
-          out.write(s" $em$processedMessage $doneCount${s.totalOpt.filter(_ => !done).fold("")(t => s" / $t")} $elementName$extra" + System.lineSeparator())
+          val totalPart = s.totalOpt.filter(_ => !done).fold("")(t => s" / $t")
+          out.write(
+            s" $em$processedMessage $doneCount$totalPart " + elementName + extra +
+              System.lineSeparator()
+          )
           printed += 1
         }
 
@@ -83,7 +89,7 @@ final class ProgressLogger[T](
       }
     }
 
-  private val onChangeUpdate = update()
+  private val onChangeUpdate     = update()
   private val onChangeUpdateLock = new Object
   private def onChange(): Unit = {
     if (updateOnChange)
@@ -93,7 +99,7 @@ final class ProgressLogger[T](
   }
 
   def processingSet(id: T, totalOpt: Option[Int]): Unit = {
-    val s = new State(totalOpt)
+    val s        = new State(totalOpt)
     val previous = states.putIfAbsent(id, s)
     assert(previous eq null)
     onChange()
@@ -156,7 +162,7 @@ final class ProgressLogger[T](
 object ProgressLogger {
 
   private final class State(val totalOpt: Option[Int]) {
-    val done = new AtomicBoolean(false)
+    val done      = new AtomicBoolean(false)
     val processed = new ConcurrentHashMap[String, Either[(Long, Long), Unit]]
   }
 

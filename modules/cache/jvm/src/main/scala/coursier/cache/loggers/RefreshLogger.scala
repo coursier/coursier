@@ -13,7 +13,10 @@ import scala.collection.mutable.ArrayBuffer
 
 object RefreshLogger {
 
-  def defaultDisplay(fallbackMode: Boolean = defaultFallbackMode, quiet: Boolean = false): RefreshDisplay =
+  def defaultDisplay(
+    fallbackMode: Boolean = defaultFallbackMode,
+    quiet: Boolean = false
+  ): RefreshDisplay =
     if (fallbackMode)
       new FallbackRefreshDisplay(quiet = quiet)
     else if (quiet)
@@ -37,7 +40,12 @@ object RefreshLogger {
     new RefreshLogger(new OutputStreamWriter(os), display)
 
   def create(os: OutputStream, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
-    new RefreshLogger(new OutputStreamWriter(os), display, fallbackMode = false, logChanging = logChanging)
+    new RefreshLogger(
+      new OutputStreamWriter(os),
+      display,
+      fallbackMode = false,
+      logChanging = logChanging
+    )
 
   def create(
     os: OutputStream,
@@ -56,7 +64,11 @@ object RefreshLogger {
   def create(writer: OutputStreamWriter, display: RefreshDisplay): RefreshLogger =
     new RefreshLogger(writer, display)
 
-  def create(writer: OutputStreamWriter, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
+  def create(
+    writer: OutputStreamWriter,
+    display: RefreshDisplay,
+    logChanging: Boolean
+  ): RefreshLogger =
     new RefreshLogger(writer, display, fallbackMode = false, logChanging = logChanging)
 
   def create(
@@ -73,10 +85,8 @@ object RefreshLogger {
       logPickedVersions = logPickedVersions
     )
 
-
   lazy val defaultFallbackMode: Boolean =
     !coursier.paths.Util.useAnsiOutput()
-
 
   private class UpdateDisplayRunnable(out: Writer, val display: RefreshDisplay) extends Runnable {
 
@@ -86,7 +96,7 @@ object RefreshLogger {
       messages.add(message)
     private def flushMessages(): Unit = {
       var printedAnything = false
-      var msg: String = null
+      var msg: String     = null
       while ({
         msg = messages.poll()
         msg != null
@@ -112,7 +122,7 @@ object RefreshLogger {
 
     private val downloads = new ArrayBuffer[String]
     private val doneQueue = new ArrayBuffer[(String, RefreshInfo)]
-    val infos = new ConcurrentHashMap[String, RefreshInfo]
+    val infos             = new ConcurrentHashMap[String, RefreshInfo]
 
     def newEntry(
       url: String,
@@ -217,9 +227,9 @@ class RefreshLogger(
 
   import RefreshLogger._
 
-  private var updateRunnableOpt = Option.empty[UpdateDisplayRunnable]
+  private var updateRunnableOpt                             = Option.empty[UpdateDisplayRunnable]
   @volatile private var scheduler: ScheduledExecutorService = _
-  private val lock = new Object
+  private val lock                                          = new Object
 
   private def updateRunnable = updateRunnableOpt.getOrElse {
     throw new Exception("Uninitialized TermDisplay")
@@ -293,7 +303,12 @@ class RefreshLogger(
       s"Downloading $url" + System.lineSeparator()
     )
 
-  override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {
+  override def downloadLength(
+    url: String,
+    totalLength: Long,
+    alreadyDownloaded: Long,
+    watching: Boolean
+  ): Unit = {
     val info = updateRunnable.infos.get(url)
     assert(info != null, s"Incoherent state ($url)")
     val newInfo = info match {

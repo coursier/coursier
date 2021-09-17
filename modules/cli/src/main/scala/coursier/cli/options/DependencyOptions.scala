@@ -2,6 +2,7 @@ package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 
+// format: off
 final case class DependencyOptions(
 
   @Help("Exclude module")
@@ -36,8 +37,9 @@ final case class DependencyOptions(
     native: Boolean = false
 
 )
+// format: on
 
 object DependencyOptions {
   implicit val parser = Parser[DependencyOptions]
-  implicit val help = caseapp.core.help.Help[DependencyOptions]
+  implicit val help   = caseapp.core.help.Help[DependencyOptions]
 }

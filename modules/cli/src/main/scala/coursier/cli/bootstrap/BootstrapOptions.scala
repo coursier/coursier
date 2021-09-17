@@ -5,6 +5,7 @@ import coursier.cli.native.NativeLauncherOptions
 import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
 
+// format: off
 @ArgsName("org:name:version|app-name[:version]*")
 final case class BootstrapOptions(
   @Recurse
@@ -20,8 +21,9 @@ final case class BootstrapOptions(
       options = options.addApp(app, sharedLaunchOptions.resolveOptions.dependencyOptions.native)
     )
 }
+// format: on
 
 object BootstrapOptions {
   implicit val parser = Parser[BootstrapOptions]
-  implicit val help = caseapp.core.help.Help[BootstrapOptions]
+  implicit val help   = caseapp.core.help.Help[BootstrapOptions]
 }

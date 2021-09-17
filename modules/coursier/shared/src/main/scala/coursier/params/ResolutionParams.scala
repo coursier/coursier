@@ -1,6 +1,14 @@
 package coursier.params
 
-import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation, Version}
+import coursier.core.{
+  Activation,
+  Configuration,
+  Module,
+  ModuleName,
+  Organization,
+  Reconciliation,
+  Version
+}
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 import dataclass.data
@@ -73,7 +81,7 @@ import dataclass.data
   def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] =
     reconciliation.map {
       case (m, Reconciliation.Strict | Reconciliation.SemVer) => (m, Reconciliation.Default)
-      case other => other
+      case other                                              => other
     }
 
   lazy val actualRules: Seq[(Rule, RuleResolution)] = {
@@ -82,7 +90,10 @@ import dataclass.data
       case (m, Reconciliation.Strict) =>
         (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault), RuleResolution.Fail)
       case (m, Reconciliation.SemVer) =>
-        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault).withSemVer(true), RuleResolution.Fail)
+        (
+          Strict(m.include, m.exclude, includeByDefault = m.includeByDefault).withSemVer(true),
+          RuleResolution.Fail
+        )
     }
 
     rules ++ fromReconciliation

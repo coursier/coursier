@@ -19,8 +19,8 @@ object SearchParams {
 
   def apply(options: SearchOptions, anyArg: Boolean): ValidatedNel[String, SearchParams] = {
 
-    val cacheParamsV = options.cacheOptions.params(None)
-    val outputV = OutputParams(options.outputOptions)
+    val cacheParamsV  = options.cacheOptions.params(None)
+    val outputV       = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions)
 
     (cacheParamsV, outputV, repositoriesV).mapN {

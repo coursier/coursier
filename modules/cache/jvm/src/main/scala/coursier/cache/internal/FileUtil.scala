@@ -9,7 +9,7 @@ object FileUtil {
   // via https://stackoverflow.com/questions/1264709/convert-inputstream-to-byte-array-in-java/37681322#37681322)
   def readFullyUnsafe(is: InputStream): Array[Byte] = {
     val buffer = new ByteArrayOutputStream
-    val data = Array.ofDim[Byte](16384)
+    val data   = Array.ofDim[Byte](16384)
 
     var nRead = 0
     while ({
@@ -27,7 +27,8 @@ object FileUtil {
     try {
       is0 = is
       readFullyUnsafe(is0)
-    } finally {
+    }
+    finally {
       if (is0 != null)
         is0.close()
     }

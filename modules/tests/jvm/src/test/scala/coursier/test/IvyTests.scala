@@ -3,7 +3,15 @@ package coursier.test
 import java.io.File
 
 import coursier.core.{Classifier, Configuration, Type}
-import coursier.{Attributes, Dependency, Module, ivyRepositoryString, moduleNameString, moduleString, organizationString}
+import coursier.{
+  Attributes,
+  Dependency,
+  Module,
+  ivyRepositoryString,
+  moduleNameString,
+  moduleString,
+  organizationString
+}
 import coursier.ivy.IvyRepository
 import coursier.test.compatibility.executionContext
 import utest._
@@ -21,7 +29,9 @@ object IvyTests extends TestSuite {
     test("dropInfoAttributes") {
       runner.resolutionCheck(
         module = Module(
-          org"org.scala-js", name"sbt-scalajs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+          org"org.scala-js",
+          name"sbt-scalajs",
+          Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
         ),
         version = "0.6.6",
         extraRepos = Seq(sbtRepo),
@@ -33,11 +43,14 @@ object IvyTests extends TestSuite {
       // will likely break if new 0.6.x versions are published :-)
 
       val mod = Module(
-        org"com.github.ddispaltro", name"sbt-reactjs", Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
+        org"com.github.ddispaltro",
+        name"sbt-reactjs",
+        Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
       )
       val ver = "0.6.+"
 
-      val expectedArtifactUrl = "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.ddispaltro/sbt-reactjs/scala_2.10/sbt_0.13/0.6.8/jars/sbt-reactjs.jar"
+      val expectedArtifactUrl =
+        "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.ddispaltro/sbt-reactjs/scala_2.10/sbt_0.13/0.6.8/jars/sbt-reactjs.jar"
 
       test - runner.resolutionCheck(
         module = mod,
@@ -45,8 +58,9 @@ object IvyTests extends TestSuite {
         extraRepos = Seq(sbtRepo)
       )
 
-      test - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) { artifacts =>
-        assert(artifacts.exists(_.url == expectedArtifactUrl))
+      test - runner.withArtifacts(mod, ver, Attributes(Type.jar), extraRepos = Seq(sbtRepo)) {
+        artifacts =>
+          assert(artifacts.exists(_.url == expectedArtifactUrl))
       }
     }
 
@@ -75,7 +89,9 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.changing)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+            throw new Exception(
+              s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+            )
         }
       }
 
@@ -93,7 +109,9 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.changing)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+            throw new Exception(
+              s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+            )
         }
       }
     }
@@ -115,7 +133,9 @@ object IvyTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == mainJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+          throw new Exception(
+            s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+          )
       }
 
       test("test conf") {
@@ -163,7 +183,9 @@ object IvyTests extends TestSuite {
           case Seq(artifact) =>
             assert(artifact.url == testJarUrl)
           case other =>
-            throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+            throw new Exception(
+              s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+            )
         }
       }
     }

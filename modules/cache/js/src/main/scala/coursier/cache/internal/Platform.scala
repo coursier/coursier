@@ -30,10 +30,9 @@ object Platform {
 
   private lazy val fs = g.require("fs")
 
-
   // on node and from the browser
   def get(url: String)(implicit executionContext: ExecutionContext): Future[String] = {
-    val p = Promise[String]()
+    val p       = Promise[String]()
     val xhrReq0 = xhrReq()
     val f = { _: Event =>
       p.success(xhrReq0.responseText)
@@ -53,11 +52,16 @@ object Platform {
   }
 
   // only on node
-  def textResource(path: String, linkUrlOpt: Option[String] = None)(implicit ec: ExecutionContext): Future[String] = {
+  def textResource(
+    path: String,
+    linkUrlOpt: Option[String] = None
+  )(implicit
+    ec: ExecutionContext
+  ): Future[String] = {
     val p = Promise[String]()
 
-    fs.readFile(path, "utf-8", {
-      (err: js.Dynamic, data: js.Dynamic) =>
+    val cb: js.Function2[js.Dynamic, js.Dynamic, Unit] =
+      (err, data) => {
         if (js.typeOf(err) == "undefined" || err == null) {
           val s = data.asInstanceOf[String]
           val res = linkUrlOpt match {
@@ -67,10 +71,13 @@ object Platform {
                 .mkString("\n")
           }
           p.success(res)
-        } else
+        }
+        else
           p.failure(new Exception(err.toString))
         ()
-    }: js.Function2[js.Dynamic, js.Dynamic, Unit])
+      }
+
+    fs.readFile(path, "utf-8", cb)
 
     p.future
   }

@@ -3,6 +3,7 @@ package coursier.cli.publish.options
 import caseapp._
 import coursier.cli.options.CacheOptions
 
+// format: off
 final case class PublishOptions(
 
   @Recurse
@@ -47,8 +48,9 @@ final case class PublishOptions(
   urlSuffix: Option[String] = None
 
 )
+// format: on
 
 object PublishOptions {
   implicit val parser = Parser[PublishOptions]
-  implicit val help = caseapp.core.help.Help[PublishOptions]
+  implicit val help   = caseapp.core.help.Help[PublishOptions]
 }

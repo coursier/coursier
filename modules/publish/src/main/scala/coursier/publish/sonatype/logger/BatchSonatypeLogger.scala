@@ -18,7 +18,8 @@ final class BatchSonatypeLogger(out: PrintStream, verbosity: Int) extends Sonaty
           Some("Listed Sonatype profiles")
         else
           None
-      } else
+      }
+      else
         Some("Fail to list Sonatype profiles")
 
     for (msg <- msgOpt)

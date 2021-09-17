@@ -9,7 +9,7 @@ sealed abstract class CachePolicy extends Product with Serializable {
 object CachePolicy {
 
   sealed abstract class Mixed extends CachePolicy {
-    def acceptChanging: Mixed = this
+    def acceptChanging: Mixed             = this
     def acceptsChangingArtifacts: Boolean = true
   }
 
@@ -18,13 +18,14 @@ object CachePolicy {
     def rejectChanging = NoChanging.LocalOnly
   }
 
-  /** Only pick local files, possibly from the cache. Don't return changing artifacts (whose last check is) older than TTL */
+  /** Only pick local files, possibly from the cache. Don't return changing artifacts (whose last
+    * check is) older than TTL
+    */
   case object LocalOnlyIfValid extends Mixed {
     def rejectChanging = NoChanging.LocalOnly
   }
 
-  /**
-    * Only pick local files. If one of these local files corresponds to a changing artifact, check
+  /** Only pick local files. If one of these local files corresponds to a changing artifact, check
     * for updates, and download these if needed.
     *
     * If no local file is found, *don't* try download it. Updates are only checked for files already
@@ -36,8 +37,8 @@ object CachePolicy {
     def rejectChanging = NoChanging.LocalOnly
   }
 
-  /**
-    * Only pick local files, check if any update is available for them, and download these if needed.
+  /** Only pick local files, check if any update is available for them, and download these if
+    * needed.
     *
     * If no local file is found, *don't* try download it. Updates are only checked for files already
     * in cache.
@@ -51,8 +52,7 @@ object CachePolicy {
     def rejectChanging = NoChanging.LocalUpdate
   }
 
-  /**
-    * Pick local files, and download the missing ones.
+  /** Pick local files, and download the missing ones.
     *
     * For changing ones, check for updates, and download those if any.
     *
@@ -62,8 +62,7 @@ object CachePolicy {
     def rejectChanging = NoChanging.FetchMissing
   }
 
-  /**
-    * Pick local files, download the missing ones, check for updates and download those if any.
+  /** Pick local files, download the missing ones, check for updates and download those if any.
     *
     * Follows the TTL parameter (assumes no update is needed if the last one is recent enough).
     *
@@ -74,8 +73,7 @@ object CachePolicy {
     def rejectChanging = NoChanging.FetchMissing
   }
 
-  /**
-    * Pick local files, download the missing ones.
+  /** Pick local files, download the missing ones.
     *
     * No updates are checked for files already downloaded.
     */
@@ -83,8 +81,7 @@ object CachePolicy {
     def rejectChanging = NoChanging.FetchMissing
   }
 
-  /**
-    * (Re-)download all files.
+  /** (Re-)download all files.
     *
     * Erases files already in cache.
     */
@@ -94,7 +91,7 @@ object CachePolicy {
 
   sealed abstract class NoChanging extends CachePolicy {
     def rejectChanging: CachePolicy.NoChanging = this
-    def acceptsChangingArtifacts: Boolean = false
+    def acceptsChangingArtifacts: Boolean      = false
   }
 
   object NoChanging {
@@ -111,6 +108,5 @@ object CachePolicy {
       def acceptChanging = CachePolicy.ForceDownload
     }
   }
-
 
 }

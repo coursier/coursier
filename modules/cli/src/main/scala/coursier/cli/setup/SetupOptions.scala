@@ -6,6 +6,7 @@ import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 
+// format: off
 final case class SetupOptions(
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
@@ -27,11 +28,12 @@ final case class SetupOptions(
   tryRevert: Boolean = false,
   apps: List[String] = Nil
 ) {
+  // format: on
   def envOptions: EnvOptions =
     EnvOptions(env = env, userHome = userHome)
 }
 
 object SetupOptions {
   implicit val parser = Parser[SetupOptions]
-  implicit val help = caseapp.core.help.Help[SetupOptions]
+  implicit val help   = caseapp.core.help.Help[SetupOptions]
 }

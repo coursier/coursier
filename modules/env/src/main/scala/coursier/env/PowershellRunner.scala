@@ -23,10 +23,11 @@ import scala.util.Try
 
     val scriptArgs =
       if (encodeProgram) {
-        val base64 = Base64.getEncoder()
+        val base64        = Base64.getEncoder()
         val encodedScript = base64.encodeToString(fullScript.getBytes(StandardCharsets.UTF_16LE))
         Seq("-EncodedCommand", encodedScript)
-      } else
+      }
+      else
         Seq("-Command", fullScript)
 
     val command = Seq(powershellExePath) ++ options ++ scriptArgs
@@ -38,7 +39,7 @@ import scala.util.Try
     val p: Process = b.start()
     p.getOutputStream.close()
     val outputBytes = PowershellRunner.readFully(p.getInputStream)
-    val retCode = p.waitFor()
+    val retCode     = p.waitFor()
     if (retCode == 0)
       new String(outputBytes, StandardCharsets.UTF_8)
     else
@@ -62,7 +63,7 @@ object PowershellRunner {
 
   private def readFully(is: InputStream): Array[Byte] = {
     val buffer = new ByteArrayOutputStream
-    val data = Array.ofDim[Byte](16384)
+    val data   = Array.ofDim[Byte](16384)
 
     var nRead = 0
     while ({
@@ -74,6 +75,5 @@ object PowershellRunner {
     buffer.flush()
     buffer.toByteArray
   }
-
 
 }

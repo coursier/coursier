@@ -48,7 +48,11 @@ final case class GpgSigner(
     }
   }
 
-  private def sign0(path: Path, temporary: Boolean, content: Content): Task[Either[String, String]] =
+  private def sign0(
+    path: Path,
+    temporary: Boolean,
+    content: Content
+  ): Task[Either[String, String]] =
     Task.delay {
 
       // inspired by https://github.com/jodersky/sbt-gpg/blob/853e608120eac830068bbb121b486b7cf06fc4b9/src/main/scala/Gpg.scala
@@ -73,7 +77,8 @@ final case class GpgSigner(
               Seq(
                 "--armor",
                 "--yes",
-                "--output", dest.toAbsolutePath.toString,
+                "--output",
+                dest.toAbsolutePath.toString,
                 "--detach-sign",
                 path.toAbsolutePath.toString
               ): _*
@@ -88,7 +93,8 @@ final case class GpgSigner(
           Right(new String(Files.readAllBytes(dest), StandardCharsets.UTF_8))
         else
           Left(s"gpg failed (return code: $retCode)")
-      } finally {
+      }
+      finally {
         // Ignore I/O errors?
         Files.deleteIfExists(dest)
         if (temporary)
@@ -103,7 +109,7 @@ object GpgSigner {
 
   object Key {
     final case class Id(id: String) extends Key
-    case object Default extends Key
+    case object Default             extends Key
   }
 
 }

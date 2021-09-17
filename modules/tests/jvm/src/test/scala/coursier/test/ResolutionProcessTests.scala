@@ -38,7 +38,6 @@ object ResolutionProcessTests extends TestSuite {
         val fetch: ResolutionProcess.Fetch[Task] = {
 
           case Seq((`mod`, "9")) =>
-
             val save = Task.delay {
               called.put("9", ())
             }
@@ -46,7 +45,6 @@ object ResolutionProcessTests extends TestSuite {
             save.flatMap(_ => Task.never)
 
           case Seq(mv @ (`mod`, v)) =>
-
             val save = Task.delay {
               called.put(v, ())
             }
@@ -62,7 +60,12 @@ object ResolutionProcessTests extends TestSuite {
         val res = Try(Await.result(f, 1.second))
 
         // must have timed out
-        assert(res.failed.toOption.exists { case _: java.util.concurrent.TimeoutException => true; case _ => false })
+        assert {
+          res.failed.toOption.exists {
+            case _: java.util.concurrent.TimeoutException => true
+            case _                                        => false
+          }
+        }
 
         val called0 = called.asScala.iterator.map(_._1).toSet
         val expectedCalled = (0 to extra)

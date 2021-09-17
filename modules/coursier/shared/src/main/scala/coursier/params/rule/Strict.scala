@@ -25,14 +25,15 @@ import dataclass._
 
     val conflicts = coursier.graph.Conflict.conflicted(res, semVer = semVer).filter { c =>
       val conflict = c.conflict
-      val ignore = ignoreIfForcedVersion && res.forceVersions.get(conflict.module).contains(conflict.version)
+      val ignore =
+        ignoreIfForcedVersion && res.forceVersions.get(conflict.module).contains(conflict.version)
       def matches =
         if (includeByDefault)
           include.exists(_.matches(conflict.module)) ||
-            !exclude.exists(_.matches(conflict.module))
+          !exclude.exists(_.matches(conflict.module))
         else
           include.exists(_.matches(conflict.module)) &&
-            !exclude.exists(_.matches(conflict.module))
+          !exclude.exists(_.matches(conflict.module))
       !ignore && matches
     }
 
@@ -42,11 +43,14 @@ import dataclass._
       Some(new EvictedDependencies(this, conflicts))
   }
 
-  def tryResolve(res: Resolution, conflict: EvictedDependencies): Either[UnsatisfiableRule, Resolution] =
+  def tryResolve(
+    res: Resolution,
+    conflict: EvictedDependencies
+  ): Either[UnsatisfiableRule, Resolution] =
     Left(new UnsatisfiableRule(res, this, conflict))
 
   override def repr: String = {
-    val b = new StringBuilder("Strict(")
+    val b       = new StringBuilder("Strict(")
     var anyElem = false
     if (include.nonEmpty) {
       anyElem = true
@@ -85,20 +89,20 @@ object Strict {
     override val rule: Strict,
     val evicted: Seq[Conflicted]
   ) extends UnsatisfiedRule(
-    rule,
-    s"Found evicted dependencies:" + System.lineSeparator() +
-      evicted.map(_.repr + System.lineSeparator()).mkString
-  )
+        rule,
+        s"Found evicted dependencies:" + System.lineSeparator() +
+          evicted.map(_.repr + System.lineSeparator()).mkString
+      )
 
   final class UnsatisfiableRule(
     resolution: Resolution,
     override val rule: Strict,
     override val conflict: EvictedDependencies
   ) extends coursier.error.ResolutionError.UnsatisfiableRule(
-    resolution,
-    rule,
-    conflict,
-    conflict.getMessage
-  )
+        resolution,
+        rule,
+        conflict,
+        conflict.getMessage
+      )
 
 }

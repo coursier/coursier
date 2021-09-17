@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 
+// format: off
 final case class InstallOptions(
 
   @Recurse
@@ -34,8 +35,9 @@ final case class InstallOptions(
     force: Boolean = false
 
 )
+// format: on
 
 object InstallOptions {
   implicit val parser = caseapp.core.parser.Parser[InstallOptions]
-  implicit val help = caseapp.core.help.Help[InstallOptions]
+  implicit val help   = caseapp.core.help.Help[InstallOptions]
 }

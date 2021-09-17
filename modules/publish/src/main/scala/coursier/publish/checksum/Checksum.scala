@@ -3,8 +3,7 @@ package coursier.publish.checksum
 import java.math.BigInteger
 import java.security.MessageDigest
 
-/**
-  * A… checksum
+/** A… checksum
   */
 final case class Checksum(`type`: ChecksumType, value: BigInteger) {
   assert(`type`.validValue(value))
@@ -18,7 +17,7 @@ object Checksum {
 
     val md = MessageDigest.getInstance(`type`.name)
     md.update(content)
-    val digest = md.digest()
+    val digest        = md.digest()
     val calculatedSum = new BigInteger(1, digest)
 
     Checksum(`type`, calculatedSum)

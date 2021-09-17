@@ -25,15 +25,26 @@ object TestHelpers extends PlatformTestHelpers {
 
     val rootDep = res.rootDependencies.head
 
-    val isSimple = res.rootDependencies == Seq(Dependency(rootDep.module, rootDep.version).withConfiguration(rootDep.configuration))
+    val simpleRootDependencies = Seq(
+      Dependency(rootDep.module, rootDep.version)
+        .withConfiguration(rootDep.configuration)
+    )
+    val isSimple = res.rootDependencies == simpleRootDependencies
 
     val attrPathPart =
       if (rootDep.module.attributes.isEmpty)
         ""
       else
-        "/" + rootDep.module.attributes.toVector.sorted.map {
-          case (k, v) => k + "_" + v
-        }.mkString("_")
+        "/" +
+          rootDep
+            .module
+            .attributes
+            .toVector
+            .sorted
+            .map {
+              case (k, v) => k + "_" + v
+            }
+            .mkString("_")
 
     val hashPart =
       if (isSimple) ""
@@ -60,8 +71,8 @@ object TestHelpers extends PlatformTestHelpers {
         // This avoids some sha1 changes
         def normalize(s: String): String = {
           val noComma = s.replace(", ", "||")
-          val remove = Seq("None", "List()", "Map()", "Set()")
-          var value = noComma.replace("HashSet", "Set")
+          val remove  = Seq("None", "List()", "Map()", "Set()")
+          var value   = noComma.replace("HashSet", "Set")
           for (r <- remove) {
             value = value.replace("|" + r + "|", "")
             if (value.endsWith("||" + r + ")"))
@@ -83,7 +94,7 @@ object TestHelpers extends PlatformTestHelpers {
           ""
         else
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-        ) + hashPart + paramsPart + extraKeyPart
+      ) + hashPart + paramsPart + extraKeyPart
     ).filter(_.nonEmpty).mkString("/")
 
     def tryRead = textResource(path)
@@ -126,11 +137,19 @@ object TestHelpers extends PlatformTestHelpers {
       dep.withVersion(version)
     }
 
-  def validateDependencies(res: Resolution, params: ResolutionParams = ResolutionParams()): Future[Unit] =
+  def validateDependencies(
+    res: Resolution,
+    params: ResolutionParams = ResolutionParams()
+  ): Future[Unit] =
     validate("resolutions", res, params) {
       val elems = dependenciesWithRetainedVersion(res)
         .map { dep =>
-          (dep.module.organization.value, dep.module.nameWithAttributes, dep.version, dep.configuration.value)
+          (
+            dep.module.organization.value,
+            dep.module.nameWithAttributes,
+            dep.version,
+            dep.configuration.value
+          )
         }
 
       elems
@@ -169,7 +188,7 @@ object TestHelpers extends PlatformTestHelpers {
 
     val mainArtifactsPart =
       Option(mainArtifacts) match {
-        case None => ""
+        case None    => ""
         case Some(b) => s"_main_$b"
       }
 
@@ -179,7 +198,12 @@ object TestHelpers extends PlatformTestHelpers {
       else
         "_types_" + sha1(artifactTypes.toVector.sorted.mkString("|"))
 
-    validate("artifacts", res, params, mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart) {
+    validate(
+      "artifacts",
+      res,
+      params,
+      mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart
+    ) {
       artifacts.map(_.url)
     }
   }

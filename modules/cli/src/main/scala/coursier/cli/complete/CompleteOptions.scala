@@ -3,6 +3,7 @@ package coursier.cli.complete
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
+// format: off
 final case class CompleteOptions(
 
   @Recurse
@@ -19,6 +20,8 @@ final case class CompleteOptions(
     scalaVersion: Option[String] = None
 
 ) {
+  // format: on
+
   lazy val scalaBinaryVersion: Option[String] =
     scalaVersion
       .filter(_.nonEmpty)
@@ -27,5 +30,5 @@ final case class CompleteOptions(
 
 object CompleteOptions {
   implicit val parser = Parser[CompleteOptions]
-  implicit val help = caseapp.core.help.Help[CompleteOptions]
+  implicit val help   = caseapp.core.help.Help[CompleteOptions]
 }

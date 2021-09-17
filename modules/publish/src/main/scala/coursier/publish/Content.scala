@@ -5,8 +5,7 @@ import java.time.Instant
 
 import coursier.util.Task
 
-/**
-  * Content of a file, either on disk or in memory.
+/** Content of a file, either on disk or in memory.
   */
 sealed abstract class Content extends Product with Serializable {
   def lastModifiedTask: Task[Instant]

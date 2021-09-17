@@ -11,9 +11,11 @@ abstract class ResolveTests extends TestSuite {
       val output = LauncherTestUtil.output(
         launcher,
         "resolve",
-        "-r", "jitpack",
+        "-r",
+        "jitpack",
         "sh.almond:scala-kernel_2.12.8:0.3.0",
-        "--rule", "SameVersion(com.fasterxml.jackson.core:jackson-*)"
+        "--rule",
+        "SameVersion(com.fasterxml.jackson.core:jackson-*)"
       )
       val jacksonOutput = output
         .split(System.lineSeparator())

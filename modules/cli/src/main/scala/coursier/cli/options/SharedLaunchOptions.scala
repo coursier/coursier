@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
+// format: off
 final case class SharedLaunchOptions(
 
   @Short("M")
@@ -31,6 +32,8 @@ final case class SharedLaunchOptions(
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()
 ) {
+  // format: on
+
   def addApp(app: RawAppDescriptor): SharedLaunchOptions =
     copy(
       sharedLoaderOptions = sharedLoaderOptions.addApp(app),
@@ -61,9 +64,9 @@ final case class SharedLaunchOptions(
         else "bootstrap"
       }
       .withClassifiers {
-        val l = artifactOptions.classifier
+        val l       = artifactOptions.classifier
         val default = if (artifactOptions.default0) List("_") else Nil
-        val c = default ::: l
+        val c       = default ::: l
         if (c == List("_"))
           Nil
         else
@@ -91,5 +94,5 @@ final case class SharedLaunchOptions(
 
 object SharedLaunchOptions {
   implicit val parser = Parser[SharedLaunchOptions]
-  implicit val help = caseapp.core.help.Help[SharedLaunchOptions]
+  implicit val help   = caseapp.core.help.Help[SharedLaunchOptions]
 }

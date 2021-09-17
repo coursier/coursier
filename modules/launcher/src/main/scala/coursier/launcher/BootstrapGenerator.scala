@@ -34,7 +34,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
               if (resources.isEmpty)
                 parameters.content
               else {
-                val files = resources.map(r => () => new ZipInputStream(new ByteArrayInputStream(r.content)))
+                val files =
+                  resources.map(r => () => new ZipInputStream(new ByteArrayInputStream(r.content)))
 
                 AssemblyGenerator.writeEntries(files.map(Left(_)), zos, MergeRule.default)
 
@@ -82,14 +83,17 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
     val bootstrapJar =
       FileUtil.readFully {
-        val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
+        val is =
+          Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
         if (is == null) {
-          val is0 = BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
+          val is0 =
+            BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
           if (is0 == null)
             throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
           else
             is0
-        } else
+        }
+        else
           is
       }
 
@@ -99,7 +103,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       try outputZip.putNextEntry(ent)
       catch {
         case _: ZipException if ent.isDirectory =>
-          // likely a duplicate entry error, ignoring it for directories
+        // likely a duplicate entry error, ignoring it for directories
       }
       outputZip.write(content)
       outputZip.closeEntry()
@@ -109,7 +113,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       try outputZip.putNextEntry(ent)
       catch {
         case _: ZipException if ent.isDirectory =>
-          // likely a duplicate entry error, ignoring it for directories
+        // likely a duplicate entry error, ignoring it for directories
       }
       outputZip.write(data)
       outputZip.closeEntry()
@@ -130,7 +134,12 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       outputZip.closeEntry()
     }
 
-    def putBinaryEntry(name: String, lastModified: Long, b: Array[Byte], compressed: Boolean = true): Unit = {
+    def putBinaryEntry(
+      name: String,
+      lastModified: Long,
+      b: Array[Byte],
+      compressed: Boolean = true
+    ): Unit = {
       val entry = new ZipEntry(name)
       entry.setTime(lastModified)
       entry.setSize(b.length)
@@ -163,14 +172,22 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
       // really needed to sort here?
       putStringEntry(resourceDir + "bootstrap-jar-urls" + suffix, urls.sorted.mkString("\n"))
-      putStringEntry(resourceDir + "bootstrap-jar-resources" + suffix, resources.sorted.mkString("\n"))
+      putStringEntry(
+        resourceDir + "bootstrap-jar-resources" + suffix,
+        resources.sorted.mkString("\n")
+      )
 
       if (c.loaderName.nonEmpty)
         putStringEntry(resourceDir + "bootstrap-loader-name" + suffix, c.loaderName)
     }
 
     for (e <- content0.flatMap(_.entries).collect { case e: ClassPathEntry.Resource => e })
-      putBinaryEntry(s"${resourceDir}jars/${e.fileName}", e.lastModified, e.content, compressed = false)
+      putBinaryEntry(
+        s"${resourceDir}jars/${e.fileName}",
+        e.lastModified,
+        e.content,
+        compressed = false
+      )
 
     val propFileContent =
       (("bootstrap.mainClass" -> mainClass) +: properties)
@@ -187,7 +204,6 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
     outputZip.closeEntry()
   }
-
 
   def resourceDir: String = "coursier/bootstrap/launcher/"
 

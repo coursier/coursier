@@ -11,16 +11,22 @@ import coursier.publish.{Content, Pom}
 
 object Manual {
 
-  private def pomModuleVersion(params: SinglePackageParams, metadata: MetadataParams, now: Instant): Either[PublishError.InvalidArguments, (Content, Organization, ModuleName, String)] =
+  private def pomModuleVersion(
+    params: SinglePackageParams,
+    metadata: MetadataParams,
+    now: Instant
+  ): Either[PublishError.InvalidArguments, (Content, Organization, ModuleName, String)] =
     (metadata.organization, metadata.name, metadata.version) match {
       case (Some(org), Some(name), Some(ver)) =>
-
         val content = params.pomOpt match {
           case Some(path) =>
             Content.File(path)
           case None =>
             val pomStr = Pom.create(
-              org, name, ver, dependencies = metadata.dependencies.getOrElse(Nil).map {
+              org,
+              name,
+              ver,
+              dependencies = metadata.dependencies.getOrElse(Nil).map {
                 case (org0, name0, ver0) =>
                   (org0, name0, ver0, None)
               }
@@ -33,25 +39,29 @@ object Manual {
       case (orgOpt, nameOpt, verOpt) =>
         params.pomOpt match {
           case None =>
-            Left(new PublishError.InvalidArguments(s"Either specify organization / name / version, or pass a POM file."))
+            Left(new PublishError.InvalidArguments(
+              "Either specify organization / name / version, or pass a POM file."
+            ))
           case Some(path) =>
             val s = new String(Files.readAllBytes(path), StandardCharsets.UTF_8)
 
             val elem = scala.xml.XML.loadString(s) // can throw…
-          val xml = coursier.core.compatibility.xmlFromElem(elem)
+            val xml  = coursier.core.compatibility.xmlFromElem(elem)
 
             val pomOrError =
               for {
-                _ <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+                _ <-
+                  (if (xml.label == "project") Right(()) else Left("Project definition not found"))
                 proj <- coursier.maven.Pom.project(xml)
               } yield proj
 
             pomOrError match {
-              case Left(err) => Left(new PublishError.InvalidArguments(s"Error parsing $path: $err"))
+              case Left(err) =>
+                Left(new PublishError.InvalidArguments(s"Error parsing $path: $err"))
               case Right(proj) =>
-                val org = orgOpt.getOrElse(proj.module.organization)
+                val org  = orgOpt.getOrElse(proj.module.organization)
                 val name = nameOpt.getOrElse(proj.module.name)
-                val ver = verOpt.getOrElse(proj.version)
+                val ver  = verOpt.getOrElse(proj.version)
                 val content =
                   if (metadata.isEmpty)
                     Content.File(path)
@@ -71,10 +81,13 @@ object Manual {
         }
     }
 
-  def manualPackageFileSet(params: SinglePackageParams, metadata: MetadataParams, now: Instant): Either[PublishError.InvalidArguments, FileSet] =
+  def manualPackageFileSet(
+    params: SinglePackageParams,
+    metadata: MetadataParams,
+    now: Instant
+  ): Either[PublishError.InvalidArguments, FileSet] =
     pomModuleVersion(params, metadata, now).map {
       case (pom, org, name, ver) =>
-
         val dir = Path(org.value.split('.').toSeq ++ Seq(name.value, ver))
 
         val jarOpt = params

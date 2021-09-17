@@ -2,6 +2,7 @@ package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 
+// format: off
 final case class OutputOptions(
 
   @Help("Quiet output")
@@ -25,8 +26,9 @@ final case class OutputOptions(
     logChannelVersion: Boolean = false
 
 )
+// format: on
 
 object OutputOptions {
   implicit val parser = Parser[OutputOptions]
-  implicit val help = caseapp.core.help.Help[OutputOptions]
+  implicit val help   = caseapp.core.help.Help[OutputOptions]
 }

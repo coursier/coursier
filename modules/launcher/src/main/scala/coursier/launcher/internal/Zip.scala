@@ -16,7 +16,7 @@ private[coursier] object Zip {
 
       def hasNext = nextEntry.nonEmpty
       def next() = {
-        val ent = nextEntry.get
+        val ent  = nextEntry.get
         val data = FileUtil.readFullyUnsafe(zipStream)
 
         update()

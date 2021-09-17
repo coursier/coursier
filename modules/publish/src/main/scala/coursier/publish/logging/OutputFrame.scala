@@ -8,8 +8,8 @@ import coursier.cache.internal.{ConsoleDim, ThreadUtil}
 
 import scala.util.control.NonFatal
 
-/**
-  * Displays the last `bufferSize` lines of `is` in the terminal via `out`, updating them along time.
+/** Displays the last `bufferSize` lines of `is` in the terminal via `out`, updating them along
+  * time.
   */
 final class OutputFrame(
   is: InputStream,
@@ -19,7 +19,7 @@ final class OutputFrame(
   postamble: Seq[String]
 ) {
 
-  private[this] val lines = new OutputFrame.Lines(bufferSize)
+  private[this] val lines              = new OutputFrame.Lines(bufferSize)
   private[this] val inCaseOfErrorLines = new OutputFrame.Lines(100) // don't hard-code size?
 
   private val readThread: Thread =
@@ -27,7 +27,7 @@ final class OutputFrame(
       setDaemon(true)
       override def run() =
         try {
-          val br = new BufferedReader(new InputStreamReader(is))
+          val br        = new BufferedReader(new InputStreamReader(is))
           var l: String = null
           while ({
             l = br.readLine()
@@ -36,9 +36,10 @@ final class OutputFrame(
             lines.append(l)
             inCaseOfErrorLines.append(l)
           }
-        } catch {
+        }
+        catch {
           case _: InterruptedException =>
-            // normal exit
+          // normal exit
           case NonFatal(e) =>
             System.err.println(s"Caught exception in output-frame-read")
             e.printStackTrace(System.err)
@@ -92,11 +93,11 @@ final class OutputFrame(
         }
 
         val it = lines.linesIterator()
-        var n = 0
+        var n  = 0
         while (n < bufferSize && it.hasNext) {
           val l = it.next()
-            // https://stackoverflow.com/a/25189932/3714539
-            .replaceAll("\u001B\\[[\\d;]*[^\\d;]","")
+          // https://stackoverflow.com/a/25189932/3714539
+            .replaceAll("\u001B\\[[\\d;]*[^\\d;]", "")
           val l0 =
             if (l.length <= width) l
             else l.substring(0, width)
@@ -166,20 +167,20 @@ object OutputFrame {
   private final class Lines(bufferSize: Int) {
 
     @volatile private[this] var first: Line = _
-    @volatile private[this] var last: Line = _
-
+    @volatile private[this] var last: Line  = _
 
     // should not be called multiple times in parallel
     def append(value: String): Unit = {
       assert(value ne null)
       val index = if (last eq null) 0L else last.index + 1L
-      val l = new Line(value, index)
+      val l     = new Line(value, index)
 
       if (last eq null) {
         assert(first eq null)
         first = l
         last = l
-      } else {
+      }
+      else {
         last.setNext(l)
         last = l
       }

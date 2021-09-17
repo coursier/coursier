@@ -32,7 +32,7 @@ object Parameters {
       mainClass
         .map(c => JarAttributes.Name.MAIN_CLASS -> c)
         .toSeq ++
-      attributes
+        attributes
   }
 
   @data class Bootstrap(
@@ -57,7 +57,7 @@ object Parameters {
       content.exists { c =>
         c.entries.exists {
           case _: ClassPathEntry.Resource => true
-          case _ => false
+          case _                          => false
         }
       }
 

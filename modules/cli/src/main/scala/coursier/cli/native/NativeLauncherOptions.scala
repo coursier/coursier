@@ -6,6 +6,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import cats.data.{Validated, ValidatedNel}
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
+// format: off
 final case class NativeLauncherOptions(
 
   @Value("none|boehm|immix|default")
@@ -40,6 +41,7 @@ final case class NativeLauncherOptions(
     nativeKeepWorkDir: Boolean = false
 
 ) {
+  // format: on
 
   def params: ValidatedNel[String, ScalaNativeOptions] = {
 
@@ -68,7 +70,7 @@ final case class NativeLauncherOptions(
     }
 
     val prependDefaultCompileOptions = nativeDefaultCompileOptions
-    val compileOptions = nativeCompileOption
+    val compileOptions               = nativeCompileOption
 
     val targetTripleOpt = nativeTargetTriple.filter(_.nonEmpty)
 
@@ -76,7 +78,7 @@ final case class NativeLauncherOptions(
       .filter(_.nonEmpty)
       .map(Paths.get(_))
 
-    val workDirOpt = nativeWorkDir.map(Paths.get(_))
+    val workDirOpt  = nativeWorkDir.map(Paths.get(_))
     val keepWorkDir = nativeKeepWorkDir
 
     Validated.validNel(
@@ -100,5 +102,5 @@ final case class NativeLauncherOptions(
 
 object NativeLauncherOptions {
   implicit val parser = Parser[NativeLauncherOptions]
-  implicit val help = caseapp.core.help.Help[NativeLauncherOptions]
+  implicit val help   = caseapp.core.help.Help[NativeLauncherOptions]
 }

@@ -2,6 +2,7 @@ package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 
+// format: off
 final case class SharedInstallOptions(
 
   graalvmHome: Option[String] = None,
@@ -29,6 +30,7 @@ final case class SharedInstallOptions(
   proguarded: Option[Boolean] = None
 
 )
+// format: on
 
 object SharedInstallOptions {
   def defaultGraalvmVersion: Option[String] =

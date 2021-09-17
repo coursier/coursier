@@ -55,44 +55,61 @@ object DownloadTests extends TestSuite {
     test("public URL") {
       withTmpDir { dir =>
         val remoteUrls = Seq(
-          new URL("https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.3/shapeless_2.12-2.3.3.jar")
+          new URL(
+            "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.3/shapeless_2.12-2.3.3.jar"
+          )
         )
-        val download = new Download(1, dir.toFile, Collections.emptyList())
+        val download  = new Download(1, dir.toFile, Collections.emptyList())
         val localUrls = download.getLocalURLs(remoteUrls.asJava).asScala
         assert(remoteUrls.size == localUrls.size)
-        assert(localUrls
-          .map(url => Paths.get(url.toURI).toFile)
-          .foldLeft(true)(_ && _.exists))
+        assert(
+          localUrls
+            .map(url => Paths.get(url.toURI).toFile)
+            .foldLeft(true)(_ && _.exists)
+        )
       }
     }
 
-    test ("private URL with credentials in the URL") {
+    test("private URL with credentials in the URL") {
       withTmpDir { dir =>
         val remoteUrls = Seq(
-          new URL(s"http://$testRepositoryUser:$testRepositoryPassword@" + s"$testRepository/com/abc/test/0.1/test-0.1.pom".stripPrefix("http://"))
+          new URL(
+            s"http://$testRepositoryUser:$testRepositoryPassword@" +
+              s"$testRepository/com/abc/test/0.1/test-0.1.pom".stripPrefix("http://")
+          )
         )
-        val download = new Download(1, dir.toFile, Collections.emptyList())
+        val download  = new Download(1, dir.toFile, Collections.emptyList())
         val localUrls = download.getLocalURLs(remoteUrls.asJava).asScala
         assert(remoteUrls.size == localUrls.size)
-        assert(localUrls
-          .map(url => Paths.get(url.toURI).toFile)
-          .foldLeft(true)(_ && _.exists))
+        assert(
+          localUrls
+            .map(url => Paths.get(url.toURI).toFile)
+            .foldLeft(true)(_ && _.exists)
+        )
       }
     }
 
-    test ("priavte URL with configured credentials") {
+    test("priavte URL with configured credentials") {
       withTmpDir { dir =>
         val remoteUrls = Seq(
           new URL(s"$testRepository/com/abc/test/0.1/test-0.1.pom")
         )
-        val download = new Download(1, dir.toFile, Collections.singletonList(
-          new DirectCredentials(testRepositoryHost, testRepositoryUser, testRepositoryPassword).withMatchHost(true).withHttpsOnly(false)
-        ))
+        val download = new Download(
+          1,
+          dir.toFile,
+          Collections.singletonList(
+            new DirectCredentials(testRepositoryHost, testRepositoryUser, testRepositoryPassword)
+              .withMatchHost(true)
+              .withHttpsOnly(false)
+          )
+        )
         val localUrls = download.getLocalURLs(remoteUrls.asJava).asScala
         assert(remoteUrls.size == localUrls.size)
-        assert(localUrls
-          .map(url => Paths.get(url.toURI).toFile)
-          .foldLeft(true)(_ && _.exists))
+        assert(
+          localUrls
+            .map(url => Paths.get(url.toURI).toFile)
+            .foldLeft(true)(_ && _.exists)
+        )
       }
     }
 

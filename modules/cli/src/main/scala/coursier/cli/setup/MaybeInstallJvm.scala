@@ -72,11 +72,15 @@ import dataclass.data
             }
           case Some(Right(profileUpdater)) =>
             lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
+            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */ )
               Task.point(false)
             else {
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
-              confirm.confirm(s"Should we update ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              confirm.confirm(
+                s"Should we update ${profileFilesStr.mkString(", ")}?",
+                default = true
+              ).flatMap {
                 case false => Task.point(false)
                 case true =>
                   Task.delay {
@@ -140,8 +144,10 @@ import dataclass.data
 
     revertedTask.flatMap { reverted =>
       val message =
-        if (reverted) s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
-        else s"JVM $id not setup"
+        if (reverted)
+          s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
+        else
+          s"JVM $id not setup"
 
       Task.delay(System.err.println(message))
     }
@@ -154,8 +160,9 @@ import dataclass.data
         val entryOpt = jvmCache.entry(defaultId)
           .unsafeRun()(coursierCache.ec) // meh
           .toOption
-        val id = entryOpt.fold(defaultId)(_.id) // replaces version ranges with actual versions in particular
-        val dir = jvmCache.directory(id)
+        // replaces version ranges with actual versions in particular
+        val id        = entryOpt.fold(defaultId)(_.id)
+        val dir       = jvmCache.directory(id)
         val dirExists = Task.delay(dir.exists())
         val removedOpt = dirExists.flatMap {
           case false =>
@@ -169,9 +176,9 @@ import dataclass.data
         for {
           removedOpt0 <- removedOpt
           message = removedOpt0 match {
-            case None => s"Could not remove JVM $id in $dir (concurrent operation ongoing)"
+            case None        => s"Could not remove JVM $id in $dir (concurrent operation ongoing)"
             case Some(false) => s"JVM $id was not installed"
-            case Some(true) => s"Deleted JVM $id in $dir"
+            case Some(true)  => s"Deleted JVM $id in $dir"
           }
           _ <- Task.delay(System.err.println(message))
           _ <- tryRevertEnvVarUpdate(envUpdate, id)

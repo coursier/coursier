@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.core.{Classifier, Resolution, Type}
 import coursier.install.RawAppDescriptor
 
+// format: off
 final case class ArtifactOptions(
 
   @Help("Classifiers that should be fetched")
@@ -29,15 +30,17 @@ final case class ArtifactOptions(
     forceFetch: Boolean = false
 
 ) {
+  // format: on
 
   // to deprecate
-  lazy val classifier0 = classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
+  lazy val classifier0 =
+    classifier.flatMap(_.split(',')).filter(_.nonEmpty).map(Classifier(_)).toSet
 
   // to deprecate
   def default0: Boolean =
     default.getOrElse {
       (!sources && !javadoc && classifier0.isEmpty) ||
-        classifier0(Classifier("_"))
+      classifier0(Classifier("_"))
     }
 
   // deprecated
@@ -50,11 +53,14 @@ final case class ArtifactOptions(
       .toSet
 
     if (types0.isEmpty) {
-      val sourceTypes = Some(Type.source).filter(_ => sources || classifier0(Classifier.sources)).toSet
-      val javadocTypes = Some(Type.doc).filter(_ => javadoc || classifier0(Classifier.javadoc)).toSet
+      val sourceTypes =
+        Some(Type.source).filter(_ => sources || classifier0(Classifier.sources)).toSet
+      val javadocTypes =
+        Some(Type.doc).filter(_ => javadoc || classifier0(Classifier.javadoc)).toSet
       val defaultTypes = if (default0) Resolution.defaultTypes else Set()
       sourceTypes ++ javadocTypes ++ defaultTypes
-    } else if (types0(Type.all))
+    }
+    else if (types0(Type.all))
       Set(Type.all)
     else
       types0
@@ -81,5 +87,5 @@ final case class ArtifactOptions(
 
 object ArtifactOptions {
   implicit val parser = Parser[ArtifactOptions]
-  implicit val help = caseapp.core.help.Help[ArtifactOptions]
+  implicit val help   = caseapp.core.help.Help[ArtifactOptions]
 }

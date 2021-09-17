@@ -14,15 +14,13 @@ sealed abstract class ReverseModuleTree {
 
   // some info about what we depend on, our "parent" in this inverse tree
 
-  /**
-    * Module of the parent dependency of to this node.
+  /** Module of the parent dependency of to this node.
     *
     * This node is a dependee. This method corresponds to what we depend on.
     */
   def dependsOnModule: Module
 
-  /**
-    * Version of the parent dependency of to this node.
+  /** Version of the parent dependency of to this node.
     *
     * This node is a dependee. This method corresponds to what we depend on.
     *
@@ -30,8 +28,7 @@ sealed abstract class ReverseModuleTree {
     */
   def dependsOnVersion: String
 
-  /**
-    * Final version of the parent dependency of to this node.
+  /** Final version of the parent dependency of to this node.
     *
     * This node is a dependee. This method corresponds to what we depend on.
     *
@@ -39,8 +36,7 @@ sealed abstract class ReverseModuleTree {
     */
   def dependsOnReconciledVersion: String
 
-  /**
-    * Whether the parent dependency was excluded by us, but landed anyway in the classpath.
+  /** Whether the parent dependency was excluded by us, but landed anyway in the classpath.
     *
     * This node is a dependee. This method corresponds to what we depend on.
     *
@@ -67,9 +63,9 @@ object ReverseModuleTree {
     //   different children dependencies.
 
     val alreadySeen = new mutable.HashSet[ModuleTree]
-    val dependees = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
-    val versions = new mutable.HashMap[Module, (String, String)]
-    val toCheck = new mutable.Queue[ModuleTree]
+    val dependees   = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
+    val versions    = new mutable.HashMap[Module, (String, String)]
+    val toCheck     = new mutable.Queue[ModuleTree]
 
     toCheck ++= moduleTrees
 
@@ -88,23 +84,38 @@ object ReverseModuleTree {
     val dependees0 = dependees
       .toMap
       .view
-      .mapValues(_.toVector.sortBy(t => (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)))
+      .mapValues(_.toVector.sortBy(t =>
+        (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)
+      ))
       .iterator
       .toMap
     val versions0 = versions.toMap
 
     for {
-      m <- roots
+      m                      <- roots
       (reconciled, retained) <- versions.get(m)
-    } yield Node(m, reconciled, retained, m, reconciled, reconciled, excludedDependsOn = false, dependees0, versions0)
+    } yield Node(
+      m,
+      reconciled,
+      retained,
+      m,
+      reconciled,
+      reconciled,
+      excludedDependsOn = false,
+      dependees0,
+      versions0
+    )
   }
 
-  def fromDependencyTree(roots: Seq[Module], dependencyTrees: Seq[DependencyTree]): Seq[ReverseModuleTree] = {
+  def fromDependencyTree(
+    roots: Seq[Module],
+    dependencyTrees: Seq[DependencyTree]
+  ): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
-    val dependees = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
-    val versions = new mutable.HashMap[Module, (String, String)]
-    val toCheck = new mutable.Queue[DependencyTree]
+    val dependees   = new mutable.HashMap[Module, mutable.HashSet[(Module, String, Boolean)]]
+    val versions    = new mutable.HashMap[Module, (String, String)]
+    val toCheck     = new mutable.Queue[DependencyTree]
 
     toCheck ++= dependencyTrees
 
@@ -115,7 +126,10 @@ object ReverseModuleTree {
       val children = elem.children
       toCheck ++= children.filterNot(alreadySeen)
       for (c <- children) {
-        val b = dependees.getOrElseUpdate(c.dependency.module, new mutable.HashSet[(Module, String, Boolean)])
+        val b = dependees.getOrElseUpdate(
+          c.dependency.module,
+          new mutable.HashSet[(Module, String, Boolean)]
+        )
         b.add((elem.dependency.module, c.dependency.version, c.excluded))
       }
     }
@@ -123,23 +137,38 @@ object ReverseModuleTree {
     val dependees0 = dependees
       .toMap
       .view
-      .mapValues(_.toVector.sortBy(t => (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)))
+      .mapValues(_.toVector.sortBy(t =>
+        (t._1.organization.value, t._1.name.value, t._1.nameWithAttributes)
+      ))
       .iterator
       .toMap
     val versions0 = versions.toMap
 
     for {
-      m <- roots
+      m                      <- roots
       (reconciled, retained) <- versions.get(m)
-    } yield Node(m, reconciled, retained, m, reconciled, reconciled, excludedDependsOn = false, dependees0, versions0)
+    } yield Node(
+      m,
+      reconciled,
+      retained,
+      m,
+      reconciled,
+      reconciled,
+      excludedDependsOn = false,
+      dependees0,
+      versions0
+    )
   }
 
-  def apply(resolution: Resolution, roots: Seq[Module] = null, withExclusions: Boolean = false): Seq[ReverseModuleTree] = {
-    val t = DependencyTree(resolution, withExclusions = withExclusions)
+  def apply(
+    resolution: Resolution,
+    roots: Seq[Module] = null,
+    withExclusions: Boolean = false
+  ): Seq[ReverseModuleTree] = {
+    val t      = DependencyTree(resolution, withExclusions = withExclusions)
     val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
     fromDependencyTree(roots0, t)
   }
-
 
   private[graph] final case class Node(
     module: Module,
@@ -154,9 +183,19 @@ object ReverseModuleTree {
   ) extends ReverseModuleTree {
     def dependees: Seq[Node] =
       for {
-        (m, wantVer, excl) <- allDependees.getOrElse(module, Nil)
+        (m, wantVer, excl)     <- allDependees.getOrElse(module, Nil)
         (reconciled, retained) <- versions.get(m)
-      } yield Node(m, reconciled, retained, module, wantVer, reconciledVersion, excl, allDependees, versions)
+      } yield Node(
+        m,
+        reconciled,
+        retained,
+        module,
+        wantVer,
+        reconciledVersion,
+        excl,
+        allDependees,
+        versions
+      )
   }
 
 }

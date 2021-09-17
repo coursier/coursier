@@ -29,13 +29,18 @@ object Updatable {
     val dir = dest.getParent
 
     val tmpDest = dir.resolve(s".${dest.getFileName}.part")
-    val aux = dir.resolve(auxName0)
-    val tmpAux = dir.resolve(s"$auxName0.part")
+    val aux     = dir.resolve(auxName0)
+    val tmpAux  = dir.resolve(s"$auxName0.part")
 
     RelatedFiles(dest, aux, tmpDest, tmpAux)
   }
 
-  def writing[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int)(f: (Path, Path) => T): Option[T] = {
+  def writing[T](
+    baseDir: Path,
+    dest: Path,
+    auxExtension: String,
+    verbosity: Int
+  )(f: (Path, Path) => T): Option[T] = {
 
     // Ensuring we're the only process trying to write dest
     // - acquiring a lock while writing
@@ -62,7 +67,8 @@ object Updatable {
           System.err.println(s"Wrote ${files.tmpDest}")
           System.err.println(s"Moving ${files.tmpDest} to $dest")
         }
-        Files.deleteIfExists(dest) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+        // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+        Files.deleteIfExists(dest)
         Files.move(
           files.tmpDest,
           dest,
@@ -70,7 +76,8 @@ object Updatable {
         )
         if (verbosity == 1)
           System.err.println(s"Wrote $dest")
-      } else if (updated)
+      }
+      else if (updated)
         Files.deleteIfExists(dest)
 
       if (Files.isRegularFile(files.tmpAux)) {
@@ -79,7 +86,8 @@ object Updatable {
           System.err.println(s"Moving ${files.tmpAux} to ${files.aux}")
         }
         FileUtil.tryHideWindows(files.tmpAux)
-        Files.deleteIfExists(files.aux) // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+        // StandardCopyOption.REPLACE_EXISTING doesn't seem to work along with ATOMIC_MOVE
+        Files.deleteIfExists(files.aux)
         Files.move(
           files.tmpAux,
           files.aux,
@@ -87,7 +95,8 @@ object Updatable {
         )
         if (verbosity == 1)
           System.err.println(s"Wrote ${files.aux}")
-      } else if (updated)
+      }
+      else if (updated)
         Files.deleteIfExists(files.aux)
 
       res
@@ -96,7 +105,12 @@ object Updatable {
     CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
   }
 
-  def delete[T](baseDir: Path, dest: Path, auxExtension: String, verbosity: Int): Option[Boolean] = {
+  def delete[T](
+    baseDir: Path,
+    dest: Path,
+    auxExtension: String,
+    verbosity: Int
+  ): Option[Boolean] = {
 
     if (InfoFile.isInfoFile(dest)) {
 
@@ -113,7 +127,8 @@ object Updatable {
       }
 
       CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
-    } else
+    }
+    else
       throw new InstallDir.NotAnApplication(dest)
   }
 

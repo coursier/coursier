@@ -24,7 +24,6 @@ import dataclass._
   def withChanging(changing: Boolean): IvyRepository =
     withChangingOpt(Some(changing))
 
-
   override def repr: String =
     "ivy:" + pattern.string + metadataPatternOpt.fold("")("|" + _.string)
 
@@ -48,7 +47,7 @@ import dataclass._
     Map(
       "organization" -> org.value,
       "organisation" -> org.value,
-      "orgPath" -> org.value.replace('.', '/')
+      "orgPath"      -> org.value.replace('.', '/')
     )
 
   // See http://ant.apache.org/ivy/history/latest-milestone/concept.html for a
@@ -63,16 +62,15 @@ import dataclass._
     classifierOpt: Option[Classifier]
   ): Map[String, String] =
     orgVariables(module.organization) ++
-    Seq(
-      "module" -> module.name.value,
-      "type" -> `type`.value,
-      "artifact" -> artifact,
-      "ext" -> ext.value
-    ) ++
-    module.attributes ++
-    classifierOpt.map("classifier" -> _.value).toSeq ++
-    versionOpt.map("revision" -> _).toSeq
-
+      Seq(
+        "module"   -> module.name.value,
+        "type"     -> `type`.value,
+        "artifact" -> artifact,
+        "ext"      -> ext.value
+      ) ++
+      module.attributes ++
+      classifierOpt.map("classifier" -> _.value).toSeq ++
+      versionOpt.map("revision" -> _).toSeq
 
   def artifacts(
     dependency: Dependency,
@@ -84,7 +82,6 @@ import dataclass._
       val retained =
         overrideClassifiers match {
           case None =>
-
             if (dependency.publication.name.nonEmpty) {
               val tpe =
                 if (dependency.publication.`type`.isEmpty) Type.jar
@@ -95,7 +92,8 @@ import dataclass._
               Seq(
                 dependency.publication.withType(tpe).withExt(ext)
               )
-            } else if (dependency.attributes.classifier.nonEmpty)
+            }
+            else if (dependency.attributes.classifier.nonEmpty)
               // FIXME We're ignoring dependency.attributes.`type` in this case
               project.publications.collect {
                 case (_, p) if p.classifier == dependency.attributes.classifier =>
@@ -104,21 +102,29 @@ import dataclass._
             else if (dependency.attributes.`type`.nonEmpty)
               project.publications.collect {
                 case (conf, p)
-                  if (conf == Configuration.all ||
+                    if (conf == Configuration.all ||
                     conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf)) &&
-                    (
-                      p.`type` == dependency.attributes.`type` ||
-                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(p.`type`)) // wow
-                    ) =>
+                    project.allConfigurations.getOrElse(
+                      dependency.configuration,
+                      Set.empty
+                    ).contains(conf)) &&
+                      (
+                        p.`type` == dependency.attributes.`type` ||
+                        (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(
+                          p.`type`
+                        )) // wow
+                      ) =>
                   p
               }
             else
               project.publications.collect {
                 case (conf, p)
-                  if conf == Configuration.all ||
-                     conf == dependency.configuration ||
-                     project.allConfigurations.getOrElse(dependency.configuration, Set.empty).contains(conf) =>
+                    if conf == Configuration.all ||
+                      conf == dependency.configuration ||
+                      project.allConfigurations.getOrElse(
+                        dependency.configuration,
+                        Set.empty
+                      ).contains(conf) =>
                   p
               }
           case Some(classifiers) =>
@@ -142,7 +148,6 @@ import dataclass._
 
       retainedWithUrl.map {
         case (p, url) =>
-
           var artifact = artifactFor(
             url,
             changing = changingOpt.getOrElse(IvyRepository.isSnapshot(project.version))
@@ -155,7 +160,8 @@ import dataclass._
 
           (p, artifact)
       }
-    } else
+    }
+    else
       Nil
 
   private def artifactFor(url: String, changing: Boolean, cacheErrors: Boolean = false) =
@@ -163,7 +169,14 @@ import dataclass._
       url,
       Map.empty,
       if (cacheErrors)
-        Map("cache-errors" -> Artifact("", Map.empty, Map.empty, changing = false, optional = false, None))
+        Map("cache-errors" -> Artifact(
+          "",
+          Map.empty,
+          Map.empty,
+          changing = false,
+          optional = false,
+          None
+        ))
       else
         Map.empty,
       changing = changing,
@@ -195,7 +208,7 @@ import dataclass._
 
         for {
           url <- EitherT(F.point(listingUrl))
-          s <- fetch(artifactFor(url + ".links", changing = true, cacheErrors = true))
+          s   <- fetch(artifactFor(url + ".links", changing = true, cacheErrors = true))
         } yield Some((url, MavenComplete.split0(s, '\n', prefix)))
     }
 
@@ -272,7 +285,7 @@ import dataclass._
 
     for {
       artifact <- EitherT(F.point(eitherArtifact))
-      ivy <- fetch(artifact)
+      ivy      <- fetch(artifact)
       proj0 <- EitherT(
         F.point {
           for {
@@ -314,7 +327,7 @@ import dataclass._
     }
   }
 
-  override def completeOpt[F[_] : Monad](fetch: Fetch[F]): Some[Repository.Complete[F]] =
+  override def completeOpt[F[_]: Monad](fetch: Fetch[F]): Some[Repository.Complete[F]] =
     Some(IvyComplete(this, fetch, Monad[F]))
 
 }
@@ -337,27 +350,29 @@ object IvyRepository {
     authentication: Option[Authentication] = None,
     substituteDefault: Boolean = true
   ): Either[String, IvyRepository] =
-
     for {
       propertiesPattern <- PropertiesPattern.parse(pattern)
       metadataPropertiesPatternOpt <- metadataPatternOpt
-        .fold[Either[String, Option[PropertiesPattern]]](Right(None))(PropertiesPattern.parse(_).map(Some(_)))
+        .fold[Either[String, Option[PropertiesPattern]]](Right(None))(
+          PropertiesPattern.parse(_).map(Some(_))
+        )
 
       pattern <- propertiesPattern.substituteProperties(properties)
       metadataPatternOpt <- metadataPropertiesPatternOpt
-        .fold[Either[String, Option[Pattern]]](Right(None))(_.substituteProperties(properties).map(Some(_)))
+        .fold[Either[String, Option[Pattern]]](Right(None))(
+          _.substituteProperties(properties).map(Some(_))
+        )
 
-    } yield
-      IvyRepository(
-        if (substituteDefault) pattern.substituteDefault else pattern,
-        metadataPatternOpt.map(p => if (substituteDefault) p.substituteDefault else p),
-        changing,
-        withChecksums,
-        withSignatures,
-        withArtifacts,
-        dropInfoAttributes,
-        authentication
-      )
+    } yield IvyRepository(
+      if (substituteDefault) pattern.substituteDefault else pattern,
+      metadataPatternOpt.map(p => if (substituteDefault) p.substituteDefault else p),
+      changing,
+      withChecksums,
+      withSignatures,
+      withArtifacts,
+      dropInfoAttributes,
+      authentication
+    )
 
   // because of the compatibility apply method below, we can't give default values
   // to the default constructor of IvyPattern

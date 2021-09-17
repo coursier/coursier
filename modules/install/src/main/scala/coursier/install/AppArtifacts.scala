@@ -19,8 +19,11 @@ object AppArtifacts {
     AppArtifacts()
 
   sealed abstract class AppArtifactsException(message: String, parent: Throwable = null)
-    extends Exception(message, parent)
+      extends Exception(message, parent)
 
-  final class ScalaDependenciesNotFound(val scalaDependencies: Seq[JavaOrScalaDependency.ScalaDependency])
-    extends AppArtifactsException(s"Can't find a scala version suffix for ${scalaDependencies.map(_.repr).mkString(", ")} (likely a non existing module or version)")
+  final class ScalaDependenciesNotFound(
+    val scalaDependencies: Seq[JavaOrScalaDependency.ScalaDependency]
+  ) extends AppArtifactsException(
+        s"Can't find a scala version suffix for ${scalaDependencies.map(_.repr).mkString(", ")} (likely a non existing module or version)"
+      )
 }

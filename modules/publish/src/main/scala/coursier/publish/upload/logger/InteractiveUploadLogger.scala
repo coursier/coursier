@@ -7,7 +7,8 @@ import coursier.publish.logging.ProgressLogger
 import coursier.publish.upload.Upload
 
 // FIXME Would have been better if dummy was passed by the Upload instance when calling the methods of UploadLogger
-final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolean) extends UploadLogger {
+final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolean)
+    extends UploadLogger {
 
   private val underlying = new ProgressLogger[Object](
     if (isLocal) {
@@ -15,7 +16,8 @@ final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolea
         "Would have written"
       else
         "Wrote"
-    } else {
+    }
+    else {
       if (dummy)
         "Would have uploaded"
       else

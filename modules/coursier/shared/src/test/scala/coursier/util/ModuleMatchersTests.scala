@@ -10,7 +10,8 @@ object ModuleMatchersTests extends TestSuite {
     test {
       val matcher = ModuleMatchers(
         exclude = Set(ModuleMatcher(mod"io.circe:*")),
-        include = Set(ModuleMatcher(mod"io.circe:circe-*")))
+        include = Set(ModuleMatcher(mod"io.circe:circe-*"))
+      )
       val shouldMatch = Seq(
         mod"io.circe:circe-core_2.12",
         mod"io.circe:circe-generic_2.12",
@@ -30,7 +31,8 @@ object ModuleMatchersTests extends TestSuite {
     test {
       val matcher = ModuleMatchers(
         exclude = Set(ModuleMatcher(mod"org.scala-lang:*")),
-        include = Set())
+        include = Set()
+      )
       val shouldMatch = Seq(
         mod"io.circe:circe-core_2.12",
         mod"io.circe:circe-generic_2.12",

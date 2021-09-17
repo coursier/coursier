@@ -39,10 +39,14 @@ object SharedLoaderParams {
                 if (params.isEmpty)
                   Validated.validNel(target -> dep0)
                 else
-                  Validated.invalidNel(s"$d: extra dependency parameters not supported for shared loader dependencies")
+                  Validated.invalidNel(
+                    s"$d: extra dependency parameters not supported for shared loader dependencies"
+                  )
             }
           case _ =>
-            Validated.invalidNel(s"$d: malformed shared dependency (expected target:org:name:version)")
+            Validated.invalidNel(
+              s"$d: malformed shared dependency (expected target:org:name:version)"
+            )
         }
       }
 

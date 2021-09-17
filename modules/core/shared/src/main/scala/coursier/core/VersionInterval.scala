@@ -46,7 +46,7 @@ import dataclass.data
 
         case (Some(a), None) => (Some(a), fromIncluded)
         case (None, Some(b)) => (Some(b), other.fromIncluded)
-        case (None, None) => (None, false)
+        case (None, None)    => (None, false)
       }
 
     val (newTo, newToIncluded) =
@@ -59,7 +59,7 @@ import dataclass.data
 
         case (Some(a), None) => (Some(a), toIncluded)
         case (None, Some(b)) => (Some(b), other.toIncluded)
-        case (None, None) => (None, false)
+        case (None, None)    => (None, false)
       }
 
     Some(VersionInterval(newFrom, newTo, newFromIncluded, newToIncluded))

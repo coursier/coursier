@@ -6,14 +6,10 @@ import coursier.util.ValidationNel
 
 object ModuleParser {
 
-  /**
-    * Parses a module like
-    *   org:name
-    *  possibly with attributes, like
-    *    org:name;attr1=val1;attr2=val2
+  /** Parses a module like org:name possibly with attributes, like org:name;attr1=val1;attr2=val2
     *
-    * Two semi-columns after the org part is interpreted as a scala module. E.g. if
-    * the scala version is 2.11., org::name is equivalent to org:name_2.11.
+    * Two semi-columns after the org part is interpreted as a scala module. E.g. if the scala
+    * version is 2.11., org::name is equivalent to org:name_2.11.
     */
   def javaOrScalaModule(s: String): Either[String, JavaOrScalaModule] = {
 
@@ -32,7 +28,6 @@ object ModuleParser {
 
     values.flatMap {
       case (org, rawName, scalaFullVerOpt) =>
-
         val splitName = rawName.split(';')
 
         if (splitName.tail.exists(!_.contains("=")))
@@ -57,18 +52,13 @@ object ModuleParser {
     }
   }
 
-  /**
-    * Parses a module like
-    *   org:name
-    *  possibly with attributes, like
-    *    org:name;attr1=val1;attr2=val2
+  /** Parses a module like org:name possibly with attributes, like org:name;attr1=val1;attr2=val2
     *
     * Two semi-columns after the org part is interpreted as a scala module. E.g. if
     * `defaultScalaVersion` is `"2.11.x"`, org::name is equivalent to org:name_2.11.
     */
   def module(s: String, defaultScalaVersion: String): Either[String, Module] =
     javaOrScalaModule(s).map(_.module(defaultScalaVersion))
-
 
   def javaOrScalaModules(
     inputs: Seq[String]

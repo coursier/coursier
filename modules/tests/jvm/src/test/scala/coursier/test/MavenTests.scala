@@ -26,8 +26,10 @@ object MavenTests extends TestSuite {
         .stripSuffix("/") + "/"
       val repo = MavenRepository(repoBase)
 
-      val mainJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82.jar"
-      val sourcesJarUrl = repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82-sources.jar"
+      val mainJarUrl =
+        repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82.jar"
+      val sourcesJarUrl =
+        repoBase + "com/abc/test-snapshot-special/0.1.0-SNAPSHOT/test-snapshot-special-0.1.0-20170421.034426-82-sources.jar"
 
       test - runner.withArtifacts(
         dep = dep.withAttributes(Attributes(Type.jar)),
@@ -37,7 +39,9 @@ object MavenTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == mainJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+          throw new Exception(
+            s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+          )
       }
 
       test - runner.withArtifacts(
@@ -48,7 +52,9 @@ object MavenTests extends TestSuite {
         case Seq(artifact) =>
           assert(artifact.url == sourcesJarUrl)
         case other =>
-          throw new Exception(s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}")
+          throw new Exception(
+            s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+          )
       }
     }
   }

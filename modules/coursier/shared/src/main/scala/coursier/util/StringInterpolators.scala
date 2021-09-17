@@ -91,7 +91,11 @@ object StringInterpolators {
     }
   }
 
-  def safeModuleExclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+  def safeModuleExclusionMatcher(
+    c: blackbox.Context
+  )(
+    args: c.Expr[Any]*
+  ): c.Expr[ModuleMatchers] = {
     import c.universe._
     c.Expr(q"""
       _root_.coursier.util.ModuleMatchers(
@@ -102,7 +106,11 @@ object StringInterpolators {
     """)
   }
 
-  def safeModuleInclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+  def safeModuleInclusionMatcher(
+    c: blackbox.Context
+  )(
+    args: c.Expr[Any]*
+  ): c.Expr[ModuleMatchers] = {
     import c.universe._
     c.Expr(q"""
       _root_.coursier.util.ModuleMatchers(
@@ -119,7 +127,11 @@ object StringInterpolators {
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
         // same default configuration as coursier.Dependency.apply
-        DependencyParser.dependency(modString, scala.util.Properties.versionNumberString, Configuration.empty) match {
+        DependencyParser.dependency(
+          modString,
+          scala.util.Properties.versionNumberString,
+          Configuration.empty
+        ) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
           case Right(dep) =>
@@ -181,7 +193,9 @@ object StringInterpolators {
         }
         // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
         // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
-        c.Expr(q"""_root_.coursier.ivy.IvyRepository.parse($str).left.map(e => sys.error("Error parsing Ivy repository: " + e)).merge""")
+        c.Expr(
+          q"""_root_.coursier.ivy.IvyRepository.parse($str).left.map(e => sys.error("Error parsing Ivy repository: " + e)).merge"""
+        )
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }

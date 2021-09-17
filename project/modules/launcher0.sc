@@ -28,7 +28,7 @@ trait LauncherBase extends CsModule with CrossSbtModule with CoursierPublishModu
     super.resources() :+ PathRef(dir)
   }
 
-  def constantsFile = T{
+  def constantsFile = T {
     val dest = T.dest / "Properties.scala"
     val code =
       s"""package coursier.launcher.internal

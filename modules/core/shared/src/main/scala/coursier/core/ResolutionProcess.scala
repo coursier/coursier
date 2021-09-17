@@ -8,7 +8,6 @@ import dataclass.data
 import scala.annotation.tailrec
 import scala.collection.compat.immutable.LazyList
 
-
 sealed abstract class ResolutionProcess extends Product with Serializable {
   def run[F[_]](
     fetch: ResolutionProcess.Fetch[F],
@@ -103,7 +102,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
             val (toAdd, remaining) = map.partition {
               case (_, v) => v.size == min
             }
-            val acc0 = toAdd.keys.foldLeft(acc)(_.::(_))
+            val acc0          = toAdd.keys.foldLeft(acc)(_.::(_))
             val remainingKeys = remaining.keySet.map(_._1)
             val map0 = remaining.map {
               case (k, v) =>
@@ -112,7 +111,10 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
             order(map0, acc0)
           }
 
-        val orderedSuccesses = order(depMgmtMissing0.map { case (k, v) => k -> v.intersect(modVer) }.toMap, Nil)
+        val orderedSuccesses = order(
+          depMgmtMissing0.map { case (k, v) => k -> v.intersect(modVer) }.toMap,
+          Nil
+        )
 
         val res0 = orderedSuccesses.foldLeft(res) {
           case (acc, (modVer0, (source, proj))) =>
@@ -122,7 +124,8 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
         }
 
         Continue(res0, cont)
-      } else
+      }
+      else
         Missing(depMgmtMissing.toSeq, res, cont0)
     }
 
@@ -143,7 +146,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   @tailrec def nextNoCont: ResolutionProcess =
     next match {
       case nextCont: Continue => nextCont.nextNoCont
-      case other => other
+      case other              => other
     }
 
 }
@@ -162,16 +165,14 @@ object ResolutionProcess {
 
   type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
 
-  /**
-    * Try to find `module` among `repositories`.
+  /** Try to find `module` among `repositories`.
     *
-    * Look at `repositories` from the left, one-by-one, and stop at first success.
-    * Else, return all errors, in the same order.
+    * Look at `repositories` from the left, one-by-one, and stop at first success. Else, return all
+    * errors, in the same order.
     *
-    * The `version` field of the returned `Project` in case of success may not be
-    * equal to the provided one, in case the latter is not a specific
-    * version (e.g. version interval). Which version get chosen depends on
-    * the repository implementation.
+    * The `version` field of the returned `Project` in case of success may not be equal to the
+    * provided one, in case the latter is not a specific version (e.g. version interval). Which
+    * version get chosen depends on the repository implementation.
     */
   def fetchOne[F[_]](
     repositories: Seq[Repository],
@@ -187,7 +188,10 @@ object ResolutionProcess {
       fetchs.foldLeft(fetch(a))((acc, f) => acc.leftFlatMap(_ => f(a)))
     }
 
-    def versionOrError0(results: Either[String, (Versions, String)], ver: Either[VersionInterval, (Latest, Option[VersionInterval])]): Either[String, Version] =
+    def versionOrError0(
+      results: Either[String, (Versions, String)],
+      ver: Either[VersionInterval, (Latest, Option[VersionInterval])]
+    ): Either[String, Version] =
       results match {
         case Right((v, listingUrl)) =>
           val selectedOpt = ver match {
@@ -229,7 +233,10 @@ object ResolutionProcess {
           Left(e)
       }
 
-    def versionOrError(results: Seq[Either[String, (Versions, String)]], ver: Either[VersionInterval, (Latest, Option[VersionInterval])]): Either[Seq[String], (Version, Repository)] = {
+    def versionOrError(
+      results: Seq[Either[String, (Versions, String)]],
+      ver: Either[VersionInterval, (Latest, Option[VersionInterval])]
+    ): Either[Seq[String], (Version, Repository)] = {
       // FIXME We're sometimes trapping errors here (left elements in results)
       val found = results.zip(repositories)
         .collect {
@@ -284,7 +291,10 @@ object ResolutionProcess {
       }
     }
 
-    def get(fetch: Repository.Fetch[F], intervalOpt: Option[Either[VersionInterval, (Latest, Option[VersionInterval])]] = None) = {
+    def get(
+      fetch: Repository.Fetch[F],
+      intervalOpt: Option[Either[VersionInterval, (Latest, Option[VersionInterval])]] = None
+    ) = {
 
       val lookups = repositories
         .map { repo =>
@@ -301,17 +311,19 @@ object ResolutionProcess {
           }
         }
 
-      val task0 = lookups.foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
-        case (acc, (_, eitherProjTask)) =>
-          acc.flatMap {
-            case Left(errors) =>
-              eitherProjTask.map(_.left.map(error => error +: errors))
-            case res@Right(_) =>
-              F.point(res)
-          }
-      }
+      val task0 =
+        lookups.foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
+          case (acc, (_, eitherProjTask)) =>
+            acc.flatMap {
+              case Left(errors) =>
+                eitherProjTask.map(_.left.map(error => error +: errors))
+              case res @ Right(_) =>
+                F.point(res)
+            }
+        }
 
-      val task = task0.map(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
+      val task =
+        task0.map(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
       EitherT(task)
     }
 
@@ -335,7 +347,9 @@ object ResolutionProcess {
           }
         }
       else
-        fetchs.foldLeft(get(fetch, intervalOpt = Some(ver)))(_ orElse get(_, intervalOpt = Some(ver)))
+        fetchs.foldLeft(get(fetch, intervalOpt = Some(ver)))((acc, f) =>
+          acc.orElse(get(f, intervalOpt = Some(ver)))
+        )
     }
 
     if (version.contains("&")) {
@@ -344,7 +358,7 @@ object ResolutionProcess {
 
       val parsed = versions.map(s => Latest(s).toRight(s))
       val latest = parsed.collect { case Right(l) => l }
-      val other = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
+      val other  = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
       assert(latest.length == 1)
       assert(other.length == 1)
 
@@ -353,7 +367,8 @@ object ResolutionProcess {
       val itv = other.head.interval
 
       getLatest0(Right((latest0, Some(itv))))
-    } else
+    }
+    else
       Latest(version) match {
         case Some(kind) =>
           getLatest0(Right((kind, None)))
@@ -377,11 +392,11 @@ object ResolutionProcess {
       F.gather {
         modVers.map {
           case (module, version) =>
-            fetchOne(repositories, module, version, fetch, fetchs).run.map(d => (module, version) -> d)
+            fetchOne(repositories, module, version, fetch, fetchs).run.map(d =>
+              (module, version) -> d
+            )
         }
       }.map(_.toSeq)
-
-
 
   def defaultMaxIterations: Int = 100
 
@@ -397,14 +412,16 @@ object ResolutionProcess {
   private[coursier] def fetchAll[F[_]](
     modVers: Seq[(Module, String)],
     fetch: ResolutionProcess.Fetch[F]
-  )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]] = {
+  )(implicit
+    F: Monad[F]
+  ): F[Vector[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]] = {
 
     def uniqueModules(modVers: Seq[(Module, String)]): LazyList[Seq[(Module, String)]] = {
 
       val res = modVers.groupBy(_._1).toSeq.map(_._2).map {
         case Seq(v) => (v, Nil)
-        case Seq() => sys.error("Cannot happen")
-        case v =>
+        case Seq()  => sys.error("Cannot happen")
+        case v      =>
           // there might be version intervals in there, but that shouldn't matter...
           val res = v.maxBy { case (_, v0) => Version(v0) }
           (res, v.filter(_ != res))
@@ -422,7 +439,9 @@ object ResolutionProcess {
 
     uniqueModules(modVers)
       .toVector
-      .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])])) {
+      .foldLeft(F.point(
+        Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]
+      )) {
         (acc, l) =>
           for {
             v <- acc
@@ -432,4 +451,3 @@ object ResolutionProcess {
   }
 
 }
-

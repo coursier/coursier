@@ -15,6 +15,7 @@ import dataclass._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
+// format: off
 @data class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
@@ -23,16 +24,19 @@ import scala.util.{Failure, Success, Try}
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
   @since
-  proxy: Option[java.net.Proxy] = None
+    proxy: Option[java.net.Proxy] = None
 ) extends Cache[F] {
+// format: on
 
   private implicit def S0 = S
 
   def fetch: Cache.Fetch[F] = { artifact =>
 
     val (artifact0, links) =
-      if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
-      else (artifact, false)
+      if (artifact.url.endsWith("/.links"))
+        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+      else
+        (artifact, false)
 
     if (proxy.nonEmpty || artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
@@ -47,7 +51,12 @@ import scala.util.{Failure, Success, Try}
       file(artifact0)
         .leftMap(_.describe)
         .flatMap { f =>
-          EitherT(MockCache.readFully(new FileInputStream(f), if (links) Some(artifact0.url) else None))
+          EitherT {
+            MockCache.readFully(
+              new FileInputStream(f),
+              if (links) Some(artifact0.url) else None
+            )
+          }
         }
   }
 
@@ -61,7 +70,8 @@ import scala.util.{Failure, Success, Try}
           artifact.url
       val f = new File(new URI(url))
       EitherT.point(f)
-    } else {
+    }
+    else {
 
       assert(artifact.authentication.isEmpty)
 
@@ -74,7 +84,7 @@ import scala.util.{Failure, Success, Try}
             case None =>
               val path = p.resolve(MockCacheEscape.urlAsPath(artifact.url))
               S.schedule(pool)(Files.exists(path)).map {
-                case true => Some(path)
+                case true  => Some(path)
                 case false => None
               }
           }
@@ -83,35 +93,37 @@ import scala.util.{Failure, Success, Try}
       val init0 = S.schedule(pool)(Files.exists(path)).flatMap {
         case true => S.point(Right(path)): F[Either[ArtifactError, Path]]
         case false =>
-          val res: F[Either[ArtifactError, Path]] = if (writeMissing) {
-            val f = S.schedule[Either[ArtifactError, Path]](pool) {
-              Util.createDirectories(path.getParent)
-              def is(): InputStream =
-                if (dummyArtifact(artifact))
-                  new ByteArrayInputStream(Array.emptyByteArray)
-                else
-                  ConnectionBuilder(artifact.url)
-                    .withAuthentication(artifact.authentication)
-                    .connection()
-                    .getInputStream
-              val b = MockCache.readFullySync(is())
-              Files.write(path, b)
-              Right(path)
-            }
+          val res: F[Either[ArtifactError, Path]] =
+            if (writeMissing) {
+              val f = S.schedule[Either[ArtifactError, Path]](pool) {
+                Util.createDirectories(path.getParent)
+                def is(): InputStream =
+                  if (dummyArtifact(artifact))
+                    new ByteArrayInputStream(Array.emptyByteArray)
+                  else
+                    ConnectionBuilder(artifact.url)
+                      .withAuthentication(artifact.authentication)
+                      .connection()
+                      .getInputStream
+                val b = MockCache.readFullySync(is())
+                Files.write(path, b)
+                Right(path)
+              }
 
-            S.handle(f) {
-              case _: FileNotFoundException =>
-                Left(new ArtifactError.NotFound(artifact.url))
-              case e: Exception =>
-                Left(new ArtifactError.DownloadError(e.toString, Some(e)))
+              S.handle(f) {
+                case _: FileNotFoundException =>
+                  Left(new ArtifactError.NotFound(artifact.url))
+                case e: Exception =>
+                  Left(new ArtifactError.DownloadError(e.toString, Some(e)))
+              }
             }
-          } else
-            S.point(Left(new ArtifactError.NotFound(path.toString)))
+            else
+              S.point(Left(new ArtifactError.NotFound(path.toString)))
           res
       }
 
       val e = fromExtraData.flatMap {
-        case None => init0
+        case None    => init0
         case Some(f) => S.point(Right(f)): F[Either[ArtifactError, Path]]
       }
       EitherT[F, ArtifactError, Path](e)
@@ -139,10 +151,9 @@ object MockCache {
       Sync[F]
     )
 
-
   private def readFullySync(is: InputStream) = {
     val buffer = new ByteArrayOutputStream
-    val data = Array.ofDim[Byte](16384)
+    val data   = Array.ofDim[Byte](16384)
 
     var nRead = is.read(data, 0, data.length)
     while (nRead != -1) {
@@ -154,7 +165,10 @@ object MockCache {
     buffer.toByteArray
   }
 
-  private def readFully[F[_]: Sync](is: => InputStream, parseLinksUrl: Option[String]): F[Either[String, String]] =
+  private def readFully[F[_]: Sync](
+    is: => InputStream,
+    parseLinksUrl: Option[String]
+  ): F[Either[String, String]] =
     Sync[F].delay {
       val t = Try {
         val is0 = is

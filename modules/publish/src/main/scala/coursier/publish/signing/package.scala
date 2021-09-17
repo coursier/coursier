@@ -1,6 +1,5 @@
 package coursier.publish
 
-/**
-  * All things signing.
+/** All things signing.
   */
 package object signing

@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.install.RawAppDescriptor
 
 
+// format: off
 final case class SharedLoaderOptions(
 
   // deprecated, use shared instead
@@ -31,8 +32,9 @@ final case class SharedLoaderOptions(
       }
     )
 }
+// format: on
 
 object SharedLoaderOptions {
   implicit val parser = Parser[SharedLoaderOptions]
-  implicit val help = caseapp.core.help.Help[SharedLoaderOptions]
+  implicit val help   = caseapp.core.help.Help[SharedLoaderOptions]
 }

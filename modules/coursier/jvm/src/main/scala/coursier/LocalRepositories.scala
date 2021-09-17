@@ -28,11 +28,10 @@ object LocalRepositories {
     dropInfoAttributes = true
   )
 
-  /**
-    * These repositories aren't guaranteed to always work fine with coursier (they sometimes have only the
-    * metadata of some dependencies, and coursier isn't fine with that - coursier requires
-    * both the metadata and the JARs to be in the same repo)
-    * see https://github.com/coursier/coursier/pull/868#issuecomment-398779799
+  /** These repositories aren't guaranteed to always work fine with coursier (they sometimes have
+    * only the metadata of some dependencies, and coursier isn't fine with that - coursier requires
+    * both the metadata and the JARs to be in the same repo) see
+    * https://github.com/coursier/coursier/pull/868#issuecomment-398779799
     */
   object Dangerous {
 

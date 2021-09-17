@@ -22,7 +22,9 @@ import dataclass._
     if (useJni0)
       Option(coursier.jniutils.WindowsEnvironmentVariables.get(name))
     else {
-      val output = powershellRunner.runScript(WindowsEnvVarUpdater.getEnvVarScript(name)).stripSuffix(System.lineSeparator())
+      val output = powershellRunner
+        .runScript(WindowsEnvVarUpdater.getEnvVarScript(name))
+        .stripSuffix(System.lineSeparator())
       if (output == "null") // if ever the actual value is "null", we'll miss it
         None
       else
@@ -50,7 +52,7 @@ import dataclass._
 
     for ((k, v) <- update.set) {
       val formerValueOpt = getEnvironmentVariable(k)
-      val needsUpdate = formerValueOpt.forall(_ != v)
+      val needsUpdate    = formerValueOpt.forall(_ != v)
       if (needsUpdate) {
         setEnvironmentVariable(k, v)
         setSomething = true
@@ -59,7 +61,8 @@ import dataclass._
 
     for ((k, v) <- update.pathLikeAppends) {
       val formerValueOpt = getEnvironmentVariable(k)
-      val alreadyInList = formerValueOpt.exists(_.split(WindowsEnvVarUpdater.windowsPathSeparator).contains(v))
+      val alreadyInList = formerValueOpt
+        .exists(_.split(WindowsEnvVarUpdater.windowsPathSeparator).contains(v))
       if (!alreadyInList) {
         val newValue = formerValueOpt.fold(v)(_ + WindowsEnvVarUpdater.windowsPathSeparator + v)
         setEnvironmentVariable(k, newValue)
@@ -79,7 +82,7 @@ import dataclass._
 
     for ((k, v) <- update.set) {
       val formerValueOpt = getEnvironmentVariable(k)
-      val wasUpdated = formerValueOpt.exists(_ == v)
+      val wasUpdated     = formerValueOpt.exists(_ == v)
       if (wasUpdated) {
         clearEnvironmentVariable(k)
         setSomething = true
@@ -87,7 +90,7 @@ import dataclass._
     }
 
     for ((k, v) <- update.pathLikeAppends; formerValue <- getEnvironmentVariable(k)) {
-      val parts = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator)
+      val parts    = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator)
       val isInList = parts.contains(v)
       if (isInList) {
         val newValue = parts.filter(_ != v)

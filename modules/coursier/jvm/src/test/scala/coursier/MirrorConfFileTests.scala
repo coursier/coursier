@@ -18,12 +18,11 @@ object MirrorConfFileTests extends TestSuite {
         .getOrElse {
           throw new Exception("empty-mirror.properties resource not found")
         }
-      val f = MirrorConfFile(path)
-      val mirrors = f.mirrors()
+      val f               = MirrorConfFile(path)
+      val mirrors         = f.mirrors()
       val expectedMirrors = Seq()
       assert(mirrors == expectedMirrors)
     }
-
 
     test("resolve") {
 

@@ -1,6 +1,17 @@
 package coursier.parse
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Extension, Module, ModuleName, Organization, Publication, Type}
+import coursier.core.{
+  Attributes,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Module,
+  ModuleName,
+  Organization,
+  Publication,
+  Type
+}
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
 
@@ -45,14 +56,13 @@ object DependencyParser {
     javaOrScalaDependenciesParams(inputs, defaultConfiguration)
       .map(_.map(_._1))
 
-
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  possibly with attributes, like
-    *    org:name;attr1=val1;attr2=val2:version
+  /** Parses coordinates like org:name:version possibly with attributes, like
+    * org:name;attr1=val1;attr2=val2:version
     */
-  def moduleVersion(input: String, defaultScalaVersion: String): Either[String, (Module, String)] = {
+  def moduleVersion(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, String)] = {
 
     val parts = input.split(":", 4)
 
@@ -79,7 +89,6 @@ object DependencyParser {
       ValidationNel.fromEither(e)
     }
 
-
   /*
    * Validates the parsed attributes.
    *
@@ -99,10 +108,10 @@ object DependencyParser {
     val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
 
     if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
-      Some(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
-        if (extraAttributes.nonEmpty) s"The following are invalid: " +
-          s"${extraAttributes.map(_ + s" in "+ dep).mkString(", ")}"
-      }")
+      Some(
+        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${if (extraAttributes.nonEmpty) s"The following are invalid: " +
+          s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"}"
+      )
     else None
   }
 
@@ -121,18 +130,11 @@ object DependencyParser {
   ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
     javaOrScalaDependencyParams(input, Configuration.empty)
 
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  with attributes, like
-    *   org:name:version,attr1=val1,attr2=val2
-    *  and a configuration, like
-    *   org:name:version:config
-    *  or
-    *   org:name:version:config,attr1=val1,attr2=val2
+  /** Parses coordinates like org:name:version with attributes, like
+    * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or
+    * org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier" and "url attributes are
-    *  used, and others throw errors.
+    * Currently only the "classifier" and "url attributes are used, and others throw errors.
     */
   def javaOrScalaDependencyParams(
     input: String,
@@ -146,7 +148,7 @@ object DependencyParser {
     // That is ',' has to go after ':'.
     // E.g. "org:name,attr1=val1,attr2=val2:version:config" is illegal.
     val attrSeparator = ","
-    val argSeparator = ":"
+    val argSeparator  = ":"
 
     def splitRest(rest: String): (String, Seq[String]) = {
 
@@ -161,11 +163,12 @@ object DependencyParser {
         if (idx < 0)
           split(rest)
         else {
-          val (ver, attrsPart) = rest.splitAt(idx + 1)
+          val (ver, attrsPart)  = rest.splitAt(idx + 1)
           val (coodsEnd, attrs) = split(attrsPart)
           (ver + coodsEnd, attrs)
         }
-      } else
+      }
+      else
         split(rest)
     }
 
@@ -197,7 +200,9 @@ object DependencyParser {
             case Array(k, v) =>
               Right(k -> v)
             case _ =>
-              Left(s"Failed to parse attribute '$x' in '$input'. Keyword argument expected such as 'classifier=tests'")
+              Left(
+                s"Failed to parse attribute '$x' in '$input'. Keyword argument expected such as 'classifier=tests'"
+              )
           }
       }
 
@@ -227,7 +232,6 @@ object DependencyParser {
         validateAttributes(attrs, input, validAttrsKeys) match {
           case Some(err) => Left(err)
           case None =>
-
             val type0 = attrs
               .get("type")
               .map(_.last)
@@ -251,16 +255,16 @@ object DependencyParser {
                 // Using a proper parsing library would help support ':'.
                 s.split("%", 2) match {
                   case Array(o, n) => Right((Organization(o), ModuleName(n)))
-                  case _ => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
+                  case _           => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
                 }
               })
               .getOrElse(Right(Nil))
               .map(_.toSet)
 
             val extraDependencyParams: Map[String, String] = attrs.get("url").map(_.last) match {
-                case Some(url) => Map("url" -> url)
-                case None => Map()
-              }
+              case Some(url) => Map("url" -> url)
+              case None      => Map()
+            }
 
             val dummyModule = Module(Organization(""), ModuleName(""), Map.empty)
 
@@ -327,21 +331,15 @@ object DependencyParser {
                 }
             }
         }
-    }
+      }
   }
 
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  with attributes, like
-    *   org:name:version,attr1=val1,attr2=val2
-    *  and a configuration, like
-    *   org:name:version:config
-    *  or
-    *   org:name:version:config,attr1=val1,attr2=val2
+  /** Parses coordinates like org:name:version with attributes, like
+    * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or
+    * org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier", "type", "extension", and "url attributes are
-    *  used, and others throw errors.
+    * Currently only the "classifier", "type", "extension", and "url attributes are used, and others
+    * throw errors.
     */
   def dependencyParams(
     input: String,

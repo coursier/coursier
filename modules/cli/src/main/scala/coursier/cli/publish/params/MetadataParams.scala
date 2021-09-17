@@ -21,21 +21,24 @@ final case class MetadataParams(
 ) {
   def isEmpty: Boolean =
     organization.isEmpty &&
-      name.isEmpty &&
-      version.isEmpty &&
-      licenses.isEmpty &&
-      homePage.isEmpty &&
-      dependencies.isEmpty &&
-      developersOpt.isEmpty
+    name.isEmpty &&
+    version.isEmpty &&
+    licenses.isEmpty &&
+    homePage.isEmpty &&
+    dependencies.isEmpty &&
+    developersOpt.isEmpty
 }
 
 object MetadataParams {
-  def apply(options: MetadataOptions, defaultScalaVersion: String): ValidatedNel[String, MetadataParams] = {
+  def apply(
+    options: MetadataOptions,
+    defaultScalaVersion: String
+  ): ValidatedNel[String, MetadataParams] = {
 
     // TODO Check for invalid character? emptiness?
     val organization = options.organization.map(Organization(_))
-    val name = options.name.map(ModuleName(_))
-    val version = options.version
+    val name         = options.name.map(ModuleName(_))
+    val version      = options.version
     val dependenciesV =
       if (options.dependency.forall(_.trim.isEmpty))
         Validated.validNel(None)
@@ -71,7 +74,9 @@ object MetadataParams {
               case Array(id) =>
                 License.map.get(id) match {
                   case None =>
-                    Validated.invalidNel(s"Unrecognized license '$id', please pass an URL for it like --license $id:https://…")
+                    Validated.invalidNel(
+                      s"Unrecognized license '$id', please pass an URL for it like --license $id:https://…"
+                    )
                   case Some(license) =>
                     Validated.validNel(license)
                 }

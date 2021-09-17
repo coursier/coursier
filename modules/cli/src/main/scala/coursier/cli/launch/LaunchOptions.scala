@@ -5,6 +5,7 @@ import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
 
+// format: off
 @ArgsName("org:name:version|app-name[:version]*")
 final case class LaunchOptions(
 
@@ -27,6 +28,8 @@ final case class LaunchOptions(
 
   jep: Boolean = false
 ) {
+  // format: on
+
   def addApp(app: RawAppDescriptor): LaunchOptions =
     copy(
       sharedOptions = sharedOptions.addApp(app)
@@ -38,5 +41,5 @@ final case class LaunchOptions(
 
 object LaunchOptions {
   implicit val parser = Parser[LaunchOptions]
-  implicit val help = caseapp.core.help.Help[LaunchOptions]
+  implicit val help   = caseapp.core.help.Help[LaunchOptions]
 }

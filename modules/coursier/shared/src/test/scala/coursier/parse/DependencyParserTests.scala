@@ -48,7 +48,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single attr") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,classifier=tests",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -60,7 +63,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("extension") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,ext=exe",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -72,31 +78,52 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("type") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,type=typetype", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,type=typetype",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
-          assert(dep.publication == Publication("", Type("typetype"), Extension.empty, Classifier.empty))
+          val expectedPublication = Publication(
+            "",
+            Type("typetype"),
+            Extension.empty,
+            Classifier.empty
+          )
+          assert(dep.publication == expectedPublication)
       }
     }
 
     test("extension and type") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
-          assert(dep.publication == Publication("", Type("typetype"), Extension("exe"), Classifier.empty))
+          val expectedPublication = Publication(
+            "",
+            Type("typetype"),
+            Extension("exe"),
+            Classifier.empty
+          )
+          assert(dep.publication == expectedPublication)
       }
     }
 
     test("single attr with interval") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -108,7 +135,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single attr with url") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,url=" + url, "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,url=" + url,
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -122,7 +152,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("multiple attrs with url") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url, "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url,
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -136,7 +169,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("multiple attrs with interval and url") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url, "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url,
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -150,7 +186,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("multiple attrs with interval, url, and exclusions") {
-      DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
@@ -165,33 +204,45 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single attr with org::name:version") {
-      DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
-          assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          // use `contains` to be scala version agnostic
+          assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.version == "0.3.0-coursier-1")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
 
     test("single attr with org::name:interval") {
-      DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
-          assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          // use `contains` to be scala version agnostic
+          assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.version == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
 
     test("multiple attr with org::name:interval and exclusion") {
-      DependencyParser.dependencyParams("io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar", "2.11.11") match {
+      DependencyParser.dependencyParams(
+        "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar",
+        "2.11.11"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
-          assert(dep.module.name.value.contains("sandbox_native0.3")) // use `contains` to be scala version agnostic
+          // use `contains` to be scala version agnostic
+          assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.version == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(dep.exclusions == Set((org"foo", name"bar")))
@@ -209,7 +260,10 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("full cross versioned org:::name:version with exclusion") {
-      DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7,exclude=aa%*", "2.12.8") match {
+      DependencyParser.dependencyParams(
+        "com.lihaoyi:::ammonite:1.6.7,exclude=aa%*",
+        "2.12.8"
+      ) match {
         case Left(err) => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"com.lihaoyi")
@@ -221,21 +275,21 @@ object DependencyParserTests extends TestSuite {
 
     test("illegal 1") {
       DependencyParser.dependencyParams("junit:junit:4.12,attr", "2.11.11") match {
-        case Left(err) => assert(err.contains("Failed to parse attribute"))
+        case Left(err)  => assert(err.contains("Failed to parse attribute"))
         case Right(dep) => assert(false)
       }
     }
 
     test("illegal 2") {
       DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
-        case Left(err) => assert(err.contains("The only attributes allowed are:"))
+        case Left(err)  => assert(err.contains("The only attributes allowed are:"))
         case Right(dep) => assert(false)
       }
     }
 
     test("illegal 3, malformed exclude") {
       DependencyParser.dependencyParams("a:b:c,exclude=aaa", "2.11.11") match {
-        case Left(err) => assert(err.contains("Malformed exclusion:"))
+        case Left(err)  => assert(err.contains("Malformed exclusion:"))
         case Right(dep) => assert(false)
       }
     }

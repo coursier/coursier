@@ -19,22 +19,41 @@ object TreeTests extends TestSuite {
   }
 
   private val roots = Vector(
-    MutableTree("p1", ArrayBuffer(
-      MutableTree("c1", ArrayBuffer.empty),
-      MutableTree("c2", ArrayBuffer.empty))),
-    MutableTree("p2", ArrayBuffer(
-      MutableTree("c3", ArrayBuffer.empty),
-      MutableTree("c4", ArrayBuffer.empty)))
+    MutableTree(
+      "p1",
+      ArrayBuffer(
+        MutableTree("c1", ArrayBuffer.empty),
+        MutableTree("c2", ArrayBuffer.empty)
+      )
+    ),
+    MutableTree(
+      "p2",
+      ArrayBuffer(
+        MutableTree("c3", ArrayBuffer.empty),
+        MutableTree("c4", ArrayBuffer.empty)
+      )
+    )
   )
 
   private val moreNestedRoots = Vector(
-    MutableTree("p1", ArrayBuffer(
-      MutableTree("c1", ArrayBuffer(
-        MutableTree("p2", ArrayBuffer.empty))))),
-    MutableTree("p3", ArrayBuffer(
-      MutableTree("d1", ArrayBuffer.empty))
-    ))
-
+    MutableTree(
+      "p1",
+      ArrayBuffer(
+        MutableTree(
+          "c1",
+          ArrayBuffer(
+            MutableTree("p2", ArrayBuffer.empty)
+          )
+        )
+      )
+    ),
+    MutableTree(
+      "p3",
+      ArrayBuffer(
+        MutableTree("d1", ArrayBuffer.empty)
+      )
+    )
+  )
 
   // Constructing cyclic graph:
   // a -> b -> c -> a
@@ -51,7 +70,6 @@ object TreeTests extends TestSuite {
   c.addChild(a)
   c.addChild(e)
   e.addChild(f)
-
 
   val tests = Tests {
     test("basic") {

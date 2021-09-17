@@ -15,7 +15,8 @@ object JsonReportTests extends TestSuite {
       )
 
       assert(
-        report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}")
+        report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}"
+      )
     }
 
     test("JsonReport containing two deps should not be empty") {
@@ -56,10 +57,12 @@ object JsonReportTests extends TestSuite {
 
       assert(reportJson == expectedReportJson)
     }
-    test("JsonReport containing two deps should be sorted alphabetically regardless of input order") {
+    test(
+      "JsonReport containing two deps should be sorted alphabetically regardless of input order"
+    ) {
       val children = Map("a" -> Seq("b"), "b" -> Seq())
       val report: String = JsonReport[String](
-        roots = IndexedSeq( "b", "a"),
+        roots = IndexedSeq("b", "a"),
         conflictResolutionForRoots = Map()
       )(
         children = children(_),

@@ -35,13 +35,13 @@ final class DependencySet private (
 
   def contains(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
-    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
     set.contains(dependency)
   }
 
   def covers(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
-    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
     set.covers(dependency, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
   }
 
@@ -59,7 +59,13 @@ final class DependencySet private (
       m ++= grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
-        val l = m.getOrElse(dep0, Sets.empty[Dependency]).add(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+        val l = m
+          .getOrElse(dep0, Sets.empty[Dependency])
+          .add(
+            dep,
+            _.exclusions.size,
+            (a, b) => a.exclusions.subsetOf(b.exclusions)
+          )
         m(dep0) = l
       }
       new DependencySet(set ++ dependencies, m.toMap)
@@ -76,12 +82,14 @@ final class DependencySet private (
       m ++= grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
-        val prev = m.getOrElse(dep0, Sets.empty) // getOrElse useful if we're passed duplicated stuff in dependencies
+        // getOrElse useful if we're passed duplicated stuff in dependencies
+        val prev = m.getOrElse(dep0, Sets.empty)
         if (prev.contains(dep)) {
           if (prev.size <= 1)
             m -= dep0
           else {
-            val l = prev.remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+            val l = prev
+              .remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
             m += ((dep0, l))
           }
         }
@@ -91,7 +99,7 @@ final class DependencySet private (
     }
 
   def setValues(newSet: Set[Dependency]): DependencySet = {
-    val toAdd = newSet -- set
+    val toAdd    = newSet -- set
     val toRemove = set -- newSet
     addNoCheck(toAdd)
       .removeNoCheck(toRemove)
@@ -101,7 +109,6 @@ final class DependencySet private (
 
 object DependencySet {
   val empty = new DependencySet(Set.empty, Map.empty)
-
 
   private object Sets {
     def empty[T]: Sets[T] = Sets(IntMap.empty, Map.empty, Map.empty)
@@ -145,7 +152,7 @@ object DependencySet {
           Sets(required0, children0, parents)
         case Some(subset) =>
           val children0 = children + (subset -> (children.getOrElse(subset, Set.empty) + s))
-          val parents0 = parents + (s -> subset)
+          val parents0  = parents + (s       -> subset)
           Sets(required, children0, parents0)
       }
     }
@@ -167,12 +174,16 @@ object DependencySet {
               required + (size(s) -> elem)
           }
           val parents0 = parents -- children0
-          val sets0 = Sets(required0, children - s, parents0)
+          val sets0    = Sets(required0, children - s, parents0)
           children0.foldLeft(sets0)(_.forceAdd(_, size, subsetOf))
         case None =>
           parents.get(s) match {
             case Some(parent) =>
-              Sets(required, children + (parent -> (children.getOrElse(parent, Set.empty) - s)), parents - s)
+              Sets(
+                required,
+                children + (parent -> (children.getOrElse(parent, Set.empty) - s)),
+                parents - s
+              )
             case None =>
               this
           }

@@ -22,9 +22,10 @@ object Update extends CaseApp[UpdateOptions] {
 
     val now = Instant.now()
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
-    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
+    val noUpdateCoursierCache =
+      params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
     val graalvmHome = { version: String =>
       params.sharedJava.javaHome(
@@ -49,9 +50,10 @@ object Update extends CaseApp[UpdateOptions] {
     val tasks = names.map { name =>
       installDir.maybeUpdate(
         name,
-        source => Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
-          .find(source.id)
-          .map(_.map { data => (data.origin, data.data) }),
+        source =>
+          Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
+            .find(source.id)
+            .map(_.map { data => (data.origin, data.data) }),
         now,
         params.force
       ).map {

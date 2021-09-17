@@ -15,7 +15,8 @@ final class DeleteOnExit(verbosity: Int) {
         s.iterator()
           .asScala
           .foreach(deleteRecursiveIfExists)
-      } finally {
+      }
+      finally {
         if (s != null)
           s.close()
       }
@@ -25,8 +26,8 @@ final class DeleteOnExit(verbosity: Int) {
   }
 
   @volatile private var addedHook = false
-  private val deleteOnExitLock = new Object
-  private var deleteOnExit0 = List.empty[Path]
+  private val deleteOnExitLock    = new Object
+  private var deleteOnExit0       = List.empty[Path]
 
   def apply(f: Path): Unit = {
 

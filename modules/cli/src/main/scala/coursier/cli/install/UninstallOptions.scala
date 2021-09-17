@@ -2,6 +2,7 @@ package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 
+// format: off
 final case class UninstallOptions(
 
   @Short("dir")
@@ -18,3 +19,4 @@ final case class UninstallOptions(
     verbose: Int @@ Counter = Tag.of(0)
 
 )
+// format: on

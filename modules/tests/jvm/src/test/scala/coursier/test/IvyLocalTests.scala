@@ -15,26 +15,30 @@ object IvyLocalTests extends TestSuite {
 
   def localVersion = "0.1.2-publish-local"
 
-  val tests = TestSuite{
+  val tests = TestSuite {
     test("coursier") {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
       val mockIvy2Local = IvyRepository.fromPattern(
-        new File("modules/tests/metadata/ivy-local").getAbsoluteFile.toURI.toASCIIString +: Pattern.default,
+        new File("modules/tests/metadata/ivy-local").getAbsoluteFile.toURI.toASCIIString +:
+          Pattern.default,
         dropInfoAttributes = true
       )
       val extraRepos = Seq(mockIvy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
       test("resolution") - runner.resolutionCheck(
-        module, localVersion,
+        module,
+        localVersion,
         extraRepos
       )
 
       test("uniqueArtifacts") - async {
 
         val res = await(runner.resolve(
-          Seq(Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)),
+          Seq(
+            Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)
+          ),
           extraRepos = extraRepos
         ))
 
@@ -48,14 +52,13 @@ object IvyLocalTests extends TestSuite {
         assert(artifacts.forall(_._2.length == 1))
       }
 
-
       test("javadocSources") - async {
         val res = await(runner.resolve(
           Seq(Dependency(module, localVersion)),
           extraRepos = extraRepos
         ))
 
-        val artifacts = res.dependencyArtifacts().filter(_._2.`type` == Type.jar).map(_._3.url)
+        val artifacts  = res.dependencyArtifacts().filter(_._2.`type` == Type.jar).map(_._3.url)
         val anyJavadoc = artifacts.exists(_.contains("-javadoc"))
         val anySources = artifacts.exists(_.contains("-sources"))
 

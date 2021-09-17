@@ -19,17 +19,17 @@ final case class ResolveParams(
   retry: Option[(FiniteDuration, Int)]
 ) {
 
-  def cache = shared.cache
-  def output = shared.output
-  def repositories = shared.repositories
-  def dependency = shared.dependency
-  def resolution = shared.resolution
+  def cache          = shared.cache
+  def output         = shared.output
+  def repositories   = shared.repositories
+  def dependency     = shared.dependency
+  def resolution     = shared.resolution
   def classpathOrder = shared.classpathOrder
 
   def anyTree: Boolean =
     tree ||
-      reverseTree ||
-      whatDependsOn.nonEmpty
+    reverseTree ||
+    whatDependsOn.nonEmpty
 }
 
 object ResolveParams {
@@ -37,8 +37,8 @@ object ResolveParams {
 
     val sharedV = SharedResolveParams(options.sharedResolveOptions)
 
-    val benchmark = options.benchmark
-    val tree = options.tree
+    val benchmark   = options.benchmark
+    val tree        = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV = options.whatDependsOn.traverse(
       ModuleParser.javaOrScalaModule(_).toValidatedNel
@@ -47,13 +47,17 @@ object ResolveParams {
 
     val conflicts = options.conflicts
 
-    val printCheck =
-      if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts, candidateUrls).count(identity) > 1)
+    val printCheck = {
+      val resultsAskedCount =
+        Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts, candidateUrls)
+          .count(identity)
+      if (resultsAskedCount > 1)
         Validated.invalidNel(
           "Cannot specify several options among --tree, --reverse-tree, --what-depends-on, --conflicts, --candidate-urls"
         )
       else
         Validated.validNel(())
+    }
 
     val benchmarkCacheV =
       if (options.benchmark == 0 && options.benchmarkCache)
@@ -95,10 +99,12 @@ object ResolveParams {
     try {
       Duration(input) match {
         case f: FiniteDuration => Validated.validNel(f)
-        case _ => Validated.invalidNel(s"Invalid non-finite duration '$input'")
+        case _                 => Validated.invalidNel(s"Invalid non-finite duration '$input'")
       }
-    } catch {
+    }
+    catch {
       case _: IllegalArgumentException =>
-        Validated.invalidNel(s"Invalid duration '$input'") // anything interesting in the exception message?
+        // anything interesting in the exception message?
+        Validated.invalidNel(s"Invalid duration '$input'")
     }
 }

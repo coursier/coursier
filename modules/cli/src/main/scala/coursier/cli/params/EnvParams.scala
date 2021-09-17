@@ -49,7 +49,8 @@ final case class EnvParams(
               }
             case Right(profileUpdater) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {
                 if (verbosity >= 0)
@@ -93,7 +94,9 @@ object EnvParams {
     )
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --env, --disable / --disable-env, --setup.")
+        Validated.invalidNel(
+          "Error: can only specify one of --env, --disable / --disable-env, --setup."
+        )
       else
         Validated.validNel(())
 

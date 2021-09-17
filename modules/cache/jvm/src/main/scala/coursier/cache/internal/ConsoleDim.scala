@@ -3,8 +3,8 @@ package coursier.cache.internal
 final class ConsoleDim {
 
   @volatile private var dimsOpt: Option[(Int, Int)] = None
-  private var initialized = false
-  private val lock = new Object
+  private var initialized                           = false
+  private val lock                                  = new Object
 
   // FIXME On Windows, don't cache Terminal.consoleDims()? (should be a - cheap I think - native call)
 
@@ -19,9 +19,10 @@ final class ConsoleDim {
             }
         }
       )
-    } catch {
+    }
+    catch {
       case _: IllegalArgumentException =>
-        // ignored
+      // ignored
     }
 
     initialized = true

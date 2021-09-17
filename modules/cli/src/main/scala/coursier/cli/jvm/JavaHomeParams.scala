@@ -17,10 +17,10 @@ final case class JavaHomeParams(
 object JavaHomeParams {
   def apply(options: JavaHomeOptions): ValidatedNel[String, JavaHomeParams] = {
     val sharedV = SharedJavaParams(options.sharedJavaOptions)
-    val cacheV = options.cacheOptions.params
+    val cacheV  = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
-    val envV = EnvParams(options.envOptions)
-    val repoV = RepositoryParams(options.repositoryOptions)
+    val envV    = EnvParams(options.envOptions)
+    val repoV   = RepositoryParams(options.repositoryOptions)
     (sharedV, cacheV, outputV, envV, repoV).mapN { (shared, cache, output, env, repo) =>
       JavaHomeParams(
         shared,

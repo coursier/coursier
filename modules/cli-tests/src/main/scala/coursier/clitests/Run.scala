@@ -30,7 +30,7 @@ object Run extends CaseApp[RunOptions] {
           printThrowable(err)
           anyError = true
         case Right(_) =>
-          // println(Console.GREEN + namePrefix + res.name + Console.RESET)
+        // println(Console.GREEN + namePrefix + res.name + Console.RESET)
       }
 
     anyError

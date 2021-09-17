@@ -7,7 +7,7 @@ trait CsMima extends Mima {
   def mimaPreviousVersions = Seq("2.0.16")
 }
 
-def commitHash = T{
+def commitHash = T {
   os.proc("git", "rev-parse", "HEAD").call().out.text.trim
 }
 
@@ -41,10 +41,10 @@ trait CoursierPublishModule extends PublishModule {
     licenses = Seq(License.`Apache-2.0`),
     versionControl = VersionControl.github("coursier", "coursier"),
     developers = Seq(
-      Developer("alexarchambault", "Alex Archambault","https://github.com/alexarchambault")
+      Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
   )
-  def publishVersion = T{ buildVersion }
+  def publishVersion = T { buildVersion }
 }
 
 trait CsTests extends TestModule {
@@ -79,7 +79,7 @@ trait JsTests extends TestModule {
 }
 
 trait CsModule extends SbtModule {
-  def scalacOptions = T{
+  def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
       if (sv.startsWith("2.12.")) Seq("-Ypartial-unification")
@@ -89,7 +89,7 @@ trait CsModule extends SbtModule {
       else Nil
     super.scalacOptions() ++ scala212Opts ++ scala213Opts
   }
-  def scalacPluginIvyDeps = T{
+  def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val scala212Plugins =
       if (sv.startsWith("2.11.") || sv.startsWith("2.12."))
@@ -98,7 +98,7 @@ trait CsModule extends SbtModule {
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
   def sources = T.sources {
-    val sbv = mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion())
+    val sbv    = mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
     val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
       val dirNames = Seq(s"scala-$sbv")

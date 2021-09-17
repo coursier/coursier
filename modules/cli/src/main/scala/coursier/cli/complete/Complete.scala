@@ -19,8 +19,8 @@ object Complete extends CaseApp[CompleteOptions] {
         params0
     }
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
-    val ec = ExecutionContext.fromExecutorService(pool)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
+    val ec    = ExecutionContext.fromExecutorService(pool)
     val cache = params.cache.cache(pool, params.output.logger())
 
     val result = coursier.complete.Complete(cache)

@@ -348,7 +348,10 @@ object CompleteTests extends TestSuite {
       test - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
       test - simple("com.ex", 0 -> Seq("com.example"))
 
-      test - simple("com.thoughtworks:", 17 -> Seq("bug_2.12", "common_2.12", "ivy-maven-publish-fetch_2.12", "top_2.12"))
+      test - simple(
+        "com.thoughtworks:",
+        17 -> Seq("bug_2.12", "common_2.12", "ivy-maven-publish-fetch_2.12", "top_2.12")
+      )
       test - simple("com.thoughtworks:b", 17 -> Seq("bug_2.12"))
 
       test - simple("com.example:a_2.11:", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))

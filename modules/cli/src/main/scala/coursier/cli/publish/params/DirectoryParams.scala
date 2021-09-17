@@ -23,7 +23,8 @@ object DirectoryParams {
           Validated.validNel(dir0)
         else
           Validated.invalidNel(s"$d not a directory")
-      } else
+      }
+      else
         Validated.invalidNel(s"$d not found")
     }
 
@@ -36,9 +37,11 @@ object DirectoryParams {
             Validated.validNel(dir0)
           else
             Validated.invalidNel(s"project/build.properties not found under sbt directory $d")
-        } else
+        }
+        else
           Validated.invalidNel(s"$d not a directory")
-      } else
+      }
+      else
         Validated.invalidNel(s"$d not found")
     }
 

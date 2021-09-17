@@ -27,7 +27,14 @@ import shapeless._
 
 import scala.util.control.NonFatal
 
-object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
+// format: off
+object Coursier extends CommandAppPreA(
+  Parser[LauncherOptions],
+  Help[LauncherOptions],
+  CoursierCommand.parser,
+  CoursierCommand.help
+) {
+  // format: on
 
   val isGraalvmNativeImage = sys.props.contains("org.graalvm.nativeimage.imagecode")
 
@@ -38,13 +45,14 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()
       else
         io.github.alexarchambault.windowsansi.WindowsAnsi.setup()
-    } catch {
+    }
+    catch {
       case NonFatal(e) =>
         val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
         if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
           System.err.println(s"Error setting up Windows terminal for ANSI escape codes: $e")
         if (doThrow)
-           throw e
+          throw e
     }
   }
 
@@ -58,16 +66,18 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   private def zshCompletions(): String = {
     var is: InputStream = null
-    val b = try {
-      is = Thread.currentThread()
-        .getContextClassLoader
-        .getResource("completions/zsh")
-        .openStream()
-      FileUtil.readFully(is)
-    } finally {
-      if (is != null)
-        is.close()
-    }
+    val b =
+      try {
+        is = Thread.currentThread()
+          .getContextClassLoader
+          .getResource("completions/zsh")
+          .openStream()
+        FileUtil.readFully(is)
+      }
+      finally {
+        if (is != null)
+          is.close()
+      }
     new String(b, StandardCharsets.UTF_8)
   }
 
@@ -95,7 +105,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
           val arg = jvmArg.stripPrefix("-J")
           if (arg.startsWith("-D"))
             arg.stripPrefix("-D").split("=", 2) match {
-              case Array(k) => System.setProperty(k, "")
+              case Array(k)    => System.setProperty(k, "")
               case Array(k, v) => System.setProperty(k, v)
             }
           else
@@ -103,7 +113,8 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         }
 
         csArgs0
-      } else
+      }
+      else
         args
 
     if (csArgs.nonEmpty)
@@ -116,15 +127,15 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
 
-    if(options.version) {
+    if (options.version) {
       System.out.println(appVersion)
       sys.exit(0)
     }
 
     for (requiredVersion <- options.require.map(_.trim).filter(_.nonEmpty)) {
       val requiredVersion0 = Version(requiredVersion)
-      val currentVersion = coursier.util.Properties.version
-      val currentVersion0 = Version(currentVersion)
+      val currentVersion   = coursier.util.Properties.version
+      val currentVersion0  = Version(currentVersion)
       if (currentVersion0.compare(requiredVersion0) < 0) {
         System.err.println(s"Required version $requiredVersion > $currentVersion")
         sys.exit(1)
@@ -143,22 +154,22 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
 
   object runWithOptions extends Poly1 {
     private def opt[T](run: (T, RemainingArgs) => Unit) = at[T](run.curried)
-    implicit val atBootstrap = opt[bootstrap.BootstrapOptions]    (Bootstrap.run)
-    implicit val atChannel   = opt[channel.ChannelOptions]        (Channel.run)
-    implicit val atComplete  = opt[complete.CompleteOptions]      (Complete.run)
-    implicit val atFetch     = opt[fetch.FetchOptions]            (Fetch.run)
-    implicit val atGet       = opt[get.GetOptions]                (Get.run)
-    implicit val atInstall   = opt[install.InstallOptions]        (Install.run)
-    implicit val atJava      = opt[jvm.JavaOptions]               (Java.run)
-    implicit val atJavaHome  = opt[jvm.JavaHomeOptions]           (JavaHome.run)
-    implicit val atLaunch    = opt[launch.LaunchOptions]          (Launch.run)
-    implicit val atList      = opt[install.ListOptions]           (List.run)
+    implicit val atBootstrap = opt[bootstrap.BootstrapOptions](Bootstrap.run)
+    implicit val atChannel   = opt[channel.ChannelOptions](Channel.run)
+    implicit val atComplete  = opt[complete.CompleteOptions](Complete.run)
+    implicit val atFetch     = opt[fetch.FetchOptions](Fetch.run)
+    implicit val atGet       = opt[get.GetOptions](Get.run)
+    implicit val atInstall   = opt[install.InstallOptions](Install.run)
+    implicit val atJava      = opt[jvm.JavaOptions](Java.run)
+    implicit val atJavaHome  = opt[jvm.JavaHomeOptions](JavaHome.run)
+    implicit val atLaunch    = opt[launch.LaunchOptions](Launch.run)
+    implicit val atList      = opt[install.ListOptions](List.run)
     implicit val atPublish   = opt[publish.options.PublishOptions](Publish.run)
-    implicit val atResolve   = opt[resolve.ResolveOptions]        (Resolve.run)
-    implicit val atSearch    = opt[search.SearchOptions]          (Search.run)
-    implicit val atSetup     = opt[setup.SetupOptions]            (Setup.run)
-    implicit val atUninstall = opt[install.UninstallOptions]      (Uninstall.run)
-    implicit val atUpdate    = opt[install.UpdateOptions]         (Update.run)
+    implicit val atResolve   = opt[resolve.ResolveOptions](Resolve.run)
+    implicit val atSearch    = opt[search.SearchOptions](Search.run)
+    implicit val atSetup     = opt[setup.SetupOptions](Setup.run)
+    implicit val atUninstall = opt[install.UninstallOptions](Uninstall.run)
+    implicit val atUpdate    = opt[install.UpdateOptions](Update.run)
   }
 
   def runA = _.fold(runWithOptions)

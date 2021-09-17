@@ -36,7 +36,6 @@ import dataclass._
       this.cache.map(_.withCache(cache))
     )
 
-
   def default(): Task[File] =
     get(JavaHome.defaultId)
 
@@ -70,7 +69,8 @@ import dataclass._
                       extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
                     )
                     .toOption
-                } catch {
+                }
+                catch {
                   case _: IOException =>
                     None
                 }
@@ -104,7 +104,7 @@ import dataclass._
       system().map(_.map(JavaHome.systemId -> _))
     else if (id.startsWith(JavaHome.systemId + "|"))
       system().flatMap {
-        case None => getWithRetainedIdIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
+        case None      => getWithRetainedIdIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
         case Some(dir) => Task.point(Some(JavaHome.systemId -> dir))
       }
     else
@@ -130,18 +130,18 @@ import dataclass._
     else
       getWithRetainedIdIfInstalled(id).flatMap {
         case Some(res) => Task.point(res)
-        case None => getWithRetainedId0(id)
+        case None      => getWithRetainedId0(id)
       }
 
   private def getWithRetainedId0(id: String): Task[(String, File)] =
     if (id == JavaHome.systemId)
       system().flatMap {
-        case None => Task.fail(new Exception("No system JVM found"))
+        case None      => Task.fail(new Exception("No system JVM found"))
         case Some(dir) => Task.point(JavaHome.systemId -> dir)
       }
     else if (id.startsWith(JavaHome.systemId + "|"))
       system().flatMap {
-        case None => getWithRetainedId(id.stripPrefix(JavaHome.systemId + "|"))
+        case None      => getWithRetainedId(id.stripPrefix(JavaHome.systemId + "|"))
         case Some(dir) => Task.point(JavaHome.systemId -> dir)
       }
     else {
@@ -162,7 +162,7 @@ import dataclass._
     get(id).flatMap { home =>
       JavaHome.javaBin(home.toPath, pathExtensions) match {
         case Some(exe) => Task.point(exe)
-        case None => Task.fail(new Exception(s"${new File(home, "java/bin")} not found"))
+        case None      => Task.fail(new Exception(s"${new File(home, "java/bin")} not found"))
       }
     }
 
@@ -198,7 +198,8 @@ object JavaHome {
         if (addPath) {
           val binDir = new File(javaHome, "bin").getAbsolutePath
           EnvironmentUpdate.empty.withPathLikeAppends(Seq("PATH" -> binDir))
-        } else
+        }
+        else
           EnvironmentUpdate.empty
       EnvironmentUpdate.empty.withSet(Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
     }
@@ -269,7 +270,7 @@ object JavaHome {
           env.put(k, v)
         val p = b.start()
         p.getOutputStream.close()
-        val output = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
+        val output  = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
         val retCode = p.waitFor()
         if (retCode == 0)
           Right(output)
@@ -281,7 +282,9 @@ object JavaHome {
     def default(): CommandOutput =
       new DefaultCommandOutput
 
-    def apply(f: (Seq[String], Boolean, Seq[(String, String)]) => Either[Int, String]): CommandOutput =
+    def apply(
+      f: (Seq[String], Boolean, Seq[(String, String)]) => Either[Int, String]
+    ): CommandOutput =
       new CommandOutput {
         def run(
           command: Seq[String],
@@ -331,10 +334,12 @@ object JavaHome {
       if (getEnv("CS_FORMER_JAVA_HOME").isEmpty) {
         val saveJavaHome = """export CS_FORMER_JAVA_HOME="$JAVA_HOME""""
         saveJavaHome + "\n"
-      } else if (envUpdate.pathLikeAppends.exists(_._1 == "PATH")) {
+      }
+      else if (envUpdate.pathLikeAppends.exists(_._1 == "PATH")) {
         val updatedPathOpt = maybeRemovePath(cacheDirectory, getEnv, pathSeparator)
         updatedPathOpt.getOrElse("")
-      } else
+      }
+      else
         ""
 
     preamble + envUpdate.script + "\n"

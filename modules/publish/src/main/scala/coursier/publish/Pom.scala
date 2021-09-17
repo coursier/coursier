@@ -21,7 +21,6 @@ object Pom {
     lazy val map = all.map(l => l.name -> l).toMap
   }
 
-
   final case class Scm(
     url: String,
     connection: String,
@@ -37,7 +36,6 @@ object Pom {
       )
   }
 
-
   // FIXME What's mandatory? What's not?
   final case class Developer(
     id: String,
@@ -45,7 +43,6 @@ object Pom {
     url: String,
     mail: Option[String]
   )
-
 
   def create(
     organization: Organization,
@@ -113,31 +110,31 @@ object Pom {
       nodes +=
         <developers>
           {
-            developers.map { d =>
-              <developer>
+          developers.map { d =>
+            <developer>
                 <id>{d.id}</id>
                 <name>{d.name}</name>
                 <url>{d.url}</url>
               </developer>
-              // + optional mail
-            }
+          // + optional mail
           }
+        }
         </developers>
 
     if (dependencies.nonEmpty)
       nodes +=
         <dependencies>
           {
-            dependencies.map {
-              case (depOrg, depName, ver, confOpt) =>
-                <dependency>
+          dependencies.map {
+            case (depOrg, depName, ver, confOpt) =>
+              <dependency>
                   <groupId>{depOrg.value}</groupId>
                   <artifactId>{depName.value}</artifactId>
                   <version>{ver}</version>
                   {confOpt.fold[NodeSeq](Nil)(c => <scope>{c}</scope>)}
                 </dependency>
-            }
           }
+        }
         </dependencies>
 
     print(
@@ -147,7 +144,7 @@ object Pom {
     )
   }
 
-  private def addOrUpdate(content: Elem, label: String)(update: Option[Node] =>Node): Elem = {
+  private def addOrUpdate(content: Elem, label: String)(update: Option[Node] => Node): Elem = {
 
     // assumes there's at most one child with this label…
 
@@ -235,7 +232,12 @@ object Pom {
         </scm>
     }
 
-  def overrideDistributionManagementRepository(id: String, name: String, url: String, content: Elem): Elem =
+  def overrideDistributionManagementRepository(
+    id: String,
+    name: String,
+    url: String,
+    content: Elem
+  ): Elem =
     addOrUpdate(content, "distributionManagement") {
       case Some(elem0: Elem) =>
         addOrUpdate(elem0, "repository") { _ =>
@@ -276,17 +278,17 @@ object Pom {
             <id>{dev.id}</id>
             <name>{dev.name}</name>
             {
-              dev.mail match {
-                case None =>
-                  <email/>
-                case Some(mail) =>
-                  <email>{mail}</email>
-              }
+            dev.mail match {
+              case None =>
+                <email/>
+              case Some(mail) =>
+                <email>{mail}</email>
             }
+          }
             <url>{dev.url}</url>
           </developer>
         }
-        }</developers>
+      }</developers>
     }
 
   def transformDependency(

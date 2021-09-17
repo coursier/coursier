@@ -2,12 +2,14 @@ package coursier.core
 
 object Exclusions {
 
-  def partition(exclusions: Set[(Organization, ModuleName)]): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
+  def partition(
+    exclusions: Set[(Organization, ModuleName)]
+  ): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
 
-    var all0 = false
-    val excludeByOrg0 = Set.newBuilder[Organization]
+    var all0           = false
+    val excludeByOrg0  = Set.newBuilder[Organization]
     val excludeByName0 = Set.newBuilder[ModuleName]
-    val remaining0 = Set.newBuilder[(Organization, ModuleName)]
+    val remaining0     = Set.newBuilder[(Organization, ModuleName)]
 
     val it = exclusions.iterator
     while (it.hasNext) {
@@ -17,7 +19,8 @@ object Exclusions {
           all0 = true
         else
           excludeByName0 += excl._2
-      } else if (excl._2 == allNames)
+      }
+      else if (excl._2 == allNames)
         excludeByOrg0 += excl._1
       else
         remaining0 += excl
@@ -69,17 +72,26 @@ object Exclusions {
   }
 
   val allOrganizations = Organization("*")
-  val allNames = ModuleName("*")
+  val allNames         = ModuleName("*")
 
   val zero = Set.empty[(Organization, ModuleName)]
-  val one = Set((allOrganizations, allNames))
+  val one  = Set((allOrganizations, allNames))
 
-  def join(x: Set[(Organization, ModuleName)], y: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] =
+  def join(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] =
     minimize(x ++ y)
 
-  def meet(x: Set[(Organization, ModuleName)], y: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
+  def meet(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] = {
 
-    val ((xAll, xExcludeByOrg, xExcludeByName, xRemaining), (yAll, yExcludeByOrg, yExcludeByName, yRemaining)) =
+    val (
+      (xAll, xExcludeByOrg, xExcludeByName, xRemaining),
+      (yAll, yExcludeByOrg, yExcludeByName, yRemaining)
+    ) =
       (partition(x), partition(y))
 
     val all = xAll && yAll
@@ -96,8 +108,12 @@ object Exclusions {
         else xExcludeByName intersect yExcludeByName
 
       val remaining =
-        xRemaining.filter { case e @ (org, name) => yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e) } ++
-          yRemaining.filter { case e @ (org, name) => xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e) }
+        xRemaining.filter { case e @ (org, name) =>
+          yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e)
+        } ++
+          yRemaining.filter { case e @ (org, name) =>
+            xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e)
+          }
 
       excludeByOrg.map((_, allNames)) ++
         excludeByName.map((allOrganizations, _)) ++

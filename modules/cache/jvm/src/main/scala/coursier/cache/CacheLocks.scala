@@ -11,8 +11,7 @@ import scala.annotation.tailrec
 
 object CacheLocks {
 
-  /**
-    * Should be acquired when doing operations changing the file structure of the cache (creating
+  /** Should be acquired when doing operations changing the file structure of the cache (creating
     * new directories, creating / acquiring locks, ...), so that these don't hinder each other.
     *
     * Should hopefully address some transient errors seen on the CI of ensime-server.
@@ -102,10 +101,13 @@ object CacheLocks {
     }
   }
 
-  def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
+  def withLockFor[T](
+    cache: File,
+    file: File
+  )(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
     withLockOr(cache, file)(f, Some(Left(new ArtifactError.Locked(file))))
 
-  private val urlLocks = new ConcurrentHashMap[String, Object]
+  private val urlLocks           = new ConcurrentHashMap[String, Object]
   private val urlLockDummyObject = new Object
 
   def withUrlLock[T](url: String)(f: => T): Option[T] = {

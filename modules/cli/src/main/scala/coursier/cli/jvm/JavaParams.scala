@@ -17,10 +17,10 @@ final case class JavaParams(
 object JavaParams {
   def apply(options: JavaOptions, anyArg: Boolean): ValidatedNel[String, JavaParams] = {
     val sharedV = SharedJavaParams(options.sharedJavaOptions)
-    val cacheV = options.cacheOptions.params
+    val cacheV  = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
-    val envV = EnvParams(options.envOptions)
-    val repoV = RepositoryParams(options.repositoryOptions)
+    val envV    = EnvParams(options.envOptions)
+    val repoV   = RepositoryParams(options.repositoryOptions)
 
     val flags = Seq(
       options.installed,
@@ -29,26 +29,31 @@ object JavaParams {
     )
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --env, --setup, --installed, --available.")
+        Validated.invalidNel(
+          "Error: can only specify one of --env, --setup, --installed, --available."
+        )
       else
         Validated.validNel(())
 
     val checkArgsV =
       if (anyArg && flags.exists(identity))
-        Validated.invalidNel(s"Error: unexpected arguments passed along --env, --setup, --installed, or --available")
+        Validated.invalidNel(
+          s"Error: unexpected arguments passed along --env, --setup, --installed, or --available"
+        )
       else
         Validated.validNel(())
 
-    (sharedV, cacheV, outputV, envV, repoV, flagsV, checkArgsV).mapN { (shared, cache, output, env, repo, _, _) =>
-      JavaParams(
-        options.installed,
-        options.available,
-        shared,
-        repo,
-        cache,
-        output,
-        env
-      )
+    (sharedV, cacheV, outputV, envV, repoV, flagsV, checkArgsV).mapN {
+      (shared, cache, output, env, repo, _, _) =>
+        JavaParams(
+          options.installed,
+          options.available,
+          shared,
+          repo,
+          cache,
+          output,
+          env
+        )
     }
   }
 }

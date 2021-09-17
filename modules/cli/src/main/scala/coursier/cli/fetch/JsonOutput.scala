@@ -46,7 +46,10 @@ object JsonOutput {
         (dep, artifact)
     }
 
-    val jsonReq = JsonPrintRequirement(files.map { case (a, f) => a.url -> f }.toMap, depToArtifacts)
+    val jsonReq = JsonPrintRequirement(
+      files.map { case (a, f) => a.url -> f }.toMap,
+      depToArtifacts
+    )
     val roots = deps.map { d =>
       JsonElem(
         d,

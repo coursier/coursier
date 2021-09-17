@@ -15,12 +15,16 @@ class MonadlessEitherThrowable extends Monadless[({ type L[T] = Either[Throwable
         (acc, elem) =>
           for {
             acc0 <- acc
-            t <- elem
+            t    <- elem
           } yield t :: acc0
       }
       .map(_.reverse)
 
-  def rescue[T](m: Either[Throwable, T])(pf: PartialFunction[Throwable, Either[Throwable, T]]): Either[Throwable, T] =
+  def rescue[T](
+    m: Either[Throwable, T]
+  )(
+    pf: PartialFunction[Throwable, Either[Throwable, T]]
+  ): Either[Throwable, T] =
     m.left.flatMap { e =>
       if (pf.isDefinedAt(e))
         pf(e)

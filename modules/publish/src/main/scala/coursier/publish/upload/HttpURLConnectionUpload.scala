@@ -21,7 +21,13 @@ final case class HttpURLConnectionUpload(
 
   import coursier.publish.download.OkhttpDownload.TryOps
 
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]] =
+  def upload(
+    url: String,
+    authentication: Option[Authentication],
+    content: Array[Byte],
+    logger: UploadLogger,
+    loggingIdOpt: Option[Object]
+  ): Task[Option[Upload.Error]] =
     Task.schedule(pool) {
       logger.uploading(url, loggingIdOpt, Some(content.length))
 
@@ -40,8 +46,8 @@ final case class HttpURLConnectionUpload(
         conn.setRequestProperty("Content-Type", "application/octet-stream")
         conn.setRequestProperty("Content-Length", content.length.toString)
 
-        var is: InputStream = null
-        var es: InputStream = null
+        var is: InputStream  = null
+        var es: InputStream  = null
         var os: OutputStream = null
 
         try {
@@ -55,23 +61,32 @@ final case class HttpURLConnectionUpload(
               case CacheUrl.BasicRealm(r) => r
             }
             Some(new Upload.Error.Unauthorized(url, realmOpt))
-          } else if (code / 100 == 2)
+          }
+          else if (code / 100 == 2)
             None
           else {
             es = conn.getErrorStream
-            val buf = Array.ofDim[Byte](16384)
+            val buf  = Array.ofDim[Byte](16384)
             val baos = new ByteArrayOutputStream
             var read = -1
-            while ( {
+            while ({
               read = es.read(buf); read >= 0
             })
               baos.write(buf, 0, read)
             es.close()
             // FIXME Adjust charset with headers?
-            val content = Try(new String(baos.toByteArray, StandardCharsets.UTF_8)).toOption.getOrElse("")
-            Some(new Upload.Error.HttpError(code, conn.getHeaderFields.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+            val content =
+              Try(new String(baos.toByteArray, StandardCharsets.UTF_8)).toOption.getOrElse("")
+            Some(
+              new Upload.Error.HttpError(
+                code,
+                conn.getHeaderFields.asScala.mapValues(_.asScala.toList).iterator.toMap,
+                content
+              )
+            )
           }
-        } finally {
+        }
+        finally {
           // Trying to ensure the same connection is being re-used across requests
           // see https://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html
           try {
@@ -79,7 +94,8 @@ final case class HttpURLConnectionUpload(
               os = conn.getOutputStream
             if (os != null)
               os.close()
-          } catch {
+          }
+          catch {
             case NonFatal(_) =>
           }
           try {
@@ -90,7 +106,8 @@ final case class HttpURLConnectionUpload(
               while (is.read(buf) > 0) {}
               is.close()
             }
-          } catch {
+          }
+          catch {
             case NonFatal(_) =>
           }
           try {
@@ -101,13 +118,18 @@ final case class HttpURLConnectionUpload(
               while (es.read(buf) > 0) {}
               es.close()
             }
-          } catch {
+          }
+          catch {
             case NonFatal(_) =>
           }
         }
       }
 
-      logger.uploaded(url, loggingIdOpt, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
+      logger.uploaded(
+        url,
+        loggingIdOpt,
+        res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x)
+      )
 
       res.get
     }

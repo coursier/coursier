@@ -47,7 +47,7 @@ private def releaseId(
   ghToken: String,
   tag: String
 ): Long = {
-  val url = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases?access_token=$ghToken"
+  val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases?access_token=$ghToken"
   val resp = quickRequest.get(url).send()
 
   val json = ujson.read(resp.body)
@@ -61,7 +61,8 @@ private def releaseId(
           val tags = json.arr.map(_("tag_name").str).toVector
           sys.error(s"Tag $tag not found (found tags: ${tags.mkString(", ")}")
         }
-    } catch {
+    }
+    catch {
       case NonFatal(e) =>
         System.err.println(resp.body)
         throw e
@@ -94,16 +95,22 @@ def currentAssets(
     .toMap
 }
 
-/**
- * Uploads files as GitHub release assets.
- *
- * @param uploads List of local files / asset name to be uploaded
- * @param ghOrg GitHub organization of the release
- * @param ghProj GitHub project name of the release
- * @param ghToken GitHub token
- * @param tag Tag to upload assets to
- * @param dryRun Whether to run a dry run (printing the actions that would have been done, but not uploading anything)
- */
+/** Uploads files as GitHub release assets.
+  *
+  * @param uploads
+  *   List of local files / asset name to be uploaded
+  * @param ghOrg
+  *   GitHub organization of the release
+  * @param ghProj
+  *   GitHub project name of the release
+  * @param ghToken
+  *   GitHub token
+  * @param tag
+  *   Tag to upload assets to
+  * @param dryRun
+  *   Whether to run a dry run (printing the actions that would have been done, but not uploading
+  *   anything)
+  */
 def upload(
   ghOrg: String,
   ghProj: String,
@@ -117,7 +124,8 @@ def upload(
 
   val releaseId0 = releaseId(ghOrg, ghProj, ghToken, tag)
 
-  val currentAssets0 = if (overwrite) currentAssets(releaseId0, ghOrg, ghProj, ghToken) else Map.empty[String, Long]
+  val currentAssets0 =
+    if (overwrite) currentAssets(releaseId0, ghOrg, ghProj, ghToken) else Map.empty[String, Long]
 
   for ((f0, name) <- uploads) {
 
@@ -132,7 +140,8 @@ def upload(
           .send()
       }
 
-    val uri = uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name&access_token=$ghToken"
+    val uri =
+      uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name&access_token=$ghToken"
     val contentType0 = contentType(f0)
     System.err.println(s"Detected content type of $f0: $contentType0")
     if (dryRun)
@@ -149,7 +158,7 @@ def upload(
 }
 
 def readInto(is: InputStream, os: OutputStream): Unit = {
-  val buf = Array.ofDim[Byte](1024 * 1024)
+  val buf  = Array.ofDim[Byte](1024 * 1024)
   var read = -1
   while ({
     read = is.read(buf)
@@ -163,9 +172,9 @@ def writeInZip(name: String, file: os.Path, zip: os.Path): Unit = {
 
   os.makeDir.all(zip / os.up)
 
-  var fis: InputStream = null
+  var fis: InputStream      = null
   var fos: FileOutputStream = null
-  var zos: ZipOutputStream = null
+  var zos: ZipOutputStream  = null
 
   try {
     fis = os.read.inputStream(file)
@@ -180,7 +189,8 @@ def writeInZip(name: String, file: os.Path, zip: os.Path): Unit = {
     zos.closeEntry()
 
     zos.finish()
-  } finally {
+  }
+  finally {
     if (zos != null) zos.close()
     if (fos != null) fos.close()
     if (fis != null) fis.close()
@@ -258,14 +268,16 @@ private def upload0(
     def loop(n: Int): Unit =
       if (n <= 1) proceed()
       else {
-        val succeeded = try {
-          proceed()
-          true
-        } catch {
-          case NonFatal(e) =>
-            System.err.println(s"Caught $e, trying again")
-            false
-        }
+        val succeeded =
+          try {
+            proceed()
+            true
+          }
+          catch {
+            case NonFatal(e) =>
+              System.err.println(s"Caught $e, trying again")
+              false
+          }
 
         if (!succeeded)
           loop(n - 1)
@@ -356,7 +368,8 @@ private def doUpload(
           stderr = os.Inherit
         )
       }
-    } else
+    }
+    else
       System.err.println("Nothing changed")
   }
 
@@ -365,7 +378,8 @@ private def withTmpDir[T](prefix: String)(f: os.Path => T): T = {
   try {
     tmpDir = os.temp.dir(prefix = prefix)
     f(tmpDir)
-  } finally {
+  }
+  finally {
     if (tmpDir != null) {
       System.err.println(s"Deleting $tmpDir")
       try os.remove.all(tmpDir)

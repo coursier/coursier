@@ -2,6 +2,7 @@ package coursier.cli.options
 
 import caseapp.Name
 
+// format: off
 final case class EnvOptions(
   env: Boolean = false,
   @Name("disable")
@@ -9,3 +10,4 @@ final case class EnvOptions(
   setup: Boolean = false,
   userHome: Option[String] = None
 )
+// format: on

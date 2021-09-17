@@ -1,4 +1,3 @@
-
 def copyDocusaurusVersionedData(
   repo: String,
   branch: String,
@@ -15,9 +14,9 @@ def copyDocusaurusVersionedData(
     stderr = os.Inherit
   )
 
-  val versionedDocsDir = cloneUnder / "versioned_docs"
+  val versionedDocsDir     = cloneUnder / "versioned_docs"
   val versionedSidebarsDir = cloneUnder / "versioned_sidebars"
-  val versionsJson = cloneUnder / "versions.json"
+  val versionsJson         = cloneUnder / "versions.json"
 
   if (os.exists(versionedDocsDir)) {
     val dest = docusaurusDir / "versioned_docs"
@@ -201,7 +200,8 @@ def updateGhPages(
         stdout = os.Inherit,
         stderr = os.Inherit
       )
-  } else
+  }
+  else
     System.err.println("Nothing changed")
 
   ()

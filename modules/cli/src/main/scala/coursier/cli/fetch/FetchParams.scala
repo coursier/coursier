@@ -25,7 +25,7 @@ object FetchParams {
       else
         Some(Paths.get(options.jsonOutputFile))
 
-    val resolveV = SharedResolveParams(options.resolveOptions)
+    val resolveV  = SharedResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
 
     (resolveV, artifactV).mapN {
