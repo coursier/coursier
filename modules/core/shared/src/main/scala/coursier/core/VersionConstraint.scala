@@ -11,10 +11,10 @@ import scala.annotation.tailrec
   def isValid: Boolean =
     interval.isValid && preferred.forall { v =>
       interval.contains(v) ||
-        interval.to.forall { to =>
-          val cmp = v.compare(to)
-          cmp < 0 || (cmp == 0 && interval.toIncluded)
-        }
+      interval.to.forall { to =>
+        val cmp = v.compare(to)
+        cmp < 0 || (cmp == 0 && interval.toIncluded)
+      }
     }
 
   def blend: Option[Either[VersionInterval, Version]] =
@@ -25,7 +25,8 @@ import scala.annotation.tailrec
         Some(Left(interval))
       else
         Some(Right(preferredInInterval.max))
-    } else
+    }
+    else
       None
 
   def repr: Option[String] =
@@ -84,7 +85,7 @@ object VersionConstraint {
 
     val cs = constraints.toList
     cs match {
-      case Nil => VersionConstraint.all
+      case Nil      => VersionConstraint.all
       case h :: Nil => h
       case _ =>
         val sorted = cs.sortBy { c =>

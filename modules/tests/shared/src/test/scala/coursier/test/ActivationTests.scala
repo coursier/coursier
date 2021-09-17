@@ -6,7 +6,7 @@ import utest._
 
 object ActivationTests extends TestSuite {
 
-  def parseVersion(s: String) = Parse.version(s).getOrElse(???)
+  def parseVersion(s: String)         = Parse.version(s).getOrElse(???)
   def parseVersionInterval(s: String) = Parse.versionInterval(s).getOrElse(???)
 
   val macOs = Os(
@@ -27,9 +27,9 @@ object ActivationTests extends TestSuite {
       test("fromProperties") {
         test("MacOSX") {
           val props = Map(
-            "os.arch" -> "x86_64",
-            "os.name" -> "Mac OS X",
-            "os.version" -> "10.12",
+            "os.arch"        -> "x86_64",
+            "os.name"        -> "Mac OS X",
+            "os.version"     -> "10.12",
             "path.separator" -> ":"
           )
 
@@ -47,9 +47,9 @@ object ActivationTests extends TestSuite {
 
         test("linuxPi") {
           val props = Map(
-            "os.arch" -> "arm",
-            "os.name" -> "Linux",
-            "os.version" -> "4.1.13-v7+",
+            "os.arch"        -> "arm",
+            "os.name"        -> "Linux",
+            "os.version"     -> "4.1.13-v7+",
             "path.separator" -> ":"
           )
 
@@ -137,8 +137,8 @@ object ActivationTests extends TestSuite {
     test("properties") {
       val activation = Activation.empty.withProperties(
         Seq(
-          "required" -> None,
-          "requiredWithValue" -> Some("foo"),
+          "required"             -> None,
+          "requiredWithValue"    -> Some("foo"),
           "requiredWithNegValue" -> Some("!bar")
         )
       )
@@ -146,9 +146,22 @@ object ActivationTests extends TestSuite {
       test("match") {
         val isActive = activation.isActive(
           Map(
-            "required" -> "a",
-            "requiredWithValue" -> "foo",
+            "required"             -> "a",
+            "requiredWithValue"    -> "foo",
             "requiredWithNegValue" -> "baz"
+          ),
+          Os.empty,
+          None
+        )
+
+        assert(isActive)
+      }
+
+      test("match with missing property") {
+        val isActive = activation.isActive(
+          Map(
+            "required"          -> "a",
+            "requiredWithValue" -> "foo"
           ),
           Os.empty,
           None
@@ -161,7 +174,7 @@ object ActivationTests extends TestSuite {
         test {
           val isActive = activation.isActive(
             Map(
-              "requiredWithValue" -> "foo",
+              "requiredWithValue"    -> "foo",
               "requiredWithNegValue" -> "baz"
             ),
             Os.empty,
@@ -174,8 +187,8 @@ object ActivationTests extends TestSuite {
         test {
           val isActive = activation.isActive(
             Map(
-              "required" -> "a",
-              "requiredWithValue" -> "fooz",
+              "required"             -> "a",
+              "requiredWithValue"    -> "fooz",
               "requiredWithNegValue" -> "baz"
             ),
             Os.empty,
@@ -188,8 +201,8 @@ object ActivationTests extends TestSuite {
         test {
           val isActive = activation.isActive(
             Map(
-              "required" -> "a",
-              "requiredWithValue" -> "foo",
+              "required"             -> "a",
+              "requiredWithValue"    -> "foo",
               "requiredWithNegValue" -> "bar"
             ),
             Os.empty,
@@ -228,7 +241,6 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
-
         test("wrongExactVersion") {
           val activation = Activation(
             Nil,
@@ -240,7 +252,6 @@ object ActivationTests extends TestSuite {
 
           assert(!isActive)
         }
-
 
         test("wrongExactVersionSeveral") {
           val activation = Activation(
@@ -283,8 +294,8 @@ object ActivationTests extends TestSuite {
     test("all") {
       val activation = Activation(
         Seq(
-          "required" -> None,
-          "requiredWithValue" -> Some("foo"),
+          "required"             -> None,
+          "requiredWithValue"    -> Some("foo"),
           "requiredWithNegValue" -> Some("!bar")
         ),
         Os(None, Set("mac"), None, None),
@@ -294,8 +305,8 @@ object ActivationTests extends TestSuite {
       test("match") {
         val isActive = activation.isActive(
           Map(
-            "required" -> "a",
-            "requiredWithValue" -> "foo",
+            "required"             -> "a",
+            "requiredWithValue"    -> "foo",
             "requiredWithNegValue" -> "baz"
           ),
           macOs,
@@ -308,7 +319,7 @@ object ActivationTests extends TestSuite {
       test("noMatch") {
         val isActive = activation.isActive(
           Map(
-            "requiredWithValue" -> "foo",
+            "requiredWithValue"    -> "foo",
             "requiredWithNegValue" -> "baz"
           ),
           macOs,

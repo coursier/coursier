@@ -8,14 +8,16 @@ import scala.collection.compat._
 object Pom {
   import coursier.util.Xml._
 
-  /**
-    * Returns either a property's key-value pair or an error if the elem is not an element.
+  /** Returns either a property's key-value pair or an error if the elem is not an element.
     *
     * This method trims all spaces, whereas Maven has an option to preserve them.
     *
-    * @param elem a property element
-    * @return the key and the value of the property
-    * @see [[https://issues.apache.org/jira/browse/MNG-5380]]
+    * @param elem
+    *   a property element
+    * @return
+    *   the key and the value of the property
+    * @see
+    *   [[https://issues.apache.org/jira/browse/MNG-5380]]
     */
   def property(elem: Node): Either[String, (String, String)] = {
     // Not matching with Text, which fails on scala-js if the property value has xml comments
@@ -83,15 +85,15 @@ object Pom {
   private def profileActivation(node: Node): (Option[Boolean], Activation) = {
     val byDefault =
       text(node, "activeByDefault", "").toOption.flatMap {
-        case "true" => Some(true)
+        case "true"  => Some(true)
         case "false" => Some(false)
-        case _ => None
+        case _       => None
       }
 
     val properties = node.children
       .filter(_.label == "property")
       .flatMap { p =>
-        for{
+        for {
           name <- text(p, "name", "").toOption
           valueOpt = text(p, "value", "").toOption
         } yield (name, valueOpt)
@@ -124,7 +126,8 @@ object Pom {
 
     val xmlActivationOpt = node.children
       .find(_.label == "activation")
-    val (activeByDefault, activation) = xmlActivationOpt.fold((Option.empty[Boolean], Activation.empty))(profileActivation)
+    val (activeByDefault, activation) =
+      xmlActivationOpt.fold((Option.empty[Boolean], Activation.empty))(profileActivation)
 
     val xmlDeps = node.children
       .find(_.label == "dependencies")
@@ -189,12 +192,15 @@ object Pom {
         .map(v => if (v.isEmpty) Left("Parent version missing") else Right(()))
         .getOrElse(Right(()))
       _ <- parentModuleOpt
-        .map(mod => if (mod.organization.value.isEmpty) Left("Parent organization missing") else Right(()))
+        .map { mod =>
+          if (mod.organization.value.isEmpty) Left("Parent organization missing")
+          else Right(())
+        }
         .getOrElse(Right(()))
 
       xmlProperties = pom.children
         .find(_.label == "properties")
-        .map(_.children.collect{case elem if elem.isElement => elem})
+        .map(_.children.collect { case elem if elem.isElement => elem })
         .getOrElse(Seq.empty)
       properties <- xmlProperties.eitherTraverse(property)
 
@@ -247,9 +253,9 @@ object Pom {
         .filter(_.label == "developer")
         .map { n =>
           for {
-            id <- text(n, "id", "Developer ID")
+            id   <- text(n, "id", "Developer ID")
             name <- text(n, "name", "Developer name")
-            url <- text(n, "url", "Developer URL")
+            url  <- text(n, "url", "Developer URL")
           } yield Info.Developer(id, name, url)
         }
         .collect {
@@ -263,7 +269,9 @@ object Pom {
             text(n, "url", "A publicly browsable repository").toOption,
             text(n, "connection", "Requires read access").toOption,
             text(n, "developerConnection", "Requires write access").toOption
-          )).filter(scm => scm.url.isDefined || scm.connection.isDefined || scm.developerConnection.isDefined)
+          )).filter(scm =>
+            scm.url.isDefined || scm.connection.isDefined || scm.developerConnection.isDefined
+          )
         }
 
       val finalProjModule = projModule.withOrganization(groupId)
@@ -273,7 +281,6 @@ object Pom {
         .find(_.label == "distributionManagement")
         .flatMap(_.children.find(_.label == "relocation"))
         .map { n =>
-
           // see https://maven.apache.org/guides/mini/guide-relocation.html
 
           val relocatedGroupId = text(n, "groupId", "")
@@ -333,7 +340,7 @@ object Pom {
 
     for {
       organization <- text(node, "groupId", "Organization") // Ignored
-      name <- text(node, "artifactId", "Name") // Ignored
+      name         <- text(node, "artifactId", "Name") // Ignored
 
       xmlVersioning <- node.children
         .find(_.label == "versioning")
@@ -341,12 +348,18 @@ object Pom {
 
     } yield {
 
-      val latest = text(xmlVersioning, "latest", "Latest version").getOrElse("")
+      val latest  = text(xmlVersioning, "latest", "Latest version").getOrElse("")
       val release = text(xmlVersioning, "release", "Release version").getOrElse("")
 
       val versionsOpt = xmlVersioning.children
         .find(_.label == "versions")
-        .map(_.children.filter(_.label == "version").flatMap(_.children.collectFirst { case Text(t) => t }))
+        .map { node =>
+          node.children
+            .filter(_.label == "version")
+            .flatMap(_.children.collectFirst {
+              case Text(t) => t
+            })
+        }
 
       val lastUpdatedOpt = text(xmlVersioning, "lastUpdated", "Last update date and time")
         .toOption
@@ -362,8 +375,8 @@ object Pom {
       text(node, name, desc).getOrElse("")
 
     val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
-    val ext = Extension(textOrEmpty("extension", "Extensions"))
-    val value = textOrEmpty("value", "Value")
+    val ext        = Extension(textOrEmpty("extension", "Extensions"))
+    val value      = textOrEmpty("value", "Value")
 
     val updatedOpt = text(node, "updated", "Updated")
       .toOption
@@ -377,8 +390,8 @@ object Pom {
     ))
   }
 
-  /** If `snapshotVersion` is missing, guess it based on
-    * `version`, `timestamp` and `buildNumber`, as is done in:
+  /** If `snapshotVersion` is missing, guess it based on `version`, `timestamp` and `buildNumber`,
+    * as is done in:
     * https://github.com/sbt/ivy/blob/2.3.x-sbt/src/java/org/apache/ivy/plugins/resolver/IBiblioResolver.java
     */
   def guessedSnapshotVersion(
@@ -394,7 +407,7 @@ object Pom {
     // FIXME Quite similar to Versions above
     for {
       organization <- text(node, "groupId", "Organization").map(Organization(_))
-      name <- text(node, "artifactId", "Name").map(ModuleName(_))
+      name         <- text(node, "artifactId", "Name").map(ModuleName(_))
 
       xmlVersioning <- node
         .children
@@ -415,7 +428,7 @@ object Pom {
 
       val version = readVersion(node)
 
-      val latest = text(xmlVersioning, "latest", "Latest version").getOrElse("")
+      val latest  = text(xmlVersioning, "latest", "Latest version").getOrElse("")
       val release = text(xmlVersioning, "release", "Release version").getOrElse("")
 
       val lastUpdatedOpt = text(xmlVersioning, "lastUpdated", "Last update date and time")
@@ -438,7 +451,7 @@ object Pom {
       val localCopy = xmlSnapshotOpt
         .flatMap(text(_, "localCopy", "Snapshot local copy").toOption)
         .collect {
-          case "true" => true
+          case "true"  => true
           case "false" => false
         }
 
@@ -459,10 +472,10 @@ object Pom {
     }
 
   val extraAttributeSeparator = ":#@#:"
-  val extraAttributePrefix = "+"
+  val extraAttributePrefix    = "+"
 
-  val extraAttributeOrg = "organisation"
-  val extraAttributeName = "module"
+  val extraAttributeOrg     = "organisation"
+  val extraAttributeName    = "module"
   val extraAttributeVersion = "revision"
 
   val extraAttributeBase = Set(
@@ -488,8 +501,11 @@ object Pom {
         if (malformed.isEmpty)
           Right(rawParts.map(_.drop(extraAttributePrefix.length)))
         else
-          Left(s"Malformed attributes ${malformed.map("'"+_+"'").mkString(", ")} in extra attributes '$s'")
-      } else
+          Left(
+            s"Malformed attributes ${malformed.map("'" + _ + "'").mkString(", ")} in extra attributes '$s'"
+          )
+      }
+      else
         Left(s"Malformed extra attributes '$s'")
 
     def attrFrom(attrs: Map[String, String], name: String): Either[String, String] =
@@ -506,8 +522,8 @@ object Pom {
             k.stripPrefix(extraAttributeDropPrefix) -> v
         }
         .toMap
-      org <- attrFrom(attrs, extraAttributeOrg).map(Organization(_))
-      name <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
+      org     <- attrFrom(attrs, extraAttributeOrg).map(Organization(_))
+      name    <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
       version <- attrFrom(attrs, extraAttributeVersion)
     } yield {
       val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_))
@@ -523,7 +539,7 @@ object Pom {
       case (acc, line) =>
         for {
           modVers <- acc
-          modVer <- extraAttribute(line)
+          modVer  <- extraAttribute(line)
         } yield modVers :+ modVer
     }
   }
@@ -539,8 +555,9 @@ object Pom {
         optionalConfig -> dep.withOptional(false)
     }
 
-    val configurations = proj.configurations +
-      (optionalConfig -> (proj.configurations.getOrElse(optionalConfig, Nil) ++ fromConfigs.filter(_.nonEmpty)).distinct)
+    val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
+      fromConfigs.filter(_.nonEmpty)
+    val configurations = proj.configurations + (optionalConfig -> optConfigThing.distinct)
 
     proj
       .withConfigurations(configurations)

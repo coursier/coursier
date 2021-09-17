@@ -29,11 +29,13 @@ final case class SharedResolveParams(
 object SharedResolveParams {
   def apply(options: SharedResolveOptions): ValidatedNel[String, SharedResolveParams] = {
 
-    val cacheV = options.cacheOptions.params
+    val cacheV  = options.cacheOptions.params
     val outputV = OutputParams(options.outputOptions)
-    val repositoriesV = RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
+    val repositoriesV =
+      RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
-    val dependencyV = DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
+    val dependencyV =
+      DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
 
     val classpathOrder = options.classpathOrder
 

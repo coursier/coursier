@@ -1,6 +1,14 @@
 package coursier.params
 
-import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation, Version}
+import coursier.core.{
+  Activation,
+  Configuration,
+  Module,
+  ModuleName,
+  Organization,
+  Reconciliation,
+  Version
+}
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 import dataclass.data
@@ -22,7 +30,9 @@ import dataclass.data
   jdkVersionOpt: Option[Version] = None,
   useSystemOsInfo: Boolean = true,
   useSystemJdkVersion: Boolean = true,
-  defaultConfiguration: Configuration = Configuration.defaultCompile
+  defaultConfiguration: Configuration = Configuration.defaultCompile,
+  @since("2.0.17")
+  overrideFullSuffixOpt: Option[Boolean] = None
 ) {
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =
@@ -32,6 +42,8 @@ import dataclass.data
     forceScalaVersionOpt.getOrElse {
       scalaVersionOpt.nonEmpty
     }
+  def doOverrideFullSuffix: Boolean =
+    overrideFullSuffixOpt.getOrElse(false)
   def selectedScalaVersion: String =
     scalaVersionOpt.getOrElse {
       coursier.internal.Defaults.scalaVersion
@@ -69,7 +81,7 @@ import dataclass.data
   def actualReconciliation: Seq[(ModuleMatchers, Reconciliation)] =
     reconciliation.map {
       case (m, Reconciliation.Strict | Reconciliation.SemVer) => (m, Reconciliation.Default)
-      case other => other
+      case other                                              => other
     }
 
   lazy val actualRules: Seq[(Rule, RuleResolution)] = {
@@ -78,7 +90,10 @@ import dataclass.data
       case (m, Reconciliation.Strict) =>
         (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault), RuleResolution.Fail)
       case (m, Reconciliation.SemVer) =>
-        (Strict(m.include, m.exclude, includeByDefault = m.includeByDefault).withSemVer(true), RuleResolution.Fail)
+        (
+          Strict(m.include, m.exclude, includeByDefault = m.includeByDefault).withSemVer(true),
+          RuleResolution.Fail
+        )
     }
 
     rules ++ fromReconciliation

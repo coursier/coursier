@@ -12,5 +12,10 @@ final class NoopCache extends Cache[Task] {
   def fetch: Cache.Fetch[Task] =
     _ => EitherT(Task.point[Either[String, String]](Left("unexpected download attempt")))
   def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
-    EitherT(Task.point[Either[ArtifactError, File]](Left(new ArtifactError.DownloadError("unexpected download attempt", None))))
+    EitherT {
+      Task.point[Either[ArtifactError, File]](Left(new ArtifactError.DownloadError(
+        "unexpected download attempt",
+        None
+      )))
+    }
 }

@@ -15,7 +15,7 @@ abstract class PlatformScalazImplicits {
         ScalazTask.delay(a)
       override def fromAttempt[A](a: Either[Throwable, A]): ScalazTask[A] =
         a match {
-          case Left(t) => ScalazTask.fail(t)
+          case Left(t)  => ScalazTask.fail(t)
           case Right(x) => ScalazTask.now(x)
         }
       def handle[A](a: ScalazTask[A])(f: PartialFunction[Throwable, A]) =

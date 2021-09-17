@@ -7,6 +7,7 @@ import coursier.core._
 import coursier.params.ResolutionParams
 import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
 
+// format: off
 final case class ResolutionOptions(
 
   @Help("Keep optional dependencies (Maven)")
@@ -38,8 +39,11 @@ final case class ResolutionOptions(
   @Short("scala")
     scalaVersion: Option[String] = None,
 
-  @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent, and adjust the scala version for fully cross-versioned dependencies")
+  @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent")
     forceScalaVersion: Option[Boolean] = None,
+
+  @Help("Adjust the scala version for fully cross-versioned dependencies")
+    overrideFullSuffix: Option[Boolean] = None,
 
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false,
@@ -63,6 +67,7 @@ final case class ResolutionOptions(
     defaultConfiguration: String = "default(compile)"
 
 ) {
+  // format: on
 
   def scalaVersionOrDefault: String =
     scalaVersion.getOrElse(ResolutionParams().selectedScalaVersion)
@@ -77,7 +82,8 @@ final case class ResolutionOptions(
 
     val forceVersionV =
       DependencyParser.moduleVersions(
-        forceVersion, scalaVersionOrDefault
+        forceVersion,
+        scalaVersionOrDefault
       ).either match {
         case Left(e) =>
           Validated.invalidNel(
@@ -115,10 +121,11 @@ final case class ResolutionOptions(
 
     val extraStrictRule = {
       if (strict.getOrElse(strictExclude.nonEmpty || strictInclude.nonEmpty)) {
-        val modules = (strictInclude.map(_.trim).filter(_.nonEmpty) ++ strictExclude.map(_.trim).filter(_.nonEmpty).map("!" + _))
-          .mkString(", ")
-        List(s"Strict($modules)")
-      } else
+        val modules = strictInclude.map(_.trim).filter(_.nonEmpty) ++
+          strictExclude.map(_.trim).filter(_.nonEmpty).map("!" + _)
+        List(s"Strict(${modules.mkString(", ")})")
+      }
+      else
         Nil
     }
 
@@ -126,7 +133,7 @@ final case class ResolutionOptions(
       .traverse { s =>
         RuleParser.rules(s) match {
           case Left(err) => Validated.invalidNel(s"Malformed rules '$s': $err")
-          case Right(l) => Validated.validNel(l)
+          case Right(l)  => Validated.validNel(l)
         }
       }
       .map(_.flatten)
@@ -137,7 +144,14 @@ final case class ResolutionOptions(
         case Right(elems) => Validated.validNel(elems)
       }
 
-    (maxIterationsV, forceVersionV, extraPropertiesV, forcedPropertiesV, rulesV, reconciliationV).mapN {
+    (
+      maxIterationsV,
+      forceVersionV,
+      extraPropertiesV,
+      forcedPropertiesV,
+      rulesV,
+      reconciliationV
+    ).mapN {
       (maxIterations, forceVersion, extraProperties, forcedProperties, rules, reconciliation) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
@@ -148,6 +162,7 @@ final case class ResolutionOptions(
           .withProfiles(profiles)
           .withScalaVersionOpt(scalaVersion.map(_.trim).filter(_.nonEmpty))
           .withForceScalaVersionOpt(forceScalaVersion)
+          .withOverrideFullSuffixOpt(overrideFullSuffix)
           .withTypelevel(typelevel)
           .withRules(rules)
           .withReconciliation(reconciliation)
@@ -158,5 +173,5 @@ final case class ResolutionOptions(
 
 object ResolutionOptions {
   implicit val parser = Parser[ResolutionOptions]
-  implicit val help = caseapp.core.help.Help[ResolutionOptions]
+  implicit val help   = caseapp.core.help.Help[ResolutionOptions]
 }

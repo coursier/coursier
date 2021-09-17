@@ -31,9 +31,9 @@ object PublishRepository {
     snapshotRepo: MavenRepository,
     readRepoOpt: Option[MavenRepository] = None
   ) extends PublishRepository {
-    def releaseRepo: MavenRepository = snapshotRepo
+    def releaseRepo: MavenRepository      = snapshotRepo
     def readSnapshotRepo: MavenRepository = readRepoOpt.getOrElse(snapshotRepo)
-    def readReleaseRepo: MavenRepository = readSnapshotRepo
+    def readReleaseRepo: MavenRepository  = readSnapshotRepo
 
     def withAuthentication(auth: Authentication): Simple =
       copy(
@@ -130,7 +130,12 @@ object PublishRepository {
   def gitHub(username: String, repo: String, token: String): PublishRepository =
     GitHub(username, repo, token, None)
 
-  def bintray(user: String, repository: String, package0: String, apiKey: String): PublishRepository =
+  def bintray(
+    user: String,
+    repository: String,
+    package0: String,
+    apiKey: String
+  ): PublishRepository =
     Bintray(user, repository, package0, apiKey, None)
 
 }

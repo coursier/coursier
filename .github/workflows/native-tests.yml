@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
@@ -34,11 +34,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.0.9
+      - uses: uraimo/run-on-arch-action@v2.1.1
         with:
           arch: aarch64
           distro: ubuntu20.04

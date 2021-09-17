@@ -9,24 +9,30 @@ object MainClass {
   private def manifestPath = "META-INF/MANIFEST.MF"
 
   def mainClasses(jars: Seq[File]): Map[(String, String), String] = {
+    val (_, map) = mainClassesWithMainOne(jars)
+    map
+  }
+
+  def mainClassesWithMainOne(jars: Seq[File]): (Option[String], Map[(String, String), String]) = {
 
     var zipFiles = List.empty[ZipFile]
 
     try {
-      val metaInfs = jars.flatMap { f =>
+      val byFile = jars.map { f =>
         val zf = new ZipFile(f)
         zipFiles = zf :: zipFiles
         val entryOpt = Option(zf.getEntry(manifestPath))
-        entryOpt.map(e => () => zf.getInputStream(e)).toSeq
+        entryOpt.map(e => () => zf.getInputStream(e))
       }
 
-      val mainClasses = metaInfs.flatMap { f =>
+      val mainClasses = byFile.map(_.map { f =>
         var is: InputStream = null
         val attributes =
           try {
             is = f()
             new JManifest(is).getMainAttributes
-          } finally {
+          }
+          finally {
             if (is != null)
               is.close()
           }
@@ -34,15 +40,18 @@ object MainClass {
         def attributeOpt(name: String) =
           Option(attributes.getValue(name))
 
-        val vendor = attributeOpt("Implementation-Vendor-Id").getOrElse("")
-        val title = attributeOpt("Specification-Title").getOrElse("")
+        val vendor    = attributeOpt("Implementation-Vendor-Id").getOrElse("")
+        val title     = attributeOpt("Specification-Title").getOrElse("")
         val mainClass = attributeOpt("Main-Class")
 
         mainClass.map((vendor, title) -> _)
-      }
+      })
 
-      mainClasses.toMap
-    } finally {
+      val fromFirstJar = mainClasses.headOption.flatten.flatten.map(_._2)
+
+      (fromFirstJar, mainClasses.flatten.flatten.toMap)
+    }
+    finally {
       zipFiles.foreach(_.close())
     }
   }
@@ -54,15 +63,16 @@ object MainClass {
     if (mainClasses.size == 1) {
       val (_, mainClass) = mainClasses.head
       Some(mainClass)
-    } else {
+    }
+    else {
 
       // Trying to get the main class of the first artifact
       val mainClassOpt = for {
         (mainOrg, mainName) <- mainDependencyOpt
         mainClass <- mainClasses.collectFirst {
           case ((org, name), mainClass)
-            if org == mainOrg && (
-              mainName == name ||
+              if org == mainOrg && (
+                mainName == name ||
                 mainName.startsWith(name + "_") // Ignore cross version suffix
               ) =>
             mainClass
@@ -72,8 +82,7 @@ object MainClass {
       def sameOrgOnlyMainClassOpt = for {
         (mainOrg, mainName) <- mainDependencyOpt
         orgMainClasses = mainClasses.collect {
-          case ((org, _), mainClass)
-            if org == mainOrg =>
+          case ((org, _), mainClass) if org == mainOrg =>
             mainClass
         }.toSet
         if orgMainClasses.size == 1

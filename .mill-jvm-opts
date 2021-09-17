@@ -1,2 +1,3 @@
--Xmx512m
+-Xmx768m
 -Xms128m
+-Xss8m

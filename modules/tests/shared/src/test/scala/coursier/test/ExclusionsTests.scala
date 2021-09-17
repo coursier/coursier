@@ -5,7 +5,10 @@ import utest._
 
 object ExclusionsTests extends TestSuite {
 
-  def exclusionsAdd(e1: Set[(Organization, ModuleName)], e2: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] =
+  def exclusionsAdd(
+    e1: Set[(Organization, ModuleName)],
+    e2: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] =
     core.Exclusions.minimize(e1 ++ e2)
 
   val tests = Tests {
@@ -14,7 +17,7 @@ object ExclusionsTests extends TestSuite {
 
     val enb = Set((org"org1", name"*"))
     val eob = Set((org"*", name"name1"))
-    val eb = Set((org"*", name"*"))
+    val eb  = Set((org"*", name"*"))
 
     test("add") {
       test("basicZero") {

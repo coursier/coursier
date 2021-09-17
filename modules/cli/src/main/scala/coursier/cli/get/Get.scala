@@ -17,7 +17,7 @@ object Get extends CaseApp[GetOptions] {
       case Right(p) => p
     }
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
     val artifacts = args.all.map { rawUrl =>
@@ -46,16 +46,16 @@ object Get extends CaseApp[GetOptions] {
 
     val task =
       for {
-        _ <- initLogger
-        a <- Task.gather.gather(fetchAll).attempt
-        _ <- stopLogger
+        _             <- initLogger
+        a             <- Task.gather.gather(fetchAll).attempt
+        _             <- stopLogger
         pathsOrErrors <- Task.fromEither(a)
       } yield {
         val errorsIt = pathsOrErrors.iterator.collect { case Left(e) => e }
         anyError = errorsIt.hasNext
         if (!anyError || params.force) {
           val pathsIt = pathsOrErrors.iterator.collect { case Right(p) => p }
-          val output = pathsIt.mkString(params.separator)
+          val output  = pathsIt.mkString(params.separator)
           println(output)
         }
         for (err <- errorsIt) {

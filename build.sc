@@ -11,7 +11,17 @@ import $file.project.modules.directories0, directories0.Directories
 import $file.project.modules.doc0, doc0.Doc
 import $file.project.modules.interop0, interop0.{Cats, Scalaz}
 import $file.project.modules.launcher0, launcher0.LauncherBase
-import $file.project.modules.shared, shared.{buildVersion, CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule, CsScalaJsModule, CsTests, JsTests, JvmTests}
+import $file.project.modules.shared, shared.{
+  buildVersion,
+  CoursierPublishModule,
+  CsCrossJvmJsModule,
+  CsMima,
+  CsModule,
+  CsScalaJsModule,
+  CsTests,
+  JsTests,
+  JvmTests
+}
 import $file.project.modules.tests0, tests0.TestsModule
 import $file.project.modules.util0, util0.{Util, UtilJvmBase}
 import $file.project.publishing, publishing.mavenOrg
@@ -31,29 +41,28 @@ import scala.util.Properties
 implicit def millModuleBasePath: define.BasePath =
   define.BasePath(super.millModuleBasePath.value / "modules")
 
-
 object util extends Module {
   object jvm extends Cross[UtilJvm](ScalaVersions.all: _*)
-  object js extends Cross[UtilJs](ScalaVersions.all: _*)
+  object js  extends Cross[UtilJs](ScalaVersions.all: _*)
 }
 object core extends Module {
   object jvm extends Cross[CoreJvm](ScalaVersions.all: _*)
-  object js extends Cross[CoreJs](ScalaVersions.all: _*)
+  object js  extends Cross[CoreJs](ScalaVersions.all: _*)
 }
 object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all: _*)
-  object js extends Cross[CacheJs](ScalaVersions.all: _*)
+  object js  extends Cross[CacheJs](ScalaVersions.all: _*)
 }
 object launcher extends Cross[Launcher](ScalaVersions.all ++ Seq(ScalaVersions.scala211): _*)
-object publish extends Cross[Publish](ScalaVersions.all: _*)
-object env extends Cross[Env](ScalaVersions.all: _*)
-object `launcher-native_03` extends LauncherNative03
+object publish  extends Cross[Publish](ScalaVersions.all: _*)
+object env      extends Cross[Env](ScalaVersions.all: _*)
+object `launcher-native_03`    extends LauncherNative03
 object `launcher-native_040M2` extends LauncherNative040M2
-object `launcher-native_04` extends LauncherNative04
+object `launcher-native_04`    extends LauncherNative04
 
 object coursier extends Module {
   object jvm extends Cross[CoursierJvm](ScalaVersions.all: _*)
-  object js extends Cross[CoursierJs](ScalaVersions.all: _*)
+  object js  extends Cross[CoursierJs](ScalaVersions.all: _*)
 }
 
 object directories extends Directories
@@ -84,7 +93,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def resources = T.sources {
     super.resources() ++ directories.resources()
   }
-  def proguardClassPath = T{
+  def proguardClassPath = T {
     proguard.runClasspath()
   }
   object test extends Tests with CsTests {
@@ -120,7 +129,7 @@ object proguard extends JavaModule {
 
 object tests extends Module {
   object jvm extends Cross[TestsJvm](ScalaVersions.all: _*)
-  object js extends Cross[TestsJs](ScalaVersions.all: _*)
+  object js  extends Cross[TestsJs](ScalaVersions.all: _*)
 }
 
 object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all: _*)
@@ -128,22 +137,21 @@ object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all: _*)
 object interop extends Module {
   object scalaz extends Module {
     object jvm extends Cross[ScalazJvm](ScalaVersions.all: _*)
-    object js extends Cross[ScalazJs](ScalaVersions.all: _*)
+    object js  extends Cross[ScalazJs](ScalaVersions.all: _*)
   }
   object cats extends Module {
     object jvm extends Cross[CatsJvm](ScalaVersions.all: _*)
-    object js extends Cross[CatsJs](ScalaVersions.all: _*)
+    object js  extends Cross[CatsJs](ScalaVersions.all: _*)
   }
 }
 
-object jvm extends Cross[Jvm](ScalaVersions.all: _*)
+object jvm     extends Cross[Jvm](ScalaVersions.all: _*)
 object install extends Cross[Install](ScalaVersions.all: _*)
 
-object cli extends Cli
+object cli         extends Cli
 object `cli-tests` extends CliTests
 
 object web extends Web
-
 
 def publish0 = publish
 
@@ -195,11 +203,11 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   def resources = T.sources {
     super.resources() ++ directories.resources()
   }
-  def customLoaderCp = T{
+  def customLoaderCp = T {
     `custom-protocol-for-test`.runClasspath()
   }
   object test extends Tests with CsTests {
-    def ivyDeps = T{
+    def ivyDeps = T {
       val sv = scalaVersion()
       val extra =
         if (sv.startsWith("2.12."))
@@ -232,13 +240,14 @@ class Launcher(val crossScalaVersion: String) extends LauncherBase {
     Deps.dataClass
   )
 
-  def bootstrap = `bootstrap-launcher`.proguardedAssembly()
-  def resourceBootstrap = `bootstrap-launcher`.proguardedResourceAssembly()
-  def noProguardBootstrap = `bootstrap-launcher`.assembly()
+  def bootstrap                   = `bootstrap-launcher`.proguardedAssembly()
+  def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
+  def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
 }
 
-class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModule
+    with CoursierPublishModule with CsMima {
   def artifactName = "coursier-publish"
   def moduleDeps = Seq(
     core.jvm(),
@@ -250,16 +259,18 @@ class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModul
     Deps.collectionCompat,
     Deps.okhttp
   )
-  def mimaPreviousVersions = T{
+  def mimaPreviousVersions = T {
     val previous = super.mimaPreviousVersions()
     if (crossScalaVersion.startsWith("2.13."))
-      previous.filter(_ != "2.0.16") // this module wasn't published in 2.13 when coursier was built with sbt
+      // this module wasn't published in 2.13 when coursier was built with sbt
+      previous.filter(_ != "2.0.16")
     else
       previous
   }
 }
 
-class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
+    with CoursierPublishModule with CsMima {
   def artifactName = "coursier-env"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass
@@ -276,7 +287,7 @@ class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule wi
 }
 
 def cliScalaVersion = ScalaVersions.scala212
-def launcherModule = launcher
+def launcherModule  = launcher
 trait LauncherNative03 extends CsModule with CoursierPublishModule {
   def artifactName = "coursier-launcher-native_0.3"
   def scalaVersion = cliScalaVersion
@@ -360,7 +371,7 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
     def forkArgs = T.input {
       val redirectingServer0 = redirectingServer()
-      val testRepoServer0 = workers.testRepoServer()
+      val testRepoServer0    = workers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.redirect.repository=${redirectingServer0.url}",
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -447,7 +458,8 @@ class CatsJs(val crossScalaVersion: String) extends Cats with CsScalaJsModule {
   )
 }
 
-class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModule
+    with CoursierPublishModule with CsMima {
   def artifactName = "coursier-install"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -465,7 +477,8 @@ class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModul
   object test extends Tests with CsTests
 }
 
-class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
+    with CoursierPublishModule with CsMima {
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -506,10 +519,26 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     ivy"com.chuusai::shapeless:2.3.7"
   )
   def mainClass = Some("coursier.cli.Coursier")
-  def docJar = T{
-    val jar = T.dest / "empty.jar"
+  def finalMainClassOpt = T {
+    Right("coursier.cli.Coursier"): Either[String, String]
+  }
+  def manifest = T {
+    import java.util.jar.Attributes.Name
+    val ver = publishVersion()
+    super.manifest().add(
+      Name.IMPLEMENTATION_TITLE.toString     -> "coursier-cli",
+      Name.IMPLEMENTATION_VERSION.toString   -> ver,
+      Name.SPECIFICATION_VENDOR.toString     -> "io.get-coursier",
+      Name.SPECIFICATION_TITLE.toString      -> "coursier-cli",
+      Name.IMPLEMENTATION_VENDOR_ID.toString -> "io.get-coursier",
+      Name.SPECIFICATION_VERSION.toString    -> ver,
+      Name.IMPLEMENTATION_VENDOR.toString    -> "io.get-coursier"
+    )
+  }
+  def docJar = T {
+    val jar  = T.dest / "empty.jar"
     val baos = new java.io.ByteArrayOutputStream
-    val zos = new java.util.zip.ZipOutputStream(baos)
+    val zos  = new java.util.zip.ZipOutputStream(baos)
     zos.finish()
     zos.close()
     os.write.over(jar, baos.toByteArray)
@@ -530,7 +559,7 @@ trait CliTests extends CsModule { self =>
   object test extends Tests with CsTests {
     def forkArgs = {
       val launcherTask = cli.launcher.map(_.path)
-      T{
+      T {
         super.forkArgs() ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
@@ -546,7 +575,7 @@ trait CliTests extends CsModule { self =>
     }
     def forkArgs = {
       val launcherTask = cli.nativeImage.map(_.path)
-      T{
+      T {
         super.forkArgs() ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
@@ -600,18 +629,20 @@ def simpleNativeCliTest() = T.command {
   `launcher-native_040M2`.publishLocal()()
   `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
-  val tmpDir = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   val res =
     try {
       os.proc(
         launcher.toString,
         "bootstrap",
         "-S",
-        "-o", "native-echo",
+        "-o",
+        "native-echo",
         "io.get-coursier:echo_native0.3_2.11:1.0.1"
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
-    } finally {
+    }
+    finally {
       try os.remove.all(tmpDir)
       catch {
         case _: java.io.IOException =>
@@ -631,22 +662,42 @@ def uploadLaunchers(directory: String = "artifacts") = T.command {
   ghreleaseassets.uploadLaunchers(version, os.Path(directory, os.pwd))
 }
 
-def bootstrapLauncher(version: String = buildVersion, dest: String = s"coursier$platformBootstrapExtension") = T.command {
+def bootstrapLauncher(
+  version: String = buildVersion,
+  dest: String = s"coursier$platformBootstrapExtension"
+) = T.command {
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  cli.run(Seq("bootstrap", "-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliScalaVersion) ++ extraArgs: _*).map { _ =>
+  cli.run(Seq(
+    "bootstrap",
+    "-o",
+    dest,
+    "-f",
+    s"$mavenOrg::coursier-cli:$version",
+    "--scala",
+    cliScalaVersion
+  ) ++ extraArgs: _*).map { _ =>
     os.Path(dest, os.pwd)
   }
 }
 
 def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.jar") = T.command {
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  cli.run(Seq("bootstrap", "--assembly", "-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliScalaVersion) ++ extraArgs: _*).map { _ =>
+  cli.run(Seq(
+    "bootstrap",
+    "--assembly",
+    "-o",
+    dest,
+    "-f",
+    s"$mavenOrg::coursier-cli:$version",
+    "--scala",
+    cliScalaVersion
+  ) ++ extraArgs: _*).map { _ =>
     os.Path(dest, os.pwd)
   }
 }
 
 def waitForSync(version: String = buildVersion) = T.command {
-  val launcher = cli.launcher().path
+  val launcher  = cli.launcher().path
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
   sync.waitForSync(
     launcher.toString,
@@ -658,9 +709,14 @@ def waitForSync(version: String = buildVersion) = T.command {
 
 def copyJarLaunchers(version: String = buildVersion, directory: String = "artifacts") = T.command {
   val bootstrap: os.Path = bootstrapLauncher(version = version)()
-  val assembly: os.Path = assemblyLauncher(version = version)()
-  val dir = os.Path(directory, os.pwd)
-  os.copy(bootstrap, dir / s"coursier$platformBootstrapExtension", createFolders = true, replaceExisting = true)
+  val assembly: os.Path  = assemblyLauncher(version = version)()
+  val dir                = os.Path(directory, os.pwd)
+  os.copy(
+    bootstrap,
+    dir / s"coursier$platformBootstrapExtension",
+    createFolders = true,
+    replaceExisting = true
+  )
   os.copy(assembly, dir / "coursier.jar", createFolders = true, replaceExisting = true)
 }
 
@@ -685,14 +741,14 @@ object `doc-deps` extends ScalaModule {
 
 object doc extends Doc {
   def scalaVersion = docScalaVersion
-  def version = coursier.jvm(docScalaVersion).publishVersion()
-  def classPath = `doc-deps`.runClasspath()
+  def version      = coursier.jvm(docScalaVersion).publishVersion()
+  def classPath    = `doc-deps`.runClasspath()
 }
 
 def updateWebsite(dryRun: Boolean = false) = {
 
-  val docusaurusDir = os.pwd / "doc" / "website"
-  val versionedDocsRepo = "coursier/versioned-docs"
+  val docusaurusDir       = os.pwd / "doc" / "website"
+  val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
   val versionOpt =
@@ -736,6 +792,7 @@ def updateWebsite(dryRun: Boolean = false) = {
 def jvmTests(scalaVersion: String = "*") = {
 
   def crossTests(sv: String) = Seq(
+    // format: off
     core.jvm           .itemMap.get(List(sv)).map(_.test.test()),
     cache.jvm          .itemMap.get(List(sv)).map(_.test.test()),
     env                .itemMap.get(List(sv)).map(_.test.test()),
@@ -745,18 +802,23 @@ def jvmTests(scalaVersion: String = "*") = {
     interop.cats.jvm   .itemMap.get(List(sv)).map(_.test.test()),
     install            .itemMap.get(List(sv)).map(_.test.test()),
     jvm                .itemMap.get(List(sv)).map(_.test.test())
+    // format: on
   ).flatten
 
   def crossIts(sv: String) = Seq(
+    // format: off
     coursier.jvm .itemMap.get(List(sv)).map(_.it.test()),
     tests.jvm    .itemMap.get(List(sv)).map(_.it.test())
+    // format: on
   ).flatten
 
   val nonCrossTests = Seq(
+    // format: off
     `bootstrap-launcher` .test .test(),
     `bootstrap-launcher` .it   .test(),
     cli                  .test .test(),
     `cli-tests`          .test .test()
+    // format: on
   )
 
   val extraTests =
@@ -783,9 +845,11 @@ def jvmTests(scalaVersion: String = "*") = {
 def jsTests(scalaVersion: String = "*") = {
 
   def crossTests(sv: String) = Seq(
+    // format: off
     core.js            .itemMap.get(List(sv)).map(_.test.test()),
     coursier.js        .itemMap.get(List(sv)).map(_.test.test()),
     tests.js           .itemMap.get(List(sv)).map(_.test.test())
+    // format: on
   ).flatten
 
   val scalaVersions =

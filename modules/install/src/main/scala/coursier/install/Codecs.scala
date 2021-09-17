@@ -10,7 +10,7 @@ private[coursier] object Codecs {
     DecodeJson { c =>
       c.focus.obj match {
         case Some(obj) => DecodeResult.ok(obj)
-        case None => DecodeResult.fail("Expected object", c.history)
+        case None      => DecodeResult.fail("Expected object", c.history)
       }
     }
 

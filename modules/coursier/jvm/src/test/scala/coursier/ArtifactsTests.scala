@@ -204,9 +204,11 @@ object ArtifactsTests extends TestSuite {
 
     "in memory repo" - async {
 
+      val wrongShapelessJarUrl =
+        "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.242/shapeless_2.11-2.3.242.jar"
       val inMemoryRepo = InMemoryRepository.privateApply(Map(
         (mod"com.chuusai:shapeless_2.11", "2.3.3") ->
-          (new java.net.URL("https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.242/shapeless_2.11-2.3.242.jar"), false)
+          (new java.net.URL(wrongShapelessJarUrl), false)
       ))
 
       val res = await {
@@ -248,7 +250,10 @@ object ArtifactsTests extends TestSuite {
             .addDependencies(dep"com.fake:lib1:1.7.27")
             .withRepositories(Seq(
               MavenRepository(handmadeMetadataBase + "/fake-maven"),
-              IvyRepository.parse(handmadeMetadataBase + "/fake-ivy/[defaultPattern]").fold(sys.error, identity)
+              IvyRepository.parse(
+                handmadeMetadataBase +
+                  "/fake-ivy/[defaultPattern]"
+              ).fold(sys.error, identity)
             ))
             .withCache(cache)
             .future()
@@ -261,7 +266,8 @@ object ArtifactsTests extends TestSuite {
             .future()
         }
 
-        val urls = artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
+        val urls =
+          artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
 
         val expectedUrls = Seq(
           "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
@@ -278,7 +284,10 @@ object ArtifactsTests extends TestSuite {
             .noMirrors
             .addDependencies(dep"com.fake:lib1:1.7.27")
             .withRepositories(Seq(
-              IvyRepository.parse(handmadeMetadataBase + "/fake-ivy/[defaultPattern]").fold(sys.error, identity)
+              IvyRepository.parse(
+                handmadeMetadataBase +
+                  "/fake-ivy/[defaultPattern]"
+              ).fold(sys.error, identity)
             ))
             .withCache(cache)
             .future()
@@ -291,7 +300,8 @@ object ArtifactsTests extends TestSuite {
             .future()
         }
 
-        val urls = artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
+        val urls =
+          artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
 
         val expectedUrls = Seq(
           "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
@@ -307,7 +317,9 @@ object ArtifactsTests extends TestSuite {
       val res = await {
         Resolve()
           .noMirrors
-          .addDependencies(dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0")
+          .addDependencies(
+            dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0"
+          )
           .withCache(cache)
           .future()
       }
@@ -317,7 +329,9 @@ object ArtifactsTests extends TestSuite {
 
       assert(groupedArtifacts.length == 2)
 
-      val expectedDuplicatedUrls = Set("https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar")
+      val expectedDuplicatedUrls = Set(
+        "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
+      )
 
       val firstGroupUrls = groupedArtifacts.head.map(_.url).toSet
       val duplicatedUrls = groupedArtifacts(1).map(_.url).toSet

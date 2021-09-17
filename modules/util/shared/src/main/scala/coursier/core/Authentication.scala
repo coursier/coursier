@@ -15,9 +15,13 @@ import dataclass.data
   passOnRedirect: Boolean
 ) {
 
-  override def toString: String =
-    s"Authentication($user, ****, ${httpHeaders.map { case (k, v) => (k, "****") }}, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
-
+  override def toString: String = {
+    val headersStr = httpHeaders.map {
+      case (k, v) =>
+        (k, "****")
+    }
+    s"Authentication($user, ****, $headersStr, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+  }
 
   def withPassword(password: String): Authentication =
     withPasswordOpt(Some(password))
@@ -39,9 +43,25 @@ import dataclass.data
 object Authentication {
 
   def apply(user: String): Authentication =
-    Authentication(user, None, Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      user,
+      None,
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
   def apply(user: String, password: String): Authentication =
-    Authentication(user, Some(password), Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      user,
+      Some(password),
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
 
   def apply(
     user: String,
@@ -64,7 +84,15 @@ object Authentication {
     Authentication(user, Some(password), Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def apply(httpHeaders: Seq[(String, String)]): Authentication =
-    Authentication("", None, httpHeaders, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      "",
+      None,
+      httpHeaders,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
 
   def apply(
     httpHeaders: Seq[(String, String)],
@@ -74,7 +102,6 @@ object Authentication {
     passOnRedirect: Boolean
   ): Authentication =
     Authentication("", None, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
-
 
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(

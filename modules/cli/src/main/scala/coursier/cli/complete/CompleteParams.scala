@@ -18,8 +18,8 @@ final case class CompleteParams(
 object CompleteParams {
   def apply(options: CompleteOptions, args: RemainingArgs): ValidatedNel[String, CompleteParams] = {
 
-    val cacheV = options.cacheOptions.params
-    val outputV = OutputParams(options.outputOptions)
+    val cacheV        = options.cacheOptions.params
+    val outputV       = OutputParams(options.outputOptions)
     val repositoriesV = RepositoryParams(options.repositoryOptions)
 
     val argV = args.all match {
