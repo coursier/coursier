@@ -42,7 +42,9 @@ object Config {
       .groupBy(_.withConfiguration(Configuration.empty))
       .map {
         case (dep, l) =>
-          dep.withConfiguration(Configuration.join(l.map(_.configuration).toSeq.distinct.sorted: _*))
+          dep.withConfiguration(
+            Configuration.join(l.map(_.configuration).toSeq.distinct.sorted: _*)
+          )
       }
       .toSet
 

@@ -5,6 +5,7 @@ import caseapp.core.parser.Parser
 import caseapp.{Name, Recurse}
 import coursier.cli.options.{CacheOptions, OutputOptions}
 
+// format: off
 final case class GetOptions(
   @Recurse
     cache: CacheOptions,
@@ -16,8 +17,9 @@ final case class GetOptions(
   force: Boolean = false,
   changing: Boolean = false
 )
+// format: on
 
 object GetOptions {
   implicit val parser = implicitly[Parser[GetOptions]]
-  implicit val help = implicitly[Help[GetOptions]]
+  implicit val help   = implicitly[Help[GetOptions]]
 }

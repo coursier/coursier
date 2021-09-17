@@ -9,7 +9,6 @@ import utest._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 object ChecksumTests extends TestSuite {
   val tests = Tests {
 
@@ -28,7 +27,7 @@ object ChecksumTests extends TestSuite {
         // as of 2016-03-02
         val junkSha1 =
           "./spark-core_2.11/1.2.0/spark-core_2.11-1.2.0.pom:\n" +
-          "5630 42A5 4B97 E31A F452  9EA0 DB79 BA2C 4C2B B6CC"
+            "5630 42A5 4B97 E31A F452  9EA0 DB79 BA2C 4C2B B6CC"
 
         val cleanSha1 = "563042a54b97e31af4529ea0db79ba2c4c2bb6cc"
 
@@ -40,7 +39,7 @@ object ChecksumTests extends TestSuite {
         // as of 2016-03-05
         val dirtySha1 =
           "4bf5daa95eb5c12d753a359a3e00621fdc73d187  " + // no CR here
-          "/home/maven/repository-staging/to-ibiblio/maven2/org/json/json/20080701/json-20080701.pom"
+            "/home/maven/repository-staging/to-ibiblio/maven2/org/json/json/20080701/json-20080701.pom"
 
         val cleanSha1 = "4bf5daa95eb5c12d753a359a3e00621fdc73d187"
 
@@ -60,31 +59,31 @@ object ChecksumTests extends TestSuite {
 
       test("nonHexValue") - {
         val content = "0000000000000000000000000000000z"
-        val res = CacheChecksum.parseChecksum(content)
+        val res     = CacheChecksum.parseChecksum(content)
         assert(res.isEmpty)
       }
 
       test("binarySha1") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
-        val res = CacheChecksum.parseRawChecksum(content)
+        val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
       test("binarySha256") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha256").openStream())
-        val res = CacheChecksum.parseRawChecksum(content)
+        val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
       test("binarySha512") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha512").openStream())
-        val res = CacheChecksum.parseRawChecksum(content)
+        val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
       test("binaryMd5") - {
         val content = Platform.readFullySync(getClass.getResource("/empty.md5").openStream())
-        val res = CacheChecksum.parseRawChecksum(content)
+        val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
     }
@@ -104,8 +103,8 @@ object ChecksumTests extends TestSuite {
       def artifact(url: String) = Artifact(
         url,
         Map(
-          "MD5" -> (url + ".md5"),
-          "SHA-1" -> (url + ".sha1"),
+          "MD5"     -> (url + ".md5"),
+          "SHA-1"   -> (url + ".sha1"),
           "SHA-256" -> (url + ".sha256"),
           "SHA-512" -> (url + ".sha512")
         ),

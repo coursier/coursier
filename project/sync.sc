@@ -1,14 +1,16 @@
-
 import java.nio.file.Path
 
-/**
- * Waits for a module published via Sonatype to be sync-ed to Maven Central
- *
- * @param coursierLauncher Path to a coursier launcher
- * @param module A module, like `"org:name:version"`
- * @param extraArgs Extra arguments to pass to coursier to fetch `module`, like `Seq("-r", "jitpack")`
- * @param attempts Maximum number of attempts to check for the sync (one attempt per minute)
- */
+/** Waits for a module published via Sonatype to be sync-ed to Maven Central
+  *
+  * @param coursierLauncher
+  *   Path to a coursier launcher
+  * @param module
+  *   A module, like `"org:name:version"`
+  * @param extraArgs
+  *   Extra arguments to pass to coursier to fetch `module`, like `Seq("-r", "jitpack")`
+  * @param attempts
+  *   Maximum number of attempts to check for the sync (one attempt per minute)
+  */
 def waitForSync(
   coursierLauncher: String,
   module: String,
@@ -19,10 +21,11 @@ def waitForSync(
   val probeCommand = Seq(
     coursierLauncher,
     "resolve",
-    "--ttl", "0s",
+    "--ttl",
+    "0s",
     module
   ) ++
-  extraArgs
+    extraArgs
 
   val probeSuccess = Iterator.range(0, attempts)
     .map { i =>

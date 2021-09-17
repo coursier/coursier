@@ -3,6 +3,7 @@ package coursier.cli.jvm
 import caseapp.Recurse
 import coursier.cli.options.RepositoryOptions
 
+// format: off
 final case class SharedJavaOptions(
   jvm: Option[String] = None,
   jvmDir: Option[String] = None,
@@ -13,3 +14,4 @@ final case class SharedJavaOptions(
   @Recurse
     repositoryOptions: RepositoryOptions = RepositoryOptions()
 )
+// format: on

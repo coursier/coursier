@@ -18,7 +18,7 @@ private[coursier] abstract class WebPageCompatibility {
     // getting weird "maybe a wrong Dynamic method signature" errors when trying to factor that more
 
     if (jqueryAvailable)
-        g.$("<div></div>").html(page).find("a").each({ self: js.Dynamic =>
+      g.$("<div></div>").html(page).find("a").each({ self: js.Dynamic =>
         val href = g.$(self).attr("href")
         if (js.typeOf(href) != "undefined")
           links += href.asInstanceOf[String]

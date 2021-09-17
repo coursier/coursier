@@ -48,10 +48,9 @@ final case class BintrayApi(
     repo: String
   ): Task[Boolean] =
     getRepository(subject, repo).flatMap {
-      case None => createRepository(subject, repo).map(_ => true)
+      case None    => createRepository(subject, repo).map(_ => true)
       case Some(_) => Task.point(false)
     }
-
 
   def getPackage(subject: String, repo: String, package0: String): Task[Option[Json]] =
     clientUtil.get[Json](s"$base/packages/$subject/$repo/$package0") // escaping?
@@ -89,7 +88,7 @@ final case class BintrayApi(
     vcsUrl: String
   ): Task[Boolean] =
     getPackage(subject, repo, package0).flatMap {
-      case None => createPackage(subject, repo, package0, licenses, vcsUrl).map(_ => true)
+      case None    => createPackage(subject, repo, package0, licenses, vcsUrl).map(_ => true)
       case Some(_) => Task.point(false)
     }
 

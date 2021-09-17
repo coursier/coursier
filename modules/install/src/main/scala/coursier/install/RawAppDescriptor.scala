@@ -53,7 +53,8 @@ import scala.language.implicitConversions
         (s.baseModule.organization, ModuleName(s.baseModule.name.value + "_*"))
     })
 
-    val launcherTypeV: ValidatedNel[String, LauncherType] = Validated.fromEither(LauncherType.parse(launcherType).left.map(NonEmptyList.one))
+    val launcherTypeV: ValidatedNel[String, LauncherType] =
+      Validated.fromEither(LauncherType.parse(launcherType).left.map(NonEmptyList.one))
 
     val (mainArtifacts, classifiers0) = {
       val classifiers0 = classifiers
@@ -81,10 +82,11 @@ import scala.language.implicitConversions
         val default0 = types0.isEmpty || types0(Type("_"))
         val defaultTypes =
           if (default0) {
-            val sourceTypes = Some(Type.source).filter(_ => classifiers0(Classifier.sources)).toSet
+            val sourceTypes  = Some(Type.source).filter(_ => classifiers0(Classifier.sources)).toSet
             val javadocTypes = Some(Type.doc).filter(_ => classifiers0(Classifier.javadoc)).toSet
             Resolution.defaultTypes ++ sourceTypes ++ javadocTypes
-          } else
+          }
+          else
             Set()
 
         (defaultTypes ++ types0) - Type("_")
@@ -94,8 +96,8 @@ import scala.language.implicitConversions
     val (mainClassOpt, defaultMainClassOpt) =
       mainClass match {
         case Some(c) if c.endsWith("?") => (None, Some(c.stripSuffix("?")))
-        case Some(c) => (Some(c), None)
-        case None => (None, None)
+        case Some(c)                    => (Some(c), None)
+        case None                       => (None, None)
       }
 
     (repositoriesV, dependenciesV, sharedDependenciesV, exclusionsV, launcherTypeV).mapN {
@@ -138,7 +140,7 @@ import scala.language.implicitConversions
       else {
         val dep = {
           val dep0 = dependencies.head
-          val idx = dep0.lastIndexOf(':')
+          val idx  = dep0.lastIndexOf(':')
           if (idx < 0)
             dep0 // ???
           else
@@ -214,10 +216,12 @@ object RawAppDescriptor {
 
   }
 
-  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
+  private[install] implicit def validationNelToCats[L, R](
+    v: coursier.util.ValidationNel[L, R]
+  ): ValidatedNel[L, R] =
     v.either match {
       case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
-      case Right(r) => Validated.validNel(r)
+      case Right(r)     => Validated.validNel(r)
     }
 
   private final case class RawAppDescriptorJson(

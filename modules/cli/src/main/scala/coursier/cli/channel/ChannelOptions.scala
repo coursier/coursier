@@ -3,6 +3,7 @@ package coursier.cli.channel
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.OutputOptions
 
+// format: off
 final case class ChannelOptions(
   @Short("a")
   @Help("adds given URL based channels")
@@ -13,3 +14,4 @@ final case class ChannelOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions()
 )
+// format: on
