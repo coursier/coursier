@@ -12,6 +12,7 @@ import coursier.parse.{CachePolicyParser, CredentialsParser}
 
 import scala.concurrent.duration.Duration
 
+// format: off
 final case class CacheOptions(
 
   @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
@@ -56,6 +57,7 @@ final case class CacheOptions(
     useEnvCredentials: Boolean = true
 
 ) {
+  // format: on
 
   def params: ValidatedNel[String, CacheParams] =
     params(CacheDefaults.ttl)
@@ -64,7 +66,7 @@ final case class CacheOptions(
 
     val cache0 = cache match {
       case Some(path) => new File(path)
-      case None => CacheDefaults.location
+      case None       => CacheDefaults.location
     }
 
     val cachePoliciesV =
@@ -76,7 +78,9 @@ final case class CacheOptions(
             Validated.validNel(cp)
           case Left(errors) =>
             Validated.invalidNel(
-              s"Error parsing modes:\n${errors.map("  "+_).mkString(System.lineSeparator())}"
+              s"Error parsing modes:" +
+                System.lineSeparator() +
+                errors.map("  " + _).mkString(System.lineSeparator())
             )
         }
 
@@ -87,7 +91,7 @@ final case class CacheOptions(
           Validated.validNel(defaultTtl)
         case Some(ttlStr) =>
           CacheDefaults.parseDuration(ttlStr) match {
-            case Left(e) => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
+            case Left(e)  => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
             case Right(d) => Validated.validNel(Some(d))
           }
       }
@@ -111,7 +115,7 @@ final case class CacheOptions(
         else
           splitChecksumArgs.map {
             case none if none.toLowerCase == "none" => None
-            case sumType => Some(sumType)
+            case sumType                            => Some(sumType)
           }
 
       Validated.validNel(res)
@@ -142,7 +146,17 @@ final case class CacheOptions(
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
       (cachePolicy, ttl, parallel, checksum, retryCount, credentials0) =>
-        CacheParams(cache0, cachePolicy, ttl, parallel, checksum, retryCount, cacheFileArtifacts, followHttpToHttpsRedirect)
+        val baseParams = CacheParams(
+          cache0,
+          cachePolicy,
+          ttl,
+          parallel,
+          checksum,
+          retryCount,
+          cacheFileArtifacts,
+          followHttpToHttpsRedirect
+        )
+        baseParams
           .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
     }
@@ -151,5 +165,5 @@ final case class CacheOptions(
 
 object CacheOptions {
   implicit val parser = Parser[CacheOptions]
-  implicit val help = caseapp.core.help.Help[CacheOptions]
+  implicit val help   = caseapp.core.help.Help[CacheOptions]
 }

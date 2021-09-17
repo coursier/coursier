@@ -3,9 +3,8 @@ import coursier.util.StringInterpolators._
 
 import scala.language.implicitConversions
 
-/**
- * Mainly pulls definitions from coursier.core, sometimes with default arguments.
- */
+/** Mainly pulls definitions from coursier.core, sometimes with default arguments.
+  */
 package object coursier {
 
   // `extends Serializable` added here-or-there for bin compat while switching from 2.12.1 to 2.12.4
@@ -45,7 +44,11 @@ package object coursier {
 
   type Module = core.Module
   object Module extends Serializable {
-    def apply(organization: Organization, name: ModuleName, attributes: Map[String, String] = Map.empty): Module =
+    def apply(
+      organization: Organization,
+      name: ModuleName,
+      attributes: Map[String, String] = Map.empty
+    ): Module =
       core.Module(organization, name, attributes)
   }
 

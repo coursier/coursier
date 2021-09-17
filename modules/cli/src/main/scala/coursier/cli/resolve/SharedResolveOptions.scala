@@ -1,9 +1,16 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  DependencyOptions,
+  OutputOptions,
+  RepositoryOptions,
+  ResolutionOptions
+}
 import coursier.install.RawAppDescriptor
 
+// format: off
 @ArgsName("org:name:version|app-name[:version]*")
 final case class SharedResolveOptions(
 
@@ -26,6 +33,7 @@ final case class SharedResolveOptions(
     outputOptions: OutputOptions = OutputOptions()
 
 ) {
+  // format: on
   def addApp(app: RawAppDescriptor): SharedResolveOptions =
     copy(
       // TODO Take app.scalaVersion into account
@@ -59,5 +67,5 @@ final case class SharedResolveOptions(
 
 object SharedResolveOptions {
   implicit val parser = Parser[SharedResolveOptions]
-  implicit val help = caseapp.core.help.Help[SharedResolveOptions]
+  implicit val help   = caseapp.core.help.Help[SharedResolveOptions]
 }

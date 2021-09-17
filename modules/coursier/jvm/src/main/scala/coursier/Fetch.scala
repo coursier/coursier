@@ -46,7 +46,8 @@ import dataclass.data
     artifacts.artifactTypesOpt
   def extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] =
     artifacts.extraArtifactsSeq
-  def transformArtifacts: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] =
+  def transformArtifacts
+    : Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] =
     artifacts.transformArtifacts
 
   def classpathOrder: Boolean =
@@ -58,9 +59,9 @@ import dataclass.data
 
     val mayBeCached =
       resolve.throughOpt.isEmpty &&
-        resolve.transformFetcherOpt.isEmpty &&
-        artifacts.extraArtifactsSeq.isEmpty &&
-        artifacts.resolutions.isEmpty
+      resolve.transformFetcherOpt.isEmpty &&
+      artifacts.extraArtifactsSeq.isEmpty &&
+      artifacts.resolutions.isEmpty
 
     if (mayBeCached)
       artifacts.cache match {
@@ -96,7 +97,6 @@ import dataclass.data
 
   def canBeCached: Boolean =
     cacheKeyOpt.nonEmpty
-
 
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
     withResolve(resolve.withDependencies(dependencies))
@@ -146,10 +146,14 @@ import dataclass.data
     withResolve(resolve.withThroughOpt(fOpt))
 
   def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Fetch[F] =
-    withResolve(resolve.withTransformFetcherOpt(Some(resolve.transformFetcherOpt.fold(f)(_ andThen f))))
+    withResolve(
+      resolve.withTransformFetcherOpt(Some(resolve.transformFetcherOpt.fold(f)(_ andThen f)))
+    )
   def noTransformFetcher(): Fetch[F] =
     withResolve(resolve.withTransformFetcherOpt(None))
-  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Fetch[F] =
+  def withTransformFetcher(
+    fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]
+  ): Fetch[F] =
     withResolve(resolve.withTransformFetcherOpt(fOpt))
 
   def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
@@ -163,7 +167,9 @@ import dataclass.data
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
     withArtifacts(artifacts.withArtifactTypesOpt(Some(artifactTypes)))
   def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
-    withArtifacts(artifacts.withArtifactTypesOpt(Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)))
+    withArtifacts(artifacts.withArtifactTypesOpt(
+      Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)
+    ))
   def allArtifactTypes(): Fetch[F] =
     withArtifacts(artifacts.withArtifactTypesOpt(Some(Set(Type.all))))
 
@@ -171,10 +177,14 @@ import dataclass.data
     withArtifacts(artifacts.withExtraArtifactsSeq(artifacts.extraArtifactsSeq :+ f))
   def noExtraArtifacts(): Fetch[F] =
     withArtifacts(artifacts.withExtraArtifactsSeq(Nil))
-  def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Fetch[F] =
+  def withExtraArtifacts(
+    l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]
+  ): Fetch[F] =
     withArtifacts(artifacts.withExtraArtifactsSeq(l))
 
-  def addTransformArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]): Fetch[F] =
+  def addTransformArtifacts(
+    f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]
+  ): Fetch[F] =
     withArtifacts(artifacts.addTransformArtifacts(f))
 
   def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
@@ -198,7 +208,7 @@ import dataclass.data
 
     val cacheKeyOpt0 = for {
       fetchCache <- fetchCacheOpt
-      key <- cacheKeyOpt
+      key        <- cacheKeyOpt
     } yield {
       val cache = FetchCache(fetchCache.toPath)
       (cache, key)
@@ -212,7 +222,7 @@ import dataclass.data
           case None =>
             ioResult.flatMap { res =>
               val artifacts = res.artifacts
-              val files = res.files
+              val files     = res.files
 
               val maybeWrite =
                 if (artifacts.forall(!_._1.changing))
@@ -271,8 +281,12 @@ object Fetch {
         .distinct
 
     @deprecated("Use withFullDetailedArtifacts instead", "2.0.0-RC6-15")
-    def withDetailedArtifacts(detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]): Result =
-      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) => (dep, pub, art, Some(file)) })
+    def withDetailedArtifacts(
+      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]
+    ): Result =
+      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) =>
+        (dep, pub, art, Some(file))
+      })
     @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
     def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
       withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
@@ -300,7 +314,9 @@ object Fetch {
     def future()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Future[Seq[File]] =
       fetch.io.future()
 
-    def eitherResult()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Either[CoursierError, Result] = {
+    def eitherResult()(implicit
+      ec: ExecutionContext = fetch.resolve.cache.ec
+    ): Either[CoursierError, Result] = {
 
       val f = fetch
         .ioResult
@@ -311,7 +327,9 @@ object Fetch {
       Await.result(f, Duration.Inf)
     }
 
-    def either()(implicit ec: ExecutionContext = fetch.resolve.cache.ec): Either[CoursierError, Seq[File]] = {
+    def either()(implicit
+      ec: ExecutionContext = fetch.resolve.cache.ec
+    ): Either[CoursierError, Seq[File]] = {
 
       val f = fetch
         .io

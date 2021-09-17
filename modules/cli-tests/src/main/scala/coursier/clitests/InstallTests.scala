@@ -13,7 +13,7 @@ abstract class InstallTests extends TestSuite {
 
   private val extraOptions =
     overrideProguarded match {
-      case None => Nil
+      case None        => Nil
       case Some(value) => Seq(s"--proguarded=$value")
     }
 
@@ -25,7 +25,8 @@ abstract class InstallTests extends TestSuite {
           args = Seq(
             launcher,
             "install",
-            "--install-dir", tmpDir.getAbsolutePath,
+            "--install-dir",
+            tmpDir.getAbsolutePath,
             """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}"""
           ) ++ extraOptions,
           directory = tmpDir
@@ -49,7 +50,8 @@ abstract class InstallTests extends TestSuite {
           args = Seq(
             launcher,
             "install",
-            "--install-dir", tmpDir.getAbsolutePath,
+            "--install-dir",
+            tmpDir.getAbsolutePath,
             """env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}"""
           ) ++ extraOptions,
           directory = tmpDir
@@ -83,7 +85,8 @@ abstract class InstallTests extends TestSuite {
           args = Seq(
             launcher,
             "install",
-            "--install-dir", tmpDir.getAbsolutePath,
+            "--install-dir",
+            tmpDir.getAbsolutePath,
             s"""props:{"dependencies": ["${TestUtil.propsDepStr}"], "repositories": ["central"], "jna": ["python"]}"""
           ) ++ extraOptions,
           directory = tmpDir

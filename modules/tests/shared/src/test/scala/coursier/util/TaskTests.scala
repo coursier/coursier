@@ -14,7 +14,7 @@ object TaskTests extends TestSuite {
       def countTo(i: Int): Task[Int] =
         Task.tailRecM(0) {
           case x if x >= i => Task.delay(Right(i))
-          case toosmall => Task.delay(Left(toosmall + 1))
+          case toosmall    => Task.delay(Left(toosmall + 1))
         }
       countTo(500000).map(_ == 500000).future().map(assert(_))
     }

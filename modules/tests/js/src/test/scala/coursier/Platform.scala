@@ -10,8 +10,8 @@ object Platform {
         coursier.cache.internal.Platform.get(artifact.url)
           .map(Right(_))
           .recover { case e: Exception =>
-          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
-        }
+            Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+          }
       }
     )
   }

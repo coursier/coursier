@@ -18,7 +18,7 @@ import scala.util.Try
 
 object JvmCacheTests extends TestSuite {
 
-  val theOS = if (Properties.isWin) "windows" else "the-os"
+  val theOS    = if (Properties.isWin) "windows" else "the-os"
   val filename = if (Properties.isWin) "java.bat" else "java"
 
   private def deleteRecursive(f: File): Unit = {
@@ -32,7 +32,8 @@ object JvmCacheTests extends TestSuite {
     try {
       dir = Files.createTempDirectory("jvm-cache-tests-")
       f(dir)
-    } finally {
+    }
+    finally {
       if (dir != null)
         deleteRecursive(dir.toFile)
     }
@@ -100,9 +101,9 @@ object JvmCacheTests extends TestSuite {
             .withDefaultVersionOpt(None)
             .withIndex(Task.point(index))
 
-          val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
+          val home           = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
           val expectedOutput = "the jdk 1.1\n"
-          val javaExec = new File(new File(home, "bin"), filename)
+          val javaExec       = new File(new File(home, "bin"), filename)
 
           val output = (Seq(javaExec.getAbsolutePath, "-version").!!)
           assert(output.replace("\r\n", "\n") == expectedOutput)
@@ -120,9 +121,9 @@ object JvmCacheTests extends TestSuite {
             .withDefaultVersionOpt(None)
             .withIndex(Task.point(index))
 
-          val home = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
-          val javaExec = new File(new File(home, "bin"), filename)
-          val output = Seq(javaExec.getAbsolutePath, "-version").!!
+          val home           = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
+          val javaExec       = new File(new File(home, "bin"), filename)
+          val output         = Seq(javaExec.getAbsolutePath, "-version").!!
           val expectedOutput = "the jdk 1.2\n"
           assert(output.replace("\r\n", "\n") == expectedOutput)
         }
@@ -144,11 +145,12 @@ object JvmCacheTests extends TestSuite {
           assert(home.getParentFile.getName == "Contents")
           val javaExec = new File(home, "bin/java")
           try {
-            val output = Seq(javaExec.getAbsolutePath, "-version").!!
+            val output         = Seq(javaExec.getAbsolutePath, "-version").!!
             val expectedOutput = "the jdk 1.1\n"
             assert(output == expectedOutput)
             ()
-          } catch {
+          }
+          catch {
             case _: IOException if Properties.isWin => ()
           }
         }
@@ -169,11 +171,12 @@ object JvmCacheTests extends TestSuite {
           assert(home.getName == "the-jdk@1.2")
           val javaExec = new File(home, "bin/java")
           try {
-            val output = Seq(javaExec.getAbsolutePath, "-version").!!
+            val output         = Seq(javaExec.getAbsolutePath, "-version").!!
             val expectedOutput = "the jdk 1.2\n"
             assert(output == expectedOutput)
             ()
-          } catch {
+          }
+          catch {
             case _: IOException if Properties.isWin => ()
           }
         }

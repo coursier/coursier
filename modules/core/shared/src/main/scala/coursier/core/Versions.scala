@@ -10,7 +10,7 @@ import dataclass.data
 ) {
   private def latestIntegrationCandidates(): Iterator[String] = {
 
-    val latestOpt = Some(latest).filter(_.nonEmpty)
+    val latestOpt  = Some(latest).filter(_.nonEmpty)
     val releaseOpt = Some(release).filter(_.nonEmpty)
     def latestFromAvailable = available
       .filter(v => !latestOpt.contains(v))
@@ -25,7 +25,7 @@ import dataclass.data
   }
   private def latestReleaseCandidates(): Iterator[String] = {
 
-    val latestOpt = Some(latest).filter(_.nonEmpty).filter(!_.endsWith("SNAPSHOT"))
+    val latestOpt  = Some(latest).filter(_.nonEmpty).filter(!_.endsWith("SNAPSHOT"))
     val releaseOpt = Some(release).filter(_.nonEmpty)
     def latestFromAvailable = available
       .filter(!_.endsWith("SNAPSHOT"))
@@ -45,11 +45,11 @@ import dataclass.data
     def isStable(ver: String): Boolean =
       !ver.endsWith("SNAPSHOT") &&
       !ver.exists(_.isLetter) &&
-        ver
-          .split(Array('.', '-'))
-          .forall(_.lengthCompare(5) <= 0)
+      ver
+        .split(Array('.', '-'))
+        .forall(_.lengthCompare(5) <= 0)
 
-    val latestOpt = Some(latest).filter(_.nonEmpty).filter(isStable)
+    val latestOpt  = Some(latest).filter(_.nonEmpty).filter(isStable)
     val releaseOpt = Some(release).filter(_.nonEmpty).filter(isStable)
     def latestFromAvailable = available
       .filter(isStable)
@@ -67,8 +67,8 @@ import dataclass.data
   def candidates(kind: Latest): Iterator[String] =
     kind match {
       case Latest.Integration => latestIntegrationCandidates()
-      case Latest.Release => latestReleaseCandidates()
-      case Latest.Stable => latestStableCandidates()
+      case Latest.Release     => latestReleaseCandidates()
+      case Latest.Stable      => latestStableCandidates()
     }
 
   def latest(kind: Latest): Option[String] = {

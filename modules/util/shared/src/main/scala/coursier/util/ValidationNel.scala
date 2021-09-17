@@ -23,12 +23,17 @@ final case class ValidationNel[L, R](either: Either[::[L], R]) {
         }
     }
 
-  def zip[R1, R2](second: ValidationNel[L, R1], third: ValidationNel[L, R2]): ValidationNel[L, (R, R1, R2)] =
+  def zip[R1, R2](
+    second: ValidationNel[L, R1],
+    third: ValidationNel[L, R2]
+  ): ValidationNel[L, (R, R1, R2)] =
     (either, second.either, third.either) match {
       case (Right(ra), Right(rb), Right(rc)) =>
         ValidationNel.success((ra, rb, rc))
       case _ =>
-        val errs = either.left.getOrElse(Nil) ::: second.either.left.getOrElse(Nil) ::: third.either.left.getOrElse(Nil)
+        val errs = either.left.getOrElse(Nil) :::
+          second.either.left.getOrElse(Nil) :::
+          third.either.left.getOrElse(Nil)
         errs match {
           case h :: t =>
             ValidationNel.failures(h, t: _*)

@@ -28,7 +28,7 @@ object InstallDirTests extends TestSuite {
 
       val nativeParams = params match {
         case n: Parameters.NativeImage => n
-        case _ => sys.error(s"Unrecognized parameters type: $params")
+        case _                         => sys.error(s"Unrecognized parameters type: $params")
       }
 
       assert(nativeParams.graalvmVersion == Some(version))
@@ -36,8 +36,13 @@ object InstallDirTests extends TestSuite {
 
     test("assume SSL handshake exceptions are not found errors") {
       InstallDir.handleArtifactErrors(
-        Left(new ArtifactError.DownloadError("foo", Some(new javax.net.ssl.SSLHandshakeException("foo")))),
-        Artifact("https://repo1.maven.org/maven2/org/scala-lang/scala-library/7.12.14/scala-library-7.12.14.jar"),
+        Left(new ArtifactError.DownloadError(
+          "foo",
+          Some(new javax.net.ssl.SSLHandshakeException("foo"))
+        )),
+        Artifact(
+          "https://repo1.maven.org/maven2/org/scala-lang/scala-library/7.12.14/scala-library-7.12.14.jar"
+        ),
         verbosity = 0
       )
     }

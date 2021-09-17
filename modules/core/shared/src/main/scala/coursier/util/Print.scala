@@ -7,13 +7,13 @@ import dataclass.data
 object Print {
 
   object Colors {
-    private val `with`: Colors = Colors(Console.RED, Console.YELLOW, Console.RESET)
+    private val `with`: Colors    = Colors(Console.RED, Console.YELLOW, Console.RESET)
     private val `without`: Colors = Colors("", "", "")
 
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  @data class Colors private(red: String, yellow: String, reset: String)
+  @data class Colors private (red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)
@@ -30,10 +30,14 @@ object Print {
       }
       .mkString
 
-    s"${dep.module}:${dep.version}:${dep.configuration.value}" + (if (printExclusions) exclusionsStr else "")
+    s"${dep.module}:${dep.version}:${dep.configuration.value}" +
+      (if (printExclusions) exclusionsStr else "")
   }
 
-  def dependenciesUnknownConfigs(deps: Seq[Dependency], projects: Map[(Module, String), Project]): String =
+  def dependenciesUnknownConfigs(
+    deps: Seq[Dependency],
+    projects: Map[(Module, String), Project]
+  ): String =
     dependenciesUnknownConfigs(deps, projects, printExclusions = false)
 
   def dependenciesUnknownConfigs(
@@ -71,7 +75,7 @@ object Print {
       else
         deps0
 
-    val l = deps1.map(dependency(_, printExclusions))
+    val l  = deps1.map(dependency(_, printExclusions))
     val l0 = if (reorder) l.distinct else l
     l0.mkString(System.lineSeparator())
   }
@@ -106,24 +110,30 @@ object Print {
         DependencyTree(resolution, withExclusions = printExclusions)
       )
 
-      Tree(t.toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(_.dependees)
-        .render { node =>
-          if (node.excludedDependsOn)
-            s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
-          else if (node.dependsOnVersion == node.dependsOnReconciledVersion)
-            s"${node.module}:${node.reconciledVersion}"
-          else {
-            val assumeCompatibleVersions = compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+      val tree0 = Tree(
+        t.toVector.sortBy(t =>
+          (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)
+        )
+      )(_.dependees)
+      tree0.render { node =>
+        if (node.excludedDependsOn)
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
+        else if (node.dependsOnVersion == node.dependsOnReconciledVersion)
+          s"${node.module}:${node.reconciledVersion}"
+        else {
+          val assumeCompatibleVersions =
+            compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
 
-            s"${node.module}:${node.reconciledVersion} " +
-              (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-              s"${node.dependsOnModule}:${node.dependsOnVersion} -> ${node.dependsOnReconciledVersion}" +
-              colors0.reset
-          }
+          s"${node.module}:${node.reconciledVersion} " +
+            (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+            s"${node.dependsOnModule}:${node.dependsOnVersion} -> ${node.dependsOnReconciledVersion}" +
+            colors0.reset
         }
-    } else {
+      }
+    }
+    else {
       val roots0 = Option(roots).getOrElse(resolution.rootDependencies)
-      val t = DependencyTree(resolution, roots0, withExclusions = printExclusions)
+      val t      = DependencyTree(resolution, roots0, withExclusions = printExclusions)
       Tree(t.toVector)(_.children)
         .render { t =>
           render(
@@ -164,7 +174,8 @@ object Print {
           version
         else {
           val reconciledVersion = reconciledVersionOpt.getOrElse(version)
-          val assumeCompatibleVersions = compatibleVersions(version, reconciledVersionOpt.getOrElse(version))
+          val assumeCompatibleVersions =
+            compatibleVersions(version, reconciledVersionOpt.getOrElse(version))
 
           (if (assumeCompatibleVersions) colors.yellow else colors.red) +
             s"$version -> $reconciledVersion" +
@@ -182,7 +193,7 @@ object Print {
       val m = l.iterator.map(_._1.length).max
       l.map {
         case (a, b) =>
-          a + " "*(m - a.length + 1) + b
+          a + " " * (m - a.length + 1) + b
       }
     }
 
@@ -212,7 +223,10 @@ object Print {
                 " (and excluded it)"
               else
                 ""
-            (s"${c.dependeeModule}:${c.dependeeVersion}", s"wanted version ${c.wantedVersion}" + extra)
+            (
+              s"${c.dependeeModule}:${c.dependeeVersion}",
+              s"wanted version ${c.wantedVersion}" + extra
+            )
           }
 
           s"$mod:${l.head.version} was selected, but" + System.lineSeparator() +
