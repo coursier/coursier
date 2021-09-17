@@ -20,7 +20,6 @@ import scala.util.control.NonFatal
 
 object InstallTests extends TestSuite {
 
-
   private val pool = Sync.fixedThreadPool(6)
 
   private val mockDataLocation = {
@@ -43,11 +42,13 @@ object InstallTests extends TestSuite {
         s.iterator()
           .asScala
           .foreach(delete)
-      } finally {
+      }
+      finally {
         if (s != null)
           s.close()
       }
-    } else
+    }
+    else
       try Files.deleteIfExists(d)
       catch {
         case e: FileSystemException if Windows.isWindows =>
@@ -67,7 +68,8 @@ object InstallTests extends TestSuite {
     try {
       zf = new ZipFile(f)
       t(zf)
-    } finally {
+    }
+    finally {
       if (zf != null)
         zf.close()
     }
@@ -95,7 +97,12 @@ object InstallTests extends TestSuite {
 
   private def commandOutput(command: String*): String =
     commandOutput(new File("."), mergeError = false, expectedReturnCode = 0, command: _*)
-  private def commandOutput(dir: File, mergeError: Boolean, expectedReturnCode: Int, command: String*): String = {
+  private def commandOutput(
+    dir: File,
+    mergeError: Boolean,
+    expectedReturnCode: Int,
+    command: String*
+  ): String = {
 
     val b = new ProcessBuilder(command: _*)
     b.redirectInput(Redirect.INHERIT)
@@ -105,10 +112,10 @@ object InstallTests extends TestSuite {
     else
       b.redirectError(Redirect.INHERIT)
     b.directory(dir)
-    val p = b.start()
-    val is = p.getInputStream
+    val p    = b.start()
+    val is   = p.getInputStream
     val baos = new ByteArrayOutputStream
-    val buf = Array.ofDim[Byte](16384)
+    val buf  = Array.ofDim[Byte](16384)
     var read = -1
     while ({ read = is.read(buf); read >= 0 })
       baos.write(buf, 0, read)
@@ -117,45 +124,50 @@ object InstallTests extends TestSuite {
     if (retCode == expectedReturnCode)
       new String(baos.toByteArray, StandardCharsets.UTF_8)
     else
-      throw new Exception(s"Error while running ${command.mkString(" ")} (return code: $retCode, expected: $expectedReturnCode)")
+      throw new Exception(
+        s"Error while running ${command.mkString(" ")} (return code: $retCode, expected: $expectedReturnCode)"
+      )
   }
 
   private def assertNativeExecutable(file: File) = {
 
     // https://stackoverflow.com/questions/14799966/detect-an-executable-file-in-java/14800092#14800092
 
-    val fis = new FileInputStream(file)
+    val fis    = new FileInputStream(file)
     val osName = sys.props("os.name").toLowerCase(Locale.ROOT)
     if (osName.contains("mac")) {
-      val buf = Array.fill[Byte](4)(0)
+      val buf  = Array.fill[Byte](4)(0)
       val read = fis.read(buf)
       assert(read == 4)
       // cf fa ed fe
       val expected = Seq(0xcf, 0xfa, 0xed, 0xfe).map(_.toByte)
       assert(buf.toSeq == expected)
-    } else if (osName.contains("linux")) {
-      val buf = Array.fill[Byte](4)(0)
+    }
+    else if (osName.contains("linux")) {
+      val buf  = Array.fill[Byte](4)(0)
       val read = fis.read(buf)
       assert(read == 4)
       // 7f 45 4c 46
       val expected = Seq(0x7f, 0x45, 0x4c, 0x46).map(_.toByte)
       assert(buf.toSeq == expected)
-    } else if (osName.contains("windows")) {
-      val buf = Array.fill[Byte](2)(0)
+    }
+    else if (osName.contains("windows")) {
+      val buf  = Array.fill[Byte](2)(0)
       val read = fis.read(buf)
       assert(read == 2)
       // 4d 5a
       val expected = Seq(0x4d, 0x5a).map(_.toByte)
       assert(buf.toSeq == expected)
-    } else {
+    }
+    else {
       sys.error(s"Unsupported OS: $osName")
     }
     fis.close()
   }
 
   private def appInfo(raw: RawAppDescriptor, id: String): AppInfo = {
-    val appDesc = raw.appDescriptor.toOption.get
-    val descRepr = raw.repr.getBytes(StandardCharsets.UTF_8)
+    val appDesc   = raw.appDescriptor.toOption.get
+    val descRepr  = raw.repr.getBytes(StandardCharsets.UTF_8)
     val rawSource = RawSource(Nil, "inline", id)
     AppInfo(
       appDesc,
@@ -213,16 +225,17 @@ object InstallTests extends TestSuite {
           .split('\n')
           .filter(_.nonEmpty)
           .toSeq
-        val expectedUrls = Seq("https://repo1.maven.org/maven2/io/get-coursier/echo/1.0.2/echo-1.0.2.jar")
+        val expectedUrls =
+          Seq("https://repo1.maven.org/maven2/io/get-coursier/echo/1.0.2/echo-1.0.2.jar")
         assert(urls == expectedUrls)
 
         if (currentOs == os) {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
 
-        val appList = installDir0.list()
+        val appList         = installDir0.list()
         val expectedAppList = Seq(id)
         assert(appList == expectedAppList)
       }
@@ -254,7 +267,7 @@ object InstallTests extends TestSuite {
         assertHasEntry(launcher.toFile, "coursier/echo/Echo.class")
 
         if (currentOs == os) {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
@@ -286,15 +299,16 @@ object InstallTests extends TestSuite {
 
         assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/ResourcesLauncher.class")
         assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
-        val bootResources = stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-resources")
-          .split('\n')
-          .filter(_.nonEmpty)
-          .toSeq
+        val bootResources =
+          stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-resources")
+            .split('\n')
+            .filter(_.nonEmpty)
+            .toSeq
         val expectedBootResources = Seq("echo-1.0.2.jar")
         assert(bootResources == expectedBootResources)
 
         if (currentOs == os) {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
@@ -325,7 +339,7 @@ object InstallTests extends TestSuite {
         assert(Files.isRegularFile(launcher))
 
         def testRun(): Unit = {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
@@ -368,13 +382,16 @@ object InstallTests extends TestSuite {
         assert(created.exists(identity))
 
         val launcher = installDir0.actualDest(id)
-        Predef.assert(Files.getLastModifiedTime(launcher).toInstant == now.plusSeconds(-30), s"now=$now, 30s before=${now.plusSeconds(-30)}")
+        Predef.assert(
+          Files.getLastModifiedTime(launcher).toInstant == now.plusSeconds(-30),
+          s"now=$now, 30s before=${now.plusSeconds(-30)}"
+        )
 
         assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
         assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
 
         def testRun(): Unit = {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
           val expectedOutput = "foo"
           assert(output == expectedOutput)
         }
@@ -420,7 +437,7 @@ object InstallTests extends TestSuite {
     test("install a prebuilt launcher") {
       def run(os: String) = withTempDir { tmpDir =>
 
-        val id = "coursier"
+        val id    = "coursier"
         val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
@@ -428,8 +445,8 @@ object InstallTests extends TestSuite {
             .withLauncherType("graalvm-native-image")
             .withPrebuiltBinaries(Map(
               "x86_64-apple-darwin" -> csUrl,
-              "x86_64-pc-linux" -> csUrl,
-              "x86_64-pc-win32" -> csUrl
+              "x86_64-pc-linux"     -> csUrl,
+              "x86_64-pc-win32"     -> csUrl
             )),
           id
         )
@@ -444,7 +461,7 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val output = commandOutput(launcher.toAbsolutePath.toString, "--help")
+          val output              = commandOutput(launcher.toAbsolutePath.toString, "--help")
           val expectedStartOutput = "Coursier 2.0.0"
           assert(output.startsWith(expectedStartOutput))
         }
@@ -469,8 +486,8 @@ object InstallTests extends TestSuite {
             .withLauncherType("graalvm-native-image")
             .withPrebuiltBinaries(Map(
               "x86_64-apple-darwin" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
-              "x86_64-pc-linux"     -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
-              "x86_64-pc-win32"     -> "zip+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.zip"
+              "x86_64-pc-linux" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
+              "x86_64-pc-win32" -> "zip+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.zip"
             )),
           id
         )
@@ -486,7 +503,13 @@ object InstallTests extends TestSuite {
 
         def testRun(): Unit = {
           val expectedRetCode = if (Windows.isWindows) 0 else 1
-          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = expectedRetCode, launcher.toAbsolutePath.toString, "--help")
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = expectedRetCode,
+            launcher.toAbsolutePath.toString,
+            "--help"
+          )
           val expectedInOutput =
             if (Windows.isWindows) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
@@ -503,8 +526,10 @@ object InstallTests extends TestSuite {
     }
 
     test("install a prebuilt launcher in an archive") {
-      val zipPattern = "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-${platform}"
-      val tgzPattern = "tgz+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz!sbt/bin/sbtn-${platform}"
+      val zipPattern =
+        "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-${platform}"
+      val tgzPattern =
+        "tgz+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz!sbt/bin/sbtn-${platform}"
 
       def run(os: String, pattern: String) = withTempDir { tmpDir =>
 
@@ -528,7 +553,13 @@ object InstallTests extends TestSuite {
 
         def testRun(): Unit = {
           val expectedRetCode = if (Windows.isWindows) 0 else 1
-          val output = commandOutput(tmpDir.toFile, mergeError = true, expectedReturnCode = expectedRetCode, launcher.toAbsolutePath.toString, "--help")
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = expectedRetCode,
+            launcher.toAbsolutePath.toString,
+            "--help"
+          )
           val expectedInOutput =
             if (Windows.isWindows) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
@@ -601,13 +632,15 @@ object InstallTests extends TestSuite {
         val app = installDir0.actualDest("foo")
         Files.write(app, Array.emptyByteArray)
 
-        val gotException = try {
-          installDir0.delete("foo")
-          false
-        } catch {
-          case _: InstallDir.NotAnApplication =>
-            true
-        }
+        val gotException =
+          try {
+            installDir0.delete("foo")
+            false
+          }
+          catch {
+            case _: InstallDir.NotAnApplication =>
+              true
+          }
 
         assert(gotException)
       }

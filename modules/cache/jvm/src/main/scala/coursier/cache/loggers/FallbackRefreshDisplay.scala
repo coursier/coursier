@@ -8,7 +8,7 @@ import scala.concurrent.duration.{Duration, DurationInt}
 
 class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
 
-  private var previous = Set.empty[String]
+  private var previous                 = Set.empty[String]
   @volatile private var lastInstantOpt = Option.empty[Long]
 
   private def describe(info: RefreshInfo): String =

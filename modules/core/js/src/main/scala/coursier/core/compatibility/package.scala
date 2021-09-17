@@ -1,7 +1,7 @@
 package coursier.core
 
 import scala.scalajs.js
-import js.Dynamic.{ global => g }
+import js.Dynamic.{global => g}
 import org.scalajs.dom.raw.NodeList
 
 import coursier.util.{SaxHandler, Xml}
@@ -43,7 +43,7 @@ package object compatibility {
 
   // Can't find these from node
   val ELEMENT_NODE = 1 // org.scalajs.dom.raw.Node.ELEMENT_NODE
-  val TEXT_NODE = 3 // org.scalajs.dom.raw.Node.TEXT_NODE
+  val TEXT_NODE    = 3 // org.scalajs.dom.raw.Node.TEXT_NODE
 
   def fromNode(node: org.scalajs.dom.raw.Node): Xml.Node = {
 
@@ -82,7 +82,6 @@ package object compatibility {
     }
   }
 
-
   def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
 
     val parser = sax.parser(true)
@@ -114,7 +113,7 @@ package object compatibility {
       if (s.isEmpty) None
       else {
         for {
-          xmlDoc <- dynOption(DOMParser.parseFromString(s, "text/xml"))
+          xmlDoc    <- dynOption(DOMParser.parseFromString(s, "text/xml"))
           rootNodes <- dynOption(xmlDoc.childNodes)
           // From node, rootNodes.head is sometimes just a comment instead of the main root node
           // (tested with org.ow2.asm:asm-commons in CentralTests)

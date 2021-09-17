@@ -20,7 +20,6 @@ import scala.collection.mutable
   def isEmpty: Boolean =
     set.isEmpty && pathLikeAppends.isEmpty
 
-
   // references previous values with as variables
   def scriptUpdates: Seq[(String, String)] =
     updatedEnv(
@@ -73,7 +72,6 @@ import scala.collection.mutable
       }
       set ++ l.toList.map(k => k -> m(k))
     }
-
 
   def alreadyApplied(): Boolean =
     alreadyApplied(EnvironmentUpdate.defaultGetEnv, File.pathSeparator)

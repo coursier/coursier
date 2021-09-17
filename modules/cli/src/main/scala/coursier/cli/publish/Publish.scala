@@ -38,10 +38,12 @@ object Publish extends CaseApp[PublishOptions] {
       if (!repo.root.contains("://") && repo.root.contains(File.separatorChar)) {
         val p = Paths.get(repo.root).toAbsolutePath
         (FileUpload(p), FileDownload(p), repo.withRoot("."), true)
-      } else if (repo.root.startsWith("file:")) {
+      }
+      else if (repo.root.startsWith("file:")) {
         val p = Paths.get(new URI(repo.root)).toAbsolutePath
         (FileUpload(p), FileDownload(p), repo.withRoot("."), true)
-      } else if (repo.root.startsWith("http://") || repo.root.startsWith("https://")) {
+      }
+      else if (repo.root.startsWith("http://") || repo.root.startsWith("https://")) {
         val pool = Sync.fixedThreadPool(if (parallel) 4 else 1) // sizing, shutdown, …
         val upload =
           if (parallel)
@@ -49,7 +51,8 @@ object Publish extends CaseApp[PublishOptions] {
           else
             HttpURLConnectionUpload.create(pool, urlSuffix)
         (upload, OkhttpDownload.create(pool), repo, false)
-      } else
+      }
+      else
         throw new PublishError.UnrecognizedRepositoryFormat(repo.root)
 
     val actualUpload =
@@ -85,7 +88,7 @@ object Publish extends CaseApp[PublishOptions] {
       _ <- params.initSigner
 
       manualPackageFileSetOpt <- Input.manualPackageFileSetOpt(params, now)
-      dirFileSet0 <- Input.dirFileSet(params, out)
+      dirFileSet0             <- Input.dirFileSet(params, out)
       sbtFileSet0 <- Input.sbtFileSet(
         params,
         now,
@@ -94,7 +97,10 @@ object Publish extends CaseApp[PublishOptions] {
         manualPackageFileSetOpt.isEmpty,
         es
       )
-      fileSet0 = (manualPackageFileSetOpt.toSeq ++ Seq(dirFileSet0, sbtFileSet0)).foldLeft(FileSet.empty)(_ ++ _)
+      fileSet0 = {
+        val fileSets = manualPackageFileSetOpt.toSeq ++ Seq(dirFileSet0, sbtFileSet0)
+        fileSets.foldLeft(FileSet.empty)(_ ++ _)
+      }
       _ = {
         if (params.verbosity >= 2) {
           System.err.println(s"Initial file set (${fileSet0.elements.length} elements)")
@@ -165,7 +171,9 @@ object Publish extends CaseApp[PublishOptions] {
           }
       }
 
-      _ <- params.initSigner // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
+      // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
+      _ <- params.initSigner
+
       withSignatures <- {
         params
           .signer
@@ -178,8 +186,8 @@ object Publish extends CaseApp[PublishOptions] {
           )
           .flatMap {
             case Left((path, _, msg)) => Task.fail(new Exception(
-              s"Failed to sign $path: $msg"
-            ))
+                s"Failed to sign $path: $msg"
+              ))
             case Right(fs) => Task.point(fileSet1 ++ fs)
           }
       }
@@ -219,7 +227,7 @@ object Publish extends CaseApp[PublishOptions] {
       retainedRepo = hooks.repository(hooksData, params.repository.repository, isSnapshot0)
         .getOrElse(params.repository.repository.repo(isSnapshot0))
 
-      parallel = params.parallel.getOrElse(!params.repository.gitHub)
+      parallel  = params.parallel.getOrElse(!params.repository.gitHub)
       urlSuffix = params.urlSuffixOpt.getOrElse(if (params.repository.bintray) ";publish=1" else "")
 
       (upload, _, repo, isLocal) = {
@@ -278,8 +286,8 @@ object Publish extends CaseApp[PublishOptions] {
     val ec = ExecutionContext.fromExecutorService(es)
 
     val task = publish(params, System.err, es)
-    val f = task.attempt.future()(ec)
-    val res = Await.result(f, Duration.Inf)
+    val f    = task.attempt.future()(ec)
+    val res  = Await.result(f, Duration.Inf)
 
     res match {
       case Left(err: PublishError) if params.verbosity <= 1 =>
@@ -296,7 +304,7 @@ object Publish extends CaseApp[PublishOptions] {
         throw e
 
       case Right(()) =>
-        // normal exit
+      // normal exit
     }
   }
 }

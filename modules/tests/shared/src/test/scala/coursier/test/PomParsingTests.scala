@@ -11,7 +11,7 @@ object PomParsingTests extends TestSuite {
 
   val tests = Tests {
     test("readClassifier") {
-      val depNode ="""
+      val depNode = """
         <dependency>
           <groupId>comp</groupId>
           <artifactId>lib</artifactId>
@@ -31,7 +31,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
     test("readProfileWithNoActivation") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
         </profile>
@@ -59,7 +59,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
     test("readProfileActivatedByDefault") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <activation>
@@ -68,14 +68,15 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = Right(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
+      val expected =
+        Right(Profile("profile1", Some(true), Profile.Activation(Nil), Nil, Nil, Map.empty))
 
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
     test("readProfileActiveByPropertyWithoutValue") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <activation>
@@ -85,14 +86,23 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> None)), Nil, Nil, Map.empty))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(List("hadoop.profile" -> None)),
+          Nil,
+          Nil,
+          Map.empty
+        )
+      }
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
 
     test("readProfileActiveByPropertyWithValue") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <activation>
@@ -103,14 +113,23 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = Right(Profile("profile1", None, Profile.Activation(List("hadoop.profile" -> Some("yes"))), Nil, Nil, Map.empty))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(List("hadoop.profile" -> Some("yes"))),
+          Nil,
+          Nil,
+          Map.empty
+        )
+      }
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
 
     test("readProfileDependencies") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <dependencies>
@@ -123,22 +142,25 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = Right(Profile(
-        "profile1",
-        None,
-        Profile.Activation(Nil),
-        Seq(
-          Configuration.empty -> Dependency(mod"comp:lib", "0.2")),
-        Nil,
-        Map.empty
-      ))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(Nil),
+          Seq(
+            Configuration.empty -> Dependency(mod"comp:lib", "0.2")
+          ),
+          Nil,
+          Map.empty
+        )
+      }
 
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
     test("readProfileDependenciesMgmt") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <dependencyManagement>
@@ -154,22 +176,25 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = Right(Profile(
-        "profile1",
-        None,
-        Profile.Activation(Nil),
-        Nil,
-        Seq(
-          Configuration.test -> Dependency(mod"comp:lib", "0.2")),
-        Map.empty
-      ))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(Nil),
+          Nil,
+          Seq(
+            Configuration.test -> Dependency(mod"comp:lib", "0.2")
+          ),
+          Map.empty
+        )
+      }
 
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
     test("readProfileProperties") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <properties>
@@ -178,21 +203,23 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = Right(Profile(
-        "profile1",
-        None,
-        Profile.Activation(Nil),
-        Nil,
-        Nil,
-        Map("first.prop" -> "value1")
-      ))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(Nil),
+          Nil,
+          Nil,
+          Map("first.prop" -> "value1")
+        )
+      }
 
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
       assert(result == expected)
     }
     test("propertyWithSpaces") {
-      val profileNode ="""
+      val profileNode = """
         <profile>
           <id>profile1</id>
           <properties>
@@ -201,14 +228,16 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
 
-      val expected = Right(Profile(
-        "profile1",
-        None,
-        Profile.Activation(Nil),
-        Nil,
-        Nil,
-        Map("first.prop" -> "value1")
-      ))
+      val expected = Right {
+        Profile(
+          "profile1",
+          None,
+          Profile.Activation(Nil),
+          Nil,
+          Nil,
+          Map("first.prop" -> "value1")
+        )
+      }
 
       val result = Pom.profile(xmlParseDom(profileNode).toOption.get)
 
@@ -255,7 +284,7 @@ object PomParsingTests extends TestSuite {
       assert(node.label == "properties")
 
       val children = node.children.collect { case elem if elem.isElement => elem }
-      val props0 = children.eitherTraverse(Pom.property)
+      val props0   = children.eitherTraverse(Pom.property)
 
       assert(props0.isRight)
 
@@ -271,19 +300,20 @@ object PomParsingTests extends TestSuite {
     }
 
     test("projectWithScm") {
-      val profileNode ="""
-       |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-       |    <modelVersion>4.0.0</modelVersion>
-       |    <groupId>com.example</groupId>
-       |    <artifactId>awesome-project</artifactId>
-       |    <version>1.0-SNAPSHOT</version>
-       |
-       |    <url>https://example.com</url>
-       |    <scm>
-       |      <url>https://github.com/coursier/coursier</url>
-       |      <connection>scm:git:git@github.com:coursier/coursier.git</connection>
-       |    </scm>
-       |</project>""".stripMargin
+      val profileNode =
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com.example</groupId>
+          |    <artifactId>awesome-project</artifactId>
+          |    <version>1.0-SNAPSHOT</version>
+          |
+          |    <url>https://example.com</url>
+          |    <scm>
+          |      <url>https://github.com/coursier/coursier</url>
+          |      <connection>scm:git:git@github.com:coursier/coursier.git</connection>
+          |    </scm>
+          |</project>""".stripMargin
 
       val expected = Right(Project(
         Module(Organization("com.example"), ModuleName("awesome-project")),
@@ -298,8 +328,8 @@ object PomParsingTests extends TestSuite {
           url = Some("https://github.com/coursier/coursier"),
           connection = Some("scm:git:git@github.com:coursier/coursier.git"),
           developerConnection = None
-        )
-      ))))
+        ))
+      )))
 
       val result = Pom.project(xmlParseDom(profileNode).toOption.get)
 

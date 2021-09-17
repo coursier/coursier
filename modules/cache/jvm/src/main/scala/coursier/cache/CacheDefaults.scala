@@ -15,7 +15,10 @@ object CacheDefaults {
 
   lazy val location: File = CachePath.defaultCacheDirectory()
 
-  @deprecated("Legacy cache location support was dropped, this method does nothing.", "2.0.0-RC6-22")
+  @deprecated(
+    "Legacy cache location support was dropped, this method does nothing.",
+    "2.0.0-RC6-22"
+  )
   def warnLegacyCacheLocation(): Unit = {}
 
   private def defaultConcurrentDownloadCount = 6
@@ -40,9 +43,9 @@ object CacheDefaults {
       }
 
   lazy val ttl: Option[Duration] = {
-    val fromEnv = Option(System.getenv("COURSIER_TTL")).flatMap(parseDuration(_).toOption)
+    val fromEnv   = Option(System.getenv("COURSIER_TTL")).flatMap(parseDuration(_).toOption)
     def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).toOption)
-    def default = 24.hours
+    def default   = 24.hours
 
     fromEnv
       .orElse(fromProps)
@@ -89,20 +92,25 @@ object CacheDefaults {
     if (credentialPropOpt.isEmpty) {
       // Warn if those files have group and others read permissions?
       val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
-      val mainCredentialsFiles = configDirs.map(configDir => new File(configDir, "credentials.properties"))
+      val mainCredentialsFiles =
+        configDirs.map(configDir => new File(configDir, "credentials.properties"))
       val otherFiles = {
         // delay listing files until credentials are really needed?
         val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
-        val files = dirs.flatMap(dir => Option(dir.listFiles(new FilenameFilter {
-          def accept(dir: File, name: String): Boolean =
+        val files = dirs.flatMap { dir =>
+          val listOrNull = dir.listFiles { (dir, name) =>
             !name.startsWith(".") && name.endsWith(".properties")
-        })).toSeq.flatten)
+          }
+          Option(listOrNull).toSeq.flatten
+        }
         Option(files).toSeq.flatten.map { f =>
           FileCredentials(f.getAbsolutePath, optional = true) // non optional?
         }
       }
-      mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++ otherFiles
-    } else
+      mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++
+        otherFiles
+    }
+    else
       credentialPropOpt
         .filter(isPropFile)
         .toSeq

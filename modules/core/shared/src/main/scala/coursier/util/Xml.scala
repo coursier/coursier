@@ -7,6 +7,7 @@ object Xml {
   /** A representation of an XML node/document, with different implementations on JVM and JS */
   trait Node {
     def label: String
+
     /** Namespace / key / value */
     def attributes: Seq[(String, String, String)]
     def children: Seq[Node]
@@ -23,7 +24,7 @@ object Xml {
     lazy val attributesMap = attributes.map { case (_, k, v) => k -> v }.toMap
     def attribute(name: String): Either[String, String] =
       attributesMap.get(name) match {
-        case None => Left(s"Missing attribute $name")
+        case None        => Left(s"Missing attribute $name")
         case Some(value) => Right(value)
       }
   }
@@ -31,11 +32,11 @@ object Xml {
   object Node {
     val empty: Node =
       new Node {
-        val isText = false
-        val isElement = false
-        val children = Nil
-        val label = ""
-        val attributes = Nil
+        val isText      = false
+        val isElement   = false
+        val children    = Nil
+        val label       = ""
+        val attributes  = Nil
         val textContent = ""
       }
   }
@@ -49,7 +50,7 @@ object Xml {
   def text(elem: Node, label: String, description: String): Either[String, String] =
     elem.children
       .find(_.label == label)
-      .flatMap(_.children.collectFirst{case Text(t) => t})
+      .flatMap(_.children.collectFirst { case Text(t) => t })
       .toRight(s"$description not found")
 
   def parseDateTime(s: String): Option[Versions.DateTime] =

@@ -37,7 +37,8 @@ final class Sbt(
       if (keepSbtOutput) {
         b.redirectOutput(ProcessBuilder.Redirect.INHERIT)
         b.redirectError(ProcessBuilder.Redirect.INHERIT)
-      } else
+      }
+      else
         b.redirectErrorStream(true)
 
       val p = b.start()
@@ -49,7 +50,13 @@ final class Sbt(
           outputFrameSizeOpt.map { n =>
             System.out.flush()
             System.err.flush()
-            val f = new OutputFrame(p.getInputStream, new OutputStreamWriter(System.err), n, Seq("", "--- sbt is running ---"), Seq())
+            val f = new OutputFrame(
+              p.getInputStream,
+              new OutputStreamWriter(System.err),
+              n,
+              Seq("", "--- sbt is running ---"),
+              Seq()
+            )
             f.start()
             f
           }
@@ -57,7 +64,8 @@ final class Sbt(
       var retCode = 0
       try {
         retCode = p.waitFor()
-      } finally {
+      }
+      finally {
         val errStreamOpt = if (retCode == 0) None else Some(System.err)
         outputFrameOpt.foreach(_.stop(keepFrame = false, errored = errStreamOpt))
       }
@@ -66,11 +74,12 @@ final class Sbt(
     }
   }
 
-
   def publishTo(dir: File, projectsOpt: Option[Seq[String]] = None): Future[Unit] = {
 
     if (verbosity >= 1)
-      Console.err.println(s"Publishing sbt project ${directory.getAbsolutePath} to temporary directory $dir")
+      Console.err.println(
+        s"Publishing sbt project ${directory.getAbsolutePath} to temporary directory $dir"
+      )
     else if (verbosity >= 0) {
       val name = directory.getName
       val msg =

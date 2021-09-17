@@ -6,8 +6,8 @@ import scala.scalajs.js.annotation.JSImport
 @js.native
 @JSImport("graphdracula", JSImport.Namespace)
 object Dracula extends js.Object {
-  def Graph: js.Dynamic = js.native
-  def Layout: Layout = js.native
+  def Graph: js.Dynamic  = js.native
+  def Layout: Layout     = js.native
   def Renderer: Renderer = js.native
 }
 

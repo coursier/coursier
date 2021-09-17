@@ -3,6 +3,7 @@ package coursier.cli.bootstrap
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.install.RawAppDescriptor
 
+// format: off
 final case class BootstrapSpecificOptions(
   @Short("o")
     output: Option[String] = None,
@@ -56,21 +57,35 @@ final case class BootstrapSpecificOptions(
   jvmDir: Option[String] = None,
   jvmIndex: Option[String] = None
 ) {
+  // format: on
+
   def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
     val count = Seq(
       assembly.exists(identity),
       standalone.exists(identity),
       native,
       nativeImage.exists(identity) ||
-        graalvmVersion.map(_.trim).filter(_.nonEmpty).filter(_ => !nativeImage.contains(false)).nonEmpty ||
-        (!nativeImage.contains(false) && (graalvmJvmOption.filter(_.nonEmpty).nonEmpty || graalvmOption.filter(_.nonEmpty).nonEmpty))
+      graalvmVersion
+        .map(_.trim)
+        .filter(_.nonEmpty)
+        .filter(_ => !nativeImage.contains(false))
+        .nonEmpty ||
+      (!nativeImage.contains(false) &&
+      (graalvmJvmOption.filter(_.nonEmpty).nonEmpty ||
+      graalvmOption.filter(_.nonEmpty).nonEmpty))
     ).count(identity)
     copy(
       output = output.orElse(app.name),
       javaOpt = app.javaOptions ++ javaOpt,
-      standalone = standalone.orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
-      assembly = assembly.orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None),
-      nativeImage = nativeImage.orElse(if (count == 0 && app.launcherType == "graalvm-native-image") Some(true) else None),
+      standalone = standalone
+        .orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
+      assembly = assembly
+        .orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None),
+      nativeImage = nativeImage
+        .orElse {
+          if (count == 0 && app.launcherType == "graalvm-native-image") Some(true)
+          else None
+        },
       jvmOptionFile = jvmOptionFile.orElse(app.jvmOptionFile)
     )
   }
@@ -78,5 +93,5 @@ final case class BootstrapSpecificOptions(
 
 object BootstrapSpecificOptions {
   implicit val parser = Parser[BootstrapSpecificOptions]
-  implicit val help = caseapp.core.help.Help[BootstrapSpecificOptions]
+  implicit val help   = caseapp.core.help.Help[BootstrapSpecificOptions]
 }

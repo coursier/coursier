@@ -24,10 +24,11 @@ object UtilTests extends TestSuite {
         var tmpDir: Path = null
         try {
           tmpDir = Files.createTempDirectory("coursier-paths-tests")
-          val dir = Files.createDirectories(tmpDir.resolve("dir"))
+          val dir  = Files.createDirectories(tmpDir.resolve("dir"))
           val link = Files.createSymbolicLink(tmpDir.resolve("link"), dir)
           Util.createDirectories(link) // should not throw
-        } finally {
+        }
+        finally {
           deleteRecursive(tmpDir.toFile)
         }
       }
@@ -35,7 +36,7 @@ object UtilTests extends TestSuite {
 
     test("property expansion") {
       test("simple") {
-        val map = Map("something" -> "value", "other" -> "a")
+        val map      = Map("something" -> "value", "other" -> "a")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")
         val toSet = Util.expandProperties(sysProps, map.asJava)
@@ -47,7 +48,7 @@ object UtilTests extends TestSuite {
       }
 
       test("substitution") {
-        val map = Map("something" -> "value ${foo}", "other" -> "a")
+        val map      = Map("something" -> "value ${foo}", "other" -> "a")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")
         val toSet = Util.expandProperties(sysProps, map.asJava)
@@ -59,7 +60,7 @@ object UtilTests extends TestSuite {
       }
 
       test("optional value") {
-        val map = Map("something" -> "value", "foo?" -> "A")
+        val map      = Map("something" -> "value", "foo?" -> "A")
         val sysProps = new Properties
         sysProps.setProperty("foo", "FOO")
         val toSet = Util.expandProperties(sysProps, map.asJava)

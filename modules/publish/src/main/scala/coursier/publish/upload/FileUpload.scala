@@ -9,8 +9,7 @@ import coursier.util.Task
 
 import scala.util.control.NonFatal
 
-/**
-  * Copies
+/** Copies
   * @param base
   */
 final case class FileUpload(base: Path) extends Upload {
@@ -27,14 +26,16 @@ final case class FileUpload(base: Path) extends Upload {
     if (p.startsWith(base0))
       Task.delay {
         logger.uploading(url, loggingId, Some(content.length))
-        val errorOpt = try {
-          Util.createDirectories(p.getParent)
-          Files.write(p, content)
-          None
-        } catch {
-          case NonFatal(e) =>
-            Some(e)
-        }
+        val errorOpt =
+          try {
+            Util.createDirectories(p.getParent)
+            Files.write(p, content)
+            None
+          }
+          catch {
+            case NonFatal(e) =>
+              Some(e)
+          }
         logger.uploaded(url, loggingId, errorOpt.map(e => new Upload.Error.FileException(e)))
 
         None

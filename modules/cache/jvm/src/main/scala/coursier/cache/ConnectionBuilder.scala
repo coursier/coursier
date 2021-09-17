@@ -7,6 +7,7 @@ import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import dataclass.data
 
+// format: off
 @data class ConnectionBuilder(
   url: String,
   authentication: Option[Authentication] = None,
@@ -20,8 +21,9 @@ import dataclass.data
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
   @since("2.0.16")
-  classLoaders: Seq[ClassLoader] = Nil,
+    classLoaders: Seq[ClassLoader] = Nil
 ) {
+  // format: on
 
   def connection(): URLConnection = {
     val (c, partial) = connectionMaybePartial()

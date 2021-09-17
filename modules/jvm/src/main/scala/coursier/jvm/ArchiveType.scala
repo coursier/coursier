@@ -11,6 +11,6 @@ object ArchiveType {
     input match {
       case "zip" => Some(Zip)
       case "tgz" => Some(Tgz)
-      case _ => None
+      case _     => None
     }
 }

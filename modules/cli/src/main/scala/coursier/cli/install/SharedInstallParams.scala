@@ -36,10 +36,12 @@ object SharedInstallParams {
 
   lazy val defaultDir = InstallDir.defaultDir
 
-  private[install] implicit def validationNelToCats[L, R](v: coursier.util.ValidationNel[L, R]): ValidatedNel[L, R] =
+  private[install] implicit def validationNelToCats[L, R](
+    v: coursier.util.ValidationNel[L, R]
+  ): ValidatedNel[L, R] =
     v.either match {
       case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
-      case Right(r) => Validated.validNel(r)
+      case Right(r)     => Validated.validNel(r)
     }
 
   def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] = {
@@ -54,7 +56,7 @@ object SharedInstallParams {
 
     val dir = options.installDir.filter(_.nonEmpty) match {
       case Some(d) => Paths.get(d)
-      case None => defaultDir
+      case None    => defaultDir
     }
 
     val graalvmParams = GraalvmParams(
