@@ -35,26 +35,39 @@ object SonatypeParams {
 
     val list = options.list.orElse(options.cleanList).getOrElse(false)
 
-    val checkActionsV =
-      if (!options.listProfiles && !list && !options.create && !options.close && !options.promote && !options.drop)
-        Validated.invalidNel("No action specified (pass either one of --list-profiles, --list, --create, --close, --drop, or --promote)")
+    val checkActionsV = {
+      val missingAction = !options.listProfiles &&
+        !list &&
+        !options.create &&
+        !options.close &&
+        !options.promote &&
+        !options.drop
+      if (missingAction)
+        Validated.invalidNel(
+          "No action specified (pass either one of --list-profiles, --list, --create, --close, --drop, or --promote)"
+        )
       else if (options.create && options.profileId.isEmpty && options.profile.isEmpty)
         Validated.invalidNel("Profile id or name required to create a repository")
       else if ((options.close || options.promote || options.drop) && options.repository.isEmpty)
         Validated.invalidNel("Repository required to close, promote, or drop")
       else
         Validated.validNel(())
+    }
 
     // FIXME this will duplicate error messages (re-uses the same Validated
 
     val authV = (options.user, options.password) match {
       case (None, None) =>
-        (Option(System.getenv("SONATYPE_USERNAME")), Option(System.getenv("SONATYPE_PASSWORD"))) match {
+        val userOpt     = Option(System.getenv("SONATYPE_USERNAME"))
+        val passwordOpt = Option(System.getenv("SONATYPE_PASSWORD"))
+        (userOpt, passwordOpt) match {
           case (Some(u), Some(p)) =>
             Validated.validNel(Some(Authentication(u, p)))
           case _ =>
             // should we allow no authentication somehow?
-            Validated.invalidNel("No authentication specified (either pass --user and --password, or set SONATYPE_USERNAME and SONATYPE_PASSWORD in the environment)")
+            Validated.invalidNel(
+              "No authentication specified (either pass --user and --password, or set SONATYPE_USERNAME and SONATYPE_PASSWORD in the environment)"
+            )
         }
       case (Some(u), Some(p)) =>
         Validated.validNel(Some(Authentication(u, p)))

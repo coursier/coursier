@@ -3,6 +3,7 @@ package coursier.cli.options
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.install.SharedChannelOptions
 
+// format: off
 final case class RepositoryOptions(
 
   @Help("Repository - for multiple repositories, separate with comma and/or add this option multiple times (e.g. -r central,ivy2local -r sonatype:snapshots, or equivalently -r central,ivy2local,sonatype:snapshots)")
@@ -24,8 +25,9 @@ final case class RepositoryOptions(
     channelOptions: SharedChannelOptions = SharedChannelOptions()
 
 )
+// format: on
 
 object RepositoryOptions {
   implicit val parser = Parser[RepositoryOptions]
-  implicit val help = caseapp.core.help.Help[RepositoryOptions]
+  implicit val help   = caseapp.core.help.Help[RepositoryOptions]
 }

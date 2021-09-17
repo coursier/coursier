@@ -33,7 +33,8 @@ object InMemoryRepository {
           val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location)(_.location)
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
           Some(new File(cachePath, s"file/${url.getPath}").exists())
-        } else {
+        }
+        else {
           Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
         }
       }
@@ -44,8 +45,12 @@ object InMemoryRepository {
         var conn: URLConnection = null
         try {
           conn = ConnectionBuilder(url.toString)
-            .withFollowHttpToHttpsRedirections(cacheOpt.fold(false)(_.followHttpToHttpsRedirections))
-            .withFollowHttpsToHttpRedirections(cacheOpt.fold(false)(_.followHttpsToHttpRedirections))
+            .withFollowHttpToHttpsRedirections(
+              cacheOpt.fold(false)(_.followHttpToHttpsRedirections)
+            )
+            .withFollowHttpsToHttpRedirections(
+              cacheOpt.fold(false)(_.followHttpsToHttpRedirections)
+            )
             .withSslSocketFactoryOpt(cacheOpt.flatMap(_.sslSocketFactoryOpt))
             .withHostnameVerifierOpt(cacheOpt.flatMap(_.hostnameVerifierOpt))
             .withMethod("HEAD")
@@ -148,9 +153,8 @@ object InMemoryRepository {
       .get((module, version))
       .fold[Either[String, (ArtifactSource, Project)]](Left("No fallback URL found")) {
         case (url, _) =>
-
           val urlStr = url.toExternalForm
-          val idx = urlStr.lastIndexOf('/')
+          val idx    = urlStr.lastIndexOf('/')
 
           if (idx < 0 || urlStr.endsWith("/"))
             Left(s"$url doesn't point to a file")
@@ -177,7 +181,8 @@ object InMemoryRepository {
               )
 
               Right((this, proj))
-            } else
+            }
+            else
               Left(s"$fileName not found under $dirUrlStr")
           }
       }
@@ -196,7 +201,7 @@ object InMemoryRepository {
       .map {
         case (url, changing) =>
           val url0 = url.toString
-          val ext = url0.substring(url0.lastIndexOf('.') + 1)
+          val ext  = url0.substring(url0.lastIndexOf('.') + 1)
           val pub = Publication(
             dependency.module.name.value, // ???
             Type(ext),

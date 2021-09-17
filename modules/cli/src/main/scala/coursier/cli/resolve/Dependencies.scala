@@ -9,10 +9,7 @@ import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModul
 
 object Dependencies {
 
-
-  /**
-    * Tries to parse dependencies as a simple dependencies.
-    */
+  /** Tries to parse dependencies as a simple dependencies. */
   def handleDependencies(
     rawDependencies: Seq[String]
   ): ValidatedNel[String, List[(JavaOrScalaDependency, Map[String, String])]] =
@@ -20,7 +17,7 @@ object Dependencies {
       .map { s =>
         DependencyParser.javaOrScalaDependencyParams(s) match {
           case Left(error) => Validated.invalidNel(error)
-          case Right(d) => Validated.validNel(List(d))
+          case Right(d)    => Validated.validNel(List(d))
         }
       }
       .toList
@@ -32,7 +29,6 @@ object Dependencies {
   ): Either[Throwable, (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, String), URL])] =
     handleDependencies(rawDependencies) match {
       case Validated.Valid(l) =>
-
         val l0 = l ++ extraDependencies
 
         val deps = l0.map(_._1)
@@ -59,7 +55,7 @@ object Dependencies {
 
   def addExclusions(
     dep: Dependency,
-    perModuleExclude: Map[Module, Set[Module]],
+    perModuleExclude: Map[Module, Set[Module]]
   ): Dependency =
     perModuleExclude.get(dep.module) match {
       case None => dep
@@ -71,7 +67,7 @@ object Dependencies {
 
   def addExclusions(
     deps: Seq[Dependency],
-    perModuleExclude: Map[Module, Set[Module]],
+    perModuleExclude: Map[Module, Set[Module]]
   ): Seq[Dependency] =
     deps.map { dep =>
       addExclusions(dep, perModuleExclude)

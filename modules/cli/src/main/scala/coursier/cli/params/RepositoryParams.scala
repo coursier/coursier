@@ -22,10 +22,13 @@ final case class RepositoryParams(
 
 object RepositoryParams {
 
-  def apply(options: RepositoryOptions, hasSbtPlugins: Boolean = false): ValidatedNel[String, RepositoryParams] = {
+  def apply(
+    options: RepositoryOptions,
+    hasSbtPlugins: Boolean = false
+  ): ValidatedNel[String, RepositoryParams] = {
 
     val noDefaultShortcut = options.repository.exists(_.startsWith("!"))
-    val repositoryInput = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
+    val repositoryInput   = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
     val repositoriesV = Validated.fromEither(
       RepositoryParser.repositories(repositoryInput)
         .either
@@ -39,7 +42,6 @@ object RepositoryParams {
 
     (repositoriesV, channelsV).mapN {
       (repos0, channels) =>
-
         // preprend defaults
         val defaults =
           if (options.noDefault || noDefaultShortcut) Nil
@@ -54,14 +56,14 @@ object RepositoryParams {
         // take sbtPluginHack into account
         repos = repos.map {
           case m: MavenRepository => m.withSbtAttrStub(options.sbtPluginHack)
-          case other => other
+          case other              => other
         }
 
         // take dropInfoAttr into account
         if (options.dropInfoAttr)
           repos = repos.map {
             case m: IvyRepository => m.withDropInfoAttributes(true)
-            case other => other
+            case other            => other
           }
 
         RepositoryParams(

@@ -11,7 +11,7 @@ import coursier.util.{Artifact, Gather}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TestRunner[F[_]: Gather : ToFuture](
+class TestRunner[F[_]: Gather: ToFuture](
   artifact: Repository.Fetch[F] = compatibility.taskArtifact,
   repositories: Seq[Repository] = Seq(MavenRepository("https://repo1.maven.org/maven2"))
 )(implicit ec: ExecutionContext) {
@@ -37,7 +37,14 @@ class TestRunner[F[_]: Gather : ToFuture](
     val r = Resolution()
       .withRootDependencies(deps)
       .withFilter(filter)
-      .withUserActivations(profiles.map(_.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap))
+      .withUserActivations {
+        profiles.map { profiles0 =>
+          profiles0
+            .iterator
+            .map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true)
+            .toMap
+        }
+      }
       .withMapDependencies(mapDependencies)
       .withForceVersions(forceVersions)
       .withDefaultConfiguration(defaultConfiguration)
@@ -48,8 +55,8 @@ class TestRunner[F[_]: Gather : ToFuture](
     val t = Gather[F].map(r) { res =>
 
       val metadataErrors = res.errors
-      val conflicts = res.conflicts
-      val isDone = res.isDone
+      val conflicts      = res.conflicts
+      val isDone         = res.isDone
       assert(metadataErrors.isEmpty)
       assert(conflicts.isEmpty)
       assert(isDone)
@@ -95,7 +102,15 @@ class TestRunner[F[_]: Gather : ToFuture](
       def tryRead = textResource(path)
 
       val dep = Dependency(module, version).withConfiguration(configuration)
-      val res = await(resolve(Seq(dep), extraRepos = extraRepos, profiles = profiles, forceVersions = forceVersions, defaultConfiguration = defaultConfiguration))
+      val res = await {
+        resolve(
+          Seq(dep),
+          extraRepos = extraRepos,
+          profiles = profiles,
+          forceVersions = forceVersions,
+          defaultConfiguration = defaultConfiguration
+        )
+      }
 
       val result = res
         .orderedDependencies
@@ -104,7 +119,12 @@ class TestRunner[F[_]: Gather : ToFuture](
             .get(dep.moduleVersion)
             .map { case (_, proj) => proj }
           val dep0 = dep.withVersion(projOpt.fold(dep.version)(_.actualVersion))
-          (dep0.module.organization.value, dep0.module.nameWithAttributes, dep0.version, dep0.configuration.value)
+          (
+            dep0.module.organization.value,
+            dep0.module.nameWithAttributes,
+            dep0.version,
+            dep0.configuration.value
+          )
         }
         .distinct
         .map {
@@ -189,8 +209,8 @@ class TestRunner[F[_]: Gather : ToFuture](
       val res = await(resolve(deps, extraRepos = extraRepos))
 
       val metadataErrors = res.errors
-      val conflicts = res.conflicts
-      val isDone = res.isDone
+      val conflicts      = res.conflicts
+      val isDone         = res.isDone
       assert(metadataErrors.isEmpty)
       assert(conflicts.isEmpty)
       assert(isDone)

@@ -54,7 +54,7 @@ object AuthenticationTests extends TestSuite {
         )
         .run()
     }
-    val modules = result.minDependencies.map(_.module)
+    val modules         = result.minDependencies.map(_.module)
     val expectedModules = Set(mod"com.abc:test")
     assert(modules == expectedModules)
   }
@@ -76,17 +76,17 @@ object AuthenticationTests extends TestSuite {
       val credentialsStr = s"$testHost $user:$password"
       val credentials = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
-        case Right(c) => c
+        case Right(c)    => c
       }
       testCredentials(credentials)
     }
 
     test {
       val content =
-       s"""foo.username=$user
-          |foo.password=$password
-          |foo.host=$testHost
-          |""".stripMargin
+        s"""foo.username=$user
+           |foo.password=$password
+           |foo.host=$testHost
+           |""".stripMargin
       val allCredentials = FileCredentials.parse(content, s"'$content'")
       assert(allCredentials.length == 1)
       val credentials = allCredentials.head

@@ -17,12 +17,16 @@ package object compatibility {
   private def textResource0(path: String)(implicit ec: ExecutionContext): Future[String] = {
     val p = Promise[String]()
 
-    fs.readFile(path, "utf-8", {
-      (err: js.Dynamic, data: js.Dynamic) =>
-        if (js.typeOf(err) == "undefined" || err == null) p.success(data.asInstanceOf[String])
-        else p.failure(new Exception(err.toString))
-        ()
-    }: js.Function2[js.Dynamic, js.Dynamic, Unit])
+    fs.readFile(
+      path,
+      "utf-8",
+      {
+        (err: js.Dynamic, data: js.Dynamic) =>
+          if (js.typeOf(err) == "undefined" || err == null) p.success(data.asInstanceOf[String])
+          else p.failure(new Exception(err.toString))
+          ()
+      }: js.Function2[js.Dynamic, js.Dynamic, Unit]
+    )
 
     p.future
   }

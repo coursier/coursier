@@ -2,6 +2,7 @@ package coursier.cli.publish.options
 
 import caseapp._
 
+// format: off
 final case class MetadataOptions(
 
   @Name("org")
@@ -28,8 +29,9 @@ final case class MetadataOptions(
   mavenMetadata: Option[Boolean] = None
 
 )
+// format: on
 
 object MetadataOptions {
   implicit val parser = Parser[MetadataOptions]
-  implicit val help = caseapp.core.help.Help[MetadataOptions]
+  implicit val help   = caseapp.core.help.Help[MetadataOptions]
 }

@@ -49,7 +49,10 @@ import dataclass.data
           }
         case Some(Right(profileUpdater)) =>
           val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
-          confirm.confirm(s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
+          confirm.confirm(
+            s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?",
+            default = true
+          ).flatMap {
             case false => Task.point(())
             case true =>
               Task.delay {
@@ -88,7 +91,8 @@ import dataclass.data
 
     revertedTask.flatMap { reverted =>
       val message =
-        if (reverted) s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
+        if (reverted)
+          s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
         else s"$binDir not setup in PATH"
 
       Task.delay(System.err.println(message))

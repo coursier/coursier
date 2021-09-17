@@ -3,7 +3,7 @@ package coursier.cli.install
 import java.nio.file.{Path, Paths}
 
 final case class ListParams(
-    installPath: Path
+  installPath: Path
 )
 
 object ListParams {

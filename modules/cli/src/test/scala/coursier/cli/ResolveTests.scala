@@ -6,7 +6,13 @@ import java.nio.charset.StandardCharsets
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
-import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
+import coursier.cli.resolve.{
+  Resolve,
+  ResolveException,
+  ResolveOptions,
+  ResolveParams,
+  SharedResolveOptions
+}
 import coursier.util.Sync
 import utest._
 
@@ -15,7 +21,7 @@ import scala.concurrent.ExecutionContext
 object ResolveTests extends TestSuite {
 
   val pool = Sync.fixedThreadPool(6)
-  val ec = ExecutionContext.fromExecutorService(pool)
+  val ec   = ExecutionContext.fromExecutorService(pool)
 
   override def utestAfterAll(): Unit = {
     pool.shutdown()
@@ -26,7 +32,14 @@ object ResolveTests extends TestSuite {
   def paramsOrThrow(options: ResolveOptions): ResolveParams =
     ResolveParams(options) match {
       case Validated.Invalid(errors) =>
-        sys.error("Got errors:" + System.lineSeparator() + errors.toList.map(e => s"  $e" + System.lineSeparator()).mkString)
+        sys.error(
+          "Got errors:" +
+            System.lineSeparator() +
+            errors
+              .toList
+              .map(e => s"  $e" + System.lineSeparator())
+              .mkString
+        )
       case Validated.Valid(params0) =>
         params0
     }
@@ -35,7 +48,6 @@ object ResolveTests extends TestSuite {
     def noCrLf: String =
       s.replace("\r\n", "\n")
   }
-
 
   val tests = Tests {
     test("print what depends on") {
@@ -109,7 +121,10 @@ object ResolveTests extends TestSuite {
         forcePrint = true
       )
       val args = RemainingArgs(
-        Seq("ioi.get-coursier:coursier-core_2.12:1.1.0-M9", "io.get-coursier:coursier-cache_2.12:1.1.0-M9"),
+        Seq(
+          "ioi.get-coursier:coursier-core_2.12:1.1.0-M9",
+          "io.get-coursier:coursier-cache_2.12:1.1.0-M9"
+        ),
         Nil
       )
 
@@ -123,16 +138,26 @@ object ResolveTests extends TestSuite {
 
       val output = new String(stdout.toByteArray, "UTF-8")
         .replace(sys.props("user.home"), "HOME")
+      val notFoundPath = Seq(
+        "HOME",
+        ".ivy2",
+        "local",
+        "ioi.get-coursier",
+        "coursier-core_2.12",
+        "1.1.0-M9",
+        "ivys",
+        "ivy.xml"
+      ).mkString(File.separator)
       val expectedOutput =
-       s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
-          |  not found: ${Seq("HOME", ".ivy2", "local", "ioi.get-coursier", "coursier-core_2.12", "1.1.0-M9", "ivys", "ivy.xml").mkString(File.separator)}
-          |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
-          |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
-          |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
-          |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
-          |org.scala-lang:scala-library:2.12.7:default
-          |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
-          |""".stripMargin
+        s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
+           |  not found: $notFoundPath
+           |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
+           |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
+           |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
+           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
+           |org.scala-lang:scala-library:2.12.7:default
+           |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
+           |""".stripMargin
 
       assert(output.noCrLf == expectedOutput.noCrLf)
     }
@@ -301,7 +326,8 @@ object ResolveTests extends TestSuite {
         .unsafeRun()(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
-      val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
+      val expectedOutput =
+        "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
       assert(output.noCrLf == expectedOutput.noCrLf)
     }
@@ -499,12 +525,23 @@ object ResolveTests extends TestSuite {
             "com.chuusaiz::shapeless:2.3.3"
           )
           true
-        } catch {
+        }
+        catch {
           case e: ResolveException =>
+            val notFoundPath = Seq(
+              "HOME",
+              ".ivy2",
+              "local",
+              "com.chuusaiz",
+              "shapeless_2.13",
+              "2.3.3",
+              "ivys",
+              "ivy.xml"
+            ).mkString(File.separator)
             val expectedMessage =
-             s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
-                |  not found: ${Seq("HOME", ".ivy2", "local", "com.chuusaiz", "shapeless_2.13", "2.3.3", "ivys", "ivy.xml").mkString(File.separator)}
-                |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
+              s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
+                 |  not found: $notFoundPath
+                 |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
             val message = e.message.replace(System.getProperty("user.home"), "HOME")
             assert(message.noCrLf == expectedMessage.noCrLf)
             false

@@ -33,12 +33,12 @@ final case class SharedJavaParams(
         .withBaseDirectory(jvmDir.toFile)
         .withCache(cache)
       jvmChannelOpt match {
-        case None => c.withDefaultIndex
+        case None             => c.withDefaultIndex
         case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
       }
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
-    val jvmCache = jvmCacheOf(cache)
+    val jvmCache         = jvmCacheOf(cache)
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
@@ -89,9 +89,9 @@ object SharedJavaParams {
       JvmCache.defaultBaseDirectory.toPath
     }
     val (allowSystem, requireSystem) = options.systemJvm match {
-      case None => (true, false)
+      case None        => (true, false)
       case Some(false) => (false, false)
-      case Some(true) => (true, true)
+      case Some(true)  => (true, true)
     }
 
     val checkSystemV =
@@ -108,8 +108,8 @@ object SharedJavaParams {
         .map(JvmIndex.handleAliases)
         .map { s => JvmChannel.parse(s) }
       parsed match {
-        case None => Validated.validNel(None)
-        case Some(Left(err)) => Validated.invalidNel(s"Invalid --jvm-index value: $err")
+        case None                 => Validated.validNel(None)
+        case Some(Left(err))      => Validated.invalidNel(s"Invalid --jvm-index value: $err")
         case Some(Right(channel)) => Validated.validNel(Some(channel))
       }
     }
