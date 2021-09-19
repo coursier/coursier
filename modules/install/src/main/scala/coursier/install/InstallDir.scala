@@ -10,11 +10,10 @@ import java.util.stream.Stream
 import java.util.zip.{ZipEntry, ZipFile}
 
 import coursier.Fetch
-import coursier.cache.{ArtifactError, Cache, FileCache}
+import coursier.cache.{ArchiveType, ArtifactError, Cache, FileCache}
 import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
-import coursier.jvm.ArchiveType
 import coursier.launcher.{
   AssemblyGenerator,
   BootstrapGenerator,

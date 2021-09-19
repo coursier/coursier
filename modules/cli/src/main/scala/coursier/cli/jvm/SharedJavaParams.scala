@@ -6,13 +6,12 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.Repository
-import coursier.cache.Cache
+import coursier.cache.{ArchiveCache, Cache}
 import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
 
 final case class SharedJavaParams(
   jvm: Option[String],
-  jvmDir: Path,
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
   localOnly: Boolean,
@@ -29,9 +28,9 @@ final case class SharedJavaParams(
     verbosity: Int
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
+      val archiveCache = ArchiveCache().withCache(cache)
       val c = JvmCache()
-        .withBaseDirectory(jvmDir.toFile)
-        .withCache(cache)
+        .withArchiveCache(archiveCache)
       jvmChannelOpt match {
         case None             => c.withDefaultIndex
         case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
@@ -42,7 +41,6 @@ final case class SharedJavaParams(
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
-      .withJvmCacheLogger(jvmCacheLogger(verbosity))
       .withAllowSystem(allowSystemJvm)
       .withInstallIfNeeded(!localOnly)
       .withUpdate(update)
@@ -85,9 +83,6 @@ final case class SharedJavaParams(
 object SharedJavaParams {
   def apply(options: SharedJavaOptions): ValidatedNel[String, SharedJavaParams] = {
     val jvm = options.jvm.map(_.trim).filter(_.nonEmpty)
-    val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
-      JvmCache.defaultBaseDirectory.toPath
-    }
     val (allowSystem, requireSystem) = options.systemJvm match {
       case None        => (true, false)
       case Some(false) => (false, false)
@@ -118,7 +113,6 @@ object SharedJavaParams {
       (_, indexChannelOpt) =>
         SharedJavaParams(
           jvm,
-          jvmDir,
           allowSystem,
           requireSystem,
           options.localOnly,

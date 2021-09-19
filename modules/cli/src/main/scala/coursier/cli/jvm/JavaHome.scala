@@ -30,9 +30,9 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       params.repository.repositories,
       params.output.verbosity
     )
-    val task = javaHome.getWithRetainedId(params.shared.id)
+    val task = javaHome.getWithIsSystem(params.shared.id)
 
-    val (retainedId, home) = logger.use {
+    val (isSystem, home) = logger.use {
       try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
       catch {
         case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
@@ -41,13 +41,13 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       }
     }
 
-    lazy val envUpdate = javaHome.environmentFor(retainedId, home)
+    lazy val envUpdate = javaHome.environmentFor(isSystem, home)
     if (params.env.env) {
-      val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+      val script = coursier.jvm.JavaHome.finalScript(envUpdate)
       print(script)
     }
     else if (params.env.disableEnv) {
-      val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+      val script = coursier.jvm.JavaHome.disableScript()
       print(script)
     }
     else if (params.env.setup) {

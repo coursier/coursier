@@ -5,9 +5,10 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Path}
 import java.util.Locale
 
-import coursier.cache.{Cache, CacheLogger}
+import coursier.cache.{ArchiveCache, Cache, CacheLogger}
 import coursier.cache.internal.FileUtil
 import coursier.env.EnvironmentUpdate
+import coursier.jvm.util.CommandOutput
 import coursier.util.Task
 import dataclass._
 
@@ -16,7 +17,7 @@ import dataclass._
   installIfNeeded: Boolean = true,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmIndex.defaultOs(),
-  commandOutput: JavaHome.CommandOutput = JavaHome.CommandOutput.default(),
+  commandOutput: CommandOutput = CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,
   @since
@@ -27,13 +28,9 @@ import dataclass._
   def withCache(cache: JvmCache): JavaHome =
     withCache(Some(cache))
 
-  def withJvmCacheLogger(logger: JvmCacheLogger): JavaHome =
+  def withArchiveCache(archiveCache: ArchiveCache[Task]): JavaHome =
     withCache(
-      cache.map(_.withDefaultLogger(logger))
-    )
-  def withCoursierCache(cache: Cache[Task]): JavaHome =
-    withCache(
-      this.cache.map(_.withCache(cache))
+      this.cache.map(_.withArchiveCache(archiveCache))
     )
 
   def default(): Task[File] =
@@ -96,16 +93,16 @@ import dataclass._
       Task.point(None)
 
   def getIfInstalled(id: String): Task[Option[File]] =
-    getWithRetainedIdIfInstalled(id)
+    getWithIsSystemIfInstalled(id)
       .map(_.map(_._2))
 
-  def getWithRetainedIdIfInstalled(id: String): Task[Option[(String, File)]] =
+  def getWithIsSystemIfInstalled(id: String): Task[Option[(Boolean, File)]] =
     if (id == JavaHome.systemId)
-      system().map(_.map(JavaHome.systemId -> _))
+      system().map(_.map(true -> _))
     else if (id.startsWith(JavaHome.systemId + "|"))
       system().flatMap {
-        case None      => getWithRetainedIdIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
-        case Some(dir) => Task.point(Some(JavaHome.systemId -> dir))
+        case None      => getWithIsSystemIfInstalled(id.stripPrefix(JavaHome.systemId + "|"))
+        case Some(dir) => Task.point(Some(true -> dir))
       }
     else
       noUpdateCache.orElse(cache) match {
@@ -117,32 +114,32 @@ import dataclass._
             else
               id
 
-          cache0.getIfInstalled(id0)
+          cache0.getIfInstalled(id0).map(_.map((false, _)))
       }
 
   def get(id: String): Task[File] =
-    getWithRetainedId(id)
+    getWithIsSystem(id)
       .map(_._2)
 
-  def getWithRetainedId(id: String): Task[(String, File)] =
+  def getWithIsSystem(id: String): Task[(Boolean, File)] =
     if (update)
-      getWithRetainedId0(id)
+      getWithIsSystem0(id)
     else
-      getWithRetainedIdIfInstalled(id).flatMap {
+      getWithIsSystemIfInstalled(id).flatMap {
         case Some(res) => Task.point(res)
-        case None      => getWithRetainedId0(id)
+        case None      => getWithIsSystem0(id)
       }
 
-  private def getWithRetainedId0(id: String): Task[(String, File)] =
+  private def getWithIsSystem0(id: String): Task[(Boolean, File)] =
     if (id == JavaHome.systemId)
       system().flatMap {
         case None      => Task.fail(new Exception("No system JVM found"))
-        case Some(dir) => Task.point(JavaHome.systemId -> dir)
+        case Some(dir) => Task.point(true -> dir)
       }
     else if (id.startsWith(JavaHome.systemId + "|"))
       system().flatMap {
-        case None      => getWithRetainedId(id.stripPrefix(JavaHome.systemId + "|"))
-        case Some(dir) => Task.point(JavaHome.systemId -> dir)
+        case None      => getWithIsSystem(id.stripPrefix(JavaHome.systemId + "|"))
+        case Some(dir) => Task.point(true -> dir)
       }
     else {
       val id0 =
@@ -154,7 +151,7 @@ import dataclass._
       cache match {
         case None => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
-          cache0.get(id0, installIfNeeded).map(home => cache0.idOf(home).getOrElse(id0) -> home)
+          cache0.get(id0, installIfNeeded).map(home => false -> home)
       }
     }
 
@@ -167,12 +164,13 @@ import dataclass._
     }
 
   def environmentFor(id: String): Task[EnvironmentUpdate] =
-    get(id).map { home =>
-      JavaHome.environmentFor(id, home, isMacOs = os == "darwin")
+    getWithIsSystem(id).map {
+      case (isSystem, home) =>
+        JavaHome.environmentFor(isSystem, home, isMacOs = os == "darwin")
     }
 
-  def environmentFor(id: String, home: File): EnvironmentUpdate =
-    JavaHome.environmentFor(id, home, isMacOs = os == "darwin")
+  def environmentFor(isSystem: Boolean, home: File): EnvironmentUpdate =
+    JavaHome.environmentFor(isSystem, home, isMacOs = os == "darwin")
 
 }
 
@@ -186,11 +184,11 @@ object JavaHome {
     s"$systemId|$defaultJvm"
 
   def environmentFor(
-    id: String,
+    isSystem: Boolean,
     javaHome: File,
     isMacOs: Boolean
   ): EnvironmentUpdate =
-    if (id == systemId)
+    if (isSystem)
       EnvironmentUpdate.empty
     else {
       val addPath = !isMacOs // /usr/bin/java reads JAVA_HOME on macOS, no need to update the PATH
@@ -240,61 +238,6 @@ object JavaHome {
       None
   }
 
-  trait CommandOutput {
-    final def run(
-      command: Seq[String],
-      keepErrStream: Boolean
-    ): Either[Int, String] =
-      run(command, keepErrStream, Nil)
-    def run(
-      command: Seq[String],
-      keepErrStream: Boolean,
-      extraEnv: Seq[(String, String)]
-    ): Either[Int, String]
-  }
-
-  object CommandOutput {
-    private final class DefaultCommandOutput extends CommandOutput {
-      def run(
-        command: Seq[String],
-        keepErrStream: Boolean,
-        extraEnv: Seq[(String, String)]
-      ): Either[Int, String] = {
-        val b = new ProcessBuilder(command: _*)
-        b.redirectInput(ProcessBuilder.Redirect.INHERIT)
-        b.redirectOutput(ProcessBuilder.Redirect.PIPE)
-        b.redirectError(ProcessBuilder.Redirect.PIPE)
-        b.redirectErrorStream(true)
-        val env = b.environment()
-        for ((k, v) <- extraEnv)
-          env.put(k, v)
-        val p = b.start()
-        p.getOutputStream.close()
-        val output  = new String(FileUtil.readFully(p.getInputStream), Charset.defaultCharset())
-        val retCode = p.waitFor()
-        if (retCode == 0)
-          Right(output)
-        else
-          Left(retCode)
-      }
-    }
-
-    def default(): CommandOutput =
-      new DefaultCommandOutput
-
-    def apply(
-      f: (Seq[String], Boolean, Seq[(String, String)]) => Either[Int, String]
-    ): CommandOutput =
-      new CommandOutput {
-        def run(
-          command: Seq[String],
-          keepErrStream: Boolean,
-          extraEnv: Seq[(String, String)]
-        ): Either[Int, String] =
-          f(command, keepErrStream, extraEnv)
-      }
-  }
-
   private[coursier] def csJavaFailVariable: String =
     "__CS_JAVA_FAIL"
 
@@ -325,7 +268,6 @@ object JavaHome {
 
   def finalScript(
     envUpdate: EnvironmentUpdate,
-    cacheDirectory: Path,
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
     pathSeparator: String = File.pathSeparator
   ): String = {
@@ -335,10 +277,6 @@ object JavaHome {
         val saveJavaHome = """export CS_FORMER_JAVA_HOME="$JAVA_HOME""""
         saveJavaHome + "\n"
       }
-      else if (envUpdate.pathLikeAppends.exists(_._1 == "PATH")) {
-        val updatedPathOpt = maybeRemovePath(cacheDirectory, getEnv, pathSeparator)
-        updatedPathOpt.getOrElse("")
-      }
       else
         ""
 
@@ -346,28 +284,18 @@ object JavaHome {
   }
 
   def disableScript(
-    cacheDirectory: Path,
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
     pathSeparator: String = File.pathSeparator,
     isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
-  ): String = {
-
-    val maybeReinstateFormerJavaHome =
-      getEnv("CS_FORMER_JAVA_HOME") match {
-        case None => ""
-        case Some("") =>
-          """unset JAVA_HOME""" + "\n" +
-            """unset CS_FORMER_JAVA_HOME""" + "\n"
-        case Some(_) =>
-          """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
-            """unset CS_FORMER_JAVA_HOME""" + "\n"
-      }
-
-    val maybeRemovePath0 =
-      if (isMacOs) ""
-      else maybeRemovePath(cacheDirectory, getEnv, pathSeparator).getOrElse("")
-
-    maybeReinstateFormerJavaHome + maybeRemovePath0
-  }
+  ): String =
+    getEnv("CS_FORMER_JAVA_HOME") match {
+      case None => ""
+      case Some("") =>
+        """unset JAVA_HOME""" + "\n" +
+          """unset CS_FORMER_JAVA_HOME""" + "\n"
+      case Some(_) =>
+        """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
+          """unset CS_FORMER_JAVA_HOME""" + "\n"
+    }
 
 }
