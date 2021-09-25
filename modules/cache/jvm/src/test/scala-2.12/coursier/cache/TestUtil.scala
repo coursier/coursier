@@ -32,7 +32,7 @@ object TestUtil {
 
     val dummyTrustManager = Array[TrustManager](
       new X509TrustManager {
-        def getAcceptedIssuers = null
+        def getAcceptedIssuers                                                  = null
         def checkClientTrusted(certs: Array[X509Certificate], authType: String) = {}
         def checkServerTrusted(certs: Array[X509Certificate], authType: String) = {}
       }
