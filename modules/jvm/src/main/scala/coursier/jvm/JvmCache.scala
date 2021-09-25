@@ -50,39 +50,48 @@ import scala.util.control.NonFatal
     tmpDir: File
   ) =
     withLockFor(dir) {
-      logger0.extracting(entry.id, archive.getAbsolutePath, dir)
-      val dir0 =
-        try {
+      // Check again that the entry doesn't exist, since another process might
+      // have extracted the archive between the initial check and us acquiring
+      // the lock.
+      // Without this check, a race can result in a "Directory not empty"
+      // FileSystemException being raised on the Files.move(...) call below.
+      if (dir.isDirectory) {
+        dir
+      } else {
+        logger0.extracting(entry.id, archive.getAbsolutePath, dir)
+        val dir0 =
+          try {
 
-          JvmCache.deleteRecursive(tmpDir)
-          unArchiver.extract(entry.archiveType, archive, tmpDir, overwrite = false)
+            JvmCache.deleteRecursive(tmpDir)
+            unArchiver.extract(entry.archiveType, archive, tmpDir, overwrite = false)
 
-          val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
-            case Array() =>
-              throw new JvmCache.EmptyArchive(archive, entry.url)
-            case Array(rootDir0) =>
-              if (rootDir0.isDirectory)
-                rootDir0
-              else
-                throw new JvmCache.NoDirectoryFoundInArchive(archive, entry.url)
-            case other =>
-              throw new JvmCache.UnexpectedContentInArchive(
-                archive,
-                entry.url,
-                other.map(_.getName).toSeq
-              )
+            val rootDir = tmpDir.listFiles().filter(!_.getName.startsWith(".")) match {
+              case Array() =>
+                throw new JvmCache.EmptyArchive(archive, entry.url)
+              case Array(rootDir0) =>
+                if (rootDir0.isDirectory)
+                  rootDir0
+                else
+                  throw new JvmCache.NoDirectoryFoundInArchive(archive, entry.url)
+              case other =>
+                throw new JvmCache.UnexpectedContentInArchive(
+                  archive,
+                  entry.url,
+                  other.map(_.getName).toSeq
+                )
+            }
+            Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
+            JvmCache.deleteRecursive(tmpDir)
+            dir
           }
-          Files.move(rootDir.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
-          JvmCache.deleteRecursive(tmpDir)
-          dir
-        }
-        catch {
-          case NonFatal(e) =>
-            logger0.extractionFailed(entry.id, entry.url, dir, e)
-            throw e
-        }
-      logger0.extracted(entry.id, entry.url, dir)
-      dir0
+          catch {
+            case NonFatal(e) =>
+              logger0.extractionFailed(entry.id, entry.url, dir, e)
+              throw e
+          }
+        logger0.extracted(entry.id, entry.url, dir)
+        dir0
+      }
     }
 
   private def tryRemove(
