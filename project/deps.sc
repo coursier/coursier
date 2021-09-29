@@ -13,7 +13,7 @@ object Deps {
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
-  def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.0"
+  def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.1"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.2"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
