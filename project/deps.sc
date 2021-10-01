@@ -29,7 +29,7 @@ object Deps {
   def mdoc            = ivy"org.scalameta::mdoc:2.2.23"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
-  def okhttp          = ivy"com.squareup.okhttp3:okhttp:3.14.9"
+  def okhttp          = ivy"com.squareup.okhttp3:okhttp:4.9.2"
   def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.2.5"
   def plexusContainerDefault =
     ivy"org.codehaus.plexus:plexus-container-default:2.1.0" // plexus-archiver needs its loggers
