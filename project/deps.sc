@@ -77,5 +77,5 @@ object ScalaVersions {
   // only used by the launcher module
   def scala211 = "2.11.12"
 
-  def scalaJs = "1.5.1"
+  def scalaJs = "1.7.0"
 }
