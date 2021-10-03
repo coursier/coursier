@@ -9,7 +9,24 @@ import coursier.util.{Artifact, Task}
 import java.io.File
 import java.nio.file.Files
 
+sealed abstract class PrebuiltApp extends Product with Serializable {
+  def artifact: Artifact
+  def file: File
+}
+
 object PrebuiltApp {
+
+  final case class Uncompressed(
+    artifact: Artifact,
+    file: File
+  ) extends PrebuiltApp
+
+  final case class Compressed(
+    artifact: Artifact,
+    file: File,
+    archiveType: ArchiveType,
+    pathInArchiveOpt: Option[String]
+  ) extends PrebuiltApp
 
   def get(
     desc: AppDescriptor,
@@ -19,22 +36,38 @@ object PrebuiltApp {
     platform: Option[String],
     platformExtensions: Seq[String],
     preferPrebuilt: Boolean
-  ): Either[Seq[String], (Artifact, File, Option[(ArchiveType, Option[String])])] = {
+  ): Either[Seq[String], PrebuiltApp] = {
 
     def downloadArtifacts(
       artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]
-    ): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
+    ): Iterator[PrebuiltApp] =
       artifacts.iterator.flatMap {
         case (artifact, archiveTypeOpt) =>
           if (verbosity >= 2)
             System.err.println(s"Checking prebuilt launcher at ${artifact.url}")
-          cache.loggerOpt.foreach(_.init())
-          val maybeFile =
-            try cache.file(artifact).run.unsafeRun()(cache.ec)
-            finally cache.loggerOpt.foreach(_.stop())
-          handleArtifactErrors(maybeFile, artifact, verbosity)
-            .iterator
-            .map((artifact, _, archiveTypeOpt))
+          def maybeFileIt: Iterator[File] = {
+            cache.loggerOpt.foreach(_.init())
+            val maybeFile =
+              try cache.file(artifact).run.unsafeRun()(cache.ec)
+              finally cache.loggerOpt.foreach(_.stop())
+            handleArtifactErrors(maybeFile, artifact, verbosity)
+              .iterator
+          }
+          archiveTypeOpt match {
+            case None =>
+              maybeFileIt.map { f =>
+                Uncompressed(artifact, f)
+              }
+            case Some((archiveType, pathInArchiveOpt)) =>
+              maybeFileIt.map { f =>
+                Compressed(
+                  artifact,
+                  f,
+                  archiveType,
+                  pathInArchiveOpt
+                )
+              }
+          }
       }
 
     candidatePrebuiltArtifacts(

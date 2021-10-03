@@ -10,7 +10,7 @@ import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
 import coursier.Fetch
-import coursier.cache.{ArchiveCache, ArchiveType, ArtifactError, Cache, FileCache}
+import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
@@ -275,10 +275,10 @@ import scala.util.Properties
             .filterNot(appArtifacts.shared.toSet)
             .map {
               case (a, f) =>
-                (a, f, None)
+                PrebuiltApp.Uncompressed(a, f)
             }
         }
-        ArtifactsLock.ofArtifacts(artifacts.map { case (a, f, _) => (a, f) })
+        ArtifactsLock.ofArtifacts(artifacts.map(app => (app.artifact, app.file)))
       }
 
       val sharedLockOpt =
@@ -337,32 +337,34 @@ import scala.util.Properties
                 Generator.generate(params0, genDest)
               }
 
-            case Right((_, prebuilt, archiveTypeAndPathOpt)) =>
-              archiveTypeAndPathOpt match {
-                case Some((ArchiveType.Tgz, None)) =>
-                  ArchiveUtil.withFirstFileInTgz(prebuilt) { is =>
+            case Right(a: PrebuiltApp.Uncompressed) =>
+              Files.copy(a.file.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
+              FileUtil.tryMakeExecutable(genDest)
+
+            case Right(a: PrebuiltApp.Compressed) =>
+              (a.archiveType, a.pathInArchiveOpt) match {
+                case (ArchiveType.Tgz, None) =>
+                  ArchiveUtil.withFirstFileInTgz(a.file) { is =>
                     writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Tgz, Some(subPath))) =>
-                  ArchiveUtil.withFileInTgz(prebuilt, subPath) { is =>
+                case (ArchiveType.Tgz, Some(subPath)) =>
+                  ArchiveUtil.withFileInTgz(a.file, subPath) { is =>
                     writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Gzip, None)) =>
-                  ArchiveUtil.withGzipContent(prebuilt) { is =>
+                case (ArchiveType.Gzip, None) =>
+                  ArchiveUtil.withGzipContent(a.file) { is =>
                     writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Gzip, Some(_))) =>
+                case (ArchiveType.Gzip, Some(_)) =>
                   sys.error("Sub-path not supported for gzip files")
-                case Some((ArchiveType.Zip, None)) =>
-                  ArchiveUtil.withFirstFileInZip(prebuilt) { is =>
+                case (ArchiveType.Zip, None) =>
+                  ArchiveUtil.withFirstFileInZip(a.file) { is =>
                     writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Zip, Some(subPath))) =>
-                  ArchiveUtil.withFileInZip(prebuilt, subPath) { is =>
+                case (ArchiveType.Zip, Some(subPath)) =>
+                  ArchiveUtil.withFileInZip(a.file, subPath) { is =>
                     writeTo(is, genDest)
                   }
-                case None =>
-                  Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
               }
 
               FileUtil.tryMakeExecutable(genDest)
@@ -378,10 +380,11 @@ import scala.util.Properties
                 baseNativePreamble
                   .withKind(Preamble.Kind.Sh)
                   .withCommand(
+                    // FIXME needs directory
                     """"$(cd "$(dirname "$0")"; pwd)/""" +
                       auxName(dest0.getFileName.toString, "") +
                       "\""
-                  ) // FIXME needs directory
+                  )
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
