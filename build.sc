@@ -524,6 +524,9 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.svmSubs,
     ivy"com.chuusai::shapeless:2.3.7"
   )
+  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.svm
+  )
   def mainClass = Some("coursier.cli.Coursier")
   def finalMainClassOpt = T {
     Right("coursier.cli.Coursier"): Either[String, String]
