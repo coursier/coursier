@@ -4,6 +4,7 @@ import java.nio.channels.{FileChannel, FileLock}
 import java.nio.file.{Files, Path, StandardOpenOption, StandardCopyOption}
 
 import coursier.cache.CacheLocks
+import coursier.install.error.NotAnApplication
 import coursier.launcher.internal.FileUtil
 import coursier.paths.CachePath
 
@@ -129,7 +130,7 @@ object Updatable {
       CacheLocks.withLockOr(baseDir.toFile, dest.toFile)(Some(get), Some(None))
     }
     else
-      throw new InstallDir.NotAnApplication(dest)
+      throw new NotAnApplication(dest)
   }
 
 }

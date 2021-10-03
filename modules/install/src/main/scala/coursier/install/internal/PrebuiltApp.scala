@@ -3,6 +3,7 @@ package coursier.install.internal
 import coursier.cache.{ArchiveCache, ArchiveType, ArtifactError, Cache}
 import coursier.cache.loggers.ProgressBarRefreshDisplay
 import coursier.install.{AppDescriptor, InstallDir}
+import coursier.install.error.DownloadError
 import coursier.util.{Artifact, Task}
 
 import java.io.File
@@ -71,7 +72,7 @@ object PrebuiltApp {
         None
       case Left(e) =>
         // FIXME Ignore some other kind of errors too? Just warn about them?
-        throw new InstallDir.DownloadError(artifact.url, e)
+        throw new DownloadError(artifact.url, e)
       case Right(f) =>
         if (verbosity >= 1) {
           val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))

@@ -5,6 +5,7 @@ import caseapp.core.RemainingArgs
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.InstallDir
 import coursier.cache.Cache
+import coursier.install.error.InstallDirException
 import coursier.util.Task
 import coursier.util.EitherT
 import coursier.util.Artifact
@@ -49,7 +50,7 @@ object Uninstall extends CaseApp[UninstallOptions] {
         val resOpt =
           try installDir.delete(app)
           catch {
-            case e: InstallDir.InstallDirException if params.verbosity <= 1 =>
+            case e: InstallDirException if params.verbosity <= 1 =>
               System.err.println(e.getMessage)
               sys.exit(1)
           }

@@ -10,6 +10,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
+import coursier.install.error.NotAnApplication
 import coursier.launcher.Preamble
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
@@ -686,7 +687,7 @@ object InstallTests extends TestSuite {
             false
           }
           catch {
-            case _: InstallDir.NotAnApplication =>
+            case _: NotAnApplication =>
               true
           }
 

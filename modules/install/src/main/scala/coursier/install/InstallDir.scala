@@ -13,6 +13,7 @@ import coursier.Fetch
 import coursier.cache.{ArchiveCache, ArchiveType, ArtifactError, Cache, FileCache}
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
+import coursier.install.error._
 import coursier.install.internal._
 import coursier.launcher.{
   AssemblyGenerator,
@@ -632,32 +633,5 @@ object InstallDir {
         os.close()
     }
   }
-
-  sealed abstract class InstallDirException(message: String, cause: Throwable = null)
-      extends Exception(message, cause)
-
-  final class NoMainClassFound extends InstallDirException("No main class found")
-
-  // FIXME Keep more details
-  final class NoScalaVersionFound extends InstallDirException("No scala version found")
-
-  final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
-
-  final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
-      extends InstallDirException(
-        if (candidateUrls.isEmpty)
-          "No prebuilt binary available"
-        else
-          s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
-      )
-
-  final class CannotReadAppDescriptionInLauncher(val path: Path)
-      extends InstallDirException(s"Cannot read app description in $path")
-
-  final class NotAnApplication(val path: Path)
-      extends InstallDirException(s"File $path wasn't installed by cs install")
-
-  final class DownloadError(val url: String, cause: Throwable = null)
-      extends InstallDirException(s"Error downloading $url", cause)
 
 }
