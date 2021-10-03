@@ -26,6 +26,7 @@ import coursier.launcher.internal.{FileUtil, Windows}
 import shapeless._
 
 import scala.util.control.NonFatal
+import scala.util.Properties
 
 // format: off
 object Coursier extends CommandAppPreA(
@@ -37,6 +38,11 @@ object Coursier extends CommandAppPreA(
   // format: on
 
   val isGraalvmNativeImage = sys.props.contains("org.graalvm.nativeimage.imagecode")
+
+  if (Properties.isWin && isGraalvmNativeImage)
+    // The DLL loaded by LoadWindowsLibrary is statically linked in
+    // the coursier native image, no need to manually load it.
+    coursier.jniutils.LoadWindowsLibrary.assumeInitialized()
 
   if (System.console() != null && Windows.isWindows) {
     val useJni = coursier.paths.Util.useJni()
