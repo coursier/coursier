@@ -7,7 +7,7 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption
 import java.time.Instant
 import java.util.Locale
 import java.util.stream.Stream
-import java.util.zip.{ZipEntry, ZipFile}
+import java.util.zip.{GZIPInputStream, ZipEntry, ZipFile}
 
 import coursier.Fetch
 import coursier.cache.{ArchiveType, ArtifactError, Cache, FileCache}
@@ -349,6 +349,12 @@ import scala.util.control.NonFatal
                   withFileInTgz(prebuilt, subPath) { is =>
                     writeTo(is, genDest)
                   }
+                case Some((ArchiveType.Gzip, None)) =>
+                  withGzipContent(prebuilt) { is =>
+                    writeTo(is, genDest)
+                  }
+                case Some((ArchiveType.Gzip, Some(_))) =>
+                  sys.error("Sub-path not supported for gzip files")
                 case Some((ArchiveType.Zip, None)) =>
                   withFirstFileInZip(prebuilt) { is =>
                     writeTo(is, genDest)
@@ -812,6 +818,20 @@ object InstallDir {
       else
         throw new NoSuchElementException(s"$pathInArchive not found in $tgz")
     }
+
+  private def withGzipContent[T](gzFile: File)(f: InputStream => T): T = {
+    var fis: FileInputStream  = null
+    var gzis: GZIPInputStream = null
+    try {
+      fis = new FileInputStream(gzFile)
+      gzis = new GZIPInputStream(fis)
+      f(gzis)
+    }
+    finally {
+      if (gzis != null) gzis.close()
+      if (fis != null) fis.close()
+    }
+  }
 
   private def withFirstFileInZip[T](zip: File)(f: InputStream => T): T = {
     var zf: ZipFile     = null

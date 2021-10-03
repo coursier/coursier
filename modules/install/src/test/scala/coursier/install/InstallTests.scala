@@ -583,6 +583,54 @@ object InstallTests extends TestSuite {
       }
     }
 
+    test("install a prebuilt gzip-ed / zip-ed launcher") {
+      def run(os: String) = withTempDir { tmpDir =>
+
+        val id = "scalafmt-native"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scalameta::scalafmt-cli:3.0.6"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuiltBinaries(
+              Map(
+                "x86_64-apple-darwin" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
+                "x86_64-pc-linux" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
+                "x86_64-pc-win32" -> "zip+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
+              )
+            ),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os)
+          .withVerbosity(1)
+          .withOnlyPrebuilt(true)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = 0,
+            launcher.toAbsolutePath.toString,
+            "--help"
+          )
+          val expectedInOutput = "scalafmt 3.0.6"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux")
+      test("mac") - run("mac")
+      test("windows") - run("windows")
+    }
+
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
     //   val id = "echo"
     //   val appInfo0 = appInfo(
