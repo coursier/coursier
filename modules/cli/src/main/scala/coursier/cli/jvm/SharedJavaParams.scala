@@ -14,7 +14,6 @@ final case class SharedJavaParams(
   jvm: Option[String],
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
-  localOnly: Boolean,
   update: Boolean,
   jvmChannelOpt: Option[JvmChannel]
 ) {
@@ -42,7 +41,6 @@ final case class SharedJavaParams(
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
       .withAllowSystem(allowSystemJvm)
-      .withInstallIfNeeded(!localOnly)
       .withUpdate(update)
     (jvmCache, javaHome)
   }
@@ -115,7 +113,6 @@ object SharedJavaParams {
           jvm,
           allowSystem,
           requireSystem,
-          options.localOnly,
           options.update,
           indexChannelOpt
         )

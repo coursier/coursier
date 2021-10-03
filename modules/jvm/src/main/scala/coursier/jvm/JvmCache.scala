@@ -55,8 +55,7 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
   def get(
     entry: JvmIndexEntry,
-    logger: Option[JvmCacheLogger],
-    installIfNeeded: Boolean // hmm, unused
+    logger: Option[JvmCacheLogger]
   ): Task[File] = {
 
     val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
@@ -86,22 +85,14 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
   // seems installIfNeeded is unused in the 'get' methods below :|
 
   def get(
-    entry: JvmIndexEntry,
-    logger: Option[JvmCacheLogger]
-  ): Task[File] =
-    get(entry, logger, installIfNeeded = true)
-
-  def get(
     entry: JvmIndexEntry
   ): Task[File] =
-    get(entry, None, installIfNeeded = true)
+    get(entry, None)
 
   def get(id: String): Task[File] =
-    get(id, installIfNeeded = true)
-  def get(id: String, installIfNeeded: Boolean): Task[File] =
     entries(id).flatMap {
       case Left(err)       => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
-      case Right(entries0) => get(entries0.last, None, installIfNeeded)
+      case Right(entries0) => get(entries0.last, None)
     }
 
   def withIndex(index: Task[JvmIndex]): JvmCache =

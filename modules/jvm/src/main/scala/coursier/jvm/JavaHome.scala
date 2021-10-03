@@ -14,7 +14,6 @@ import dataclass._
 
 @data class JavaHome(
   cache: Option[JvmCache] = None,
-  installIfNeeded: Boolean = true,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmIndex.defaultOs(),
   commandOutput: CommandOutput = CommandOutput.default(),
@@ -151,7 +150,7 @@ import dataclass._
       cache match {
         case None => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
-          cache0.get(id0, installIfNeeded).map(home => false -> home)
+          cache0.get(id0).map(home => false -> home)
       }
     }
 
