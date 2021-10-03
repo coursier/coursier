@@ -34,6 +34,7 @@ import dataclass._
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+import scala.util.Properties
 
 @data class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
@@ -42,7 +43,7 @@ import scala.util.control.NonFatal
   verbosity: Int = 0,
   graalvmParamsOpt: Option[GraalvmParams] = None,
   coursierRepositories: Seq[Repository] = Nil,
-  platform: Option[String] = InstallDir.platform(),
+  platform: Option[String] = Platform.get(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
   os: String = System.getProperty("os.name", ""),
   nativeImageJavaHome: Option[String => Task[File]] = None,
@@ -56,11 +57,8 @@ import scala.util.control.NonFatal
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
-  private lazy val isWindows =
-    os.toLowerCase(Locale.ROOT).contains("windows")
-
   private lazy val auxExtension =
-    if (isWindows) ".exe"
+    if (Properties.isWin) ".exe"
     else ""
 
   import InstallDir._
@@ -108,18 +106,18 @@ import scala.util.control.NonFatal
 
   private def actualName(dest: Path): String = {
     val name = dest.getFileName.toString
-    if (isWindows) name.stripSuffix(".bat")
+    if (Properties.isWin) name.stripSuffix(".bat")
     else name
   }
 
   private def actualDest(dest: Path): Path =
-    if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
+    if (Properties.isWin) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
 
   private def baseJarPreamble(desc: AppDescriptor): Preamble =
     basePreamble.addExtraEnvVar(InstallDir.isJvmLauncherEnvVar, "true")
-      .withOsKind(isWindows)
-      .callsItself(isWindows)
+      .withOsKind(Properties.isWin)
+      .callsItself(Properties.isWin)
       .withJavaOpts(desc.javaOptions)
       .withJvmOptionFile(desc.jvmOptionFile)
   private def baseNativePreamble: Preamble =
@@ -372,7 +370,7 @@ import scala.util.control.NonFatal
 
           if (desc.launcherType.isNative) {
             val preamble =
-              if (isWindows)
+              if (Properties.isWin)
                 baseNativePreamble
                   .withKind(Preamble.Kind.Bat)
                   .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
@@ -588,33 +586,6 @@ object InstallDir {
     Option(System.getProperty("os.name"))
       .toSeq
       .flatMap(platformExtensions(_))
-
-  @deprecated("Use the override accepting two arguments instead", "2.0.10")
-  def platform(os: String): Option[String] = {
-    platform(os, Option(System.getProperty("os.arch")).getOrElse("x86_64"))
-  }
-
-  def platform(os: String, arch: String): Option[String] = {
-
-    val os0   = os.toLowerCase(Locale.ROOT)
-    val arch0 = if (arch == "amd64") "x86_64" else arch
-
-    if (os0.contains("linux"))
-      Some(s"$arch0-pc-linux")
-    else if (os0.contains("mac"))
-      Some(s"$arch0-apple-darwin")
-    else if (os0.contains("windows"))
-      Some(s"$arch0-pc-win32")
-    else
-      None
-  }
-
-  def platform(): Option[String] =
-    for {
-      os   <- Option(System.getProperty("os.name"))
-      arch <- Option(System.getProperty("os.arch"))
-      p    <- platform(os, arch)
-    } yield p
 
   private def writeTo(is: InputStream, dest: Path): Unit = {
     var os: OutputStream = null

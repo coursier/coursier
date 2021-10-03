@@ -179,17 +179,20 @@ object InstallTests extends TestSuite {
   }
 
   private def installDir(tmpDir: Path): InstallDir =
-    installDir(tmpDir, "linux")
-  private def installDir(tmpDir: Path, os: String): InstallDir =
+    installDir(tmpDir, "linux", "x86_64")
+  private def installDir(tmpDir: Path, os: String, arch: String): InstallDir =
     InstallDir(tmpDir, cache)
       .withOs(os)
-      .withPlatform(InstallDir.platform(os))
+      .withPlatform(Platform.get(os, arch))
       .withPlatformExtensions(InstallDir.platformExtensions(os))
       .withBasePreamble(Preamble())
       .withOverrideProguardedBootstraps {
         if (sys.props.get("java.version").exists(_.startsWith("1."))) None
         else Some(false)
       }
+
+  private val currentArch =
+    Option(System.getProperty("os.arch")).getOrElse("x86_64")
 
   private val currentOs = {
     val os = sys.props.getOrElse("os.name", "").toLowerCase(Locale.ROOT)
@@ -205,7 +208,7 @@ object InstallTests extends TestSuite {
 
   val tests = Tests {
     test("generate an echo launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -214,7 +217,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -241,13 +244,13 @@ object InstallTests extends TestSuite {
         assert(appList == expectedAppList)
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("generate an echo assembly") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -257,7 +260,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -274,13 +277,13 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("generate an echo standalone launcher") - {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -290,7 +293,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -315,13 +318,13 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("not update an already up-to-date launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -330,7 +333,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val created = installDir0.createOrUpdate(appInfo0)
@@ -355,13 +358,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("update a launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -371,7 +374,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val now = {
@@ -430,13 +433,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a prebuilt launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id    = "coursier"
         val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
@@ -452,7 +455,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -472,13 +475,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a compressed prebuilt launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "sbtn"
         val appInfo0 = appInfo(
@@ -493,7 +496,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -521,9 +524,9 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a prebuilt launcher in an archive") {
@@ -532,7 +535,7 @@ object InstallTests extends TestSuite {
       val tgzPattern =
         "tgz+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz!sbt/bin/sbtn-${platform}"
 
-      def run(os: String, pattern: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String, pattern: String) = withTempDir { tmpDir =>
 
         val id = "sbtn"
         val appInfo0 = appInfo(
@@ -543,7 +546,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -572,20 +575,20 @@ object InstallTests extends TestSuite {
       }
 
       test("zip") {
-        test("linux") - run("linux", zipPattern)
-        test("mac") - run("mac", zipPattern)
-        test("windows") - run("windows", zipPattern)
+        test("linux") - run("linux", "x86_64", zipPattern)
+        test("mac") - run("mac", "x86_64", zipPattern)
+        test("windows") - run("windows", "x86_64", zipPattern)
       }
 
       test("tgz") {
-        test("linux") - run("linux", tgzPattern)
-        test("mac") - run("mac", tgzPattern)
-        test("windows") - run("windows", tgzPattern)
+        test("linux") - run("linux", "x86_64", tgzPattern)
+        test("mac") - run("mac", "x86_64", tgzPattern)
+        test("windows") - run("windows", "x86_64", tgzPattern)
       }
     }
 
     test("install a prebuilt gzip-ed / zip-ed launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "scalafmt-native"
         val appInfo0 = appInfo(
@@ -602,7 +605,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -627,9 +630,9 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
@@ -673,9 +676,9 @@ object InstallTests extends TestSuite {
     // }
 
     test("refuse to delete a file not created by us") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val app = installDir0.actualDest("foo")
@@ -694,9 +697,9 @@ object InstallTests extends TestSuite {
         assert(gotException)
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
   }
 
