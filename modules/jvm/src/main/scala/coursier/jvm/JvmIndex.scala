@@ -23,17 +23,17 @@ object JvmIndex {
 
   def handleAliases(indexName: String): String =
     indexName match {
-      case "cs"    => coursierIndexCoordinates
-      case "jabba" => jabbaIndexUrl
-      case other   => other
+      case "cs"       => coursierIndexUrl
+      case "cs-maven" => coursierIndexCoordinates
+      case "jabba"    => jabbaIndexUrl
+      case other      => other
     }
 
   def defaultIndexUrl: String =
-    jabbaIndexUrl
+    coursierIndexUrl
 
   def jabbaIndexUrl: String =
     "https://github.com/shyiko/jabba/raw/master/index.json"
-  @deprecated("Use coursierIndexCoordinates instead", "2.0.10")
   def coursierIndexUrl: String =
     "https://github.com/coursier/jvm-index/raw/master/index.json"
   def coursierIndexCoordinates: String =
