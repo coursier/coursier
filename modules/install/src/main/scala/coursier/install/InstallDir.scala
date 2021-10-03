@@ -10,10 +10,10 @@ import java.util.stream.Stream
 import java.util.zip.{GZIPInputStream, ZipEntry, ZipFile}
 
 import coursier.Fetch
-import coursier.cache.{ArchiveType, ArtifactError, Cache, FileCache}
-import coursier.cache.loggers.ProgressBarRefreshDisplay
+import coursier.cache.{ArchiveCache, ArchiveType, ArtifactError, Cache, FileCache}
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
+import coursier.install.internal._
 import coursier.launcher.{
   AssemblyGenerator,
   BootstrapGenerator,
@@ -52,7 +52,9 @@ import scala.util.control.NonFatal
   basePreamble: Preamble = Preamble()
     .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
   @since
-  overrideProguardedBootstraps: Option[Boolean] = None
+  overrideProguardedBootstraps: Option[Boolean] = None,
+  @since("2.0.17")
+  archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
   private lazy val isWindows =
@@ -255,9 +257,10 @@ import scala.util.control.NonFatal
           None
       }
 
-      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(
+      val prebuiltOrNotFoundUrls0 = PrebuiltApp.get(
         desc,
         cache,
+        archiveCache,
         verbosity,
         platform,
         platformExtensions,
@@ -338,8 +341,6 @@ import scala.util.control.NonFatal
               }
 
             case Right((_, prebuilt, archiveTypeAndPathOpt)) =>
-              // decompress if needed
-
               archiveTypeAndPathOpt match {
                 case Some((ArchiveType.Tgz, None)) =>
                   withFirstFileInTgz(prebuilt) { is =>
@@ -560,145 +561,6 @@ object InstallDir {
     if (verbosity >= 1)
       System.err.println(s"Wrote $path")
     t
-  }
-
-  private def candidatePrebuiltArtifacts(
-    desc: AppDescriptor,
-    cache: Cache[Task],
-    verbosity: Int,
-    platform: Option[String],
-    platformExtensions: Seq[String],
-    preferPrebuilt: Boolean
-  ): Option[Seq[(Artifact, Option[(ArchiveType, Option[String])])]] = {
-
-    def mainVersionsIterator(): Iterator[String] = {
-      val it0 = desc.candidateMainVersions(cache, verbosity)
-      val it =
-        if (it0.hasNext) it0
-        else desc.mainVersionOpt.iterator
-      // check the latest 5 versions if preferPrebuilt is true
-      // FIXME Don't hardcode that number?
-      it.take(if (preferPrebuilt) 5 else 1)
-    }
-
-    def urlArchiveType(url: String): (String, Option[(ArchiveType, Option[String])]) = {
-      val idx = url.indexOf('+')
-      if (idx < 0) (url, None)
-      else
-        ArchiveType.parse(url.take(idx)) match {
-          case Some(tpe) =>
-            val url0         = url.drop(idx + 1)
-            val subPathIndex = url0.indexOf('!')
-            if (subPathIndex < 0)
-              (url0, Some((tpe, None)))
-            else {
-              val subPath = url0.drop(subPathIndex + 1)
-              (url0.take(subPathIndex), Some((tpe, Some(subPath))))
-            }
-          case None =>
-            (url, None)
-        }
-    }
-
-    def patternArtifacts(
-      pattern: String
-    ): Seq[(Artifact, Option[(ArchiveType, Option[String])])] = {
-
-      val artifactsIt = for {
-        version <- mainVersionsIterator()
-        isSnapshot = version.endsWith("SNAPSHOT")
-        baseUrl0 = pattern
-          .replace("${version}", version)
-          .replace("${platform}", platform.getOrElse(""))
-        (baseUrl, archiveTypeAndPathOpt) = urlArchiveType(baseUrl0)
-        ext <-
-          if (archiveTypeAndPathOpt.forall(_._2.nonEmpty))
-            platformExtensions.iterator ++ Iterator("")
-          else Iterator("")
-        (url, archiveTypeAndPathOpt0) = archiveTypeAndPathOpt match {
-          case None                  => (baseUrl + ext, archiveTypeAndPathOpt)
-          case Some((tpe, subPath0)) => (baseUrl, Some((tpe, subPath0.map(_ + ext))))
-        }
-      } yield (Artifact(url).withChanging(isSnapshot), archiveTypeAndPathOpt0)
-
-      artifactsIt.toVector
-    }
-
-    if (desc.launcherType.isNative)
-      desc.prebuiltLauncher
-        .orElse(desc.prebuiltBinaries.get(platform.getOrElse("")))
-        .map(patternArtifacts)
-    else
-      None
-  }
-
-  private[coursier] def handleArtifactErrors(
-    maybeFile: Either[ArtifactError, File],
-    artifact: Artifact,
-    verbosity: Int
-  ): Option[File] =
-    maybeFile match {
-      case Left(e: ArtifactError.NotFound) =>
-        if (verbosity >= 2)
-          System.err.println(s"No prebuilt launcher found at ${artifact.url}")
-        None
-      case Left(e: ArtifactError.DownloadError)
-          if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
-        // These seem to happen on Windows for non existing artifacts, only from the native launcher apparently???
-        // Interpreting these errors as not-found-errors too.
-        if (verbosity >= 2)
-          System.err.println(
-            s"No prebuilt launcher found at ${artifact.url} (SSL handshake exception)"
-          )
-        None
-      case Left(e) =>
-        // FIXME Ignore some other kind of errors too? Just warn about them?
-        throw new DownloadError(artifact.url, e)
-      case Right(f) =>
-        if (verbosity >= 1) {
-          val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-          System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
-        }
-        Some(f)
-    }
-
-  private def prebuiltOrNotFoundUrls(
-    desc: AppDescriptor,
-    cache: Cache[Task],
-    verbosity: Int,
-    platform: Option[String],
-    platformExtensions: Seq[String],
-    preferPrebuilt: Boolean
-  ): Either[Seq[String], (Artifact, File, Option[(ArchiveType, Option[String])])] = {
-
-    def downloadArtifacts(
-      artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]
-    ): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
-      artifacts.iterator.flatMap {
-        case (artifact, archiveTypeOpt) =>
-          if (verbosity >= 2)
-            System.err.println(s"Checking prebuilt launcher at ${artifact.url}")
-          cache.loggerOpt.foreach(_.init())
-          val maybeFile =
-            try cache.file(artifact).run.unsafeRun()(cache.ec)
-            finally cache.loggerOpt.foreach(_.stop())
-          handleArtifactErrors(maybeFile, artifact, verbosity)
-            .iterator
-            .map((artifact, _, archiveTypeOpt))
-      }
-
-    candidatePrebuiltArtifacts(
-      desc,
-      cache,
-      verbosity,
-      platform,
-      platformExtensions,
-      preferPrebuilt
-    ).toRight(Nil).flatMap { artifacts =>
-      val iterator = downloadArtifacts(artifacts)
-      if (iterator.hasNext) Right(iterator.next())
-      else Left(artifacts.map(_._1.url))
-    }
   }
 
   def auxName(name: String, auxExtension: String): String = {
