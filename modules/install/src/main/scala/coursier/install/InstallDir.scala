@@ -341,27 +341,21 @@ import scala.util.control.NonFatal
               // decompress if needed
 
               archiveTypeAndPathOpt match {
-                case Some((ArchiveType.Tgz, subPathOpt)) =>
-                  subPathOpt match {
-                    case None =>
-                      withFirstFileInTgz(prebuilt) { is =>
-                        writeTo(is, genDest)
-                      }
-                    case Some(subPath) =>
-                      withFileInTgz(prebuilt, subPath) { is =>
-                        writeTo(is, genDest)
-                      }
+                case Some((ArchiveType.Tgz, None)) =>
+                  withFirstFileInTgz(prebuilt) { is =>
+                    writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Zip, subPathOpt)) =>
-                  subPathOpt match {
-                    case None =>
-                      withFirstFileInZip(prebuilt) { is =>
-                        writeTo(is, genDest)
-                      }
-                    case Some(subPath) =>
-                      withFileInZip(prebuilt, subPath) { is =>
-                        writeTo(is, genDest)
-                      }
+                case Some((ArchiveType.Tgz, Some(subPath))) =>
+                  withFileInTgz(prebuilt, subPath) { is =>
+                    writeTo(is, genDest)
+                  }
+                case Some((ArchiveType.Zip, None)) =>
+                  withFirstFileInZip(prebuilt) { is =>
+                    writeTo(is, genDest)
+                  }
+                case Some((ArchiveType.Zip, Some(subPath))) =>
+                  withFileInZip(prebuilt, subPath) { is =>
+                    writeTo(is, genDest)
                   }
                 case None =>
                   Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
