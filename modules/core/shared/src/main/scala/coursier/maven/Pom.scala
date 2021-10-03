@@ -340,7 +340,7 @@ object Pom {
 
     for {
       organization <- text(node, "groupId", "Organization") // Ignored
-      name         <- text(node, "artifactId", "Name") // Ignored
+      name <- text(node, "artifactId", "Name")              // Ignored
 
       xmlVersioning <- node.children
         .find(_.label == "versioning")
