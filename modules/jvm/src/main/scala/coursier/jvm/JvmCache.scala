@@ -57,7 +57,8 @@ import scala.util.control.NonFatal
       // FileSystemException being raised on the Files.move(...) call below.
       if (dir.isDirectory) {
         dir
-      } else {
+      }
+      else {
         logger0.extracting(entry.id, archive.getAbsolutePath, dir)
         val dir0 =
           try {
