@@ -9,10 +9,11 @@ import java.util.zip.ZipFile
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.{Dependency, Repository}
-import coursier.cache.{Cache, FileCache}
+import coursier.cache.{ArchiveType, Cache, FileCache}
 import coursier.cache.internal.FileUtil
 import coursier.core.{Latest, Parse, Version}
 import coursier.util.{Artifact, Task}
+import coursier.util.Traverse.TraverseOps
 import dataclass.data
 
 import scala.collection.compat._
@@ -22,17 +23,17 @@ object JvmIndex {
 
   def handleAliases(indexName: String): String =
     indexName match {
-      case "cs"    => coursierIndexCoordinates
-      case "jabba" => jabbaIndexUrl
-      case other   => other
+      case "cs"       => coursierIndexUrl
+      case "cs-maven" => coursierIndexCoordinates
+      case "jabba"    => jabbaIndexUrl
+      case other      => other
     }
 
   def defaultIndexUrl: String =
-    jabbaIndexUrl
+    coursierIndexUrl
 
   def jabbaIndexUrl: String =
     "https://github.com/shyiko/jabba/raw/master/index.json"
-  @deprecated("Use coursierIndexCoordinates instead", "2.0.10")
   def coursierIndexUrl: String =
     "https://github.com/coursier/jvm-index/raw/master/index.json"
   def coursierIndexCoordinates: String =
@@ -255,13 +256,16 @@ object JvmIndex {
     version: String,
     os: Option[String] = None,
     arch: Option[String] = None
-  ): Either[String, JvmIndexEntry] = {
+  ): Either[String, Seq[JvmIndexEntry]] = {
 
-    def fromVersionConstraint(versionIndex: Map[String, String], version: String) =
+    def fromVersionConstraint(
+      versionIndex: Map[String, String],
+      version: String
+    ): Either[String, Seq[(String, String)]] =
       Latest(version) match {
         case Some(_) =>
           // TODO Filter versions depending on latest kind
-          Right(versionIndex.maxBy { case (v, _) => Version(v) })
+          Right(versionIndex.toVector.sortBy { case (v, _) => Version(v) })
         case None =>
           val maybeConstraint = Some(Parse.versionConstraint(version))
             .filter(c => c.isValid && c.preferred.isEmpty)
@@ -281,7 +285,7 @@ object JvmIndex {
               val map =
                 if (preferredInInterval.isEmpty) inInterval
                 else preferredInInterval
-              val retained = map.maxBy { case (v, _) => Version(v) }
+              val retained = map.toVector.sortBy { case (v, _) => Version(v) }
               Right(retained)
             }
           }
@@ -307,12 +311,18 @@ object JvmIndex {
           version
       retainedVersionUrlDescriptor <- versionIndex
         .get(version0)
-        .map(url => Right((version0, url)))
+        .map(url => Right(Seq((version0, url))))
         .getOrElse(fromVersionConstraint(versionIndex, version0))
-      (retainedVersion, urlDescriptor) = retainedVersionUrlDescriptor
-      archiveTypeUrl <- parseDescriptor(urlDescriptor)
-      (archiveType, url) = archiveTypeUrl
-    } yield JvmIndexEntry(os, arch, name, retainedVersion, archiveType, url)
+      // (retainedVersion, urlDescriptor) = retainedVersionUrlDescriptor
+      entries <- retainedVersionUrlDescriptor
+        .eitherTraverse {
+          case (retainedVersion, urlDescriptor) =>
+            parseDescriptor(urlDescriptor).map {
+              case (archiveType, url) =>
+                JvmIndexEntry(os, arch, name, retainedVersion, archiveType, url)
+            }
+        }
+    } yield entries
   }
 
   def available(

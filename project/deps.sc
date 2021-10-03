@@ -13,7 +13,7 @@ object Deps {
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
-  def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.0"
+  def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.1"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.2"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
@@ -23,7 +23,7 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.14.2"
+  def jsoup           = ivy"org.jsoup:jsoup:1.14.3"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.6"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.2.23"
@@ -55,8 +55,8 @@ object Deps {
 
 object Versions {
   def fastParse     = "2.3.3"
-  def http4s        = "0.23.4"
-  def jniUtils      = "0.2.2"
+  def http4s        = "0.18.26"
+  def jniUtils      = "0.3.1"
   def jsoniterScala = "2.10.2"
   def monadless     = "0.0.13"
   def scalaz        = "7.2.33"

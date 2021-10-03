@@ -25,24 +25,24 @@ import dataclass.data
 
   def task: Task[Unit] =
     for {
-      initialIdJavaHomeOpt <- javaHome.getWithRetainedIdIfInstalled(defaultId)
+      initialIsSystemJavaHomeOpt <- javaHome.getWithIsSystemIfInstalled(defaultId)
 
-      idJavaHomeOpt <- initialIdJavaHomeOpt match {
-        case Some((id, javaHome0)) =>
+      isSystemJavaHomeOpt <- initialIsSystemJavaHomeOpt match {
+        case Some((isSystem, javaHome0)) =>
           System.err.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
-          Task.point(Some(id -> javaHome0))
+          Task.point(Some(isSystem -> javaHome0))
         case None =>
           confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>
-              javaHome.getWithRetainedId(defaultId).map(Some(_))
+              javaHome.getWithIsSystem(defaultId).map(Some(_))
           }
       }
 
-      envUpdate = idJavaHomeOpt match {
-        case Some((id, javaHome0)) =>
-          javaHome.environmentFor(id, javaHome0)
+      envUpdate = isSystemJavaHomeOpt match {
+        case Some((isSystem, javaHome0)) =>
+          javaHome.environmentFor(isSystem, javaHome0)
         case None =>
           EnvironmentUpdate.empty
       }
@@ -157,31 +157,31 @@ import dataclass.data
 
     val maybeRemoveJvm = javaHome.cache
       .map { jvmCache =>
-        val entryOpt = jvmCache.entry(defaultId)
+        val entryOpt = jvmCache.entries(defaultId)
           .unsafeRun()(coursierCache.ec) // meh
           .toOption
+          .map(_.last)
         // replaces version ranges with actual versions in particular
-        val id        = entryOpt.fold(defaultId)(_.id)
-        val dir       = jvmCache.directory(id)
-        val dirExists = Task.delay(dir.exists())
-        val removedOpt = dirExists.flatMap {
-          case false =>
-            Task.point(Some(false))
-          case true =>
-            jvmCache.delete(id)
-        }
-
-        val envUpdate = javaHome.environmentFor(id, dir)
+        val id = entryOpt.fold(defaultId)(_.id)
 
         for {
-          removedOpt0 <- removedOpt
+          dirOpt <- jvmCache.getIfInstalled(id)
+          removedOpt0 <- dirOpt match {
+            case None => Task.point(Option(false))
+            case Some(dir) =>
+              ???
+          }
           message = removedOpt0 match {
-            case None        => s"Could not remove JVM $id in $dir (concurrent operation ongoing)"
+            case None        => s"Could not remove JVM $id (concurrent operation ongoing)"
             case Some(false) => s"JVM $id was not installed"
-            case Some(true)  => s"Deleted JVM $id in $dir"
+            case Some(true)  => s"Deleted JVM $id"
           }
           _ <- Task.delay(System.err.println(message))
-          _ <- tryRevertEnvVarUpdate(envUpdate, id)
+          envUpdateOpt = dirOpt.map(dir => javaHome.environmentFor(false /* ??? */, dir))
+          _ <- envUpdateOpt match {
+            case None            => ???
+            case Some(envUpdate) => tryRevertEnvVarUpdate(envUpdate, id)
+          }
         } yield ()
       }
       .getOrElse(Task.point(()))

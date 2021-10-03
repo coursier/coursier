@@ -2,6 +2,7 @@ package coursier.cli.get
 
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cache.ArchiveCache
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
@@ -19,6 +20,9 @@ object Get extends CaseApp[GetOptions] {
 
     val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
+
+    val archiveCache = ArchiveCache()
+      .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
       if (rawUrl.endsWith("?changing"))
@@ -38,7 +42,10 @@ object Get extends CaseApp[GetOptions] {
 
     val fetchAll =
       artifacts.map { artifact =>
-        cache.file(artifact).run
+        if (options.archive)
+          archiveCache.get(artifact)
+        else
+          cache.file(artifact).run
       }
 
     val initLogger = Task.delay(cache.logger.init())

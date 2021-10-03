@@ -15,6 +15,8 @@ object CacheDefaults {
 
   lazy val location: File = CachePath.defaultCacheDirectory()
 
+  lazy val archiveCacheLocation: File = CachePath.defaultArchiveCacheDirectory()
+
   @deprecated(
     "Legacy cache location support was dropped, this method does nothing.",
     "2.0.0-RC6-22"

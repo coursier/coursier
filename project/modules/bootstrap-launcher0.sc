@@ -37,7 +37,7 @@ trait BootstrapLauncher extends SbtModule {
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
-       |-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {
+       |-keep class coursier.bootstrap.launcher.jniutils.BootstrapNativeApi {
        |  *;
        |}
        |-keep class coursier.bootstrap.launcher.Launcher {
@@ -54,7 +54,7 @@ trait BootstrapLauncher extends SbtModule {
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
-       |-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {
+       |-keep class coursier.bootstrap.launcher.jniutils.BootstrapNativeApi {
        |  *;
        |}
        |-keep class ${resourceAssemblyMainClass()} {

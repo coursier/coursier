@@ -5,7 +5,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicBoolean
 
 import coursier.cache.internal.FileUtil
-import coursier.cache.MockCache
+import coursier.cache.{ArchiveCache, MockCache}
 import coursier.util.{Sync, Task}
 import utest._
 
@@ -92,9 +92,9 @@ object JvmCacheTests extends TestSuite {
 
       test("specific version") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs(theOS)
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -112,9 +112,9 @@ object JvmCacheTests extends TestSuite {
 
       test("version range") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs(theOS)
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -131,9 +131,9 @@ object JvmCacheTests extends TestSuite {
 
       test("Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs("darwin")
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -158,9 +158,9 @@ object JvmCacheTests extends TestSuite {
 
       test("no Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs("darwin")
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -168,7 +168,7 @@ object JvmCacheTests extends TestSuite {
             .withIndex(Task.point(index))
 
           val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
-          assert(home.getName == "the-jdk@1.2")
+          assert(home.getName == "the-jdk-1.2")
           val javaExec = new File(home, "bin/java")
           try {
             val output         = Seq(javaExec.getAbsolutePath, "-version").!!
