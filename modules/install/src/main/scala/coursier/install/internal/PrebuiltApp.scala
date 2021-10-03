@@ -28,6 +28,13 @@ object PrebuiltApp {
     pathInArchiveOpt: Option[String]
   ) extends PrebuiltApp
 
+  final case class ExtractedArchive(
+    artifact: Artifact,
+    archiveRoot: File,
+    pathInArchive: String,
+    file: File
+  ) extends PrebuiltApp
+
   def get(
     desc: AppDescriptor,
     cache: Cache[Task],
@@ -53,18 +60,35 @@ object PrebuiltApp {
             handleArtifactErrors(maybeFile, artifact, verbosity)
               .iterator
           }
+          def maybeExtractedArchiveIt: Iterator[File] = {
+            cache.loggerOpt.foreach(_.init())
+            val maybeDir =
+              try archiveCache.get(artifact).unsafeRun()(cache.ec)
+              finally cache.loggerOpt.foreach(_.stop())
+            handleArtifactErrors(maybeDir, artifact, verbosity)
+              .iterator
+          }
           archiveTypeOpt match {
             case None =>
               maybeFileIt.map { f =>
                 Uncompressed(artifact, f)
               }
-            case Some((archiveType, pathInArchiveOpt)) =>
+            case Some((archiveType, None)) =>
               maybeFileIt.map { f =>
                 Compressed(
                   artifact,
                   f,
                   archiveType,
-                  pathInArchiveOpt
+                  None
+                )
+              }
+            case Some((archiveType, Some(pathInArchive))) =>
+              maybeExtractedArchiveIt.map { f =>
+                ExtractedArchive(
+                  artifact,
+                  f,
+                  pathInArchive,
+                  new File(f, pathInArchive)
                 )
               }
           }

@@ -371,6 +371,9 @@ import scala.util.Properties
 
               FileUtil.tryMakeExecutable(genDest)
               genDest
+
+            case Right(a: PrebuiltApp.ExtractedArchive) =>
+              a.file.toPath
           }
 
           val inPlaceLauncher     = desc.launcherType.isNative && actualLauncher == genDest
