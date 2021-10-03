@@ -151,13 +151,13 @@ object ArchiveCache {
 
   private def archiveType(url: String): ArchiveType =
     // TODO Case-insensitive comparisons?
-    if (url.endsWith(".tar.gz"))
+    if (url.endsWith(".tar.gz") || url.endsWith(".tgz"))
       ArchiveType.Tgz
     else if (url.endsWith(".zip"))
       ArchiveType.Zip
     else if (url.endsWith(".gz"))
       ArchiveType.Gzip
     else
-      ???
+      sys.error(s"Unrecognized archive type: $url")
 
 }

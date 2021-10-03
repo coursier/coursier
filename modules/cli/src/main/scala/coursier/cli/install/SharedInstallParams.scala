@@ -8,7 +8,7 @@ import cats.implicits._
 import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.params.OutputParams
 import coursier.core.Repository
-import coursier.install.{GraalvmParams, InstallDir}
+import coursier.install.{GraalvmParams, InstallDir, Platform}
 import coursier.parse.RepositoryParser
 import coursier.util.Task
 
@@ -66,7 +66,7 @@ object SharedInstallParams {
 
     val onlyPrebuilt = options.onlyPrebuilt
 
-    val platformOpt = options.installPlatform.orElse(InstallDir.platform())
+    val platformOpt = options.installPlatform.orElse(Platform.get())
 
     val preferPrebuilt = options.installPreferPrebuilt
 

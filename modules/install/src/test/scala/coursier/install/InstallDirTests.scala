@@ -3,6 +3,7 @@ package coursier.install
 import java.nio.file.Paths
 
 import coursier.cache.ArtifactError
+import coursier.install.internal.PrebuiltApp
 import coursier.launcher.Parameters
 import coursier.util.Artifact
 
@@ -35,7 +36,7 @@ object InstallDirTests extends TestSuite {
     }
 
     test("assume SSL handshake exceptions are not found errors") {
-      InstallDir.handleArtifactErrors(
+      PrebuiltApp.handleArtifactErrors(
         Left(new ArtifactError.DownloadError(
           "foo",
           Some(new javax.net.ssl.SSLHandshakeException("foo"))

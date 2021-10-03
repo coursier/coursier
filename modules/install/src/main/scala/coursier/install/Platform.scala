@@ -1,37 +1,29 @@
 package coursier.install
 
-import coursier.moduleString
-import coursier.cache.Cache
-import coursier.core.Repository
-import coursier.util.Task
-
-abstract class Platform extends Product with Serializable {
-  def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String]
-  def suffix(ver: String): String
-}
+import java.util.Locale
 
 object Platform {
 
-  private def binaryVersion(v: String): String =
-    if (v.forall(c => c.isDigit || c == '.'))
-      v.split('.').take(2).mkString(".")
+  def get(os: String, arch: String): Option[String] = {
+
+    val os0   = os.toLowerCase(Locale.ROOT)
+    val arch0 = if (arch == "amd64") "x86_64" else arch
+
+    if (os0.contains("linux"))
+      Some(s"$arch0-pc-linux")
+    else if (os0.contains("mac"))
+      Some(s"$arch0-apple-darwin")
+    else if (os0.contains("windows"))
+      Some(s"$arch0-pc-win32")
     else
-      v
-
-  final case object Native extends Platform {
-    def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
-      AppDescriptor.listVersions(cache, repositories, mod"org.scala-native:tools_2.12")
-        .map(binaryVersion)
-    def suffix(ver: String): String =
-      s"_native$ver"
+      None
   }
 
-  final case object JS extends Platform {
-    def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
-      AppDescriptor.listVersions(cache, repositories, mod"org.scala-js:scalajs-tools_2.12")
-        .map(binaryVersion)
-    def suffix(ver: String): String =
-      s"_sjs$ver"
-  }
+  def get(): Option[String] =
+    for {
+      os   <- Option(System.getProperty("os.name"))
+      arch <- Option(System.getProperty("os.arch"))
+      p    <- get(os, arch)
+    } yield p
 
 }
