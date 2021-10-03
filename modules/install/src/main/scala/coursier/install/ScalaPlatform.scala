@@ -5,12 +5,12 @@ import coursier.cache.Cache
 import coursier.core.Repository
 import coursier.util.Task
 
-abstract class Platform extends Product with Serializable {
+abstract class ScalaPlatform extends Product with Serializable {
   def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String]
   def suffix(ver: String): String
 }
 
-object Platform {
+object ScalaPlatform {
 
   private def binaryVersion(v: String): String =
     if (v.forall(c => c.isDigit || c == '.'))
@@ -18,7 +18,7 @@ object Platform {
     else
       v
 
-  final case object Native extends Platform {
+  final case object Native extends ScalaPlatform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
       AppDescriptor.listVersions(cache, repositories, mod"org.scala-native:tools_2.12")
         .map(binaryVersion)
@@ -26,7 +26,7 @@ object Platform {
       s"_native$ver"
   }
 
-  final case object JS extends Platform {
+  final case object JS extends ScalaPlatform {
     def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String] =
       AppDescriptor.listVersions(cache, repositories, mod"org.scala-js:scalajs-tools_2.12")
         .map(binaryVersion)

@@ -5,7 +5,7 @@ import cats.implicits._
 import coursier.cli.options.DependencyOptions
 import coursier.cli.util.DeprecatedModuleRequirements0
 import coursier.core._
-import coursier.install.Platform
+import coursier.install.ScalaPlatform
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
 import scala.io.Source
@@ -15,12 +15,12 @@ final case class DependencyParams(
   perModuleExclude: Map[JavaOrScalaModule, Set[JavaOrScalaModule]], // FIXME key should be Module
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
-  platformOpt: Option[Platform]
+  platformOpt: Option[ScalaPlatform]
 ) {
   def native: Boolean =
     platformOpt match {
-      case Some(Platform.Native) => true
-      case _                     => false
+      case Some(ScalaPlatform.Native) => true
+      case _                          => false
     }
 }
 
@@ -177,8 +177,8 @@ object DependencyParams {
 
     val platformOptV = (options.scalaJs, options.native) match {
       case (false, false) => Validated.validNel(None)
-      case (true, false)  => Validated.validNel(Some(Platform.JS))
-      case (false, true)  => Validated.validNel(Some(Platform.Native))
+      case (true, false)  => Validated.validNel(Some(ScalaPlatform.JS))
+      case (false, true)  => Validated.validNel(Some(ScalaPlatform.Native))
       case (true, true)   => Validated.invalidNel("Cannot specify both --scala-js and --native")
     }
 
