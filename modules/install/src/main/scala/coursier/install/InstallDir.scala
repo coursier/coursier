@@ -326,7 +326,7 @@ import scala.util.Properties
             if (desc.launcherType.isNative) tmpAux
             else tmpDest
 
-          prebuiltOrNotFoundUrls0 match {
+          val actualLauncher = prebuiltOrNotFoundUrls0 match {
             case Left(notFoundUrls) =>
               if (onlyPrebuilt && desc.launcherType.isNative)
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
@@ -335,11 +335,13 @@ import scala.util.Properties
 
               writing(genDest, verbosity, Some(currentTime)) {
                 Generator.generate(params0, genDest)
+                genDest
               }
 
             case Right(a: PrebuiltApp.Uncompressed) =>
               Files.copy(a.file.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
               FileUtil.tryMakeExecutable(genDest)
+              genDest
 
             case Right(a: PrebuiltApp.Compressed) =>
               (a.archiveType, a.pathInArchiveOpt) match {
@@ -368,23 +370,34 @@ import scala.util.Properties
               }
 
               FileUtil.tryMakeExecutable(genDest)
+              genDest
           }
 
-          if (desc.launcherType.isNative) {
+          val inPlaceLauncher     = desc.launcherType.isNative && actualLauncher == genDest
+          val launcherIsElsewhere = actualLauncher != genDest
+          if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
-              if (Properties.isWin)
+              if (inPlaceLauncher) {
+                if (Properties.isWin)
+                  baseNativePreamble
+                    .withKind(Preamble.Kind.Bat)
+                    .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
+                else
+                  baseNativePreamble
+                    .withKind(Preamble.Kind.Sh)
+                    .withCommand(
+                      // FIXME needs directory
+                      """"$(cd "$(dirname "$0")"; pwd)/""" +
+                        auxName(dest0.getFileName.toString, "") +
+                        "\""
+                    )
+              }
+              else {
+                assert(launcherIsElsewhere)
                 baseNativePreamble
-                  .withKind(Preamble.Kind.Bat)
-                  .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
-              else
-                baseNativePreamble
-                  .withKind(Preamble.Kind.Sh)
-                  .withCommand(
-                    // FIXME needs directory
-                    """"$(cd "$(dirname "$0")"; pwd)/""" +
-                      auxName(dest0.getFileName.toString, "") +
-                      "\""
-                  )
+                  .withKind(if (Properties.isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
+                  .withCommand(actualLauncher.toAbsolutePath.toString)
+              }
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
