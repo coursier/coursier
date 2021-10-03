@@ -192,6 +192,8 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jniUtils,
+    Deps.plexusArchiver,
+    Deps.plexusContainerDefault,
     Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -479,6 +481,9 @@ class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModul
 
 class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -491,9 +496,7 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,
-    Deps.jsoniterCore,
-    Deps.plexusArchiver,
-    Deps.plexusContainerDefault
+    Deps.jsoniterCore
   )
   object test extends Tests with CsTests
 }

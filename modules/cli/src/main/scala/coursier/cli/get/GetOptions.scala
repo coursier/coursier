@@ -15,7 +15,8 @@ final case class GetOptions(
     zero: Boolean = false,
   separator: Option[String] = None,
   force: Boolean = false,
-  changing: Boolean = false
+  changing: Boolean = false,
+  archive: Boolean = false
 )
 // format: on
 

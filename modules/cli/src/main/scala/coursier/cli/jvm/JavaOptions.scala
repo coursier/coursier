@@ -6,7 +6,6 @@ import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, Repository
 
 // format: off
 final case class JavaOptions(
-  installed: Boolean = false,
   available: Boolean = false,
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
