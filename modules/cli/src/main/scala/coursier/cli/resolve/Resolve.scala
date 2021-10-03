@@ -18,7 +18,7 @@ import coursier.util._
 
 import scala.concurrent.ExecutionContext
 
-object Resolve extends CaseApp[ResolveOptions] {
+object Resolve extends Command[ResolveOptions] {
 
   /** Tries to parse get dependencies via Scala Index lookups.
     */

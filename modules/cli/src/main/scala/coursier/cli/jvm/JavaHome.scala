@@ -2,7 +2,7 @@ package coursier.cli.jvm
 
 import java.io.File
 
-import caseapp.core.app.CaseApp
+import caseapp.core.app.Command
 import caseapp.core.RemainingArgs
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
@@ -13,7 +13,7 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object JavaHome extends CaseApp[JavaHomeOptions] {
+object JavaHome extends Command[JavaHomeOptions] {
 
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 

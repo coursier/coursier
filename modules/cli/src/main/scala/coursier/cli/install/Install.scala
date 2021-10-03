@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Instant
 
-import caseapp.core.app.CaseApp
+import caseapp.core.app.Command
 import caseapp.core.RemainingArgs
 import coursier.cli.channel.Channel
 import coursier.cli.setup.MaybeSetupPath
@@ -18,7 +18,7 @@ import coursier.util.Sync
 
 import scala.concurrent.duration.Duration
 
-object Install extends CaseApp[InstallOptions] {
+object Install extends Command[InstallOptions] {
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
 

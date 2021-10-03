@@ -5,7 +5,7 @@ import java.nio.file.Files
 import java.util.concurrent.ExecutorService
 
 import caseapp.core.RemainingArgs
-import caseapp.core.app.CaseApp
+import caseapp.core.app.Command
 import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
@@ -37,7 +37,7 @@ import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Bootstrap extends CaseApp[BootstrapOptions] {
+object Bootstrap extends Command[BootstrapOptions] {
 
   def task(
     params: BootstrapParams,

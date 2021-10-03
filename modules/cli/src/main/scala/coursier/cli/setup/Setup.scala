@@ -3,7 +3,7 @@ package coursier.cli.setup
 import java.io.File
 import java.util.Locale
 
-import caseapp.core.app.CaseApp
+import caseapp.core.app.Command
 import caseapp.core.RemainingArgs
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
@@ -15,7 +15,7 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Setup extends CaseApp[SetupOptions] {
+object Setup extends Command[SetupOptions] {
 
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
 
