@@ -462,6 +462,9 @@ class CatsJs(val crossScalaVersion: String) extends Cats with CsScalaJsModule {
 
 class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-install"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -520,6 +523,9 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.monadlessStdlib,
     Deps.svmSubs,
     ivy"com.chuusai::shapeless:2.3.7"
+  )
+  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.svm
   )
   def mainClass = Some("coursier.cli.Coursier")
   def finalMainClassOpt = T {

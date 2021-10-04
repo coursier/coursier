@@ -5,6 +5,7 @@ import java.time.Instant
 import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.install.{Channels, InstallDir}
+import coursier.install.error.InstallDirException
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
@@ -73,7 +74,7 @@ object Update extends CaseApp[UpdateOptions] {
 
     try task.unsafeRun()(cache.ec)
     catch {
-      case e: InstallDir.InstallDirException =>
+      case e: InstallDirException =>
         System.err.println(e.getMessage)
         if (params.output.verbosity >= 2)
           throw e

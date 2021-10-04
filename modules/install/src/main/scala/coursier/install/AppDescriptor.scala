@@ -63,7 +63,7 @@ import dataclass._
 
     // FIXME A bit of duplication with retainedMainVersion above
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
       case _                        => None
     }
 
@@ -144,7 +144,7 @@ import dataclass._
 
   def processDependencies(
     cache: Cache[Task],
-    platformOpt: Option[Platform],
+    platformOpt: Option[ScalaPlatform],
     verbosity: Int
   ): Either[
     AppArtifacts.AppArtifactsException,
@@ -223,7 +223,7 @@ import dataclass._
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
       case _                        => None
     }
 
@@ -389,7 +389,7 @@ object AppDescriptor {
     dependencies: Seq[JavaOrScalaDependency],
     constraintOpt: Option[VersionConstraint],
     verbosity: Int,
-    platform: Platform
+    platform: ScalaPlatform
   ): Option[(String, String)] = {
 
     def platformVersions = platform

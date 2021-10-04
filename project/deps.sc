@@ -55,8 +55,8 @@ object Deps {
 
 object Versions {
   def fastParse     = "2.3.3"
-  def http4s        = "0.23.4"
-  def jniUtils      = "0.3.1"
+  def http4s        = "0.18.26"
+  def jniUtils      = "0.3.2"
   def jsoniterScala = "2.10.2"
   def monadless     = "0.0.13"
   def scalaz        = "7.2.33"
@@ -77,5 +77,5 @@ object ScalaVersions {
   // only used by the launcher module
   def scala211 = "2.11.12"
 
-  def scalaJs = "1.5.1"
+  def scalaJs = "1.7.0"
 }

@@ -11,6 +11,7 @@ import coursier.cli.channel.Channel
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
+import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
 import coursier.paths.Util
 import coursier.util.Sync
@@ -131,7 +132,7 @@ object Install extends CaseApp[InstallOptions] {
         }
       }
       catch {
-        case e: InstallDir.InstallDirException =>
+        case e: InstallDirException =>
           System.err.println(e.getMessage)
           if (params.output.verbosity >= 2)
             throw e

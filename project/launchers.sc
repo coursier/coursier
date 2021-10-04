@@ -1,9 +1,10 @@
 import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image_mill0.9:0.1.9`
 
 import $file.cs
-import $file.deps, deps.{graalVmVersion, jvmIndex}
-import $file.graalvm
+import $file.deps, deps.{Deps, graalVmVersion, jvmIndex}
 
+import io.github.alexarchambault.millnativeimage.NativeImage
 import mill._, mill.scalalib._
 
 import java.io.File
@@ -34,7 +35,7 @@ def platformSuffix: String = {
   s"$arch-$os"
 }
 
-trait Launchers extends SbtModule {
+trait Launchers extends SbtModule with NativeImage {
 
   def transitiveJars: T[Agg[PathRef]] = {
 
@@ -52,15 +53,46 @@ trait Launchers extends SbtModule {
     }
   }
 
-  def nativeImage = T {
-    val cp         = runClasspath().map(_.path)
-    val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
-    val dest       = T.ctx().dest / "cs"
-    val actualDest = T.ctx().dest / s"cs$platformExtension"
+  def nativeImageCsCommand    = Seq(cs.cs)
+  def nativeImagePersist      = System.getenv("CI") != null
+  def nativeImageGraalVmJvmId = s"graalvm-java11:${deps.graalVmVersion}"
 
-    graalvm.generateNativeImage(graalVmVersion, cp, mainClass0, dest)
+  def nativeImageClassPath     = runClasspath()
+  def nativeImageName          = "cs"
+  def nativeImageMainClass     = mainClass().getOrElse(sys.error("No main class"))
+  private def staticLibDirName = "native-libs"
+  private def copyCsjniutilTo(destDir: os.Path): Unit = {
+    val jniUtilsVersion = Deps.jniUtils.dep.version
+    val libRes = os.proc(
+      cs.cs,
+      "fetch",
+      "--intransitive",
+      s"io.get-coursier.jniutils:windows-jni-utils:$jniUtilsVersion,classifier=x86_64-pc-win32,ext=lib,type=lib",
+      "-A",
+      "lib"
+    ).call()
+    val libPath = os.Path(libRes.out.text.trim, os.pwd)
+    os.copy.over(libPath, destDir / "csjniutils.lib")
+  }
 
-    PathRef(actualDest)
+  def staticLibDir = T {
+    val dir = nativeImageDockerWorkingDir() / staticLibDirName
+    os.makeDir.all(dir)
+
+    if (Properties.isWin)
+      copyCsjniutilTo(dir)
+
+    PathRef(dir)
+  }
+
+  def nativeImageOptions = T {
+    val usesDocker = nativeImageDockerParams().nonEmpty
+    val cLibPath =
+      if (usesDocker) s"/data/$staticLibDirName"
+      else staticLibDir().path.toString
+    Seq(
+      s"-H:CLibraryPath=$cLibPath"
+    )
   }
 
   def runWithAssistedConfig(args: String*) = T.command {
