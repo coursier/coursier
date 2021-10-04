@@ -55,7 +55,7 @@ object Deps {
 
 object Versions {
   def fastParse     = "2.3.3"
-  def http4s        = "0.18.26"
+  def http4s        = "0.23.4"
   def jniUtils      = "0.3.2"
   def jsoniterScala = "2.10.2"
   def monadless     = "0.0.13"
