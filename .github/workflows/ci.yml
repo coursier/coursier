@@ -153,7 +153,7 @@ jobs:
         run: |
           ./mill -i publishSonatype __.publishArtifacts || (
             echo "Publishing exit with non-zero code, ignoring it" 1>&2
-            exit 1
+            exit 0
           )
         env:
           PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
