@@ -14,7 +14,7 @@ import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Fetch extends CaseApp[FetchOptions] {
+object Fetch extends Command[FetchOptions] {
 
   def task(
     params: FetchParams,

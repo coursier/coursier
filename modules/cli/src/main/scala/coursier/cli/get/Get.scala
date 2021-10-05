@@ -1,13 +1,13 @@
 package coursier.cli.get
 
-import caseapp.core.app.CaseApp
+import caseapp.core.app.Command
 import caseapp.core.RemainingArgs
 import coursier.cache.ArchiveCache
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Get extends CaseApp[GetOptions] {
+object Get extends Command[GetOptions] {
   def run(options: GetOptions, args: RemainingArgs): Unit = {
 
     val params = GetParams(options).toEither match {

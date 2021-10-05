@@ -22,7 +22,7 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-object Publish extends CaseApp[PublishOptions] {
+object Publish extends Command[PublishOptions] {
 
   val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
 
