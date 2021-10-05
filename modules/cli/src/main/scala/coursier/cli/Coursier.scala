@@ -3,10 +3,12 @@ package coursier.cli
 import caseapp.core.app.CommandsEntryPoint
 import caseapp.RemainingArgs
 import coursier.cache.CacheUrl
-import coursier.cli.internal.Argv0
+import coursier.cli.internal.{Argv0, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.install.InstallDir
+import coursier.jniutils.ModuleFileName
 
+import java.nio.file.Paths
 import java.util.Scanner
 
 import scala.util.control.NonFatal
@@ -41,8 +43,11 @@ object Coursier extends CommandsEntryPoint {
   override def enableCompleteCommand    = true
   override def enableCompletionsCommand = true
 
-  private def isInstalledLauncher: Boolean =
-    System.getenv(InstallDir.isInstalledLauncherEnvVar) == "true"
+  private def isNonInstalledLauncherWindows: Boolean =
+    Properties.isWin && isGraalvmNativeImage && {
+      val p = Paths.get(ModuleFileName.get())
+      !PathUtil.isInPath(p)
+    }
 
   private def runSetup(): Unit = {
     Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
@@ -104,7 +109,7 @@ object Coursier extends CommandsEntryPoint {
 
     if (csArgs.nonEmpty)
       super.main(csArgs)
-    else if (Properties.isWin && !isInstalledLauncher)
+    else if (isNonInstalledLauncherWindows)
       runSetup()
     else {
       println(help.help(helpFormat, showHidden = false))
