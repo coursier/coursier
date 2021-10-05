@@ -8,6 +8,7 @@ import caseapp._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.CoursierCommand
 import coursier.cli.install.Install
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
@@ -18,7 +19,7 @@ import coursier.util._
 
 import scala.concurrent.ExecutionContext
 
-object Resolve extends CaseApp[ResolveOptions] {
+object Resolve extends CoursierCommand[ResolveOptions] {
 
   /** Tries to parse get dependencies via Scala Index lookups.
     */
@@ -402,10 +403,10 @@ object Resolve extends CaseApp[ResolveOptions] {
     val (options0, deps) =
       ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
         val initialRepositories = initialParams.repositories.repositories
-        val channels            = initialParams.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.cache.parallel)
         val cache     = initialParams.cache.cache(pool, initialParams.output.logger())
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = handleApps(options, args.all, channels0)(_.addApp(_))
         res
       }

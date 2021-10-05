@@ -61,7 +61,7 @@ import scala.io.{Codec, Source}
         Seq("#!/usr/bin/env sh") ++
           setVars ++
           Seq(
-            "exec " + c + " \"$@\""
+            "exec \"" + c + "\" \"$@\""
           )
     }
 

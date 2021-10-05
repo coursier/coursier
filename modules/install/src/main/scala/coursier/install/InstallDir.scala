@@ -49,8 +49,7 @@ import scala.util.Properties
   nativeImageJavaHome: Option[String => Task[File]] = None,
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
-  basePreamble: Preamble = Preamble()
-    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
+  basePreamble: Preamble = Preamble(),
   @since
   overrideProguardedBootstraps: Option[Boolean] = None,
   @since("2.0.17")
@@ -115,13 +114,11 @@ import scala.util.Properties
     else dest
 
   private def baseJarPreamble(desc: AppDescriptor): Preamble =
-    basePreamble.addExtraEnvVar(InstallDir.isJvmLauncherEnvVar, "true")
+    basePreamble
       .withOsKind(Properties.isWin)
       .callsItself(Properties.isWin)
       .withJavaOpts(desc.javaOptions)
       .withJvmOptionFile(desc.jvmOptionFile)
-  private def baseNativePreamble: Preamble =
-    basePreamble.addExtraEnvVar(InstallDir.isNativeLauncherEnvVar, "true")
 
   private[install] def params(
     desc: AppDescriptor,
@@ -382,11 +379,11 @@ import scala.util.Properties
             val preamble =
               if (inPlaceLauncher) {
                 if (Properties.isWin)
-                  baseNativePreamble
+                  basePreamble
                     .withKind(Preamble.Kind.Bat)
                     .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
                 else
-                  baseNativePreamble
+                  basePreamble
                     .withKind(Preamble.Kind.Sh)
                     .withCommand(
                       // FIXME needs directory
@@ -397,7 +394,7 @@ import scala.util.Properties
               }
               else {
                 assert(launcherIsElsewhere)
-                baseNativePreamble
+                basePreamble
                   .withKind(if (Properties.isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
                   .withCommand(actualLauncher.toAbsolutePath.toString)
               }
@@ -489,10 +486,6 @@ import scala.util.Properties
 }
 
 object InstallDir {
-
-  val isInstalledLauncherEnvVar: String = "IS_CS_INSTALLED_LAUNCHER"
-  val isJvmLauncherEnvVar: String       = "CS_JVM_LAUNCHER"
-  val isNativeLauncherEnvVar: String    = "CS_NATIVE_LAUNCHER"
 
   private lazy val defaultDir0: Path = {
 

@@ -13,6 +13,7 @@ import coursier.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
 import coursier.cli.publish.params.PublishParams
 import coursier.publish.upload._
+import coursier.cli.CoursierCommand
 import coursier.cli.publish.util.{DeleteOnExit, Git}
 import coursier.cli.util.Guard
 import coursier.maven.MavenRepository
@@ -22,7 +23,7 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-object Publish extends CaseApp[PublishOptions] {
+object Publish extends CoursierCommand[PublishOptions] {
 
   val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
 

@@ -1,7 +1,7 @@
 package coursier.cli.install
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.CoursierCommand
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.InstallDir
 import coursier.cache.Cache
@@ -13,7 +13,7 @@ import coursier.cache.ArtifactError
 import java.io.File
 import scala.concurrent.ExecutionContext
 
-object Uninstall extends CaseApp[UninstallOptions] {
+object Uninstall extends CoursierCommand[UninstallOptions] {
 
   def run(options: UninstallOptions, args: RemainingArgs): Unit = {
 

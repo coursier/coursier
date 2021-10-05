@@ -9,11 +9,9 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.params.OutputParams
 import coursier.core.Repository
 import coursier.install.{GraalvmParams, InstallDir, Platform}
-import coursier.parse.RepositoryParser
 import coursier.util.Task
 
 final case class SharedInstallParams(
-  repositories: Seq[Repository],
   dir: Path,
   graalvmParamsOpt: Option[GraalvmParams] = None,
   onlyPrebuilt: Boolean,
@@ -22,7 +20,7 @@ final case class SharedInstallParams(
   proguarded: Option[Boolean]
 ) {
 
-  def installDir(cache: Cache[Task]): InstallDir =
+  def installDir(cache: Cache[Task], repositories: Seq[Repository]): InstallDir =
     InstallDir(dir, cache)
       .withGraalvmParamsOpt(graalvmParamsOpt)
       .withCoursierRepositories(repositories)
@@ -44,15 +42,7 @@ object SharedInstallParams {
       case Right(r)     => Validated.validNel(r)
     }
 
-  def apply(options: SharedInstallOptions): ValidatedNel[String, SharedInstallParams] = {
-
-    val repositoriesV = validationNelToCats(RepositoryParser.repositories(options.repository))
-
-    val defaultRepositories =
-      if (options.defaultRepositories)
-        coursier.Resolve.defaultRepositories
-      else
-        Nil
+  def apply(options: SharedInstallOptions): SharedInstallParams = {
 
     val dir = options.installDir.filter(_.nonEmpty) match {
       case Some(d) => Paths.get(d)
@@ -70,16 +60,13 @@ object SharedInstallParams {
 
     val preferPrebuilt = options.installPreferPrebuilt
 
-    repositoriesV.map { repositories =>
-      SharedInstallParams(
-        defaultRepositories ++ repositories,
-        dir,
-        Some(graalvmParams),
-        onlyPrebuilt,
-        platformOpt,
-        preferPrebuilt,
-        options.proguarded
-      )
-    }
+    SharedInstallParams(
+      dir,
+      Some(graalvmParams),
+      onlyPrebuilt,
+      platformOpt,
+      preferPrebuilt,
+      options.proguarded
+    )
   }
 }

@@ -3,8 +3,8 @@ package coursier.cli.setup
 import java.io.File
 import java.util.Locale
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.CoursierCommand
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
@@ -15,7 +15,7 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Setup extends CaseApp[SetupOptions] {
+object Setup extends CoursierCommand[SetupOptions] {
 
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
 
@@ -43,11 +43,11 @@ object Setup extends CaseApp[SetupOptions] {
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
-    val installDir = params.sharedInstall.installDir(installCache)
+    val installDir = params.sharedInstall.installDir(installCache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
     val channels =
-      Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
+      Channels(params.sharedChannel.channels, params.repository.repositories, installCache)
         .withVerbosity(params.output.verbosity)
 
     val confirm =

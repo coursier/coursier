@@ -1,6 +1,7 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{
   CacheOptions,
   DependencyOptions,
@@ -38,6 +39,8 @@ final case class ResolveOptions(
 
   @Recurse
     sharedResolveOptions: SharedResolveOptions = SharedResolveOptions(),
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
   @Help("Force printing / generating results, even if errored")
   @Short("F")

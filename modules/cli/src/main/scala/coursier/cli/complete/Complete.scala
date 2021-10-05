@@ -1,13 +1,16 @@
 package coursier.cli.complete
 
 import caseapp.core.RemainingArgs
-import caseapp.core.app.CaseApp
+import coursier.cli.CoursierCommand
 import coursier.util.Sync
 
 import scala.concurrent.ExecutionContext
 
-object Complete extends CaseApp[CompleteOptions] {
-
+object Complete extends CoursierCommand[CompleteOptions] {
+  override def names = List(
+    List("complete-dep"),
+    List("complete-dependency")
+  )
   def run(options: CompleteOptions, args: RemainingArgs): Unit = {
 
     val params = CompleteParams(options, args).toEither match {
