@@ -44,33 +44,6 @@ abstract class InstallTests extends TestSuite {
       else { inlineApp(); "" }
     }
 
-    def envVars(): Unit =
-      TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "install",
-            "--install-dir",
-            tmpDir.getAbsolutePath,
-            """env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}"""
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val envLauncher = new File(tmpDir, "env").getAbsolutePath
-
-        val csJvmLauncherOutput = LauncherTestUtil.output(
-          Seq(envLauncher, "CS_JVM_LAUNCHER"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        val expectedCsJvmLauncherOutput = "true" + System.lineSeparator()
-        assert(csJvmLauncherOutput == expectedCsJvmLauncherOutput)
-      }
-    test("env vars") {
-      if (LauncherTestUtil.isWindows) "disabled"
-      else { envVars(); "" }
-    }
-
     def jnaPython(): Unit =
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
