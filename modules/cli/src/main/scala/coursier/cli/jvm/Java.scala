@@ -2,8 +2,8 @@ package coursier.cli.jvm
 
 import java.io.File
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.CoursierCommand
 import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
@@ -14,7 +14,7 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Java extends CaseApp[JavaOptions] {
+object Java extends CoursierCommand[JavaOptions] {
   override def stopAtFirstUnrecognized = true
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
 

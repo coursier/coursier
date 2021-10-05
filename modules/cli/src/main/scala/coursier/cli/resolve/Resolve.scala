@@ -8,6 +8,7 @@ import caseapp._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.CoursierCommand
 import coursier.cli.install.Install
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
@@ -18,7 +19,7 @@ import coursier.util._
 
 import scala.concurrent.ExecutionContext
 
-object Resolve extends CaseApp[ResolveOptions] {
+object Resolve extends CoursierCommand[ResolveOptions] {
 
   /** Tries to parse get dependencies via Scala Index lookups.
     */

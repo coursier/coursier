@@ -2,15 +2,15 @@ package coursier.cli.install
 
 import java.time.Instant
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.CoursierCommand
 import coursier.install.{Channels, InstallDir}
 import coursier.install.error.InstallDirException
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Update extends CaseApp[UpdateOptions] {
+object Update extends CoursierCommand[UpdateOptions] {
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
 
     val params = UpdateParams(options).toEither match {

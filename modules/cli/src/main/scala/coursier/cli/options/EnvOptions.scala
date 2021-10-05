@@ -1,13 +1,24 @@
 package coursier.cli.options
 
-import caseapp.Name
+import caseapp._
 
 // format: off
 final case class EnvOptions(
-  env: Boolean = false,
+
+  @Group("Scripting")
+    env: Boolean = false,
+
+  @Group("Scripting")
+  @Hidden
   @Name("disable")
     disableEnv: Boolean = false,
-  setup: Boolean = false,
-  userHome: Option[String] = None
+
+  @Group("Scripting")
+    setup: Boolean = false,
+
+  @Group("Scripting")
+  @Hidden
+    userHome: Option[String] = None
+
 )
 // format: on

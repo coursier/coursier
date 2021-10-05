@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
+import coursier.cli.CoursierCommand
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
 import coursier.install.Channels
@@ -14,7 +15,7 @@ import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Fetch extends CaseApp[FetchOptions] {
+object Fetch extends CoursierCommand[FetchOptions] {
 
   def task(
     params: FetchParams,

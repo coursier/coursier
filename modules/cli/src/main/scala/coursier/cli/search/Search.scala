@@ -1,12 +1,12 @@
 package coursier.cli.search
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.CoursierCommand
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.Channels
 import coursier.util.Sync
 
-object Search extends CaseApp[SearchOptions] {
+object Search extends CoursierCommand[SearchOptions] {
 
   override def run(options: SearchOptions, args: RemainingArgs): Unit = {
     val params = SearchParams(options, args.all.nonEmpty).exitOnError()

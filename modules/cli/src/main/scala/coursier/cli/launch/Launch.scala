@@ -6,9 +6,9 @@ import java.net.{URL, URLClassLoader}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
-import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cli.CoursierCommand
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
@@ -29,7 +29,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-object Launch extends CaseApp[LaunchOptions] {
+object Launch extends CoursierCommand[LaunchOptions] {
 
   def baseLoader: ClassLoader = {
 
