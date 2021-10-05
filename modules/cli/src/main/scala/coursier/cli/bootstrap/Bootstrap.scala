@@ -47,7 +47,8 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     stderr: PrintStream = System.err
   ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], String)] =
     for {
-      t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
+      t <-
+        Fetch.task(params.sharedLaunch.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
@@ -209,13 +210,13 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     val (options0, deps) =
       BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
         val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
-        val channels            = initialParams.sharedLaunch.resolve.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
         val cache = initialParams.sharedLaunch.resolve.cache.cache(
           pool,
           initialParams.sharedLaunch.resolve.output.logger()
         )
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
         res
       }

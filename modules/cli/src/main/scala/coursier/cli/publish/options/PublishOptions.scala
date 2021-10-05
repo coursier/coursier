@@ -33,8 +33,7 @@ final case class PublishOptions(
   @Name("v")
     verbose: Int @@ Counter = Tag.of(0),
 
-  @Name("n")
-    dummy: Boolean = false,
+  dummy: Boolean = false,
 
   @HelpMessage("Disable interactive output")
     batch: Option[Boolean] = None,

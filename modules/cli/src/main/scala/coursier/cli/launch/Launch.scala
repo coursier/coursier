@@ -475,7 +475,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     stderr: PrintStream = System.err
   ): Task[(String, () => Option[Int])] =
     for {
-      t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
+      t <- Fetch.task(params.shared.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
@@ -515,13 +515,13 @@ object Launch extends CoursierCommand[LaunchOptions] {
     val (options0, deps) =
       LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
         val initialRepositories = initialParams.shared.resolve.repositories.repositories
-        val channels            = initialParams.shared.resolve.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
         val cache = initialParams.shared.resolve.cache.cache(
           pool,
           initialParams.shared.resolve.output.logger()
         )
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
 
         if (options.json) {

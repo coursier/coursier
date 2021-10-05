@@ -48,7 +48,7 @@ object Install extends CoursierCommand[InstallOptions] {
       ).get(s"graalvm:$version")
     }
 
-    val installDir = params.shared.installDir(cache)
+    val installDir = params.shared.installDir(cache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
 
@@ -96,7 +96,7 @@ object Install extends CoursierCommand[InstallOptions] {
         sys.exit(0)
       }
 
-      val channels = Channels(params.channels, params.shared.repositories, cache)
+      val channels = Channels(params.channels, params.repository.repositories, cache)
         .withVerbosity(params.output.verbosity)
 
       try {

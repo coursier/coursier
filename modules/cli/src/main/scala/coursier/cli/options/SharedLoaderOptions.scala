@@ -10,7 +10,6 @@ final case class SharedLoaderOptions(
   // deprecated, use shared instead
   @Value("target:dependency")
   @Short("I")
-  @Short("isolated")
   @Help("(deprecated) dependencies to be put in shared class loaders")
     isolated: List[String] = Nil,
 

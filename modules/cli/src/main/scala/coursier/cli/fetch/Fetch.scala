@@ -89,10 +89,10 @@ object Fetch extends CoursierCommand[FetchOptions] {
     val (options0, deps) =
       FetchParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
         val initialRepositories = initialParams.resolve.repositories.repositories
-        val channels            = initialParams.resolve.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
         val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
         res
       }

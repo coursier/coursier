@@ -1,6 +1,7 @@
 package coursier.cli.search
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
@@ -11,6 +12,9 @@ final case class SearchOptions(
 
   @Recurse
     repositoryOptions: RepositoryOptions = RepositoryOptions(),
+
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
   @Recurse
     outputOptions: OutputOptions = OutputOptions()

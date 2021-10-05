@@ -12,7 +12,7 @@ object Search extends CoursierCommand[SearchOptions] {
     val params = SearchParams(options, args.all.nonEmpty).exitOnError()
     val pool   = Sync.fixedThreadPool(params.cache.parallel)
     val cache  = params.cache.cache(pool, params.output.logger())
-    val channels = Channels(params.channels, params.repositories, cache)
+    val channels = Channels(params.channels.channels, params.repositories.repositories, cache)
       .withVerbosity(params.output.verbosity)
     channels.searchAppName(args.all).attempt.unsafeRun()(cache.ec) match {
       case Left(err: Channels.ChannelsException) =>

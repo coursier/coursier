@@ -403,10 +403,10 @@ object Resolve extends CoursierCommand[ResolveOptions] {
     val (options0, deps) =
       ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
         val initialRepositories = initialParams.repositories.repositories
-        val channels            = initialParams.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.cache.parallel)
         val cache     = initialParams.cache.cache(pool, initialParams.output.logger())
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = handleApps(options, args.all, channels0)(_.addApp(_))
         res
       }

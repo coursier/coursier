@@ -5,6 +5,7 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.fetch.FetchParams
+import coursier.cli.install.SharedChannelParams
 import coursier.cli.options.SharedLaunchOptions
 import coursier.cli.resolve.SharedResolveParams
 
@@ -18,12 +19,13 @@ final case class SharedLaunchParams(
   fork: Option[Boolean],
   pythonOpt: Option[Boolean]
 ) {
-  def fetch: FetchParams =
+  def fetch(channel: SharedChannelParams): FetchParams =
     FetchParams(
       classpath = false,
       jsonOutputOpt = None,
       resolve = resolve,
-      artifact = artifact
+      artifact = artifact,
+      channel = channel
     )
 
   def python = pythonOpt.getOrElse(false)

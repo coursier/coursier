@@ -1,7 +1,6 @@
 package coursier.cli.jvm
 
 import caseapp._
-import coursier.cli.options.RepositoryOptions
 
 // format: off
 final case class SharedJavaOptions(
@@ -18,9 +17,6 @@ final case class SharedJavaOptions(
     update: Boolean = false,
 
   @Group("Java")
-    jvmIndex: Option[String] = None,
-
-  @Recurse
-    repositoryOptions: RepositoryOptions = RepositoryOptions()
+    jvmIndex: Option[String] = None
 )
 // format: on

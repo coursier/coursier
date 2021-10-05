@@ -1,6 +1,7 @@
 package coursier.cli.fetch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.ArtifactOptions
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
@@ -22,7 +23,10 @@ final case class FetchOptions(
     resolveOptions: SharedResolveOptions = SharedResolveOptions(),
 
   @Recurse
-    artifactOptions: ArtifactOptions = ArtifactOptions()
+    artifactOptions: ArtifactOptions = ArtifactOptions(),
+
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions()
 
 ) {
   // format: on
