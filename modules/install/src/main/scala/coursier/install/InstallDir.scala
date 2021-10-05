@@ -49,8 +49,7 @@ import scala.util.Properties
   nativeImageJavaHome: Option[String => Task[File]] = None,
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
-  basePreamble: Preamble = Preamble()
-    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
+  basePreamble: Preamble = Preamble(),
   @since
   overrideProguardedBootstraps: Option[Boolean] = None,
   @since("2.0.17")
@@ -490,9 +489,8 @@ import scala.util.Properties
 
 object InstallDir {
 
-  val isInstalledLauncherEnvVar: String = "IS_CS_INSTALLED_LAUNCHER"
-  val isJvmLauncherEnvVar: String       = "CS_JVM_LAUNCHER"
-  val isNativeLauncherEnvVar: String    = "CS_NATIVE_LAUNCHER"
+  val isJvmLauncherEnvVar: String    = "CS_JVM_LAUNCHER"
+  val isNativeLauncherEnvVar: String = "CS_NATIVE_LAUNCHER"
 
   private lazy val defaultDir0: Path = {
 

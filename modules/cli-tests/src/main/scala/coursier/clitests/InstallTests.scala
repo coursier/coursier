@@ -65,14 +65,6 @@ abstract class InstallTests extends TestSuite {
         )
         val expectedCsJvmLauncherOutput = "true" + System.lineSeparator()
         assert(csJvmLauncherOutput == expectedCsJvmLauncherOutput)
-
-        val isCsInstalledLauncherOutput = LauncherTestUtil.output(
-          Seq(envLauncher, "IS_CS_INSTALLED_LAUNCHER"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        val expectedIsCsInstalledLauncherOutput = "true" + System.lineSeparator()
-        assert(isCsInstalledLauncherOutput == expectedIsCsInstalledLauncherOutput)
       }
     test("env vars") {
       if (LauncherTestUtil.isWindows) "disabled"
