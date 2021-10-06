@@ -47,8 +47,12 @@ private def releaseId(
   ghToken: String,
   tag: String
 ): Long = {
-  val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases?access_token=$ghToken"
-  val resp = quickRequest.get(url).send()
+  val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
+  val resp = quickRequest
+    .header("Accept", "application/vnd.github.v3+json")
+    .header("Authorization", s"token $ghToken")
+    .get(url)
+    .send()
 
   val json = ujson.read(resp.body)
   val releaseId =
@@ -141,7 +145,7 @@ def upload(
       }
 
     val uri =
-      uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name&access_token=$ghToken"
+      uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name"
     val contentType0 = contentType(f0)
     System.err.println(s"Detected content type of $f0: $contentType0")
     if (dryRun)
@@ -149,6 +153,8 @@ def upload(
     else {
       System.err.println(s"Uploading $f0 as $name")
       quickRequest
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("Authorization", s"token $ghToken")
         .body(f0.toNIO)
         .header("Content-Type", contentType0)
         .post(uri)
