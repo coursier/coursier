@@ -153,6 +153,25 @@ object JvmCacheTests extends TestSuite {
           catch {
             case _: IOException if Properties.isWin => ()
           }
+
+          val alreadyThereHome = jvmCache
+            .getIfInstalled("the-jdk:1.1")
+            .unsafeRun()(cache.ec)
+            .getOrElse {
+              sys.error("Should have been there")
+            }
+          assert(alreadyThereHome.getName == "Home")
+          assert(alreadyThereHome.getParentFile.getName == "Contents")
+          val alreadyThereJavaExec = new File(alreadyThereHome, "bin/java")
+          try {
+            val output         = Seq(alreadyThereJavaExec.getAbsolutePath, "-version").!!
+            val expectedOutput = "the jdk 1.1\n"
+            assert(output == expectedOutput)
+            ()
+          }
+          catch {
+            case _: IOException if Properties.isWin => ()
+          }
         }
       }
 
