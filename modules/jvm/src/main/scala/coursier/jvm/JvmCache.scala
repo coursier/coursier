@@ -192,10 +192,12 @@ object JvmCache {
       case Array() =>
         Task.fail(new JvmCache.EmptyArchive(dir, url))
       case Array(rootDir0) =>
-        if (rootDir0.isDirectory)
-          Task.point(rootDir0)
-        else
-          Task.fail(new JvmCache.NoDirectoryFoundInArchive(dir, url))
+        Task.delay(rootDir0.isDirectory).flatMap {
+          case true =>
+            Task.point(rootDir0)
+          case false =>
+            Task.fail(new JvmCache.NoDirectoryFoundInArchive(dir, url))
+        }
       case other =>
         Task.fail {
           new JvmCache.UnexpectedContentInArchive(
