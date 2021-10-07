@@ -48,8 +48,9 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
 
     archiveCache.getIfExists(artifact).flatMap {
-      case Left(e)       => Task.fail(e)
-      case Right(dirOpt) => Task.point(dirOpt)
+      case Left(e)          => Task.fail(e)
+      case Right(None)      => Task.point(None)
+      case Right(Some(dir)) => JvmCache.finalDirectory(entry.url, dir, os).map(Some(_))
     }
   }
 
@@ -191,10 +192,12 @@ object JvmCache {
       case Array() =>
         Task.fail(new JvmCache.EmptyArchive(dir, url))
       case Array(rootDir0) =>
-        if (rootDir0.isDirectory)
-          Task.point(rootDir0)
-        else
-          Task.fail(new JvmCache.NoDirectoryFoundInArchive(dir, url))
+        Task.delay(rootDir0.isDirectory).flatMap {
+          case true =>
+            Task.point(rootDir0)
+          case false =>
+            Task.fail(new JvmCache.NoDirectoryFoundInArchive(dir, url))
+        }
       case other =>
         Task.fail {
           new JvmCache.UnexpectedContentInArchive(
