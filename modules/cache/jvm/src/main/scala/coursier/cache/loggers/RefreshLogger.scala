@@ -2,7 +2,7 @@ package coursier.cache.loggers
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
 import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.CacheLogger
 import coursier.cache.internal.Terminal
@@ -227,6 +227,7 @@ class RefreshLogger(
 
   import RefreshLogger._
 
+  private val refCount                                      = new AtomicInteger
   private var updateRunnableOpt                             = Option.empty[UpdateDisplayRunnable]
   @volatile private var scheduler: ScheduledExecutorService = _
   private val lock                                          = new Object
@@ -250,6 +251,8 @@ class RefreshLogger(
               }
             }
           )
+
+        refCount.getAndIncrement()
 
         if (updateRunnableOpt.isEmpty) {
 
@@ -281,7 +284,8 @@ class RefreshLogger(
           scheduler = null
         }
 
-        if (updateRunnableOpt.nonEmpty) {
+        val newCount = refCount.decrementAndGet()
+        if (updateRunnableOpt.nonEmpty && newCount == 0) {
           updateRunnable.stop()
           updateRunnableOpt = None
         }
