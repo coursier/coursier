@@ -96,7 +96,7 @@ import java.nio.file.{Files, StandardCopyOption}
       }
 
     val downloadAndExtract: F[Either[ArtifactError, File]] =
-      cache.file(artifact).run.flatMap {
+      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run).flatMap {
         case Left(err) => S.point(Left(err))
         case Right(f)  => extract(f, deleteDest = false)
       }
@@ -105,7 +105,7 @@ import java.nio.file.{Files, StandardCopyOption}
       S.delay(dir.exists()).flatMap {
         case true =>
           if (artifact.changing)
-            cache.file(artifact).run.flatMap {
+            cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run).flatMap {
               case Left(err) => S.point(Left(err))
               case Right(f) =>
                 val archiveLastModifiedTime = Files.getLastModifiedTime(f.toPath)
