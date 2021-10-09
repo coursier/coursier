@@ -309,7 +309,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - run: .github/scripts/update-brew-formula.sh
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1
+        with:
+          jvm: 8
+      - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
