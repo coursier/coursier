@@ -53,12 +53,14 @@ object UpdateBrewFormula {
       .call(cwd = repoDir, stdout = os.Inherit)
 
     val jarUrl = s"https://github.com/coursier/coursier/releases/download/v$version/coursier"
-    val launcherUrl = s"https://github.com/coursier/coursier/releases/download/v$version/cs-x86_64-apple-darwin"
+    val launcherUrl = s"https://github.com/coursier/coursier/releases/download/v$version/cs-x86_64-apple-darwin.gz"
 
     val jarPath = os.rel / "jar-launcher"
     val launcherPath = os.rel / "launcher"
+    System.err.println(s"Getting $jarUrl")
     os.proc("curl", "-fLo", jarPath, jarUrl)
       .call(cwd = repoDir, stdout = os.Inherit)
+    System.err.println(s"Getting $launcherUrl")
     os.proc("curl", "-fLo", "launcher", launcherUrl)
       .call(cwd = repoDir, stdout = os.Inherit)
 
