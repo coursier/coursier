@@ -2,7 +2,7 @@
 
 object UpdateBrewFormula {
   def gitUsername = "Github Actions"
-  def gitEmail = "actions@github.com"
+  def gitEmail    = "actions@github.com"
 
   val workDir = os.pwd / "target"
 
@@ -11,7 +11,7 @@ object UpdateBrewFormula {
   def main(args: Array[String]): Unit = {
 
     val dryRun = args match {
-      case Array() => false
+      case Array()                   => false
       case Array("-n" | "--dry-run") => true
       case _ =>
         System.err.println(s"Usage: UpdateBrewFormula (-n|--dry-run)?")
@@ -53,9 +53,10 @@ object UpdateBrewFormula {
       .call(cwd = repoDir, stdout = os.Inherit)
 
     val jarUrl = s"https://github.com/coursier/coursier/releases/download/v$version/coursier"
-    val launcherUrl = s"https://github.com/coursier/coursier/releases/download/v$version/cs-x86_64-apple-darwin.gz"
+    val launcherUrl =
+      s"https://github.com/coursier/coursier/releases/download/v$version/cs-x86_64-apple-darwin.gz"
 
-    val jarPath = os.rel / "jar-launcher"
+    val jarPath      = os.rel / "jar-launcher"
     val launcherPath = os.rel / "launcher"
     System.err.println(s"Getting $jarUrl")
     os.proc("curl", "-fLo", jarPath, jarUrl)
@@ -69,7 +70,7 @@ object UpdateBrewFormula {
         .call(cwd = repoDir)
         .out.text()
         .trim
-    val jarSha256 = sha256(jarPath)
+    val jarSha256      = sha256(jarPath)
     val launcherSha256 = sha256(launcherPath)
 
     os.remove(repoDir / jarPath)
@@ -111,4 +112,3 @@ object UpdateBrewFormula {
     }
   }
 }
-
