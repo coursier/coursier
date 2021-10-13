@@ -15,11 +15,44 @@ sealed abstract class JavaOrScalaModule extends Product with Serializable {
 
 object JavaOrScalaModule {
 
-  def scalaBinaryVersion(scalaVersion: String): String =
-    if (scalaVersion.contains("-M") || scalaVersion.contains("-RC"))
-      scalaVersion
-    else
-      scalaVersion.split('.').take(2).mkString(".")
+  // Copied from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L23-L32
+  private val longPattern  = """\d{1,19}"""
+  private val basicVersion = raw"""($longPattern)\.($longPattern)\.($longPattern)"""
+  private val tagPattern   = raw"""(?:\w+(?:\.\w+)*)"""
+  private val ReleaseV     = raw"""$basicVersion""".r
+  private val BinCompatV   = raw"""$basicVersion(-$tagPattern)?-bin(-.*)?""".r
+  private val NonReleaseV_n =
+    raw"""$basicVersion((?:-$tagPattern)*)""".r // 0-n word suffixes, with leading dashes
+  private val NonReleaseV_1 = raw"""$basicVersion(-$tagPattern)""".r // 1 word suffix, after a dash
+
+  def scalaBinaryVersion(scalaVersion: String): String = {
+    // Directly inspired from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L87
+    if (scalaVersion.startsWith("3.")) {
+      scalaVersion match {
+        case ReleaseV(maj, _, _) =>
+          maj
+        case NonReleaseV_n(maj, min, patch, _) if min.toLong > 0 || patch.toLong > 0 =>
+          maj
+        case BinCompatV(maj, min, patch, stageOrNull, _) =>
+          val stage = if (stageOrNull != null) stageOrNull else ""
+          scalaBinaryVersion(s"$maj.$min.$patch$stage")
+        case _ =>
+          scalaVersion
+      }
+    }
+    else {
+      scalaVersion match {
+        case ReleaseV(maj, min, _) =>
+          s"$maj.$min"
+        case BinCompatV(maj, min, _, _, _) =>
+          s"$maj.$min"
+        case NonReleaseV_1(maj, min, patch, _) if patch.toLong > 0 =>
+          s"$maj.$min"
+        case _ =>
+          scalaVersion
+      }
+    }
+  }
 
   @data class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes
