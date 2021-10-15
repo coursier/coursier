@@ -204,6 +204,9 @@ import scala.util.Properties
           .withJavaHome(graalvmHomeOpt)
           .withVerbosity(verbosity)
 
+      case LauncherType.Prebuilt =>
+        Parameters.Prebuilt()
+
       case LauncherType.ScalaNative =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
@@ -325,7 +328,9 @@ import scala.util.Properties
 
           val actualLauncher = prebuiltOrNotFoundUrls0 match {
             case Left(notFoundUrls) =>
-              if (onlyPrebuilt && desc.launcherType.isNative)
+              if (
+                (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
+              )
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
               val params0 = params(desc, appArtifacts, infoEntries, mainClass, dest)
