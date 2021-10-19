@@ -83,13 +83,19 @@ object PrebuiltApp {
                 )
               }
             case Some((archiveType, Some(pathInArchive))) =>
-              maybeExtractedArchiveIt.map { f =>
-                ExtractedArchive(
-                  artifact,
-                  f,
-                  pathInArchive,
-                  new File(f, pathInArchive)
-                )
+              maybeExtractedArchiveIt.flatMap { f =>
+                val innerF = new File(f, pathInArchive)
+                if (innerF.exists()) {
+                  Iterator.single(ExtractedArchive(
+                    artifact,
+                    f,
+                    pathInArchive,
+                    innerF
+                  ))
+                }
+                else {
+                  Iterator.empty
+                }
               }
           }
       }

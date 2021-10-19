@@ -589,7 +589,7 @@ object InstallDir {
     val os0 = os.toLowerCase(Locale.ROOT)
 
     if (os0.contains("windows"))
-      Seq(".exe")
+      Seq(".exe", ".bat")
     else
       Nil
   }
