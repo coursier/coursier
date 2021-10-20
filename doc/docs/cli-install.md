@@ -507,6 +507,7 @@ Specifies the type of launcher that should be built for this application. Can be
 - `standalone`: builds a bootstrap embedding its JAR dependencies as resources (corresponds to the `--standalone` option of the `bootstrap` command - these JARs are similar to the ones [one-jar](http://one-jar.sourceforge.net) builds)
 - `scala-native`: builds a Scala Native application (requires the right [environment setup](https://scala-native.readthedocs.io/en/v0.3.9-docs/user/setup.html), and requires coursier to be started via its [JAR-based launcher](cli-installation.md#jar-based-launcher) for now)
 - `graalvm-native-image`: builds a GraalVM native image
+- `prebuilt`: points to an existing prebuilt executable (requires the [`prebuilt`](#prebuilt) field to be set as well)
 
 #### `mainClass`
 

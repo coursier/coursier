@@ -635,6 +635,49 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
+    test("install a prebuilt-only zip-ed launcher") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id = "sbt"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
+            .withRepositories(List("central"))
+            .withLauncherType("prebuilt")
+            .withPrebuilt(Some(
+              "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbt"
+            )),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = 0,
+            launcher.toAbsolutePath.toString,
+            "-version"
+          )
+          val expectedInOutput = "sbt script version: 1.4.1"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
     //   val id = "echo"
     //   val appInfo0 = appInfo(
