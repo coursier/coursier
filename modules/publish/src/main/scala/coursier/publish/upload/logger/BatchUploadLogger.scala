@@ -14,11 +14,10 @@ final class BatchUploadLogger(out: PrintStream, dummy: Boolean, isLocal: Boolean
         "Would have tried to write"
       else
         "Writing"
+    else if (dummy)
+      "Would have tried to upload"
     else
-      if (dummy)
-        "Would have tried to upload"
-      else
-        "Uploading"
+      "Uploading"
 
   override def uploadingSet(id: Object, fileSet: FileSet): Unit =
     out.println(s"$processing ${fileSet.elements.length} files")

@@ -16,11 +16,10 @@ final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolea
         "Would have written"
       else
         "Wrote"
+    else if (dummy)
+      "Would have uploaded"
     else
-      if (dummy)
-        "Would have uploaded"
-      else
-        "Uploaded",
+      "Uploaded",
     "files",
     out,
     doneEmoji = Some("\ud83d\ude9a")

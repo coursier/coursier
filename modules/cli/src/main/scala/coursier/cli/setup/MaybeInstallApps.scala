@@ -44,8 +44,8 @@ import dataclass.data
           deletedOpt <- Task.delay(installDir.delete(installedName))
           _ <- Task.delay {
             val message = deletedOpt match {
-              case None       => s"Could not delete $installedName (concurrent operation ongoing)"
-              case Some(true) => s"Uninstalled $installedName"
+              case None        => s"Could not delete $installedName (concurrent operation ongoing)"
+              case Some(true)  => s"Uninstalled $installedName"
               case Some(false) => s"$installedName was not installed"
             }
             System.err.println(message)

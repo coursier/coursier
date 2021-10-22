@@ -63,7 +63,7 @@ import java.nio.file.{Files, StandardCopyOption}
 
     def extract(f: File, deleteDest: Boolean): F[Either[ArtifactError, File]] =
       S.delay {
-        CacheLocks.withLockOr(location, dir) {
+        CacheLocks.withLockOr(location, dir)(
           if (deleteDest || !dir.exists()) {
             val tmp = CachePath.temporaryFile(dir)
             ArchiveCache.deleteRecursive(tmp)
@@ -87,7 +87,7 @@ import java.nio.file.{Files, StandardCopyOption}
             Thread.sleep(50L)
             None
           }
-        }
+        )
 
         Right(dir)
       }

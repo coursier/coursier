@@ -342,12 +342,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           (None, input)
       }
 
-      val e = for {
-        rawDesc <- RawAppDescriptor.parse(json)
-      } yield rawDesc
-        // kind of meh - so that the id can be picked as default output name by bootstrap
-        // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-        .withName(rawDesc.name.orElse(nameOpt))
+      val e =
+        for {
+          rawDesc <- RawAppDescriptor.parse(json)
+        } yield rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(nameOpt))
 
       e match {
         case Left(err) =>
@@ -359,23 +360,24 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
     def descOpt = appIds.headOption.map { id =>
 
-      val e = for {
-        info <- channels.appDescriptor(id)
-          .attempt
-          .flatMap {
-            case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
-            case Left(e)                             => Task.fail(new Exception(e))
-            case Right(res)                          => Task.point(Right(res))
-          }
-          .unsafeRun()(channels.cache.ec)
-        rawDesc <- RawAppDescriptor.parse(
-          new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
-        )
-      } yield rawDesc
-        // kind of meh - so that the id can be picked as default output name by bootstrap
-        // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-        .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
-        .overrideVersion(info.overrideVersionOpt)
+      val e =
+        for {
+          info <- channels.appDescriptor(id)
+            .attempt
+            .flatMap {
+              case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
+              case Left(e)                             => Task.fail(new Exception(e))
+              case Right(res)                          => Task.point(Right(res))
+            }
+            .unsafeRun()(channels.cache.ec)
+          rawDesc <- RawAppDescriptor.parse(
+            new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
+          )
+        } yield rawDesc
+          // kind of meh - so that the id can be picked as default output name by bootstrap
+          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+          .overrideVersion(info.overrideVersionOpt)
 
       e match {
         case Left(err) =>

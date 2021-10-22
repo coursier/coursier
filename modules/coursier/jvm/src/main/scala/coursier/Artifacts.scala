@@ -363,17 +363,16 @@ object Artifacts {
           S.point(result(true))
         else
           S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
+      else if (errors.isEmpty && ignoredErrors.isEmpty)
+        S.point(result(false))
       else
-        if (errors.isEmpty && ignoredErrors.isEmpty)
-          S.point(result(false))
-        else
-          fetchArtifacts(
-            errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq,
-            otherCaches.head,
-            otherCaches.tail: _*
-          ).map { l =>
-            reorder(result(false) ++ l)
-          }
+        fetchArtifacts(
+          errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq,
+          otherCaches.head,
+          otherCaches.tail: _*
+        ).map { l =>
+          reorder(result(false) ++ l)
+        }
     }
   }
 
