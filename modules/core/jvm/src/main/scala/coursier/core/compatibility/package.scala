@@ -25,7 +25,7 @@ package object compatibility {
 
     var i     = fromIdx
     var found = Option.empty[(Int, Int)]
-    while (found.isEmpty && i < s.length) {
+    while (found.isEmpty && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
         i += 1
@@ -47,7 +47,6 @@ package object compatibility {
       }
       else
         i += 1
-    }
 
     found
   }

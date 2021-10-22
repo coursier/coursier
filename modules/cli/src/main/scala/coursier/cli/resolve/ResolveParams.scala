@@ -100,11 +100,9 @@ object ResolveParams {
   }
 
   private def duration(input: String): ValidatedNel[String, FiniteDuration] =
-    try {
-      Duration(input) match {
-        case f: FiniteDuration => Validated.validNel(f)
-        case _                 => Validated.invalidNel(s"Invalid non-finite duration '$input'")
-      }
+    try Duration(input) match {
+      case f: FiniteDuration => Validated.validNel(f)
+      case _                 => Validated.invalidNel(s"Invalid non-finite duration '$input'")
     }
     catch {
       case _: IllegalArgumentException =>

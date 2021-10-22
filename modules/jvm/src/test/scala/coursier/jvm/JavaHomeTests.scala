@@ -119,7 +119,7 @@ object JavaHomeTests extends TestSuite {
             keepErrorStream: Boolean,
             extraEnv: Seq[(String, String)]
           ): Either[Int, String] =
-            if (command == Seq("java", "-XshowSettings:properties", "-version")) {
+            if (command == Seq("java", "-XshowSettings:properties", "-version"))
               if (keepErrorStream)
                 Right(
                   """hello
@@ -135,7 +135,6 @@ object JavaHomeTests extends TestSuite {
                   """Oracle JDK 39b07
                     |""".stripMargin
                 )
-            }
             else
               throw new Exception(s"Unexpected command: $command")
         }

@@ -19,18 +19,17 @@ object Pom {
     * @see
     *   [[https://issues.apache.org/jira/browse/MNG-5380]]
     */
-  def property(elem: Node): Either[String, (String, String)] = {
+  def property(elem: Node): Either[String, (String, String)] =
     // Not matching with Text, which fails on scala-js if the property value has xml comments
     if (elem.isElement) Right(elem.label -> elem.textContent.trim)
     else Left(s"Can't parse property $elem")
-  }
 
   // TODO Allow no version in some contexts
   private def module(
     node: Node,
     defaultGroupId: Option[Organization] = None,
     defaultArtifactId: Option[ModuleName] = None
-  ): Either[String, Module] = {
+  ): Either[String, Module] =
     for {
       organization <- {
         val e = text(node, "groupId", "Organization").map(Organization(_))
@@ -41,7 +40,6 @@ object Pom {
         defaultArtifactId.fold(n)(n0 => Right(n.getOrElse(n0)))
       }
     } yield Module(organization, name, Map.empty).trim
-  }
 
   private def readVersion(node: Node) =
     text(node, "version", "Version").getOrElse("").trim
@@ -336,8 +334,7 @@ object Pom {
       )
     }
 
-  def versions(node: Node): Either[String, Versions] = {
-
+  def versions(node: Node): Either[String, Versions] =
     for {
       organization <- text(node, "groupId", "Organization") // Ignored
       name <- text(node, "artifactId", "Name")              // Ignored
@@ -367,7 +364,6 @@ object Pom {
 
       Versions(latest, release, versionsOpt.map(_.toList).getOrElse(Nil), lastUpdatedOpt)
     }
-  }
 
   def snapshotVersion(node: Node): Either[String, SnapshotVersion] = {
 

@@ -342,11 +342,10 @@ object AppDescriptor {
       val dep0        = dep.dependency(sv)
       val depVersions = listVersions(cache, repositories, dep0.module)
 
-      if (verbosity >= 2) {
+      if (verbosity >= 2)
         System.err.println(
           s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}"
         )
-      }
 
       latestVersions(dep.version) || {
         val constraint   = coursier.core.Parse.versionConstraint(dep.version)

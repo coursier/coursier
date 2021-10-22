@@ -115,12 +115,11 @@ object Output {
           )
         }
 
-      if (depsStr.nonEmpty) {
+      if (depsStr.nonEmpty)
         if (printResultStdout)
           stdout.println(depsStr)
         else
           stderr.println(depsStr)
-      }
     }
 
 }

@@ -54,7 +54,7 @@ object Update extends CoursierCommand[UpdateOptions] {
         source =>
           Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
             .find(source.id)
-            .map(_.map { data => (data.origin, data.data) }),
+            .map(_.map(data => (data.origin, data.data))),
         now,
         params.force
       ).map {

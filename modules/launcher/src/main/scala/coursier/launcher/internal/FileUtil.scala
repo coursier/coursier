@@ -32,10 +32,8 @@ private[coursier] object FileUtil {
       is0 = is
       readFullyUnsafe(is0)
     }
-    finally {
-      if (is0 != null)
-        is0.close()
-    }
+    finally if (is0 != null)
+      is0.close()
   }
 
   def withOutputStream[T](path: Path)(f: OutputStream => T): T = {
@@ -44,14 +42,11 @@ private[coursier] object FileUtil {
       os = Files.newOutputStream(path)
       f(os)
     }
-    finally {
-      if (os != null)
-        os.close()
-    }
+    finally if (os != null)
+      os.close()
   }
 
-  def tryMakeExecutable(path: Path): Boolean = {
-
+  def tryMakeExecutable(path: Path): Boolean =
     try {
       val perms = Files.getPosixFilePermissions(path).asScala.toSet
 
@@ -75,7 +70,6 @@ private[coursier] object FileUtil {
       case _: UnsupportedOperationException =>
         false
     }
-  }
 
   def tryHideWindows(path: Path): Boolean =
     Windows.isWindows && {

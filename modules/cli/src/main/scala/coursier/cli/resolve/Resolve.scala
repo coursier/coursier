@@ -344,12 +344,10 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       val e = for {
         rawDesc <- RawAppDescriptor.parse(json)
-      } yield {
-        rawDesc
-          // kind of meh - so that the id can be picked as default output name by bootstrap
-          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-          .withName(rawDesc.name.orElse(nameOpt))
-      }
+      } yield rawDesc
+        // kind of meh - so that the id can be picked as default output name by bootstrap
+        // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+        .withName(rawDesc.name.orElse(nameOpt))
 
       e match {
         case Left(err) =>
@@ -373,13 +371,11 @@ object Resolve extends CoursierCommand[ResolveOptions] {
         rawDesc <- RawAppDescriptor.parse(
           new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
         )
-      } yield {
-        rawDesc
-          // kind of meh - so that the id can be picked as default output name by bootstrap
-          // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
-          .overrideVersion(info.overrideVersionOpt)
-      }
+      } yield rawDesc
+        // kind of meh - so that the id can be picked as default output name by bootstrap
+        // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
+        .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+        .overrideVersion(info.overrideVersionOpt)
 
       e match {
         case Left(err) =>

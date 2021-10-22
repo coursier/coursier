@@ -358,13 +358,12 @@ object Artifacts {
         reorder(if (withIgnoredErrors) withFiles ++ noFiles else withFiles)
       }
 
-      if (otherCaches.isEmpty) {
+      if (otherCaches.isEmpty)
         if (errors.isEmpty)
           S.point(result(true))
         else
           S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
-      }
-      else {
+      else
         if (errors.isEmpty && ignoredErrors.isEmpty)
           S.point(result(false))
         else
@@ -375,7 +374,6 @@ object Artifacts {
           ).map { l =>
             reorder(result(false) ++ l)
           }
-      }
     }
   }
 

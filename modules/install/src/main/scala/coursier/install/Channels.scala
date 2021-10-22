@@ -33,9 +33,8 @@ import scala.collection.JavaConverters._
       val idx = id.indexOf(':')
       if (idx < 0)
         (None, id, None)
-      else if (id.length > idx + 1 && id.charAt(idx + 1) == '{') {
+      else if (id.length > idx + 1 && id.charAt(idx + 1) == '{')
         (Some(id.drop(idx + 1)), id.take(idx), None)
-      }
       else
         (None, id.take(idx), Some(id.drop(idx + 1)))
     }
@@ -90,10 +89,8 @@ import scala.collection.JavaConverters._
       sourceBytes = RawSource(repositoriesRepr0, source.channel.repr, actualId)
         .repr.getBytes(StandardCharsets.UTF_8)
 
-    } yield {
-      AppInfo(desc, channelData.data, source, sourceBytes)
-        .overrideVersion(overrideVersionOpt)
-    }
+    } yield AppInfo(desc, channelData.data, source, sourceBytes)
+      .overrideVersion(overrideVersionOpt)
   }
 
   private def withZipFile[T](file: File)(f: ZipFile => T): T = {
@@ -102,10 +99,8 @@ import scala.collection.JavaConverters._
       zf = new ZipFile(file)
       f(zf)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   def find(id: String): Task[Option[ChannelData]] = {
@@ -251,9 +246,8 @@ import scala.collection.JavaConverters._
 
   def searchAppName(query: Seq[String]): Task[List[String]] = {
 
-    def matchQuery(id: String): Boolean = {
+    def matchQuery(id: String): Boolean =
       query.isEmpty || query.exists(id.contains)
-    }
 
     def fromModule(channel: Channel.FromModule): Task[List[String]] =
       for {
@@ -356,10 +350,8 @@ import scala.collection.JavaConverters._
             .filter(matchQuery)
             .toList
         }
-        finally {
-          if (stream != null)
-            stream.close()
-        }
+        finally if (stream != null)
+          stream.close()
       }
       else List.empty[String]
     }

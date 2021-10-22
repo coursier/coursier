@@ -87,9 +87,7 @@ object TestUtil {
     assert(server.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
 
     try f(server.baseUri)
-    finally {
-      server.shutdownNow()
-    }
+    finally server.shutdownNow()
   }
 
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {

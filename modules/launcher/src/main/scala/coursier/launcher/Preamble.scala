@@ -119,10 +119,8 @@ object Preamble {
         .getResourceAsStream(path)
       Source.fromInputStream(is)(Codec.UTF8).mkString
     }
-    finally {
-      if (is != null)
-        is.close()
-    }
+    finally if (is != null)
+      is.close()
   }
 
   private lazy val batJarTemplate: String =

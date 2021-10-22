@@ -67,10 +67,8 @@ object ArtifactsLock {
       is = new FileInputStream(f)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     }
-    finally {
-      if (is != null)
-        is.close()
-    }
+    finally if (is != null)
+      is.close()
 
     val b = md.digest()
     new BigInteger(1, b).toString(16)

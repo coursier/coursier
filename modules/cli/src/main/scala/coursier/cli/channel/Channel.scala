@@ -31,9 +31,7 @@ object Channel extends CoursierCommand[ChannelOptions] {
       rawLine <- new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).linesIterator
       line = rawLine.trim
       if line.nonEmpty
-    } {
-      System.out.println(line)
-    }
+    } System.out.println(line)
   }
 
   def addChannel(channels: List[String], output: OutputParams) = {

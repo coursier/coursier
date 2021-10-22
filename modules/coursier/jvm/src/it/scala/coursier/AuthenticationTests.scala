@@ -32,9 +32,7 @@ object AuthenticationTests extends TestSuite {
   private def withTmpDir[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     try f(dir)
-    finally {
-      deleteRecursive(dir.toFile)
-    }
+    finally deleteRecursive(dir.toFile)
   }
 
   private def testCredentials(credentials: DirectCredentials): Unit = {

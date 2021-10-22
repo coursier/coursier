@@ -111,8 +111,7 @@ object Updatable {
     dest: Path,
     auxExtension: String,
     verbosity: Int
-  ): Option[Boolean] = {
-
+  ): Option[Boolean] =
     if (InfoFile.isInfoFile(dest)) {
 
       val files = relatedFiles(dest, auxExtension)
@@ -131,6 +130,5 @@ object Updatable {
     }
     else
       throw new NotAnApplication(dest)
-  }
 
 }

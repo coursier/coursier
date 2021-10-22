@@ -24,9 +24,8 @@ final class SimpleDownloadLogger(out: PrintStream, verbosity: Int) extends Downl
           s"Failed to download $url"
       out.println(msg)
     }
-    else if (verbosity >= 1) {
+    else if (verbosity >= 1)
       if (size.nonEmpty)
         out.println(s"Downloaded $url")
-    }
 
 }

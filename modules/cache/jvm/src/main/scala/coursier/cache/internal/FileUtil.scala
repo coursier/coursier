@@ -28,10 +28,8 @@ object FileUtil {
       is0 = is
       readFullyUnsafe(is0)
     }
-    finally {
-      if (is0 != null)
-        is0.close()
-    }
+    finally if (is0 != null)
+      is0.close()
   }
 
   def withContent(is: InputStream, f: WithContent, bufferSize: Int = 16384): Unit = {

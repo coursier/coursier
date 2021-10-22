@@ -58,10 +58,8 @@ object JvmIndex {
       zf = new ZipFile(file)
       f(zf)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   private def fromModule(
@@ -301,12 +299,11 @@ object JvmIndex {
         archIndex.get(jdkNamePrefix.getOrElse("") + name).toRight(s"JVM $name not found")
       needs1Prefix = versionIndex.keysIterator.forall(_.startsWith("1."))
       version0 =
-        if (needs1Prefix) {
+        if (needs1Prefix)
           if (version.startsWith("1.") || version == "1" || version == "1+")
             version
           else
             "1." + version
-        }
         else
           version
       retainedVersionUrlDescriptor <- versionIndex
@@ -335,11 +332,9 @@ object JvmIndex {
       arch      <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
       osIndex   <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
-    } yield {
-      archIndex.map {
-        case (name, versionMap) =>
-          val name0 = jdkNamePrefix.fold(name)(name.stripPrefix)
-          name0 -> versionMap
-      }
+    } yield archIndex.map {
+      case (name, versionMap) =>
+        val name0 = jdkNamePrefix.fold(name)(name.stripPrefix)
+        name0 -> versionMap
     }
 }

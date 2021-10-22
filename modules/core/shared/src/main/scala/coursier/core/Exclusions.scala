@@ -14,12 +14,11 @@ object Exclusions {
     val it = exclusions.iterator
     while (it.hasNext) {
       val excl = it.next()
-      if (excl._1 == allOrganizations) {
+      if (excl._1 == allOrganizations)
         if (excl._2 == allNames)
           all0 = true
         else
           excludeByName0 += excl._2
-      }
       else if (excl._2 == allNames)
         excludeByOrg0 += excl._1
       else
@@ -35,11 +34,10 @@ object Exclusions {
 
     if (all) (_, _) => false
     else
-      (org, name) => {
+      (org, name) =>
         !excludeByName(name) &&
         !excludeByOrg(org) &&
         !remaining((org, name))
-      }
   }
 
   def minimize(exclusions: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {

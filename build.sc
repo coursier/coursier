@@ -639,6 +639,12 @@ def simpleNativeCliTest() = T.command {
   `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  def cleanUp(): Unit =
+    try os.remove.all(tmpDir)
+    catch {
+      case _: java.io.IOException =>
+        System.err.println(s"Error removing $tmpDir, ignoring it")
+    }
   val res =
     try {
       os.proc(
@@ -651,13 +657,7 @@ def simpleNativeCliTest() = T.command {
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
-    finally {
-      try os.remove.all(tmpDir)
-      catch {
-        case _: java.io.IOException =>
-          System.err.println(s"Error removing $tmpDir, ignoring it")
-      }
-    }
+    finally cleanUp()
   assert(res.out.text == "foo a")
 }
 

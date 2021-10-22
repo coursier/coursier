@@ -66,10 +66,8 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
             }
           }
         }
-        finally {
-          if (response != null)
-            response.body().close()
-        }
+        finally if (response != null)
+          response.body().close()
       }.toEither.flatMap(identity)
 
       logger.downloadedIfExists(
@@ -95,8 +93,7 @@ object OkhttpDownload {
       }
   }
 
-  def create(pool: ExecutorService): Download = {
+  def create(pool: ExecutorService): Download =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpDownload(new OkHttpClient, pool)
-  }
 }

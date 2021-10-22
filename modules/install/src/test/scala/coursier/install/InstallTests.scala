@@ -44,10 +44,8 @@ object InstallTests extends TestSuite {
           .asScala
           .foreach(delete)
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else
       try Files.deleteIfExists(d)
@@ -59,9 +57,7 @@ object InstallTests extends TestSuite {
   private def withTempDir[T](f: Path => T): T = {
     val tmpDir = Files.createTempDirectory("coursier-install-test")
     try f(tmpDir)
-    finally {
-      delete(tmpDir)
-    }
+    finally delete(tmpDir)
   }
 
   private def withZipFile[T](f: File)(t: ZipFile => T): T = {
@@ -70,10 +66,8 @@ object InstallTests extends TestSuite {
       zf = new ZipFile(f)
       t(zf)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   private def assertHasNotEntry(f: File, path: String) =
@@ -160,9 +154,8 @@ object InstallTests extends TestSuite {
       val expected = Seq(0x4d, 0x5a).map(_.toByte)
       assert(buf.toSeq == expected)
     }
-    else {
+    else
       sys.error(s"Unsupported OS: $osName")
-    }
     fis.close()
   }
 

@@ -28,9 +28,7 @@ object UtilTests extends TestSuite {
           val link = Files.createSymbolicLink(tmpDir.resolve("link"), dir)
           Util.createDirectories(link) // should not throw
         }
-        finally {
-          deleteRecursive(tmpDir.toFile)
-        }
+        finally deleteRecursive(tmpDir.toFile)
       }
     }
 

@@ -47,10 +47,8 @@ object ArchiveUtil {
 
       f(it)
     }
-    finally {
-      if (fis != null)
-        fis.close()
-    }
+    finally if (fis != null)
+      fis.close()
   }
 
   def withFirstFileInTgz[T](tgz: File)(f: InputStream => T): T =

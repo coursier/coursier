@@ -54,18 +54,16 @@ import dataclass._
             Task.delay {
 
               val outputOrRetCode =
-                try {
-                  commandOutput
-                    .run(
-                      Seq("java", "-XshowSettings:properties", "-version"),
-                      keepErrStream = true,
-                      // Setting this makes cs-java fail.
-                      // This prevents us (possibly cs-java) to call ourselves,
-                      // which could call ourselves again, etc. indefinitely.
-                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
-                    )
-                    .toOption
-                }
+                try commandOutput
+                  .run(
+                    Seq("java", "-XshowSettings:properties", "-version"),
+                    keepErrStream = true,
+                    // Setting this makes cs-java fail.
+                    // This prevents us (possibly cs-java) to call ourselves,
+                    // which could call ourselves again, etc. indefinitely.
+                    extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                  )
+                  .toOption
                 catch {
                   case _: IOException =>
                     None

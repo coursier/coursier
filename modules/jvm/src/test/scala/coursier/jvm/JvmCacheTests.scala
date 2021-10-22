@@ -33,10 +33,8 @@ object JvmCacheTests extends TestSuite {
       dir = Files.createTempDirectory("jvm-cache-tests-")
       f(dir)
     }
-    finally {
-      if (dir != null)
-        deleteRecursive(dir.toFile)
-    }
+    finally if (dir != null)
+      deleteRecursive(dir.toFile)
   }
 
   private val poolInitialized = new AtomicBoolean(false)
@@ -105,7 +103,7 @@ object JvmCacheTests extends TestSuite {
           val expectedOutput = "the jdk 1.1\n"
           val javaExec       = new File(new File(home, "bin"), filename)
 
-          val output = (Seq(javaExec.getAbsolutePath, "-version").!!)
+          val output = Seq(javaExec.getAbsolutePath, "-version").!!
           assert(output.replace("\r\n", "\n") == expectedOutput)
         }
       }

@@ -13,7 +13,7 @@ import dataclass.data
   override def sbtAttrStub: Boolean =
     repo.sbtAttrStub
 
-  private def fromDirListing(dirUrl: String, prefix: String): F[Either[Throwable, Seq[String]]] = {
+  private def fromDirListing(dirUrl: String, prefix: String): F[Either[Throwable, Seq[String]]] =
     F.map(fetch(repo.artifactFor(dirUrl + ".links", changing = true)).run) {
       case Left(e) =>
         Left(new Exception(e))
@@ -21,7 +21,6 @@ import dataclass.data
         val entries = MavenComplete.split0(rawLinks, '\n', prefix)
         Right(entries)
     }
-  }
 
   def organization(prefix: String): F[Either[Throwable, Seq[String]]] = {
 

@@ -48,9 +48,8 @@ trait Shading extends JavaModule with PublishModule {
         case (false, Left(x))               => x
         case (true, Left(x)) if !x.notFound => x
       }
-      if (errors.nonEmpty) {
+      if (errors.nonEmpty)
         sys.error(errors.toString)
-      }
       loadedArtifacts.collect { case (_, Right(x)) => x }
     }
 
@@ -96,8 +95,8 @@ trait Shading extends JavaModule with PublishModule {
           zf = new ZipFile(f.toIO)
 
           val buf = Array.ofDim[Byte](64 * 1024)
-          for (ent <- zf.entries.asScala) {
-            if (ent.getName.endsWith("/")) {
+          for (ent <- zf.entries.asScala)
+            if (ent.getName.endsWith("/"))
               for {
                 (_, updatedName) <- shader(Array.emptyByteArray, ent.getName)
                 if !seen(updatedName)
@@ -118,7 +117,6 @@ trait Shading extends JavaModule with PublishModule {
                 }
                 zos.putNextEntry(updatedEnt)
               }
-            }
             else {
               val baos            = new ByteArrayOutputStream
               var is: InputStream = null
@@ -128,15 +126,12 @@ trait Shading extends JavaModule with PublishModule {
                 while ({
                   read = is.read(buf)
                   read >= 0
-                }) {
+                })
                   if (read > 0)
                     baos.write(buf, 0, read)
-                }
               }
-              finally {
-                if (is != null)
-                  is.close()
-              }
+              finally if (is != null)
+                is.close()
               val bytes = baos.toByteArray
               for {
                 (updatedBytes, updatedName) <- shader(bytes, ent.getName)
@@ -164,12 +159,9 @@ trait Shading extends JavaModule with PublishModule {
                 zos.write(updatedBytes, 0, updatedBytes.length)
               }
             }
-          }
         }
-        finally {
-          if (zf != null)
-            zf.close()
-        }
+        finally if (zf != null)
+          zf.close()
       }
 
       zos.finish()

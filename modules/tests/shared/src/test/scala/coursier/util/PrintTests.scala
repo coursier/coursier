@@ -12,11 +12,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object PrintTests extends TestSuite {
 
   object AppliedTree {
-    def apply[A](tree: Tree[A]): Seq[AppliedTree[A]] = {
-      tree.roots.map(root => {
+    def apply[A](tree: Tree[A]): Seq[AppliedTree[A]] =
+      tree.roots.map { root =>
         AppliedTree[A](root, apply(Tree(tree.children(root).toIndexedSeq)(tree.children)))
-      })
-    }
+      }
   }
 
   case class AppliedTree[A](root: A, children: Seq[AppliedTree[A]])

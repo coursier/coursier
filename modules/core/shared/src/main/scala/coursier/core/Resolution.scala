@@ -215,8 +215,8 @@ object Resolution {
 
     val dep0 = dep.copy(
       module = dep.module.copy(
-        organization = (dep.module.organization.map(substituteProps0)),
-        name = (dep.module.name.map(substituteProps0))
+        organization = dep.module.organization.map(substituteProps0),
+        name = dep.module.name.map(substituteProps0)
       ),
       version = substituteTrimmedProps(dep.version),
       attributes = dep.attributes
@@ -1086,8 +1086,7 @@ object Resolution {
       toCheck: Set[ModuleVersion],
       done: Set[ModuleVersion],
       missing: Set[ModuleVersion]
-    ): Set[ModuleVersion] = {
-
+    ): Set[ModuleVersion] =
       if (toCheck.isEmpty)
         missing
       else if (toCheck.exists(done))
@@ -1107,7 +1106,6 @@ object Resolution {
       }
       else
         helper(Set.empty, done, missing ++ toCheck)
-    }
 
     helper(
       dependencyManagementRequirements(project),

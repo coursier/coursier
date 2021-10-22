@@ -53,10 +53,8 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
       zos = new JarOutputStream(output, manifest)
       writeEntries(jars.map(Right(_)), zos, rules, extraZipEntries)
     }
-    finally {
-      if (zos != null)
-        zos.close()
-    }
+    finally if (zos != null)
+      zos.close()
   }
 
   def writeEntries(
@@ -118,7 +116,7 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
               append()
 
             case None =>
-              if (!excludePatterns.exists(_.matcher(ent.getName).matches())) {
+              if (!excludePatterns.exists(_.matcher(ent.getName).matches()))
                 if (appendPatterns.exists(_.matcher(ent.getName).matches()))
                   append()
                 else if (!ignore(ent.getName)) {
@@ -129,7 +127,6 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
                   ignore += ent.getName
                 }
-              }
           }
         }
 
