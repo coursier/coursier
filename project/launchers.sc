@@ -55,7 +55,7 @@ trait Launchers extends SbtModule with NativeImage {
 
   def nativeImageCsCommand    = Seq(cs.cs)
   def nativeImagePersist      = System.getenv("CI") != null
-  def nativeImageGraalVmJvmId = s"graalvm-java11:$graalVmVersion"
+  def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
 
   def nativeImageClassPath     = runClasspath()
   def nativeImageName          = "cs"
@@ -90,9 +90,16 @@ trait Launchers extends SbtModule with NativeImage {
     val cLibPath =
       if (usesDocker) s"/data/$staticLibDirName"
       else staticLibDir().path.toString
-    Seq(
-      s"-H:CLibraryPath=$cLibPath"
-    )
+    val extraOpts =
+      if (Properties.isLinux)
+        Seq(
+          // required on the Linux / ARM64 CI in particular (not sure why)
+          "-Djdk.lang.Process.launchMechanism=vfork" // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+        )
+      else
+        Nil
+    Seq(s"-H:CLibraryPath=$cLibPath") ++
+      extraOpts
   }
 
   def runWithAssistedConfig(args: String*) = T.command {
