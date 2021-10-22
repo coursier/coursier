@@ -55,7 +55,7 @@ trait Launchers extends SbtModule with NativeImage {
 
   def nativeImageCsCommand    = Seq(cs.cs)
   def nativeImagePersist      = System.getenv("CI") != null
-  def nativeImageGraalVmJvmId = s"graalvm-java11:${deps.graalVmVersion}"
+  def nativeImageGraalVmJvmId = s"graalvm-java11:$graalVmVersion"
 
   def nativeImageClassPath     = runClasspath()
   def nativeImageName          = "cs"
@@ -104,7 +104,7 @@ trait Launchers extends SbtModule with NativeImage {
         cs.cs,
         "java-home",
         "--jvm",
-        s"graalvm-java11:$graalVmVersion",
+        nativeImageGraalVmJvmId(),
         "--jvm-index",
         jvmIndex
       ).!!.trim
