@@ -114,7 +114,6 @@ object CacheDefaults {
     }
     else
       credentialPropOpt
-        .filter(isPropFile)
         .toSeq
         .flatMap {
           case path if isPropFile(path) =>
