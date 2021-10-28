@@ -19,5 +19,3 @@ processed-docs/
 .bloop/
 
 bin/
-
-target/
