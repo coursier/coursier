@@ -142,7 +142,7 @@ object CacheUrl {
 
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", "")
+        conn0.setRequestProperty("User-Agent", "Coursier")
 
         conn0 match {
           case conn1: HttpsURLConnection =>
