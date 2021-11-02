@@ -798,7 +798,7 @@ abstract class CentralTests extends TestSuite {
           val res = await(runner.resolution(
             mod"edu.illinois.cs.cogcomp:illinois-pos",
             "2.0.2",
-            Seq(mvn"http://cogcomp.cs.illinois.edu/m2repo"),
+            Seq(mvn"https://cogcomp.seas.upenn.edu/m2repo"),
             configuration = Configuration.compile
           ))
           val expectedTree =
