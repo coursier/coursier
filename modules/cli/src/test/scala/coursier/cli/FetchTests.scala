@@ -1145,7 +1145,7 @@ object FetchTests extends TestSuite {
             assert(Files.isRegularFile(junitPomFile))
             assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
               junitAlternativePomShaFile
-            )) //, s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
+            )) // , s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
             junitPomFile
           }
 

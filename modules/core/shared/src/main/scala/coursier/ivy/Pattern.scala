@@ -14,7 +14,7 @@ import fastparse._, NoWhitespace._
   def substituteProperties(properties: Map[String, String]): Either[String, Pattern] = {
 
     val validation = chunks.validationNelTraverse[String, Seq[Pattern.Chunk]] {
-      case prop: ChunkOrProperty.Prop => //(name, alternativesOpt) =>
+      case prop: ChunkOrProperty.Prop => // (name, alternativesOpt) =>
         properties.get(prop.name) match {
           case Some(value) =>
             ValidationNel.success(Seq(Pattern.Chunk.Const(value)))

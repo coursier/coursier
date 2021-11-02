@@ -14,7 +14,7 @@ object JavaOrScalaModuleTests extends TestSuite {
        */
 
       // The 2.9.x scheme is not supported by coursier
-      //assert(scalaBinaryVersion("2.9.2") == "2.9.2")
+      // assert(scalaBinaryVersion("2.9.2") == "2.9.2")
 
       assert(scalaBinaryVersion("2.10.0-M1") == "2.10.0-M1")
       assert(scalaBinaryVersion("2.10.0-RC1") == "2.10.0-RC1")
