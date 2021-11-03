@@ -376,7 +376,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     else
       launch(hierarchy0, mainClass0, userArgs, properties0)
         // format: off
-        .map { f => () => f(); None }
+        .map {f => () => f(); None}
         // format: on
   }
 
