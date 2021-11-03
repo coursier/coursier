@@ -1078,30 +1078,14 @@ object FetchTests extends TestSuite {
 
     test("Bad pom resolve should succeed with retry") - withTempDir("tmp_dir") {
       dir =>
-        {
-          def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
-            val (_, _, _, files) = mayThrow {
-              Fetch.task(params, pool, Seq("junit:junit:4.12"))
-                .unsafeRun()(ec)
-            }
-            assert(files.map(_._2.getName).toSet
-              .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
-            val junitJarPath =
-              files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
-                .head
-            val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
-            val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
-            val junitAlternativePomShaFile =
-              FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
-            assert(Files.isRegularFile(junitPomFile))
-            assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
-              junitAlternativePomShaFile
-            )) // , s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
-            junitPomFile
+        def runFetchJunit() = {
+          val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
+          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+          val options    = FetchOptions(resolveOptions = resolveOpt)
+          val params     = paramsOrThrow(options)
+          val (_, _, _, files) = mayThrow {
+            Fetch.task(params, pool, Seq("junit:junit:4.12"))
+              .unsafeRun()(ec)
           }
           assert(files.map(_._2.getName).toSet
             .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
