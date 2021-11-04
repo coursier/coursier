@@ -1,8 +1,14 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, Parser}
+import caseapp.{ExtraName => Short, HelpMessage, Parser}
 
 // format: off
+@HelpMessage(
+  "List all currently installed applications.\n" +
+  "\n" +
+  "Example:\n" +
+  "$ cs list\n"
+)
 final case class ListOptions(
   @Short("dir")
     installDir: Option[String] = None,

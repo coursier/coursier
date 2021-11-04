@@ -4,6 +4,7 @@ import caseapp._
 import coursier.cli.options.CacheOptions
 
 // format: off
+@HelpMessage("[Experimental] Publish an artifact to a maven repository.")
 final case class PublishOptions(
 
   @Recurse
