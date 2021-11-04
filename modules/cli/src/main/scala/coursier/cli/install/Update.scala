@@ -3,7 +3,7 @@ package coursier.cli.install
 import java.time.Instant
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.install.{Channels, InstallDir}
 import coursier.install.error.InstallDirException
 import coursier.util.{Sync, Task}
@@ -11,6 +11,9 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 
 object Update extends CoursierCommand[UpdateOptions] {
+
+  override def group: String = CommandGroup.install
+
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
 
     val params = UpdateParams(options).toEither match {

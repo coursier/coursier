@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService
 
 import caseapp.core.RemainingArgs
 import coursier.cache.{Cache, CacheLogger}
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.resolve.{Resolve, ResolveException}
@@ -201,6 +201,8 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         .addDependencies(deps0: _*)
         .run()
   }
+
+  override def group: String = CommandGroup.launcher
 
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
 

@@ -8,7 +8,7 @@ import caseapp._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.install.Install
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
@@ -392,6 +392,8 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       (withApp(options, desc), desc.dependencies ++ deps)
     }
   }
+
+  override def group: String = CommandGroup.resolve
 
   def run(options: ResolveOptions, args: RemainingArgs): Unit = {
 

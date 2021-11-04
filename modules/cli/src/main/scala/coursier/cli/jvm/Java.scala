@@ -3,7 +3,7 @@ package coursier.cli.jvm
 import java.io.File
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
@@ -16,6 +16,9 @@ import scala.concurrent.duration.Duration
 
 object Java extends CoursierCommand[JavaOptions] {
   override def stopAtFirstUnrecognized = true
+
+  override def group: String = CommandGroup.java
+
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
 
     // that should probably be fixed by case-app

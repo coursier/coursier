@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Locale
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
@@ -16,6 +16,8 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 
 object Setup extends CoursierCommand[SetupOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
 

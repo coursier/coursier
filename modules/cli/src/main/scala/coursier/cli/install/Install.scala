@@ -7,7 +7,7 @@ import java.time.Instant
 
 import caseapp.core.RemainingArgs
 import coursier.cli.channel.Channel
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
@@ -19,6 +19,8 @@ import coursier.util.Sync
 import scala.concurrent.duration.Duration
 
 object Install extends CoursierCommand[InstallOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
 
