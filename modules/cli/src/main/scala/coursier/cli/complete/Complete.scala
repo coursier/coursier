@@ -7,8 +7,8 @@ import coursier.util.Sync
 import scala.concurrent.ExecutionContext
 
 object Complete extends CoursierCommand[CompleteOptions] {
-
-  override def group: String = CommandGroup.resolve
+  override def hidden: Boolean = true
+  override def group: String   = CommandGroup.resolve
 
   override def names = List(
     List("complete-dep"),
