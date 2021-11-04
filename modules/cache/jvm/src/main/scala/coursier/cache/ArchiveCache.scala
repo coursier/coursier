@@ -64,28 +64,25 @@ import java.nio.file.{Files, StandardCopyOption}
     def extract(f: File, deleteDest: Boolean): F[Either[ArtifactError, File]] =
       S.delay {
         CacheLocks.withLockOr(location, dir)(
-          {
-            if (deleteDest || !dir.exists()) {
-              val tmp = CachePath.temporaryFile(dir)
-              ArchiveCache.deleteRecursive(tmp)
-              Files.createDirectories(tmp.toPath)
-              unArchiver.extract(archiveType0, f, tmp, overwrite = false)
-              val lastModifiedTime = Files.getLastModifiedTime(f.toPath)
-              Files.setLastModifiedTime(tmp.toPath, lastModifiedTime)
-              def moveToDest(): Unit =
-                Files.move(tmp.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
-              if (dir.exists()) {
-                if (deleteDest) {
-                  ArchiveCache.deleteRecursive(dir)
-                  moveToDest()
-                }
-                else
-                  // We shouldn't go in that branch thanks to the lock and the condition above
-                  ArchiveCache.deleteRecursive(tmp)
+          if (deleteDest || !dir.exists()) {
+            val tmp = CachePath.temporaryFile(dir)
+            ArchiveCache.deleteRecursive(tmp)
+            Files.createDirectories(tmp.toPath)
+            unArchiver.extract(archiveType0, f, tmp, overwrite = false)
+            val lastModifiedTime = Files.getLastModifiedTime(f.toPath)
+            Files.setLastModifiedTime(tmp.toPath, lastModifiedTime)
+            def moveToDest(): Unit =
+              Files.move(tmp.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
+            if (dir.exists())
+              if (deleteDest) {
+                ArchiveCache.deleteRecursive(dir)
+                moveToDest()
               }
               else
-                moveToDest()
-            }
+                // We shouldn't go in that branch thanks to the lock and the condition above
+                ArchiveCache.deleteRecursive(tmp)
+            else
+              moveToDest()
           }, {
             Thread.sleep(50L)
             None

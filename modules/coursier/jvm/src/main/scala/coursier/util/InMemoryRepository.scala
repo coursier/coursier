@@ -28,16 +28,14 @@ object InMemoryRepository {
 
     val protocolSpecificAttemptOpt = {
 
-      def ifFile: Option[Boolean] = {
+      def ifFile: Option[Boolean] =
         if (localArtifactsShouldBeCached && !new File(url.toURI).exists()) {
           val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location)(_.location)
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
           Some(new File(cachePath, s"file/${url.getPath}").exists())
         }
-        else {
+        else
           Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
-        }
-      }
 
       def ifHttp: Option[Boolean] = {
         // HEAD request attempt, adapted from http://stackoverflow.com/questions/22541629/android-how-can-i-make-an-http-head-request/22545275#22545275
@@ -65,10 +63,8 @@ object InMemoryRepository {
           case _: FileNotFoundException => Some(false)
           case _: IOException           => None // error other than not found
         }
-        finally {
-          if (conn != null)
-            CacheUrl.closeConn(conn)
-        }
+        finally if (conn != null)
+          CacheUrl.closeConn(conn)
       }
 
       url.getProtocol match {
@@ -89,10 +85,8 @@ object InMemoryRepository {
       catch {
         case _: IOException => false
       }
-      finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
-      }
+      finally if (conn != null)
+        CacheUrl.closeConn(conn)
     }
 
     protocolSpecificAttemptOpt

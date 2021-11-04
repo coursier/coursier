@@ -25,9 +25,9 @@ object JavaOrScalaModule {
     raw"""$basicVersion((?:-$tagPattern)*)""".r // 0-n word suffixes, with leading dashes
   private val NonReleaseV_1 = raw"""$basicVersion(-$tagPattern)""".r // 1 word suffix, after a dash
 
-  def scalaBinaryVersion(scalaVersion: String): String = {
+  def scalaBinaryVersion(scalaVersion: String): String =
     // Directly inspired from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L87
-    if (scalaVersion.startsWith("3.")) {
+    if (scalaVersion.startsWith("3."))
       scalaVersion match {
         case ReleaseV(maj, _, _) =>
           maj
@@ -39,8 +39,7 @@ object JavaOrScalaModule {
         case _ =>
           scalaVersion
       }
-    }
-    else {
+    else
       scalaVersion match {
         case ReleaseV(maj, min, _) =>
           s"$maj.$min"
@@ -51,8 +50,6 @@ object JavaOrScalaModule {
         case _ =>
           scalaVersion
       }
-    }
-  }
 
   @data class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes

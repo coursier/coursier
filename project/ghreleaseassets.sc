@@ -24,7 +24,7 @@ private def contentType(path: os.Path): String = {
     var zf: ZipFile = null
     try { zf = new ZipFile(path.toIO); true }
     catch { case _: ZipException => false }
-    finally { if (zf != null) zf.close() }
+    finally if (zf != null) zf.close()
   }
 
   lazy val isTextFile =
@@ -56,16 +56,14 @@ private def releaseId(
 
   val json = ujson.read(resp.body)
   val releaseId =
-    try {
-      json
-        .arr
-        .find(_("tag_name").str == tag)
-        .map(_("id").num.toLong)
-        .getOrElse {
-          val tags = json.arr.map(_("tag_name").str).toVector
-          sys.error(s"Tag $tag not found (found tags: ${tags.mkString(", ")}")
-        }
-    }
+    try json
+      .arr
+      .find(_("tag_name").str == tag)
+      .map(_("id").num.toLong)
+      .getOrElse {
+        val tags = json.arr.map(_("tag_name").str).toVector
+        sys.error(s"Tag $tag not found (found tags: ${tags.mkString(", ")}")
+      }
     catch {
       case NonFatal(e) =>
         System.err.println(resp.body)
@@ -385,15 +383,13 @@ private def withTmpDir[T](prefix: String)(f: os.Path => T): T = {
     tmpDir = os.temp.dir(prefix = prefix)
     f(tmpDir)
   }
-  finally {
-    if (tmpDir != null) {
-      System.err.println(s"Deleting $tmpDir")
-      try os.remove.all(tmpDir)
-      catch {
-        case NonFatal(e) =>
-          System.err.println(s"Warning: caught $e while deleting $tmpDir, ignoring it...")
-          e.printStackTrace()
-      }
+  finally if (tmpDir != null) {
+    System.err.println(s"Deleting $tmpDir")
+    try os.remove.all(tmpDir)
+    catch {
+      case NonFatal(e) =>
+        System.err.println(s"Warning: caught $e while deleting $tmpDir, ignoring it...")
+        e.printStackTrace()
     }
   }
 }

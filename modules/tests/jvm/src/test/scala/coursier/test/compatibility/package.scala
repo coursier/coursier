@@ -24,10 +24,8 @@ package object compatibility {
       is0 = new FileInputStream(f)
       new String(Platform.readFullySync(is0), UTF_8)
     }
-    finally {
-      if (is0 != null)
-        is0.close()
-    }
+    finally if (is0 != null)
+      is0.close()
   }
 
   private val baseRepo = {

@@ -110,16 +110,13 @@ object OkhttpUpload {
       .readTimeout(60L, TimeUnit.SECONDS)
       .build()
 
-  def create(pool: ExecutorService): Upload = {
+  def create(pool: ExecutorService): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue = false, "")
-  }
-  def create(pool: ExecutorService, expect100Continue: Boolean): Upload = {
+  def create(pool: ExecutorService, expect100Continue: Boolean): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue, "")
-  }
-  def create(pool: ExecutorService, expect100Continue: Boolean, urlSuffix: String): Upload = {
+  def create(pool: ExecutorService, expect100Continue: Boolean, urlSuffix: String): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue, urlSuffix)
-  }
 }

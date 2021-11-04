@@ -65,12 +65,11 @@ object Get extends CoursierCommand[GetOptions] {
           val output  = pathsIt.mkString(params.separator)
           println(output)
         }
-        for (err <- errorsIt) {
+        for (err <- errorsIt)
           if (params.output.verbosity == 0)
             System.err.println(err.getMessage)
           else if (params.output.verbosity >= 1)
             throw err
-        }
       }
 
     val ec = ExecutionContext.fromExecutorService(pool)

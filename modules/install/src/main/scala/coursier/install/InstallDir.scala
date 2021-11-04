@@ -382,7 +382,7 @@ import scala.util.Properties
           val launcherIsElsewhere = actualLauncher != genDest
           if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
-              if (inPlaceLauncher) {
+              if (inPlaceLauncher)
                 if (Properties.isWin)
                   basePreamble
                     .withKind(Preamble.Kind.Bat)
@@ -396,7 +396,6 @@ import scala.util.Properties
                         auxName(dest0.getFileName.toString, "") +
                         "\""
                     )
-              }
               else {
                 assert(launcherIsElsewhere)
                 basePreamble
@@ -481,10 +480,8 @@ import scala.util.Properties
           .toVector
           .sorted
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else
       Nil
@@ -611,15 +608,12 @@ object InstallDir {
         Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
       val buf  = Array.ofDim[Byte](16384)
       var read = -1
-      while ({ read = is.read(buf); read >= 0 }) {
+      while ({ read = is.read(buf); read >= 0 })
         if (read > 0)
           os.write(buf, 0, read)
-      }
     }
-    finally {
-      if (os != null)
-        os.close()
-    }
+    finally if (os != null)
+      os.close()
   }
 
 }

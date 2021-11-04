@@ -23,12 +23,11 @@ final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int)
     }
 
     val msgOpt =
-      if (errorOpt.isEmpty) {
+      if (errorOpt.isEmpty)
         if (verbosity >= 1)
           Some("Listed Sonatype profiles")
         else
           None
-      }
       else
         Some("Fail to list Sonatype profiles")
 

@@ -79,7 +79,7 @@ object DependencyParams {
               val child_org_name = parent_and_child(1).split(":")
               if (child_org_name.length != 2)
                 Validated.invalidNel(s"Failed to parse $child_org_name")
-              else {
+              else
                 Validated.fromEither(
                   ModuleParser.javaOrScalaModule(parent_and_child(0)).left.map(NonEmptyList.one)
                 ).map { from =>
@@ -92,7 +92,6 @@ object DependencyParams {
                   val mod: JavaOrScalaModule = JavaOrScalaModule.JavaModule(mod0)
                   (from, mod)
                 }
-              }
             }
           }
           .map { list =>

@@ -62,9 +62,7 @@ final class Sbt(
           }
 
       var retCode = 0
-      try {
-        retCode = p.waitFor()
-      }
+      try retCode = p.waitFor()
       finally {
         val errStreamOpt = if (retCode == 0) None else Some(System.err)
         outputFrameOpt.foreach(_.stop(keepFrame = false, errored = errStreamOpt))

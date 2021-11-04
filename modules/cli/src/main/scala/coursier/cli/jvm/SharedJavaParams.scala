@@ -99,7 +99,7 @@ object SharedJavaParams {
         .map(_.trim)
         .filter(_ != "default")
         .map(JvmIndex.handleAliases)
-        .map { s => JvmChannel.parse(s) }
+        .map(s => JvmChannel.parse(s))
       parsed match {
         case None                 => Validated.validNel(None)
         case Some(Left(err))      => Validated.invalidNel(s"Invalid --jvm-index value: $err")

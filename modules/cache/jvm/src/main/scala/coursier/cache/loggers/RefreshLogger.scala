@@ -189,7 +189,7 @@ object RefreshLogger {
 
               val dw = downloads
                 .toVector
-                .map { url => url -> infos.get(url) }
+                .map(url => url -> infos.get(url))
                 .sortBy { case (_, info) => -info.fraction.sum }
 
               (q, dw)
@@ -292,9 +292,8 @@ class RefreshLogger(
       }
 
   override def checkingArtifact(url: String, artifact: Artifact): Unit =
-    if (logChanging && artifact.changing) {
+    if (logChanging && artifact.changing)
       updateRunnable.log(s"Checking changing artifact $url")
-    }
 
   override def pickedModuleVersion(module: String, version: String): Unit =
     if (logPickedVersions)

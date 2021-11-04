@@ -58,10 +58,9 @@ object UnArchiver {
                 while ({
                   read = gzis.read(buf)
                   read >= 0
-                }) {
+                })
                   if (read > 0)
                     fos.write(buf, 0, read)
-                }
                 fos.flush()
               }
               finally {

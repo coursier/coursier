@@ -672,22 +672,20 @@ object ResolutionTests extends TestSuite {
     }
     test("depsFromPropertyActivatedProfile") {
       val f =
-        for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield {
-          async {
-            val dep = Dependency(Module(org"com.github.dummy", name"libb"), version)
-            val trDeps = Seq(
-              Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6")
-            )
-            val res = await(resolve0(
-              Seq(dep)
-            )).clearCaches
+        for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
+          val dep = Dependency(Module(org"com.github.dummy", name"libb"), version)
+          val trDeps = Seq(
+            Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6")
+          )
+          val res = await(resolve0(
+            Seq(dep)
+          )).clearCaches
 
-            val expected = Resolution()
-              .withRootDependencies(Seq(dep))
-              .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          val expected = Resolution()
+            .withRootDependencies(Seq(dep))
+            .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
 
-            assert(res == expected)
-          }
+          assert(res == expected)
         }
 
       scala.concurrent.Future.sequence(f).map(_ => ())
