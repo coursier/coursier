@@ -21,6 +21,11 @@ object Coursier extends CommandsEntryPoint {
 
   lazy val progName = (new Argv0).get("coursier")
 
+  override val description =
+    """|Coursier is the Scala application and artifact manager.
+       |It can install Scala applications and setup your Scala development environment.
+       |It can also download and cache artifacts from the web.""".stripMargin
+
   val commands = Seq(
     bootstrap.Bootstrap,
     channel.Channel,

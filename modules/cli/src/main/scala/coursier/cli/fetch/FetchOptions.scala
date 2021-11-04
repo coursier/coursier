@@ -7,7 +7,13 @@ import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
 // format: off
-@ArgsName("org:name:version|app-name[:version]*")
+@ArgsName("org:name:version*|app-name[:version]")
+@Help(
+  "Transitively fetch the JARs of one or more dependencies or an application.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs fetch io.circe::circe-generic:0.12.3\n"
+)
 final case class FetchOptions(
 
   @Help("Print java -cp compatible output")

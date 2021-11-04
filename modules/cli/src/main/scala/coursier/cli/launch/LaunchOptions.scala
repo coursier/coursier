@@ -7,7 +7,14 @@ import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
 
 // format: off
-@ArgsName("org:name:version|app-name[:version]*")
+@ArgsName("org:name:version*|app-name[:version]")
+@Help(
+  "Launch an application from a dependency or an application descriptor.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs launch org.scalameta:scalafmt-cli:2.4.2 -- --version\n" +
+  "$ cs scalafmt -- --version\n"
+)
 final case class LaunchOptions(
 
   @Recurse
