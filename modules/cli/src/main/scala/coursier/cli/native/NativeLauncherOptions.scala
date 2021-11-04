@@ -8,35 +8,49 @@ import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 // format: off
 final case class NativeLauncherOptions(
-
+  @Group("Native launcher")
   @Value("none|boehm|immix|default")
     nativeGc: Option[String] = None,
-
+  
+  @Group("Native launcher")
   @Value("release|debug")
     nativeMode: Option[String] = None,
 
-  nativeLinkStubs: Boolean = true,
+  @Group("Native launcher")
+    nativeLinkStubs: Boolean = true,
 
-  nativeClang: Option[String] = None,
+  @Group("Native launcher")
+    nativeClang: Option[String] = None,
 
-  nativeClangpp: Option[String] = None,
+  @Group("Native launcher")
+    nativeClangpp: Option[String] = None,
 
-  nativeLinkingOption: List[String] = Nil,
-  nativeDefaultLinkingOptions: Boolean = true,
-  nativeUseLdflags: Boolean = true,
+  @Group("Native launcher")
+    nativeLinkingOption: List[String] = Nil,
+  @Group("Native launcher")
+    nativeDefaultLinkingOptions: Boolean = true,
+  @Group("Native launcher")
+    nativeUseLdflags: Boolean = true,
 
-  nativeCompileOption: List[String] = Nil,
-  nativeDefaultCompileOptions: Boolean = true,
+  @Group("Native launcher")
+    nativeCompileOption: List[String] = Nil,
+  @Group("Native launcher")
+    nativeDefaultCompileOptions: Boolean = true,
 
-  nativeTargetTriple: Option[String] = None,
+  @Group("Native launcher")
+    nativeTargetTriple: Option[String] = None,
 
-  nativeLib: Option[String] = None,
+  @Group("Native launcher")
+    nativeLib: Option[String] = None,
 
-  nativeVersion: Option[String] = None,
+  @Group("Native launcher")
+    nativeVersion: Option[String] = None,
 
+  @Group("Native launcher")
   @Help("Native compilation target directory")
   @Short("d")
     nativeWorkDir: Option[String] = None,
+  @Group("Native launcher")
   @Help("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
 

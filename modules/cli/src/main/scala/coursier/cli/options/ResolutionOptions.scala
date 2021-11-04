@@ -9,58 +9,73 @@ import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, Rul
 
 // format: off
 final case class ResolutionOptions(
-
+  @Group("Resolution")
   @Help("Keep optional dependencies (Maven)")
     keepOptional: Boolean = false,
 
+  @Group("Resolution")
   @Help("Maximum number of resolution iterations (specify a negative value for unlimited, default: 100)")
   @Short("N")
     maxIterations: Int = ResolutionProcess.defaultMaxIterations,
 
+  @Group("Resolution")
   @Help("Force module version")
   @Value("organization:name:forcedVersion")
   @Short("V")
     forceVersion: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Set property in POM files, if it's not already set")
   @Value("name=value")
     pomProperty: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Force property in POM files")
   @Value("name=value")
     forcePomProperty: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Enable profile")
   @Value("profile")
     profile: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Default scala version")
   @Short("e")
   @Short("scala")
     scalaVersion: Option[String] = None,
 
+  @Group("Resolution")
   @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent")
     forceScalaVersion: Option[Boolean] = None,
 
+  @Group("Resolution")
   @Help("Adjust the scala version for fully cross-versioned dependencies")
     overrideFullSuffix: Option[Boolean] = None,
 
+  @Group("Resolution")
   @Help("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false,
 
+  @Group("Resolution")
   @Help("Enforce resolution rules")
   @Short("rule")
     rules: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Choose reconciliation strategy")
   @Value("organization:name:(basic|relaxed)")
     reconciliation: List[String] = Nil,
 
-  strict: Option[Boolean] = None,
+  @Group("Resolution")
+    strict: Option[Boolean] = None,
 
-  strictInclude: List[String] = Nil,
-  strictExclude: List[String] = Nil,
+  @Group("Resolution")
+    strictInclude: List[String] = Nil,
+  @Group("Resolution")
+    strictExclude: List[String] = Nil,
 
+  @Group("Resolution")
   @Help("Default configuration (default(compile) by default)")
   @Value("configuration")
   @Short("c")

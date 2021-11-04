@@ -13,7 +13,7 @@ import coursier.install.RawAppDescriptor
 // format: off
 @ArgsName("org:name:version|app-name[:version]*")
 final case class SharedResolveOptions(
-
+  @Group("Resolution") // with ResolutionOptions
   @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
     classpathOrder: Option[Boolean] = None,
 

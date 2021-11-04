@@ -60,23 +60,25 @@ object BootstrapSpecificParams {
     options: BootstrapSpecificOptions,
     native: Boolean
   ): ValidatedNel[String, BootstrapSpecificParams] = {
-
-    val graalvmVersion = options.graalvmVersion
+    val graalvmVersion = options.graalvmOptions.graalvmVersion
       .map(_.trim)
       .filter(_.nonEmpty)
-      .filter(_ => !options.nativeImage.contains(false))
+      .filter(_ => !options.graalvmOptions.nativeImage.contains(false))
 
     val (graalvmJvmOptions, graalvmOptions) =
-      if (options.nativeImage.contains(false))
+      if (options.graalvmOptions.nativeImage.contains(false))
         (Nil, Nil)
       else
-        (options.graalvmJvmOption.filter(_.nonEmpty), options.graalvmOption.filter(_.nonEmpty))
+        (
+          options.graalvmOptions.graalvmJvmOption.filter(_.nonEmpty),
+          options.graalvmOptions.graalvmOption.filter(_.nonEmpty)
+        )
 
     val assembly    = options.assembly.getOrElse(false)
     val manifestJar = options.manifestJar.getOrElse(false)
     val standalone  = options.standalone.getOrElse(false)
     val hybrid      = options.hybrid.getOrElse(false)
-    val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
+    val nativeImage = options.graalvmOptions.nativeImage.getOrElse(graalvmVersion.nonEmpty)
 
     val validateOutputType = {
       val count = Seq(
@@ -164,7 +166,7 @@ object BootstrapSpecificParams {
           options.proguarded,
           hybrid,
           nativeImage,
-          options.intermediateAssembly,
+          options.graalvmOptions.intermediateAssembly,
           graalvmVersion,
           graalvmJvmOptions,
           graalvmOptions,

@@ -8,15 +8,21 @@ import coursier.install.RawAppDescriptor
 final case class SharedLoaderOptions(
 
   // deprecated, use shared instead
+  @Group("Launch")
+  @Hidden
   @Value("target:dependency")
   @Short("I")
   @Help("(deprecated) dependencies to be put in shared class loaders")
     isolated: List[String] = Nil,
 
+  @Group("Launch")
+  @Hidden
   @Value("dependency[@target]")
   @Help("Dependencies to be put in shared class loaders")
     shared: List[String] = Nil,
 
+  @Group("Launch")
+  @Hidden
   @Help("Comma-separated isolation targets")
   @Short("i")
   @Short("isolateTarget") // former deprecated name

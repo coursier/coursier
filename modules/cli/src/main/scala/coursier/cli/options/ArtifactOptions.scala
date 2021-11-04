@@ -7,25 +7,31 @@ import coursier.install.RawAppDescriptor
 // format: off
 final case class ArtifactOptions(
 
+  @Group("Fetch")
   @Help("Classifiers that should be fetched")
   @Value("classifier1,classifier2,...")
   @Short("C")
     classifier: List[String] = Nil,
 
+  @Group("Fetch")
   @Help("Fetch source artifacts")
     sources: Boolean = false,
 
+  @Group("Fetch")
   @Help("Fetch javadoc artifacts")
     javadoc: Boolean = false,
 
+  @Group("Fetch")
   @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
     default: Option[Boolean] = None,
 
+  @Group("Fetch")
   @Help("Artifact types that should be retained (e.g. jar, src, doc, etc.) - defaults to jar,bundle")
   @Value("type1,type2,...")
   @Short("A")
     artifactType: List[String] = Nil,
 
+  @Group("Fetch")
   @Help("Fetch artifacts even if the resolution is errored")
     forceFetch: Boolean = false
 

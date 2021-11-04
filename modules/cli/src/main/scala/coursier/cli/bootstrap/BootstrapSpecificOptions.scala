@@ -5,60 +5,70 @@ import coursier.install.RawAppDescriptor
 
 // format: off
 final case class BootstrapSpecificOptions(
+  @Group("Bootstrap")
   @Short("o")
     output: Option[String] = None,
+  @Group("Bootstrap")
   @Short("f")
     force: Boolean = false,
+  @Group("Bootstrap")
   @Help("Generate a standalone launcher, with all JARs included, instead of one downloading its dependencies on startup.")
   @Short("s")
     standalone: Option[Boolean] = None,
+  @Group("Bootstrap")
   @Help("Generate an hybrid assembly / standalone launcher")
     hybrid: Option[Boolean] = None,
-  @Help("Generate a GraalVM native image")
-    nativeImage: Option[Boolean] = None,
-  @Help("When generating a GraalVM native image, merge the classpath into an assembly prior to passing it to native-image")
-    intermediateAssembly: Boolean = false,
-  @Help("GraalVM version to use to generate native images")
-  @Short("graalvm")
-    graalvmVersion: Option[String] = None,
-  @Short("graalvm-jvm-opt")
-    graalvmJvmOption: List[String] = Nil,
-  @Short("graalvm-opt")
-    graalvmOption: List[String] = Nil,
+  @Recurse
+    graalvmOptions: GraalvmOptions = GraalvmOptions(),
+  @Group("Bootstrap")
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
+  @Group("Bootstrap")
   @Help("Add Java command-line options in the generated launcher.")
   @Value("option")
     javaOpt: List[String] = Nil,
-  jvmOptionFile: Option[String] = None,
+  @Group("Bootstrap")
+    jvmOptionFile: Option[String] = None,
+  @Group("Bootstrap")
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
+  @Group("Bootstrap")
   @Help("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
     manifestJar: Option[Boolean] = None,
-  @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false else)")
+  @Group("Bootstrap")
+  @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false otherwise)")
     bat: Option[Boolean] = None,
+  @Group("Bootstrap")
   @Help("Add assembly rule")
   @Value("append:$path|append-pattern:$pattern|exclude:$path|exclude-pattern:$pattern")
   @Short("R")
     assemblyRule: List[String] = Nil,
+  @Group("Bootstrap")
   @Help("Add default rules to assembly rule list")
     defaultAssemblyRules: Boolean = true,
+  @Group("Bootstrap")
   @Help("Manifest to use as a start when creating a manifest for assemblies")
     baseManifest: Option[String] = None,
+  @Group("Bootstrap")
   @Help("Add preamble")
     preamble: Boolean = true,
+  @Group("Bootstrap")
   @Help("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")
     deterministic: Boolean = false,
+  @Group("Bootstrap")
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
+  @Group("Bootstrap")
   @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
     disableJarChecking: Option[Boolean] = None,
-  jvmIndex: Option[String] = None
+  @Group("Bootstrap")
+    jvmIndex: Option[String] = None
 ) {
   // format: on
 
   def addApp(app: RawAppDescriptor, native: Boolean): BootstrapSpecificOptions = {
+    import graalvmOptions.{copy => _, _}
     val count = Seq(
       assembly.exists(identity),
       standalone.exists(identity),
@@ -80,11 +90,13 @@ final case class BootstrapSpecificOptions(
         .orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
       assembly = assembly
         .orElse(if (count == 0 && app.launcherType == "assembly") Some(true) else None),
-      nativeImage = nativeImage
-        .orElse {
-          if (count == 0 && app.launcherType == "graalvm-native-image") Some(true)
-          else None
-        },
+      graalvmOptions = graalvmOptions.copy(
+        nativeImage = nativeImage
+          .orElse {
+            if (count == 0 && app.launcherType == "graalvm-native-image") Some(true)
+            else None
+          }
+      ),
       jvmOptionFile = jvmOptionFile.orElse(app.jvmOptionFile)
     )
   }

@@ -8,21 +8,26 @@ import coursier.install.RawAppDescriptor
 // format: off
 final case class SharedLaunchOptions(
 
+  @Group("Launch")
   @Short("M")
   @Short("main")
     mainClass: String = "",
 
+  @Group("Launch")
   @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 
+  @Group("Launch")
   @Help("Set Java properties before launching the app")
   @Value("key=value")
   @Short("D")
     property: List[String] = Nil,
 
-  fork: Option[Boolean] = None,
+  @Group("Launch")
+    fork: Option[Boolean] = None,
 
-  python: Option[Boolean] = None,
+  @Group("Launch")
+    python: Option[Boolean] = None,
 
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
