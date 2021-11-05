@@ -18,6 +18,7 @@ import utest._
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+import coursier.core.Version
 
 object InstallTests extends TestSuite {
 
@@ -731,6 +732,93 @@ object InstallTests extends TestSuite {
           }
 
         assert(gotException)
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
+    test("install, override and update scalac") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+        val id = "scalac"
+        val versionOverride =
+          RawAppDescriptor.RawVersionOverride("(,2.max]")
+            .withDependencies(Some(List("org.scala-lang:scala-compiler:2.12.8")))
+            .withMainClass(Some("scala.tools.nsc.Main"))
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.0.1"))
+            .withRepositories(List("central"))
+            .withMainClass(Some("dotty.tools.dotc.Main"))
+            .withProperties(RawAppDescriptor.Properties(
+              Seq("scala.usejavacp" -> "true")
+            ))
+            .withVersionOverrides(List(versionOverride)),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        def testRun(expectedUrls: Seq[String], expectedProperties: Seq[String]): Unit = {
+          assert(Files.isRegularFile(launcher))
+
+          val urls = stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-urls")
+            .split('\n')
+            .filter(_.nonEmpty)
+            .toSeq
+          assert(urls == expectedUrls)
+
+          val properties =
+            stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap.properties")
+              .split('\n')
+              .filter(_.nonEmpty)
+              .toSeq
+          assert(properties == expectedProperties)
+        }
+
+        val scala3CompilerJars =
+          Seq(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar"
+          )
+        val scala3Properties =
+          Seq(
+            "bootstrap.mainClass=dotty.tools.dotc.Main",
+            "scala.usejavacp=true",
+            "scala3-compiler_3.version=3.0.1"
+          )
+        testRun(scala3CompilerJars, scala3Properties)
+
+        val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
+        val overridden       = installDir0.createOrUpdate(overridenAppInfo)
+        assert(overridden.exists(identity))
+
+        val scala2CompilerJars =
+          Seq(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.12.8/scala-compiler-2.12.8.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar"
+          )
+        val scala2Properties =
+          Seq(
+            "bootstrap.mainClass=scala.tools.nsc.Main",
+            "scala.usejavacp=true",
+            "scala-compiler.version=2.12.8"
+          )
+        testRun(scala2CompilerJars, scala2Properties)
+
+        val updated = installDir0.createOrUpdate(appInfo0)
+        assert(updated.exists(identity))
+
+        testRun(scala3CompilerJars, scala3Properties)
       }
 
       test("linux") - run("linux", "x86_64")

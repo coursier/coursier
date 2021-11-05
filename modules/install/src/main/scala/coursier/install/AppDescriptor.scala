@@ -42,17 +42,42 @@ import dataclass._
   @since("2.0.1")
   prebuiltBinaries: Map[String, String] = Map.empty,
   @since("2.0.4")
-  jna: List[String] = Nil
+  jna: List[String] = Nil,
+  @since("2.1.0")
+  versionOverrides: Seq[VersionOverride] = Nil
 ) {
-  def overrideVersion(ver: String): AppDescriptor =
-    withDependencies {
-      if (dependencies.isEmpty)
-        dependencies
+  def overrideVersion(ver: String): AppDescriptor = {
+    val overriddenDesc = Parse.version(ver)
+      .flatMap { version =>
+        versionOverrides.find(_.versionRange.contains(version))
+      }
+      .map { versionOverride =>
+        withRepositories(versionOverride.repositories.getOrElse(repositories))
+          .withDependencies(versionOverride.dependencies.getOrElse(dependencies))
+          .withMainClass(
+            versionOverride.mainClass
+              .map(mc => if (mc.isEmpty) None else Some(mc))
+              .getOrElse(mainClass)
+          )
+          .withDefaultMainClass(
+            versionOverride.defaultMainClass
+              .map(dmc => if (dmc.isEmpty) None else Some(dmc))
+              .getOrElse(defaultMainClass)
+          )
+          .withJavaProperties(versionOverride.javaProperties.getOrElse(javaProperties))
+      }
+      .getOrElse(this)
+    val deps = overriddenDesc.dependencies
+    overriddenDesc.withDependencies {
+      if (deps.isEmpty)
+        deps
       else {
-        val dep = dependencies.head.withUnderlyingDependency(_.withVersion(ver))
-        dep +: dependencies.tail
+        val dep = deps.head.withUnderlyingDependency(_.withVersion(ver))
+        dep +: deps.tail
       }
     }
+  }
+
   def mainVersionOpt: Option[String] =
     dependencies.headOption.map(_.version)
 
