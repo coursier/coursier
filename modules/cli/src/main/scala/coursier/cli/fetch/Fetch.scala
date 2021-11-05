@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
 import coursier.install.Channels
@@ -80,6 +80,8 @@ object Fetch extends CoursierCommand[FetchOptions] {
       artifactFiles.collect { case (a, Some(f)) => a -> f }
     )
   }
+
+  override def group: String = CommandGroup.resolve
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
 

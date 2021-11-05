@@ -1,7 +1,7 @@
 package coursier.cli.install
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.InstallDir
 import coursier.cache.Cache
@@ -14,6 +14,8 @@ import java.io.File
 import scala.concurrent.ExecutionContext
 
 object Uninstall extends CoursierCommand[UninstallOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: UninstallOptions, args: RemainingArgs): Unit = {
 

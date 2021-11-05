@@ -1,12 +1,15 @@
 package coursier.cli.complete
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.util.Sync
 
 import scala.concurrent.ExecutionContext
 
 object Complete extends CoursierCommand[CompleteOptions] {
+  override def hidden: Boolean = true
+  override def group: String   = CommandGroup.resolve
+
   override def names = List(
     List("complete-dep"),
     List("complete-dependency")

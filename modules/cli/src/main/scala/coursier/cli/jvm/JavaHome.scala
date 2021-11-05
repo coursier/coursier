@@ -3,7 +3,7 @@ package coursier.cli.jvm
 import java.io.File
 
 import caseapp.core.RemainingArgs
-import coursier.cli.CoursierCommand
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
@@ -14,6 +14,8 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 
 object JavaHome extends CoursierCommand[JavaHomeOptions] {
+
+  override def group: String = CommandGroup.java
 
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 

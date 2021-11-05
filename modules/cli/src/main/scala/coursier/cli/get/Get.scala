@@ -8,6 +8,7 @@ import coursier.util.{Artifact, Sync, Task}
 import scala.concurrent.ExecutionContext
 
 object Get extends CoursierCommand[GetOptions] {
+  override def hidden: Boolean = true
   def run(options: GetOptions, args: RemainingArgs): Unit = {
 
     val params = GetParams(options).toEither match {

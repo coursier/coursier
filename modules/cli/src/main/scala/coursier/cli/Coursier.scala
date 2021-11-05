@@ -13,6 +13,7 @@ import java.util.Scanner
 
 import scala.util.control.NonFatal
 import scala.util.Properties
+import caseapp.core.help.HelpFormat
 
 object Coursier extends CommandsEntryPoint {
 
@@ -119,4 +120,8 @@ object Coursier extends CommandsEntryPoint {
       sys.exit(1)
     }
   }
+
+  override def helpFormat: HelpFormat =
+    HelpFormat.default()
+      .withSortedCommandGroups(Some(CommandGroup.order))
 }

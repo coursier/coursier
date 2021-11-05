@@ -24,6 +24,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 object Publish extends CoursierCommand[PublishOptions] {
+  override def hidden: Boolean = true
 
   val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
 
