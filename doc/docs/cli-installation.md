@@ -2,51 +2,64 @@
 title: Installation
 ---
 
+These instructions will install the coursier CLI `cs` itself, as well as a typical Scala development environment.
+By default, they will install the following applications:
+
+- `cs` itself, to further manage your Scala environment
+- `scala`, the Scala 2 REPL
+- `scalac`, the Scala 2 compiler
+- `sbt` and `sbtn`, the [sbt build toold](https://www.scala-sbt.org/)
+- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala 2
+- `scalafmt`, the [Scala code formatter](https://scalameta.org/scalafmt/)
+
+They will also install a JVM if none is found on the system.
+
+If you want more control over what gets installed and how, read about the [`setup`](cli-setup.md) command.
+
+After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/getting-started.html#create-a-hello-world-project-with-sbt), or install more applications with the [`install`](cli-install.md) command.
+
 ## Native launcher
 
 ### Linux & macOS
 
-On Linux and macOS, download and run the coursier launcher with
+On Linux and macOS, download and run the coursier installer with
 
 ```bash
 $ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
 $ chmod +x cs
-$ ./cs
+$ ./cs setup
 ```
-
-> Note: The above instructions explain how to install a local copy of `cs`. The next thing you may want to do is to add `cs` to your PATH. The easiest way to accomplish this is to let `cs` do it for you! The following adapted installation instructions show the complete process:
->
-> 
-> ```
-> $ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
-> $ chmod +x cs
-> $ ./cs install cs
-> $ ./cs install --setup
-> $ rm cs
-> ```
-> 
-> Apart from now having `cs` on your PATH, updating `cs` is now as simple as executing the following command:
-> 
-> ```
-> $ cs update cs
-> ```
 
 ### macOS - brew based installation
 
-Alternatively, the native launcher can be installed via [homebrew](https://brew.sh) with
+Alternatively, the coursier launcher can be installed via [homebrew](https://brew.sh) with
 ```bash
 $ brew install coursier/formulas/coursier
-$ cs
+$ cs setup
 ```
 
 ### Windows
 
-On Windows, use
+On Windows, [download and execute the Windows installer](https://git.io/coursier-cli-windows-exe).
+
+If you prefer a command line-based install, or if you would like to customize the setup options, use:
+
 ```bash
 > bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
-> .\cs --help
+> .\cs setup
 ```
 Note that this must be run with `cmd.exe`, not `PowerShell`.
+
+### Check your setup
+
+Check your setup with
+
+```bash
+$ scala -version
+Scala code runner version 2.13.7 -- Copyright 2002-2021, LAMP/EPFL and Lightbend, Inc.
+```
+
+If that does not work, you may need to log out and log back in (or reboot) in order for the changes to take effect.
 
 ## JAR-based launcher
 
