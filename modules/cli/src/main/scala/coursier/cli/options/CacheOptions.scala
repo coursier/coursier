@@ -20,23 +20,27 @@ final case class CacheOptions(
     cache: Option[String] = None,
 
   @Group("Cache")
+  @Hidden
   @Help("Download mode (default: missing, that is fetch things missing from cache)")
   @Value("offline|update-changing|update|missing|force")
   @Short("m")
     mode: String = "",
 
   @Group("Cache")
+  @Hidden
   @Help("TTL duration (e.g. \"24 hours\")")
   @Value("duration")
   @Short("l")
     ttl: Option[String] = None,
 
   @Group("Cache")
+  @Hidden
   @Help("Maximum number of parallel downloads (default: 6)")
   @Short("n")
     parallel: Int = 6,
 
   @Group("Cache")
+  @Hidden
   @Help("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
   @Value("checksum1,checksum2,...")
     checksum: List[String] = Nil,

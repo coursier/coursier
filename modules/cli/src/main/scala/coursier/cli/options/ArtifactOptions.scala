@@ -8,6 +8,7 @@ import coursier.install.RawAppDescriptor
 final case class ArtifactOptions(
 
   @Group("Fetch")
+  @Hidden
   @Help("Classifiers that should be fetched")
   @Value("classifier1,classifier2,...")
   @Short("C")
@@ -26,12 +27,14 @@ final case class ArtifactOptions(
     default: Option[Boolean] = None,
 
   @Group("Fetch")
+  @Hidden
   @Help("Artifact types that should be retained (e.g. jar, src, doc, etc.) - defaults to jar,bundle")
   @Value("type1,type2,...")
   @Short("A")
     artifactType: List[String] = Nil,
 
   @Group("Fetch")
+  @Hidden
   @Help("Fetch artifacts even if the resolution is errored")
     forceFetch: Boolean = false
 

@@ -9,18 +9,22 @@ final case class BootstrapSpecificOptions(
   @Short("o")
     output: Option[String] = None,
   @Group("Bootstrap")
+  @Hidden
   @Short("f")
     force: Boolean = false,
   @Group("Bootstrap")
+  @Hidden
   @Help("Generate a standalone launcher, with all JARs included, instead of one downloading its dependencies on startup.")
   @Short("s")
     standalone: Option[Boolean] = None,
   @Group("Bootstrap")
+  @Hidden
   @Help("Generate an hybrid assembly / standalone launcher")
     hybrid: Option[Boolean] = None,
   @Recurse
     graalvmOptions: GraalvmOptions = GraalvmOptions(),
   @Group("Bootstrap")
+  @Hidden
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
   @Group("Bootstrap")
@@ -30,39 +34,49 @@ final case class BootstrapSpecificOptions(
   @Group("Bootstrap")
     jvmOptionFile: Option[String] = None,
   @Group("Bootstrap")
+  @Hidden
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
   @Group("Bootstrap")
+  @Hidden
   @Help("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
     manifestJar: Option[Boolean] = None,
   @Group("Bootstrap")
   @Help("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false otherwise)")
     bat: Option[Boolean] = None,
   @Group("Bootstrap")
+  @Hidden
   @Help("Add assembly rule")
   @Value("append:$path|append-pattern:$pattern|exclude:$path|exclude-pattern:$pattern")
   @Short("R")
     assemblyRule: List[String] = Nil,
   @Group("Bootstrap")
+  @Hidden
   @Help("Add default rules to assembly rule list")
     defaultAssemblyRules: Boolean = true,
   @Group("Bootstrap")
+  @Hidden
   @Help("Manifest to use as a start when creating a manifest for assemblies")
     baseManifest: Option[String] = None,
   @Group("Bootstrap")
+  @Hidden
   @Help("Add preamble")
     preamble: Boolean = true,
   @Group("Bootstrap")
+  @Hidden
   @Help("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")
     deterministic: Boolean = false,
   @Group("Bootstrap")
+  @Hidden
   @Help("Use proguarded bootstrap")
     proguarded: Boolean = true,
   @Group("Bootstrap")
+  @Hidden
   @Help("Have the bootstrap or assembly disable jar checking via a hard-coded Java property (default: true for bootstraps with resources, false else)")
     disableJarChecking: Option[Boolean] = None,
   @Group("Bootstrap")
+  @Hidden
     jvmIndex: Option[String] = None
 ) {
   // format: on

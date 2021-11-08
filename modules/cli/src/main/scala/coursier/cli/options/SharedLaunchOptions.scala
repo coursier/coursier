@@ -14,6 +14,7 @@ final case class SharedLaunchOptions(
     mainClass: String = "",
 
   @Group("Launch")
+  @Hidden
   @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 
@@ -24,9 +25,11 @@ final case class SharedLaunchOptions(
     property: List[String] = Nil,
 
   @Group("Launch")
+  @Hidden
     fork: Option[Boolean] = None,
 
   @Group("Launch")
+  @Hidden
     python: Option[Boolean] = None,
 
   @Recurse
