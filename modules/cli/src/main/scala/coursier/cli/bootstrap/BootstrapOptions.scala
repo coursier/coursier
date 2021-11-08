@@ -1,6 +1,7 @@
 package coursier.cli.bootstrap
 
 import caseapp.{ArgsName, Group, HelpMessage, Parser, Recurse}
+import coursier.cli.options.OptionGroup
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.native.NativeLauncherOptions
 import coursier.cli.options.SharedLaunchOptions
@@ -21,7 +22,7 @@ final case class BootstrapOptions(
     nativeOptions: NativeLauncherOptions = NativeLauncherOptions(),
   @Recurse
     sharedLaunchOptions: SharedLaunchOptions = SharedLaunchOptions(),
-  @Group("Launch")
+  @Group(OptionGroup.launch)
     jvmOptionFile: Option[String] = None,
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions(),

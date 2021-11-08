@@ -4,67 +4,68 @@ import java.nio.file.Paths
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import cats.data.{Validated, ValidatedNel}
+import coursier.cli.options.OptionGroup
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 // format: off
 final case class NativeLauncherOptions(
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
   @Value("none|boehm|immix|default")
     nativeGc: Option[String] = None,
   
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
   @Value("release|debug")
     nativeMode: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeLinkStubs: Boolean = true,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeClang: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeClangpp: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeLinkingOption: List[String] = Nil,
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeDefaultLinkingOptions: Boolean = true,
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeUseLdflags: Boolean = true,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeCompileOption: List[String] = Nil,
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeDefaultCompileOptions: Boolean = true,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeTargetTriple: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeLib: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
     nativeVersion: Option[String] = None,
 
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
   @Help("Native compilation target directory")
   @Short("d")
     nativeWorkDir: Option[String] = None,
-  @Group("Native launcher")
+  @Group(OptionGroup.native)
   @Hidden
   @Help("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
