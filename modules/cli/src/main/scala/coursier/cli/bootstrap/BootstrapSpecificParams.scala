@@ -15,8 +15,6 @@ final case class BootstrapSpecificParams(
   force: Boolean,
   standalone: Boolean,
   embedFiles: Boolean,
-  javaOptions: Seq[String],
-  jvmOptionFile: Option[String],
   assembly: Boolean,
   manifestJar: Boolean,
   createBatFile: Boolean,
@@ -147,15 +145,11 @@ object BootstrapSpecificParams {
 
     (validateOutputType, rulesV, baseManifestOptV).mapN {
       (_, rules, baseManifestOpt) =>
-        val javaOptions   = options.javaOpt
-        val jvmOptionFile = options.jvmOptionFile.map(_.trim).filter(_.nonEmpty)
         BootstrapSpecificParams(
           output,
           options.force,
           standalone,
           options.embedFiles,
-          javaOptions,
-          jvmOptionFile,
           assembly,
           manifestJar,
           createBatFile,

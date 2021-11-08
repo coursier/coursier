@@ -14,7 +14,6 @@ final case class LaunchParams(
   sharedJava: SharedJavaParams,
   channel: SharedChannelParams,
   fork: Boolean,
-  javaOptions: Seq[String],
   jep: Boolean,
   fetchCacheIKnowWhatImDoing: Option[String],
   execve: Option[Boolean]
@@ -51,7 +50,7 @@ object LaunchParams {
         options.fork.getOrElse(
           options.jep ||
           shared.python ||
-          options.javaOpt.nonEmpty ||
+          shared.javaOptions.nonEmpty ||
           sharedJava.jvm.nonEmpty ||
           SharedLaunchParams.defaultFork
         )
@@ -61,7 +60,6 @@ object LaunchParams {
         sharedJava,
         channel,
         fork,
-        options.javaOpt,
         options.jep,
         options.fetchCacheIKnowWhatImDoing,
         options.execve

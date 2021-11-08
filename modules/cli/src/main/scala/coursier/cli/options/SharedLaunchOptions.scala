@@ -23,6 +23,11 @@ final case class SharedLaunchOptions(
   @Value("key=value")
   @Short("D")
     property: List[String] = Nil,
+  
+  @Group("Launch")
+  @Help("Add Java command-line options")
+  @Value("option")
+    javaOpt: List[String] = Nil,
 
   @Group("Launch")
   @Hidden
@@ -49,6 +54,7 @@ final case class SharedLaunchOptions(
           app.mainClass.fold("")(_.stripSuffix("?")) // FIXME '?' suffix means optional main class
         else
           mainClass,
+      javaOpt = app.javaOptions ++ javaOpt,
       property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
       python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
     )

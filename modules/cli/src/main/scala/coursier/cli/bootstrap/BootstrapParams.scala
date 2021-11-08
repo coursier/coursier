@@ -7,6 +7,7 @@ import coursier.cli.params.SharedLaunchParams
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 final case class BootstrapParams(
+  jvmOptionFile: Option[String],
   sharedLaunch: SharedLaunchParams,
   nativeOptions: ScalaNativeOptions,
   channel: SharedChannelParams,
@@ -29,7 +30,9 @@ object BootstrapParams {
 
     (sharedLaunchV, nativeOptionsV, channelV, specificV).mapN {
       case (sharedLaunch, nativeOptions, channel, specific) =>
+        val jvmOptionFile = options.jvmOptionFile.map(_.trim).filter(_.nonEmpty)
         BootstrapParams(
+          jvmOptionFile,
           sharedLaunch,
           nativeOptions,
           channel,

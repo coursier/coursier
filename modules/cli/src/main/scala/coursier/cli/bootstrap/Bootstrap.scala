@@ -266,11 +266,11 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
 
     val javaOptions =
       if (params.specific.assembly || params.specific.manifestJar)
-        params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
+        params.sharedLaunch.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
           s"-D$k=$v"
         }
       else
-        params.specific.javaOptions
+        params.sharedLaunch.javaOptions
 
     val params0 =
       if (params.sharedLaunch.resolve.dependency.native) {
@@ -353,7 +353,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             Some(
               coursier.launcher.Preamble()
                 .withJavaOpts(javaOptions)
-                .withJvmOptionFile(params.specific.jvmOptionFile)
+                .withJvmOptionFile(params.jvmOptionFile)
             )
           else
             None

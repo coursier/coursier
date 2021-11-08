@@ -14,6 +14,7 @@ final case class SharedLaunchParams(
   artifact: ArtifactParams,
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
+  javaOptions: Seq[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
   pythonOpt: Option[Boolean]
@@ -86,6 +87,7 @@ object SharedLaunchParams {
           artifact,
           sharedLoader,
           mainClassOpt,
+          options.javaOpt,
           properties,
           extraJars,
           options.python

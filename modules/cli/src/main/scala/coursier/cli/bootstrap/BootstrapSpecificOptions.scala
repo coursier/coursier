@@ -28,12 +28,6 @@ final case class BootstrapSpecificOptions(
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
   @Group("Bootstrap")
-  @Help("Add Java command-line options in the generated launcher.")
-  @Value("option")
-    javaOpt: List[String] = Nil,
-  @Group("Bootstrap")
-    jvmOptionFile: Option[String] = None,
-  @Group("Bootstrap")
   @Hidden
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
@@ -99,7 +93,6 @@ final case class BootstrapSpecificOptions(
     ).count(identity)
     copy(
       output = output.orElse(app.name),
-      javaOpt = app.javaOptions ++ javaOpt,
       standalone = standalone
         .orElse(if (count == 0 && app.launcherType == "standalone") Some(true) else None),
       assembly = assembly
@@ -110,8 +103,7 @@ final case class BootstrapSpecificOptions(
             if (count == 0 && app.launcherType == "graalvm-native-image") Some(true)
             else None
           }
-      ),
-      jvmOptionFile = jvmOptionFile.orElse(app.jvmOptionFile)
+      )
     )
   }
 }

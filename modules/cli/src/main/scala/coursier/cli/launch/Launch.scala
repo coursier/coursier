@@ -366,7 +366,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         mainClass0,
         userArgs,
         javaPath,
-        params.javaOptions,
+        params.shared.javaOptions,
         properties0,
         pythonEnv + extraEnv,
         params.shared.resolve.output.verbosity,
