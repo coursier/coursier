@@ -12,10 +12,7 @@ final case class BootstrapParams(
   channel: SharedChannelParams,
   nativeShortVersionOpt: Option[String] = None,
   specific: BootstrapSpecificParams
-) {
-  lazy val fork: Boolean =
-    sharedLaunch.fork.getOrElse(SharedLaunchParams.defaultFork)
-}
+)
 
 object BootstrapParams {
   def apply(options: BootstrapOptions): ValidatedNel[String, BootstrapParams] = {

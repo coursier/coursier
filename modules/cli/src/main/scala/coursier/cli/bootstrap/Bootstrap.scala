@@ -36,6 +36,7 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
+import caseapp.core.help.HelpFormat
 
 object Bootstrap extends CoursierCommand[BootstrapOptions] {
 

@@ -13,20 +13,12 @@ final case class LaunchParams(
   shared: SharedLaunchParams,
   sharedJava: SharedJavaParams,
   channel: SharedChannelParams,
+  fork: Boolean,
   javaOptions: Seq[String],
   jep: Boolean,
   fetchCacheIKnowWhatImDoing: Option[String],
   execve: Option[Boolean]
 ) {
-  lazy val fork: Boolean =
-    shared.fork.getOrElse(
-      jep ||
-      shared.python ||
-      javaOptions.nonEmpty ||
-      sharedJava.jvm.nonEmpty ||
-      SharedLaunchParams.defaultFork
-    )
-
   def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] = {
     val id     = sharedJava.id
     val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
@@ -55,10 +47,20 @@ object LaunchParams {
     val channelV    = SharedChannelParams(options.channelOptions)
 
     (sharedV, sharedJavaV, channelV).mapN { (shared, sharedJava, channel) =>
+      val fork: Boolean =
+        options.fork.getOrElse(
+          options.jep ||
+          shared.python ||
+          options.javaOpt.nonEmpty ||
+          sharedJava.jvm.nonEmpty ||
+          SharedLaunchParams.defaultFork
+        )
+
       LaunchParams(
         shared,
         sharedJava,
         channel,
+        fork,
         options.javaOpt,
         options.jep,
         options.fetchCacheIKnowWhatImDoing,

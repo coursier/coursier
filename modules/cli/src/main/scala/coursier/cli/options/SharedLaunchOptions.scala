@@ -26,10 +26,6 @@ final case class SharedLaunchOptions(
 
   @Group("Launch")
   @Hidden
-    fork: Option[Boolean] = None,
-
-  @Group("Launch")
-  @Hidden
     python: Option[Boolean] = None,
 
   @Recurse
