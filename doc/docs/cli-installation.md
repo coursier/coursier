@@ -44,11 +44,15 @@ On Windows, [download and execute the Windows installer](https://git.io/coursier
 
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
 
-```bash
+```bat
+# CMD
 > bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
-> .\cs setup
+> .\cs --help
+
+# PowerShell
+> Start-BitsTransfer -Source https://git.io/coursier-cli-windows-exe -Destination cs.exe
+> .\cs --help
 ```
-Note that this must be run with `cmd.exe`, not `PowerShell`.
 
 ### Check your setup
 
@@ -95,8 +99,13 @@ $ coursier
 
 Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with
 ```bat
+# CMD
 > bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "%cd%\coursier"
 > bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "%cd%\coursier.bat"
+
+# PowerShell
+> Start-BitsTransfer -Source https://git.io/coursier-cli -Destination coursier
+> Start-BitsTransfer -Source https://git.io/coursier-bat -Destination coursier.bat
 ```
 
 You can then run coursier from the same directory, like

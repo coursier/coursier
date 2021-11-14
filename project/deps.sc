@@ -5,7 +5,7 @@ object Deps {
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M8"
   def catsCore          = ivy"org.typelevel::cats-core:2.6.1"
   def catsEffect        = ivy"org.typelevel::cats-effect::2.5.4"
-  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.5.0"
+  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.6.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.5"
@@ -24,13 +24,13 @@ object Deps {
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def jsoup           = ivy"org.jsoup:jsoup:1.14.3"
-  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.6"
+  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.7"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.2.24"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def okhttp          = ivy"com.squareup.okhttp3:okhttp:3.14.9"
-  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.2.5"
+  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.2.6"
   def plexusContainerDefault =
     ivy"org.codehaus.plexus:plexus-container-default:2.1.0" // plexus-archiver needs its loggers
   def proguard                 = ivy"com.guardsquare:proguard-base:7.1.1"
