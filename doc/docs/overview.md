@@ -31,7 +31,7 @@ It handles many features of the Maven model, and is able to fetch metadata and
 artifacts from both Maven and Ivy repositories. It handles parallel downloads
 out-of-the-box without resorting to global locks.
 
-The core features of courser can be used [as a **library** via its API](api.md), on the JVM or [from Scala.js](api-scala-js.md).
+The core features of coursier can be used [as a **library** via its API](api.md), on the JVM or [from Scala.js](api-scala-js.md).
 See [Users](overview-in-the-wild.md) for an overview of third-party projects that do this.
 
 *This is the documentation for version @VERSION@*.
