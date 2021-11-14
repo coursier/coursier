@@ -2,8 +2,8 @@ package coursier.cli.jvm
 
 import java.io.File
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
@@ -14,8 +14,11 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Java extends CaseApp[JavaOptions] {
+object Java extends CoursierCommand[JavaOptions] {
   override def stopAtFirstUnrecognized = true
+
+  override def group: String = CommandGroup.java
+
   def run(options: JavaOptions, args: RemainingArgs): Unit = {
 
     // that should probably be fixed by case-app
@@ -45,19 +48,7 @@ object Java extends CaseApp[JavaOptions] {
       params.output.verbosity
     )
 
-    if (params.installed) {
-      val task =
-        for {
-          list <- jvmCache.installed()
-          _ <- Task.delay {
-            for (id <- list)
-              // ':' more readable than '@'
-              System.out.println(id.replaceFirst("@", ":"))
-          }
-        } yield ()
-      task.unsafeRun()(coursierCache.ec)
-    }
-    else if (params.available) {
+    if (params.available) {
       val task =
         for {
           index <- jvmCache.index.getOrElse(sys.error("should not happen"))
@@ -83,12 +74,12 @@ object Java extends CaseApp[JavaOptions] {
     }
     else {
 
-      val task = javaHome.getWithRetainedId(params.shared.id)
+      val task = javaHome.getWithIsSystem(params.shared.id)
 
       // TODO More thin grain handling of the logger lifetime here.
       // As is, its output gets flushed too late sometimes, resulting in progress bars
       // displayed after actions done after downloads.
-      val (retainedId, home) = logger.use {
+      val (isSystem, home) = logger.use {
         try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
@@ -97,7 +88,7 @@ object Java extends CaseApp[JavaOptions] {
         }
       }
 
-      val envUpdate = javaHome.environmentFor(retainedId, home)
+      val envUpdate = javaHome.environmentFor(isSystem, home)
 
       val javaBin = {
 
@@ -127,11 +118,11 @@ object Java extends CaseApp[JavaOptions] {
       }
 
       if (params.env.env) {
-        val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+        val script = coursier.jvm.JavaHome.finalScript(envUpdate)
         print(script)
       }
       else if (params.env.disableEnv) {
-        val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+        val script = coursier.jvm.JavaHome.disableScript()
         print(script)
       }
       else if (params.env.setup) {

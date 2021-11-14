@@ -110,10 +110,8 @@ import scala.util.control.NonFatal
 
               Right(res)
             }
-            finally {
-              if (!success)
-                logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
-            }
+            finally if (!success)
+              logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
 
           case other =>
             Left(
@@ -134,10 +132,8 @@ import scala.util.control.NonFatal
             throw ex
           Left(ex)
       }
-      finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
-      }
+      finally if (conn != null)
+        CacheUrl.closeConn(conn)
     }
 
     def lastCheck(file: File): Option[Long] =
@@ -173,10 +169,8 @@ import scala.util.control.NonFatal
               fos = new FileOutputStream(linkFile)
               fos.write(content.getBytes(UTF_8))
             }
-            finally {
-              if (fos != null)
-                fos.close()
-            }
+            finally if (fos != null)
+              fos.close()
             true
           }
           catch {
@@ -305,10 +299,8 @@ import scala.util.control.NonFatal
           Right(result)
         }
       }
-      finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
-      }
+      finally if (conn != null)
+        CacheUrl.closeConn(conn)
     }
 
     def checkDownload(
@@ -418,9 +410,7 @@ import scala.util.control.NonFatal
         success = res.isRight
         res
       }
-      finally {
-        logger.downloadedArtifact(url, success = success)
-      }
+      finally logger.downloadedArtifact(url, success = success)
     }
 
   }
@@ -744,7 +734,7 @@ object Downloader {
             val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
 
             val msg = List(
-              s"Caught ${e.getClass().getName()} (${msg0}) while downloading $url.",
+              s"Caught ${e.getClass.getName} ($msg0) while downloading $url.",
               s"Visit $docUrl to learn how to handle custom protocols."
             ).mkString(" ")
 
@@ -819,10 +809,8 @@ object Downloader {
 
             Right(len)
           }
-          finally {
-            if (!success)
-              logger.gettingLengthResult(url, None)
-          }
+          finally if (!success)
+            logger.gettingLengthResult(url, None)
 
         case other =>
           Left(
@@ -833,10 +821,8 @@ object Downloader {
           )
       }
     }
-    finally {
-      if (conn != null)
-        CacheUrl.closeConn(conn)
-    }
+    finally if (conn != null)
+      CacheUrl.closeConn(conn)
   }
 
 }

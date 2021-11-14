@@ -68,9 +68,7 @@ object CacheFetchTests extends TestSuite {
 
     val res =
       try Await.result(f, Duration.Inf)
-      finally {
-        cleanTmpDir()
-      }
+      finally cleanTmpDir()
 
     val errors = res.errors
 

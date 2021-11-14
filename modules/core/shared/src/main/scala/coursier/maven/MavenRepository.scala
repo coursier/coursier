@@ -127,12 +127,11 @@ object MavenRepository {
     val it      = path.iterator
     var isFirst = true
     while (it.hasNext) {
-      if (!isDir) {
+      if (!isDir)
         if (isFirst)
           isFirst = false
         else
           b += '/'
-      }
       b ++= it.next()
       if (isDir)
         b += '/'
@@ -379,15 +378,13 @@ object MavenRepository {
         if (useSaxParser) parseRawPomSax(str)
         else parseRawPomDom(str)
       ))
-    } yield {
-      Pom.addOptionalDependenciesInConfig(
-        proj0
-          .withActualVersionOpt(Some(version))
-          .withConfigurations(defaultConfigurations),
-        Set(Configuration.empty, Configuration.default),
-        Configuration.optional
-      )
-    }
+    } yield Pom.addOptionalDependenciesInConfig(
+      proj0
+        .withActualVersionOpt(Some(version))
+        .withConfigurations(defaultConfigurations),
+      Set(Configuration.empty, Configuration.default),
+      Configuration.optional
+    )
   }
 
   private def artifacts0(
@@ -481,12 +478,11 @@ object MavenRepository {
 
       val types =
         // this ignores publication.ext if publication.`type` is empty… should we?
-        if (dependency.publication.`type`.isEmpty) {
+        if (dependency.publication.`type`.isEmpty)
           if (dependency.configuration == Configuration.test)
             Seq((Type.jar, Extension.empty), (Type.testJar, Extension.empty))
           else
             Seq((Type.jar, Extension.empty))
-        }
         else
           Seq((dependency.publication.`type`, dependency.publication.ext))
 

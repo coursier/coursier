@@ -1,17 +1,22 @@
 package coursier.cli.jvm
 
-import caseapp.Recurse
-import coursier.cli.options.RepositoryOptions
+import caseapp._
 
 // format: off
 final case class SharedJavaOptions(
-  jvm: Option[String] = None,
-  jvmDir: Option[String] = None,
-  systemJvm: Option[Boolean] = None,
-  localOnly: Boolean = false,
-  update: Boolean = false,
-  jvmIndex: Option[String] = None,
-  @Recurse
-    repositoryOptions: RepositoryOptions = RepositoryOptions()
+
+  @Group("Java")
+    jvm: Option[String] = None,
+
+  @Group("Java")
+  @Hidden
+    systemJvm: Option[Boolean] = None,
+
+  @Group("Java")
+  @Hidden
+    update: Boolean = false,
+
+  @Group("Java")
+    jvmIndex: Option[String] = None
 )
 // format: on

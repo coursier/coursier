@@ -17,9 +17,8 @@ package object compatibility {
   private def between(c: Char, lower: Char, upper: Char) = lower <= c && c <= upper
 
   implicit class RichChar(val c: Char) extends AnyVal {
-    def letterOrDigit: Boolean = {
+    def letterOrDigit: Boolean =
       between(c, '0', '9') || letter
-    }
     def letter: Boolean = between(c, 'a', 'z') || between(c, 'A', 'Z')
   }
 
@@ -111,7 +110,7 @@ package object compatibility {
   def xmlParseDom(s: String): Either[String, Xml.Node] = {
     val doc = {
       if (s.isEmpty) None
-      else {
+      else
         for {
           xmlDoc    <- dynOption(DOMParser.parseFromString(s, "text/xml"))
           rootNodes <- dynOption(xmlDoc.childNodes)
@@ -122,7 +121,6 @@ package object compatibility {
             .dropWhile(_.nodeType != ELEMENT_NODE)
             .headOption
         } yield rootNode
-      }
     }
 
     Right(doc.fold(Xml.Node.empty)(fromNode))

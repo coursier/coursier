@@ -32,10 +32,8 @@ object MainClass {
             is = f()
             new JManifest(is).getMainAttributes
           }
-          finally {
-            if (is != null)
-              is.close()
-          }
+          finally if (is != null)
+            is.close()
 
         def attributeOpt(name: String) =
           Option(attributes.getValue(name))
@@ -51,9 +49,7 @@ object MainClass {
 
       (fromFirstJar, mainClasses.flatten.flatten.toMap)
     }
-    finally {
-      zipFiles.foreach(_.close())
-    }
+    finally zipFiles.foreach(_.close())
   }
 
   def retainedMainClassOpt(

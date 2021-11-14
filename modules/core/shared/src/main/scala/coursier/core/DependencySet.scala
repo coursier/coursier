@@ -84,7 +84,7 @@ final class DependencySet private (
         val dep0 = dep.clearExclusions
         // getOrElse useful if we're passed duplicated stuff in dependencies
         val prev = m.getOrElse(dep0, Sets.empty)
-        if (prev.contains(dep)) {
+        if (prev.contains(dep))
           if (prev.size <= 1)
             m -= dep0
           else {
@@ -92,7 +92,6 @@ final class DependencySet private (
               .remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
             m += ((dep0, l))
           }
-        }
       }
 
       new DependencySet(set -- dependencies, m.toMap)

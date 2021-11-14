@@ -122,20 +122,18 @@ object IvyXml {
           (fromConf, toConf) <- mappings(rawConf)
           if globalExcludesFilter(fromConf, org, name)
           pub <- publications
-        } yield {
-          fromConf -> Dependency(
-            Module(org, name, attr.toMap),
-            version,
-            toConf,
-            globalExcludes.getOrElse(Configuration.all, Set.empty) ++
-              globalExcludes.getOrElse(fromConf, Set.empty) ++
-              allConfsExcludes ++
-              excludes.getOrElse(fromConf, Set.empty),
-            pub, // should come from possible artifact nodes
-            optional = false,
-            transitive = transitive
-          )
-        }
+        } yield fromConf -> Dependency(
+          Module(org, name, attr.toMap),
+          version,
+          toConf,
+          globalExcludes.getOrElse(Configuration.all, Set.empty) ++
+            globalExcludes.getOrElse(fromConf, Set.empty) ++
+            allConfsExcludes ++
+            excludes.getOrElse(fromConf, Set.empty),
+          pub, // should come from possible artifact nodes
+          optional = false,
+          transitive = transitive
+        )
       }
 
   private def publication(node: Node): Publication = {

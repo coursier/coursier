@@ -116,10 +116,8 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         else
           Left(retCode)
       }
-      finally {
-        if (tmpFile != null)
-          Files.deleteIfExists(tmpFile)
-      }
+      finally if (tmpFile != null)
+        Files.deleteIfExists(tmpFile)
 
     res match {
       case Left(retCode) =>
@@ -136,9 +134,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       Files.write(path, content)
       t(path)
     }
-    finally {
-      Files.deleteIfExists(path)
-    }
+    finally Files.deleteIfExists(path)
   }
 
 }

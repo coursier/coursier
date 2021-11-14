@@ -5,7 +5,6 @@ class Coursier < Formula
   url "@LAUNCHER_URL@"
   version "@LAUNCHER_VERSION@"
   sha256 "@LAUNCHER_SHA256@"
-  bottle :unneeded
 
   option "without-zsh-completions", "Disable zsh completion installation"
 

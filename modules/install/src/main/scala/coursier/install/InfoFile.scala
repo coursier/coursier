@@ -32,10 +32,8 @@ object InfoFile {
       case e: ZipException =>
         false
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   def readSource(f: Path): Option[(Source, Array[Byte])] = {
@@ -65,10 +63,8 @@ object InfoFile {
       case NonFatal(e) =>
         throw new Exception(s"Reading $f", e)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   private[coursier] def appDescriptor(path: String, content: Array[Byte]) =
@@ -101,10 +97,8 @@ object InfoFile {
       case NonFatal(e) =>
         throw new Exception(s"Reading $f", e)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   def extraEntries(
@@ -191,10 +185,8 @@ object InfoFile {
       case NonFatal(e) =>
         throw new Exception(s"Reading $infoFile", e)
     }
-    finally {
-      if (f != null)
-        f.close()
-    }
+    finally if (f != null)
+      f.close()
   }
 
   def writeInfoFile(

@@ -333,34 +333,28 @@ object PomParser {
     }
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "project" :: Nil,
-    (s, c, d) => {
+    (s, c, d) =>
       s.dependencies += c -> d
-    }
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "dependencyManagement" :: "project" :: Nil,
-    (s, c, d) => {
+    (s, c, d) =>
       s.dependencyManagement += c -> d
-    }
   ) ++ propertyHandlers(
     "properties" :: "project" :: Nil,
-    (s, k, v) => {
+    (s, k, v) =>
       s.properties += k -> v
-    }
   ) ++ profileHandlers(
     "profile" :: "profiles" :: "project" :: Nil,
-    (s, p) => {
+    (s, p) =>
       s.profiles += p
-    }
   ) ++ scmHandlers(
     "scm" :: "project" :: Nil,
-    (s, scm) => {
+    (s, scm) =>
       s.scmOpt = Some(scm)
-    }
   ) ++ licenseHandlers(
     "license" :: "licenses" :: "project" :: Nil,
-    (s, l) => {
+    (s, l) =>
       s.licenseInfo += l
-    }
   )
 
   private def profileHandlers(prefix: List[String], add: (State, Profile) => Unit) =
@@ -417,10 +411,9 @@ object PomParser {
           state.profilePropertyNameOpt = None
           state.profilePropertyValueOpt = None
         }
-        def end(state: State) = {
+        def end(state: State) =
           state.profileActivationProperties +=
             state.profilePropertyNameOpt.get -> state.profilePropertyValueOpt
-        }
       },
       content("name" :: "property" :: "activation" :: prefix) {
         (state, content) =>
@@ -457,19 +450,16 @@ object PomParser {
       }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: prefix,
-      (s, c, d) => {
+      (s, c, d) =>
         s.profileDependencies += c -> d
-      }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: "dependencyManagement" :: prefix,
-      (s, c, d) => {
+      (s, c, d) =>
         s.profileDependencyManagement += c -> d
-      }
     ) ++ propertyHandlers(
       "properties" :: prefix,
-      (s, k, v) => {
+      (s, k, v) =>
         s.profileProperties = s.profileProperties + (k -> v)
-      }
     )
 
   private def dependencyHandlers(
@@ -552,9 +542,8 @@ object PomParser {
   private def propertyHandlers(prefix: List[String], add: (State, String, String) => Unit) =
     Seq(
       new PropertyHandler(prefix) {
-        override def name(state: State, name: String) = {
+        override def name(state: State, name: String) =
           state.propertyNameOpt = Some(name)
-        }
         override def content(state: State, content: String) = {
           add(state, state.propertyNameOpt.get, content)
           state.propertyNameOpt = None

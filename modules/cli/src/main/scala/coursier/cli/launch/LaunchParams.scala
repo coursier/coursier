@@ -3,6 +3,7 @@ package coursier.cli.launch
 import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cache.{Cache, CacheLogger}
+import coursier.cli.install.SharedChannelParams
 import coursier.cli.jvm.SharedJavaParams
 import coursier.cli.params.SharedLaunchParams
 import coursier.env.EnvironmentUpdate
@@ -11,6 +12,7 @@ import coursier.util.Task
 final case class LaunchParams(
   shared: SharedLaunchParams,
   sharedJava: SharedJavaParams,
+  channel: SharedChannelParams,
   javaOptions: Seq[String],
   jep: Boolean,
   fetchCacheIKnowWhatImDoing: Option[String],
@@ -40,7 +42,7 @@ final case class LaunchParams(
         .withCache(cache0)
       javaExe   <- handle.javaBin(id)
       envUpdate <- handle.environmentFor(id)
-      _         <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
+      _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
     } yield (javaExe.toAbsolutePath.toString, envUpdate)
   }
 }
@@ -50,11 +52,13 @@ object LaunchParams {
 
     val sharedV     = SharedLaunchParams(options.sharedOptions)
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
+    val channelV    = SharedChannelParams(options.channelOptions)
 
-    (sharedV, sharedJavaV).mapN { (shared, sharedJava) =>
+    (sharedV, sharedJavaV, channelV).mapN { (shared, sharedJava, channel) =>
       LaunchParams(
         shared,
         sharedJava,
+        channel,
         options.javaOpt,
         options.jep,
         options.fetchCacheIKnowWhatImDoing,

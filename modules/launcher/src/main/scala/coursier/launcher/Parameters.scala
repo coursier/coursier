@@ -108,6 +108,10 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
+  @data class Prebuilt() extends Parameters {
+    override def isNative: Boolean = true
+  }
+
   @data class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,

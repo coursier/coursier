@@ -6,9 +6,9 @@ import java.net.{URL, URLClassLoader}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
-import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
@@ -29,7 +29,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-object Launch extends CaseApp[LaunchOptions] {
+object Launch extends CoursierCommand[LaunchOptions] {
 
   def baseLoader: ClassLoader = {
 
@@ -375,7 +375,9 @@ object Launch extends CaseApp[LaunchOptions] {
         .map(f => () => Some(f()))
     else
       launch(hierarchy0, mainClass0, userArgs, properties0)
-        .map(f => { () => f(); None })
+        // format: off
+        .map {f => () => f(); None}
+        // format: on
   }
 
   // same as task below, except:
@@ -475,7 +477,7 @@ object Launch extends CaseApp[LaunchOptions] {
     stderr: PrintStream = System.err
   ): Task[(String, () => Option[Int])] =
     for {
-      t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
+      t <- Fetch.task(params.shared.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
@@ -507,6 +509,8 @@ object Launch extends CaseApp[LaunchOptions] {
       }
     } yield (mainClass0, f)
 
+  override def group: String = CommandGroup.launcher
+
   def run(options: LaunchOptions, args: RemainingArgs): Unit = {
 
     var pool: ExecutorService = null
@@ -515,13 +519,13 @@ object Launch extends CaseApp[LaunchOptions] {
     val (options0, deps) =
       LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
         val initialRepositories = initialParams.shared.resolve.repositories.repositories
-        val channels            = initialParams.shared.resolve.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
         val cache = initialParams.shared.resolve.cache.cache(
           pool,
           initialParams.shared.resolve.output.logger()
         )
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
 
         if (options.json) {

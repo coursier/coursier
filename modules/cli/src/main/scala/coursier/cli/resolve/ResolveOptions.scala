@@ -1,6 +1,7 @@
 package coursier.cli.resolve
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{
   CacheOptions,
   DependencyOptions,
@@ -11,7 +12,15 @@ import coursier.cli.options.{
 import coursier.install.RawAppDescriptor
 
 // format: off
-@ArgsName("org:name:version|app-name[:version]*")
+@ArgsName("org:name:version*|app-name[:version]")
+@Help(
+  "Resolve and print the transitive dependencies of one or more dependencies or an application.\n" +
+  "Print the maven coordinates, does not download the artifacts.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs resolve org.http4s:http4s-dsl_2.12:0.18.21\n" +
+  "$ cs resolve --tree org.http4s:http4s-dsl_2.12:0.18.21"
+)
 final case class ResolveOptions(
 
   @Help("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
@@ -38,6 +47,8 @@ final case class ResolveOptions(
 
   @Recurse
     sharedResolveOptions: SharedResolveOptions = SharedResolveOptions(),
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
   @Help("Force printing / generating results, even if errored")
   @Short("F")

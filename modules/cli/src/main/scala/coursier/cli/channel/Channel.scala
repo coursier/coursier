@@ -4,13 +4,15 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.params.OutputParams
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.paths.Util.createDirectories
 
-object Channel extends CaseApp[ChannelOptions] {
+object Channel extends CoursierCommand[ChannelOptions] {
+
+  override def group: String = CommandGroup.channel
 
   def run(options: ChannelOptions, args: RemainingArgs): Unit = {
     val params = ChannelParam(options, args.all.nonEmpty).exitOnError()
@@ -31,9 +33,7 @@ object Channel extends CaseApp[ChannelOptions] {
       rawLine <- new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).linesIterator
       line = rawLine.trim
       if line.nonEmpty
-    } {
-      System.out.println(line)
-    }
+    } System.out.println(line)
   }
 
   def addChannel(channels: List[String], output: OutputParams) = {

@@ -7,13 +7,11 @@ import java.io.FileInputStream
 
 class CustomprotocolHandler extends URLStreamHandlerFactory {
   def createURLStreamHandler(protocol: String): URLStreamHandler = new URLStreamHandler {
-    protected def openConnection(url: URL): URLConnection = {
+    protected def openConnection(url: URL): URLConnection =
       new URLConnection(url) {
         def connect(): Unit = ()
-        override def getInputStream(): InputStream = {
+        override def getInputStream(): InputStream =
           new FileInputStream(new File(new File("."), url.getPath.stripPrefix("/")))
-        }
       }
-    }
   }
 }

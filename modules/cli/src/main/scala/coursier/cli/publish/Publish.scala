@@ -13,6 +13,7 @@ import coursier.publish.fileset.{FileSet, Group}
 import coursier.cli.publish.options.PublishOptions
 import coursier.cli.publish.params.PublishParams
 import coursier.publish.upload._
+import coursier.cli.CoursierCommand
 import coursier.cli.publish.util.{DeleteOnExit, Git}
 import coursier.cli.util.Guard
 import coursier.maven.MavenRepository
@@ -22,7 +23,8 @@ import coursier.util.{Sync, Task}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-object Publish extends CaseApp[PublishOptions] {
+object Publish extends CoursierCommand[PublishOptions] {
+  override def hidden: Boolean = true
 
   val defaultChecksums = Seq(ChecksumType.MD5, ChecksumType.SHA1)
 
@@ -174,23 +176,21 @@ object Publish extends CaseApp[PublishOptions] {
       // re-init signer (e.g. in case gpg-agent cleared its cache since the first init)
       _ <- params.initSigner
 
-      withSignatures <- {
-        params
-          .signer
-          .signatures(
-            fileSet1,
-            now,
-            ChecksumType.all.map(_.extension).toSet,
-            Set("maven-metadata.xml"),
-            params.signerLogger(out)
-          )
-          .flatMap {
-            case Left((path, _, msg)) => Task.fail(new Exception(
-                s"Failed to sign $path: $msg"
-              ))
-            case Right(fs) => Task.point(fileSet1 ++ fs)
-          }
-      }
+      withSignatures <- params
+        .signer
+        .signatures(
+          fileSet1,
+          now,
+          ChecksumType.all.map(_.extension).toSet,
+          Set("maven-metadata.xml"),
+          params.signerLogger(out)
+        )
+        .flatMap {
+          case Left((path, _, msg)) => Task.fail(new Exception(
+              s"Failed to sign $path: $msg"
+            ))
+          case Right(fs) => Task.point(fileSet1 ++ fs)
+        }
 
       finalFileSet <- {
         val checksums = params.checksum.checksumsOpt.getOrElse {
@@ -230,14 +230,12 @@ object Publish extends CaseApp[PublishOptions] {
       parallel  = params.parallel.getOrElse(!params.repository.gitHub)
       urlSuffix = params.urlSuffixOpt.getOrElse(if (params.repository.bintray) ";publish=1" else "")
 
-      (upload, _, repo, isLocal) = {
-        repoParams(
-          retainedRepo,
-          parallel = parallel,
-          dummyUpload = params.dummy,
-          urlSuffix = urlSuffix
-        )
-      }
+      (upload, _, repo, isLocal) = repoParams(
+        retainedRepo,
+        parallel = parallel,
+        dummyUpload = params.dummy,
+        urlSuffix = urlSuffix
+      )
 
       res <- upload.uploadFileSet(
         repo,
@@ -253,7 +251,7 @@ object Publish extends CaseApp[PublishOptions] {
       }
 
       _ <- hooks.afterUpload(hooksData)
-    } yield {
+    } yield
       if (params.verbosity >= 0) {
         val actualReadRepo = params.repository.repository.checkResultsRepo(isSnapshot0)
         val modules = Group.split(sortedFinalFileSet)
@@ -267,7 +265,6 @@ object Publish extends CaseApp[PublishOptions] {
         // TODO If publishing releases to Sonatype and not promoting, print message about how to promote things.
         // TODO If publishing releases to Sonatype, print message about Maven Central sync.
       }
-    }
   }
 
   def run(options: PublishOptions, args: RemainingArgs): Unit = {

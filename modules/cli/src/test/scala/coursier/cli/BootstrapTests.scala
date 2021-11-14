@@ -315,7 +315,7 @@ object BootstrapTests extends TestSuite {
             RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
           )
 
-          //We need to wait between two runs to ensure we don't accidentally get the same hash
+          // We need to wait between two runs to ensure we don't accidentally get the same hash
           Thread.sleep(2000)
 
           val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(

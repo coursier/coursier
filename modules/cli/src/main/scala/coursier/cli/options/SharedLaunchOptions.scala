@@ -1,6 +1,7 @@
 package coursier.cli.options
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
@@ -39,12 +40,11 @@ final case class SharedLaunchOptions(
       sharedLoaderOptions = sharedLoaderOptions.addApp(app),
       resolveOptions = resolveOptions.addApp(app),
       artifactOptions = artifactOptions.addApp(app),
-      mainClass = {
+      mainClass =
         if (mainClass.isEmpty)
           app.mainClass.fold("")(_.stripSuffix("?")) // FIXME '?' suffix means optional main class
         else
-          mainClass
-      },
+          mainClass,
       property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
       python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
     )

@@ -3,18 +3,21 @@ package coursier.cli.setup
 import java.io.File
 import java.util.Locale
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
+import coursier.install.error.InstallDirException
 import coursier.jvm.JvmCache
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Setup extends CaseApp[SetupOptions] {
+object Setup extends CoursierCommand[SetupOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: SetupOptions, args: RemainingArgs): Unit = {
 
@@ -42,11 +45,11 @@ object Setup extends CaseApp[SetupOptions] {
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
-    val installDir = params.sharedInstall.installDir(installCache)
+    val installDir = params.sharedInstall.installDir(installCache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
     val channels =
-      Channels(params.sharedChannel.channels, params.sharedInstall.repositories, installCache)
+      Channels(params.sharedChannel.channels, params.repository.repositories, installCache)
         .withVerbosity(params.output.verbosity)
 
     val confirm =
@@ -101,7 +104,7 @@ object Setup extends CaseApp[SetupOptions] {
     // TODO Better error messages for relevant exceptions
     try task.unsafeRun()(cache.ec)
     catch {
-      case e: InstallDir.InstallDirException if params.output.verbosity <= 1 =>
+      case e: InstallDirException if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
         sys.exit(1)
       case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>

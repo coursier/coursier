@@ -1,20 +1,20 @@
 package coursier.install
 
-import java.io.{BufferedInputStream, File, FileInputStream, InputStream, OutputStream}
+import java.io.{File, InputStream, OutputStream}
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 import java.time.Instant
 import java.util.Locale
 import java.util.stream.Stream
-import java.util.zip.{ZipEntry, ZipFile}
+import java.util.zip.ZipEntry
 
 import coursier.Fetch
-import coursier.cache.{ArtifactError, Cache, FileCache}
-import coursier.cache.loggers.ProgressBarRefreshDisplay
+import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
 import coursier.core.{Dependency, Repository}
 import coursier.env.EnvironmentUpdate
-import coursier.jvm.ArchiveType
+import coursier.install.error._
+import coursier.install.internal._
 import coursier.launcher.{
   AssemblyGenerator,
   BootstrapGenerator,
@@ -31,11 +31,10 @@ import coursier.launcher.native.NativeBuilder
 import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
 import dataclass._
-import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveStreamFactory}
-import org.apache.commons.compress.compressors.CompressorStreamFactory
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+import scala.util.Properties
 
 @data class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
@@ -44,23 +43,21 @@ import scala.util.control.NonFatal
   verbosity: Int = 0,
   graalvmParamsOpt: Option[GraalvmParams] = None,
   coursierRepositories: Seq[Repository] = Nil,
-  platform: Option[String] = InstallDir.platform(),
+  platform: Option[String] = Platform.get(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
   os: String = System.getProperty("os.name", ""),
   nativeImageJavaHome: Option[String => Task[File]] = None,
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
-  basePreamble: Preamble = Preamble()
-    .addExtraEnvVar(InstallDir.isInstalledLauncherEnvVar, "true"),
+  basePreamble: Preamble = Preamble(),
   @since
-  overrideProguardedBootstraps: Option[Boolean] = None
+  overrideProguardedBootstraps: Option[Boolean] = None,
+  @since("2.0.17")
+  archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
-  private lazy val isWindows =
-    os.toLowerCase(Locale.ROOT).contains("windows")
-
   private lazy val auxExtension =
-    if (isWindows) ".exe"
+    if (Properties.isWin) ".exe"
     else ""
 
   import InstallDir._
@@ -108,22 +105,20 @@ import scala.util.control.NonFatal
 
   private def actualName(dest: Path): String = {
     val name = dest.getFileName.toString
-    if (isWindows) name.stripSuffix(".bat")
+    if (Properties.isWin) name.stripSuffix(".bat")
     else name
   }
 
   private def actualDest(dest: Path): Path =
-    if (isWindows) dest.getParent.resolve(dest.getFileName.toString + ".bat")
+    if (Properties.isWin) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
 
   private def baseJarPreamble(desc: AppDescriptor): Preamble =
-    basePreamble.addExtraEnvVar(InstallDir.isJvmLauncherEnvVar, "true")
-      .withOsKind(isWindows)
-      .callsItself(isWindows)
+    basePreamble
+      .withOsKind(Properties.isWin)
+      .callsItself(Properties.isWin)
       .withJavaOpts(desc.javaOptions)
       .withJvmOptionFile(desc.jvmOptionFile)
-  private def baseNativePreamble: Preamble =
-    basePreamble.addExtraEnvVar(InstallDir.isNativeLauncherEnvVar, "true")
 
   private[install] def params(
     desc: AppDescriptor,
@@ -209,6 +204,9 @@ import scala.util.control.NonFatal
           .withJavaHome(graalvmHomeOpt)
           .withVerbosity(verbosity)
 
+      case LauncherType.Prebuilt =>
+        Parameters.Prebuilt()
+
       case LauncherType.ScalaNative =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
@@ -256,9 +254,10 @@ import scala.util.control.NonFatal
           None
       }
 
-      val prebuiltOrNotFoundUrls0 = prebuiltOrNotFoundUrls(
+      val prebuiltOrNotFoundUrls0 = PrebuiltApp.get(
         desc,
         cache,
+        archiveCache,
         verbosity,
         platform,
         platformExtensions,
@@ -276,10 +275,10 @@ import scala.util.control.NonFatal
             .filterNot(appArtifacts.shared.toSet)
             .map {
               case (a, f) =>
-                (a, f, None)
+                PrebuiltApp.Uncompressed(a, f)
             }
         }
-        ArtifactsLock.ofArtifacts(artifacts.map { case (a, f, _) => (a, f) })
+        ArtifactsLock.ofArtifacts(artifacts.map(app => (app.artifact, app.file)))
       }
 
       val sharedLockOpt =
@@ -327,64 +326,82 @@ import scala.util.control.NonFatal
             if (desc.launcherType.isNative) tmpAux
             else tmpDest
 
-          prebuiltOrNotFoundUrls0 match {
+          val actualLauncher = prebuiltOrNotFoundUrls0 match {
             case Left(notFoundUrls) =>
-              if (onlyPrebuilt && desc.launcherType.isNative)
+              if (
+                (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
+              )
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
               val params0 = params(desc, appArtifacts, infoEntries, mainClass, dest)
 
               writing(genDest, verbosity, Some(currentTime)) {
                 Generator.generate(params0, genDest)
+                genDest
               }
 
-            case Right((_, prebuilt, archiveTypeAndPathOpt)) =>
-              // decompress if needed
+            case Right(a: PrebuiltApp.Uncompressed) =>
+              Files.copy(a.file.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
+              FileUtil.tryMakeExecutable(genDest)
+              genDest
 
-              archiveTypeAndPathOpt match {
-                case Some((ArchiveType.Tgz, subPathOpt)) =>
-                  subPathOpt match {
-                    case None =>
-                      withFirstFileInTgz(prebuilt) { is =>
-                        writeTo(is, genDest)
-                      }
-                    case Some(subPath) =>
-                      withFileInTgz(prebuilt, subPath) { is =>
-                        writeTo(is, genDest)
-                      }
+            case Right(a: PrebuiltApp.Compressed) =>
+              (a.archiveType, a.pathInArchiveOpt) match {
+                case (ArchiveType.Tgz, None) =>
+                  ArchiveUtil.withFirstFileInTgz(a.file) { is =>
+                    writeTo(is, genDest)
                   }
-                case Some((ArchiveType.Zip, subPathOpt)) =>
-                  subPathOpt match {
-                    case None =>
-                      withFirstFileInZip(prebuilt) { is =>
-                        writeTo(is, genDest)
-                      }
-                    case Some(subPath) =>
-                      withFileInZip(prebuilt, subPath) { is =>
-                        writeTo(is, genDest)
-                      }
+                case (ArchiveType.Tgz, Some(subPath)) =>
+                  ArchiveUtil.withFileInTgz(a.file, subPath) { is =>
+                    writeTo(is, genDest)
                   }
-                case None =>
-                  Files.copy(prebuilt.toPath, genDest, StandardCopyOption.REPLACE_EXISTING)
+                case (ArchiveType.Gzip, None) =>
+                  ArchiveUtil.withGzipContent(a.file) { is =>
+                    writeTo(is, genDest)
+                  }
+                case (ArchiveType.Gzip, Some(_)) =>
+                  sys.error("Sub-path not supported for gzip files")
+                case (ArchiveType.Zip, None) =>
+                  ArchiveUtil.withFirstFileInZip(a.file) { is =>
+                    writeTo(is, genDest)
+                  }
+                case (ArchiveType.Zip, Some(subPath)) =>
+                  ArchiveUtil.withFileInZip(a.file, subPath) { is =>
+                    writeTo(is, genDest)
+                  }
               }
 
               FileUtil.tryMakeExecutable(genDest)
+              genDest
+
+            case Right(a: PrebuiltApp.ExtractedArchive) =>
+              a.file.toPath
           }
 
-          if (desc.launcherType.isNative) {
+          val inPlaceLauncher     = desc.launcherType.isNative && actualLauncher == genDest
+          val launcherIsElsewhere = actualLauncher != genDest
+          if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
-              if (isWindows)
-                baseNativePreamble
-                  .withKind(Preamble.Kind.Bat)
-                  .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
-              else
-                baseNativePreamble
-                  .withKind(Preamble.Kind.Sh)
-                  .withCommand(
-                    """"$(cd "$(dirname "$0")"; pwd)/""" +
-                      auxName(dest0.getFileName.toString, "") +
-                      "\""
-                  ) // FIXME needs directory
+              if (inPlaceLauncher)
+                if (Properties.isWin)
+                  basePreamble
+                    .withKind(Preamble.Kind.Bat)
+                    .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
+                else
+                  basePreamble
+                    .withKind(Preamble.Kind.Sh)
+                    .withCommand(
+                      // FIXME needs directory
+                      """"$(cd "$(dirname "$0")"; pwd)/""" +
+                        auxName(dest0.getFileName.toString, "") +
+                        "\""
+                    )
+              else {
+                assert(launcherIsElsewhere)
+                basePreamble
+                  .withKind(if (Properties.isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
+                  .withCommand(actualLauncher.toAbsolutePath.toString)
+              }
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)
               FileUtil.tryMakeExecutable(tmpDest)
@@ -463,20 +480,14 @@ import scala.util.control.NonFatal
           .toVector
           .sorted
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else
       Nil
 }
 
 object InstallDir {
-
-  val isInstalledLauncherEnvVar: String = "IS_CS_INSTALLED_LAUNCHER"
-  val isJvmLauncherEnvVar: String       = "CS_JVM_LAUNCHER"
-  val isNativeLauncherEnvVar: String    = "CS_NATIVE_LAUNCHER"
 
   private lazy val defaultDir0: Path = {
 
@@ -563,145 +574,6 @@ object InstallDir {
     t
   }
 
-  private def candidatePrebuiltArtifacts(
-    desc: AppDescriptor,
-    cache: Cache[Task],
-    verbosity: Int,
-    platform: Option[String],
-    platformExtensions: Seq[String],
-    preferPrebuilt: Boolean
-  ): Option[Seq[(Artifact, Option[(ArchiveType, Option[String])])]] = {
-
-    def mainVersionsIterator(): Iterator[String] = {
-      val it0 = desc.candidateMainVersions(cache, verbosity)
-      val it =
-        if (it0.hasNext) it0
-        else desc.mainVersionOpt.iterator
-      // check the latest 5 versions if preferPrebuilt is true
-      // FIXME Don't hardcode that number?
-      it.take(if (preferPrebuilt) 5 else 1)
-    }
-
-    def urlArchiveType(url: String): (String, Option[(ArchiveType, Option[String])]) = {
-      val idx = url.indexOf('+')
-      if (idx < 0) (url, None)
-      else
-        ArchiveType.parse(url.take(idx)) match {
-          case Some(tpe) =>
-            val url0         = url.drop(idx + 1)
-            val subPathIndex = url0.indexOf('!')
-            if (subPathIndex < 0)
-              (url0, Some((tpe, None)))
-            else {
-              val subPath = url0.drop(subPathIndex + 1)
-              (url0.take(subPathIndex), Some((tpe, Some(subPath))))
-            }
-          case None =>
-            (url, None)
-        }
-    }
-
-    def patternArtifacts(
-      pattern: String
-    ): Seq[(Artifact, Option[(ArchiveType, Option[String])])] = {
-
-      val artifactsIt = for {
-        version <- mainVersionsIterator()
-        isSnapshot = version.endsWith("SNAPSHOT")
-        baseUrl0 = pattern
-          .replace("${version}", version)
-          .replace("${platform}", platform.getOrElse(""))
-        (baseUrl, archiveTypeAndPathOpt) = urlArchiveType(baseUrl0)
-        ext <-
-          if (archiveTypeAndPathOpt.forall(_._2.nonEmpty))
-            platformExtensions.iterator ++ Iterator("")
-          else Iterator("")
-        (url, archiveTypeAndPathOpt0) = archiveTypeAndPathOpt match {
-          case None                  => (baseUrl + ext, archiveTypeAndPathOpt)
-          case Some((tpe, subPath0)) => (baseUrl, Some((tpe, subPath0.map(_ + ext))))
-        }
-      } yield (Artifact(url).withChanging(isSnapshot), archiveTypeAndPathOpt0)
-
-      artifactsIt.toVector
-    }
-
-    if (desc.launcherType.isNative)
-      desc.prebuiltLauncher
-        .orElse(desc.prebuiltBinaries.get(platform.getOrElse("")))
-        .map(patternArtifacts)
-    else
-      None
-  }
-
-  private[coursier] def handleArtifactErrors(
-    maybeFile: Either[ArtifactError, File],
-    artifact: Artifact,
-    verbosity: Int
-  ): Option[File] =
-    maybeFile match {
-      case Left(e: ArtifactError.NotFound) =>
-        if (verbosity >= 2)
-          System.err.println(s"No prebuilt launcher found at ${artifact.url}")
-        None
-      case Left(e: ArtifactError.DownloadError)
-          if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
-        // These seem to happen on Windows for non existing artifacts, only from the native launcher apparently???
-        // Interpreting these errors as not-found-errors too.
-        if (verbosity >= 2)
-          System.err.println(
-            s"No prebuilt launcher found at ${artifact.url} (SSL handshake exception)"
-          )
-        None
-      case Left(e) =>
-        // FIXME Ignore some other kind of errors too? Just warn about them?
-        throw new DownloadError(artifact.url, e)
-      case Right(f) =>
-        if (verbosity >= 1) {
-          val size = ProgressBarRefreshDisplay.byteCount(Files.size(f.toPath))
-          System.err.println(s"Found prebuilt launcher at ${artifact.url} ($size)")
-        }
-        Some(f)
-    }
-
-  private def prebuiltOrNotFoundUrls(
-    desc: AppDescriptor,
-    cache: Cache[Task],
-    verbosity: Int,
-    platform: Option[String],
-    platformExtensions: Seq[String],
-    preferPrebuilt: Boolean
-  ): Either[Seq[String], (Artifact, File, Option[(ArchiveType, Option[String])])] = {
-
-    def downloadArtifacts(
-      artifacts: Seq[(Artifact, Option[(ArchiveType, Option[String])])]
-    ): Iterator[(Artifact, File, Option[(ArchiveType, Option[String])])] =
-      artifacts.iterator.flatMap {
-        case (artifact, archiveTypeOpt) =>
-          if (verbosity >= 2)
-            System.err.println(s"Checking prebuilt launcher at ${artifact.url}")
-          cache.loggerOpt.foreach(_.init())
-          val maybeFile =
-            try cache.file(artifact).run.unsafeRun()(cache.ec)
-            finally cache.loggerOpt.foreach(_.stop())
-          handleArtifactErrors(maybeFile, artifact, verbosity)
-            .iterator
-            .map((artifact, _, archiveTypeOpt))
-      }
-
-    candidatePrebuiltArtifacts(
-      desc,
-      cache,
-      verbosity,
-      platform,
-      platformExtensions,
-      preferPrebuilt
-    ).toRight(Nil).flatMap { artifacts =>
-      val iterator = downloadArtifacts(artifacts)
-      if (iterator.hasNext) Right(iterator.next())
-      else Left(artifacts.map(_._1.url))
-    }
-  }
-
   def auxName(name: String, auxExtension: String): String = {
     val (name0, _) = {
       val idx = name.lastIndexOf('.')
@@ -719,7 +591,7 @@ object InstallDir {
     val os0 = os.toLowerCase(Locale.ROOT)
 
     if (os0.contains("windows"))
-      Seq(".exe")
+      Seq(".exe", ".bat")
     else
       Nil
   }
@@ -729,135 +601,6 @@ object InstallDir {
       .toSeq
       .flatMap(platformExtensions(_))
 
-  @deprecated("Use the override accepting two arguments instead", "2.0.10")
-  def platform(os: String): Option[String] = {
-    platform(os, Option(System.getProperty("os.arch")).getOrElse("x86_64"))
-  }
-
-  def platform(os: String, arch: String): Option[String] = {
-
-    val os0   = os.toLowerCase(Locale.ROOT)
-    val arch0 = if (arch == "amd64") "x86_64" else arch
-
-    if (os0.contains("linux"))
-      Some(s"$arch0-pc-linux")
-    else if (os0.contains("mac"))
-      Some(s"$arch0-apple-darwin")
-    else if (os0.contains("windows"))
-      Some(s"$arch0-pc-win32")
-    else
-      None
-  }
-
-  def platform(): Option[String] =
-    for {
-      os   <- Option(System.getProperty("os.name"))
-      arch <- Option(System.getProperty("os.arch"))
-      p    <- platform(os, arch)
-    } yield p
-
-  private def withTgzEntriesIterator[T](
-    tgz: File
-  )(
-    f: Iterator[(ArchiveEntry, InputStream)] => T
-  ): T = {
-    // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
-    var fis: FileInputStream = null
-    try {
-      fis = new FileInputStream(tgz)
-      val uncompressedInputStream = new CompressorStreamFactory().createCompressorInputStream(
-        if (fis.markSupported()) fis
-        else new BufferedInputStream(fis)
-      )
-      val archiveInputStream = new ArchiveStreamFactory().createArchiveInputStream(
-        if (uncompressedInputStream.markSupported()) uncompressedInputStream
-        else new BufferedInputStream(uncompressedInputStream)
-      )
-
-      var nextEntryOrNull: ArchiveEntry = null
-
-      val it: Iterator[(ArchiveEntry, InputStream)] =
-        new Iterator[(ArchiveEntry, InputStream)] {
-          def hasNext: Boolean = {
-            if (nextEntryOrNull == null)
-              nextEntryOrNull = archiveInputStream.getNextEntry
-            nextEntryOrNull != null
-          }
-          def next(): (ArchiveEntry, InputStream) = {
-            assert(hasNext)
-            val value = (nextEntryOrNull, archiveInputStream)
-            nextEntryOrNull = null
-            value
-          }
-        }
-
-      f(it)
-    }
-    finally {
-      if (fis != null)
-        fis.close()
-    }
-  }
-
-  private def withFirstFileInTgz[T](tgz: File)(f: InputStream => T): T =
-    withTgzEntriesIterator(tgz) { it =>
-      val it0 = it.filter(!_._1.isDirectory).map(_._2)
-      if (it0.hasNext)
-        f(it0.next())
-      else
-        throw new NoSuchElementException(s"No file found in $tgz")
-    }
-
-  private def withFileInTgz[T](tgz: File, pathInArchive: String)(f: InputStream => T): T =
-    withTgzEntriesIterator(tgz) { it =>
-      val it0 = it.collect {
-        case (ent, is) if !ent.isDirectory && ent.getName == pathInArchive =>
-          is
-      }
-      if (it0.hasNext)
-        f(it0.next())
-      else
-        throw new NoSuchElementException(s"$pathInArchive not found in $tgz")
-    }
-
-  private def withFirstFileInZip[T](zip: File)(f: InputStream => T): T = {
-    var zf: ZipFile     = null
-    var is: InputStream = null
-    try {
-      zf = new ZipFile(zip)
-      val ent = zf.entries().asScala.find(e => !e.isDirectory).getOrElse {
-        throw new NoSuchElementException(s"No file found in $zip")
-      }
-      is = zf.getInputStream(ent)
-      f(is)
-    }
-    finally {
-      if (zf != null)
-        zf.close()
-      if (is != null)
-        is.close()
-    }
-  }
-
-  private def withFileInZip[T](zip: File, pathInArchive: String)(f: InputStream => T): T = {
-    var zf: ZipFile     = null
-    var is: InputStream = null
-    try {
-      zf = new ZipFile(zip)
-      val ent = Option(zf.getEntry(pathInArchive)).getOrElse {
-        throw new NoSuchElementException(s"$pathInArchive not found in $zip")
-      }
-      is = zf.getInputStream(ent)
-      f(is)
-    }
-    finally {
-      if (zf != null)
-        zf.close()
-      if (is != null)
-        is.close()
-    }
-  }
-
   private def writeTo(is: InputStream, dest: Path): Unit = {
     var os: OutputStream = null
     try {
@@ -865,42 +608,12 @@ object InstallDir {
         Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
       val buf  = Array.ofDim[Byte](16384)
       var read = -1
-      while ({ read = is.read(buf); read >= 0 }) {
+      while ({ read = is.read(buf); read >= 0 })
         if (read > 0)
           os.write(buf, 0, read)
-      }
     }
-    finally {
-      if (os != null)
-        os.close()
-    }
+    finally if (os != null)
+      os.close()
   }
-
-  sealed abstract class InstallDirException(message: String, cause: Throwable = null)
-      extends Exception(message, cause)
-
-  final class NoMainClassFound extends InstallDirException("No main class found")
-
-  // FIXME Keep more details
-  final class NoScalaVersionFound extends InstallDirException("No scala version found")
-
-  final class LauncherNotFound(val path: Path) extends InstallDirException(s"$path not found")
-
-  final class NoPrebuiltBinaryAvailable(val candidateUrls: Seq[String])
-      extends InstallDirException(
-        if (candidateUrls.isEmpty)
-          "No prebuilt binary available"
-        else
-          s"No prebuilt binary available at ${candidateUrls.mkString(", ")}"
-      )
-
-  final class CannotReadAppDescriptionInLauncher(val path: Path)
-      extends InstallDirException(s"Cannot read app description in $path")
-
-  final class NotAnApplication(val path: Path)
-      extends InstallDirException(s"File $path wasn't installed by cs install")
-
-  final class DownloadError(val url: String, cause: Throwable = null)
-      extends InstallDirException(s"Error downloading $url", cause)
 
 }

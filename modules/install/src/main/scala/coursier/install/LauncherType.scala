@@ -19,6 +19,9 @@ object LauncherType {
   case object GraalvmNativeImage extends LauncherType {
     override def isNative: Boolean = true
   }
+  case object Prebuilt extends LauncherType {
+    override def isNative: Boolean = true
+  }
 
   /** Dummy generator, simply creating an empty JAR */
   case object DummyJar extends LauncherType
@@ -36,6 +39,7 @@ object LauncherType {
       case "standalone"           => Right(Standalone)
       case "scala-native"         => Right(ScalaNative)
       case "graalvm-native-image" => Right(GraalvmNativeImage)
+      case "prebuilt"             => Right(Prebuilt)
       case _                      => Left(s"Unrecognized launcher type: $input")
     }
 

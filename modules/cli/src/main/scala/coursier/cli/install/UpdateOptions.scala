@@ -1,10 +1,19 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp.{ArgsName, ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
+@ArgsName("app-name*")
+@Help(
+  "Update one or more applications.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs update\n" +
+  "$ cs update amm\n" +
+  "$ cs update sbt sbtn\n"
+)
 final case class UpdateOptions(
 
   @Recurse

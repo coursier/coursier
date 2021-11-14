@@ -1,12 +1,21 @@
 package coursier.cli.setup
 
 import caseapp.core.parser.Parser
-import caseapp.{Name => Short, Recurse}
+import caseapp.{HelpMessage, Name => Short, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 
 // format: off
+@HelpMessage(
+  "Setup a machine for Scala development.\n" +
+  "Install Coursier itself and standard Scala tooling.\n" +
+  "Also install a JVM if necessary.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs setup\n" +
+  "$ cs setup --jvm 11 --apps bloop,scalafix\n"
+)
 final case class SetupOptions(
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),

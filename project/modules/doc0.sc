@@ -98,7 +98,7 @@ trait Doc extends ScalaModule {
         workingDir = forkWorkingDir()
       )
 
-    if (watch) {
+    if (watch)
       if (yarnRunBuild)
         Util.withBgProcess(
           Seq("yarn", "run", "start"),
@@ -109,7 +109,6 @@ trait Doc extends ScalaModule {
         }
       else
         runMdoc()
-    }
     else {
       runMdoc()
       if (yarnRunBuild)
