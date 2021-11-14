@@ -76,10 +76,14 @@ $ cs
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="windows"></a><a href="#windows" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Windows</h3>
 <p>On Windows, use</p>
-<pre><code class="hljs css language-bash">&gt; bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe <span class="hljs-string">"%cd%\cs.exe"</span>
+<pre><code class="hljs css language-bat"># <span class="hljs-built_in">CMD</span>
+&gt; bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "<span class="hljs-variable">%cd%</span>\cs.exe"
+&gt; .\cs --<span class="hljs-built_in">help</span>
+
+# PowerShell
+&gt; <span class="hljs-built_in">Start</span>-BitsTransfer -Source https://git.io/coursier-cli-windows-exe -Destination cs.exe
 &gt; .\cs --<span class="hljs-built_in">help</span>
 </code></pre>
-<p>Note that this must be run with <code>cmd.exe</code>, not <code>PowerShell</code>.</p>
 <h2><a class="anchor" aria-hidden="true" id="jar-based-launcher"></a><a href="#jar-based-launcher" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>JAR-based launcher</h2>
 <p>In case you run into any issue with the <a href="#native-launcher">native launcher</a>,
 a JAR-based launcher is available.</p>
@@ -104,8 +108,13 @@ $ coursier
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="windows-1"></a><a href="#windows-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Windows</h3>
 <p>Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with</p>
-<pre><code class="hljs css language-bat">&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
+<pre><code class="hljs css language-bat"># <span class="hljs-built_in">CMD</span>
+&gt; bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "<span class="hljs-variable">%cd%</span>\coursier"
 &gt; bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "<span class="hljs-variable">%cd%</span>\coursier.bat"
+
+# PowerShell
+&gt; <span class="hljs-built_in">Start</span>-BitsTransfer -Source https://git.io/coursier-cli -Destination coursier
+&gt; <span class="hljs-built_in">Start</span>-BitsTransfer -Source https://git.io/coursier-bat -Destination coursier.bat
 </code></pre>
 <p>You can then run coursier from the same directory, like</p>
 <pre><code class="hljs css language-bat">&gt; coursier resolve io.circe:circe-core_2.<span class="hljs-number">12</span>:<span class="hljs-number">0</span>.<span class="hljs-number">10</span>.<span class="hljs-number">0</span>
@@ -151,10 +160,10 @@ assets:</p>
 <tr><th>OS</th><th>URL</th><th>Since version</th></tr>
 </thead>
 <tbody>
-<tr><td>Linux</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-pc-linux</a></td><td><code>2.0.0-RC3-1</code></td></tr>
-<tr><td>macOS</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-apple-darwin</a></td><td><code>2.0.0-RC3-1</code></td></tr>
-<tr><td>Windows</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/cs-x86_64-pc-win32.exe</a></td><td><code>2.0.0-RC6</code></td></tr>
-<tr><td>Any (needs JVM)</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/coursier">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-4-5820fb6aa-SNAPSHOT/coursier</a></td><td><code>1.1.0-M9</code></td></tr>
+<tr><td>Linux</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-pc-linux">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-pc-linux</a></td><td><code>2.0.0-RC3-1</code></td></tr>
+<tr><td>macOS</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-apple-darwin">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-apple-darwin</a></td><td><code>2.0.0-RC3-1</code></td></tr>
+<tr><td>Windows</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-pc-win32.exe">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/cs-x86_64-pc-win32.exe</a></td><td><code>2.0.0-RC6</code></td></tr>
+<tr><td>Any (needs JVM)</td><td><a href="https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/coursier">https://github.com/coursier/coursier/releases/download/v2.0.16-200-ge888c6dea-6-1b4fe844e-SNAPSHOT/coursier</a></td><td><code>1.1.0-M9</code></td></tr>
 <tr><td>Any (needs JVM)</td><td><a href="https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier">https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier</a> (up to version <code>1.1.0-M9</code>)</td><td><em>Invalid for newest versions</em></td></tr>
 </tbody>
 </table>
