@@ -4,6 +4,7 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.ValidatedNel
 import cats.implicits._
+import coursier.cli.install.SharedChannelParams
 import coursier.cli.params.ArtifactParams
 import coursier.cli.resolve.SharedResolveParams
 
@@ -11,7 +12,8 @@ final case class FetchParams(
   classpath: Boolean,
   jsonOutputOpt: Option[Path],
   resolve: SharedResolveParams,
-  artifact: ArtifactParams
+  artifact: ArtifactParams,
+  channel: SharedChannelParams
 )
 
 object FetchParams {
@@ -27,14 +29,16 @@ object FetchParams {
 
     val resolveV  = SharedResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
+    val channelV  = SharedChannelParams(options.channelOptions)
 
-    (resolveV, artifactV).mapN {
-      (resolve, artifact) =>
+    (resolveV, artifactV, channelV).mapN {
+      (resolve, artifact, channel) =>
         FetchParams(
           classpath,
           jsonOutputOpt,
           resolve,
-          artifact
+          artifact,
+          channel
         )
     }
   }

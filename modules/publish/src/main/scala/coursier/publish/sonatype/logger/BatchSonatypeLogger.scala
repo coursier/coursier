@@ -13,12 +13,11 @@ final class BatchSonatypeLogger(out: PrintStream, verbosity: Int) extends Sonaty
   override def listedProfiles(errorOpt: Option[Throwable]): Unit = {
 
     val msgOpt =
-      if (errorOpt.isEmpty) {
+      if (errorOpt.isEmpty)
         if (verbosity >= 1)
           Some("Listed Sonatype profiles")
         else
           None
-      }
       else
         Some("Fail to list Sonatype profiles")
 

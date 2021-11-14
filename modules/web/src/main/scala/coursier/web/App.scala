@@ -44,7 +44,7 @@ object App {
             label
           )
 
-        def depItem(dep: Dependency, finalVersionOpt: Option[String]) = {
+        def depItem(dep: Dependency, finalVersionOpt: Option[String]) =
           <.tr(
             ^.`class` := (if (res.errorCache.contains(dep.moduleVersion)) "danger" else ""),
             <.td(dep.module.organization.value),
@@ -106,7 +106,6 @@ object App {
               }
             ))
           )
-        }
 
         val sortedDeps = res.minDependencies.toList
           .sortBy { dep =>

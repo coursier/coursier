@@ -242,8 +242,8 @@ object ResolveTests extends TestSuite {
             val res = await {
               resolve0
                 .addDependencies(
-                  dep"com.chuusai:shapeless_2.12:latest.release",
-                  dep"com.chuusai:shapeless_2.12:2.3+"
+                  dep"com.chuusai:shapeless_2.10:latest.release",
+                  dep"com.chuusai:shapeless_2.10:2.3+"
                 )
                 .future()
             }
@@ -256,8 +256,8 @@ object ResolveTests extends TestSuite {
             val res = await {
               resolve0
                 .addDependencies(
-                  dep"com.chuusai:shapeless_2.12:latest.release",
-                  dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
+                  dep"com.chuusai:shapeless_2.10:latest.release",
+                  dep"com.chuusai:shapeless_2.10:[2.3.0,2.3.3)"
                 )
                 .io
                 .attempt
@@ -271,7 +271,7 @@ object ResolveTests extends TestSuite {
 
             error match {
               case e: ResolutionError.CantDownloadModule =>
-                assert(e.module == mod"com.chuusai:shapeless_2.12")
+                assert(e.module == mod"com.chuusai:shapeless_2.10")
               case _ =>
                 throw error
             }

@@ -209,7 +209,7 @@ object Orders {
   def minDependencies(
     dependencies: Set[Dependency],
     configs: ((Module, String)) => Map[Configuration, Seq[Configuration]]
-  ): Set[Dependency] = {
+  ): Set[Dependency] =
     dependencies
       .groupBy(
         _.withConfiguration(Configuration.empty).withExclusions(Set.empty).withOptional(false)
@@ -217,6 +217,5 @@ object Orders {
       .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
       .valuesIterator
       .fold(Set.empty)(_ ++ _)
-  }
 
 }

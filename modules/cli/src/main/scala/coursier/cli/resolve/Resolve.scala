@@ -8,6 +8,7 @@ import caseapp._
 import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.install.Install
 import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
@@ -18,7 +19,7 @@ import coursier.util._
 
 import scala.concurrent.ExecutionContext
 
-object Resolve extends CaseApp[ResolveOptions] {
+object Resolve extends CoursierCommand[ResolveOptions] {
 
   /** Tries to parse get dependencies via Scala Index lookups.
     */
@@ -341,14 +342,13 @@ object Resolve extends CaseApp[ResolveOptions] {
           (None, input)
       }
 
-      val e = for {
-        rawDesc <- RawAppDescriptor.parse(json)
-      } yield {
-        rawDesc
+      val e =
+        for {
+          rawDesc <- RawAppDescriptor.parse(json)
+        } yield rawDesc
           // kind of meh - so that the id can be picked as default output name by bootstrap
           // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
           .withName(rawDesc.name.orElse(nameOpt))
-      }
 
       e match {
         case Left(err) =>
@@ -360,25 +360,24 @@ object Resolve extends CaseApp[ResolveOptions] {
 
     def descOpt = appIds.headOption.map { id =>
 
-      val e = for {
-        info <- channels.appDescriptor(id)
-          .attempt
-          .flatMap {
-            case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
-            case Left(e)                             => Task.fail(new Exception(e))
-            case Right(res)                          => Task.point(Right(res))
-          }
-          .unsafeRun()(channels.cache.ec)
-        rawDesc <- RawAppDescriptor.parse(
-          new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
-        )
-      } yield {
-        rawDesc
+      val e =
+        for {
+          info <- channels.appDescriptor(id)
+            .attempt
+            .flatMap {
+              case Left(e: Channels.ChannelsException) => Task.point(Left(e.getMessage))
+              case Left(e)                             => Task.fail(new Exception(e))
+              case Right(res)                          => Task.point(Right(res))
+            }
+            .unsafeRun()(channels.cache.ec)
+          rawDesc <- RawAppDescriptor.parse(
+            new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
+          )
+        } yield rawDesc
           // kind of meh - so that the id can be picked as default output name by bootstrap
           // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
           .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
           .overrideVersion(info.overrideVersionOpt)
-      }
 
       e match {
         case Left(err) =>
@@ -394,6 +393,8 @@ object Resolve extends CaseApp[ResolveOptions] {
     }
   }
 
+  override def group: String = CommandGroup.resolve
+
   def run(options: ResolveOptions, args: RemainingArgs): Unit = {
 
     var pool: ExecutorService = null
@@ -402,10 +403,10 @@ object Resolve extends CaseApp[ResolveOptions] {
     val (options0, deps) =
       ResolveParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
         val initialRepositories = initialParams.repositories.repositories
-        val channels            = initialParams.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.cache.parallel)
         val cache     = initialParams.cache.cache(pool, initialParams.output.logger())
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = handleApps(options, args.all, channels0)(_.addApp(_))
         res
       }

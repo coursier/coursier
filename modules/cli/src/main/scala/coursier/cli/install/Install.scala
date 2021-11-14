@@ -5,19 +5,22 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Instant
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
 import coursier.cli.channel.Channel
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.{Channels, InstallDir, RawSource}
+import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
 import coursier.paths.Util
 import coursier.util.Sync
 
 import scala.concurrent.duration.Duration
 
-object Install extends CaseApp[InstallOptions] {
+object Install extends CoursierCommand[InstallOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: InstallOptions, args: RemainingArgs): Unit = {
 
@@ -47,7 +50,7 @@ object Install extends CaseApp[InstallOptions] {
       ).get(s"graalvm:$version")
     }
 
-    val installDir = params.shared.installDir(cache)
+    val installDir = params.shared.installDir(cache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
 
@@ -95,43 +98,41 @@ object Install extends CaseApp[InstallOptions] {
         sys.exit(0)
       }
 
-      val channels = Channels(params.channels, params.shared.repositories, cache)
+      val channels = Channels(params.channels, params.repository.repositories, cache)
         .withVerbosity(params.output.verbosity)
 
-      try {
-        for (id <- args.all) {
+      try for (id <- args.all) {
 
-          val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-            case Left(err: Channels.ChannelsException) =>
-              System.err.println(err.getMessage)
-              sys.exit(1)
-            case Left(err)      => throw err
-            case Right(appInfo) => appInfo
-          }
+        val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
+          case Left(err: Channels.ChannelsException) =>
+            System.err.println(err.getMessage)
+            sys.exit(1)
+          case Left(err)      => throw err
+          case Right(appInfo) => appInfo
+        }
 
-          val wroteSomethingOpt = installDir.createOrUpdate(
-            appInfo,
-            Instant.now(),
-            force = params.force
-          )
+        val wroteSomethingOpt = installDir.createOrUpdate(
+          appInfo,
+          Instant.now(),
+          force = params.force
+        )
 
-          wroteSomethingOpt match {
-            case Some(true) =>
-              if (params.output.verbosity >= 0)
-                System.err.println(s"Wrote ${appInfo.source.id}")
-            case Some(false) =>
-              if (params.output.verbosity >= 1)
-                System.err.println(s"${appInfo.source.id} doesn't need updating")
-            case None =>
-              if (params.output.verbosity >= 0)
-                System.err.println(
-                  s"Could not install ${appInfo.source.id} (concurrent operation ongoing)"
-                )
-          }
+        wroteSomethingOpt match {
+          case Some(true) =>
+            if (params.output.verbosity >= 0)
+              System.err.println(s"Wrote ${appInfo.source.id}")
+          case Some(false) =>
+            if (params.output.verbosity >= 1)
+              System.err.println(s"${appInfo.source.id} doesn't need updating")
+          case None =>
+            if (params.output.verbosity >= 0)
+              System.err.println(
+                s"Could not install ${appInfo.source.id} (concurrent operation ongoing)"
+              )
         }
       }
       catch {
-        case e: InstallDir.InstallDirException =>
+        case e: InstallDirException =>
           System.err.println(e.getMessage)
           if (params.output.verbosity >= 2)
             throw e

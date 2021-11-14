@@ -1,10 +1,19 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 
 // format: off
+@ArgsName("app-name[:version]*")
+@HelpMessage(
+  "Install an application from its descriptor.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs install scalafmt\n" +
+  "$ cs install --channel io.get-coursier:apps-contrib proguard\n" +
+  "$ cs install --contrib proguard\n"
+)
 final case class InstallOptions(
 
   @Recurse
@@ -28,16 +37,19 @@ final case class InstallOptions(
   @Recurse
     envOptions: EnvOptions = EnvOptions(),
 
-  @Help("(deprecated)")
-  addChannel: List[String] = Nil,
+  @Group("App channel")
+  @HelpMessage("(deprecated)")
+  @Hidden
+    addChannel: List[String] = Nil,
 
-  @Short("f")
+  @Group("Install")
+  @ExtraName("f")
     force: Boolean = false
 
 )
 // format: on
 
 object InstallOptions {
-  implicit val parser = caseapp.core.parser.Parser[InstallOptions]
-  implicit val help   = caseapp.core.help.Help[InstallOptions]
+  implicit val parser = Parser[InstallOptions]
+  implicit val help   = Help[InstallOptions]
 }

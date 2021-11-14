@@ -44,7 +44,7 @@ trait CoursierPublishModule extends PublishModule {
       Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
   )
-  def publishVersion = T { buildVersion }
+  def publishVersion = T(buildVersion)
 }
 
 trait CsTests extends TestModule {

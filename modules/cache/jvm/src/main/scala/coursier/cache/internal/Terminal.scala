@@ -25,7 +25,7 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt).toOption
     }
@@ -39,7 +39,7 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt
     }
@@ -52,7 +52,7 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       def valueOpt(s: String) =
         Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt)

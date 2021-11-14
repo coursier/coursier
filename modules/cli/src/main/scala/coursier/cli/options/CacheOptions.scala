@@ -15,44 +15,59 @@ import scala.concurrent.duration.Duration
 // format: off
 final case class CacheOptions(
 
+  @Group("Cache")
   @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
     cache: Option[String] = None,
 
+  @Group("Cache")
   @Help("Download mode (default: missing, that is fetch things missing from cache)")
   @Value("offline|update-changing|update|missing|force")
   @Short("m")
     mode: String = "",
 
+  @Group("Cache")
   @Help("TTL duration (e.g. \"24 hours\")")
   @Value("duration")
   @Short("l")
     ttl: Option[String] = None,
 
+  @Group("Cache")
   @Help("Maximum number of parallel downloads (default: 6)")
   @Short("n")
     parallel: Int = 6,
 
+  @Group("Cache")
   @Help("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
   @Value("checksum1,checksum2,...")
     checksum: List[String] = Nil,
 
+  @Group("Cache")
+  @Hidden
   @Help("Retry limit for Checksum error when fetching a file")
     retryCount: Int = 1,
 
+  @Group("Cache")
+  @Hidden
   @Help("Flag that specifies if a local artifact should be cached.")
   @Short("cfa")
     cacheFileArtifacts: Boolean = false,
 
+  @Group("Cache")
+  @Hidden
   @Help("Whether to follow http to https redirections")
     followHttpToHttpsRedirect: Boolean = true,
 
+  @Group("Cache")
   @Help("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
   @Value("host(realm) user:pass|host user:pass")
     credentials: List[String] = Nil,
 
+  @Group("Cache")
   @Help("Path to credential files to read credentials from")
     credentialFile: List[String] = Nil,
 
+  @Group("Cache")
+  @Hidden
   @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
     useEnvCredentials: Boolean = true
 
