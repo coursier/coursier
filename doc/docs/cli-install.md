@@ -464,6 +464,9 @@ $ test-install-dir/ammonite
 ```
 The directory passed this way takes precedence over the ones above.
 
+One can run `cs install --setup` to [update](https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally) profile files (Linux / macOS) or user environment variables (Windows),
+to add the installation directory to `PATH`.
+
 ## Application descriptor reference
 
 Application descriptors are parsed from [`RawAppDescriptor.scala`](https://github.com/coursier/coursier/blob/master/modules/install/src/main/scala/coursier/install/RawAppDescriptor.scala),
