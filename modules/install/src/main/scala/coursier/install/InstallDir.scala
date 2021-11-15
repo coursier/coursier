@@ -392,9 +392,7 @@ import scala.util.Properties
                     .withKind(Preamble.Kind.Sh)
                     .withCommand(
                       // FIXME needs directory
-                      """"$(cd "$(dirname "$0")"; pwd)/""" +
-                        auxName(dest0.getFileName.toString, "") +
-                        "\""
+                      """$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "")
                     )
               else {
                 assert(launcherIsElsewhere)
