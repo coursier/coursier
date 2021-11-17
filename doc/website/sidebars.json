@@ -6,7 +6,6 @@
     "Command-line": [
       "cli-overview",
       "cli-installation",
-      "cli-examples",
       "cli-install",
       "cli-launch",
       "cli-bootstrap",

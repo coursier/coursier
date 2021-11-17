@@ -91,6 +91,11 @@ Type in expressions for evaluation. Or try :help.
 scala>
 ```
 
+You may also combine `launch` with the [`fetch`](#fetch) command to run a Scala REPL with specific dependencies on the classpath:
+```bash
+$ cs launch scala:2.13.7 -- -cp $(cs fetch --scala 2.13.7 -p org.typelevel::cats-core:2.6.0)
+```
+
 In order to launch an application that does not have a published [application descriptor](cli-appdescriptors.md), `launch` accepts Maven coordinates as well:
 
 ```bash
