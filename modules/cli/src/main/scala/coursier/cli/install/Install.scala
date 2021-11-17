@@ -63,8 +63,14 @@ object Install extends CoursierCommand[InstallOptions] {
 
       Channel.addChannel(params.installChannels.toList, params.output)
     }
-    else if (params.env.env)
-      println(installDir.envUpdate.script)
+    else if (params.env.env) {
+      val script =
+        if (params.env.windowsScript)
+          installDir.envUpdate.batScript
+        else
+          installDir.envUpdate.bashScript
+      println(script)
+    }
     else if (params.env.disableEnv) {
       // TODO Move that to InstallDir?
       val dir = installDir.baseDir.toAbsolutePath.toString
@@ -77,7 +83,10 @@ object Install extends CoursierCommand[InstallOptions] {
       }
       val script = updatedPath.fold("") { s =>
         // FIXME Escaping in s
-        s"""export PATH="$s"""" + "\n"
+        if (params.env.windowsScript)
+          s"""set "PATH=$s"""" + "\r\n"
+        else
+          s"""export PATH="$s"""" + "\n"
       }
       print(script)
     }

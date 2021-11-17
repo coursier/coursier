@@ -52,7 +52,7 @@ import dataclass.data
         envVarUpdaterOpt match {
           case None =>
             Task.delay {
-              println(envUpdate.script)
+              println(envUpdate.bashScript)
               false
             }
           case Some(Left(windowsEnvVarUpdater)) =>

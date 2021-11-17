@@ -45,11 +45,19 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
 
     lazy val envUpdate = javaHome.environmentFor(isSystem, home)
     if (params.env.env) {
-      val script = coursier.jvm.JavaHome.finalScript(envUpdate)
+      val script =
+        if (params.env.windowsScript)
+          coursier.jvm.JavaHome.finalBatScript(envUpdate)
+        else
+          coursier.jvm.JavaHome.finalBashScript(envUpdate)
       print(script)
     }
     else if (params.env.disableEnv) {
-      val script = coursier.jvm.JavaHome.disableScript()
+      val script =
+        if (params.env.windowsScript)
+          coursier.jvm.JavaHome.disableBatScript()
+        else
+          coursier.jvm.JavaHome.disableBashScript()
       print(script)
     }
     else if (params.env.setup) {
