@@ -263,7 +263,7 @@ object JavaHome {
     }
   }
 
-  def finalScript(
+  def finalBashScript(
     envUpdate: EnvironmentUpdate,
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
     pathSeparator: String = File.pathSeparator
@@ -277,12 +277,29 @@ object JavaHome {
       else
         ""
 
-    preamble + envUpdate.script + "\n"
+    preamble + envUpdate.bashScript + "\n"
   }
 
-  def disableScript(
+  def finalBatScript(
+    envUpdate: EnvironmentUpdate,
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
-    pathSeparator: String = File.pathSeparator,
+    pathSeparator: String = File.pathSeparator
+  ): String = {
+
+    val preamble =
+      if (getEnv("CS_FORMER_JAVA_HOME").isEmpty) {
+        val saveJavaHome = """set CS_FORMER_JAVA_HOME="%JAVA_HOME%""""
+        saveJavaHome + "\r\n"
+      }
+      else
+        ""
+
+    preamble + envUpdate.batScript + "\r\n"
+  }
+
+  def disableBashScript(
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = ":",
     isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
@@ -293,6 +310,20 @@ object JavaHome {
       case Some(_) =>
         """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
           """unset CS_FORMER_JAVA_HOME""" + "\n"
+    }
+
+  def disableBatScript(
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = ";"
+  ): String =
+    getEnv("CS_FORMER_JAVA_HOME") match {
+      case None => ""
+      case Some("") =>
+        """set JAVA_HOME=""" + "\r\n" +
+          """set CS_FORMER_JAVA_HOME=""" + "\r\n"
+      case Some(_) =>
+        """set "JAVA_HOME=%CS_FORMER_JAVA_HOME%"""" + "\r\n" +
+          """set CS_FORMER_JAVA_HOME=""" + "\r\n"
     }
 
 }

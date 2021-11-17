@@ -12,7 +12,8 @@ final case class EnvParams(
   env: Boolean,
   disableEnv: Boolean,
   setup: Boolean,
-  homeOpt: Option[Path]
+  homeOpt: Option[Path],
+  windowsScript: Boolean
 ) {
   def anyFlag: Boolean = env || setup
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
@@ -105,7 +106,8 @@ object EnvParams {
         options.env,
         options.disableEnv,
         options.setup,
-        homeOpt
+        homeOpt,
+        options.windowsScript
       )
     }
   }
