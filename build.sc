@@ -273,6 +273,9 @@ class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModul
 
 class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-env"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass
