@@ -6,7 +6,6 @@
     "Command-line": [
       "cli-overview",
       "cli-installation",
-      "cli-examples",
       "cli-install",
       "cli-launch",
       "cli-bootstrap",
@@ -14,7 +13,8 @@
       "cli-resolve",
       "cli-fetch",
       "cli-complete",
-      "cli-setup"
+      "cli-setup",
+      "cli-appdescriptors"
     ],
     "Motivation": [
       "overview-motivations",

@@ -10,11 +10,13 @@ See [Installation](cli-installation.md) for how to install the
 CLI of coursier.
 
 Once installed, the CLI of coursier provides a number of services:
-- manage the installed Scala applications: [`install`, `list`, `update`, `uninstall`](#install), [`setup`](#setup)
-- configure *channels* to install Scala applications from: `channel`, [`search`](#search)
+- manage the installed Scala applications: [`install`, `list`, `update`, `uninstall`](#install), [`search`](#search)
+- configure *channels* to install Scala applications from: `channel`
 - launchers for Scala applications: [`launch`](#launch), [`bootstrap`](#bootstrap)
 - manage the installed JVMs: [`java`, `java-home`](#java)
 - directly manipulate Maven dependencies: [`fetch`](#fetch), [`resolve`](#resolve)
+- perform [`setup`](#setup) again
+
 
 This page succinctly describes each of these commands. More
 details about each them are then given in the dedicated
@@ -29,7 +31,7 @@ documentation page of each command (see links on the left).
 ### `install`
 
 The `install` command installs Scala applications in the
-[installation directory](https://get-coursier.io/docs/cli-install.html#installation-directory)
+[installation directory](cli-install.md#installation-directory)
 configured when installing `cs` (`~/.local/share/coursier/bin` by default on Linux):
 
 ```bash
@@ -89,7 +91,12 @@ Type in expressions for evaluation. Or try :help.
 scala>
 ```
 
-In order to launch an application that does not have a published [application descriptor](cli-install.md#application-descriptors), `launch` accepts Maven coordinates as well:
+You may also combine `launch` with the [`fetch`](#fetch) command to run a Scala REPL with specific dependencies on the classpath:
+```bash
+$ cs launch scala:2.13.7 -- -cp $(cs fetch --scala 2.13.7 -p org.typelevel::cats-core:2.6.0)
+```
+
+In order to launch an application that does not have a published [application descriptor](cli-appdescriptors.md), `launch` accepts Maven coordinates as well:
 
 ```bash
 $ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --help
