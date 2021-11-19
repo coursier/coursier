@@ -14,9 +14,9 @@ final case class SharedLaunchParams(
   artifact: ArtifactParams,
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
+  javaOptions: Seq[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
-  fork: Option[Boolean],
   pythonOpt: Option[Boolean]
 ) {
   def fetch(channel: SharedChannelParams): FetchParams =
@@ -87,9 +87,9 @@ object SharedLaunchParams {
           artifact,
           sharedLoader,
           mainClassOpt,
+          options.javaOpt,
           properties,
           extraJars,
-          options.fork,
           options.python
         )
     }

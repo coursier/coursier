@@ -4,6 +4,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.cli.options.{
   CacheOptions,
   DependencyOptions,
+  OptionGroup,
   OutputOptions,
   RepositoryOptions,
   ResolutionOptions
@@ -13,7 +14,8 @@ import coursier.install.RawAppDescriptor
 // format: off
 @ArgsName("org:name:version|app-name[:version]*")
 final case class SharedResolveOptions(
-
+  @Group(OptionGroup.resolution) // with ResolutionOptions
+  @Hidden
   @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
     classpathOrder: Option[Boolean] = None,
 

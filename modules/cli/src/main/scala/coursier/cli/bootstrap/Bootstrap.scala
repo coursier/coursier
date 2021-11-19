@@ -9,6 +9,7 @@ import coursier.cache.{Cache, CacheLogger}
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
+import coursier.cli.options.OptionGroup
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{
@@ -36,8 +37,12 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
+import caseapp.core.help.HelpFormat
 
 object Bootstrap extends CoursierCommand[BootstrapOptions] {
+  override def group: String = CommandGroup.launcher
+  override def helpFormat: HelpFormat =
+    HelpFormat.default().withSortedGroups(Some(OptionGroup.order))
 
   def task(
     params: BootstrapParams,
@@ -202,8 +207,6 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         .run()
   }
 
-  override def group: String = CommandGroup.launcher
-
   def run(options: BootstrapOptions, args: RemainingArgs): Unit = {
 
     var pool: ExecutorService = null
@@ -265,11 +268,11 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
 
     val javaOptions =
       if (params.specific.assembly || params.specific.manifestJar)
-        params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
+        params.sharedLaunch.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
           s"-D$k=$v"
         }
       else
-        params.specific.javaOptions
+        params.sharedLaunch.javaOptions
 
     val params0 =
       if (params.sharedLaunch.resolve.dependency.native) {
@@ -352,7 +355,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             Some(
               coursier.launcher.Preamble()
                 .withJavaOpts(javaOptions)
-                .withJvmOptionFile(params.specific.jvmOptionFile)
+                .withJvmOptionFile(params.jvmOptionFile)
             )
           else
             None

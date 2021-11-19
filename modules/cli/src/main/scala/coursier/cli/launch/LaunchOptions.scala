@@ -26,9 +26,8 @@ final case class LaunchOptions(
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  @Help("Add Java command-line options, when forking")
-  @Value("option")
-    javaOpt: List[String] = Nil,
+  @Group("Launch")
+    fork: Option[Boolean] = None,
 
   fetchCacheIKnowWhatImDoing: Option[String] = None,
 

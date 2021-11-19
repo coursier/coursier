@@ -1,25 +1,26 @@
 package coursier.cli.install
 
 import caseapp.{HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.options.OptionGroup
 
 // format: off
 final case class SharedChannelOptions(
 
-  @Group("App channel")
+  @Group(OptionGroup.channel)
   @Help("Channel for apps")
   @Value("org:name")
     channel: List[String] = Nil,
 
-  @Group("App channel")
+  @Group(OptionGroup.channel)
   @Hidden
   @Help("Add default channels")
     defaultChannels: Boolean = true,
 
-  @Group("App channel")
+  @Group(OptionGroup.channel)
   @Help("Add contrib channel")
     contrib: Boolean = false,
 
-  @Group("App channel")
+  @Group(OptionGroup.channel)
   @Hidden
   @Help("Add channels read from the configuration directory")
     fileChannels: Boolean = true
