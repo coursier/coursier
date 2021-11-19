@@ -14,7 +14,6 @@ final case class SharedLaunchOptions(
     mainClass: String = "",
 
   @Group(OptionGroup.launch)
-  @Hidden
   @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 

@@ -27,7 +27,6 @@ final case class CacheOptions(
     mode: String = "",
 
   @Group(OptionGroup.cache)
-  @Hidden
   @Help("TTL duration (e.g. \"24 hours\")")
   @Value("duration")
   @Short("l")

@@ -51,6 +51,7 @@ final case class ResolutionOptions(
     scalaVersion: Option[String] = None,
 
   @Group(OptionGroup.resolution)
+  @Hidden
   @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent")
     forceScalaVersion: Option[Boolean] = None,
 
@@ -71,6 +72,7 @@ final case class ResolutionOptions(
     rules: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
+  @Hidden
   @Help("Choose reconciliation strategy")
   @Value("organization:name:(basic|relaxed)")
     reconciliation: List[String] = Nil,

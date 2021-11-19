@@ -5,7 +5,7 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 // format: off
 final case class GraalvmOptions(
   @Group("Graalvm")
-  @Hidden
+  @Hidden // could be visible, but how well does it work?
   @Help("Generate a GraalVM native image")
     nativeImage: Option[Boolean] = None,
   @Group("Graalvm")

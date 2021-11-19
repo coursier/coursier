@@ -10,16 +10,13 @@ final case class BootstrapSpecificOptions(
   @Short("o")
     output: Option[String] = None,
   @Group(OptionGroup.bootstrap)
-  @Hidden
   @Short("f")
     force: Boolean = false,
   @Group(OptionGroup.bootstrap)
-  @Hidden
   @Help("Generate a standalone launcher, with all JARs included, instead of one downloading its dependencies on startup.")
   @Short("s")
     standalone: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
-  @Hidden
   @Help("Generate an hybrid assembly / standalone launcher")
     hybrid: Option[Boolean] = None,
   @Recurse
@@ -29,12 +26,10 @@ final case class BootstrapSpecificOptions(
   @Help("Include files in generated launcher even in non-standalone mode.")
     embedFiles: Boolean = true,
   @Group(OptionGroup.bootstrap)
-  @Hidden
   @Help("Generate an assembly rather than a bootstrap jar")
   @Short("a")
     assembly: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
-  @Hidden
   @Help("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
     manifestJar: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
