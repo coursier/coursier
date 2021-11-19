@@ -5,6 +5,7 @@ import coursier.cli.install.SharedChannelOptions
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
+import coursier.cli.options.OptionGroup
 
 // format: off
 @ArgsName("org:name:version*|app-name[:version]")
@@ -26,17 +27,25 @@ final case class LaunchOptions(
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  @Group("Launch")
+  @Group(OptionGroup.launch)
     fork: Option[Boolean] = None,
 
-  fetchCacheIKnowWhatImDoing: Option[String] = None,
+  @Group(OptionGroup.launch)
+  @Hidden
+    fetchCacheIKnowWhatImDoing: Option[String] = None,
 
+  @Group(OptionGroup.launch)
+  @Hidden
   @Help("Launch child application via execve (replaces the coursier process)")
     execve: Option[Boolean] = None,
 
-  json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
+  @Group(OptionGroup.launch)
+  @Hidden
+    json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
 
-  jep: Boolean = false
+  @Group(OptionGroup.launch)
+  @Hidden
+    jep: Boolean = false
 ) {
   // format: on
 

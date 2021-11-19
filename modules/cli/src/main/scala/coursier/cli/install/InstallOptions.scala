@@ -2,7 +2,13 @@ package coursier.cli.install
 
 import caseapp._
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  EnvOptions,
+  OptionGroup,
+  OutputOptions,
+  RepositoryOptions
+}
 
 // format: off
 @ArgsName("app-name[:version]*")
@@ -37,12 +43,12 @@ final case class InstallOptions(
   @Recurse
     envOptions: EnvOptions = EnvOptions(),
 
-  @Group("App channel")
+  @Group(OptionGroup.channel)
   @HelpMessage("(deprecated)")
   @Hidden
     addChannel: List[String] = Nil,
 
-  @Group("Install")
+  @Group(OptionGroup.install)
   @ExtraName("f")
     force: Boolean = false
 
