@@ -1,10 +1,16 @@
 package coursier.cli.setup
 
 import caseapp.core.parser.Parser
-import caseapp.{HelpMessage, Name => Short, Recurse}
+import caseapp.{Group, HelpMessage, Hidden, Name => Short, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  EnvOptions,
+  OptionGroup,
+  OutputOptions,
+  RepositoryOptions
+}
 
 // format: off
 @HelpMessage(
@@ -29,13 +35,21 @@ final case class SetupOptions(
     cacheOptions: CacheOptions = CacheOptions(),
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
-  env: Boolean = false,
-  userHome: Option[String] = None,
-  banner: Option[Boolean] = None,
+  @Group(OptionGroup.setup)
+    env: Boolean = false,
+  @Group(OptionGroup.setup)
+  @Hidden
+    userHome: Option[String] = None,
+  @Group(OptionGroup.setup)
+  @Hidden
+    banner: Option[Boolean] = None,
   @Short("y")
     yes: Option[Boolean] = None,
-  tryRevert: Boolean = false,
-  apps: List[String] = Nil
+  @Group(OptionGroup.setup)
+  @Hidden
+    tryRevert: Boolean = false,
+  @Group(OptionGroup.setup)
+    apps: List[String] = Nil
 ) {
   // format: on
   def envOptions: EnvOptions =

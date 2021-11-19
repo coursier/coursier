@@ -1,6 +1,7 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import coursier.cli.options.OptionGroup
 
 // format: off
 @ArgsName("app-name*")
@@ -15,15 +16,19 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 )
 final case class UninstallOptions(
 
+  @Group(OptionGroup.uninstall)
   @Short("dir")
     installDir: Option[String] = None,
 
-  all: Boolean = false,
+  @Group(OptionGroup.uninstall)
+    all: Boolean = false,
 
+  @Group(OptionGroup.uninstall)
   @Help("Quiet output")
   @Short("q")
     quiet: Int @@ Counter = Tag.of(0),
 
+  @Group(OptionGroup.uninstall)
   @Help("Increase verbosity (specify several times to increase more)")
   @Short("v")
     verbose: Int @@ Counter = Tag.of(0)
