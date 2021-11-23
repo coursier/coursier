@@ -2,7 +2,7 @@ package coursier.cli.install
 
 import caseapp.{ArgsName, ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{CacheOptions, OptionGroup, OutputOptions, RepositoryOptions}
 
 // format: off
 @ArgsName("app-name*")
@@ -31,8 +31,10 @@ final case class UpdateOptions(
   @Recurse
     repositoryOptions: RepositoryOptions = RepositoryOptions(),
 
-  overrideRepositories: Boolean = false,
+  @Group(OptionGroup.update)
+    overrideRepositories: Boolean = false,
 
+  @Group(OptionGroup.update)
   @Short("f")
     force: Boolean = false
 

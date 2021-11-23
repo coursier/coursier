@@ -41,8 +41,6 @@ import caseapp.core.help.HelpFormat
 
 object Bootstrap extends CoursierCommand[BootstrapOptions] {
   override def group: String = CommandGroup.launcher
-  override def helpFormat: HelpFormat =
-    HelpFormat.default().withSortedGroups(Some(OptionGroup.order))
 
   def task(
     params: BootstrapParams,

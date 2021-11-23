@@ -1,7 +1,7 @@
 package coursier.cli.channel
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, Recurse}
-import coursier.cli.options.OutputOptions
+import caseapp.{ExtraName => Short, Group, HelpMessage => Help, Recurse}
+import coursier.cli.options.{OptionGroup, OutputOptions}
 
 // format: off
 @Help(
@@ -13,9 +13,11 @@ import coursier.cli.options.OutputOptions
   "$ cs channel --list\n"
 )
 final case class ChannelOptions(
+  @Group(OptionGroup.channel)
   @Short("a")
   @Help("adds given URL based channels")
     add: List[String] = Nil,
+  @Group(OptionGroup.channel)
   @Short("l")
   @Help("lists down all added channels")
     list: Boolean = false,

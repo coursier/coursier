@@ -2,7 +2,7 @@ package coursier.cli.fetch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.install.SharedChannelOptions
-import coursier.cli.options.ArtifactOptions
+import coursier.cli.options.{ArtifactOptions, OptionGroup}
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
@@ -16,11 +16,14 @@ import coursier.install.RawAppDescriptor
 )
 final case class FetchOptions(
 
+  @Group(OptionGroup.fetch)
   @Help("Print java -cp compatible output")
   @Short("p")
     classpath: Boolean = false,
 
+  @Group(OptionGroup.fetch)
   @Help("Specify path for json output")
+  @Hidden
   @Short("j")
     jsonOutputFile: String = "",
 
