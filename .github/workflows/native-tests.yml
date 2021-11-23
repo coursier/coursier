@@ -64,12 +64,12 @@ jobs:
           # The shell to run commands with in the container
           shell: /bin/bash
 
-          # build-essential and libz-dev are required to build native images.
+          # build-essential, libz-dev, and zlib1g-dev are required to build native images.
           # git is required by some of the launcher.sc logic.
           # python3-pip is required for some CLI tests.
           install: |
             apt-get update -q -y
-            apt-get install -q -y build-essential libz-dev git python3-pip curl
+            apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl
 
           run: |
             set -e
