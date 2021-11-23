@@ -258,7 +258,7 @@ object ResolveRulesTests extends TestSuite {
         val expectedEvicted = Seq(
           Conflict(
             mod"com.chuusai:shapeless_2.12",
-            "2.3.3",
+            "2.3.4-M1",
             "2.3.2",
             wasExcluded = false,
             mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",

@@ -24,7 +24,7 @@ private def contentType(path: os.Path): String = {
     var zf: ZipFile = null
     try { zf = new ZipFile(path.toIO); true }
     catch { case _: ZipException => false }
-    finally { if (zf != null) zf.close() }
+    finally if (zf != null) zf.close()
   }
 
   lazy val isTextFile =
@@ -47,21 +47,23 @@ private def releaseId(
   ghToken: String,
   tag: String
 ): Long = {
-  val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases?access_token=$ghToken"
-  val resp = quickRequest.get(url).send()
+  val url = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
+  val resp = quickRequest
+    .header("Accept", "application/vnd.github.v3+json")
+    .header("Authorization", s"token $ghToken")
+    .get(url)
+    .send()
 
   val json = ujson.read(resp.body)
   val releaseId =
-    try {
-      json
-        .arr
-        .find(_("tag_name").str == tag)
-        .map(_("id").num.toLong)
-        .getOrElse {
-          val tags = json.arr.map(_("tag_name").str).toVector
-          sys.error(s"Tag $tag not found (found tags: ${tags.mkString(", ")}")
-        }
-    }
+    try json
+      .arr
+      .find(_("tag_name").str == tag)
+      .map(_("id").num.toLong)
+      .getOrElse {
+        val tags = json.arr.map(_("tag_name").str).toVector
+        sys.error(s"Tag $tag not found (found tags: ${tags.mkString(", ")}")
+      }
     catch {
       case NonFatal(e) =>
         System.err.println(resp.body)
@@ -141,7 +143,7 @@ def upload(
       }
 
     val uri =
-      uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name&access_token=$ghToken"
+      uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name"
     val contentType0 = contentType(f0)
     System.err.println(s"Detected content type of $f0: $contentType0")
     if (dryRun)
@@ -149,6 +151,8 @@ def upload(
     else {
       System.err.println(s"Uploading $f0 as $name")
       quickRequest
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("Authorization", s"token $ghToken")
         .body(f0.toNIO)
         .header("Content-Type", contentType0)
         .post(uri)
@@ -379,15 +383,13 @@ private def withTmpDir[T](prefix: String)(f: os.Path => T): T = {
     tmpDir = os.temp.dir(prefix = prefix)
     f(tmpDir)
   }
-  finally {
-    if (tmpDir != null) {
-      System.err.println(s"Deleting $tmpDir")
-      try os.remove.all(tmpDir)
-      catch {
-        case NonFatal(e) =>
-          System.err.println(s"Warning: caught $e while deleting $tmpDir, ignoring it...")
-          e.printStackTrace()
-      }
+  finally if (tmpDir != null) {
+    System.err.println(s"Deleting $tmpDir")
+    try os.remove.all(tmpDir)
+    catch {
+      case NonFatal(e) =>
+        System.err.println(s"Warning: caught $e while deleting $tmpDir, ignoring it...")
+        e.printStackTrace()
     }
   }
 }

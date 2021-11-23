@@ -21,7 +21,7 @@ final case class UpdateParams(
   force: Boolean
 ) {
   def selectedRepositories(initialList: Seq[Repository]): Seq[Repository] =
-    if (overrideRepositories) shared.repositories
+    if (overrideRepositories) repository.repositories
     else initialList
 }
 
@@ -31,15 +31,15 @@ object UpdateParams {
     val cacheParamsV = options.cacheOptions.params(Some(Duration(0L, TimeUnit.MILLISECONDS)))
     val outputV      = OutputParams(options.outputOptions)
 
-    val sharedV     = SharedInstallParams(options.sharedInstallOptions)
+    val shared      = SharedInstallParams(options.sharedInstallOptions)
     val sharedJavaV = SharedJavaParams(options.sharedJavaOptions)
 
     val repoV = RepositoryParams(options.repositoryOptions)
 
     val force = options.force
 
-    (cacheParamsV, outputV, sharedV, sharedJavaV, repoV).mapN {
-      (cacheParams, output, shared, sharedJava, repo) =>
+    (cacheParamsV, outputV, sharedJavaV, repoV).mapN {
+      (cacheParams, output, sharedJava, repo) =>
         UpdateParams(
           cacheParams,
           output,

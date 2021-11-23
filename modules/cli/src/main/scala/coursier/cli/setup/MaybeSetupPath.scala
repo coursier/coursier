@@ -37,7 +37,7 @@ import dataclass.data
       envVarUpdaterOpt match {
         case None =>
           Task.delay {
-            println(envUpdate.script)
+            println(envUpdate.bashScript)
           }
         case Some(Left(windowsEnvVarUpdater)) =>
           confirm.confirm(s"Should we add $binDirStr to your PATH?", default = true).flatMap {

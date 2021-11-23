@@ -11,7 +11,7 @@ trait Mima extends ScalaModule with PublishModule {
 
   def mimaPreviousDeps = T {
     Agg.from(mimaPreviousVersions().map { version =>
-      ivy"${pomSettings().organization}:${artifactId()}:${version}"
+      ivy"${pomSettings().organization}:${artifactId()}:$version"
     })
   }
 

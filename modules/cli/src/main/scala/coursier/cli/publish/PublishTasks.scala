@@ -39,20 +39,18 @@ object PublishTasks {
         case _: Group.MavenMetadata => Nil
         case m                      => Seq(m)
       } ++ metadata
-      groups2 <- {
-        Task.gather.gather {
-          groups1.map {
-            case m: Group.Module if m.version.endsWith("SNAPSHOT") && !m.version.contains("+") =>
-              if (withMavenSnapshotVersioning)
-                Group.downloadSnapshotVersioningMetadata(m, download, repository, logger).flatMap {
-                  m0 =>
-                    m0.addSnapshotVersioning(now, Set("md5", "sha1", "asc")) // meh second arg
-                }
-              else
-                Task.point(m.clearSnapshotVersioning)
-            case other =>
-              Task.point(other)
-          }
+      groups2 <- Task.gather.gather {
+        groups1.map {
+          case m: Group.Module if m.version.endsWith("SNAPSHOT") && !m.version.contains("+") =>
+            if (withMavenSnapshotVersioning)
+              Group.downloadSnapshotVersioningMetadata(m, download, repository, logger).flatMap {
+                m0 =>
+                  m0.addSnapshotVersioning(now, Set("md5", "sha1", "asc")) // meh second arg
+              }
+            else
+              Task.point(m.clearSnapshotVersioning)
+          case other =>
+            Task.point(other)
         }
       }
       res <- Task.fromEither(Group.merge(groups2).left.map(msg => new Exception(msg)))

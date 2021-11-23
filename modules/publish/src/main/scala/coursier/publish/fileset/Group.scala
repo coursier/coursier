@@ -694,9 +694,8 @@ object Group {
 
     if (duplicatedModules.isEmpty && duplicatedMeta.isEmpty)
       Right(groups.foldLeft(FileSet.empty)(_ ++ _.fileSet))
-    else {
+    else
       ???
-    }
   }
 
   private[coursier] def mergeUnsafe(groups: Seq[Group]): FileSet =

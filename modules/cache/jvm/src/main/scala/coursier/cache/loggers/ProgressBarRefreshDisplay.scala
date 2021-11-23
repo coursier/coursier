@@ -132,8 +132,7 @@ object ProgressBarRefreshDisplay {
   private def formatTimestamp(ts: Long): String =
     format.format(new Timestamp(ts))
 
-  private def display(info: RefreshInfo, isDone: Boolean): String = {
-
+  private def display(info: RefreshInfo, isDone: Boolean): String =
     info match {
       case d: RefreshInfo.DownloadInfo =>
         val actualFraction = d.fraction
@@ -185,6 +184,5 @@ object ProgressBarRefreshDisplay {
               "" // ???
           }
     }
-  }
 
 }

@@ -37,7 +37,7 @@ trait BootstrapLauncher extends SbtModule {
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
-       |-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {
+       |-keep class coursier.bootstrap.launcher.jniutils.BootstrapNativeApi {
        |  *;
        |}
        |-keep class coursier.bootstrap.launcher.Launcher {
@@ -54,7 +54,7 @@ trait BootstrapLauncher extends SbtModule {
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
-       |-keep class coursier.bootstrap.launcher.jniutils.NativeCalls {
+       |-keep class coursier.bootstrap.launcher.jniutils.BootstrapNativeApi {
        |  *;
        |}
        |-keep class ${resourceAssemblyMainClass()} {
@@ -122,7 +122,7 @@ trait BootstrapLauncher extends SbtModule {
     PathRef(dest)
   }
 
-  def resourceAssemblyMainClass = T { "coursier.bootstrap.launcher.ResourcesLauncher" }
+  def resourceAssemblyMainClass = T("coursier.bootstrap.launcher.ResourcesLauncher")
   def resourceAssembly = T {
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
@@ -157,10 +157,9 @@ trait BootstrapLauncher extends SbtModule {
         while ({
           read = is.read(buf)
           read >= 0
-        }) {
+        })
           if (read > 0)
             baos.write(buf, 0, read)
-        }
         is.close()
         is = null
 
@@ -189,10 +188,9 @@ trait BootstrapLauncher extends SbtModule {
         while ({
           read = is.read(buf)
           read >= 0
-        }) {
+        })
           if (read > 0)
             zos.write(buf, 0, read)
-        }
         is.close()
         is = null
       }

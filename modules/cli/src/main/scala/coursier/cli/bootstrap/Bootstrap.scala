@@ -5,10 +5,11 @@ import java.nio.file.Files
 import java.util.concurrent.ExecutorService
 
 import caseapp.core.RemainingArgs
-import caseapp.core.app.CaseApp
 import coursier.cache.{Cache, CacheLogger}
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
+import coursier.cli.options.OptionGroup
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{
@@ -36,8 +37,10 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
+import caseapp.core.help.HelpFormat
 
-object Bootstrap extends CaseApp[BootstrapOptions] {
+object Bootstrap extends CoursierCommand[BootstrapOptions] {
+  override def group: String = CommandGroup.launcher
 
   def task(
     params: BootstrapParams,
@@ -47,7 +50,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     stderr: PrintStream = System.err
   ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], String)] =
     for {
-      t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
+      t <-
+        Fetch.task(params.sharedLaunch.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
@@ -209,13 +213,13 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     val (options0, deps) =
       BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
         val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
-        val channels            = initialParams.sharedLaunch.resolve.repositories.channels
+        val channels            = initialParams.channel.channels
         pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
         val cache = initialParams.sharedLaunch.resolve.cache.cache(
           pool,
           initialParams.sharedLaunch.resolve.output.logger()
         )
-        val channels0 = Channels(channels.channels, initialRepositories, cache)
+        val channels0 = Channels(channels, initialRepositories, cache)
         val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
         res
       }
@@ -262,11 +266,11 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val javaOptions =
       if (params.specific.assembly || params.specific.manifestJar)
-        params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
+        params.sharedLaunch.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
           s"-D$k=$v"
         }
       else
-        params.specific.javaOptions
+        params.sharedLaunch.javaOptions
 
     val params0 =
       if (params.sharedLaunch.resolve.dependency.native) {
@@ -349,7 +353,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             Some(
               coursier.launcher.Preamble()
                 .withJavaOpts(javaOptions)
-                .withJvmOptionFile(params.specific.jvmOptionFile)
+                .withJvmOptionFile(params.jvmOptionFile)
             )
           else
             None

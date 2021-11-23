@@ -60,8 +60,7 @@ import scala.util.{Failure, Success, Try}
         }
   }
 
-  def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
-
+  def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     if (artifact.url.startsWith("file:")) {
       val url =
         if (artifact.url.endsWith("/"))
@@ -129,7 +128,6 @@ import scala.util.{Failure, Success, Try}
       EitherT[F, ArtifactError, Path](e)
         .map(_.toFile)
     }
-  }
 
   lazy val ec = ExecutionContext.fromExecutorService(pool)
 

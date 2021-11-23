@@ -20,10 +20,8 @@ object FetchCacheTests extends TestSuite {
           .map(remove(_)(f))
           .sum
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
       1
@@ -39,10 +37,8 @@ object FetchCacheTests extends TestSuite {
           .asScala
           .foreach(delete)
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else
       Files.deleteIfExists(d)

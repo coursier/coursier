@@ -87,19 +87,19 @@ object ObjectSizeTests extends TestSuite {
           "0.7.0"
         )
         var ad1 = d1
-        //d1 is in cache
+        // d1 is in cache
         assert(cacheSize() == 1)
         System.gc()
-        //d1 is still in cache
+        // d1 is still in cache
         assert(cacheSize() == 1)
         var ad2 = d2
-        //d1 and d2 are in cache
+        // d1 and d2 are in cache
         assert(cacheSize() == 2)
 
-        //remove strong references and double GC
+        // remove strong references and double GC
         ad1 = null
         ad2 = null
-        //nothing in cache
+        // nothing in cache
         eventually {
           System.gc()
           cacheSize() == 0

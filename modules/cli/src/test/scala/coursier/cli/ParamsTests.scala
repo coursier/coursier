@@ -15,9 +15,7 @@ object ParamsTests extends TestSuite {
     val writer = new FileWriter(file)
     writer.write(content)
     writer.flush()
-    try {
-      testCode(file, writer) // "loan" the fixture to the test
-    }
+    try testCode(file, writer) // "loan" the fixture to the test
     finally {
       writer.close()
       file.delete()

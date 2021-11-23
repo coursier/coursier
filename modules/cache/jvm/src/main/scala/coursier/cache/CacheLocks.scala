@@ -81,10 +81,8 @@ object CacheLocks {
           case _: OverlappingFileLockException =>
             ifLocked
         }
-        finally {
-          if (lock != null)
-            lock.release()
-        }
+        finally if (lock != null)
+          lock.release()
       }
 
       resOpt match {
@@ -95,10 +93,8 @@ object CacheLocks {
     }
 
     try loop()
-    finally {
-      if (channel != null)
-        channel.close()
-    }
+    finally if (channel != null)
+      channel.close()
   }
 
   def withLockFor[T](
@@ -116,9 +112,7 @@ object CacheLocks {
 
     if (prev == null)
       try Some(f)
-      finally {
-        urlLocks.remove(url)
-      }
+      finally urlLocks.remove(url)
     else
       None
   }

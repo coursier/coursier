@@ -108,7 +108,7 @@ object Version {
     case object None       extends Separator
 
     def apply(str: String): (Item, LazyList[(Separator, Item)]) = {
-      def parseItem(s: LazyList[Char], prev: Option[Separator]): (Item, LazyList[Char]) = {
+      def parseItem(s: LazyList[Char], prev: Option[Separator]): (Item, LazyList[Char]) =
         if (s.isEmpty) (empty, s)
         else if (s.head.isDigit) {
           def digits(b: StringBuilder, s: LazyList[Char]): (String, LazyList[Char]) =
@@ -157,7 +157,6 @@ object Version {
             case _                 => (empty, s)
           }
         }
-      }
 
       def parseSeparator(s: LazyList[Char]): (Separator, LazyList[Char]) = {
         assert(s.nonEmpty)
@@ -171,7 +170,7 @@ object Version {
         }
       }
 
-      def helper(s: LazyList[Char]): LazyList[(Separator, Item)] = {
+      def helper(s: LazyList[Char]): LazyList[(Separator, Item)] =
         if (s.isEmpty) LazyList.empty
         else {
           val (sep, rem0) = parseSeparator(s)
@@ -183,7 +182,6 @@ object Version {
               (sep, item) #:: helper(rem)
           }
         }
-      }
 
       val (first, rem) = parseItem(str.to(LazyList), scala.None)
       (first, helper(rem))
@@ -227,7 +225,7 @@ object Version {
   }
 
   @tailrec
-  private def listCompare0(first: Vector[Item], second: Vector[Item]): Int = {
+  private def listCompare0(first: Vector[Item], second: Vector[Item]): Int =
     if (first.isEmpty && second.isEmpty) 0
     else if (first.isEmpty) {
       assert(second.nonEmpty)
@@ -242,6 +240,5 @@ object Version {
       if (rel == 0) listCompare0(first.tail, second.tail)
       else rel
     }
-  }
 
 }

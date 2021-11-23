@@ -105,6 +105,10 @@ public class CachePath {
         return CoursierPaths.cacheDirectory();
     }
 
+    public static File defaultArchiveCacheDirectory() throws IOException {
+        return CoursierPaths.archiveCacheDirectory();
+    }
+
     // Trying to limit the calls to String.intern via this map (https://shipilev.net/jvm/anatomy-quarks/10-string-intern/)
     private static ConcurrentHashMap<String, Object> internedStrings = new ConcurrentHashMap<>();
 

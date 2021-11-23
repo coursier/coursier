@@ -60,7 +60,7 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  override final lazy val hashCode = tuple.hashCode()
+  final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
     organization: Organization = this.organization,
@@ -276,7 +276,7 @@ object Attributes {
 ) {
   def licenses: Seq[(String, Option[String])] = licenseInfo.map(li => li.name -> li.url)
 
-  def withLicenses(license: Seq[(String, Option[String])]) = {
+  def withLicenses(license: Seq[(String, Option[String])]) =
     new Info(
       description,
       homePage,
@@ -285,7 +285,6 @@ object Attributes {
       scm,
       license.map(l => Info.License(l._1, l._2, None, None))
     )
-  }
 
   def this(
     description: String,
@@ -294,7 +293,7 @@ object Attributes {
     developers: Seq[Info.Developer],
     publication: Option[Versions.DateTime],
     scm: Option[Info.Scm]
-  ) = {
+  ) =
     this(
       description,
       homePage,
@@ -303,7 +302,6 @@ object Attributes {
       scm,
       licenses.map(l => Info.License(l._1, l._2, None, None))
     )
-  }
 }
 
 object Info {

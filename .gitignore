@@ -1,4 +1,3 @@
-target/
 out/
 .bsp/
 
@@ -11,14 +10,6 @@ node_modules/
 
 package-lock.json
 
-# tut backups?
-.*.swp
-
-# pants
-.pants.d
-.pants.workdir.file_lock
-.pids
-
 # generated site
 generated/
 processed-docs/
@@ -28,6 +19,3 @@ processed-docs/
 .bloop/
 
 bin/
-
-# Ammonite BSP (via metals)
-.ammonite/

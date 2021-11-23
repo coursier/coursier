@@ -25,7 +25,7 @@ final case class SetupParams(
 object SetupParams {
   def apply(options: SetupOptions): ValidatedNel[String, SetupParams] = {
     val sharedJavaV    = SharedJavaParams(options.sharedJavaOptions)
-    val sharedInstallV = SharedInstallParams(options.sharedInstallOptions)
+    val sharedInstall  = SharedInstallParams(options.sharedInstallOptions)
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
     val cacheV         = options.cacheOptions.params
     val outputV        = OutputParams(options.outputOptions)
@@ -37,8 +37,8 @@ object SetupParams {
     val apps = Some(options.apps.flatMap(_.split(',').toSeq).map(_.trim).filter(_.nonEmpty))
       .filter(_.nonEmpty)
       .getOrElse(DefaultAppList.defaultAppList)
-    (sharedJavaV, sharedInstallV, sharedChannelV, cacheV, outputV, envV, repoV).mapN {
-      (sharedJava, sharedInstall, sharedChannel, cache, output, env, repo) =>
+    (sharedJavaV, sharedChannelV, cacheV, outputV, envV, repoV).mapN {
+      (sharedJava, sharedChannel, cache, output, env, repo) =>
         SetupParams(
           sharedJava,
           repo,

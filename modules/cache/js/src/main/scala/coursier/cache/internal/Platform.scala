@@ -23,9 +23,8 @@ object Platform {
 
   private def fetchTimeout(target: String, p: Promise[_]) =
     setTimeout(timeout) {
-      if (!p.isCompleted) {
+      if (!p.isCompleted)
         p.failure(new Exception(s"Timeout when fetching $target"))
-      }
     }
 
   private lazy val fs = g.require("fs")

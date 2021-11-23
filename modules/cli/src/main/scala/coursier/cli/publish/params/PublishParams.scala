@@ -272,14 +272,13 @@ object PublishParams {
               Right(None)
           case Some(c) =>
             val p = Paths.get(c)
-            if (Files.exists(p)) {
+            if (Files.exists(p))
               if (Files.isRegularFile(p))
                 Conf.load(p)
                   .left.map(NonEmptyList.of(_))
                   .map(Some(_))
               else
                 Left(NonEmptyList.of(s"Conf file $c is not a file"))
-            }
             else
               Left(NonEmptyList.of(s"Conf file $c not found"))
         }

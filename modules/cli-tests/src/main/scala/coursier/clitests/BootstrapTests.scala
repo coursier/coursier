@@ -490,10 +490,8 @@ abstract class BootstrapTests extends TestSuite {
                 directory = tmpDir
               )
             }
-            finally {
-              if (bgProc != null)
-                bgProc.destroy()
-            }
+            finally if (bgProc != null)
+              bgProc.destroy()
 
           val expectedOutput = "foo" + System.lineSeparator()
           assert(output == expectedOutput)

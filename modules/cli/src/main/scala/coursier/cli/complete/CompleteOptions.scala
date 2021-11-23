@@ -4,6 +4,15 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, _}
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
+@ArgsName("org[:name[:version]]")
+@Help(
+  "Auto-complete Maven coordinates.\n" +
+  "\n" + 
+  "Examples:\n" +
+  "$ cs complete-dep com.type\n" +
+  "$ cs complete-dep org.scala-lang:\n" +
+  "$ cs complete-dep org.scala-lang:scala-compiler:2.13.\n"
+)
 final case class CompleteOptions(
 
   @Recurse

@@ -69,7 +69,7 @@ public class ResourcesLauncher {
 
         if (isWindows)
             coursier.paths.Util.useJni(() -> {
-                coursier.bootstrap.launcher.jniutils.NativeCalls.setup();
+                coursier.bootstrap.launcher.jniutils.BootstrapNativeApi.setup();
             });
 
         Download download = Download.getDefault();

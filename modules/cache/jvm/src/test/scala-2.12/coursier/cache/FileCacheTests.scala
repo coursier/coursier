@@ -316,7 +316,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm, params = challengeParams)
         }
 
-        def testEnabled(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabled(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -329,9 +329,8 @@ object FileCacheTests extends TestSuite {
               )
             )
           }
-        }
 
-        def testEnabledAllRealms(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabledAllRealms(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -344,9 +343,8 @@ object FileCacheTests extends TestSuite {
               )
             )
           }
-        }
 
-        def testEnabledSeveralCreds(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabledSeveralCreds(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -365,16 +363,14 @@ object FileCacheTests extends TestSuite {
               )
             )
           }
-        }
 
-        def testDisabled(challengeParams: Map[String, String] = Map.empty) = {
+        def testDisabled(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             error(
               base / "redirect",
               _.startsWith("unauthorized: ")
             )
           }
-        }
 
         test("oldRfc2617") {
           test("enabled") {

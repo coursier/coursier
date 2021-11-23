@@ -192,6 +192,8 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jniUtils,
+    Deps.plexusArchiver,
+    Deps.plexusContainerDefault,
     Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -271,6 +273,9 @@ class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModul
 
 class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-env"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass
@@ -460,6 +465,9 @@ class CatsJs(val crossScalaVersion: String) extends Cats with CsScalaJsModule {
 
 class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-install"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -479,6 +487,9 @@ class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModul
 
 class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     with CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    super.mimaPreviousVersions().filter(_ != "2.0.16")
+  }
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -491,9 +502,7 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,
-    Deps.jsoniterCore,
-    Deps.plexusArchiver,
-    Deps.plexusContainerDefault
+    Deps.jsoniterCore
   )
   object test extends Tests with CsTests
 }
@@ -517,6 +526,9 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.monadlessStdlib,
     Deps.svmSubs,
     ivy"com.chuusai::shapeless:2.3.7"
+  )
+  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.svm
   )
   def mainClass = Some("coursier.cli.Coursier")
   def finalMainClassOpt = T {
@@ -630,6 +642,12 @@ def simpleNativeCliTest() = T.command {
   `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  def cleanUp(): Unit =
+    try os.remove.all(tmpDir)
+    catch {
+      case _: java.io.IOException =>
+        System.err.println(s"Error removing $tmpDir, ignoring it")
+    }
   val res =
     try {
       os.proc(
@@ -642,13 +660,7 @@ def simpleNativeCliTest() = T.command {
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
-    finally {
-      try os.remove.all(tmpDir)
-      catch {
-        case _: java.io.IOException =>
-          System.err.println(s"Error removing $tmpDir, ignoring it")
-      }
-    }
+    finally cleanUp()
   assert(res.out.text == "foo a")
 }
 

@@ -33,7 +33,7 @@ object InstallParams {
     val cacheParamsV = options.cacheOptions.params(None)
     val outputV      = OutputParams(options.outputOptions)
 
-    val sharedV = SharedInstallParams(options.sharedInstallOptions)
+    val shared = SharedInstallParams(options.sharedInstallOptions)
 
     val sharedChannelV = SharedChannelParams(options.sharedChannelOptions)
     val sharedJavaV    = SharedJavaParams(options.sharedJavaOptions)
@@ -82,7 +82,6 @@ object InstallParams {
     (
       cacheParamsV,
       outputV,
-      sharedV,
       sharedChannelV,
       sharedJavaV,
       envV,
@@ -92,7 +91,7 @@ object InstallParams {
       flagsV,
       checkArgsV
     ).mapN {
-      (cacheParams, output, shared, sharedChannel, sharedJava, env, repo, addChannels, _, _, _) =>
+      (cacheParams, output, sharedChannel, sharedJava, env, repo, addChannels, _, _, _) =>
         InstallParams(
           cacheParams,
           output,

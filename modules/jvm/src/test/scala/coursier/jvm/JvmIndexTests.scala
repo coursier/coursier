@@ -1,5 +1,6 @@
 package coursier.jvm
 
+import coursier.cache.ArchiveType
 import utest._
 
 object JvmIndexTests extends TestSuite {
@@ -23,24 +24,28 @@ object JvmIndexTests extends TestSuite {
         jdkNamePrefix = Some(prefix)
       )
 
+      val entry192 =
+        JvmIndexEntry(os, arch, "foo", "19.1.2", ArchiveType.Zip, "https://foo.com/jdk-19.1.2.zip")
+      val entry193 =
+        JvmIndexEntry(os, arch, "foo", "19.1.3", ArchiveType.Zip, "https://foo.com/jdk-19.1.3.zip")
       val entry194 =
         JvmIndexEntry(os, arch, "foo", "19.1.4", ArchiveType.Zip, "https://foo.com/jdk-19.1.4.zip")
 
       test {
         val res      = index.lookup("foo", "19.1", os = Some(os), arch = Some(arch))
-        val expected = Right(entry194)
+        val expected = Right(Seq(entry192, entry193, entry194))
         assert(res == expected)
       }
 
       test {
         val res      = index.lookup("foo", "19.1+", os = Some(os), arch = Some(arch))
-        val expected = Right(entry194)
+        val expected = Right(Seq(entry192, entry193, entry194))
         assert(res == expected)
       }
 
       test {
         val res      = index.lookup("foo", "19.1.4", os = Some(os), arch = Some(arch))
-        val expected = Right(entry194)
+        val expected = Right(Seq(entry194))
         assert(res == expected)
       }
 
@@ -64,6 +69,14 @@ object JvmIndexTests extends TestSuite {
         )))
       )
 
+      val open191 = JvmIndexEntry(
+        os,
+        arch,
+        "openfoo",
+        "1.19-1",
+        ArchiveType.Zip,
+        "https://openfoo.com/jdk-19.1.zip"
+      )
       val open192 = JvmIndexEntry(
         os,
         arch,
@@ -71,6 +84,14 @@ object JvmIndexTests extends TestSuite {
         "1.19-2",
         ArchiveType.Zip,
         "https://openfoo.com/jdk-19.2.zip"
+      )
+      val open201 = JvmIndexEntry(
+        os,
+        arch,
+        "openfoo",
+        "1.20-1",
+        ArchiveType.Zip,
+        "https://openfoo.com/jdk-20.1.zip"
       )
       val open202 = JvmIndexEntry(
         os,
@@ -83,37 +104,37 @@ object JvmIndexTests extends TestSuite {
 
       test("add prefix") {
         val res      = index.lookup("openfoo", "19-2", os = Some(os), arch = Some(arch))
-        val expected = Right(open192)
+        val expected = Right(Seq(open192))
         assert(res == expected)
       }
 
       test("add prefix with interval") {
         val res      = index.lookup("openfoo", "19", os = Some(os), arch = Some(arch))
-        val expected = Right(open192)
+        val expected = Right(Seq(open191, open192))
         assert(res == expected)
       }
 
       test("accept 1-dot nonetheless") {
         val res      = index.lookup("openfoo", "1.19-2", os = Some(os), arch = Some(arch))
-        val expected = Right(open192)
+        val expected = Right(Seq(open192))
         assert(res == expected)
       }
 
       test("accept 1-dot nonetheless with interval") {
         val res      = index.lookup("openfoo", "1.19", os = Some(os), arch = Some(arch))
-        val expected = Right(open192)
+        val expected = Right(Seq(open191, open192))
         assert(res == expected)
       }
 
       test("accept just 1") {
         val res      = index.lookup("openfoo", "1", os = Some(os), arch = Some(arch))
-        val expected = Right(open202)
+        val expected = Right(Seq(open191, open192, open201, open202))
         assert(res == expected)
       }
 
       test("accept 1 plus") {
         val res      = index.lookup("openfoo", "1+", os = Some(os), arch = Some(arch))
-        val expected = Right(open202)
+        val expected = Right(Seq(open191, open192, open201, open202))
         assert(res == expected)
       }
     }

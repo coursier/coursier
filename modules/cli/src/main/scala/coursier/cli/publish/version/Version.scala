@@ -54,9 +54,8 @@ object Version extends CaseApp[Options] {
             val idx = previousVersion.indexOf("-M")
             if (idx < 0)
               None
-            else {
+            else
               Some(previousVersion.take(idx) + "-SNAPSHOT")
-            }
           }
 
         versionOpt.toRight {

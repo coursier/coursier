@@ -24,10 +24,8 @@ final case class RedirectingServer(
       case _: IOException =>
         false
     }
-    finally {
-      if (is != null)
-        is.close()
-    }
+    finally if (is != null)
+      is.close()
   }
 
   override def close(): Unit =
@@ -98,10 +96,8 @@ final case class TestRepoServer(
       case ex: IOException =>
         ex.getMessage.contains("401")
     }
-    finally {
-      if (is != null)
-        is.close()
-    }
+    finally if (is != null)
+      is.close()
   }
 
   override def close(): Unit =

@@ -2,7 +2,7 @@ package coursier.core
 
 import scala.scalajs.js
 import js.Dynamic.{global => g}
-import org.scalajs.dom.raw.NodeList
+import org.scalajs.dom.raw.{Node, NodeList}
 
 import coursier.util.{SaxHandler, Xml}
 
@@ -17,9 +17,8 @@ package object compatibility {
   private def between(c: Char, lower: Char, upper: Char) = lower <= c && c <= upper
 
   implicit class RichChar(val c: Char) extends AnyVal {
-    def letterOrDigit: Boolean = {
+    def letterOrDigit: Boolean =
       between(c, '0', '9') || letter
-    }
     def letter: Boolean = between(c, 'a', 'z') || between(c, 'A', 'Z')
   }
 
@@ -45,7 +44,7 @@ package object compatibility {
   val ELEMENT_NODE = 1 // org.scalajs.dom.raw.Node.ELEMENT_NODE
   val TEXT_NODE    = 3 // org.scalajs.dom.raw.Node.TEXT_NODE
 
-  def fromNode(node: org.scalajs.dom.raw.Node): Xml.Node = {
+  def fromNode(node: Node): Xml.Node = {
 
     val node0 = node.asInstanceOf[js.Dynamic]
 
@@ -54,7 +53,7 @@ package object compatibility {
         option[String](node0.nodeName)
           .getOrElse("")
       def children =
-        option[NodeList](node0.childNodes)
+        option[NodeList[Node]](node0.childNodes)
           .map(l => List.tabulate(l.length)(l.item).map(fromNode))
           .getOrElse(Nil)
 
@@ -111,18 +110,17 @@ package object compatibility {
   def xmlParseDom(s: String): Either[String, Xml.Node] = {
     val doc = {
       if (s.isEmpty) None
-      else {
+      else
         for {
           xmlDoc    <- dynOption(DOMParser.parseFromString(s, "text/xml"))
           rootNodes <- dynOption(xmlDoc.childNodes)
           // From node, rootNodes.head is sometimes just a comment instead of the main root node
           // (tested with org.ow2.asm:asm-commons in CentralTests)
           rootNode <- rootNodes.asInstanceOf[js.Array[js.Dynamic]]
-            .flatMap(option[org.scalajs.dom.raw.Node])
+            .flatMap(option[Node])
             .dropWhile(_.nodeType != ELEMENT_NODE)
             .headOption
         } yield rootNode
-      }
     }
 
     Right(doc.fold(Xml.Node.empty)(fromNode))

@@ -37,12 +37,10 @@ object LauncherTestUtil {
       p = b.start()
       f(p)
     }
-    finally {
-      if (p != null) {
-        val exited = p.waitFor(1L, TimeUnit.SECONDS)
-        if (!exited)
-          p.destroy()
-      }
+    finally if (p != null) {
+      val exited = p.waitFor(1L, TimeUnit.SECONDS)
+      if (!exited)
+        p.destroy()
     }
   }
 
@@ -120,7 +118,7 @@ object LauncherTestUtil {
     val retCode = tryRun(args, directory)
     if (retCode != 0)
       sys.error(
-        s"Error: command '${launcher}${args.map(" " + _).mkString}' exited with code $retCode"
+        s"Error: command '$launcher${args.map(" " + _).mkString}' exited with code $retCode"
       )
   }
 }

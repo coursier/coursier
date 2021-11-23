@@ -10,6 +10,7 @@ import java.util.zip.ZipFile
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{Cache, MockCache}
+import coursier.install.error.NotAnApplication
 import coursier.launcher.Preamble
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
@@ -17,6 +18,7 @@ import utest._
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
+import coursier.core.Version
 
 object InstallTests extends TestSuite {
 
@@ -43,10 +45,8 @@ object InstallTests extends TestSuite {
           .asScala
           .foreach(delete)
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
     else
       try Files.deleteIfExists(d)
@@ -58,9 +58,7 @@ object InstallTests extends TestSuite {
   private def withTempDir[T](f: Path => T): T = {
     val tmpDir = Files.createTempDirectory("coursier-install-test")
     try f(tmpDir)
-    finally {
-      delete(tmpDir)
-    }
+    finally delete(tmpDir)
   }
 
   private def withZipFile[T](f: File)(t: ZipFile => T): T = {
@@ -69,10 +67,8 @@ object InstallTests extends TestSuite {
       zf = new ZipFile(f)
       t(zf)
     }
-    finally {
-      if (zf != null)
-        zf.close()
-    }
+    finally if (zf != null)
+      zf.close()
   }
 
   private def assertHasNotEntry(f: File, path: String) =
@@ -159,9 +155,8 @@ object InstallTests extends TestSuite {
       val expected = Seq(0x4d, 0x5a).map(_.toByte)
       assert(buf.toSeq == expected)
     }
-    else {
+    else
       sys.error(s"Unsupported OS: $osName")
-    }
     fis.close()
   }
 
@@ -178,17 +173,20 @@ object InstallTests extends TestSuite {
   }
 
   private def installDir(tmpDir: Path): InstallDir =
-    installDir(tmpDir, "linux")
-  private def installDir(tmpDir: Path, os: String): InstallDir =
+    installDir(tmpDir, "linux", "x86_64")
+  private def installDir(tmpDir: Path, os: String, arch: String): InstallDir =
     InstallDir(tmpDir, cache)
       .withOs(os)
-      .withPlatform(InstallDir.platform(os))
+      .withPlatform(Platform.get(os, arch))
       .withPlatformExtensions(InstallDir.platformExtensions(os))
       .withBasePreamble(Preamble())
       .withOverrideProguardedBootstraps {
         if (sys.props.get("java.version").exists(_.startsWith("1."))) None
         else Some(false)
       }
+
+  private val currentArch =
+    Option(System.getProperty("os.arch")).getOrElse("x86_64")
 
   private val currentOs = {
     val os = sys.props.getOrElse("os.name", "").toLowerCase(Locale.ROOT)
@@ -204,7 +202,7 @@ object InstallTests extends TestSuite {
 
   val tests = Tests {
     test("generate an echo launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -213,7 +211,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -240,13 +238,13 @@ object InstallTests extends TestSuite {
         assert(appList == expectedAppList)
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("generate an echo assembly") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -256,7 +254,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -273,13 +271,13 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("generate an echo standalone launcher") - {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -289,7 +287,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -314,13 +312,13 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_84")
+      test("mac") - run("mac", "x86_84")
+      test("windows") - run("windows", "x86_84")
     }
 
     test("not update an already up-to-date launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -329,7 +327,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val created = installDir0.createOrUpdate(appInfo0)
@@ -354,13 +352,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("update a launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
         val appInfo0 = appInfo(
@@ -370,7 +368,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val now = {
@@ -429,13 +427,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a prebuilt launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id    = "coursier"
         val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
@@ -451,7 +449,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -471,13 +469,13 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a compressed prebuilt launcher") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "sbtn"
         val appInfo0 = appInfo(
@@ -492,7 +490,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -520,9 +518,9 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     test("install a prebuilt launcher in an archive") {
@@ -531,7 +529,7 @@ object InstallTests extends TestSuite {
       val tgzPattern =
         "tgz+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.tgz!sbt/bin/sbtn-${platform}"
 
-      def run(os: String, pattern: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String, pattern: String) = withTempDir { tmpDir =>
 
         val id = "sbtn"
         val appInfo0 = appInfo(
@@ -542,7 +540,7 @@ object InstallTests extends TestSuite {
           id
         )
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
           .withOnlyPrebuilt(true)
 
@@ -571,16 +569,107 @@ object InstallTests extends TestSuite {
       }
 
       test("zip") {
-        test("linux") - run("linux", zipPattern)
-        test("mac") - run("mac", zipPattern)
-        test("windows") - run("windows", zipPattern)
+        test("linux") - run("linux", "x86_64", zipPattern)
+        test("mac") - run("mac", "x86_64", zipPattern)
+        test("windows") - run("windows", "x86_64", zipPattern)
       }
 
       test("tgz") {
-        test("linux") - run("linux", tgzPattern)
-        test("mac") - run("mac", tgzPattern)
-        test("windows") - run("windows", tgzPattern)
+        test("linux") - run("linux", "x86_64", tgzPattern)
+        test("mac") - run("mac", "x86_64", tgzPattern)
+        test("windows") - run("windows", "x86_64", tgzPattern)
       }
+    }
+
+    test("install a prebuilt gzip-ed / zip-ed launcher") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id = "scalafmt-native"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scalameta::scalafmt-cli:3.0.6"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuiltBinaries(
+              Map(
+                "x86_64-apple-darwin" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
+                "x86_64-pc-linux" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
+                "x86_64-pc-win32" -> "zip+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
+              )
+            ),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+          .withOnlyPrebuilt(true)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = 0,
+            launcher.toAbsolutePath.toString,
+            "--help"
+          )
+          val expectedInOutput = "scalafmt 3.0.6"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
+    test("install a prebuilt-only zip-ed launcher") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id = "sbt"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
+            .withRepositories(List("central"))
+            .withLauncherType("prebuilt")
+            .withPrebuilt(Some(
+              "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbt"
+            )),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+
+        def testRun(): Unit = {
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = 0,
+            launcher.toAbsolutePath.toString,
+            "-version"
+          )
+          val expectedInOutput = "sbt script version: 1.4.1"
+          assert(output.contains(expectedInOutput))
+        }
+
+        if (currentOs == os)
+          testRun()
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
 
     // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
@@ -624,9 +713,9 @@ object InstallTests extends TestSuite {
     // }
 
     test("refuse to delete a file not created by us") {
-      def run(os: String) = withTempDir { tmpDir =>
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val installDir0 = installDir(tmpDir, os)
+        val installDir0 = installDir(tmpDir, os, arch)
           .withVerbosity(1)
 
         val app = installDir0.actualDest("foo")
@@ -638,16 +727,103 @@ object InstallTests extends TestSuite {
             false
           }
           catch {
-            case _: InstallDir.NotAnApplication =>
+            case _: NotAnApplication =>
               true
           }
 
         assert(gotException)
       }
 
-      test("linux") - run("linux")
-      test("mac") - run("mac")
-      test("windows") - run("windows")
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
+    test("install, override and update scalac") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+        val id = "scalac"
+        val versionOverride =
+          RawAppDescriptor.RawVersionOverride("(,2.max]")
+            .withDependencies(Some(List("org.scala-lang:scala-compiler:2.12.8")))
+            .withMainClass(Some("scala.tools.nsc.Main"))
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.0.1"))
+            .withRepositories(List("central"))
+            .withMainClass(Some("dotty.tools.dotc.Main"))
+            .withProperties(RawAppDescriptor.Properties(
+              Seq("scala.usejavacp" -> "true")
+            ))
+            .withVersionOverrides(List(versionOverride)),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        def testRun(expectedUrls: Seq[String], expectedProperties: Seq[String]): Unit = {
+          assert(Files.isRegularFile(launcher))
+
+          val urls = stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap-jar-urls")
+            .split('\n')
+            .filter(_.nonEmpty)
+            .toSeq
+          assert(urls == expectedUrls)
+
+          val properties =
+            stringEntry(launcher.toFile, "coursier/bootstrap/launcher/bootstrap.properties")
+              .split('\n')
+              .filter(_.nonEmpty)
+              .toSeq
+          assert(properties == expectedProperties)
+        }
+
+        val scala3CompilerJars =
+          Seq(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar"
+          )
+        val scala3Properties =
+          Seq(
+            "bootstrap.mainClass=dotty.tools.dotc.Main",
+            "scala.usejavacp=true",
+            "scala3-compiler_3.version=3.0.1"
+          )
+        testRun(scala3CompilerJars, scala3Properties)
+
+        val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
+        val overridden       = installDir0.createOrUpdate(overridenAppInfo)
+        assert(overridden.exists(identity))
+
+        val scala2CompilerJars =
+          Seq(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.12.8/scala-compiler-2.12.8.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar"
+          )
+        val scala2Properties =
+          Seq(
+            "bootstrap.mainClass=scala.tools.nsc.Main",
+            "scala.usejavacp=true",
+            "scala-compiler.version=2.12.8"
+          )
+        testRun(scala2CompilerJars, scala2Properties)
+
+        val updated = installDir0.createOrUpdate(appInfo0)
+        assert(updated.exists(identity))
+
+        testRun(scala3CompilerJars, scala3Properties)
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
     }
   }
 

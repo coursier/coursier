@@ -32,7 +32,7 @@ object TestUtil {
 
     val dummyTrustManager = Array[TrustManager](
       new X509TrustManager {
-        def getAcceptedIssuers = null
+        def getAcceptedIssuers                                                  = null
         def checkClientTrusted(certs: Array[X509Certificate], authType: String) = {}
         def checkServerTrusted(certs: Array[X509Certificate], authType: String) = {}
       }
@@ -87,9 +87,7 @@ object TestUtil {
     assert(server.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
 
     try f(server.baseUri)
-    finally {
-      server.shutdownNow()
-    }
+    finally server.shutdownNow()
   }
 
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {

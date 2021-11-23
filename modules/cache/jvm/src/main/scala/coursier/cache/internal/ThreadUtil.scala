@@ -66,10 +66,8 @@ object ThreadUtil {
       pool = fixedThreadPool(size)
       f(pool)
     }
-    finally {
-      if (pool != null)
-        pool.shutdown()
-    }
+    finally if (pool != null)
+      pool.shutdown()
   }
 
 }

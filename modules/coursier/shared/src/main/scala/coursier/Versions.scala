@@ -55,9 +55,7 @@ import dataclass._
           for {
             mod  <- moduleOpt.toSeq
             repo <- repositories
-          } yield {
-            repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
-          }
+          } yield repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
         )
       }
 

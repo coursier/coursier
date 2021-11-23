@@ -140,10 +140,6 @@ object CacheUrl {
         // handling those ourselves, so that we can update credentials upon redirection
         conn0.setInstanceFollowRedirects(false)
 
-        // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
-        // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", "")
-
         conn0 match {
           case conn1: HttpsURLConnection =>
             for (f <- sslSocketFactoryOpt)
@@ -461,7 +457,7 @@ object CacheUrl {
 
      */
 
-    def unapply(wwwAuthenticate: String): Option[String] = {
+    def unapply(wwwAuthenticate: String): Option[String] =
       wwwAuthenticate match {
         case BasicAuthBase(basicAuthLine) =>
           Param.findAllMatchIn(basicAuthLine)
@@ -471,7 +467,6 @@ object CacheUrl {
         case _ =>
           None
       }
-    }
   }
 
   def realm(conn: URLConnection): Option[String] =
@@ -517,10 +512,10 @@ object CacheUrl {
   def setupProxyAuth(): Unit = {
     def authOpt(scheme: String): Option[((String, String, String), (String, String))] =
       for {
-        host     <- sys.props.get(s"${scheme}.proxyHost")
-        port     <- sys.props.get(s"${scheme}.proxyPort")
-        user     <- sys.props.get(s"${scheme}.proxyUser")
-        password <- sys.props.get(s"${scheme}.proxyPassword")
+        host     <- sys.props.get(s"$scheme.proxyHost")
+        port     <- sys.props.get(s"$scheme.proxyPort")
+        user     <- sys.props.get(s"$scheme.proxyUser")
+        password <- sys.props.get(s"$scheme.proxyPassword")
       } yield (scheme, host, port) -> (user, password)
     val httpAuthOpt  = authOpt("http")
     val httpsAuthOpt = authOpt("https")

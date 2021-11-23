@@ -177,9 +177,8 @@ import java.nio.file.FileAlreadyExistsException
     val addition = contentFor(update)
     removeFromProfileFiles(Some(addition), None)
   }
-  def tryRevertUpdate(title: String): Boolean = {
+  def tryRevertUpdate(title: String): Boolean =
     removeFromProfileFiles(None, Some(title))
-  }
 
 }
 

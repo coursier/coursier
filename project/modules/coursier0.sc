@@ -1,6 +1,6 @@
 import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
-import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule, CsTests}
+import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
 
 import mill._, mill.scalalib._
 
@@ -22,7 +22,7 @@ trait CoursierTests extends TestModule {
     )
   }
 }
-trait CoursierJvmBase extends Coursier with CsTests with CsMima with Shading {
+trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
   def mimaBinaryIssueFilters = {
     import com.typesafe.tools.mima.core._

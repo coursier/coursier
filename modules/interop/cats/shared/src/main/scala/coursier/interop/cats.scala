@@ -22,9 +22,8 @@ abstract class LowPriorityCatsImplicits extends PlatformCatsImplicits {
     new Gather[F] {
       def point[A](a: A)                       = N.pure(a)
       def bind[A, B](elem: F[A])(f: A => F[B]) = N.flatMap(elem)(f)
-      def gather[A](elems: Seq[F[A]]) = {
+      def gather[A](elems: Seq[F[A]]) =
         N.map(_root_.cats.Parallel.parSequence(elems.toVector))(_.toSeq)
-      }
     }
 
 }

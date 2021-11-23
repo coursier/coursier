@@ -224,7 +224,7 @@ object Resolve extends PlatformResolve {
       else Organization("org.scala-lang")
 
     val forceScalaVersions =
-      if (params.doForceScalaVersion) {
+      if (params.doForceScalaVersion)
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
             Module(scalaOrg, ModuleName("scala3-library"))  -> params.selectedScalaVersion,
@@ -237,7 +237,6 @@ object Resolve extends PlatformResolve {
             Module(scalaOrg, ModuleName("scala-reflect"))  -> params.selectedScalaVersion,
             Module(scalaOrg, ModuleName("scalap"))         -> params.selectedScalaVersion
           )
-      }
       else
         Nil
 

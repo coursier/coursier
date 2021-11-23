@@ -9,7 +9,7 @@ final case class SignatureParams(
 )
 
 object SignatureParams {
-  def apply(options: SignatureOptions): ValidatedNel[String, SignatureParams] = {
+  def apply(options: SignatureOptions): ValidatedNel[String, SignatureParams] =
     // check here that the passed gpg key exists?
     Validated.validNel(
       SignatureParams(
@@ -18,5 +18,4 @@ object SignatureParams {
         options.gpgKey
       )
     )
-  }
 }

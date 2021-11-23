@@ -1,3 +1,11 @@
+## Requirements
+
+Before anything, we need the code from other repositories. Use `git submodule` to get it:
+
+```bash
+git submodule update --init --recursive
+```
+
 ## Mill commands cookbook
 
 Coursier is built with [Mill](https://com-lihaoyi.github.io/mill).

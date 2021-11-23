@@ -29,9 +29,8 @@ class FileTypeRefreshDisplay(
   private var done    = Map.empty[String, RefreshInfo]
   private var ongoing = Map.empty[String, RefreshInfo]
 
-  override def sizeHint(n: Int) = {
+  override def sizeHint(n: Int) =
     sizeHintOpt = Some(n)
-  }
 
   override def stop(out: Writer): Unit = {
 

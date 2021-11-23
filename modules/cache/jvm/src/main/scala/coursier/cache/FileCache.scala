@@ -178,8 +178,7 @@ import scala.util.control.NonFatal
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] = {
-
+  ): EitherT[F, ArtifactError, File] =
     EitherT {
       download(
         artifact,
@@ -255,7 +254,6 @@ import scala.util.control.NonFatal
       case err =>
         EitherT(S.point(Left(err)))
     }
-  }
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     file(artifact, retry)
@@ -299,8 +297,8 @@ import scala.util.control.NonFatal
         }
 
       val res =
-        if (f.exists()) {
-          if (f.isDirectory) {
+        if (f.exists())
+          if (f.isDirectory)
             if (artifact0.url.startsWith("file:")) {
 
               val content =
@@ -348,19 +346,16 @@ import scala.util.control.NonFatal
             else {
               val f0 = new File(f, ".directory")
 
-              if (f0.exists()) {
+              if (f0.exists())
                 if (f0.isDirectory)
                   Left(s"Woops: ${f.getCanonicalPath} is a directory")
                 else
                   read(f0)
-              }
               else
                 notFound(f0)
             }
-          }
           else
             read(f)
-        }
         else
           notFound(f)
 

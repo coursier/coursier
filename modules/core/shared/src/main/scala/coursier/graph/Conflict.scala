@@ -79,12 +79,11 @@ object Conflict {
       wanted == selected || {
         val c = Parse.versionConstraint(wanted)
         val v = Version(selected)
-        if (c.interval == VersionInterval.zero) {
+        if (c.interval == VersionInterval.zero)
           if (semVer)
             c.preferred.exists(_.items.take(2) == v.items.take(2))
           else
             c.preferred.contains(v)
-        }
         else
           c.interval.contains(v)
       }

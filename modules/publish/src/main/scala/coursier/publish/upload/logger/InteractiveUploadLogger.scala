@@ -11,18 +11,15 @@ final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolea
     extends UploadLogger {
 
   private val underlying = new ProgressLogger[Object](
-    if (isLocal) {
+    if (isLocal)
       if (dummy)
         "Would have written"
       else
         "Wrote"
-    }
-    else {
-      if (dummy)
-        "Would have uploaded"
-      else
-        "Uploaded"
-    },
+    else if (dummy)
+      "Would have uploaded"
+    else
+      "Uploaded",
     "files",
     out,
     doneEmoji = Some("\ud83d\ude9a")

@@ -16,10 +16,8 @@ final class DeleteOnExit(verbosity: Int) {
           .asScala
           .foreach(deleteRecursiveIfExists)
       }
-      finally {
-        if (s != null)
-          s.close()
-      }
+      finally if (s != null)
+        s.close()
     }
 
     Files.deleteIfExists(f)

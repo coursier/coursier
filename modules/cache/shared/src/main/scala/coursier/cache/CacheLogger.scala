@@ -17,7 +17,7 @@ trait CacheLogger {
 
   def downloadProgress(url: String, downloaded: Long): Unit = {}
 
-  def downloadedArtifact(url: String, success: Boolean): Unit = {}
+  def downloadedArtifact(url: String, success: Boolean): Unit          = {}
   def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit = {}
   def checkingUpdatesResult(
     url: String,
@@ -32,7 +32,7 @@ trait CacheLogger {
     watching: Boolean
   ): Unit = {}
 
-  def gettingLength(url: String): Unit = {}
+  def gettingLength(url: String): Unit                             = {}
   def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
   def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
@@ -42,7 +42,7 @@ trait CacheLogger {
 
   // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
   def init(sizeHint: Option[Int] = None): Unit = {}
-  def stop(): Unit = {}
+  def stop(): Unit                             = {}
 
   final def use[T](f: => T): T = {
     init()

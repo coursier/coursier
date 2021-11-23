@@ -5,12 +5,15 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 // format: off
 final case class DependencyOptions(
 
+  @Group(OptionGroup.dependency)
+  @Hidden
   @Help("Exclude module")
   @Value("organization:name")
   @Short("E")
-  @Help("Global level exclude")
     exclude: List[String] = Nil,
 
+  @Group(OptionGroup.dependency)
+  @Hidden
   @Short("x")
   @Help("Path to the local exclusion file. " +
     "Syntax: <org:name>--<org:name>. `--` means minus. Example file content:\n\t" +
@@ -20,18 +23,26 @@ final case class DependencyOptions(
   )
     localExcludeFile: String = "",
 
+  @Group(OptionGroup.dependency)
+  @Hidden
   @Help("If --sbt-plugin options are passed: default sbt version  (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
   @Value("sbt version")
     sbtVersion: String = "1.0",
 
+  @Group(OptionGroup.dependency)
+  @Hidden
   @Help("Add intransitive dependencies")
     intransitive: List[String] = Nil,
 
+  @Group(OptionGroup.dependency)
   @Help("Add sbt plugin dependencies")
     sbtPlugin: List[String] = Nil,
 
-  scalaJs: Boolean = false,
+  @Group(OptionGroup.dependency)
+  @Help("Enable Scala.js")
+    scalaJs: Boolean = false,
 
+  @Group(OptionGroup.dependency)
   @Help("Enable scala-native")
   @Short("S")
     native: Boolean = false

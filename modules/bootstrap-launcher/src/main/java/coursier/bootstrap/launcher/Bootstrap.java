@@ -27,7 +27,7 @@ public class Bootstrap {
         if (System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false"))
             return;
 
-        boolean useJni = coursier.paths.Util.useJni(() -> { coursier.bootstrap.launcher.jniutils.NativeCalls.setup(); });
+        boolean useJni = coursier.paths.Util.useJni(() -> { coursier.bootstrap.launcher.jniutils.BootstrapNativeApi.setup(); });
         try {
             if (useJni)
                 coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput();

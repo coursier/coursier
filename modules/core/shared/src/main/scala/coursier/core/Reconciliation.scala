@@ -43,7 +43,7 @@ object Reconciliation {
     }
 
   case object Default extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] = {
+    def apply(versions: Seq[String]): Option[String] =
       if (versions.isEmpty)
         None
       else if (versions.lengthCompare(1) == 0)
@@ -77,11 +77,10 @@ object Reconciliation {
               .map(itv => (itv +: retainedLatestOpt.toSeq).mkString("&"))
         }
       }
-    }
   }
 
   case object Relaxed extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] = {
+    def apply(versions: Seq[String]): Option[String] =
       if (versions.isEmpty)
         None
       else if (versions.lengthCompare(1) == 0)
@@ -103,7 +102,6 @@ object Reconciliation {
         else
           retainedLatestOpt
       }
-    }
   }
 
   /** Strict version reconciliation.

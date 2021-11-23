@@ -89,15 +89,13 @@ object Conf {
       for {
         s             <- c.as(SimpleFields.decoder)
         orgDetailsOpt <- c.as(orgDetailsDecoder)
-      } yield {
-        Conf(
-          orgDetailsOpt.getOrElse(OrganizationDetails.empty),
-          s.versionOpt,
-          s.homePageOpt,
-          s.licenses,
-          s.developers.map(_.map(_.get))
-        )
-      }
+      } yield Conf(
+        orgDetailsOpt.getOrElse(OrganizationDetails.empty),
+        s.versionOpt,
+        s.homePageOpt,
+        s.licenses,
+        s.developers.map(_.map(_.get))
+      )
     }
 
   def load(path: Path): Either[String, Conf] = {

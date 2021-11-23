@@ -110,7 +110,7 @@ final case class JsonElem(
 
   // This is used to printing json output
   // Option of the file path
-  lazy val downloadedFile: Option[String] = {
+  lazy val downloadedFile: Option[String] =
     jsonPrintRequirement.flatMap(req =>
       req.depToArtifacts.getOrElse(dep, Seq())
         .filter(_._1.classifier == dep.attributes.classifier)
@@ -120,7 +120,6 @@ final case class JsonElem(
         .map(_.get.getPath)
         .headOption
     )
-  }
 
   lazy val reconciledVersion: String = resolution.reconciledVersions
     .getOrElse(dep.module, dep.version)

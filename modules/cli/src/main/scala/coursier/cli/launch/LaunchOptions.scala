@@ -1,12 +1,21 @@
 package coursier.cli.launch
 
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.SharedLaunchOptions
 import coursier.install.RawAppDescriptor
+import coursier.cli.options.OptionGroup
 
 // format: off
-@ArgsName("org:name:version|app-name[:version]*")
+@ArgsName("org:name:version*|app-name[:version]")
+@Help(
+  "Launch an application from a dependency or an application descriptor.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs launch org.scalameta:scalafmt-cli:2.4.2 -- --version\n" +
+  "$ cs scalafmt -- --version\n"
+)
 final case class LaunchOptions(
 
   @Recurse
@@ -15,18 +24,28 @@ final case class LaunchOptions(
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
 
-  @Help("Add Java command-line options, when forking")
-  @Value("option")
-    javaOpt: List[String] = Nil,
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  fetchCacheIKnowWhatImDoing: Option[String] = None,
+  @Group(OptionGroup.launch)
+    fork: Option[Boolean] = None,
 
+  @Group(OptionGroup.launch)
+  @Hidden
+    fetchCacheIKnowWhatImDoing: Option[String] = None,
+
+  @Group(OptionGroup.launch)
+  @Hidden
   @Help("Launch child application via execve (replaces the coursier process)")
     execve: Option[Boolean] = None,
 
-  json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
+  @Group(OptionGroup.launch)
+  @Hidden
+    json: Boolean = false, // move to SharedLaunchOptions? (and handle it from the other commands too)
 
-  jep: Boolean = false
+  @Group(OptionGroup.launch)
+  @Hidden
+    jep: Boolean = false
 ) {
   // format: on
 

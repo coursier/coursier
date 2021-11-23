@@ -73,9 +73,7 @@ final class Backend($ : BackendScope[_, State]) {
       parDep <- parents
       to = repr(parDep)
       _  = addNode(to)
-    } {
-      graph.addEdge(from, to)
-    }
+    } graph.addEdge(from, to)
 
     val layouter = js.Dynamic.newInstance(Dracula.Layout.Spring)(graph)
     layouter.layout()
@@ -116,9 +114,7 @@ final class Backend($ : BackendScope[_, State]) {
       for {
         dep   <- minDependencies
         trDep <- resolution.dependenciesOf(dep)
-      } {
-        m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
-      }
+      } m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
 
       m
     }
@@ -212,9 +208,8 @@ final class Backend($ : BackendScope[_, State]) {
     }
   }
 
-  def clearLog(e: raw.SyntheticEvent[_]) = {
+  def clearLog(e: raw.SyntheticEvent[_]) =
     $.modState(_.copy(log = Nil))
-  }
 
   def toggleReverseTree(e: raw.SyntheticEvent[_]) =
     $.modState { s =>
@@ -340,13 +335,12 @@ final class Backend($ : BackendScope[_, State]) {
   }
 
   object options {
-    def toggleOptional(e: raw.SyntheticEvent[_]) = {
+    def toggleOptional(e: raw.SyntheticEvent[_]) =
       $.modState(s =>
         s.copy(
           options = s.options
             .copy(followOptional = !s.options.followOptional)
         )
       )
-    }
   }
 }

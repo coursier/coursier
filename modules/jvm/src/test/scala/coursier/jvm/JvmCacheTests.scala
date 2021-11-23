@@ -5,7 +5,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicBoolean
 
 import coursier.cache.internal.FileUtil
-import coursier.cache.MockCache
+import coursier.cache.{ArchiveCache, MockCache}
 import coursier.util.{Sync, Task}
 import utest._
 
@@ -33,10 +33,8 @@ object JvmCacheTests extends TestSuite {
       dir = Files.createTempDirectory("jvm-cache-tests-")
       f(dir)
     }
-    finally {
-      if (dir != null)
-        deleteRecursive(dir.toFile)
-    }
+    finally if (dir != null)
+      deleteRecursive(dir.toFile)
   }
 
   private val poolInitialized = new AtomicBoolean(false)
@@ -92,9 +90,9 @@ object JvmCacheTests extends TestSuite {
 
       test("specific version") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs(theOS)
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -105,16 +103,16 @@ object JvmCacheTests extends TestSuite {
           val expectedOutput = "the jdk 1.1\n"
           val javaExec       = new File(new File(home, "bin"), filename)
 
-          val output = (Seq(javaExec.getAbsolutePath, "-version").!!)
+          val output = Seq(javaExec.getAbsolutePath, "-version").!!
           assert(output.replace("\r\n", "\n") == expectedOutput)
         }
       }
 
       test("version range") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs(theOS)
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -131,9 +129,9 @@ object JvmCacheTests extends TestSuite {
 
       test("Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs("darwin")
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -153,14 +151,33 @@ object JvmCacheTests extends TestSuite {
           catch {
             case _: IOException if Properties.isWin => ()
           }
+
+          val alreadyThereHome = jvmCache
+            .getIfInstalled("the-jdk:1.1")
+            .unsafeRun()(cache.ec)
+            .getOrElse {
+              sys.error("Should have been there")
+            }
+          assert(alreadyThereHome.getName == "Home")
+          assert(alreadyThereHome.getParentFile.getName == "Contents")
+          val alreadyThereJavaExec = new File(alreadyThereHome, "bin/java")
+          try {
+            val output         = Seq(alreadyThereJavaExec.getAbsolutePath, "-version").!!
+            val expectedOutput = "the jdk 1.1\n"
+            assert(output == expectedOutput)
+            ()
+          }
+          catch {
+            case _: IOException if Properties.isWin => ()
+          }
         }
       }
 
       test("no Contents/Home directory on macOS") {
         withTempDir { tmpDir =>
+          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
           val jvmCache = JvmCache()
-            .withBaseDirectory(tmpDir.toFile)
-            .withCache(cache)
+            .withArchiveCache(archiveCache)
             .withOs("darwin")
             .withArchitecture("the-arch")
             .withDefaultJdkNameOpt(None)
@@ -168,7 +185,7 @@ object JvmCacheTests extends TestSuite {
             .withIndex(Task.point(index))
 
           val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
-          assert(home.getName == "the-jdk@1.2")
+          assert(home.getName == "the-jdk-1.2")
           val javaExec = new File(home, "bin/java")
           try {
             val output         = Seq(javaExec.getAbsolutePath, "-version").!!

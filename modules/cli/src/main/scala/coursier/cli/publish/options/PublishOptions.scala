@@ -4,6 +4,7 @@ import caseapp._
 import coursier.cli.options.CacheOptions
 
 // format: off
+@HelpMessage("[Experimental] Publish an artifact to a maven repository.")
 final case class PublishOptions(
 
   @Recurse
@@ -33,8 +34,7 @@ final case class PublishOptions(
   @Name("v")
     verbose: Int @@ Counter = Tag.of(0),
 
-  @Name("n")
-    dummy: Boolean = false,
+  dummy: Boolean = false,
 
   @HelpMessage("Disable interactive output")
     batch: Option[Boolean] = None,

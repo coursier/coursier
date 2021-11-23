@@ -42,17 +42,42 @@ import dataclass._
   @since("2.0.1")
   prebuiltBinaries: Map[String, String] = Map.empty,
   @since("2.0.4")
-  jna: List[String] = Nil
+  jna: List[String] = Nil,
+  @since("2.1.0")
+  versionOverrides: Seq[VersionOverride] = Nil
 ) {
-  def overrideVersion(ver: String): AppDescriptor =
-    withDependencies {
-      if (dependencies.isEmpty)
-        dependencies
+  def overrideVersion(ver: String): AppDescriptor = {
+    val overriddenDesc = Parse.version(ver)
+      .flatMap { version =>
+        versionOverrides.find(_.versionRange.contains(version))
+      }
+      .map { versionOverride =>
+        withRepositories(versionOverride.repositories.getOrElse(repositories))
+          .withDependencies(versionOverride.dependencies.getOrElse(dependencies))
+          .withMainClass(
+            versionOverride.mainClass
+              .map(mc => if (mc.isEmpty) None else Some(mc))
+              .getOrElse(mainClass)
+          )
+          .withDefaultMainClass(
+            versionOverride.defaultMainClass
+              .map(dmc => if (dmc.isEmpty) None else Some(dmc))
+              .getOrElse(defaultMainClass)
+          )
+          .withJavaProperties(versionOverride.javaProperties.getOrElse(javaProperties))
+      }
+      .getOrElse(this)
+    val deps = overriddenDesc.dependencies
+    overriddenDesc.withDependencies {
+      if (deps.isEmpty)
+        deps
       else {
-        val dep = dependencies.head.withUnderlyingDependency(_.withVersion(ver))
-        dep +: dependencies.tail
+        val dep = deps.head.withUnderlyingDependency(_.withVersion(ver))
+        dep +: deps.tail
       }
     }
+  }
+
   def mainVersionOpt: Option[String] =
     dependencies.headOption.map(_.version)
 
@@ -63,7 +88,7 @@ import dataclass._
 
     // FIXME A bit of duplication with retainedMainVersion above
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
       case _                        => None
     }
 
@@ -144,7 +169,7 @@ import dataclass._
 
   def processDependencies(
     cache: Cache[Task],
-    platformOpt: Option[Platform],
+    platformOpt: Option[ScalaPlatform],
     verbosity: Int
   ): Either[
     AppArtifacts.AppArtifactsException,
@@ -223,7 +248,7 @@ import dataclass._
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
       case _                        => None
     }
 
@@ -342,11 +367,10 @@ object AppDescriptor {
       val dep0        = dep.dependency(sv)
       val depVersions = listVersions(cache, repositories, dep0.module)
 
-      if (verbosity >= 2) {
+      if (verbosity >= 2)
         System.err.println(
           s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}"
         )
-      }
 
       latestVersions(dep.version) || {
         val constraint   = coursier.core.Parse.versionConstraint(dep.version)
@@ -389,7 +413,7 @@ object AppDescriptor {
     dependencies: Seq[JavaOrScalaDependency],
     constraintOpt: Option[VersionConstraint],
     verbosity: Int,
-    platform: Platform
+    platform: ScalaPlatform
   ): Option[(String, String)] = {
 
     def platformVersions = platform

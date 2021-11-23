@@ -185,7 +185,7 @@ object RepositoryParams {
               )
           }
 
-        if (s.startsWith("env:")) {
+        if (s.startsWith("env:"))
           if (s.contains(":"))
             s.split(":", 2) match {
               case Array(userVar, passVar) =>
@@ -203,11 +203,9 @@ object RepositoryParams {
                 handleAuth(v)
             }
           }
-        }
-        else if (s.startsWith("file:")) {
+        else if (s.startsWith("file:"))
           // TODO
           ???
-        }
         else
           handleAuth(s)
     }

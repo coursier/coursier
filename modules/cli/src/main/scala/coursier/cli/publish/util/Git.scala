@@ -4,10 +4,9 @@ import java.io.File
 
 object Git {
 
-  def remoteUrl(dir: File): String = {
+  def remoteUrl(dir: File): String =
     // from https://github.com/sbt/sbt-git/blob/f8caf9365be380cf101e9605af159b5e7f842d0c/src/main/scala/com/typesafe/sbt/git/JGit.scala#L100
     scala.sys.process.Process(Seq("git", "ls-remote", "--get-url", "origin")).lineStream_!.head
-  }
 
   def apply(dir: File): Option[(String, String)] = {
 

@@ -1,12 +1,14 @@
 package coursier.cli.get
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cache.ArchiveCache
+import coursier.cli.CoursierCommand
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Get extends CaseApp[GetOptions] {
+object Get extends CoursierCommand[GetOptions] {
+  override def hidden: Boolean = true
   def run(options: GetOptions, args: RemainingArgs): Unit = {
 
     val params = GetParams(options).toEither match {
@@ -19,6 +21,9 @@ object Get extends CaseApp[GetOptions] {
 
     val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
+
+    val archiveCache = ArchiveCache()
+      .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
       if (rawUrl.endsWith("?changing"))
@@ -38,7 +43,10 @@ object Get extends CaseApp[GetOptions] {
 
     val fetchAll =
       artifacts.map { artifact =>
-        cache.file(artifact).run
+        if (options.archive)
+          archiveCache.get(artifact)
+        else
+          cache.file(artifact).run
       }
 
     val initLogger = Task.delay(cache.logger.init())
@@ -58,12 +66,11 @@ object Get extends CaseApp[GetOptions] {
           val output  = pathsIt.mkString(params.separator)
           println(output)
         }
-        for (err <- errorsIt) {
+        for (err <- errorsIt)
           if (params.output.verbosity == 0)
             System.err.println(err.getMessage)
           else if (params.output.verbosity >= 1)
             throw err
-        }
       }
 
     val ec = ExecutionContext.fromExecutorService(pool)

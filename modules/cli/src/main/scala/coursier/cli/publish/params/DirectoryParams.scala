@@ -18,19 +18,18 @@ object DirectoryParams {
 
     val dirsV = options.dir.traverse { d =>
       val dir0 = Paths.get(d)
-      if (Files.exists(dir0)) {
+      if (Files.exists(dir0))
         if (Files.isDirectory(dir0))
           Validated.validNel(dir0)
         else
           Validated.invalidNel(s"$d not a directory")
-      }
       else
         Validated.invalidNel(s"$d not found")
     }
 
     val sbtDirsV = ((if (options.sbt) List(".") else Nil) ::: options.sbtDir).traverse { d =>
       val dir0 = Paths.get(d)
-      if (Files.exists(dir0)) {
+      if (Files.exists(dir0))
         if (Files.isDirectory(dir0)) {
           val buildProps = dir0.resolve("project/build.properties")
           if (Files.exists(buildProps))
@@ -40,7 +39,6 @@ object DirectoryParams {
         }
         else
           Validated.invalidNel(s"$d not a directory")
-      }
       else
         Validated.invalidNel(s"$d not found")
     }

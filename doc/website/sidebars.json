@@ -1,26 +1,28 @@
 {
   "docs": {
     "Intro": [
-      "overview",
+      "overview"
+    ],
+    "Command-line": [
+      "cli-overview",
+      "cli-installation",
+      "cli-install",
+      "cli-launch",
+      "cli-bootstrap",
+      "cli-java",
+      "cli-resolve",
+      "cli-fetch",
+      "cli-complete",
+      "cli-setup",
+      "cli-appdescriptors"
+    ],
+    "Motivation": [
       "overview-motivations",
       "overview-in-the-wild"
     ],
     "sbt plugins": [
       "sbt-coursier",
       "sbt-pgp-coursier"
-    ],
-    "Command-line": [
-      "cli-overview",
-      "cli-installation",
-      "cli-examples",
-      "cli-complete",
-      "cli-resolve",
-      "cli-fetch",
-      "cli-launch",
-      "cli-bootstrap",
-      "cli-install",
-      "cli-java",
-      "cli-setup"
     ],
     "API": [
       "api",
